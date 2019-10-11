@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -30,18 +31,12 @@ namespace {
 class AccessMapper : public iir::ASTVisitor {
   const iir::StencilMetaInformation& metadata_;
 
-  /// Keep track of the current statement access pair
-  struct CurrentStatementAccessPair {
-    CurrentStatementAccessPair(const std::unique_ptr<iir::StatementAccessesPair>& pair)
-        : Pair(pair), ChildIndex(0), IfCondExpr(nullptr) {}
+  /// Keep track of the current statement
+  struct CurrentStatement {
+    CurrentStatement(const std::shared_ptr<iir::Stmt>& stmt) : Stmt(stmt), IfCondExpr(nullptr) {}
 
-    /// Reference to the pair we are currently working on.
-    const std::unique_ptr<iir::StatementAccessesPair>& Pair;
-
-    /// Index of the child we are currently traversing. We need to keep track of this index because
-    /// we fold the two block statements of an if/then/else block into a single vector of statements
-    /// (i.e the childrens).
-    int ChildIndex;
+    /// Reference to the stmt we are currently working on.
+    const std::shared_ptr<iir::Stmt>& Stmt;
 
     /// Access of the condition of the if-statement (this will be added to all subsequent accesses)
     /// For example:
@@ -49,13 +44,13 @@ class AccessMapper : public iir::ASTVisitor {
     ///     in = 5.0;   // Accesses:  W:in, R:5.0, R:true   (true is part of the read-access)
     std::shared_ptr<iir::Expr> IfCondExpr;
   };
-  std::vector<std::unique_ptr<CurrentStatementAccessPair>> curStatementAccessPairStack_;
+  std::vector<std::unique_ptr<CurrentStatement>> curStatementStack_;
 
   /// List of caller and callee accesses. The first element is the primary accesses corresponding to
-  /// the statement of the statement access pair which was passed to the constructor. All other
+  /// the statement which was passed to the constructor. All other
   /// elements are the accesses of the children of the top-level statement.
-  std::vector<std::shared_ptr<iir::Accesses>> callerAccessesList_;
-  std::vector<std::shared_ptr<iir::Accesses>> calleeAccessesList_;
+  std::vector<iir::Accesses*> callerAccessesList_;
+  std::vector<iir::Accesses*> calleeAccessesList_;
 
   /// Reference to the stencil function we are currently inside (if any)
   std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun_;
@@ -72,12 +67,10 @@ class AccessMapper : public iir::ASTVisitor {
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
 
 public:
-  AccessMapper(const iir::StencilMetaInformation& metadata,
-               const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair,
+  AccessMapper(const iir::StencilMetaInformation& metadata, const std::shared_ptr<iir::Stmt>& stmt,
                std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
       : metadata_(metadata), stencilFun_(stencilFun) {
-    curStatementAccessPairStack_.push_back(
-        std::make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
+    curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt));
   }
 
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
@@ -87,44 +80,33 @@ public:
                         : metadata_.getStencilFunctionInstantiation(expr));
   }
 
-  /// @brief Get the AccessID from the Expr
-  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
-    return stencilFun_ ? stencilFun_->getAccessIDFromExpr(expr)
-                       : metadata_.getAccessIDFromExpr(expr);
-  }
-
-  /// @brief Get the AccessID from the Stmt
-  int getAccessIDFromStmt(const std::shared_ptr<iir::Stmt>& stmt) {
-    return stencilFun_ ? stencilFun_->getAccessIDFromStmt(stmt)
-                       : metadata_.getAccessIDFromStmt(stmt);
-  }
-
   /// @brief Add a new access to the caller and callee and register it in the caller and callee
-  /// accesses list. This will also add accesses to the children of the top-level statement access
-  /// pair
+  /// accesses list. This will also add accesses to the children of the top-level statement
   void appendNewAccesses() {
-    curStatementAccessPairStack_.back()->Pair->setCallerAccesses(std::make_shared<iir::Accesses>());
+    curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CallerAccesses =
+        std::make_optional(iir::Accesses());
     callerAccessesList_.emplace_back(
-        curStatementAccessPairStack_.back()->Pair->getCallerAccesses());
+        &*curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CallerAccesses);
 
     if(stencilFun_) {
-      curStatementAccessPairStack_.back()->Pair->setCalleeAccesses(
-          std::make_shared<iir::Accesses>());
+      curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses =
+          std::make_optional(iir::Accesses());
       calleeAccessesList_.emplace_back(
-          curStatementAccessPairStack_.back()->Pair->getCalleeAccesses());
-    }
+          &*curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses);
+    } else
+      curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses = std::nullopt;
 
     // Add all accesses of all parent if-cond expressions
-    for(const auto& pair : curStatementAccessPairStack_)
-      if(pair->IfCondExpr)
-        pair->IfCondExpr->accept(*this);
+    for(const auto& stmt : curStatementStack_)
+      if(stmt->IfCondExpr)
+        stmt->IfCondExpr->accept(*this);
   }
 
   /// @brief Pop the last added child access from the caller and callee accesses list
   void removeLastChildAccesses() {
 
-    // The top-level pair is never removed
-    if(curStatementAccessPairStack_.size() <= 1)
+    // The top-level stmt is never removed
+    if(curStatementStack_.size() <= 1)
       return;
 
     callerAccessesList_.pop_back();
@@ -141,35 +123,35 @@ public:
     };
 
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromExpr(field), getOffset(true));
+      callerAccesses->mergeWriteOffset(iir::getAccessID(field), getOffset(true));
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromExpr(field), getOffset(false));
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(field), getOffset(false));
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarDeclStmt>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
   }
 
   void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
                         const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
+      callerAccesses->mergeWriteExtent(iir::getAccessID(field), extent);
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
+      calleeAccesses->mergeWriteExtent(iir::getAccessID(field), extent);
   }
   /// @}
 
@@ -182,35 +164,35 @@ public:
     };
 
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(field), getOffset(true));
+      callerAccesses->mergeReadOffset(iir::getAccessID(field), getOffset(true));
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(field), getOffset(false));
+      calleeAccesses->mergeReadOffset(iir::getAccessID(field), getOffset(false));
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::LiteralAccessExpr>& lit) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessID(lit), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessID(lit), Array3i{{0, 0, 0}});
   }
 
   void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
                        const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
+      callerAccesses->mergeReadExtent(iir::getAccessID(field), extent);
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
+      calleeAccesses->mergeReadExtent(iir::getAccessID(field), extent);
   }
   /// @}
 
@@ -252,31 +234,19 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
-    // If we are inside the else block of an if-statement we need to continue iterating
-    // the block statements as the if/then/else block of the if-statement has been collapsed into
-    // one single
-    // vector of block statements
-    if(!curStatementAccessPairStack_.back()->IfCondExpr)
-      curStatementAccessPairStack_.back()->ChildIndex = 0;
-
+    appendNewAccesses();
     for(auto& s : stmt->getStatements()) {
 
-      DAWN_ASSERT(!curStatementAccessPairStack_.empty());
+      DAWN_ASSERT(!curStatementStack_.empty());
 
-      const auto& curStmt = curStatementAccessPairStack_.back();
-      DAWN_ASSERT(curStmt->Pair->hasBlockStatements());
-
-      auto curBlockStmt = std::make_unique<CurrentStatementAccessPair>(
-          curStmt->Pair->getBlockStatements()[curStmt->ChildIndex]);
-
-      curStatementAccessPairStack_.push_back(std::move(curBlockStmt));
+      curStatementStack_.push_back(std::make_unique<CurrentStatement>(s));
 
       // Process the statement
       s->accept(*this);
 
-      curStatementAccessPairStack_.pop_back();
-      curStatementAccessPairStack_.back()->ChildIndex++;
+      curStatementStack_.pop_back();
     }
+    removeLastChildAccesses();
   }
 
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
@@ -293,15 +263,23 @@ public:
 
   void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {
     appendNewAccesses();
-    stmt->getCondExpr()->accept(*this);
 
-    curStatementAccessPairStack_.back()->IfCondExpr = stmt->getCondExpr();
+    curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getCondStmt()));
+    stmt->getCondStmt()->accept(*this);
+    curStatementStack_.pop_back();
 
+    curStatementStack_.back()->IfCondExpr = stmt->getCondExpr();
+
+    curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getThenStmt()));
     stmt->getThenStmt()->accept(*this);
-    if(stmt->hasElse())
+    curStatementStack_.pop_back();
+    if(stmt->hasElse()) {
+      curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getElseStmt()));
       stmt->getElseStmt()->accept(*this);
+      curStatementStack_.pop_back();
+    }
 
-    curStatementAccessPairStack_.back()->IfCondExpr = nullptr;
+    curStatementStack_.back()->IfCondExpr = nullptr;
     removeLastChildAccesses();
   }
 
@@ -476,7 +454,8 @@ void computeAccesses(iir::StencilInstantiation* instantiation,
                      ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair, nullptr);
+    AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair->getStatement(),
+                        nullptr);
     statementAccessesPair->getStatement()->accept(mapper);
   }
 }
@@ -486,7 +465,7 @@ void computeAccesses(
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getMetaData(),
-                        statementAccessesPair, stencilFunctionInstantiation);
+                        statementAccessesPair->getStatement(), stencilFunctionInstantiation);
     statementAccessesPair->getStatement()->accept(mapper);
   }
 }

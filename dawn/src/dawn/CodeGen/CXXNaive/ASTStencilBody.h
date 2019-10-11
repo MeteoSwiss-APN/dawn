@@ -78,27 +78,17 @@ public:
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
   /// @}
 
@@ -108,8 +98,7 @@ public:
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
-  std::string getName(const std::shared_ptr<iir::Stmt>& stmt) const override;
-  int getAccessID(const std::shared_ptr<iir::Expr>& expr) const;
+  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const override;
 };
 
 } // namespace cxxnaive

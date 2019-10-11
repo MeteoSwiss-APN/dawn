@@ -41,17 +41,17 @@ void ASTConverter::visit(const std::shared_ptr<sir::BlockStmt>& blockStmt) {
 }
 
 void ASTConverter::visit(const std::shared_ptr<sir::ExprStmt>& stmt) {
-  stmtMap_.emplace(stmt, iir::makeExprStmt(stmt->getExpr(), stmt->getSourceLocation()));
+  stmtMap_.emplace(stmt, iir::makeExprStmt(stmt->getExpr()->clone(), stmt->getSourceLocation()));
 }
 
 void ASTConverter::visit(const std::shared_ptr<sir::ReturnStmt>& stmt) {
-  stmtMap_.emplace(stmt, iir::makeReturnStmt(stmt->getExpr(), stmt->getSourceLocation()));
+  stmtMap_.emplace(stmt, iir::makeReturnStmt(stmt->getExpr()->clone(), stmt->getSourceLocation()));
 }
 
 void ASTConverter::visit(const std::shared_ptr<sir::VarDeclStmt>& varDeclStmt) {
   iir::VarDeclStmt::InitList initList;
   for(auto& expr : varDeclStmt->getInitList())
-    initList.push_back(expr);
+    initList.push_back(expr->clone());
 
   stmtMap_.emplace(varDeclStmt,
                    iir::makeVarDeclStmt(varDeclStmt->getType(), varDeclStmt->getName(),

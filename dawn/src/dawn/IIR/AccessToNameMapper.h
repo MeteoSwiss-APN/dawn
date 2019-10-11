@@ -49,7 +49,7 @@ public:
 
 private:
   void insertAccessInfo(const std::shared_ptr<iir::Expr>& expr);
-  void insertAccessInfo(const std::shared_ptr<iir::Stmt>& stmt);
+  void insertAccessInfo(const std::shared_ptr<iir::VarDeclStmt>& stmt);
 };
 
 } // namespace iir

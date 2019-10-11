@@ -14,6 +14,7 @@
 
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -86,10 +87,12 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   ASSERT_TRUE((doMethod1->getChildren().size() == 1));
   const auto& stmtAccessPair = doMethod1->getChildren()[0];
-  ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(metadata.getAccessIDFromName("u")) ==
+  ASSERT_TRUE((iir::computeMaximumExtents(*stmtAccessPair->getStatement(),
+                                          metadata.getAccessIDFromName("u")) ==
                iir::Extents{-1, 1, -1, 1, 0, 0}));
 
-  EXPECT_EQ(stmtAccessPair->computeMaximumExtents(metadata.getAccessIDFromName("coeff")),
+  EXPECT_EQ(iir::computeMaximumExtents(*stmtAccessPair->getStatement(),
+                                       metadata.getAccessIDFromName("coeff")),
             (iir::Extents{0, 0, 0, 0, 1, 1}));
 }
 

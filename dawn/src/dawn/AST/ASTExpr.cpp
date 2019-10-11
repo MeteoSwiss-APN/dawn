@@ -324,10 +324,13 @@ VarAccessExpr::VarAccessExpr(const std::string& name, std::shared_ptr<Expr> inde
 
 VarAccessExpr::VarAccessExpr(const VarAccessExpr& expr)
     : Expr(EK_VarAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
-      index_(expr.getIndex()), isExternal_(expr.isExternal()) {}
+      index_(expr.getIndex()), isExternal_(expr.isExternal()) {
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
+}
 
 VarAccessExpr& VarAccessExpr::operator=(VarAccessExpr expr) {
   assign(expr);
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
   name_ = std::move(expr.getName());
   index_ = std::move(expr.getIndex());
   isExternal_ = expr.isExternal();
@@ -344,7 +347,8 @@ bool VarAccessExpr::equals(const Expr* other) const {
   const VarAccessExpr* otherPtr = dyn_cast<VarAccessExpr>(other);
   return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
          isExternal_ == otherPtr->isExternal_ && isArrayAccess() == otherPtr->isArrayAccess() &&
-         (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true);
+         (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true) &&
+         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
 void VarAccessExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -370,10 +374,13 @@ FieldAccessExpr::FieldAccessExpr(const std::string& name, Array3i offset, Array3
 FieldAccessExpr::FieldAccessExpr(const FieldAccessExpr& expr)
     : Expr(EK_FieldAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
       offset_(expr.getOffset()), argumentMap_(expr.getArgumentMap()),
-      argumentOffset_(expr.getArgumentOffset()), negateOffset_(expr.negateOffset()) {}
+      argumentOffset_(expr.getArgumentOffset()), negateOffset_(expr.negateOffset()) {
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
+}
 
 FieldAccessExpr& FieldAccessExpr::operator=(FieldAccessExpr expr) {
   assign(expr);
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
   name_ = std::move(expr.getName());
   offset_ = std::move(expr.getOffset());
   argumentMap_ = std::move(expr.getArgumentMap());
@@ -398,7 +405,8 @@ bool FieldAccessExpr::equals(const Expr* other) const {
   const FieldAccessExpr* otherPtr = dyn_cast<FieldAccessExpr>(other);
   return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
          offset_ == otherPtr->offset_ && argumentMap_ == otherPtr->argumentMap_ &&
-         argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_;
+         argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_ &&
+         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -411,10 +419,13 @@ LiteralAccessExpr::LiteralAccessExpr(const std::string& value, BuiltinTypeID bui
 
 LiteralAccessExpr::LiteralAccessExpr(const LiteralAccessExpr& expr)
     : Expr(EK_LiteralAccessExpr, expr.getSourceLocation()), value_(expr.getValue()),
-      builtinType_(expr.getBuiltinType()) {}
+      builtinType_(expr.getBuiltinType()) {
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
+}
 
 LiteralAccessExpr& LiteralAccessExpr::operator=(LiteralAccessExpr expr) {
   assign(expr);
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
   value_ = std::move(expr.getValue());
   builtinType_ = expr.getBuiltinType();
   return *this;
@@ -429,18 +440,22 @@ std::shared_ptr<Expr> LiteralAccessExpr::clone() const {
 bool LiteralAccessExpr::equals(const Expr* other) const {
   const LiteralAccessExpr* otherPtr = dyn_cast<LiteralAccessExpr>(other);
   return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
-         builtinType_ == otherPtr->builtinType_;
+         builtinType_ == otherPtr->builtinType_ &&
+         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& rhs,
                                                      std::shared_ptr<Expr> const& init,
+                                                     ast::Expr::LocationType rhs_location,
                                                      SourceLocation loc)
-    : Expr(EK_ReductionOverNeighborExpr, loc), op_(op), operands_{rhs, init} {}
+    : Expr(EK_ReductionOverNeighborExpr, loc), op_(op),
+      rhs_location_(rhs_location), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
-    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()),
-      op_(expr.op_), operands_{expr.getRhs()->clone(), expr.getInit()->clone()} {}
+    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
+      rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
+                                                      expr.getInit()->clone()} {}
 
 ReductionOverNeighborExpr& ReductionOverNeighborExpr::
 operator=(ReductionOverNeighborExpr const& expr) {
@@ -450,6 +465,8 @@ operator=(ReductionOverNeighborExpr const& expr) {
   operands_[Init] = expr.getInit();
   return *this;
 }
+
+ast::Expr::LocationType ReductionOverNeighborExpr::getRhsLocation() const { return rhs_location_; }
 
 std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
   return std::make_shared<ReductionOverNeighborExpr>(*this);

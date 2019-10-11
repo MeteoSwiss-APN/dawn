@@ -48,6 +48,9 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
+  // Location type of the stage (which loop it represents)
+  ast::Expr::LocationType type_ = ast::Expr::LocationType::Cells;
+
   struct DerivedInfo {
 
     DerivedInfo() : extents_{0, 0, 0, 0, 0, 0} {}
@@ -180,10 +183,10 @@ public:
   /// The global variables are computed during `Stage::update`.
   const std::unordered_set<int>& getAllGlobalVariables() const;
 
-  /// @brief Add the given Do-Method to the list of Do-Methods of this stage
+  /// @brief Moves the given Do-Method to the list of Do-Methods of this stage
   ///
   /// Calls `update()` in the end.
-  void addDoMethod(const DoMethodSmartPtr_t& doMethod);
+  void addDoMethod(DoMethodSmartPtr_t&& doMethod);
 
   /// @brief Append the `from` DoMethod to the existing `to` DoMethod of this stage and use
   /// `dependencyGraph` as the new DependencyGraphAccesses of this new Do-Method
@@ -219,6 +222,12 @@ public:
   /// @brief get the flag that specifies that the stage will require an explicit sync before
   /// execution
   bool getRequiresSync() const;
+
+  /// @brief setter for the location type
+  void setLocationType(ast::Expr::LocationType type);
+
+  /// @brief returns the location type of a stage
+  ast::Expr::LocationType getLocationType() const;
 };
 
 } // namespace iir

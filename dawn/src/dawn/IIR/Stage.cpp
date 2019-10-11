@@ -63,6 +63,7 @@ std::unique_ptr<Stage> Stage::clone() const {
   auto cloneStage = std::make_unique<Stage>(metaData_, StageID_);
 
   cloneStage->derivedInfo_ = derivedInfo_;
+  cloneStage->type_ = type_;
 
   cloneStage->cloneChildrenFrom(*this);
   return cloneStage;
@@ -209,7 +210,8 @@ void Stage::updateGlobalVariablesInfo() {
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      const auto& access = statementAccessesPair->getAccesses();
+      const auto& access =
+          statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
@@ -257,14 +259,14 @@ const std::unordered_set<int>& Stage::getAllGlobalVariables() const {
   return derivedInfo_.allGlobalVariables_;
 }
 
-void Stage::addDoMethod(const DoMethodSmartPtr_t& doMethod) {
+void Stage::addDoMethod(DoMethodSmartPtr_t&& doMethod) {
   DAWN_ASSERT_MSG(std::find_if(childrenBegin(), childrenEnd(),
                                [&](const DoMethodSmartPtr_t& doMethodPtr) {
                                  return doMethodPtr->getInterval() == doMethod->getInterval();
                                }) == childrenEnd(),
                   "Do-Method with given interval already exists!");
 
-  insertChild(doMethod->clone());
+  insertChild(std::move(doMethod));
 }
 
 void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
@@ -337,6 +339,10 @@ bool Stage::isEmptyOrNullStmt() const {
   }
   return true;
 }
+
+void Stage::setLocationType(ast::Expr::LocationType type) { type_ = type; }
+
+ast::Expr::LocationType Stage::getLocationType() const { return type_; }
 
 } // namespace iir
 } // namespace dawn

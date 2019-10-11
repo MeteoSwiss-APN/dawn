@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -155,9 +156,11 @@ public:
 
       // Register the variable
       metadata_.addAccessIDNamePair(AccessID, returnVarName);
-      metadata_.addStmtToAccessID(newStmt, AccessID);
+      newStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(AccessID);
       // TODO recheck this
-      metadata_.insertExprToAccessID(newExpr_, AccessID);
+      std::dynamic_pointer_cast<iir::VarAccessExpr>(newExpr_)
+          ->getData<iir::IIRAccessExprData>()
+          .AccessID = std::make_optional(AccessID);
 
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
@@ -173,7 +176,9 @@ public:
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary, AccessIDOfCaller_,
                                    returnFieldName);
-      metadata_.insertExprToAccessID(newExpr_, AccessIDOfCaller_);
+      std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
+          ->getData<iir::IIRAccessExprData>()
+          .AccessID = std::make_optional(AccessIDOfCaller_);
     }
 
     // Resolve the actual expression of the return statement
@@ -192,10 +197,9 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
+    int AccessID = iir::getAccessID(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     metadata_.addAccessIDNamePair(AccessID, name);
-    metadata_.addStmtToAccessID(stmt, AccessID);
 
     // Push back the statement and move on
     appendNewStatementAccessesPair(stmt);
@@ -317,24 +321,17 @@ public:
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
 
-    std::string callerName = metadata_.getFieldNameFromAccessID(
-        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
     expr->setName(callerName);
 
-    metadata_.insertExprToAccessID(expr,
-                                   curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     if(expr->isArrayAccess())
       expr->getIndex()->accept(*this);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
 
-    std::string callerName = metadata_.getFieldNameFromAccessID(
-        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
     expr->setName(callerName);
-
-    metadata_.insertExprToAccessID(expr,
-                                   curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
@@ -345,9 +342,8 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
-    int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
+    int AccessID = iir::getAccessID(expr);
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    metadata_.insertExprToAccessID(expr, AccessID);
   }
 };
 
@@ -357,7 +353,7 @@ class DetectInlineCandiates : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
-  std::unique_ptr<iir::StatementAccessesPair> oldStmtAccessesPair_;
+  std::unique_ptr<iir::StatementAccessesPair>* oldStmtAccessesPair_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
   std::unordered_map<std::shared_ptr<iir::Expr>, std::shared_ptr<iir::Expr>>
@@ -388,14 +384,14 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(const std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
+  void processStatment(std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
     // Reset the state
     inlineCandiatesFound_ = false;
-    oldStmtAccessesPair_ = stmtAccesesPair->clone();
+    oldStmtAccessesPair_ = &stmtAccesesPair;
     newStmtAccessesPairs_.clear();
 
     // Detect the stencil functions suitable for inlining
-    oldStmtAccessesPair_->getStatement()->accept(*this);
+    (*oldStmtAccessesPair_)->getStatement()->accept(*this);
   }
 
   /// @brief Atleast one inline candiate was found and the given `stmt` should be replaced with
@@ -407,7 +403,7 @@ public:
   /// Note that the accesses are not computed!
   std::vector<std::unique_ptr<iir::StatementAccessesPair>>& getNewStatementAccessesPairs() {
     if(!replacmentOfOldStmtMap_.empty()) {
-      newStmtAccessesPairs_.push_back(oldStmtAccessesPair_->clone());
+      newStmtAccessesPairs_.push_back(std::move(*oldStmtAccessesPair_));
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(
@@ -443,7 +439,7 @@ public:
     argListScope_.pop();
 
     auto inlineResult =
-        tryInlineStencilFunction(strategy_, func, oldStmtAccessesPair_, newStmtAccessesPairs_,
+        tryInlineStencilFunction(strategy_, func, *oldStmtAccessesPair_, newStmtAccessesPairs_,
                                  AccessIDOfCaller, instantiation_);
 
     inlineCandiatesFound_ |= inlineResult.first;

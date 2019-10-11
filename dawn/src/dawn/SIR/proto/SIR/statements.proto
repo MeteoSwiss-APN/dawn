@@ -19,6 +19,8 @@
 syntax = "proto3";
 package dawn.proto.statements;
 
+import "google/protobuf/wrappers.proto";
+
 // @brief Source information
 //
 // `(-1,-1)` indicates an invalid location.
@@ -239,6 +241,13 @@ message ReturnStmt {
   int32 ID = 3;           // ID of the Stmt
 }
 
+// @brief Data of a VarDeclStmt
+//
+// @ingroup sir_proto
+message VarDeclStmtData {
+  google.protobuf.Int32Value accessID = 1;    // ID of the variable declared in the statement
+}
+
 // @brief Declaration of a variable
 //
 // Synopsis
@@ -274,7 +283,8 @@ message VarDeclStmt {
   repeated Expr init_list = 5;
 
   SourceLocation loc = 6; // Source location
-  int32 ID = 7;           // ID of the Stmt
+  VarDeclStmtData data = 7; // Data of this statement
+  int32 ID = 8;           // ID of the Stmt
 }
 
 // @brief Declaration of a vertical region
@@ -454,6 +464,13 @@ message StencilFunArgExpr {
   int32 ID = 5;
 }
 
+// @brief Data of an access expression
+//
+// @ingroup sir_proto
+message AccessExprData {
+  google.protobuf.Int32Value accessID = 1; // Access ID of variable/literal/field accessed
+}
+
 // @brief Access to a variable
 //
 // @ingroup sir_proto
@@ -462,7 +479,8 @@ message VarAccessExpr {
   Expr index = 2;         // Is it an array access (i.e var[2])?
   bool is_external = 3;   // Is this an access to a external variable (e.g a global)?
   SourceLocation loc = 4; // Source location
-  int32 ID = 5;           // ID of the Expr
+  AccessExprData data = 5; // Access data
+  int32 ID = 6;           // ID of the Expr
 }
 
 // @brief Access to a field
@@ -515,8 +533,11 @@ message FieldAccessExpr {
   // Source location
   SourceLocation loc = 6;
 
+  // Access data
+  AccessExprData data = 7;
+
   // ID of the Expr
-  int32 ID = 7;
+  int32 ID = 8;
 }
 
 // @brief Access of a literal
@@ -526,7 +547,8 @@ message LiteralAccessExpr {
   string value = 1;       // Value of the literal (e.g "1.24324")
   BuiltinType type = 2;   // Type of the literal
   SourceLocation loc = 3; // Source location
-  int32 ID = 4;           // ID of the Expr
+  AccessExprData data = 4; // Access data
+  int32 ID = 5;           // ID of the Expr
 }
 
 // @brief Reduction operation over neighbors

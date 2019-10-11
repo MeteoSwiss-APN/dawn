@@ -36,7 +36,7 @@ std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
-  cloneMS->setDependencyGraph(derivedInfo_.dependencyGraph_);
+  cloneMS->derivedInfo_ = derivedInfo_.clone();
 
   cloneMS->cloneChildrenFrom(*this);
   return cloneMS;
@@ -54,7 +54,7 @@ std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const
   std::optional<Extents> extents;
 
   for(auto& stmtAccess : getChildren()) {
-    auto extents_ = stmtAccess->computeMaximumExtents(accessID);
+    auto extents_ = iir::computeMaximumExtents(*stmtAccess->getStatement(), accessID);
     if(!extents_)
       continue;
 
@@ -85,6 +85,13 @@ void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
 const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return derivedInfo_.dependencyGraph_;
+}
+
+DoMethod::DerivedInfo DoMethod::DerivedInfo::clone() const {
+  DerivedInfo clone;
+  clone.fields_ = fields_;
+  clone.dependencyGraph_ = dependencyGraph_ ? dependencyGraph_->clone() : nullptr;
+  return clone;
 }
 
 void DoMethod::DerivedInfo::clear() { fields_.clear(); }
@@ -130,7 +137,8 @@ void DoMethod::updateLevel() {
   std::unordered_map<int, Field> outputFields;
 
   for(const auto& statementAccessesPair : children_) {
-    const auto& access = statementAccessesPair->getAccesses();
+    const auto& access =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -141,8 +149,15 @@ void DoMethod::updateLevel() {
       if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
         continue;
       }
-      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     extents, getInterval());
+
+      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
+        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                       extents, getInterval(),
+                                       metaData_.getLocationTypeFromAccessID(AccessID));
+      } else {
+        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                       extents, getInterval());
+      }
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -154,8 +169,14 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
-                                    getInterval());
+      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
+        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                      extents, getInterval(),
+                                      metaData_.getLocationTypeFromAccessID(AccessID));
+      } else {
+        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                      extents, getInterval());
+      }
     }
   }
 
@@ -172,7 +193,8 @@ void DoMethod::updateLevel() {
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
   for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
-    const auto& access = statementAccessesPair->getAccesses();
+    const auto& access =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {

@@ -17,6 +17,6 @@ if [[ "${CLANG_FORMAT_VERSION}" != "6.0" ]]; then
 fi
 
 file_list=$(find . -regextype posix-egrep -regex ".*\.(hpp|cpp|h|cu)$")
-for file in $(grep -v ${arg_list[@]} <<< $file_list); do
+for file in $(echo "$file_list" | grep -v ${arg_list[@]}); do
     $CLANG_FORMAT -style=file -i $file
 done

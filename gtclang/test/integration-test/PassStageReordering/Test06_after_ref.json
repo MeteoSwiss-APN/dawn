@@ -220,13 +220,53 @@
               }
             }
           },
-          "ID": 44,
+          "ID": 56,
           "Loop": "parallel",
           "Stages": [
             {
               "DoMethods": [
                 {
-                  "Fields": null,
+                  "Fields": {
+                    "field_a0": {
+                      "accessID": 23,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (-1, 1)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start+1 : Start+1 }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (1, 1)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_a1": {
+                      "accessID": 24,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start+1 : Start+1 }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    },
+                    "field_b1": {
+                      "accessID": 27,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start+1 : Start+1 }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    }
+                  },
                   "ID": 0,
                   "Stmts": [
                     {
@@ -369,13 +409,66 @@
               }
             }
           },
-          "ID": 45,
+          "ID": 57,
           "Loop": "parallel",
           "Stages": [
             {
               "DoMethods": [
                 {
-                  "Fields": null,
+                  "Fields": {
+                    "field_a1": {
+                      "accessID": 24,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (1, 1)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start+3 : End-1 }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (1, 1)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_a2": {
+                      "accessID": 25,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start+3 : End-1 }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    },
+                    "field_b1": {
+                      "accessID": 27,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (-1, -1)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start+3 : End-1 }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (-1, -1)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_b2": {
+                      "accessID": 28,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start+3 : End-1 }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    }
+                  },
                   "ID": 1,
                   "Stmts": [
                     {

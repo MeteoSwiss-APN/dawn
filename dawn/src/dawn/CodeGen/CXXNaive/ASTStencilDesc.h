@@ -63,7 +63,7 @@ public:
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
   /// @}
 
-  std::string getName(const std::shared_ptr<iir::Stmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const override;
   std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
 };
 

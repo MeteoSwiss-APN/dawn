@@ -228,9 +228,10 @@ bool PassSetBoundaryCondition::run(
 
     for(const auto& stmtAccess : iterateIIROver<iir::StatementAccessesPair>(stencil)) {
 
-      iir::Accesses& acesses = *(stmtAccess->getAccesses());
-      const auto& allReadAccesses = acesses.getReadAccesses();
-      const auto& allWriteAccesses = acesses.getWriteAccesses();
+      const iir::Accesses& accesses =
+          *(stmtAccess->getStatement()->getData<iir::IIRStmtData>().CallerAccesses);
+      const auto& allReadAccesses = accesses.getReadAccesses();
+      const auto& allWriteAccesses = accesses.getWriteAccesses();
 
       // ReadAccesses can trigger Halo-Updates and Boundary conditions if the following
       // criteria are fullfilled:

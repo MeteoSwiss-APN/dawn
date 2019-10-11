@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -70,19 +71,17 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
     auto fieldAccessExpr = std::make_shared<iir::FieldAccessExpr>(fieldname);
-    instantiation->getMetaData().insertExprToAccessID(fieldAccessExpr, accessID);
+    fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(accessID);
     auto assignmentExpr =
         std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
     auto exprStmt = iir::makeExprStmt(assignmentExpr);
 
     // Replace the statement
-    exprStmt->getData<iir::IIRStmtData>().StackTrace =
-        oldStatement->getData<iir::IIRStmtData>().StackTrace;
+    exprStmt->getData<iir::IIRStmtData>() = std::move(oldStatement->getData<iir::IIRStmtData>());
     statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(exprStmt);
 
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
-    instantiation->getMetaData().eraseStmtToAccessID(oldStatement);
   }
   // Register the field
   instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
@@ -145,6 +144,10 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   // Replace the statement
   varDeclStmt->getData<iir::IIRStmtData>().StackTrace =
       oldStatement->getData<iir::IIRStmtData>().StackTrace;
+  varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
+      oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
+  varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
+      oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(varDeclStmt);
 
   // Remove the field
@@ -152,7 +155,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
 
   // Register the variable
   instantiation->getMetaData().addAccessIDNamePair(AccessID, varname);
-  instantiation->getMetaData().addStmtToAccessID(varDeclStmt, AccessID);
+  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
