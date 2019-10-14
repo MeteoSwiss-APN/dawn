@@ -159,8 +159,8 @@ protected:
   sir::Interval interval_; // interval where the function declaration will be defined
   std::shared_ptr<sir::StencilFunction>
       tmpFunction_;            // sir function with the declaration of the tmp computation
-  std::vector<int> accessIDs_; // accessIDs of the accesses that form the tmp = ... expression,
-                               // that will become arguments of the stencil fn
+  std::vector<int> accessIDs_; // accessIDs of the accesses that form the tmp = ... expression, that
+                               // will become arguments of the stencil fn
 
   std::shared_ptr<iir::FieldAccessExpr> tmpFieldAccessExpr_ =
       nullptr; // the field access expr of the temporary that is captured and being replaced by
@@ -187,10 +187,9 @@ public:
 
   bool foundTemporaryToReplace() { return (tmpFunction_ != nullptr); }
 
-  /// @brief pre visit the node. The assignment expr visit will only continue processing the
-  /// visitor for the right hand side of the =. Therefore all accesses capture here correspond to
-  /// arguments for computing the tmp. They are captured as arguments of the stencil function
-  /// being created
+  /// @brief pre visit the node. The assignment expr visit will only continue processing the visitor
+  /// for the right hand side of the =. Therefore all accesses capture here correspond to arguments
+  /// for computing the tmp. They are captured as arguments of the stencil function being created
   virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
     for(int idx : expr->getArgumentMap()) {
@@ -282,8 +281,8 @@ public:
 /// function instantiation is then created and the field access expression replaced by a stencil
 /// function call
 class TmpReplacement : public iir::ASTVisitorPostOrder, public NonCopyable {
-  // struct to store the stencil function instantiation of each parameter of a stencil function
-  // that is at the same time instantiated as a stencil function
+  // struct to store the stencil function instantiation of each parameter of a stencil function that
+  // is at the same time instantiated as a stencil function
   struct NestedStencilFunctionArgs {
     int currentPos_ = 0;
     std::unordered_map<int, std::shared_ptr<iir::StencilFunctionInstantiation>> stencilFun_;
@@ -366,8 +365,8 @@ public:
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
   /// recompute its <statement,accesses> pairs
   virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
-    // we would like to identify fields that are lhs of an assignment expr, so that we skip them
-    // and dont replace them
+    // we would like to identify fields that are lhs of an assignment expr, so that we skip them and
+    // dont replace them
     if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
       skip_ = expr->getLeft();
     }
@@ -419,8 +418,8 @@ public:
     // insert the sir::stencilFunction into the StencilInstantiation
     stencilInstantiation_->getIIR()->insertStencilFunction(sirStencilFunctionInstance);
 
-    // we clone the stencil function instantiation of the candidate so that each instance of the
-    // st function has its own private copy of the expressions (i.e. ast)
+    // we clone the stencil function instantiation of the candidate so that each instance of the st
+    // function has its own private copy of the expressions (i.e. ast)
     std::shared_ptr<iir::StencilFunctionInstantiation> cloneStencilFun =
         metadata_.cloneStencilFunctionCandidate(stencilFun, fnClone);
 
