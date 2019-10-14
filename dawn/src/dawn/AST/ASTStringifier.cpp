@@ -235,7 +235,7 @@ public:
                                       offset.verticalOffset()};
 
     if(!expr->hasArguments()) {
-      ss_ << expr->getName() << "(" << offset << ")";
+      ss_ << expr->getName() << "[" << ast::toString(offset, ", ") << "]";
     } else {
       ss_ << expr->getName() << "[";
 
