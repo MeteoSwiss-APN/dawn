@@ -140,12 +140,17 @@ std::string toString(Offsets const& offset, std::string const& sep, F&& offset_t
   auto const& hoffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
   std::string s;
-  if(std::string ret = offset_to_string("i", hoffset.offsetI()); ret != "")
-    s += ret + sep;
-  if(std::string ret = offset_to_string("j", hoffset.offsetJ()); ret != "")
-    s += ret + sep;
+  std::string csep = "";
+  if(std::string ret = offset_to_string("i", hoffset.offsetI()); ret != "") {
+    s += csep + ret;
+    csep = sep;
+  }
+  if(std::string ret = offset_to_string("j", hoffset.offsetJ()); ret != "") {
+    s += csep + ret;
+    csep = sep;
+  }
   if(std::string ret = offset_to_string("k", voffset); ret != "")
-    s += ret + sep;
+    s += csep + ret;
   return s;
 }
 std::string toString(Offsets const& offset, std::string const& sep = ",");
