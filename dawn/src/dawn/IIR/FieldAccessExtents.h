@@ -31,7 +31,7 @@ public:
   FieldAccessExtents(std::optional<Extents> const& readExtents,
                      std::optional<Extents> const& writeExtents)
       : readAccessExtents_(readExtents),
-        writeAccessExtents_(writeExtents), totalExtents_{0, 0, 0, 0, 0, 0} {
+        writeAccessExtents_(writeExtents), totalExtents_{ast::cartesian, 0, 0, 0, 0, 0, 0} {
     updateTotalExtents();
   }
 
