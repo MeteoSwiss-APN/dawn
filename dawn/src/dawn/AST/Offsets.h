@@ -28,9 +28,7 @@ static constexpr cartesian_ cartesian;
 class HorizontalOffsetImpl {
 public:
   virtual ~HorizontalOffsetImpl() = default;
-  std::unique_ptr<HorizontalOffsetImpl> clone() const {
-    return std::unique_ptr<HorizontalOffsetImpl>(cloneImpl());
-  }
+  HorizontalOffsetImpl* clone() const { return cloneImpl(); }
 
   bool operator==(HorizontalOffsetImpl const& other) const { return equalsImpl(other); }
 
@@ -48,7 +46,7 @@ protected:
 class CartesianOffset : public HorizontalOffsetImpl {
 public:
   CartesianOffset(int iOffset, int jOffset) : horizontalOffset_({iOffset, jOffset}) {}
-  CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
+  explicit CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
   CartesianOffset() = default;
 
   int offsetI() const { return horizontalOffset_[0]; }
@@ -70,12 +68,12 @@ private:
 
 class HorizontalOffset {
 public:
-  HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
+  explicit HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
   HorizontalOffset(cartesian_, int iOffset, int jOffset)
       : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
-  HorizontalOffset(HorizontalOffset const& other) : impl_(other.impl_->clone()) {}
+  HorizontalOffset(HorizontalOffset const& other) { *this = other; }
   HorizontalOffset& operator=(HorizontalOffset const& other) {
-    impl_ = other.impl_->clone();
+    impl_ = std::unique_ptr<HorizontalOffsetImpl>(other.impl_->clone());
     return *this;
   }
   HorizontalOffset(HorizontalOffset&& other) = default;
@@ -108,7 +106,7 @@ public:
       : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
       : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
-  Offsets(cartesian_) : horizontalOffset_(cartesian) {}
+  explicit Offsets(cartesian_) : horizontalOffset_(cartesian) {}
 
   int verticalOffset() const { return verticalOffset_; }
   HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
