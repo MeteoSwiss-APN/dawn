@@ -58,8 +58,8 @@ protected:
   HorizontalOffsetImpl* cloneImpl() const override {
     return new StructuredOffset{horizontalOffset_};
   }
-  bool equalsImpl(HorizontalOffsetImpl const& other) const override ;
-  StructuredOffset& addImpl(HorizontalOffsetImpl const& other) override ;
+  bool equalsImpl(HorizontalOffsetImpl const& other) const override;
+  StructuredOffset& addImpl(HorizontalOffsetImpl const& other) override;
   bool isZeroImpl() const override {
     return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
   }
@@ -134,13 +134,18 @@ template <typename F>
 std::string toString(Offsets const& offset, std::string const& sep, F&& f) {
   auto const& hoffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
+  std::string csep = "";
   std::string s;
-  if(auto ret = f("i", hoffset.offsetI()); ret != "")
-    s += ret + sep;
-  if(auto ret = f("j", hoffset.offsetJ()); ret != "")
-    s += ret + sep;
+  if(auto ret = f("i", hoffset.offsetI()); ret != "") {
+    s += csep + ret;
+    csep = sep;
+  }
+  if(auto ret = f("j", hoffset.offsetJ()); ret != "") {
+    s += csep + ret;
+    csep = sep;
+  }
   if(auto ret = f("k", voffset); ret != "")
-    s += ret + sep;
+    s += csep + ret;
   return s;
 }
 std::string toString(Offsets const& offset, std::string const& sep = ",");
