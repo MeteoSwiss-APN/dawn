@@ -58,16 +58,8 @@ protected:
   HorizontalOffsetImpl* cloneImpl() const override {
     return new StructuredOffset{horizontalOffset_};
   }
-  bool equalsImpl(HorizontalOffsetImpl const& other) const override {
-    auto const& so_other = dynamic_cast<StructuredOffset const&>(other);
-    return so_other.horizontalOffset_ == horizontalOffset_;
-  }
-  StructuredOffset& addImpl(HorizontalOffsetImpl const& other) override {
-    auto const& so_other = dynamic_cast<StructuredOffset const&>(other);
-    horizontalOffset_[0] += so_other.horizontalOffset_[0];
-    horizontalOffset_[1] += so_other.horizontalOffset_[1];
-    return *this;
-  }
+  bool equalsImpl(HorizontalOffsetImpl const& other) const override ;
+  StructuredOffset& addImpl(HorizontalOffsetImpl const& other) override ;
   bool isZeroImpl() const override {
     return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
   }
