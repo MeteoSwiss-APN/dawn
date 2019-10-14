@@ -675,6 +675,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     const auto& exprProto = expressionProto.literal_access_expr();
     auto expr = std::make_shared<LiteralAccessExpr>(
         exprProto.value(), makeBuiltinTypeID(exprProto.type()), makeLocation(exprProto));
+    if(dataType == StmtData::IIR_DATA_TYPE)
+      fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());
     return expr;
   }
