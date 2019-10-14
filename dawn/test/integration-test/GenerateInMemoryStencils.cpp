@@ -15,6 +15,7 @@
 #include "GenerateInMemoryStencils.h"
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
@@ -84,17 +85,20 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
                                                    sirOutField->Name, sirOutField->fieldDimensions);
 
+  lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
+  rhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(in_fieldID);
+
   auto expr = std::make_shared<ast::AssignmentExpr>(lhs, rhs);
   expr->setID(target->nextUID());
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(target->nextUID());
   auto insertee = std::make_unique<iir::StatementAccessesPair>(stmt);
 
-  // Add the accesses to the Pair:
-  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-  callerAccesses->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  insertee->setCallerAccesses(callerAccesses);
+  // Add the accesses:
+  iir::Accesses callerAccesses;
+  callerAccesses.addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  callerAccesses.addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
   // And add the StmtAccesspair to it
   IIRDoMethod->insertChild(std::move(insertee));
   IIRDoMethod->updateLevel();
@@ -112,8 +116,6 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
 
   ///////////////// Generation of the Metadata
 
-  target->getMetaData().insertExprToAccessID(lhs, out_fieldID);
-  target->getMetaData().insertExprToAccessID(rhs, in_fieldID);
   target->getMetaData().setStencilname("generated");
 
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
@@ -226,6 +228,18 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   int outFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
                                                   sirOutField->Name, sirOutField->fieldDimensions);
 
+  lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+  rhsInT2->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+  rhsInT3->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+  rhsInT4->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+
+  lhsOut->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(outFieldID);
+  rhsTmpT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsTmpT2->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsTmpT3->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsTmpT4->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+
   auto plusIn1 = std::make_shared<ast::BinaryOperator>(rhsInT1, std::string("+"), rhsInT2);
   auto plusIn2 = std::make_shared<ast::BinaryOperator>(rhsInT3, std::string("+"), rhsInT4);
   auto plusIn3 = std::make_shared<ast::BinaryOperator>(plusIn1, std::string("+"), plusIn2);
@@ -241,11 +255,13 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   stmt1->setID(target->nextUID());
   auto insertee1 = std::make_unique<iir::StatementAccessesPair>(stmt1);
 
-  // Add the accesses to the Pair:
-  std::shared_ptr<iir::Accesses> callerAccesses1 = std::make_shared<iir::Accesses>();
-  callerAccesses1->addWriteExtent(tmpFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses1->addReadExtent(inFieldID, iir::Extents{-2, 2, -2, 2, 0, 0});
-  insertee1->setCallerAccesses(callerAccesses1);
+  // Add the accesses:
+  iir::Accesses callerAccesses1;
+  callerAccesses1.addWriteExtent(tmpFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  callerAccesses1.addReadExtent(inFieldID, iir::Extents{-2, 2, -2, 2, 0, 0});
+  stmt1->getData<iir::IIRStmtData>().CallerAccesses =
+      std::make_optional(std::move(callerAccesses1));
+
   // And add the StmtAccesspair to it
   IIRDoMethod1->insertChild(std::move(insertee1));
   IIRDoMethod1->updateLevel();
@@ -266,10 +282,11 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto insertee2 = std::make_unique<iir::StatementAccessesPair>(stmt2);
 
   // Add the accesses to the Pair:
-  std::shared_ptr<iir::Accesses> callerAccesses2 = std::make_shared<iir::Accesses>();
-  callerAccesses2->addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses2->addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});
-  insertee2->setCallerAccesses(callerAccesses2);
+  iir::Accesses callerAccesses2;
+  callerAccesses2.addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  callerAccesses2.addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});
+  stmt2->getData<iir::IIRStmtData>().CallerAccesses =
+      std::make_optional(std::move(callerAccesses2));
   // And add the StmtAccesspair to it
   IIRDoMethod2->insertChild(std::move(insertee2));
   IIRDoMethod2->updateLevel();
@@ -287,18 +304,6 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallDeclStmt);
 
   ///////////////// Generation of the Metadata
-
-  target->getMetaData().insertExprToAccessID(lhsTmp, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT1, inFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT2, inFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT3, inFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT4, inFieldID);
-
-  target->getMetaData().insertExprToAccessID(lhsOut, outFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT1, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT2, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT3, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT4, tmpFieldID);
 
   target->getMetaData().setStencilname("generated");
 

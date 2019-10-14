@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/AccessToNameMapper.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 
@@ -40,19 +41,15 @@ void AccessToNameMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& e
 }
 
 void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::Expr>& expr) {
-  int accessID = (curFunctionInstantiation_.empty())
-                     ? metaData_.getAccessIDFromExpr(expr)
-                     : curFunctionInstantiation_.top()->getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessID(expr);
   std::string name = (curFunctionInstantiation_.empty())
                          ? metaData_.getNameFromAccessID(accessID)
                          : curFunctionInstantiation_.top()->getNameFromAccessID(accessID);
 
   accessIDToName_.emplace(accessID, name);
 }
-void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::Stmt>& stmt) {
-  int accessID = (curFunctionInstantiation_.empty())
-                     ? metaData_.getAccessIDFromStmt(stmt)
-                     : curFunctionInstantiation_.top()->getAccessIDFromStmt(stmt);
+void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+  int accessID = iir::getAccessID(stmt);
   std::string name = (curFunctionInstantiation_.empty())
                          ? metaData_.getNameFromAccessID(accessID)
                          : curFunctionInstantiation_.top()->getNameFromAccessID(accessID);

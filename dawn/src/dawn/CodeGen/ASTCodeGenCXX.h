@@ -68,7 +68,7 @@ public:
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   /// @{
   virtual std::string getName(const std::shared_ptr<iir::Expr>& expr) const = 0;
-  virtual std::string getName(const std::shared_ptr<iir::Stmt>& stmt) const = 0;
+  virtual std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const = 0;
   /// @}
 
   /// @brief Convert builtin type to the corresponding C++ type

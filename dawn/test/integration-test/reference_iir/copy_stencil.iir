@@ -4,11 +4,6 @@
    "9": "in_field",
    "10": "out_field"
   },
-  "exprIDToAccessID": {
-   "6": 10,
-   "8": 9
-  },
-  "stmtIDToAccessID": {},
   "accessIDToType": {
    "9": 6,
    "10": 6
@@ -106,6 +101,9 @@
                    "Line": -1,
                    "Column": -1
                   },
+                  "data": {
+                   "accessID": 10
+                  },
                   "ID": 6
                  }
                 },
@@ -132,6 +130,9 @@
                   "loc": {
                    "Line": -1,
                    "Column": -1
+                  },
+                  "data": {
+                   "accessID": 9
                   },
                   "ID": 8
                  }

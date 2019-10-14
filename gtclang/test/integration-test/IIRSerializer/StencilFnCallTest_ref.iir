@@ -1,31 +1,22 @@
 {
  "metadata": {
   "accessIDToName": {
-   "29": "__local_fn_29",
-   "15": "a",
-   "16": "b"
-  },
-  "exprIDToAccessID": {
-   "30": 29,
-   "8": 15,
-   "9": 16,
-   "27": 15
-  },
-  "stmtIDToAccessID": {
-   "31": 29
+   "16": "a",
+   "17": "b",
+   "34": "__local_fn_34"
   },
   "accessIDToType": {
-   "15": 6,
-   "16": 6
+   "16": 6,
+   "17": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   15,
-   16
+   16,
+   17
   ],
   "APIFieldIDs": [
-   15,
-   16
+   16,
+   17
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -39,28 +30,28 @@
     "int2": 1,
     "int3": 1
    },
-   "15": {
+   "17": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    }
   },
   "idToStencilCall": {
-   "17": {
+   "18": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_17",
+      "callee": "__code_gen_18",
       "arguments": []
      },
      "loc": {
       "Line": -1,
       "Column": -1
      },
-     "ID": 18
+     "ID": 19
     }
    }
   },
@@ -93,7 +84,7 @@
                "is_const": true,
                "is_volatile": false
               },
-              "name": "__local_fn_29",
+              "name": "__local_fn_34",
               "dimension": 0,
               "op": "=",
               "init_list": [
@@ -120,7 +111,10 @@
                   "Line": 26,
                   "Column": 25
                  },
-                 "ID": 27
+                 "data": {
+                  "accessID": 16
+                 },
+                 "ID": 32
                 }
                }
               ],
@@ -128,12 +122,15 @@
                "Line": -1,
                "Column": -1
               },
-              "ID": 31
+              "data": {
+               "accessID": 34
+              },
+              "ID": 36
              }
             },
             "accesses": {
              "writeAccess": {
-              "29": {
+              "34": {
                "extents": [
                 {
                  "minus": 0,
@@ -151,7 +148,7 @@
               }
              },
              "readAccess": {
-              "15": {
+              "16": {
                "extents": [
                 {
                  "minus": 0,
@@ -198,38 +195,44 @@
                    "Line": 32,
                    "Column": 59
                   },
-                  "ID": 9
+                  "data": {
+                   "accessID": 17
+                  },
+                  "ID": 22
                  }
                 },
                 "op": "=",
                 "right": {
                  "var_access_expr": {
-                  "name": "__local_fn_29",
+                  "name": "__local_fn_34",
                   "is_external": false,
                   "loc": {
                    "Line": -1,
                    "Column": -1
                   },
-                  "ID": 30
+                  "data": {
+                   "accessID": 34
+                  },
+                  "ID": 35
                  }
                 },
                 "loc": {
                  "Line": 32,
                  "Column": 59
                 },
-                "ID": 10
+                "ID": 23
                }
               },
               "loc": {
                "Line": 32,
                "Column": 59
               },
-              "ID": 19
+              "ID": 24
              }
             },
             "accesses": {
              "writeAccess": {
-              "16": {
+              "17": {
                "extents": [
                 {
                  "minus": 0,
@@ -247,7 +250,7 @@
               }
              },
              "readAccess": {
-              "29": {
+              "34": {
                "extents": [
                 {
                  "minus": 0,
@@ -276,15 +279,15 @@
           }
          }
         ],
-        "stageID": 24
+        "stageID": 29
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 28,
+      "multiStageID": 33,
       "Caches": {}
      }
     ],
-    "stencilID": 17,
+    "stencilID": 18,
     "attr": {
      "attributes": []
     }
@@ -298,14 +301,14 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_17",
+      "callee": "__code_gen_18",
       "arguments": []
      },
      "loc": {
       "Line": -1,
       "Column": -1
      },
-     "ID": 18
+     "ID": 19
     }
    }
   ],

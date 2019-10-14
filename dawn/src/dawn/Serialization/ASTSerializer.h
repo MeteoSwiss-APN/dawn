@@ -45,11 +45,14 @@ void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* fiel
 class ProtoStmtBuilder : public ast::ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;
+  const dawn::ast::StmtData::DataType dataType_;
 
 public:
-  ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto);
+  ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto,
+                   dawn::ast::StmtData::DataType dataType);
 
-  ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto);
+  ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto,
+                   dawn::ast::StmtData::DataType dataType);
 
   dawn::proto::statements::Stmt* getCurrentStmtProto();
 
@@ -115,7 +118,8 @@ std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetP
 
 std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& intervalProto);
 
-std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto);
+std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto,
+                                    ast::StmtData::DataType dataType);
 
 std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto,
                                     ast::StmtData::DataType dataType);

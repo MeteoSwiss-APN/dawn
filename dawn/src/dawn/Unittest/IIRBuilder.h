@@ -16,6 +16,7 @@
 #define DAWN_IIR_IIRBUILDER_H
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
@@ -55,6 +56,8 @@ class IIRBuilder {
   struct Field {
     int id;
     std::string name;
+    bool unstructured;
+    ast::Expr::LocationType location;
   };
   struct LocalVar {
     int id;
@@ -68,10 +71,12 @@ class IIRBuilder {
 
 public:
   Field field(std::string const& name, fieldType ft = fieldType::ijk);
+  Field field(std::string const& name, ast::Expr::LocationType location);
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                                    std::shared_ptr<iir::Expr>&& init);
+                                                    std::shared_ptr<iir::Expr>&& init,
+                                                    ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, op operation);
@@ -95,7 +100,7 @@ public:
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
     expr->setID(-si_->nextUID());
-    si_->getMetaData().insertExprToAccessID(expr, acc);
+    expr->template getData<IIRAccessExprData>().AccessID = std::make_optional(acc);
     return expr;
   }
 
@@ -111,8 +116,8 @@ public:
   template <typename... Stmts>
   StmtData block(Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto stmt = std::make_shared<iir::BlockStmt>(
-        std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
+    auto stmt =
+        iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
     auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
     int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
     (void)x;
@@ -137,6 +142,18 @@ public:
     return ret;
   }
 
+  // specialized builder for the stage that accepts a location type
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    ret->setLocationType(type);
+    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
+    return ret;
+  }
+
+  // default builder for the stage that assumes stages are over cells
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);

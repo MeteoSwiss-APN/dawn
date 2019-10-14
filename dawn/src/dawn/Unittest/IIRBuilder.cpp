@@ -120,12 +120,13 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   return map;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(op operation,
-                                                              std::shared_ptr<iir::Expr>&& rhs,
-                                                              std::shared_ptr<iir::Expr>&& init) {
+std::shared_ptr<iir::Expr>
+IIRBuilder::reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                   std::shared_ptr<iir::Expr>&& init,
+                                   ast::Expr::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), std::move(rhs),
-      std::move(init));
+      std::move(init), rhs_location);
   expr->setID(si_->nextUID());
   return expr;
 }
@@ -169,7 +170,16 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
-  return {id, name};
+  return {id, name, false, ast::Expr::LocationType::Cells};
+}
+IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
+                                       asArray(fieldType::ijk));
+  int accessID = si_->getMetaData().getAccessIDFromName(name);
+  si_->getMetaData().addAccessIDLocationPair(accessID, location);
+
+  return {id, name, true, location};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
   DAWN_ASSERT(si_);
@@ -184,7 +194,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, access
       std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::structured, offset});
   expr->setID(si_->nextUID());
 
-  si_->getMetaData().insertExprToAccessID(expr, field.id);
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, Array3i extent) {
@@ -195,7 +205,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
   expr->setID(si_->nextUID());
-  si_->getMetaData().insertExprToAccessID(expr, var.id);
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
 IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {

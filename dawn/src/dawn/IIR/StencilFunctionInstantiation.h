@@ -130,14 +130,6 @@ private:
   /// field mapping to the first argument in `avg(in(i+1))` would be [1, 0, 0])
   std::unordered_map<int, ast::Offsets> CallerAccessIDToInitialOffsetMap_;
 
-  //===----------------------------------------------------------------------------------------===//
-  //     Expr/Stmt to caller AccessID maps
-
-  /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt) of
-  /// the stencil function to the *caller* AccessID.
-  std::unordered_map<std::shared_ptr<iir::Expr>, int> ExprToCallerAccessIDMap_;
-  std::unordered_map<std::shared_ptr<iir::Stmt>, int> StmtToCallerAccessIDMap_;
-
   /// Caller AccessID to name
   std::unordered_map<int, std::string> AccessIDToNameMap_;
   std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
@@ -334,24 +326,6 @@ public:
 
   /// @brief Get the `name` associated with the literal `AccessID`
   const std::string& getNameFromLiteralAccessID(int AccessID) const;
-
-  /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
-  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) const;
-
-  /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
-  int getAccessIDFromStmt(const std::shared_ptr<iir::Stmt>& stmt) const;
-
-  /// @brief Set the `AccessID` of a Expr (VarAccess or FieldAccess)
-  void setAccessIDOfExpr(const std::shared_ptr<iir::Expr>& expr, const int accessID);
-
-  /// @brief Add entry to the map between a given expr to its access ID
-  void mapExprToAccessID(const std::shared_ptr<iir::Expr>& expr, int AccessID);
-
-  /// @brief Set the `AccessID` of a Stmt (VarDecl)
-  void setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt, const int accessID);
-
-  /// @brief Add entry to the map between a given stmt to its access ID
-  void mapStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt, int AccessID);
 
   /// @brief Get the Literal-AccessID-to-Name map
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();

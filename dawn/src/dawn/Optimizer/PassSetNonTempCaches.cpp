@@ -207,7 +207,7 @@ private:
 
     // Add the single do method to the new Stage
     assignmentStage->clearChildren();
-    assignmentStage->addDoMethod(domethod);
+    assignmentStage->addDoMethod(std::move(domethod));
     for(auto& doMethod : assignmentStage->getChildren()) {
       doMethod->update(iir::NodeUpdateType::level);
     }
@@ -228,15 +228,16 @@ private:
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
     auto pair = std::make_unique<iir::StatementAccessesPair>(expAssignment);
-    auto newAccess = std::make_shared<iir::Accesses>();
-    newAccess->addWriteExtent(assignmentID, iir::Extents(ast::Offsets{ast::structured}));
-    newAccess->addReadExtent(assigneeID, iir::Extents(ast::Offsets{ast::structured}));
-    pair->setAccesses(newAccess);
+    iir::Accesses newAccess;
+    newAccess.addWriteExtent(assignmentID, iir::Extents(ast::Offsets{ast::structured}));
+    newAccess.addReadExtent(assigneeID, iir::Extents(ast::Offsets{ast::structured}));
+    pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
+        std::make_optional(std::move(newAccess));
     domethod->insertChild(std::move(pair));
 
-    // Add the new expressions to the map
-    metadata_.insertExprToAccessID(fa_assignment, assignmentID);
-    metadata_.insertExprToAccessID(fa_assignee, assigneeID);
+    // Add access ids to the expressions
+    fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
+    fa_assignee->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given
@@ -248,17 +249,18 @@ private:
     for(const auto& stmtAccessesPair :
         iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
 
+      const auto& callerAccesses =
+          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+
       // Find first if this statement has a read
-      auto readAccessIterator =
-          stmtAccessesPair->getCallerAccesses()->getReadAccesses().find(AccessID);
-      if(readAccessIterator != stmtAccessesPair->getCallerAccesses()->getReadAccesses().end()) {
+      auto readAccessIterator = callerAccesses->getReadAccesses().find(AccessID);
+      if(readAccessIterator != callerAccesses->getReadAccesses().end()) {
         return true;
       }
       // If we did not find a read statement so far, we have  a write first and do not need to
       // fill the cache
-      auto wirteAccessIterator =
-          stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
-      if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+      auto writeAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
+      if(writeAccessIterator != callerAccesses->getWriteAccesses().end()) {
         return false;
       }
     }
@@ -270,10 +272,12 @@ private:
     for(const auto& stmtAccessesPair :
         iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
 
+      const auto& callerAccesses =
+          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+
       // If we find a write-statement we exit
-      auto wirteAccessIterator =
-          stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
-      if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+      auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
+      if(wirteAccessIterator != callerAccesses->getWriteAccesses().end()) {
         return false;
       }
     }
