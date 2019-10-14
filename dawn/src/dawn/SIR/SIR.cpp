@@ -616,23 +616,6 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
   dawn_unreachable("invalid type");
 }
 
-sir::Value::Value(TypeKind type) : isConstexpr_(false) {
-  switch(type) {
-  case Boolean:
-    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<bool>>>(false);
-    break;
-  case Integer:
-    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<int>>>(0);
-    break;
-  case Double:
-    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<double>>>(0.0);
-    break;
-  case String:
-    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<std::string>>>("");
-    break;
-  }
-}
-
 BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
   switch(type) {
   case Boolean:
@@ -647,24 +630,19 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
 }
 
 std::string sir::Value::toString() const {
-  std::stringstream ss;
-  switch(valueImpl_->getType()) {
+  DAWN_ASSERT(has_value());
+  switch(type_) {
   case Boolean:
-    ss << (getValue<bool>() ? "true" : "false");
-    break;
+    return std::get<bool>(*value_) ? "true" : "false";
   case Integer:
-    ss << getValue<int>();
-    break;
+    return std::to_string(std::get<int>(*value_));
   case Double:
-    ss << getValue<double>();
-    break;
+    return std::to_string(std::get<double>(*value_));
   case String:
-    ss << "\"" << getValue<std::string>() << "\"";
-    break;
+    return std::get<std::string>(*value_);
   default:
     dawn_unreachable("invalid type");
   }
-  return ss.str();
 }
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
