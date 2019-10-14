@@ -99,6 +99,8 @@ if [ -n ${INSTALL_DIR} ]; then
 fi
 if [ ! -z ${DAWN_PATH} ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -Ddawn_DIR=${DAWN_PATH}"
+else
+  CMAKE_ARGS="${CMAKE_ARGS} -DUSE_SYSTEM_DAWN=OFF"
 fi
 
 if [ "$ENABLE_GPU" = true ]; then
