@@ -92,9 +92,10 @@ ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
     if(argIndex != -1) {
       const int argOffset = expr->getArgumentOffset()[i];
 
-      std::array<int, 3> addOffset{};
-
       // Resolve the directions and offsets
+      // Note: Offsets could implement directions, then this could be simplified because we just want to do
+      // offset[my_direction] += sign * argOffset;
+      std::array<int, 3> addOffset{};
       if(isArgDirection(argIndex))
         addOffset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
       else {
