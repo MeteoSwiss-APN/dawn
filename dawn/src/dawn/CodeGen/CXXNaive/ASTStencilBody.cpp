@@ -25,8 +25,8 @@ namespace cxxnaive {
 
 ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
                                StencilContext stencilContext)
-    : ASTCodeGenCXX(), metadata_(metadata), currentFunction_(nullptr),
-      nestingOfStencilFunArgLists_(0), stencilContext_(stencilContext) {}
+    : metadata_(metadata), currentFunction_(nullptr), nestingOfStencilFunArgLists_(0),
+      stencilContext_(stencilContext) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
@@ -188,8 +188,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
           std::string accessName =
               currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
           ss_ << ", "
-              << "pw_" + accessName << ".cloneWithOffset(std::array<int, 3>{" << offset << "}";
-          ss_ << "})";
+              << "pw_" + accessName << ".cloneWithOffset(std::array<int, 3>{" << offset << "})";
         }
       }
       ss_ << ")";

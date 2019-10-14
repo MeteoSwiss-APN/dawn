@@ -96,7 +96,7 @@ protected:
     expr_StencilFunArgExpr = std::make_shared<sir::StencilFunArgExpr>(1, 0, -1);
     expr_VarAccessExpr = std::make_shared<sir::VarAccessExpr>("foo");
     expr_FieldAccessExpr =
-        std::make_shared<sir::FieldAccessExpr>("foo", ast::Offsets{ast::structured, {1, 2, 3}},
+        std::make_shared<sir::FieldAccessExpr>("foo", ast::Offsets{ast::structured, 1, 2, 3},
                                                Array3i{-1, -1, -1}, Array3i{0, 0, 0}, false);
     expr_LiteralAccessExpr = std::make_shared<sir::LiteralAccessExpr>("5.0", BuiltinTypeID::Float);
   }

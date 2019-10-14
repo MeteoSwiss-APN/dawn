@@ -26,7 +26,9 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
     return pos;
   };
   ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
-                      toString(expr->getOffset()));
+                      toString(expr->getOffset(), ", ", [&](std::string const& name, int offset) {
+                        return name + "+" + std::to_sring(offset);
+                      }));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {

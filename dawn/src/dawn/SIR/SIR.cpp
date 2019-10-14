@@ -108,7 +108,6 @@ CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::s
 /// @brief Compares two ASTs
 std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
                                         const std::shared_ptr<sir::AST>& rhs) {
-
   if(lhs->getRoot()->equals(rhs->getRoot().get()))
     return std::make_pair("", true);
 
