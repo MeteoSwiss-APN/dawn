@@ -13,9 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 #include <dawn-c/Compiler.h>
 #include <dawn-c/Options.h>
+#include <dawn-c/TranslationUnit.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
 
 int main(int argc, char* argv[]) {
   if(argc != 2) {
@@ -31,11 +33,25 @@ int main(int argc, char* argv[]) {
   ss << inputFile.rdbuf();
 
   auto options = dawnOptionsCreate();
-  auto entry = dawnOptionsEntryCreateInteger(1);
-  dawnOptionsSet(options, "SerializeIIR", entry);
+  auto backend = dawnOptionsEntryCreateString("c++-naive");
+  dawnOptionsSet(options, "Backend", backend);
 
   auto str = ss.str();
-  auto code = dawnCompile(str.c_str(), str.length(), options);
+  auto translationUnit = dawnCompile(str.c_str(), str.length(), options);
+
+  std::ofstream ofs("laplacian_stencil_from_standalone.cpp");
+
+  char** ppDefines;
+  int numPPDefines;
+  dawnTranslationUnitGetPPDefines(translationUnit, &ppDefines, &numPPDefines);
+  for(int i = 0; i < numPPDefines; i++) {
+    ofs << ppDefines[i] << "\n";
+  }
+
+  ofs << dawnTranslationUnitGetGlobals(translationUnit);
+  ofs << dawnTranslationUnitGetStencil(translationUnit, "laplacian_stencil");
+
+  ofs.close();
 
   return 0;
 }
