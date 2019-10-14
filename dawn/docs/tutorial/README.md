@@ -1,8 +1,8 @@
-#Getting Started using GTClang & dawn
+# Getting Started using GTClang & dawn
 
 In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. To follow this tutorial, please make sure that you compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag. See the Readme in the dawn subfolder on information on how to do that. We will compile and execute the same stencil three times, once starting from a stencil written in the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++. 
 
-##Writing a Stencil in the GTClang SIR and Compiling the Stencil
+## Writing a Stencil in the GTClang SIR and Compiling the Stencil
 
 For the purpose of this exercise, we will write a simple Finite Difference Stencil to find the Laplacian of a function. In **GTClang**, this can be achieved using very few lines of code as demonstrated in `laplacian_stencil.cpp`:
 
@@ -29,7 +29,7 @@ For the purpose of this tutorial we are going to use the `C++-naive` backend. To
 ./gtclang -backend=c++-naive laplacian_stencil.cpp -o laplacian_stencil_cxx_naive.cpp
 ```
 
-##Writing and Compiling the Driver Code
+## Writing and Compiling the Driver Code
 
 **GTClang** now wrote a code file for us that can be compiled with any C++11 compliant compiler. However, for the stencil to do something useful some driver code that fills the `in_field` and reads the `out_field`. For the purpose of this exercise we are goanna initialize in field to a wave function `in(x,y) = sin(x)*sin(y)` since the Laplacian of this is the same wave again, but with inverted phase and twice the amplitude, and thus easy to check. The driver code is located in `laplacian_driver.cpp` and should be straight forward. The actual stencil launch is just one line:
 
@@ -49,7 +49,7 @@ This will place an executable called `laplacian_driver` in the tutorial folder. 
 
 <img src="img/in.png" width="425"/> <img src="img/out.png" width="425"/> 
 
-##Use Python to generate SIR 
+## Use Python to generate SIR 
 
 Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided. As a preliminary step, a config file that was generated during the **dawn** install step needs to be copied and the proper `PYTHONPATH` needs to be set:
 
@@ -91,7 +91,7 @@ make && ./laplacian-driver
 
 The python file should be quite easy to follow. The the bulk of the AST of the stencil is generated in function `create_vertical_region_stmt`. 
 
-##Generate code from SIR using dawn from C++
+## Generate code from SIR using dawn from C++
 
 As a final exercise, the C interface to dawn is again used to compile the same example. This time, the interface is called from a C++ file. This example will use the SIR written to disk by the preceding example, so please make sure that you followed along beforehand. Switch to the cpp example and build the `dawn_standalone` binary:
 
