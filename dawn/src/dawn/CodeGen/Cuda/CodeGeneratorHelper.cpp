@@ -174,7 +174,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
 std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const ast::Offsets& offset,
                                                             bool useTmpIndex,
                                                             const Array3i iteratorDims) {
-  auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
 
   Array3i offsets = {hoffset.offsetI(), hoffset.offsetJ(), voffset};

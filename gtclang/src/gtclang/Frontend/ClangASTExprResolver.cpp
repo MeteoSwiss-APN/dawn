@@ -372,7 +372,7 @@ public:
   std::shared_ptr<dawn::sir::FieldAccessExpr>
   makeFieldAccessExpr(const dawn::SourceLocation& loc) const {
     return std::make_shared<dawn::sir::FieldAccessExpr>(
-        name_, dawn::ast::Offsets{dawn::ast::structured, offset_}, argumentMap_, argumentOffset_,
+        name_, dawn::ast::Offsets{dawn::ast::cartesian, offset_}, argumentMap_, argumentOffset_,
         negateOffset_, loc);
   }
 

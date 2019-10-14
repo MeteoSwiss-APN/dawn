@@ -127,7 +127,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
   }
   auto offset = expr->getOffset();
   DAWN_ASSERT(offset.verticalOffset() == 0);
-  auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   std::string offsetStr;
   if(hoffset.offsetI() != 0)
@@ -147,7 +147,7 @@ void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& ex
   const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
 
   auto offset = expr->getOffset();
-  auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   DAWN_ASSERT(hoffset.offsetI() == 0 && hoffset.offsetJ() == 0);
   DAWN_ASSERT((offset.verticalOffset() <= vertExtent.Plus) &&

@@ -101,7 +101,7 @@ ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
         const auto& instantiatedOffset = getCallerOffsetOfArgOffset(argIndex);
         addOffset[instantiatedOffset[0]] = sign * (argOffset + instantiatedOffset[1]);
       }
-      offset += ast::Offsets{ast::structured, addOffset};
+      offset += ast::Offsets{ast::cartesian, addOffset};
     }
   }
 
@@ -628,7 +628,7 @@ void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>&
         int AccessID = stencilInstantiation_->nextUID();
 
         setCallerAccessIDOfArgField(argIdx, AccessID);
-        setCallerInitialOffsetFromAccessID(AccessID, ast::Offsets{ast::structured});
+        setCallerInitialOffsetFromAccessID(AccessID, ast::Offsets{ast::cartesian});
       }
     }
   }

@@ -191,7 +191,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, access
                                           Array3i offset) {
   DAWN_ASSERT(si_);
   auto expr =
-      std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::structured, offset});
+      std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::cartesian, offset});
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);

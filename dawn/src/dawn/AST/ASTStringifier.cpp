@@ -230,7 +230,7 @@ public:
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     auto offset = expr->getOffset();
-    auto const& hOffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
+    auto const& hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
     std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(),
                                       offset.verticalOffset()};
 

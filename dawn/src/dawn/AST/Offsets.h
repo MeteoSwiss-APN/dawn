@@ -22,8 +22,8 @@
 
 namespace dawn::ast {
 
-struct structured_ {};
-static constexpr structured_ structured;
+struct cartesian_ {};
+static constexpr cartesian_ cartesian;
 
 class HorizontalOffsetImpl {
 public:
@@ -45,21 +45,21 @@ protected:
   virtual bool isZeroImpl() const = 0;
 };
 
-class StructuredOffset : public HorizontalOffsetImpl {
+class CartesianOffset : public HorizontalOffsetImpl {
 public:
-  StructuredOffset(int iOffset, int jOffset) : horizontalOffset_({iOffset, jOffset}) {}
-  StructuredOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
-  StructuredOffset() = default;
+  CartesianOffset(int iOffset, int jOffset) : horizontalOffset_({iOffset, jOffset}) {}
+  CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
+  CartesianOffset() = default;
 
   int offsetI() const { return horizontalOffset_[0]; }
   int offsetJ() const { return horizontalOffset_[1]; }
 
 protected:
   HorizontalOffsetImpl* cloneImpl() const override {
-    return new StructuredOffset{horizontalOffset_};
+    return new CartesianOffset{horizontalOffset_};
   }
-  bool equalsImpl(HorizontalOffsetImpl const& other) const override ;
-  StructuredOffset& addImpl(HorizontalOffsetImpl const& other) override ;
+  bool equalsImpl(HorizontalOffsetImpl const& other) const override;
+  CartesianOffset& addImpl(HorizontalOffsetImpl const& other) override;
   bool isZeroImpl() const override {
     return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
   }
@@ -70,9 +70,9 @@ private:
 
 class HorizontalOffset {
 public:
-  HorizontalOffset(structured_) : impl_(std::make_unique<StructuredOffset>()) {}
-  HorizontalOffset(structured_, int iOffset, int jOffset)
-      : impl_(std::make_unique<StructuredOffset>(iOffset, jOffset)) {}
+  HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
+  HorizontalOffset(cartesian_, int iOffset, int jOffset)
+      : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
   HorizontalOffset(HorizontalOffset const& other) : impl_(other.impl_->clone()) {}
   HorizontalOffset& operator=(HorizontalOffset const& other) {
     impl_ = other.impl_->clone();
@@ -104,11 +104,11 @@ T offset_cast(HorizontalOffset const& offset) {
 
 class Offsets {
 public:
-  Offsets(structured_, int i, int j, int k)
-      : horizontalOffset_(structured, i, j), verticalOffset_(k) {}
-  Offsets(structured_, std::array<int, 3> const& structuredOffsets)
-      : Offsets(structured, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
-  Offsets(structured_) : horizontalOffset_(structured) {}
+  Offsets(cartesian_, int i, int j, int k)
+      : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
+  Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
+      : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
+  Offsets(cartesian_) : horizontalOffset_(cartesian) {}
 
   int verticalOffset() const { return verticalOffset_; }
   HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
@@ -130,21 +130,30 @@ private:
   HorizontalOffset horizontalOffset_;
   int verticalOffset_ = 0;
 };
+
+/**
+ * For each component of :offset, calls `offset_to_string(name_of_offset, offset_value)`.
+ * Concatenates all non-zero stringified offsets using :sep as a delimiter.
+ */
 template <typename F>
-std::string toString(Offsets const& offset, std::string const& sep, F&& f) {
-  auto const& hoffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
+std::string toString(Offsets const& offset, std::string const& sep, F&& offset_to_string) {
+  auto const& hoffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
   std::string s;
-  if(auto ret = f("i", hoffset.offsetI()); ret != "")
+  if(std::string ret = offset_to_string("i", hoffset.offsetI()); ret != "")
     s += ret + sep;
-  if(auto ret = f("j", hoffset.offsetJ()); ret != "")
+  if(std::string ret = offset_to_string("j", hoffset.offsetJ()); ret != "")
     s += ret + sep;
-  if(auto ret = f("k", voffset); ret != "")
+  if(std::string ret = offset_to_string("k", voffset); ret != "")
     s += ret + sep;
   return s;
 }
 std::string toString(Offsets const& offset, std::string const& sep = ",");
-// the default printer prints "i, j, k" for structured grids, otherwise you should use toString
+
+/**
+ * \brief the default printer prints "i, j, k" for cartesian grids. For non-standard use cases,
+ * consider
+ */
 std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
 } // namespace dawn::ast

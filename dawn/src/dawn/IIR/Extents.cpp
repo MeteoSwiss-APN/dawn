@@ -22,7 +22,7 @@ namespace dawn {
 namespace iir {
 
 Extents::Extents(const ast::Offsets& offset) {
-  auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
   std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
   for(int i = 0; i < extents_.size(); ++i)
@@ -57,7 +57,7 @@ void Extents::expand(const Extents& other) {
 }
 
 void Extents::merge(const ast::Offsets& offset) {
-  auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
   std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
   for(std::size_t i = 0; i < extents_.size(); ++i)
@@ -78,7 +78,7 @@ Extents Extents::add(const Extents& lhs, const Extents& rhs) {
 }
 
 void Extents::add(const ast::Offsets& offset) {
-  auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
   std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
   for(std::size_t i = 0; i < extents_.size(); ++i)

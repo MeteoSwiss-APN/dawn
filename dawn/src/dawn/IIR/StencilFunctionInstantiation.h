@@ -356,6 +356,7 @@ public:
     auto it = map.find(oldKey);
     if(it != map.end()) {
       map.emplace(newKey, std::move(it->second));
+      map.erase(it);
     }
   }
 

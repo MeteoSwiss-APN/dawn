@@ -28,13 +28,13 @@ std::string toString(Offsets const& offsets, std::string const& sep) {
                   [](std::string const&, int offset) { return std::to_string(offset); });
 }
 
-bool StructuredOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
-  auto const& so_other = dynamic_cast<StructuredOffset const&>(other);
+bool CartesianOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
+  auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
   return so_other.horizontalOffset_ == horizontalOffset_;
 }
 
-StructuredOffset& StructuredOffset::addImpl(HorizontalOffsetImpl const& other) {
-  auto const& so_other = dynamic_cast<StructuredOffset const&>(other);
+CartesianOffset& CartesianOffset::addImpl(HorizontalOffsetImpl const& other) {
+  auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
   horizontalOffset_[0] += so_other.horizontalOffset_[0];
   horizontalOffset_[1] += so_other.horizontalOffset_[1];
   return *this;

@@ -410,7 +410,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   protoExpr->set_name(expr->getName());
 
   auto const& hoffset =
-      ast::offset_cast<StructuredOffset const&>(expr->getOffset().horizontalOffset());
+      ast::offset_cast<CartesianOffset const&>(expr->getOffset().horizontalOffset());
   auto const& voffset = expr->getOffset().verticalOffset();
   protoExpr->add_offset(hoffset.offsetI());
   protoExpr->add_offset(hoffset.offsetJ());
@@ -664,7 +664,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     }
 
     auto expr =
-        std::make_shared<FieldAccessExpr>(name, ast::Offsets{ast::structured, offset}, argumentMap,
+        std::make_shared<FieldAccessExpr>(name, ast::Offsets{ast::cartesian, offset}, argumentMap,
                                           argumentOffset, negateOffset, makeLocation(exprProto));
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
