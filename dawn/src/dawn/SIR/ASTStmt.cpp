@@ -20,5 +20,8 @@ namespace sir {
 std::unique_ptr<ast::StmtData> SIRStmtData::clone() const {
   return std::make_unique<SIRStmtData>(*this);
 }
+bool SIRStmtData::equals(ast::StmtData const* other) const {
+  return getDataType() == other->getDataType();
+}
 } // namespace sir
 } // namespace dawn

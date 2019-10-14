@@ -24,6 +24,7 @@ struct SIRStmtData : public ast::StmtData {
 
   DataType getDataType() const override { return ThisDataType; }
   std::unique_ptr<StmtData> clone() const override;
+  bool equals(StmtData const* other) const override;
 };
 
 template <typename... Args>

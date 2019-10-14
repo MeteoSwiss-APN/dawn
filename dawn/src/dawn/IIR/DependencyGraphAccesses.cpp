@@ -30,11 +30,13 @@ void DependencyGraphAccesses::insertStatementAccessesPair(
     for(const auto& s : stmtAccessPair->getBlockStatements())
       insertStatementAccessesPair(s);
   } else {
+    const auto& callerAccesses =
+        stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
 
-    for(const auto& writeAccess : stmtAccessPair->getAccesses()->getWriteAccesses()) {
+    for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);
 
-      for(const auto& readAccess : stmtAccessPair->getAccesses()->getReadAccesses())
+      for(const auto& readAccess : callerAccesses->getReadAccesses())
         insertEdge(writeAccess.first, readAccess.first, readAccess.second);
     }
   }
@@ -102,7 +104,8 @@ std::shared_ptr<DependencyGraphAccesses> DependencyGraphAccesses::clone() const 
   graph->vertices_ = vertices_;
   graph->VertexIDToAccessIDMap_ = VertexIDToAccessIDMap_;
   for(const auto& edgeListPtr : adjacencyList_)
-    graph->adjacencyList_.push_back(std::make_shared<EdgeList>(*edgeListPtr));
+    graph->adjacencyList_.push_back(edgeListPtr ? std::make_shared<EdgeList>(*edgeListPtr)
+                                                : nullptr);
   return graph;
 }
 

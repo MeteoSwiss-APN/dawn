@@ -26,27 +26,6 @@ namespace iir {
 namespace {
 
 template <class MapType, class AccessIDToStringFunctionType>
-std::string toStringImpl(AccessIDToStringFunctionType&& accessIDToStringFunction,
-                         std::size_t initialIndent, const MapType& writeAccessMap,
-                         const MapType& readAccessMap) {
-  std::stringstream ss;
-  std::string indent(initialIndent, ' ');
-
-  auto printMap = [&](const MapType& map) {
-    for(auto it = map.begin(), end = map.end(); it != end; ++it)
-      ss << indent << "  " << accessIDToStringFunction(it->first) << " : " << it->second << "\n";
-  };
-
-  ss << indent << "Write Accesses:\n";
-  printMap(writeAccessMap);
-
-  ss << indent << "Read Accesses:\n";
-  printMap(readAccessMap);
-
-  return ss.str();
-}
-
-template <class MapType, class AccessIDToStringFunctionType>
 std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFunction,
                                const MapType& writeAccessMap, const MapType& readAccessMap) {
   std::stringstream ss;
@@ -70,6 +49,12 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
 }
 
 } // anonymous namespace
+
+bool Accesses::operator==(const Accesses& rhs) const {
+  return readAccesses_ == rhs.readAccesses_ && writeAccesses_ == rhs.writeAccesses_;
+}
+
+bool Accesses::operator!=(const Accesses& rhs) const { return !(*this == rhs); }
 
 void Accesses::mergeReadOffset(int AccessID, const Array3i& offset) {
   auto it = readAccesses_.find(AccessID);
@@ -153,17 +138,23 @@ std::string Accesses::reportAccesses(const StencilFunctionInstantiation* stencil
       writeAccesses_, readAccesses_);
 }
 
-std::string Accesses::toString(const StencilMetaInformation* metadata,
+std::string Accesses::toString(std::function<std::string(int)>&& accessIDToStringFunction,
                                std::size_t initialIndent) const {
-  return toStringImpl([&](int AccessID) { return metadata->getNameFromAccessID(AccessID); },
-                      initialIndent, writeAccesses_, readAccesses_);
-}
+  std::stringstream ss;
+  std::string indent(initialIndent, ' ');
 
-std::string Accesses::toString(const StencilFunctionInstantiation* stencilFunc,
-                               std::size_t initialIndent) const {
-  return toStringImpl(
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); },
-      initialIndent, writeAccesses_, readAccesses_);
+  auto printMap = [&](const std::unordered_map<int, Extents>& map) {
+    for(auto const& [accessID, access] : map)
+      ss << indent << "  " << accessIDToStringFunction(accessID) << " : " << access << "\n";
+  };
+
+  ss << indent << "Write Accesses:\n";
+  printMap(writeAccesses_);
+
+  ss << indent << "Read Accesses:\n";
+  printMap(readAccesses_);
+
+  return ss.str();
 }
 
 } // namespace iir

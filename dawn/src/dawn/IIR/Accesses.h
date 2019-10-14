@@ -16,6 +16,7 @@
 #define DAWN_IIR_ACCESSES_H
 
 #include "dawn/IIR/Extents.h"
+#include <functional>
 #include <unordered_map>
 
 namespace dawn {
@@ -38,6 +39,9 @@ public:
   Accesses(Accesses&&) = default;
   Accesses& operator=(const Accesses&) = default;
   Accesses& operator=(Accesses&&) = default;
+
+  bool operator==(const Accesses& rhs) const;
+  bool operator!=(const Accesses& rhs) const;
 
   /// @brief Merge read offset/extent to the field given by `AccessID`
   ///
@@ -81,8 +85,7 @@ public:
 
   /// @brief Convert the accesses of a stencil or stencil-function instantiation to string
   /// @{
-  std::string toString(const StencilMetaInformation* metadata, std::size_t initialIndent = 0) const;
-  std::string toString(const StencilFunctionInstantiation* stencilFunc,
+  std::string toString(std::function<std::string(int)>&& accessIDToStringFunction,
                        std::size_t initialIndent = 0) const;
   /// @}
 

@@ -47,7 +47,7 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   std::shared_ptr<dawn::SIR> returnSIR = nullptr;
 
   // Initialize the GTClangContext
-  std::unique_ptr<GTClangContext> context = llvm::make_unique<GTClangContext>();
+  std::unique_ptr<GTClangContext> context = std::make_unique<GTClangContext>();
 
   // Parse command-line options
   OptionsParser optionsParser(&context->getOptions());
@@ -56,7 +56,7 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
     return ReturnValue{1, returnSIR};
 
   // Ininitialize the Logger
-  auto logger = llvm::make_unique<Logger>();
+  auto logger = std::make_unique<Logger>();
   auto* oldLogger = dawn::Logger::getSingleton().getLogger();
   if(context->getOptions().Verbose)
     dawn::Logger::getSingleton().registerLogger(logger.get());

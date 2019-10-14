@@ -25,8 +25,10 @@
 #include "dawn/Support/Type.h"
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace dawn {
@@ -272,28 +274,31 @@ struct Stencil : public dawn::NonCopyable {
 
 /// @brief Representation of a value of a global variable
 ///
-/// This is a very primitive (i.e non-copyable) version of boost::any. Further, the possible
-/// values are restricted to `bool`, `int`, `double` or `std::string`.
+/// This is a very primitive (i.e non-copyable, immutable) version of boost::any.
+/// Further, the possible values are restricted to `bool`, `int`, `double` or `std::string`.
 ///
 /// @ingroup sir
 
-struct Value : NonCopyable {
+class Value : NonCopyable {
+public:
   enum TypeKind { Boolean = 0, Integer, Double, String };
+  template <typename T>
+  struct TypeInfo;
 
   template <class T>
-  explicit Value(T&& value) : isConstexpr_(false) {
-    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
-  }
+  explicit Value(T&& value)
+      : value_{std::forward<T>(value)},
+        is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   template <class T>
-  explicit Value(T value, bool isConstexpr) : isConstexpr_(isConstexpr) {
-    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
-  }
+  explicit Value(T value, bool is_constexpr)
+      : value_{std::forward<T>(value)},
+        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
-  explicit Value(TypeKind type);
+  explicit Value(TypeKind type) : value_{}, is_constexpr_{false}, type_{type} {}
 
   /// @brief Get/Set if the variable is `constexpr`
-  bool isConstexpr() const { return isConstexpr_; }
+  bool isConstexpr() const { return is_constexpr_; }
 
   /// @brief `TypeKind` to string
   static const char* typeToString(TypeKind type);
@@ -305,86 +310,58 @@ struct Value : NonCopyable {
   std::string toString() const;
 
   /// @brief Check if value is set
-  bool has_value() const { return valueImpl_->has_value(); }
+  bool has_value() const { return value_.has_value(); }
 
   /// @brief Get/Set the underlying type
-  TypeKind getType() const { return valueImpl_->getType(); }
+  TypeKind getType() const { return type_; }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
   template <class T>
   T getValue() const {
     DAWN_ASSERT(has_value());
-    DAWN_ASSERT_MSG(TypeInfo<T>::Type == valueImpl_->getType(), "type mismatch");
-    return *(T*)valueImpl_->get();
+    DAWN_ASSERT_MSG(getType() == TypeInfo<T>::Type, "type mismatch");
+    return std::get<T>(*value_);
   }
-
-  template <class T>
-  struct TypeInfo {
-    static const TypeKind Type;
-  };
 
   bool operator==(const Value& rhs) const;
   CompareResult comparison(const sir::Value& rhs) const;
 
   json::json jsonDump() const {
     json::json valueJson;
-    valueJson["type"] = Value::typeToString(valueImpl_->getType());
+    valueJson["type"] = Value::typeToString(getType());
     valueJson["isConstexpr"] = isConstexpr();
     valueJson["value"] = toString();
     return valueJson;
   }
 
 private:
-  struct ValueImplBase {
-    virtual ~ValueImplBase() {}
-    virtual void* get() = 0;
-    virtual TypeKind getType() const = 0;
-    virtual bool has_value() const = 0;
-  };
-
-  template <class T>
-  struct ValueImpl : public ValueImplBase {
-    T* ValuePtr;
-
-    ValueImpl() : ValuePtr(nullptr) {}
-    ValueImpl(const T& value) : ValuePtr(new T) { *ValuePtr = value; }
-    ~ValueImpl() {
-      if(ValuePtr)
-        delete ValuePtr;
-    }
-    void* get() override { return (void*)ValuePtr; }
-    TypeKind getType() const override { return TypeInfo<T>::Type; }
-    bool has_value() const override { return ValuePtr != nullptr; }
-  };
-
-  bool isConstexpr_;
-  std::unique_ptr<ValueImplBase> valueImpl_;
+  std::optional<std::variant<bool, int, double, std::string>> value_;
+  bool is_constexpr_;
+  TypeKind type_;
 };
 
 template <>
 struct Value::TypeInfo<bool> {
-  static const Value::TypeKind Type = Value::Boolean;
+  static constexpr TypeKind Type = Boolean;
 };
 
 template <>
 struct Value::TypeInfo<int> {
-  static const Value::TypeKind Type = Value::Integer;
+  static constexpr TypeKind Type = Integer;
 };
 
 template <>
 struct Value::TypeInfo<double> {
-  static const Value::TypeKind Type = Value::Double;
+  static constexpr TypeKind Type = Double;
 };
 
 template <>
 struct Value::TypeInfo<std::string> {
-  static const Value::TypeKind Type = Value::String;
+  static constexpr TypeKind Type = String;
 };
 
-/// @brief Representation of the global variable map (key/value pair)
-/// @ingroup sir
-using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<sir::Value>>;
+using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>>;
 
 } // namespace sir
 

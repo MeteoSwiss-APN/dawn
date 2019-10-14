@@ -17,6 +17,7 @@
 #include <string>
 #include <type_traits>
 
+#include "gtclang/Support/ClangCompat/ImplicitNodes.h"
 #include "clang/AST/ASTFwd.h"
 
 namespace gtclang {
@@ -34,11 +35,8 @@ extern std::string getClassNameFromConstructExpr(clang::CXXConstructExpr* expr);
 /// @param expr               clang stmt
 ///
 /// @ingroup support
-template <typename T>
-typename std::enable_if<std::is_base_of<clang::Stmt, typename std::decay<T>::type>::value, T*>::type
-skipAllImplicitNodes(T* e) {
-  while(e != e->IgnoreImplicit())
-    e = e->IgnoreImplicit();
-  return e;
+template <typename StmtT>
+StmtT* skipAllImplicitNodes(StmtT* s) {
+  return clang_compat::skipAllImplicitNodes(s);
 }
 } // namespace gtclang

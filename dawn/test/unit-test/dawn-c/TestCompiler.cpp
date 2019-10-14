@@ -73,11 +73,12 @@ TEST(CompilerTest, CompileCopyStencil) {
   auto in_f = b.field("in_field", fieldType::ijk);
   auto out_f = b.field("out_field", fieldType::ijk);
 
-  auto stencil_instantiation = b.build(
-      "generated",
-      b.stencil(b.multistage(dawn::iir::LoopOrderKind::LK_Parallel,
-                             b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                               b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+  auto stencil_instantiation =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  dawn::iir::LoopOrderKind::LK_Parallel,
+                  b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                    b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))))));
   std::ofstream of("/dev/null");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }

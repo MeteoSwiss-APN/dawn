@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/ASTConverter.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -305,7 +306,7 @@ public:
           auto voidStmt = iir::makeExprStmt(voidExpr);
           int AccessID = -instantiation_->nextUID();
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
-          metadata_.insertExprToAccessID(voidExpr, AccessID);
+          voidExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
           iir::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt, voidStmt);
         }
@@ -552,15 +553,17 @@ public:
         int AccessID = instantiation_->nextUID();
         metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, -AccessID,
                                      newExpr->getValue());
-        metadata_.insertExprToAccessID(newExpr, AccessID);
+        newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
       } else {
-        metadata_.insertExprToAccessID(expr, metadata_.getAccessIDFromName(varname));
+        expr->getData<iir::IIRAccessExprData>().AccessID =
+            std::make_optional(metadata_.getAccessIDFromName(varname));
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
-      metadata_.insertExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      expr->getData<iir::IIRAccessExprData>().AccessID =
+          std::make_optional(scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
       if(expr->isArrayAccess())
@@ -572,7 +575,7 @@ public:
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    metadata_.insertExprToAccessID(expr, AccessID);
+    expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {}

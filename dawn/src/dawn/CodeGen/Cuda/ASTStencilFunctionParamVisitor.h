@@ -51,8 +51,6 @@ public:
 
   std::string getName(const std::shared_ptr<iir::Expr>& expr) const;
 
-  int getAccessID(const std::shared_ptr<iir::Expr>& expr) const;
-
   /// @name Expression implementation
   /// @{
   virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
