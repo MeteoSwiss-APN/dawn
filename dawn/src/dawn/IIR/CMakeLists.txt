@@ -24,8 +24,6 @@ dawn_protobuf_generate(
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PACKG IIR
   LANGUAGE cpp
-  # this dependency could be relaxed to the usage of "SIR/statements.pb.h" in iir
-  DEPENDS ${sir_proto_cpp_files}
 )
 
 yoda_add_library(
