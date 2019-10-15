@@ -48,9 +48,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(GTClangCloneRepository)
 
-set(GTCLANG_YODA_GIT_URL "https:///github.com/MeteoSwiss-APN/yoda.git"
+set(GTCLANG_YODA_GIT_URL "https:///github.com/havogt/yoda.git"
     CACHE PATH "URL of the yoda git repository to clone")
-set(GTCLANG_YODA_GIT_BRANCH "1.0.7" CACHE STRING "Branch of the yoda git repository to clone")
+set(GTCLANG_YODA_GIT_BRANCH "fix_infinite_recursion" CACHE STRING "Branch of the yoda git repository to clone")
 
 gtclang_clone_repository(NAME yoda URL ${GTCLANG_YODA_GIT_URL} BRANCH ${GTCLANG_YODA_GIT_BRANCH} SOURCE_DIR GTCLANG_YODA_SOURCE_DIR )
 
@@ -90,7 +90,7 @@ yoda_find_package(
   REQUIRED_VARS dawn_DIR
   ADDITIONAL
     DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../dawn
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../dawn/bundle
     YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
     CMAKE_ARGS ${dawn_cmake_args}
 )
