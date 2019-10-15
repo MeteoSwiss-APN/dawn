@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -210,8 +211,7 @@ void Stage::updateGlobalVariablesInfo() {
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      const auto& access =
-          statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+      const auto& access = statementAccessesPair->getData<IIRStmtData>().CallerAccesses;
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
@@ -227,7 +227,7 @@ void Stage::updateGlobalVariablesInfo() {
         }
       }
 
-      const std::shared_ptr<iir::Stmt>& statement = statementAccessesPair->getStatement();
+      const std::shared_ptr<iir::Stmt>& statement = statementAccessesPair;
       DAWN_ASSERT(statement);
 
       // capture all the accesses to global accesses of stencil function called
@@ -293,12 +293,11 @@ Stage::split(std::deque<int>& splitterIndices,
   std::vector<std::unique_ptr<Stage>> newStages;
 
   splitterIndices.push_back(thisDoMethod.getChildren().size() - 1);
-  DoMethod::StatementAccessesIterator prevSplitterIndex = thisDoMethod.childrenBegin();
+  auto prevSplitterIndex = thisDoMethod.childrenBegin();
 
   // Create new stages
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
-    DoMethod::StatementAccessesIterator nextSplitterIndex =
-        std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
+    auto nextSplitterIndex = std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));

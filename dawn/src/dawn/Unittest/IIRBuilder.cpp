@@ -15,7 +15,6 @@
 #include "IIRBuilder.h"
 
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
@@ -210,26 +209,24 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
 IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   DAWN_ASSERT(si_);
   auto stmt = iir::makeExprStmt(std::move(expr));
-  auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-  return {std::move(stmt), std::move(sap)};
+  return {std::move(stmt), std::move(stmt)}; // TODO(SAP)
 }
 IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
                                         StmtData&& caseElse) {
   DAWN_ASSERT(si_);
   auto condStmt = iir::makeExprStmt(std::move(cond));
   auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
-  auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-  if(caseThen.sap)
-    sap->insertBlockStatement(std::move(caseThen.sap));
-  if(caseElse.sap)
-    sap->insertBlockStatement(std::move(caseElse.sap));
-  return {std::move(stmt), std::move(sap)};
+  // auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
+  // if(caseThen.sap)
+  //   sap->insertBlockStatement(std::move(caseThen.sap));
+  // if(caseElse.sap)
+  //   sap->insertBlockStatement(std::move(caseElse.sap)); // TODO(SAP)
+  return {std::move(stmt), std::move(stmt)};
 }
 IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
   DAWN_ASSERT(var.decl);
-  auto sap = std::make_unique<iir::StatementAccessesPair>(var.decl);
-  return {std::move(var.decl), std::move(sap)};
+  return {std::move(var.decl), std::move(var.decl)}; // TODO(SAP)
 }
 
 } // namespace iir

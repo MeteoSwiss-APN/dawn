@@ -66,7 +66,7 @@ class IIRBuilder {
   };
   struct StmtData {
     std::shared_ptr<Stmt> stmt;
-    std::unique_ptr<StatementAccessesPair> sap;
+    std::shared_ptr<iir::Stmt> sap;
   };
 
 public:
@@ -118,10 +118,10 @@ public:
     DAWN_ASSERT(si_);
     auto stmt =
         iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
-    auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-    int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
-    (void)x;
-    return {std::move(stmt), std::move(sap)};
+    // auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
+    // int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
+    // (void)x; // TODO(SAP)
+    return {std::move(stmt), std::move(stmt)};
   }
 
   StmtData ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
@@ -135,8 +135,8 @@ public:
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
-    int x[] = {(DAWN_ASSERT(stmts.sap), ret->insertChild(std::move(stmts.sap)), 0)...};
-    (void)x;
+    // int x[] = {(DAWN_ASSERT(stmts.sap), ret->insertChild(std::move(stmts.sap)), 0)...};
+    // (void)x; // TODO(SAP)
     computeAccesses(si_.get(), ret->getChildren());
     ret->updateLevel();
     return ret;

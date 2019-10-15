@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
@@ -24,14 +24,13 @@ namespace dawn {
 namespace iir {
 
 void DependencyGraphAccesses::insertStatementAccessesPair(
-    const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
+    const std::shared_ptr<iir::Stmt>& stmtAccessPair) {
 
-  if(stmtAccessPair->hasBlockStatements()) {
-    for(const auto& s : stmtAccessPair->getBlockStatements())
+  if(!stmtAccessPair->getChildren().empty()) { // TODO(SAP)
+    for(const auto& s : stmtAccessPair->getChildren())
       insertStatementAccessesPair(s);
   } else {
-    const auto& callerAccesses =
-        stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses = stmtAccessPair->getData<iir::IIRStmtData>().CallerAccesses;
 
     for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);
@@ -238,14 +237,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                          vertices);
+    getInputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                           vertices);
+    getOutputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
   }

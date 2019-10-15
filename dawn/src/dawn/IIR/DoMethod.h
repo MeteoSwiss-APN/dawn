@@ -18,6 +18,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Interval.h"
 #include <memory>
 #include <optional>
@@ -62,9 +63,9 @@ class DoMethod : public IIRNode<Stage, DoMethod, iir::Stmt> {
 public:
   static constexpr const char* name = "DoMethod";
 
-  bool checkDoMethod() override { return false; }
+  bool checkDoMethod() const override { return false; }
 
-  using StatementAccessesIterator = ChildIterator;
+  // using StatementAccessesIterator = ChildIterator;
 
   /// @name Constructors and Assignment
   /// @{
@@ -213,6 +214,16 @@ public:
 };
 
 } // namespace iir
+
+template <typename RootNode>
+auto iterateIIROverStmt(const RootNode& root) {
+  std::vector<std::shared_ptr<iir::Stmt>> allStmts;
+  for(auto& doMethod : iterateIIROver<iir::DoMethod>(root)) {
+    std::copy(doMethod->getChildren().begin(), doMethod->getChildren().end(),
+              std::back_inserter(allStmts));
+  }
+  return allStmts;
+}
 } // namespace dawn
 
 #endif

@@ -15,9 +15,9 @@
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <iostream>
@@ -451,22 +451,21 @@ public:
 } // anonymous namespace
 
 void computeAccesses(iir::StencilInstantiation* instantiation,
-                     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+                     ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair->getStatement(),
-                        nullptr);
-    statementAccessesPair->getStatement()->accept(mapper);
+    AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair, nullptr);
+    statementAccessesPair->accept(mapper);
   }
 }
 
 void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getMetaData(),
-                        statementAccessesPair->getStatement(), stencilFunctionInstantiation);
-    statementAccessesPair->getStatement()->accept(mapper);
+                        statementAccessesPair, stencilFunctionInstantiation);
+    statementAccessesPair->accept(mapper);
   }
 }
 

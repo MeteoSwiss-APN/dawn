@@ -39,7 +39,7 @@ class StatementMapper : public iir::ASTVisitor {
     /// Statement accesses pair pointing to the statement we are currently working on. This might
     /// not be the top-level statement which was passed to the constructor but rather a
     /// sub-statement (child) of the top-level statement if decend into nested block statements.
-    std::stack<std::unique_ptr<iir::StatementAccessesPair> const*> CurentStmtAccessesPair;
+    // std::stack<std::shared_ptr<iir::Stmt> const*> CurentStmtAccessesPair;
 
     /// The current interval
     const iir::Interval VerticalInterval;
@@ -83,7 +83,7 @@ public:
 
   void appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt);
 
-  void removeLastChildStatementAccessesPair();
+  // void removeLastChildStatementAccessesPair();
 
   void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
 

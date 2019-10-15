@@ -92,7 +92,6 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   expr->setID(target->nextUID());
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(target->nextUID());
-  auto insertee = std::make_unique<iir::StatementAccessesPair>(stmt);
 
   // Add the accesses:
   iir::Accesses callerAccesses;
@@ -100,7 +99,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses.addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
   // And add the StmtAccesspair to it
-  IIRDoMethod->insertChild(std::move(insertee));
+  IIRDoMethod->insertChild(std::move(stmt));
   IIRDoMethod->updateLevel();
 
   // Add the control flow descriptor to the IIR
@@ -245,7 +244,6 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto stmt1 = iir::makeExprStmt(assignmentTmpIn);
   stmt1->setID(target->nextUID());
-  auto insertee1 = std::make_unique<iir::StatementAccessesPair>(stmt1);
 
   // Add the accesses:
   iir::Accesses callerAccesses1;
@@ -255,7 +253,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
       std::make_optional(std::move(callerAccesses1));
 
   // And add the StmtAccesspair to it
-  IIRDoMethod1->insertChild(std::move(insertee1));
+  IIRDoMethod1->insertChild(std::move(stmt1));
   IIRDoMethod1->updateLevel();
 
   auto plusTmp1 = std::make_shared<ast::BinaryOperator>(rhsTmpT1, std::string("+"), rhsTmpT2);
@@ -271,7 +269,6 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto stmt2 = iir::makeExprStmt(assignmentOutTmp);
   stmt2->setID(target->nextUID());
-  auto insertee2 = std::make_unique<iir::StatementAccessesPair>(stmt2);
 
   // Add the accesses to the Pair:
   iir::Accesses callerAccesses2;
@@ -280,7 +277,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses2));
   // And add the StmtAccesspair to it
-  IIRDoMethod2->insertChild(std::move(insertee2));
+  IIRDoMethod2->insertChild(std::move(stmt2));
   IIRDoMethod2->updateLevel();
 
   // Add the control flow descriptor to the IIR

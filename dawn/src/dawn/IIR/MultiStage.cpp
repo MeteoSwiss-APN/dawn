@@ -20,7 +20,6 @@
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/Stage.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/UIDGenerator.h"
@@ -248,7 +247,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   for(const auto& doMethod : orderedDoMethods) {
     for(const auto& statementAccesssPair : doMethod->getChildren()) {
       const Accesses& accesses =
-          *statementAccesssPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+          *statementAccesssPair->getData<IIRStmtData>().CallerAccesses;
       if(accesses.hasWriteAccess(accessID)) {
         writeIntervalPre.insert(doMethod->getInterval());
       }
@@ -258,7 +257,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   for(const auto& doMethod : orderedDoMethods) {
     for(const auto& statementAccesssPair : doMethod->getChildren()) {
       const Accesses& accesses =
-          *statementAccesssPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+          *statementAccesssPair->getData<IIRStmtData>().CallerAccesses;
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
       if(accesses.hasReadAccess(accessID)) {

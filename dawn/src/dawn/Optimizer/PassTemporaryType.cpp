@@ -17,7 +17,6 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -111,8 +110,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     AccessIDs.clear();
 
     // Loop over all accesses
-    for(const auto& statementAccessesPair :
-        iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
+    for(const auto& statementAccessesPair : iterateIIROverStmt(*stencilPtr)) {
       auto processAccessMap = [&](const std::unordered_map<int, iir::Extents>& accessMap) {
         for(const auto& AccessIDExtentPair : accessMap) {
           int AccessID = AccessIDExtentPair.first;
@@ -142,7 +140,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         }
       };
       const auto& callerAccesses =
-          statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+          statementAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
       processAccessMap(callerAccesses->getWriteAccesses());
       processAccessMap(callerAccesses->getReadAccesses());
     }

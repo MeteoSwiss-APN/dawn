@@ -350,7 +350,7 @@ bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
           ExprToStencilFunctionInstantiationMap_.end());
 }
 
-const std::vector<std::unique_ptr<StatementAccessesPair>>&
+const std::vector<std::shared_ptr<iir::Stmt>>&
 StencilFunctionInstantiation::getStatementAccessesPairs() const {
   return doMethod_->getChildren();
 }
@@ -381,7 +381,7 @@ void StencilFunctionInstantiation::update() {
 
   for(const auto& statementAccessesPair : doMethod_->getChildren()) {
     const auto& access =
-        statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+        statementAccessesPair->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -458,8 +458,8 @@ void StencilFunctionInstantiation::update() {
       for(const auto& statementAccessesPair : doMethod_->getChildren()) {
         const auto& access =
             callerAccesses
-                ? statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses
-                : statementAccessesPair->getStatement()->getData<IIRStmtData>().CalleeAccesses;
+                ? statementAccessesPair->getData<IIRStmtData>().CallerAccesses
+                : statementAccessesPair->getData<IIRStmtData>().CalleeAccesses;
 
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
@@ -598,7 +598,7 @@ void StencilFunctionInstantiation::dump() const {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
     const auto& callerAccesses =
-        doMethod_->getChild(i)->getStatement()->getData<IIRStmtData>().CallerAccesses;
+        doMethod_->getChild(i)->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },

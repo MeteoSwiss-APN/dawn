@@ -44,16 +44,14 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
       iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
       for(int stmtIdx = 0; stmtIdx < doMethod.getChildren().size(); ++stmtIdx) {
 
-        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
-            doMethod.getChildren()[stmtIdx];
+        const std::shared_ptr<iir::Stmt>& stmtAccessesPair = doMethod.getChildren()[stmtIdx];
 
         iir::AssignmentExpr* assignment = nullptr;
-        if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(stmtAccessesPair->getStatement().get()))
+        if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(stmtAccessesPair.get()))
           assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
         std::vector<int> AccessIDsToRename;
-        const auto& callerAccesses =
-            stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+        const auto& callerAccesses = stmtAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
 
         for(const std::pair<int, iir::Extents>& readAccess : callerAccesses->getReadAccesses()) {
           int AccessID = readAccess.first;

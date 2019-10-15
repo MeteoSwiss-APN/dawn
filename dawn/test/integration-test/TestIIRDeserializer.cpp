@@ -88,7 +88,7 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement (and its data)
-            EXPECT_TRUE(lhsStmt->getStatement()->equals(rhsStmt->getStatement().get()));
+            EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
           }
         }
       }

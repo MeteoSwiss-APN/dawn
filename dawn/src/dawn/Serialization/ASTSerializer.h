@@ -17,7 +17,6 @@
 
 #include "dawn/AST/ASTFwd.h"
 #include "dawn/AST/ASTStmt.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"

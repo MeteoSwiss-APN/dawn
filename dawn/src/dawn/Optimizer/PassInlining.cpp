@@ -18,7 +18,6 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -38,9 +37,8 @@ class Inliner;
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
     PassInlining::InlineStrategy strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
-    const std::unique_ptr<iir::StatementAccessesPair>& oldStmt,
-    std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmts, int AccessIDOfCaller,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+    const std::shared_ptr<iir::Stmt>& oldStmt, std::vector<std::shared_ptr<iir::Stmt>>& newStmts,
+    int AccessIDOfCaller, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
 /// @brief Perform the inlining of a stencil-function
 class Inliner : public iir::ASTVisitor {
@@ -50,10 +48,10 @@ class Inliner : public iir::ASTVisitor {
   iir::StencilMetaInformation& metadata_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
-  const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair_;
+  const std::shared_ptr<iir::Stmt>& oldStmtAccessesPair_;
 
   /// List of the new statements
-  std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs_;
+  std::vector<std::shared_ptr<iir::Stmt>>& newStmtAccessesPairs_;
 
   /// If a stencil function is called within the argument list of another stencil function, this
   /// stores the AccessID of the "temporary" storage we would need to store the return value of the
@@ -77,14 +75,13 @@ class Inliner : public iir::ASTVisitor {
   };
 
   std::stack<ArgListScope> argListScope_;
-  std::stack<const std::unique_ptr<iir::StatementAccessesPair>*> currentStmtAccessesPair_;
+  // std::stack<const std::shared_ptr<iir::Stmt>*> currentStmtAccessesPair_;
 
 public:
   Inliner(PassInlining::InlineStrategy strategy,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
-          const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
-          std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
-          int AccessIDOfCaller,
+          const std::shared_ptr<iir::Stmt>& oldStmtAccessesPair,
+          std::vector<std::shared_ptr<iir::Stmt>>& newStmtAccessesPairs, int AccessIDOfCaller,
           const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
         instantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
@@ -104,37 +101,41 @@ public:
 
   void appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
     stmt->getData<iir::IIRStmtData>().StackTrace =
-        oldStmtAccessesPair_->getStatement()->getData<iir::IIRStmtData>().StackTrace;
+        oldStmtAccessesPair_->getData<iir::IIRStmtData>().StackTrace;
     if(scopeDepth_ == 1) {
-      // The top-level block statement is collapsed thus we only insert at 1. Note that this works
-      // because all AST have a block statement as root node.
-      newStmtAccessesPairs_.emplace_back(std::make_unique<iir::StatementAccessesPair>(stmt));
-
-      currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
-
-    } else if(scopeDepth_ > 1) {
-      // We are inside a nested block statement, we add the stmt as a child of the parent statement
-      (*currentStmtAccessesPair_.top())
-          ->insertBlockStatement(std::make_unique<iir::StatementAccessesPair>(stmt));
-
-      const std::unique_ptr<iir::StatementAccessesPair>& lp =
-          (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
-
-      currentStmtAccessesPair_.push(&lp);
+      newStmtAccessesPairs_.emplace_back(stmt);
     }
-  }
-  void removeLastChildStatementAccessesPair() {
-    // The top-level pair is never removed
-    if(currentStmtAccessesPair_.size() <= 1)
-      return;
+    //   // The top-level block statement is collapsed thus we only insert at 1. Note that this
+    //   works
+    //   // because all AST have a block statement as root node.
+    //   newStmtAccessesPairs_.emplace_back(stmt);
 
-    currentStmtAccessesPair_.pop();
+    //   // currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
+
+    // } else if(scopeDepth_ > 1) {
+    //   // TODO(SAP)
+    //   // We are inside a nested block statement, we add the stmt as a child of the parent
+    //   statement
+    //   // (*currentStmtAccessesPair_.top())->insertBlockStatement(stmt);
+
+    //   // const std::shared_ptr<iir::Stmt>& lp =
+    //   //     (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
+
+    //   // currentStmtAccessesPair_.push(&lp);
+    // }
   }
+  // void removeLastChildStatementAccessesPair() {
+  //   // The top-level pair is never removed
+  //   if(currentStmtAccessesPair_.size() <= 1)
+  //     return;
+
+  //   currentStmtAccessesPair_.pop();
+  // }
 
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     appendNewStatementAccessesPair(stmt);
     stmt->getExpr()->accept(*this);
-    removeLastChildStatementAccessesPair();
+    // removeLastChildStatementAccessesPair();
   }
 
   virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override {
@@ -193,7 +194,7 @@ public:
     if(stmt->hasElse())
       stmt->getElseStmt()->accept(*this);
 
-    removeLastChildStatementAccessesPair();
+    // removeLastChildStatementAccessesPair();
   }
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
@@ -208,7 +209,7 @@ public:
     for(const auto& expr : stmt->getInitList())
       expr->accept(*this);
 
-    removeLastChildStatementAccessesPair();
+    // removeLastChildStatementAccessesPair();
   }
 
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>&) override {}
@@ -289,13 +290,12 @@ public:
         // push backed all the new statements). Hence, we need to insert an empty statement in the
         // back -> swap with our statement -> replace the expr in our statement and evict the empty
         // statement)
-        newStmtAccessesPairs_.emplace_back(std::make_unique<iir::StatementAccessesPair>(nullptr));
+        newStmtAccessesPairs_.emplace_back(nullptr); // TODO(SAP)
         std::iter_swap(newStmtAccessesPairs_.begin() + stmtIdxOfFunc,
                        std::prev(newStmtAccessesPairs_.end()));
 
         iir::replaceOldExprWithNewExprInStmt(
-            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement(), expr,
-            inliner->getNewExpr());
+            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1], expr, inliner->getNewExpr());
       }
 
       // Erase the statement of the original stencil function call. The statment is either empty
@@ -353,14 +353,14 @@ class DetectInlineCandiates : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
-  std::unique_ptr<iir::StatementAccessesPair>* oldStmtAccessesPair_;
+  std::shared_ptr<iir::Stmt>* oldStmtAccessesPair_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
   std::unordered_map<std::shared_ptr<iir::Expr>, std::shared_ptr<iir::Expr>>
       replacmentOfOldStmtMap_;
 
   /// The new list of StatementAccessesPair which can serve as a replacement for `oldStmt`
-  std::vector<std::unique_ptr<iir::StatementAccessesPair>> newStmtAccessesPairs_;
+  std::vector<std::shared_ptr<iir::Stmt>> newStmtAccessesPairs_;
 
   /// If `true` we need to replace `oldStmt` with `newStmts`
   bool inlineCandiatesFound_;
@@ -384,14 +384,14 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
+  void processStatment(std::shared_ptr<iir::Stmt>& stmtAccesesPair) {
     // Reset the state
     inlineCandiatesFound_ = false;
     oldStmtAccessesPair_ = &stmtAccesesPair;
     newStmtAccessesPairs_.clear();
 
     // Detect the stencil functions suitable for inlining
-    (*oldStmtAccessesPair_)->getStatement()->accept(*this);
+    (*oldStmtAccessesPair_)->accept(*this);
   }
 
   /// @brief Atleast one inline candiate was found and the given `stmt` should be replaced with
@@ -401,14 +401,14 @@ public:
   /// @brief Get the newly computed statements which can be substituted for the given `stmt`
   ///
   /// Note that the accesses are not computed!
-  std::vector<std::unique_ptr<iir::StatementAccessesPair>>& getNewStatementAccessesPairs() {
+  std::vector<std::shared_ptr<iir::Stmt>>& getNewStatementAccessesPairs() {
     if(!replacmentOfOldStmtMap_.empty()) {
       newStmtAccessesPairs_.push_back(std::move(*oldStmtAccessesPair_));
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(
-            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement(),
-            oldNewPair.first, oldNewPair.second);
+            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1], oldNewPair.first,
+            oldNewPair.second);
 
       // Clear the map in case someone would call getNewStatments multiple times
       replacmentOfOldStmtMap_.clear();
@@ -486,12 +486,13 @@ public:
 ///                          instantiation)
 /// @returns `true` if the stencil-function was inlined, `false` otherwise (the corresponding
 /// `Inliner` instance (or NULL) is returned as well)
-static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
-    PassInlining::InlineStrategy strategy,
-    const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunc,
-    const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
-    std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
-    int AccessIDOfCaller, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+static std::pair<bool, std::shared_ptr<Inliner>>
+tryInlineStencilFunction(PassInlining::InlineStrategy strategy,
+                         const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunc,
+                         const std::shared_ptr<iir::Stmt>& oldStmtAccessesPair,
+                         std::vector<std::shared_ptr<iir::Stmt>>& newStmtAccessesPairs,
+                         int AccessIDOfCaller,
+                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.

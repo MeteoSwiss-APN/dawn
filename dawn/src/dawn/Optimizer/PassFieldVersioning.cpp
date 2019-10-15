@@ -19,7 +19,6 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
@@ -167,7 +166,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  iir::Stmt& statement = *doMethod.getChildren()[index]->getStatement();
+  iir::Stmt& statement = *doMethod.getChildren()[index];
 
   int numRenames = 0;
 

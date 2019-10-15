@@ -45,12 +45,12 @@ class Stencil;
 ///
 /// @ingroup optimizer
 /// @{
-void renameAccessIDInStmts(
-    iir::StencilMetaInformation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
-void renameAccessIDInStmts(
-    iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+void renameAccessIDInStmts(iir::StencilMetaInformation* instantiation, int oldAccessID,
+                           int newAccessID,
+                           ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs);
+void renameAccessIDInStmts(iir::StencilFunctionInstantiation* instantiation, int oldAccessID,
+                           int newAccessID,
+                           ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs);
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
                           int newAccessID, std::shared_ptr<iir::Expr>& expr);
 /// @}
@@ -65,12 +65,12 @@ void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAcces
 /// @param statementAccessesPairs       Accesses to update
 ///
 /// @ingroup optimizer
-void renameAccessIDInAccesses(
-    const iir::StencilMetaInformation* metadata, int oldAccessID, int newAccessID,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
-void renameAccessIDInAccesses(
-    iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+void renameAccessIDInAccesses(const iir::StencilMetaInformation* metadata, int oldAccessID,
+                              int newAccessID,
+                              ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs);
+void renameAccessIDInAccesses(iir::StencilFunctionInstantiation* instantiation, int oldAccessID,
+                              int newAccessID,
+                              ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs);
 /// @}
 
 void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, int newAccessID);

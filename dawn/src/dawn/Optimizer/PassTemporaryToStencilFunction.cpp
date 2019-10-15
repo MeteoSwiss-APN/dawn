@@ -589,7 +589,7 @@ bool PassTemporaryToStencilFunction::run(
           for(auto stmtAccessPairIt = (*doMethodIt)->childrenRBegin();
               stmtAccessPairIt != (*doMethodIt)->childrenREnd(); stmtAccessPairIt++) {
 
-            (*stmtAccessPairIt)->getStatement()->acceptAndReplace(localVariablePromotion);
+            (*stmtAccessPairIt)->acceptAndReplace(localVariablePromotion);
           }
         }
       }
@@ -624,7 +624,7 @@ bool PassTemporaryToStencilFunction::run(
             }
 
             for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
-              const std::shared_ptr<iir::Stmt> stmt = stmtAccessPair->getStatement();
+              const std::shared_ptr<iir::Stmt> stmt = stmtAccessPair;
 
               DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
                           (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
@@ -668,7 +668,7 @@ bool PassTemporaryToStencilFunction::run(
 
                   DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
 
-                  std::unique_ptr<iir::StatementAccessesPair>& stmtPair =
+                  std::shared_ptr<iir::Stmt>& stmtPair =
                       *(tmpStmtDoMethod.childrenBegin());
                   computeAccesses(stencilInstantiation.get(), stmtPair);
 

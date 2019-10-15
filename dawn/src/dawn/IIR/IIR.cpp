@@ -15,7 +15,6 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/Field.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"

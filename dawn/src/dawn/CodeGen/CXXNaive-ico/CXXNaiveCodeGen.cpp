@@ -422,7 +422,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               if(!doMethod.getInterval().overlaps(interval))
                 continue;
               for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+                statementAccessesPair->accept(stencilBodyCXXVisitor);
                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
             }
@@ -520,7 +520,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+        statementAccessesPair->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }

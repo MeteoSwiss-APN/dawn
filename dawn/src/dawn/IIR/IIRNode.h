@@ -98,7 +98,7 @@ public:
     cloneChildrenImpl<Child>(other, thisNode);
   }
 
-  virtual bool checkDoMethod() { return true; }
+  virtual bool checkDoMethod() const { return true; }
 
   /// @brief getters and iterator getters
   /// @{
@@ -156,16 +156,12 @@ public:
   }
   /// @brief get unique_ptr to parent
   inline const std::unique_ptr<Parent>& getParent() const {
-    DAWN_ASSERT(checkDoMethod());
     DAWN_ASSERT(parent_);
     return *parent_;
   }
 
   /// @brief get raw pointer to parent smart ptr
-  inline const std::unique_ptr<Parent>* getParentPtr() {
-    DAWN_ASSERT(checkDoMethod());
-    return parent_;
-  }
+  inline const std::unique_ptr<Parent>* getParentPtr() { return parent_; }
   /// @}
 
   /// @brief erase a children element (tree consistency is ensured after erasure)
@@ -207,18 +203,12 @@ public:
 
   /// @brief virtual method to be implemented by node classes that update the derived info from
   /// children derived infos
-  virtual void updateFromChildren() { DAWN_ASSERT(checkDoMethod()); }
+  virtual void updateFromChildren() {}
 
-  inline void setParent(const std::unique_ptr<Parent>& p) {
-    DAWN_ASSERT(checkDoMethod());
-    parent_ = &p;
-  }
+  inline void setParent(const std::unique_ptr<Parent>& p) { parent_ = &p; }
 
   /// @brief check if the pointer to parent is set
-  inline bool parentIsSet() const {
-    DAWN_ASSERT(checkDoMethod());
-    return static_cast<bool>(parent_);
-  }
+  inline bool parentIsSet() const { return static_cast<bool>(parent_); }
 
   template <bool T>
   struct identity {
@@ -412,7 +402,6 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
     updateFromChildren();
   }
 
@@ -420,7 +409,6 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
     updateFromChildren();
 
     auto parentPtr = getParentPtr();
@@ -433,7 +421,6 @@ public:
   template <typename TNodeType>
   inline void clearDerivedInfoRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
     clearDerivedInfo();
   }
 
@@ -441,7 +428,6 @@ public:
   template <typename TNodeType>
   inline void clearDerivedInfoRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
 
     auto parentPtr = getParentPtr();
     if(parentPtr) {
@@ -454,7 +440,6 @@ public:
   /// @param updateType determines if the update should be applied to this tree level (only) or
   /// propagate it to the top or bottom of the tree
   void update(NodeUpdateType updateType) {
-    DAWN_ASSERT(checkDoMethod());
     if(impl::updateLevel(updateType)) {
       clearDerivedInfo();
       static_cast<NodeType*>(this)->updateLevel();

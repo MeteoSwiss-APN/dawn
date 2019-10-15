@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_ACCESSCOMPUTATION_H
 #define DAWN_OPTIMIZER_ACCESSCOMPUTATION_H
 
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 #include <vector>
@@ -34,9 +35,8 @@ class StencilFunctionInstantiation;
 /// @fn computeAccesses
 /// @brief Compute the Accesses of `statementAccessesPairs`
 /// @ingroup optimizer
-extern void
-computeAccesses(iir::StencilInstantiation* instantiation,
-                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+extern void computeAccesses(iir::StencilInstantiation* instantiation,
+                            ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs);
 
 /// @fn computeAccesses
 /// @brief Compute the caller and callee Accesses of `statementCallerAccessesPairs`
@@ -48,7 +48,7 @@ computeAccesses(iir::StencilInstantiation* instantiation,
 /// @ingroup optimizer
 extern void
 computeAccesses(std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+                ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs);
 
 /// @}
 

@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
@@ -69,7 +68,7 @@ bool PassStageSplitter::run(
           if(hasHorizontalReadBeforeWriteConflict(newGraph.get())) {
 
             // Check if the conflict is related to a conditional block
-            if(isa<iir::IfStmt>(stmtAccessesPair->getStatement().get())) {
+            if(isa<iir::IfStmt>(stmtAccessesPair.get())) {
               // Check if the conflict is inside the conditional block
               iir::DependencyGraphAccesses conditionalBlockGraph =
                   iir::DependencyGraphAccesses(stencilInstantiation->getMetaData());
@@ -77,7 +76,7 @@ bool PassStageSplitter::run(
               if(hasHorizontalReadBeforeWriteConflict(&conditionalBlockGraph)) {
                 // Since splitting inside a conditional block is not supported, report and return an
                 // error.
-                auto statement = stmtAccessesPair->getStatement();
+                auto statement = stmtAccessesPair;
                 DiagnosticsBuilder diag(DiagnosticsKind::Error, statement->getSourceLocation());
                 diag << "Read-before-Write conflict inside conditional block is not supported.";
                 context_.getDiagnostics().report(diag);
@@ -95,8 +94,7 @@ bool PassStageSplitter::run(
 
             if(context_.getOptions().ReportPassStageSplit)
               std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                        << ": split:" << stmtAccessesPair->getStatement()->getSourceLocation().Line
-                        << "\n";
+                        << ": split:" << stmtAccessesPair->getSourceLocation().Line << "\n";
 
             // Clear the new graph an process the current statements again
             newGraph->clear();

@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/CodeGen/GridTools/CodeGenUtils.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -627,7 +626,7 @@ void GTCodeGen::generateStencilClasses(
         stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
         stencilBodyCGVisitor.setIndent(doMethod.getIndent());
         for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-          statementAccessesPair->getStatement()->accept(stencilBodyCGVisitor);
+          statementAccessesPair->accept(stencilBodyCGVisitor);
           doMethod.indentStatment();
           doMethod << stencilBodyCGVisitor.getCodeAndResetStream();
         }
@@ -790,7 +789,7 @@ void GTCodeGen::generateStencilClasses(
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
           for(const auto& statementAccessesPair : doMethod.getChildren()) {
-            statementAccessesPair->getStatement()->accept(stencilBodyCGVisitor);
+            statementAccessesPair->accept(stencilBodyCGVisitor);
             DoMethodCodeGen << stencilBodyCGVisitor.getCodeAndResetStream();
           }
         }

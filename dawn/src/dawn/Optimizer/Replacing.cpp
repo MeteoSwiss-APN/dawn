@@ -63,16 +63,15 @@ public:
 
 } // anonymous namespace
 
-void replaceFieldWithVarAccessInStmts(
-    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
-    const std::string& varname,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+void replaceFieldWithVarAccessInStmts(iir::StencilMetaInformation& metadata, iir::Stencil* stencil,
+                                      int AccessID, const std::string& varname,
+                                      ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) {
 
   GetFieldAndVarAccesses visitor(metadata, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement();
+    const auto& stmt = statementAccessesPair;
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getFieldAccessExprToReplace()) {
@@ -85,16 +84,15 @@ void replaceFieldWithVarAccessInStmts(
   }
 }
 
-void replaceVarWithFieldAccessInStmts(
-    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
-    const std::string& fieldname,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+void replaceVarWithFieldAccessInStmts(iir::StencilMetaInformation& metadata, iir::Stencil* stencil,
+                                      int AccessID, const std::string& fieldname,
+                                      ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) {
 
   GetFieldAndVarAccesses visitor(metadata, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement();
+    const auto& stmt = statementAccessesPair;
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getVarAccessesToReplace()) {

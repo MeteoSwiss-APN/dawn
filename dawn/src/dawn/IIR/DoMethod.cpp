@@ -15,6 +15,7 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -22,7 +23,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
@@ -57,7 +57,7 @@ std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const
   std::optional<Extents> extents;
 
   for(auto& stmtAccess : getChildren()) {
-    auto extents_ = iir::computeMaximumExtents(*stmtAccess->getStatement(), accessID);
+    auto extents_ = iir::computeMaximumExtents(*stmtAccess, accessID);
     if(!extents_)
       continue;
 
@@ -115,9 +115,9 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   node["Fields"] = fieldsJson;
 
   json::json stmtsJson;
-  for(const auto& stmt : children_) {
-    stmtsJson.push_back(stmt->jsonDump(metaData));
-  }
+  // for(const auto& stmt : getChildren()) {
+  // stmtsJson.push_back(stmt->jsonDump(metaData)); // TODO(SAP)
+  // }
   node["Stmts"] = stmtsJson;
   return node;
 }
@@ -139,9 +139,8 @@ void DoMethod::updateLevel() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& statementAccessesPair : children_) {
-    const auto& access =
-        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+  for(const auto& statementAccessesPair : getChildren()) {
+    const auto& access = statementAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -195,9 +194,8 @@ void DoMethod::updateLevel() {
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
-  for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
-    const auto& access =
-        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+  for(const auto& statementAccessesPair : getChildren()) {
+    const auto& access = statementAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
@@ -236,8 +234,8 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  for(auto const& statementAccessPair : children_) {
-    const std::shared_ptr<iir::Stmt>& root = statementAccessPair->getStatement();
+  for(auto const& statementAccessPair : getChildren()) {
+    const std::shared_ptr<iir::Stmt>& root = statementAccessPair;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 

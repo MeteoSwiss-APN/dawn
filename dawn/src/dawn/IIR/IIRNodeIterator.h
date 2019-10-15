@@ -40,7 +40,7 @@ class IIRNodeIterator {
   bool isTop_ = false;
 
 public:
-  using leafIterator_t = typename LeafNode::ChildIterator;
+  // using leafIterator_t = typename LeafNode::ChildIterator;
 
   /// @brief IIRNodeIterator constructor
   /// @param root IIRNodeIterator will model iterators for children of this node

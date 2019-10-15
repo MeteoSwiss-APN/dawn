@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
@@ -70,7 +69,7 @@ multiStageSplitterOptimized() {
 
         if(options.ReportPassMultiStageSplit)
           std::cout << "\nPASS: " << PassName << ": " << StencilName << ": split:"
-                    << doMethod.getChildren()[stmtIndex]->getStatement()->getSourceLocation().Line
+                    << doMethod.getChildren()[stmtIndex]->getSourceLocation().Line
                     << " looporder:" << curLoopOrder << "\n";
 
         if(options.DumpSplitGraphs)

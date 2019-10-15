@@ -1020,7 +1020,7 @@ void MSCodeGen::generateCudaKernelCode() {
                 if(!doMethod.getInterval().overlaps(interval))
                   continue;
                 for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                  statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+                  statementAccessesPair->accept(stencilBodyCXXVisitor);
                   cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
                 }
               }

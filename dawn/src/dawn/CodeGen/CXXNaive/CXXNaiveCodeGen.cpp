@@ -391,7 +391,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
                               for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                                statementAccessesPair->getStatement()->accept(
+                                statementAccessesPair->accept(
                                     stencilBodyCXXVisitor);
                                 stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }
@@ -501,7 +501,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+        statementAccessesPair->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }

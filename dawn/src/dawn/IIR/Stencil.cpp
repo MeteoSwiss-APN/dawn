@@ -16,7 +16,6 @@
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -203,12 +202,12 @@ int Stencil::getNumStages() const {
 }
 
 void Stencil::forEachStatementAccessesPair(
-    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, bool updateFields) {
+    std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func, bool updateFields) {
   forEachStatementAccessesPairImpl(func, 0, getNumStages(), updateFields);
 }
 
 void Stencil::forEachStatementAccessesPair(
-    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
+    std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
     const Stencil::Lifetime& lifetime, bool updateFields) {
   int startStageIdx = getStageIndexFromPosition(lifetime.Begin.StagePos);
   int endStageIdx = getStageIndexFromPosition(lifetime.End.StagePos);
@@ -216,7 +215,7 @@ void Stencil::forEachStatementAccessesPair(
 }
 
 void Stencil::forEachStatementAccessesPairImpl(
-    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, int startStageIdx,
+    std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func, int startStageIdx,
     int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
@@ -482,8 +481,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
 
         int statementIdx = 0;
         for(const auto& stmtAccessPair : doMethod.getChildren()) {
-          const Accesses& accesses =
-              *stmtAccessPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+          const Accesses& accesses = *stmtAccessPair->getData<IIRStmtData>().CallerAccesses;
 
           auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
             if(!accessMap.count(AccessID))
@@ -542,8 +540,8 @@ std::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
 }
 
 void Stencil::accept(iir::ASTVisitor& visitor) {
-  for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
-    stmtAccessesPairPtr->getStatement()->accept(visitor);
+  for(const auto& stmtAccessesPairPtr : iterateIIROverStmt(*this)) {
+    stmtAccessesPairPtr->accept(visitor);
   }
 }
 
