@@ -36,11 +36,6 @@ class StatementMapper : public iir::ASTVisitor {
     /// DoMethod containing the list of statement/accesses pair of the stencil function or stage
     iir::DoMethod& doMethod_;
 
-    /// Statement accesses pair pointing to the statement we are currently working on. This might
-    /// not be the top-level statement which was passed to the constructor but rather a
-    /// sub-statement (child) of the top-level statement if decend into nested block statements.
-    // std::stack<std::shared_ptr<iir::Stmt> const*> CurentStmtAccessesPair;
-
     /// The current interval
     const iir::Interval VerticalInterval;
 

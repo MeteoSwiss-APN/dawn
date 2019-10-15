@@ -75,7 +75,6 @@ class Inliner : public iir::ASTVisitor {
   };
 
   std::stack<ArgListScope> argListScope_;
-  // std::stack<const std::shared_ptr<iir::Stmt>*> currentStmtAccessesPair_;
 
 public:
   Inliner(PassInlining::InlineStrategy strategy,
@@ -105,37 +104,11 @@ public:
     if(scopeDepth_ == 1) {
       newStmtAccessesPairs_.emplace_back(stmt);
     }
-    //   // The top-level block statement is collapsed thus we only insert at 1. Note that this
-    //   works
-    //   // because all AST have a block statement as root node.
-    //   newStmtAccessesPairs_.emplace_back(stmt);
-
-    //   // currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
-
-    // } else if(scopeDepth_ > 1) {
-    //   // TODO(SAP)
-    //   // We are inside a nested block statement, we add the stmt as a child of the parent
-    //   statement
-    //   // (*currentStmtAccessesPair_.top())->insertBlockStatement(stmt);
-
-    //   // const std::shared_ptr<iir::Stmt>& lp =
-    //   //     (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
-
-    //   // currentStmtAccessesPair_.push(&lp);
-    // }
   }
-  // void removeLastChildStatementAccessesPair() {
-  //   // The top-level pair is never removed
-  //   if(currentStmtAccessesPair_.size() <= 1)
-  //     return;
-
-  //   currentStmtAccessesPair_.pop();
-  // }
 
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     appendNewStatementAccessesPair(stmt);
     stmt->getExpr()->accept(*this);
-    // removeLastChildStatementAccessesPair();
   }
 
   virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override {
@@ -193,8 +166,6 @@ public:
     stmt->getThenStmt()->accept(*this);
     if(stmt->hasElse())
       stmt->getElseStmt()->accept(*this);
-
-    // removeLastChildStatementAccessesPair();
   }
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
@@ -208,8 +179,6 @@ public:
     // Resolve the RHS
     for(const auto& expr : stmt->getInitList())
       expr->accept(*this);
-
-    // removeLastChildStatementAccessesPair();
   }
 
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>&) override {}

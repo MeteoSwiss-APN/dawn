@@ -67,6 +67,8 @@ public:
   Stmt(std::unique_ptr<StmtData> data, StmtKind kind, SourceLocation loc = SourceLocation())
       : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()),
         data_(std::move(data)) {}
+  Stmt(int id, std::unique_ptr<StmtData> data, StmtKind kind, SourceLocation loc = SourceLocation())
+      : kind_(kind), loc_(loc), statementID_(id), data_(std::move(data)) {}
   Stmt(const Stmt& stmt)
       : std::enable_shared_from_this<Stmt>(stmt), kind_(stmt.getKind()),
         loc_(stmt.getSourceLocation()), statementID_(UIDGenerator::getInstance()->get()),
@@ -173,6 +175,8 @@ public:
   /// @name Constructor & Destructor
   /// @{
   BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc = SourceLocation());
+  BlockStmt(int id, std::unique_ptr<StmtData> data, SourceLocation loc = SourceLocation())
+      : Stmt(id, std::move(data), SK_BlockStmt, loc) {}
   BlockStmt(std::unique_ptr<StmtData> data, const std::vector<std::shared_ptr<Stmt>>& statements,
             SourceLocation loc = SourceLocation());
   BlockStmt(const BlockStmt& stmt);

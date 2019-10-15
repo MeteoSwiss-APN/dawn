@@ -37,42 +37,12 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
 }
 
 void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
-
-  // if(scope_.top()->ScopeDepth == 1) {
-  //   // The top-level block statement is collapsed thus we only insert at 1. Note that this works
-  //   // because all AST have a block statement as root node.
-  //   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
-  //   auto tmp = stmt; // TODO(SAP)
-  //   scope_.top()->doMethod_.insertChild(std::move(tmp));
-  //   scope_.top()->CurentStmtAccessesPair.push(
-  //       &(*(scope_.top()->doMethod_.childrenRBegin()))); // TODO(SAP) this is stupid, do we need
-  //       it?
-
-  // } else if(scope_.top()->ScopeDepth > 1) {
-  //   // TODO(SAP)
-  //   // We are inside a nested block statement, we add the stmt as a child of the parent statement
-  //   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
-  //   // // (*scope_.top()->CurentStmtAccessesPair.top())->insertBlockStatement(stmt);
-
-  //   // const std::shared_ptr<iir::Stmt>& lp =
-  //   //     ((*scope_.top()->CurentStmtAccessesPair.top())->getBlockStatements().back());
-
-  //   scope_.top()->CurentStmtAccessesPair.push(&stmt); // TODO(SAP) this is stupid, do we need it?
-  // }
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
     auto tmp = stmt; // TODO(SAP)
     scope_.top()->doMethod_.insertChild(std::move(tmp));
   }
 }
-
-// void StatementMapper::removeLastChildStatementAccessesPair() {
-//   // The top-level pair is never removed
-//   if(scope_.top()->CurentStmtAccessesPair.size() <= 1)
-//     return;
-
-//   scope_.top()->CurentStmtAccessesPair.pop();
-// }
 
 void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   initializedWithBlockStmt_ = true;
@@ -89,7 +59,6 @@ void StatementMapper::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   appendNewStatementAccessesPair(stmt);
   stmt->getExpr()->accept(*this);
-  // removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
@@ -109,7 +78,6 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
 
   appendNewStatementAccessesPair(stmt);
   stmt->getExpr()->accept(*this);
-  // removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
@@ -121,8 +89,6 @@ void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
   stmt->getThenStmt()->accept(*this);
   if(stmt->hasElse())
     stmt->getElseStmt()->accept(*this);
-
-  // removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
@@ -160,8 +126,6 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     // Resolve the RHS
     for(const auto& expr : stmt->getInitList())
       expr->accept(*this);
-
-    // removeLastChildStatementAccessesPair();
   }
 }
 

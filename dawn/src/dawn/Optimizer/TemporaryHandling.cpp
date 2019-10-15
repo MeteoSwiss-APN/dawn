@@ -145,7 +145,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
       oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
   varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
       oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
-  statementAccessesPairs[lifetime.Begin.StatementIndex] = std::move(varDeclStmt);
+  statementAccessesPairs[lifetime.Begin.StatementIndex] = varDeclStmt;
 
   // Remove the field
   instantiation->getMetaData().removeAccessID(AccessID);

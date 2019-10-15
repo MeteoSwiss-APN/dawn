@@ -15,7 +15,9 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -27,21 +29,23 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logging.h"
+#include <memory>
 
 namespace dawn {
 namespace iir {
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
-      metaData_(metaData), ast_{*iir::makeBlockStmt()} {}
+      metaData_(metaData), ast_{1232132323, std::make_unique<iir::IIRStmtData>()}
+//, ast_{*iir::makeBlockStmt()} // TODO(SAP)
+{}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
-
-  cloneMS->setAST(std::move(*dynamic_cast<iir::BlockStmt*>(ast_.clone().get()))); // TODO(SAP)
+  cloneMS->ast_ = iir::BlockStmt{ast_};
   return cloneMS;
 }
 
@@ -101,6 +105,32 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
+namespace {
+json::json print(const StencilMetaInformation& metadata,
+                 const AccessToNameMapper& accessToNameMapper,
+                 const std::unordered_map<int, Extents>& accesses) {
+  json::json node;
+  for(const auto& accessPair : accesses) {
+    json::json accessNode;
+    int accessID = accessPair.first;
+    std::string accessName = "unknown";
+    if(accessToNameMapper.hasAccessID(accessID)) {
+      accessName = accessToNameMapper.getNameFromAccessID(accessID);
+    }
+    if(metadata.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
+      continue;
+    }
+    accessNode["access_id"] = accessID;
+    accessNode["name"] = accessName;
+    std::stringstream ss;
+    ss << accessPair.second;
+    accessNode["extents"] = ss.str();
+    node.push_back(accessNode);
+  }
+  return node;
+}
+} // namespace
+
 json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   json::json node;
   node["ID"] = id_;
@@ -115,12 +145,24 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   node["Fields"] = fieldsJson;
 
   json::json stmtsJson;
-  // for(const auto& stmt : getChildren()) {
-  // stmtsJson.push_back(stmt->jsonDump(metaData)); // TODO(SAP)
-  // }
+  for(const auto& stmt : getChildren()) {
+    json::json node2;
+    node2["stmt"] = ASTStringifier::toString(stmt, 0);
+
+    AccessToNameMapper accessToNameMapper(metaData);
+    stmt->accept(accessToNameMapper);
+
+    node2["write_accesses"] =
+        print(metaData, accessToNameMapper,
+              stmt->getData<iir::IIRStmtData>().CallerAccesses->getWriteAccesses());
+    node2["read_accesses"] =
+        print(metaData, accessToNameMapper,
+              stmt->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses());
+    stmtsJson.push_back(node2); // TODO(SAP)
+  }
   node["Stmts"] = stmtsJson;
   return node;
-}
+} // namespace iir
 
 void DoMethod::updateLevel() {
 
