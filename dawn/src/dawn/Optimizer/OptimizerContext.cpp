@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/ASTConverter.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -391,6 +392,7 @@ public:
                                     doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
+    // doMethod.setAST(std::move(*ast->getRoot()));
     DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
 
     if(context_.getDiagnostics().hasErrors())

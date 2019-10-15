@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -30,7 +32,8 @@ namespace dawn {
 namespace iir {
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData) {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
+      metaData_(metaData), ast_{*iir::makeBlockStmt()} {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
@@ -38,7 +41,7 @@ std::unique_ptr<DoMethod> DoMethod::clone() const {
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
 
-  cloneMS->cloneChildrenFrom(*this);
+  cloneMS->setAST(std::move(*dynamic_cast<iir::BlockStmt*>(ast_.clone().get()))); // TODO(SAP)
   return cloneMS;
 }
 

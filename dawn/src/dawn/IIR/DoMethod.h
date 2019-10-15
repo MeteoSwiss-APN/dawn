@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_DOMETHOD_H
 #define DAWN_IIR_DOMETHOD_H
 
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
@@ -34,7 +35,7 @@ class StencilMetaInformation;
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
+class DoMethod : public IIRNode<Stage, DoMethod, iir::Stmt> {
   Interval interval_;
   long unsigned int id_;
 
@@ -56,9 +57,12 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
 
   const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
+  iir::BlockStmt ast_;
 
 public:
   static constexpr const char* name = "DoMethod";
+
+  bool checkDoMethod() override { return false; }
 
   using StatementAccessesIterator = ChildIterator;
 
@@ -130,6 +134,82 @@ public:
   /// @brief update the derived info from the children (currently no information are propagated,
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
+
+  const std::vector<std::shared_ptr<iir::Stmt>>& getChildren() const {
+    return ast_.getStatements();
+  }
+
+  std::vector<std::shared_ptr<iir::Stmt>>& getChildren() { return ast_.getStatements(); }
+
+  auto childrenBegin() { return ast_.getStatements().begin(); }
+  auto childrenEnd() { return ast_.getStatements().end(); }
+
+  inline auto childrenRBegin() { return ast_.getStatements().rbegin(); }
+  inline auto childrenREnd() { return ast_.getStatements().rend(); }
+
+  inline auto childrenBegin() const { return ast_.getStatements().begin(); }
+  inline auto childrenEnd() const { return ast_.getStatements().end(); }
+
+  inline auto childrenRBegin() const { return ast_.getStatements().rbegin(); }
+  inline auto childrenREnd() const { return ast_.getStatements().rend(); }
+
+  inline auto& getChild(unsigned long pos) { return ast_.getStatements()[pos]; }
+
+  template <typename T>
+  inline auto childrenErase(T childIt) {
+    auto it_ = ast_.getStatements().erase(childIt);
+    return it_;
+  }
+
+  inline bool checkTreeConsistency() const { return true; }
+
+  /// @brief set the parent pointer of the children
+  template <typename TChildSmartPtr>
+  void setChildrenParent(TChildSmartPtr* = 0) {}
+
+  void setChildParent(const std::shared_ptr<iir::Stmt>& child) {}
+
+  void insertChild(std::shared_ptr<iir::Stmt>&& child) { ast_.getStatements().push_back(child); }
+
+  void insertChild(std::shared_ptr<iir::Stmt>&& child, const std::unique_ptr<DoMethod>& thisNode) {
+    ast_.getStatements().push_back(child);
+  }
+
+  auto insertChild(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos,
+                   std::shared_ptr<iir::Stmt>&& child) {
+    return ast_.getStatements().insert(pos, std::move(child));
+  }
+
+  template <typename Iterator>
+  auto insertChildren(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos, Iterator first,
+                      Iterator last) {
+    return ast_.getStatements().insert(pos, first, last);
+  }
+
+  template <typename Iterator>
+  ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
+                               const std::unique_ptr<DoMethod>&) {
+    return ast_.getStatements().insert(pos, first, last);
+  }
+
+  void printTree() {}
+
+  void replace(const std::shared_ptr<iir::Stmt>& inputChild,
+               std::shared_ptr<iir::Stmt>& withNewChild) {
+    auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
+    *it = withNewChild;
+  }
+
+  void replace(const std::shared_ptr<iir::Stmt>& inputChild,
+               std::shared_ptr<iir::Stmt>& withNewChild, const std::unique_ptr<DoMethod>&) {
+    auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
+    *it = withNewChild;
+  }
+
+  bool childrenEmpty() const { return ast_.getStatements().empty(); }
+  void clearChildren() { ast_.getStatements().clear(); }
+
+  void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
 };
 
 } // namespace iir
