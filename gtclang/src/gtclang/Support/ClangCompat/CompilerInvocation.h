@@ -21,9 +21,7 @@
 #include "clang/Frontend/CompilerInvocation.h"
 #include "llvm/Option/Option.h"
 
-namespace gtclang {
-namespace clang_compat {
-namespace CompilerInvocation {
+namespace gtclang::clang_compat::CompilerInvocation {
 #if CLANG_VERSION_MAJOR < 9
 inline bool CreateFromArgs(clang::CompilerInvocation& Res, llvm::opt::ArgStringList& ccArgs,
                            clang::DiagnosticsEngine& Diags) {
@@ -31,23 +29,12 @@ inline bool CreateFromArgs(clang::CompilerInvocation& Res, llvm::opt::ArgStringL
       Res, const_cast<const char**>(ccArgs.data()),
       const_cast<const char**>(ccArgs.data()) + ccArgs.size(), Diags);
 }
-
 #else
 inline bool CreateFromArgs(clang::CompilerInvocation& Res, llvm::opt::ArgStringList& ccArgs,
                            clang::DiagnosticsEngine& Diags) {
-  const char* args_tmp[ccArgs.size()];
-  std::size_t i = 0;
-  for(auto a : ccArgs) {
-    args_tmp[i] = a;
-    ++i;
-  }
-  llvm::ArrayRef<const char*> argsArrayRef(args_tmp, ccArgs.size());
-  return clang::CompilerInvocation::CreateFromArgs(Res, argsArrayRef, Diags);
+  return clang::CompilerInvocation::CreateFromArgs(Res, ccArgs, Diags);
 }
-
 #endif
-} // namespace CompilerInvocation
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat::CompilerInvocation
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_COMPILER_INVOCATION_H

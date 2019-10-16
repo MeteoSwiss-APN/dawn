@@ -20,22 +20,16 @@
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/Version.h"
 
-namespace gtclang {
-namespace clang_compat {
-namespace FileUtil {
+namespace gtclang::clang_compat::FileUtil {
 #if CLANG_VERSION_MAJOR < 9
 inline const clang::FileEntry* getFile(clang::FileManager& files, ::llvm::StringRef filename) {
   return files.getFile(filename);
 }
-
 #else
 inline const clang::FileEntry* getFile(clang::FileManager& files, ::llvm::StringRef filename) {
   return files.getFile(filename).get(); // maybe check for error
 }
-
 #endif
-} // namespace FileUtil
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat::FileUtil
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_FILE_UTIL_H
