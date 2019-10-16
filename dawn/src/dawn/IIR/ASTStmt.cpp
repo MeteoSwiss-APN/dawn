@@ -25,10 +25,6 @@ namespace iir {
 //     IIRStmtData
 //===------------------------------------------------------------------------------------------===//
 
-IIRStmtData::IIRStmtData(const IIRStmtData& other)
-    : StackTrace(other.StackTrace), CallerAccesses(other.CallerAccesses),
-      CalleeAccesses(other.CalleeAccesses) {}
-
 bool IIRStmtData::operator==(const IIRStmtData& rhs) const {
   return StackTrace == rhs.StackTrace && CallerAccesses == rhs.CallerAccesses &&
          CalleeAccesses == rhs.CalleeAccesses;
