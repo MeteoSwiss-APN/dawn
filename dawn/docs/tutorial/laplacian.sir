@@ -1,0 +1,6 @@
+globals
+  double dx
+stencil laplacian_stencil
+  field in['i', 'j', 'k'],out['i', 'j', 'k'],
+  vertical_region(kstart,kend)
+    out[0,0,0] = (((in[0,0,0] * -4.0) + (in[1,0,0] + (in[-1,0,0] + (in[0,1,0] + in[0,-1,0])))) / (dx * dx))

@@ -1,0 +1,50 @@
+<h1>Getting Started using GTClang &amp; dawn</h1>
+
+<p>In this tutorial the basic usage of <strong>GTClang</strong> will be demonstrated using a simple example. Note that we will not directly interact with <strong>dawn</strong>, rather, <strong>GTClang</strong> will run dawn in the background to generate our code. To follow this tutorial, please make sure that you compiled <strong>GTClang</strong> with the <code>GTCLANG_ENABLE_GRIDTOOLS=ON</code> flag. See the Readme in the dawn subfolder on information on how to do that.</p>
+
+<h2>Writing and Compiling the Stencil</h2>
+
+<p>For the purpose of this exercise, we will write a simple Finite Difference Stencil to find the Laplacian of a function. In <strong>GTClang</strong>, this can be achieved using very few lines of code as demonstrated in <code>laplacian_stencil.cpp</code>:</p>
+
+<p>```
+globals {
+  double dx;  //grid spacing
+};</p>
+
+<p>stencil laplacian<em>stencil {
+  storage</em>ij out<em>field;
+  storage</em>ij in<em>field;
+  Do() {
+    vertical</em>region(k<em>start, k</em>end) {
+        out<em>field[i,j] = (-4*in</em>field + in<em>field[i+1] + in</em>field[i-1] + in<em>field[j-1] + in</em>field[j+1])/(dx*dx);
+    }
+  }
+};
+```</p>
+
+<p>We define two fields which will serve as the arguments to our stencil. The variable <code>dx</code> is the grid spacing and is read-only (during the stencil run), which is modelled as a global in <strong>GTClang</strong>. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example <a href="https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables">wikipedia</a>), which close to no boiler plate. Save the stencil as <code>laplacian_stencil.cpp</code>.</p>
+
+<p>For the purpose of this tutorial we are going to use the <code>C++-naive</code> backend. To compile the stencil use:
+<code>
+./gtclang -backend=c++-naive laplacian_stencil.cpp -o laplacian_stencil_cxx_naive.cpp
+</code></p>
+
+<h2>Writing and Compiling the Driver Code</h2>
+
+<p><strong>GTClang</strong> now wrote a code file for us that can be compiled with any C++11 compliant compiler. However, for the stencil to do something useful some driver code that fills the <code>in_field</code> and reads the <code>out_field</code>. For the purpose of this exercise we are goanna initialize in field to a wave function <code>in(x,y) = sin(x)*sin(y)</code> since the Laplacian of this is the same wave again, but with inverted phase and twice the amplitude, and thus easy to check. The driver code is located in <code>laplacian_driver.cpp</code> and should be straight forward. The actual stencil launch is just one line:</p>
+
+<p><code>
+dawn_generated::cxxnaive::laplacian_stencil laplacian_naive(dom, out, in);
+laplacian_naive.set_dx(dx);
+laplacian_naive.run(out, in);   //launch stencil
+</code></p>
+
+<p>the run method could now be called in a time loop, for example to simulate diffusion. To facilitate the compilation, a <code>CMakeLists.txt</code> file has been provided. To compile the code:</p>
+
+<p><code>
+cmake . &amp;&amp; make
+</code></p>
+
+<p>This will place an executable called <code>laplacian_driver</code> in the tutorial folder. When run, two <code>vtk</code> files will be written. Those can be viewed using (ParaView)[https://www.paraview.org/]. <code>in.vtk</code> shows the initial conditions. If <code>out.vtk</code> is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations. </p>
+
+<p><img src="img/in.png" width="425"/> <img src="img/out.png" width="425"/> </p>

@@ -42,7 +42,7 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
 
       ss << h_extents.iMinus() << "," << h_extents.iPlus() << ",";
       ss << h_extents.jMinus() << "," << h_extents.jPlus() << ",";
-      ss << v_extents.Minus << "," << v_extents.Plus << ">";
+      ss << v_extents.minus() << "," << v_extents.plus() << ">";
     }
   };
 

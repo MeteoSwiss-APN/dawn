@@ -45,7 +45,10 @@ public:
   /// @{
   std::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
   std::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
-  Extents const& getExtents() const { return *totalExtents_; }
+  Extents const& getExtents() const {
+    DAWN_ASSERT(totalExtents_);
+    return *totalExtents_;
+  }
   /// @}
   /// @brief merge of extent with another (argument) extent
   /// @{

@@ -54,7 +54,7 @@ bool PassComputeStageExtents::run(
 
         iir::Extents fieldExtent = fromFieldExtents;
 
-        fieldExtent.expand(stageExtent);
+        fieldExtent = iir::Extents::add(fieldExtent, stageExtent);
 
         // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
