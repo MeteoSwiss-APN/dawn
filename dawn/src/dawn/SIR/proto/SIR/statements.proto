@@ -283,7 +283,7 @@ message VarDeclStmt {
   repeated Expr init_list = 5;
 
   SourceLocation loc = 6; // Source location
-  VarDeclStmtData data = 7; // Data of this statement
+  VarDeclStmtData var_decl_stmt_data = 7; // Data of this statement
   int32 ID = 8;           // ID of the Stmt
 }
 

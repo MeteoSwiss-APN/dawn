@@ -194,9 +194,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   if(dataType_ == ast::StmtData::IIR_DATA_TYPE)
-    setVarDeclStmtData(protoStmt->mutable_data(), stmt->getData<iir::VarDeclStmtData>());
+    setVarDeclStmtData(protoStmt->mutable_var_decl_stmt_data(),
+                       stmt->getData<iir::VarDeclStmtData>());
   else
-    protoStmt->mutable_data();
+    protoStmt->mutable_var_decl_stmt_data();
   protoStmt->set_id(stmt->getID());
 }
 
@@ -732,7 +733,8 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
         type, stmtProto.name(), stmtProto.dimension(), stmtProto.op().c_str(), initList,
         makeLocation(stmtProto));
     if(dataType == StmtData::IIR_DATA_TYPE)
-      fillVarDeclStmtDataFromProto(stmt->getData<iir::VarDeclStmtData>(), stmtProto.data());
+      fillVarDeclStmtDataFromProto(stmt->getData<iir::VarDeclStmtData>(),
+                                   stmtProto.var_decl_stmt_data());
     stmt->setID(stmtProto.id());
     return stmt;
   }
