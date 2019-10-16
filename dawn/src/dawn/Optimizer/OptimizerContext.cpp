@@ -602,7 +602,7 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
                                           : iir::FieldAccessType::FAT_APIField),
-                      field->Name, field->fieldDimensions);
+                      field->Name, field->fieldDimensions, field->locationType);
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),

@@ -56,8 +56,6 @@ class IIRBuilder {
   struct Field {
     int id;
     std::string name;
-    bool unstructured;
-    ast::Expr::LocationType location;
   };
   struct LocalVar {
     int id;
