@@ -305,15 +305,14 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
   IIRDoMethod->insertChild(std::move(varDeclStmt));
 
-  auto getNthChild = [](std::shared_ptr<iir::StencilInstantiation>& si,
-                        int n) -> std::shared_ptr<iir::Stmt> {
+  auto&& getNthChild = [](std::shared_ptr<iir::StencilInstantiation>& si,
+                          int n) -> std::shared_ptr<iir::Stmt> {
     auto& iir = si->getIIR();
     auto& stencil = iir->getChild(0);
     auto& ms = stencil->getChild(0);
     auto& stage = ms->getChild(0);
     auto& doMethod = stage->getChild(0);
-    auto& sap = doMethod->getChild(n);
-    return sap;
+    return doMethod->getChild(n);
   };
 
   deserialized = serializeAndDeserializeRef();
@@ -324,9 +323,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(
-          deserialized->getIIR()->getChild(0)->getChild(0)->getChild(0)->getChild(0)->getChild(0))
-          ->getExpr());
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0))->getExpr());
   deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
       std::make_optional<int>(50);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);

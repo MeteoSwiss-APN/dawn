@@ -190,9 +190,6 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
 }
 
 static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
-  // for(const auto& leaf : iterateIIROverStmt(*target->getIIR())) {
-  //   leaf->update(iir::NodeUpdateType::level);
-  // }
   for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }

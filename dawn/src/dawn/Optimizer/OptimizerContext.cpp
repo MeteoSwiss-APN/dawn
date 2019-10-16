@@ -393,7 +393,6 @@ public:
                                     doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
-    // doMethod.setAST(std::move(*ast->getRoot()));
     DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
 
     if(context_.getDiagnostics().hasErrors())
