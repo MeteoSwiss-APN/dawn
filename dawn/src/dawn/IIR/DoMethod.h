@@ -64,8 +64,6 @@ public:
 
   bool checkDoMethod() const override { return false; }
 
-  // using StatementAccessesIterator = ChildIterator;
-
   /// @name Constructors and Assignment
   /// @{
   DoMethod(Interval interval, const StencilMetaInformation& metaData);
