@@ -270,7 +270,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto stmt2 = iir::makeExprStmt(assignmentOutTmp);
   stmt2->setID(target->nextUID());
 
-  // Add the accesses to the Pair:
+  // Add the accesses to the statement:
   iir::Accesses callerAccesses2;
   callerAccesses2.addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   callerAccesses2.addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});

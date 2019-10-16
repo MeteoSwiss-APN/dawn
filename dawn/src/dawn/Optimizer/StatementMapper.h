@@ -33,7 +33,7 @@ class StatementMapper : public iir::ASTVisitor {
         : doMethod_(doMethod), VerticalInterval(interval), ScopeDepth(0),
           FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
 
-    /// DoMethod containing the list of statement/accesses pair of the stencil function or stage
+    /// DoMethod containing the list of statements of the stencil function or stage
     iir::DoMethod& doMethod_;
 
     /// The current interval
