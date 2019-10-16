@@ -20,30 +20,16 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/Support/FileSystem.h"
 
-namespace gtclang {
-namespace clang_compat {
+namespace gtclang::clang_compat {
 #if LLVM_VERSION_MAJOR < 7
-namespace llvm {
-namespace sys {
-namespace fs {
-namespace OpenFlags {
+namespace llvm::sys::fs::OpenFlags {
 static constexpr ::llvm::sys::fs::OpenFlags OF_Text = ::llvm::sys::fs::OpenFlags::F_Text;
 }
-} // namespace fs
-} // namespace sys
-} // namespace llvm
 #else
-namespace llvm {
-namespace sys {
-namespace fs {
-namespace OpenFlags {
+namespace llvm::sys::fs::OpenFlags {
 static constexpr ::llvm::sys::fs::OpenFlags OF_Text = ::llvm::sys::fs::OpenFlags::OF_Text;
 }
-} // namespace fs
-} // namespace sys
-} // namespace llvm
 #endif
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_FILESYSTEM_H
