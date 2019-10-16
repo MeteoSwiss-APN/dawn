@@ -1,3 +1,0 @@
-/home/mroeth/workspace/dawn/dawn/docs/tutorial/cpp/CMakeFiles/rebuild_cache.dir
-/home/mroeth/workspace/dawn/dawn/docs/tutorial/cpp/CMakeFiles/dawn_standalone.dir
-/home/mroeth/workspace/dawn/dawn/docs/tutorial/cpp/CMakeFiles/edit_cache.dir

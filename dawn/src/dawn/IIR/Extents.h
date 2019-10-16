@@ -34,11 +34,10 @@ namespace iir {
 
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
-class Extent {
+struct Extent { // TODO class?
   int Minus;
   int Plus;
 
-public:
   /// @name Constructors and Assignment
   /// @{
   Extent() : Minus(0), Plus(0) {}
@@ -133,13 +132,17 @@ protected:
 class CartesianExtent : public HorizontalExtentImpl {
 public:
   CartesianExtent(int iMinus, int iPlus, int jMinus, int jPlus) {
-    m_extents_[0] = Extent(iMinus, iPlus);
-    m_extents_[1] = Extent(jMinus, jPlus);
+    m_extents_[0].Minus = iMinus;
+    m_extents_[0].Plus = iPlus;
+    m_extents_[1].Minus = jMinus;
+    m_extents_[1].Plus = jPlus;
   }
 
   CartesianExtent() {
-    m_extents_[0] = Extent(0, 0);
-    m_extents_[1] = Extent(0, 0);
+    m_extents_[0].Minus = 0;
+    m_extents_[0].Plus = 0;
+    m_extents_[1].Minus = 0;
+    m_extents_[1].Plus = 0;
   }
 
   HorizontalExtentImpl* plus_impl(HorizontalExtentImpl const& other) const override {
@@ -190,10 +193,10 @@ public:
     return m_extents_[0].isPointwise() && m_extents_[1].isPointwise();
   }
 
-  int iMinus() const { return m_extents_[0].minus(); }
-  int iPlus() const { return m_extents_[0].plus(); }
-  int jMinus() const { return m_extents_[1].minus(); }
-  int jPlus() const { return m_extents_[1].plus(); }
+  int iMinus() const { return m_extents_[0].Minus; }
+  int iPlus() const { return m_extents_[0].Plus; }
+  int jMinus() const { return m_extents_[1].Minus; }
+  int jPlus() const { return m_extents_[1].Plus; }
 
 private:
   std::array<Extent, 2> m_extents_;
@@ -257,7 +260,6 @@ public:
   Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
           int extent3minus, int extent3plus);
   Extents(ast::cartesian_);
-
   Extents(const Extents& other);
   Extents(Extents&& other);
   Extents() = delete;
@@ -265,10 +267,6 @@ public:
   Extents& operator=(Extents&&);
   /// @}
 
-  /// @brief is the Vertel extent enclosing 0?
-  ///
-  /// @b Example:
-  ///   {1, 1} => False, {-3, 2} => True
   bool hasVerticalCenter() const;
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
@@ -278,6 +276,8 @@ public:
   ///   `{-2, 1, 0, 0, 0, 1}`.
   void merge(const Extents& other);
   void merge(const ast::Offsets& offset);
+
+  void expand(const Extents& other);
 
   /// @brief resets vertical extants to {0, 0}
   void resetVerticalExtent();
@@ -307,6 +307,8 @@ public:
     bool LoopOrder;        ///< Access in the loop order
   };
 
+  VerticalLoopOrderAccess getVerticalLoopOrderAccess() const;
+
   /// @brief Check if there is a stencil extent (i.e non-pointwise) in the counter-loop- and loop
   /// order
   ///
@@ -327,10 +329,9 @@ public:
                                                    VerticalLoopOrderDir loopOrderPolicy,
                                                    bool includeCenter) const;
 
+  /// @brief format extents in string
   /// @brief Convert to stream
   friend std::ostream& operator<<(std::ostream& os, const Extents& extent);
-
-  /// @brief format extents in string
   std::string toString() const;
 
   /// @brief Comparison operators
@@ -339,11 +340,8 @@ public:
   bool operator!=(const Extents& other) const;
   /// @}
 
-  /// @brief get vertical / horizontal Extents
-  /// @{
   Extent const& verticalExtent() const { return verticalExtent_; }
   HorizontalExtent const& horizontalExtent() const { return horizontalExtent_; }
-  /// @}
 
 private:
   void add(const Extents& other);

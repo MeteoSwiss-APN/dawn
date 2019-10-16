@@ -1,3 +1,0 @@
-/home/mroeth/workspace/dawn/dawn/docs/tutorial/CMakeFiles/rebuild_cache.dir
-/home/mroeth/workspace/dawn/dawn/docs/tutorial/CMakeFiles/laplacian_driver.dir
-/home/mroeth/workspace/dawn/dawn/docs/tutorial/CMakeFiles/edit_cache.dir

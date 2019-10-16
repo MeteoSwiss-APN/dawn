@@ -25,9 +25,6 @@ TEST(TestField, Construction) {
   Field f{1, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian_{}, -1, 1, -2, 2, 0, 3),
           Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
 
-  auto extents = f.getExtents();
-  printf("%d %d\n", extents.verticalExtent().minus(), extents.verticalExtent().plus());
-
   EXPECT_TRUE((f.getExtents() == Extents(dawn::ast::cartesian_{}, -1, 1, -2, 2, -1, 3)));
   EXPECT_TRUE((f.getReadExtents() == Extents(dawn::ast::cartesian_{}, -1, 1, -2, 2, 0, 3)));
   EXPECT_TRUE((f.getWriteExtents() == Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, -1, 2)));

@@ -111,7 +111,7 @@ bool CacheProperties::requiresFill(const iir::Cache& cache) {
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = ms_->getKCacheVertExtent(accessID);
-  return -ext.minus();
+  return -ext.Minus;
 }
 
 bool CacheProperties::isKCached(const int accessID) const {
