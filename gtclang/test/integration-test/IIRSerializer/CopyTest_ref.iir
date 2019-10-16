@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "10": "field_b",
-   "9": "field_a"
+   "9": "field_a",
+   "10": "field_b"
   },
   "accessIDToType": {
    "9": 6,
@@ -204,7 +204,7 @@
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 22,
+      "multiStageID": 23,
       "Caches": {}
      }
     ],
@@ -235,5 +235,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/code/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }
