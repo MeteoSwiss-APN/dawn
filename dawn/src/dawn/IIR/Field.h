@@ -74,7 +74,7 @@ public:
         std::optional<Extents>&& writeExtents, Interval&& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        extentsRB_(extents_), interval_(std::move(interval)) {}
+        extentsRB_(std::move(extents_)), interval_(std::move(interval)) {}
 
   Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
         std::optional<Extents>&& writeExtents, Interval&& interval,

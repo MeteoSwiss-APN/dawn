@@ -120,7 +120,7 @@ Extent Stage::getMaxVerticalExtent() const {
   Extent verticalExtent;
   std::for_each(derivedInfo_.fields_.begin(), derivedInfo_.fields_.end(),
                 [&](const std::pair<int, Field>& pair) {
-                  verticalExtent.merge(pair.second.getExtents()[2]);
+                  verticalExtent.merge(pair.second.getExtents().verticalExtent());
                 });
   return verticalExtent;
 }
@@ -159,8 +159,8 @@ bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Fie
         if(thisField.getAccessID() != field.getAccessID())
           continue;
 
-        if(thisInterval.extendInterval(thisField.getExtents()[2])
-               .overlaps(interval.extendInterval(field.getExtents()[2])))
+        if(thisInterval.extendInterval(thisField.getExtents().verticalExtent())
+               .overlaps(interval.extendInterval(field.getExtents().verticalExtent())))
           return true;
       }
     }

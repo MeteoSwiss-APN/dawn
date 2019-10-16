@@ -30,9 +30,9 @@ public:
   TestGraph() : Base(iir::StencilMetaInformation{sir::GlobalVariableMap{}}) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
-    Base::insertEdge(IDFrom, IDTo, iir::Extents{0, 0, 0, 0, 0, 0});
+    Base::insertEdge(IDFrom, IDTo, iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
   }
-};
+}; // namespace
 
 TEST(IsDAGAlgorithmTest, Test1) {
   TestGraph graph;

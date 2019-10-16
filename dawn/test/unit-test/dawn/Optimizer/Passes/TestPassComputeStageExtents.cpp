@@ -64,6 +64,19 @@ protected:
   }
 };
 
+static void compareExtents(iir::Extents extents, const std::array<int, 6>& ref) {
+  const auto& h_extents =
+      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+  const auto& v_extents = extents.verticalExtent();
+
+  EXPECT_EQ(h_extents.iMinus(), ref[0]);
+  EXPECT_EQ(h_extents.iPlus(), ref[1]);
+  EXPECT_EQ(h_extents.jMinus(), ref[2]);
+  EXPECT_EQ(h_extents.jPlus(), ref[3]);
+  EXPECT_EQ(v_extents.minus(), ref[4]);
+  EXPECT_EQ(v_extents.plus(), ref[5]);
+}
+
 TEST_F(ComputeStageExtents, test_stencil_01) {
   std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_01.sir");
   const auto& stencils = IIR->getChildren();
@@ -72,8 +85,8 @@ TEST_F(ComputeStageExtents, test_stencil_01) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  compareExtents(stencil->getStage(0)->getExtents(), {-1, 1, -1, 1, 0, 0});
+  compareExtents(stencil->getStage(1)->getExtents(), {0, 0, 0, 0, 0, 0});
 }
 
 TEST_F(ComputeStageExtents, test_stencil_02) {
@@ -84,9 +97,9 @@ TEST_F(ComputeStageExtents, test_stencil_02) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{-1, 0, -1, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  compareExtents(stencil->getStage(0)->getExtents(), {-1, 1, -1, 1, 0, 0});
+  compareExtents(stencil->getStage(1)->getExtents(), {-1, 0, -1, 0, 0, 0});
+  compareExtents(stencil->getStage(2)->getExtents(), {0, 0, 0, 0, 0, 0});
 }
 TEST_F(ComputeStageExtents, test_stencil_03) {
   std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_03.sir");
@@ -95,10 +108,10 @@ TEST_F(ComputeStageExtents, test_stencil_03) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 2, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{-1, 0, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents{0, 0, 0, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(3)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  compareExtents(stencil->getStage(0)->getExtents(), {-1, 1, -1, 2, 0, 0});
+  compareExtents(stencil->getStage(1)->getExtents(), {-1, 0, -1, 1, 0, 0});
+  compareExtents(stencil->getStage(2)->getExtents(), {0, 0, 0, 1, 0, 0});
+  compareExtents(stencil->getStage(3)->getExtents(), {0, 0, 0, 0, 0, 0});
 }
 
 TEST_F(ComputeStageExtents, test_stencil_04) {
@@ -109,10 +122,10 @@ TEST_F(ComputeStageExtents, test_stencil_04) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-2, 3, -2, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{-1, 1, -1, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents{0, 0, -1, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(3)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  compareExtents(stencil->getStage(0)->getExtents(), {-2, 3, -2, 1, 0, 0});
+  compareExtents(stencil->getStage(1)->getExtents(), {-1, 1, -1, 0, 0, 0});
+  compareExtents(stencil->getStage(2)->getExtents(), {0, 0, -1, 0, 0, 0});
+  compareExtents(stencil->getStage(3)->getExtents(), {0, 0, 0, 0, 0, 0});
 }
 
 TEST_F(ComputeStageExtents, test_stencil_05) {
@@ -122,10 +135,10 @@ TEST_F(ComputeStageExtents, test_stencil_05) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-2, 3, -2, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{-1, 0, -1, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents{0, 1, -1, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(3)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  compareExtents(stencil->getStage(0)->getExtents(), {-2, 3, -2, 1, 0, 0});
+  compareExtents(stencil->getStage(1)->getExtents(), {-1, 0, -1, 0, 0, 0});
+  compareExtents(stencil->getStage(2)->getExtents(), {0, 1, -1, 0, 0, 0});
+  compareExtents(stencil->getStage(3)->getExtents(), {0, 0, 0, 0, 0, 0});
 }
 
 } // anonymous namespace

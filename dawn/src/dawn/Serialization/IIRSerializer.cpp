@@ -28,11 +28,20 @@
 namespace dawn {
 static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   proto::iir::Extents protoExtents;
-  for(auto extent : extents.getExtents()) {
-    auto protoExtent = protoExtents.add_extents();
-    protoExtent->set_minus(extent.Minus);
-    protoExtent->set_plus(extent.Plus);
-  }
+  auto v_extent = extents.verticalExtent();
+  auto h_extent =
+      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+
+  auto protoExtentI = protoExtents.add_extents();
+  protoExtentI->set_minus(h_extent.iMinus());
+  protoExtentI->set_plus(h_extent.iPlus());
+  auto protoExtentJ = protoExtents.add_extents();
+  protoExtentJ->set_minus(h_extent.jMinus());
+  protoExtentJ->set_plus(h_extent.jPlus());
+  auto protoExtentK = protoExtents.add_extents();
+  protoExtentK->set_minus(v_extent.minus());
+  protoExtentK->set_plus(v_extent.plus());
+
   return protoExtents;
 }
 static void setAccesses(proto::iir::Accesses* protoAccesses,
@@ -53,7 +62,8 @@ static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
   int dim2plus = protoExtents->extents()[1].plus();
   int dim3minus = protoExtents->extents()[2].minus();
   int dim3plus = protoExtents->extents()[2].plus();
-  return iir::Extents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus);
+  return iir::Extents(dawn::ast::cartesian_{}, dim1minus, dim1plus, dim2minus, dim2plus, dim3minus,
+                      dim3plus);
 }
 
 static void

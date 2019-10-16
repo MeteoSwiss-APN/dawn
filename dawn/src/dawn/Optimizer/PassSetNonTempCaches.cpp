@@ -229,8 +229,10 @@ private:
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
     auto pair = std::make_unique<iir::StatementAccessesPair>(expAssignment);
     iir::Accesses newAccess;
-    newAccess.addWriteExtent(assignmentID, iir::Extents(ast::Offsets{ast::cartesian}));
-    newAccess.addReadExtent(assigneeID, iir::Extents(ast::Offsets{ast::cartesian}));
+    newAccess.addWriteExtent(assignmentID,
+                             iir::Extents(ast::cartesian_{}, ast::Offsets{ast::cartesian}));
+    newAccess.addReadExtent(assigneeID,
+                            iir::Extents(ast::cartesian_{}, ast::Offsets{ast::cartesian}));
     pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
     domethod->insertChild(std::move(pair));

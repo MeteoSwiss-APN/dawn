@@ -153,7 +153,7 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
 
 Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   const auto& field = getField(accessID);
-  auto vertExtent = field.getExtents()[2];
+  auto vertExtent = field.getExtents().verticalExtent();
   const auto& cache = getCache(accessID);
   // in the case of epflush, the extent of the cache required is not determined only by the access
   // pattern, but also by the window required to epflush

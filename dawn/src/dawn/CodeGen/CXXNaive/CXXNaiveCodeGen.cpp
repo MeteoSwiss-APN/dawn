@@ -29,16 +29,16 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
+static std::string makeLoopImpl(const std::pair<int, int>& extent, const std::string& dim,
                                 const std::string& lower, const std::string& upper,
                                 const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
-               " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
-               increment + dim + ")")
+  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(std::get<0>(extent)) + "; " +
+               dim + " " + comparison + " " + upper + "+" + std::to_string(std::get<1>(extent)) +
+               "; " + increment + dim + ")")
       .str();
 }
 
-static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
+static std::string makeIJLoop(const std::pair<int, int>& extent, const std::string dom,
                               const std::string& dim) {
   return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
                       dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
@@ -58,8 +58,8 @@ static std::string makeKLoop(const std::string dom, bool isBackward,
   const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
+  return isBackward ? makeLoopImpl(std::pair<int, int>(0, 0), "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(std::pair<int, int>(0, 0), "k", lower, upper, "<=", "++");
 }
 
 CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
@@ -381,10 +381,17 @@ void CXXNaiveCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
+                auto extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+                    stage.getExtents().horizontalExtent());
+
                 stencilRunMethod.addBlockStatement(
-                    makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
+                    makeIJLoop(std::pair<int, int>(extents.iMinus(), extents.iPlus()), "m_dom",
+                               "i"),
+                    [&]() {
                       stencilRunMethod.addBlockStatement(
-                          makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
+                          makeIJLoop(std::pair<int, int>(extents.jMinus(), extents.jPlus()),
+                                     "m_dom", "j"),
+                          [&]() {
                             // Generate Do-Method
                             for(const auto& doMethodPtr : stage.getChildren()) {
                               const iir::DoMethod& doMethod = *doMethodPtr;

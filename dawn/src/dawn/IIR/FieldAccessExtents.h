@@ -30,8 +30,7 @@ public:
   /// @{
   FieldAccessExtents(std::optional<Extents> const& readExtents,
                      std::optional<Extents> const& writeExtents)
-      : readAccessExtents_(readExtents),
-        writeAccessExtents_(writeExtents), totalExtents_{ast::cartesian, 0, 0, 0, 0, 0, 0} {
+      : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents) {
     updateTotalExtents();
   }
 
@@ -46,7 +45,7 @@ public:
   /// @{
   std::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
   std::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
-  Extents const& getExtents() const { return totalExtents_; }
+  Extents const& getExtents() const { return *totalExtents_; }
   /// @}
   /// @brief merge of extent with another (argument) extent
   /// @{
@@ -69,7 +68,7 @@ private:
 
   std::optional<Extents> readAccessExtents_;
   std::optional<Extents> writeAccessExtents_;
-  Extents totalExtents_;
+  std::optional<Extents> totalExtents_;
 };
 
 } // namespace iir

@@ -74,8 +74,9 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
   std::optional<Extents>&& extents = computeMaximumExtents(accessID);
 
   if(extents) {
-    if(mergeWithDoInterval)
-      extents->addCenter(2);
+    if(mergeWithDoInterval) {
+      extents->addVerticalCenter();
+    }
     return std::make_optional(getInterval())->extendInterval(*extents);
   }
   return interval;

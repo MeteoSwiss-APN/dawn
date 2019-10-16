@@ -75,7 +75,7 @@ void FieldAccessExtents::updateTotalExtents() {
   if(readAccessExtents_) {
     totalExtents_ = *readAccessExtents_;
     if(writeAccessExtents_)
-      totalExtents_.merge(*writeAccessExtents_);
+      totalExtents_->merge(*writeAccessExtents_);
   } else if(writeAccessExtents_) {
     totalExtents_ = *writeAccessExtents_;
   }

@@ -77,7 +77,7 @@ bool PassComputeStageExtents::run(
           ext.merge(fieldExtent);
           // this pass is computing the redundant computation in the horizontal, therefore we
           // nullify the vertical component of the stage
-          ext[2] = iir::Extent{0, 0};
+          ext.resetVerticalExtent();
           toStage.setExtents(ext);
         }
       }

@@ -36,9 +36,13 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
       int AccessID = it->first;
       ss << accessIDToStringFunction(AccessID);
       ss << ":<";
-      const auto& extents = it->second.getExtents();
-      for(std::size_t i = 0; i < extents.size(); ++i)
-        ss << extents[i].Minus << "," << extents[i].Plus << (i != extents.size() - 1 ? "," : ">");
+      const auto& h_extents =
+          dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(it->second.horizontalExtent());
+      const auto& v_extents = it->second.verticalExtent();
+
+      ss << h_extents.iMinus() << "," << h_extents.iPlus() << ",";
+      ss << h_extents.jMinus() << "," << h_extents.jPlus() << ",";
+      ss << v_extents.Minus << "," << v_extents.Plus << ">";
     }
   };
 
@@ -61,7 +65,7 @@ void Accesses::mergeReadOffset(int AccessID, const ast::Offsets& offset) {
   if(it != readAccesses_.end()) {
     it->second.merge(offset);
   } else {
-    readAccesses_.emplace(AccessID, Extents(offset));
+    readAccesses_.emplace(AccessID, Extents(ast::cartesian, offset));
   }
 }
 
@@ -78,7 +82,7 @@ void Accesses::mergeWriteOffset(int AccessID, const ast::Offsets& offset) {
   if(it != writeAccesses_.end())
     it->second.merge(offset);
   else
-    writeAccesses_.emplace(AccessID, Extents(offset));
+    writeAccesses_.emplace(AccessID, Extents(ast::cartesian, offset));
 }
 
 void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {
@@ -92,7 +96,7 @@ void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {
 void Accesses::addReadExtent(int AccessID, const Extents& extent) {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
-    it->second.add(extent);
+    it->second = Extents::add(it->second, extent);
   else
     readAccesses_.emplace(AccessID, extent);
 }
@@ -100,7 +104,7 @@ void Accesses::addReadExtent(int AccessID, const Extents& extent) {
 void Accesses::addWriteExtent(int AccessID, const Extents& extent) {
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
-    it->second.add(extent);
+    it->second = Extents::add(it->second, extent);
   else
     writeAccesses_.emplace(AccessID, extent);
 }

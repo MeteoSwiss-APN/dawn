@@ -96,7 +96,7 @@ struct CacheProperties {
   static bool requiresFill(const iir::Cache& cache);
 
 private:
-  int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;
+  int getStrideImpl(int dim, Array3ui blockSize, int Minus, int Plus) const;
 };
 
 CacheProperties
