@@ -625,8 +625,8 @@ void GTCodeGen::generateStencilClasses(
 
         stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
         stencilBodyCGVisitor.setIndent(doMethod.getIndent());
-        for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-          statementAccessesPair->accept(stencilBodyCGVisitor);
+        for(const auto& stmt : stencilFun->getStatements()) {
+          stmt->accept(stencilBodyCGVisitor);
           doMethod.indentStatment();
           doMethod << stencilBodyCGVisitor.getCodeAndResetStream();
         }
@@ -788,8 +788,8 @@ void GTCodeGen::generateStencilClasses(
           DoMethodCodeGen.startBody();
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
-          for(const auto& statementAccessesPair : doMethod.getChildren()) {
-            statementAccessesPair->accept(stencilBodyCGVisitor);
+          for(const auto& stmt : doMethod.getChildren()) {
+            stmt->accept(stencilBodyCGVisitor);
             DoMethodCodeGen << stencilBodyCGVisitor.getCodeAndResetStream();
           }
         }

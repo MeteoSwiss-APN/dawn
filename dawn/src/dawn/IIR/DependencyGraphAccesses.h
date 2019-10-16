@@ -28,7 +28,6 @@ class OptimizerContext;
 
 namespace iir {
 class Accesses;
-class StatementAccessesPair;
 class StencilMetaInformation;
 
 /// @enum DependencyGraphAccessesEdgeData
@@ -83,7 +82,7 @@ public:
       merge(g.get());
   }
 
-  /// @brief Process the StatementAccessPair and insert it into the current graph
+  /// @brief Process the statement and insert it into the current graph
   ///
   /// For each write and read access a node will be inserted. Between each write and read access an
   /// edge will be created s.t
@@ -93,7 +92,7 @@ public:
   /// +-------+           +--------+
   ///
   /// Note that only child-less nodes are processed.
-  void insertStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmtAccessPair);
+  void insertStatement(const std::shared_ptr<iir::Stmt>& stmt);
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID);

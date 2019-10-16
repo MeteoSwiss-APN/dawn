@@ -44,14 +44,14 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
       iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
       for(int stmtIdx = 0; stmtIdx < doMethod.getChildren().size(); ++stmtIdx) {
 
-        const std::shared_ptr<iir::Stmt>& stmtAccessesPair = doMethod.getChildren()[stmtIdx];
+        const std::shared_ptr<iir::Stmt>& stmt = doMethod.getChildren()[stmtIdx];
 
         iir::AssignmentExpr* assignment = nullptr;
-        if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(stmtAccessesPair.get()))
-          assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
+        if(iir::ExprStmt* exprStmt = dyn_cast<iir::ExprStmt>(stmt.get()))
+          assignment = dyn_cast<iir::AssignmentExpr>(exprStmt->getExpr().get());
 
         std::vector<int> AccessIDsToRename;
-        const auto& callerAccesses = stmtAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
+        const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
         for(const std::pair<int, iir::Extents>& readAccess : callerAccesses->getReadAccesses()) {
           int AccessID = readAccess.first;
@@ -77,7 +77,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
                                      stmtIdx, assignment->getLeft(), RenameDirection::Below));
         }
 
-        DAG->insertStatementAccessesPair(stmtAccessesPair);
+        DAG->insertStatement(stmt);
       }
     }
   }

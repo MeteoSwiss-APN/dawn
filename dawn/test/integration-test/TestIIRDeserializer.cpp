@@ -81,7 +81,7 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
           EXPECT_EQ(lhsDoMethod->getID(), rhsDoMethod->getID());
           EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
 
-          // checking each of the StmtAccesspairs
+          // checking each of the statements
           ASSERT_EQ(lhsDoMethod->getChildren().size(), rhsDoMethod->getChildren().size());
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {

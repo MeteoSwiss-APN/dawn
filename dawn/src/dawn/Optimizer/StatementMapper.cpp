@@ -36,7 +36,7 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
                                                 : nullptr);
 }
 
-void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
+void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
     auto tmp = stmt; // TODO(SAP)
@@ -57,7 +57,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
 
 void StatementMapper::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
-  appendNewStatementAccessesPair(stmt);
+  appendNewStatement(stmt);
   stmt->getExpr()->accept(*this);
 }
 
@@ -76,14 +76,14 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   }
   scope_.top()->FunctionInstantiation->setReturn(true);
 
-  appendNewStatementAccessesPair(stmt);
+  appendNewStatement(stmt);
   stmt->getExpr()->accept(*this);
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
-  appendNewStatementAccessesPair(stmt);
+  appendNewStatement(stmt);
   stmt->getCondExpr()->accept(*this);
 
   stmt->getThenStmt()->accept(*this);
@@ -121,7 +121,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), accessID);
 
     // Push back the statement and move on
-    appendNewStatementAccessesPair(stmt);
+    appendNewStatement(stmt);
 
     // Resolve the RHS
     for(const auto& expr : stmt->getInitList())

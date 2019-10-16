@@ -31,20 +31,19 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
       iir::InstantiationHelper::extractLocalVariablename(varname), accessID);
 
   // Replace all variable accesses with field accesses
-  stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPair) -> void {
+  stencil->forEachStatement(
+      [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmt) -> void {
         replaceVarWithFieldAccessInStmts(instantiation->getMetaData(), stencil, accessID, fieldname,
-                                         statementAccessesPair);
+                                         stmt);
       },
       lifetime);
 
   // Replace the the variable declaration with an assignment to the temporary field
-  std::vector<std::shared_ptr<iir::Stmt>>& statementAccessesPairs =
-      stencil->getStage(lifetime.Begin.StagePos)
-          ->getChildren()
-          .at(lifetime.Begin.DoMethodIndex)
-          ->getChildren();
-  std::shared_ptr<iir::Stmt> oldStatement = statementAccessesPairs[lifetime.Begin.StatementIndex];
+  std::vector<std::shared_ptr<iir::Stmt>>& stmts = stencil->getStage(lifetime.Begin.StagePos)
+                                                       ->getChildren()
+                                                       .at(lifetime.Begin.DoMethodIndex)
+                                                       ->getChildren();
+  std::shared_ptr<iir::Stmt> oldStatement = stmts[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be a `VarDeclStmt`. For example
   //
@@ -76,7 +75,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
 
     // Replace the statement
     exprStmt->getData<iir::IIRStmtData>() = std::move(oldStatement->getData<iir::IIRStmtData>());
-    statementAccessesPairs[lifetime.Begin.StatementIndex] = std::move(exprStmt);
+    stmts[lifetime.Begin.StatementIndex] = std::move(exprStmt);
 
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
@@ -104,20 +103,19 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
       iir::InstantiationHelper::extractTemporaryFieldname(fieldname), AccessID);
 
   // Replace all field accesses with variable accesses
-  stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) -> void {
+  stencil->forEachStatement(
+      [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmts) -> void {
         replaceFieldWithVarAccessInStmts(instantiation->getMetaData(), stencil, AccessID, varname,
-                                         statementAccessesPairs);
+                                         stmts);
       },
       lifetime);
 
   // Replace the first access to the field with a VarDeclStmt
-  std::vector<std::shared_ptr<iir::Stmt>>& statementAccessesPairs =
-      stencil->getStage(lifetime.Begin.StagePos)
-          ->getChildren()
-          .at(lifetime.Begin.DoMethodIndex)
-          ->getChildren();
-  std::shared_ptr<iir::Stmt> oldStatement = statementAccessesPairs[lifetime.Begin.StatementIndex];
+  std::vector<std::shared_ptr<iir::Stmt>>& stmts = stencil->getStage(lifetime.Begin.StagePos)
+                                                       ->getChildren()
+                                                       .at(lifetime.Begin.DoMethodIndex)
+                                                       ->getChildren();
+  std::shared_ptr<iir::Stmt> oldStatement = stmts[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example
   //
@@ -145,7 +143,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
       oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
   varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
       oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
-  statementAccessesPairs[lifetime.Begin.StatementIndex] = varDeclStmt;
+  stmts[lifetime.Begin.StatementIndex] = varDeclStmt;
 
   // Remove the field
   instantiation->getMetaData().removeAccessID(AccessID);

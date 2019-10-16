@@ -364,7 +364,7 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  const std::vector<std::shared_ptr<iir::Stmt>>& getStatementAccessesPairs() const;
+  const std::vector<std::shared_ptr<iir::Stmt>>& getStatements() const;
 
   /// @brief Update the fields and global variables
   ///

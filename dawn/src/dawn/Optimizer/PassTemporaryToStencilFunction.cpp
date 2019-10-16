@@ -366,7 +366,7 @@ public:
   }
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
-  /// recompute its <statement,accesses> pairs
+  /// recompute its accesses
   virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
     // we would like to identify fields that are lhs of an assignment expr, so that we skip them and
     // dont replace them
@@ -387,7 +387,7 @@ public:
   }
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
-  /// recompute its <statement,accesses> pairs
+  /// recompute its accesses
   virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
     int accessID = iir::getAccessID(expr);
 
@@ -521,7 +521,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
     iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
       for(const auto& stmt : doMethod->getChildren()) {
-        graph.insertStatementAccessesPair(stmt);
+        graph.insertStatement(stmt);
       }
     }
     // TODO this is crashing for the divergene helper
@@ -586,10 +586,10 @@ bool PassTemporaryToStencilFunction::run(
 
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
-          for(auto stmtAccessPairIt = (*doMethodIt)->childrenRBegin();
-              stmtAccessPairIt != (*doMethodIt)->childrenREnd(); stmtAccessPairIt++) {
+          for(auto stmtIt = (*doMethodIt)->childrenRBegin();
+              stmtIt != (*doMethodIt)->childrenREnd(); stmtIt++) {
 
-            (*stmtAccessPairIt)->acceptAndReplace(localVariablePromotion);
+            (*stmtIt)->acceptAndReplace(localVariablePromotion);
           }
         }
       }
@@ -623,8 +623,7 @@ bool PassTemporaryToStencilFunction::run(
               continue;
             }
 
-            for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
-              const std::shared_ptr<iir::Stmt> stmt = stmtAccessPair;
+            for(const auto& stmt : doMethodPtr->getChildren()) {
 
               DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
                           (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
@@ -668,11 +667,10 @@ bool PassTemporaryToStencilFunction::run(
 
                   DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
 
-                  std::shared_ptr<iir::Stmt>& stmtPair =
-                      *(tmpStmtDoMethod.childrenBegin());
+                  std::shared_ptr<iir::Stmt>& stmtPair = *(tmpStmtDoMethod.childrenBegin());
                   computeAccesses(stencilInstantiation.get(), stmtPair);
 
-                  doMethodPtr->replace(stmtAccessPair, stmtPair);
+                  doMethodPtr->replace(stmt, stmtPair);
                   doMethodPtr->update(iir::NodeUpdateType::level);
                 }
 

@@ -219,7 +219,7 @@ bool PassSetBoundaryCondition::run(
     }
   };
 
-  // Loop through all the StmtAccessPair in the stencil forward
+  // Loop through all the statements in the stencil forward
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     DAWN_LOG(INFO) << "analyzing stencil " << stencilInstantiation->getName();

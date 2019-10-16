@@ -83,17 +83,16 @@ bool PassTemporaryFirstAccess::run(
     // {AccesID : (isFirstAccessWrite, Stmt)}
     std::unordered_map<int, std::pair<bool, std::shared_ptr<iir::Stmt>>> accessMap;
 
-    for(const auto& stmtAccessesPair : iterateIIROverStmt(*stencilPtr)) {
-      const auto& accesses = stmtAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
-      const auto& astStatement = stmtAccessesPair;
+    for(const auto& stmt : iterateIIROverStmt(*stencilPtr)) {
+      const auto& accesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       for(const auto& writeAccess : accesses->getWriteAccesses())
         if(temporaryFields.count(writeAccess.first))
-          accessMap.emplace(writeAccess.first, std::make_pair(true, astStatement));
+          accessMap.emplace(writeAccess.first, std::make_pair(true, stmt));
 
       for(const auto& readAccess : accesses->getReadAccesses())
         if(temporaryFields.count(readAccess.first))
-          accessMap.emplace(readAccess.first, std::make_pair(false, astStatement));
+          accessMap.emplace(readAccess.first, std::make_pair(false, stmt));
     }
 
     for(const auto& accessPair : accessMap) {

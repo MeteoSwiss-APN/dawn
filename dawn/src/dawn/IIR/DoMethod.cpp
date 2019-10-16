@@ -181,8 +181,8 @@ void DoMethod::updateLevel() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& statementAccessesPair : getChildren()) {
-    const auto& access = statementAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
+  for(const auto& stmt : getChildren()) {
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -236,8 +236,8 @@ void DoMethod::updateLevel() {
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
-  for(const auto& statementAccessesPair : getChildren()) {
-    const auto& access = statementAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
+  for(const auto& stmt : getChildren()) {
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
@@ -276,8 +276,8 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  for(auto const& statementAccessPair : getChildren()) {
-    const std::shared_ptr<iir::Stmt>& root = statementAccessPair;
+  for(auto const& stmt : getChildren()) {
+    const std::shared_ptr<iir::Stmt>& root = stmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 

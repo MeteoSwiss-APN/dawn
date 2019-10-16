@@ -67,7 +67,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRDoMethod = IIRStage->getChild(0);
   IIRDoMethod->setID(target->nextUID());
 
-  // create the StmtAccessPair
+  // create the statement
   auto sirInField = std::make_shared<sir::Field>("in_field");
   sirInField->IsTemporary = false;
   sirInField->fieldDimensions = Array3i{1, 1, 1};
@@ -98,7 +98,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses.addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   callerAccesses.addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
-  // And add the StmtAccesspair to it
+  // And add the statement to it
   IIRDoMethod->insertChild(std::move(stmt));
   IIRDoMethod->updateLevel();
 
@@ -175,7 +175,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   IIRMSS->insertChild(std::move(IIRStage1));
   IIRMSS->insertChild(std::move(IIRStage2));
 
-  // create the StmtAccessPair
+  // create the statement
   auto sirInField = std::make_shared<sir::Field>("in");
   sirInField->IsTemporary = false;
   sirInField->fieldDimensions = Array3i{1, 1, 1};
@@ -252,7 +252,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   stmt1->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses1));
 
-  // And add the StmtAccesspair to it
+  // And add the statement to it
   IIRDoMethod1->insertChild(std::move(stmt1));
   IIRDoMethod1->updateLevel();
 
@@ -276,7 +276,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses2.addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses2));
-  // And add the StmtAccesspair to it
+  // And add the statement to it
   IIRDoMethod2->insertChild(std::move(stmt2));
   IIRDoMethod2->updateLevel();
 

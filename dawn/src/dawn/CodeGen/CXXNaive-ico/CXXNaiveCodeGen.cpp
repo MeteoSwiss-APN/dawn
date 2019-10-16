@@ -421,8 +421,8 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               const iir::DoMethod& doMethod = *doMethodPtr;
               if(!doMethod.getInterval().overlaps(interval))
                 continue;
-              for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                statementAccessesPair->accept(stencilBodyCXXVisitor);
+              for(const auto& stmt : doMethod.getChildren()) {
+                stmt->accept(stencilBodyCXXVisitor);
                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
             }
@@ -519,8 +519,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
-      for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->accept(stencilBodyCXXVisitor);
+      for(const auto& stmt : stencilFun->getStatements()) {
+        stmt->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }

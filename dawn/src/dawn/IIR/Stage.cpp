@@ -210,8 +210,8 @@ void Stage::updateGlobalVariablesInfo() {
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
-    for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      const auto& access = statementAccessesPair->getData<IIRStmtData>().CallerAccesses;
+    for(const auto& stmt : doMethod.getChildren()) {
+      const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
@@ -227,12 +227,9 @@ void Stage::updateGlobalVariablesInfo() {
         }
       }
 
-      const std::shared_ptr<iir::Stmt>& statement = statementAccessesPair;
-      DAWN_ASSERT(statement);
-
       // capture all the accesses to global accesses of stencil function called
       // from this statement
-      statement->accept(functionCallGlobaParamVisitor);
+      stmt->accept(functionCallGlobaParamVisitor);
     }
   }
 

@@ -23,14 +23,13 @@
 namespace dawn {
 namespace iir {
 
-void DependencyGraphAccesses::insertStatementAccessesPair(
-    const std::shared_ptr<iir::Stmt>& stmtAccessPair) {
+void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
 
-  if(!stmtAccessPair->getChildren().empty()) { // TODO(SAP)
-    for(const auto& s : stmtAccessPair->getChildren())
-      insertStatementAccessesPair(s);
+  if(!stmt->getChildren().empty()) { // TODO(SAP)
+    for(const auto& s : stmt->getChildren())
+      insertStatement(s);
   } else {
-    const auto& callerAccesses = stmtAccessPair->getData<iir::IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);
@@ -237,14 +236,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(
-        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
+                          vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(
-        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
+                           vertices);
     if(vertices.empty())
       return false;
   }

@@ -329,7 +329,7 @@ public:
 
     std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;
-    computeAccesses(curStencilFunCall, curStencilFunCall->getStatementAccessesPairs());
+    computeAccesses(curStencilFunCall, curStencilFunCall->getStatements());
 
     // Compute the fields to get the IOPolicy of the arguments
     curStencilFunCall->update();
@@ -451,21 +451,21 @@ public:
 } // anonymous namespace
 
 void computeAccesses(iir::StencilInstantiation* instantiation,
-                     ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) {
-  for(const auto& statementAccessesPair : statementAccessesPairs) {
+                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+  for(const auto& stmt : stmts) {
     DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair, nullptr);
-    statementAccessesPair->accept(mapper);
+    AccessMapper mapper(instantiation->getMetaData(), stmt, nullptr);
+    stmt->accept(mapper);
   }
 }
 
 void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-    ArrayRef<std::shared_ptr<iir::Stmt>> statementAccessesPairs) {
-  for(const auto& statementAccessesPair : statementAccessesPairs) {
+    ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+  for(const auto& stmt : stmts) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getMetaData(),
-                        statementAccessesPair, stencilFunctionInstantiation);
-    statementAccessesPair->accept(mapper);
+                        stmt, stencilFunctionInstantiation);
+    stmt->accept(mapper);
   }
 }
 

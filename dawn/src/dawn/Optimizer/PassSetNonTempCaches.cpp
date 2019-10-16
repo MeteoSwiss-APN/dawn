@@ -218,7 +218,7 @@ private:
   ///@brief Add the assignment operator of two unique id's to a given domethod
   void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
                                int assigneeID) {
-    // Create the StatementAccessPair of the assignment with the new and old variables
+    // Create the statement of the assignment with the new and old variables
     auto fa_assignee =
         std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
@@ -244,9 +244,9 @@ private:
   /// @return true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int AccessID) {
 
-    for(const auto& stmtAccessesPair : iterateIIROverStmt(*multiStagePrt_)) {
+    for(const auto& stmt : iterateIIROverStmt(*multiStagePrt_)) {
 
-      const auto& callerAccesses = stmtAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // Find first if this statement has a read
       auto readAccessIterator = callerAccesses->getReadAccesses().find(AccessID);
@@ -265,9 +265,9 @@ private:
 
   bool checkReadOnlyAccess(int AccessID) {
 
-    for(const auto& stmtAccessesPair : iterateIIROverStmt(*multiStagePrt_)) {
+    for(const auto& stmt : iterateIIROverStmt(*multiStagePrt_)) {
 
-      const auto& callerAccesses = stmtAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // If we find a write-statement we exit
       auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);

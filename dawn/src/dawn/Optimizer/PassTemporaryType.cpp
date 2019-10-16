@@ -110,7 +110,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     AccessIDs.clear();
 
     // Loop over all accesses
-    for(const auto& statementAccessesPair : iterateIIROverStmt(*stencilPtr)) {
+    for(const auto& stmt : iterateIIROverStmt(*stencilPtr)) {
       auto processAccessMap = [&](const std::unordered_map<int, iir::Extents>& accessMap) {
         for(const auto& AccessIDExtentPair : accessMap) {
           int AccessID = AccessIDExtentPair.first;
@@ -139,8 +139,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           }
         }
       };
-      const auto& callerAccesses =
-          statementAccessesPair->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
       processAccessMap(callerAccesses->getWriteAccesses());
       processAccessMap(callerAccesses->getReadAccesses());
     }

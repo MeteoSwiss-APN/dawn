@@ -76,7 +76,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
           IIR_EARLY_EXIT((lhsDoMethod->getID() == rhsDoMethod->getID()));
           IIR_EARLY_EXIT((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
 
-          // checking each of the StmtAccesspairs
+          // checking each of the statements
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);

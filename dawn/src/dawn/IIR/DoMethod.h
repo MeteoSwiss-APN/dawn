@@ -29,7 +29,6 @@ namespace iir {
 
 class Stage;
 class DependencyGraphAccesses;
-class StatementAccessesPair;
 class StencilMetaInformation;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific

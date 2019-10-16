@@ -76,9 +76,7 @@ public:
 
   Scope* getCurrentCandidateScope();
 
-  void appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt);
-
-  // void removeLastChildStatementAccessesPair();
+  void appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt);
 
   void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
 
