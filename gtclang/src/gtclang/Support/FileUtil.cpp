@@ -15,6 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Support/FileUtil.h"
+#include "gtclang/Support/ClangCompat/FileUtil.h"
 #include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
 #include "clang/Basic/SourceManager.h"
 
@@ -28,8 +29,8 @@ clang::FileID createInMemoryFile(llvm::StringRef filename, llvm::MemoryBuffer* s
                                  clang::SourceManager& sources, clang::FileManager& files,
                                  clang_compat::llvm::vfs::InMemoryFileSystem* memFS) {
   memFS->addFileNoOwn(filename, 0, source);
-  return sources.createFileID(files.getFile(filename), clang::SourceLocation(),
-                              clang::SrcMgr::C_User);
+  return sources.createFileID(clang_compat::FileUtil::getFile(files, filename),
+                              clang::SourceLocation(), clang::SrcMgr::C_User);
 }
 
 } // namespace gtclang

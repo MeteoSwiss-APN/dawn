@@ -330,7 +330,6 @@ public:
 
   /// @brief get the smart pointer of a raw pointer child node
   inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
-
     for(const auto& c : children_) {
       if(c.get() == child) {
         return c;
@@ -345,7 +344,6 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-
     updateFromChildren();
   }
 
@@ -353,7 +351,6 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-
     updateFromChildren();
 
     auto parentPtr = getParentPtr();
