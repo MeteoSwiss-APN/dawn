@@ -64,10 +64,6 @@ class IIRBuilder {
     std::string name;
     std::shared_ptr<VarDeclStmt> decl;
   };
-  struct StmtData {
-    std::shared_ptr<Stmt> stmt;
-    std::shared_ptr<iir::Stmt> sap;
-  };
 
 public:
   Field field(std::string const& name, fieldType ft = fieldType::ijk);
@@ -111,23 +107,20 @@ public:
 
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
-  StmtData stmt(std::shared_ptr<iir::Expr>&& expr);
+  std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
 
   template <typename... Stmts>
-  StmtData block(Stmts&&... stmts) {
+  std::shared_ptr<iir::Stmt> block(Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto stmt =
-        iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
-    // auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-    // int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
-    // (void)x; // TODO(SAP)
-    return {std::move(stmt), std::move(stmt)};
+    auto stmt = iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts)...});
+    return stmt;
   }
 
-  StmtData ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
-                  StmtData&& caseElse = {nullptr, {}});
+  std::shared_ptr<iir::Stmt> ifStmt(std::shared_ptr<iir::Expr>&& cond,
+                                    std::shared_ptr<iir::Stmt>&& caseThen,
+                                    std::shared_ptr<iir::Stmt>&& caseElse = {nullptr});
 
-  StmtData declareVar(LocalVar& var_id);
+  std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
@@ -135,8 +128,7 @@ public:
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
-    // int x[] = {(DAWN_ASSERT(stmts.sap), ret->insertChild(std::move(stmts.sap)), 0)...};
-    // (void)x; // TODO(SAP)
+    [[maybe_unused]] int x[] = {(DAWN_ASSERT(stmts), ret->insertChild(std::move(stmts)), 0)...};
     computeAccesses(si_.get(), ret->getChildren());
     ret->updateLevel();
     return ret;

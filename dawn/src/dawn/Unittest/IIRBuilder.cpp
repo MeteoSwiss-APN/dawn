@@ -206,27 +206,23 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
-IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
-  DAWN_ASSERT(si_);
+std::shared_ptr<iir::Stmt> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto stmt = iir::makeExprStmt(std::move(expr));
-  return {std::move(stmt), std::move(stmt)}; // TODO(SAP)
+  return stmt;
 }
-IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
-                                        StmtData&& caseElse) {
+std::shared_ptr<iir::Stmt> IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond,
+                                              std::shared_ptr<iir::Stmt>&& caseThen,
+                                              std::shared_ptr<iir::Stmt>&& caseElse) {
   DAWN_ASSERT(si_);
   auto condStmt = iir::makeExprStmt(std::move(cond));
-  auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
-  // auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-  // if(caseThen.sap)
-  //   sap->insertBlockStatement(std::move(caseThen.sap));
-  // if(caseElse.sap)
-  //   sap->insertBlockStatement(std::move(caseElse.sap)); // TODO(SAP)
-  return {std::move(stmt), std::move(stmt)};
+  auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen), std::move(caseElse));
+  return stmt;
 }
-IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
+
+std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
   DAWN_ASSERT(var.decl);
-  return {std::move(var.decl), std::move(var.decl)}; // TODO(SAP)
+  return var.decl;
 }
 
 } // namespace iir
