@@ -41,6 +41,13 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
 
+dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents);
+
+void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
+                 const std::optional<iir::Accesses>& accesses);
+
+iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents);
+
 class ProtoStmtBuilder : public ast::ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;

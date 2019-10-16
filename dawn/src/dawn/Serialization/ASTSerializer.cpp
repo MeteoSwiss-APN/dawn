@@ -13,11 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Serialization/ASTSerializer.h"
+#include "SIR/statements.pb.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/SIR/ASTStmt.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
+#include <iterator>
 #include <list>
 #include <tuple>
 #include <utility>
@@ -25,11 +28,22 @@
 using namespace dawn;
 
 namespace {
-std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType) {
+std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType,
+                                        dawn::proto::statements::StmtData const& dataProto) {
   if(dataType == ast::StmtData::SIR_DATA_TYPE)
     return std::make_unique<sir::SIRStmtData>();
-  else
-    return std::make_unique<iir::IIRStmtData>();
+  else {
+    iir::IIRStmtData data;
+    std::optional<iir::Accesses> callerAccesses = std::make_optional(iir::Accesses());
+    for(auto writeAccess : dataProto.accesses().writeaccess()) {
+      callerAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
+    }
+    for(auto readAccess : dataProto.accesses().readaccess()) {
+      callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
+    }
+    data.CallerAccesses = std::move(callerAccesses);
+    return std::make_unique<iir::IIRStmtData>(std::move(data));
+  }
 }
 
 void fillAccessExprDataFromProto(iir::IIRAccessExprData& data,
@@ -62,6 +76,37 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 } // namespace
 
 using namespace ast;
+
+dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
+  dawn::proto::statements::Extents protoExtents;
+  for(auto extent : extents.getExtents()) {
+    auto protoExtent = protoExtents.add_extents();
+    protoExtent->set_minus(extent.Minus);
+    protoExtent->set_plus(extent.Plus);
+  }
+  return protoExtents;
+}
+
+void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
+                 const std::optional<iir::Accesses>& accesses) {
+  auto protoReadAccesses = protoAccesses->mutable_readaccess();
+  for(auto IDExtentsPair : accesses->getReadAccesses())
+    protoReadAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
+
+  auto protoWriteAccesses = protoAccesses->mutable_writeaccess();
+  for(auto IDExtentsPair : accesses->getWriteAccesses())
+    protoWriteAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
+}
+
+iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
+  int dim1minus = protoExtents->extents()[0].minus();
+  int dim1plus = protoExtents->extents()[0].plus();
+  int dim2minus = protoExtents->extents()[1].minus();
+  int dim2plus = protoExtents->extents()[1].plus();
+  int dim3minus = protoExtents->extents()[2].minus();
+  int dim3plus = protoExtents->extents()[2].plus();
+  return iir::Extents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus);
+}
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
 
@@ -195,7 +240,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   if(dataType_ == ast::StmtData::IIR_DATA_TYPE)
     setVarDeclStmtData(protoStmt->mutable_var_decl_stmt_data(),
-                       stmt->getData<iir::VarDeclStmtData>());
+                       stmt->getData<iir::VarDeclStmtData>()); // TODO(SAP) do this with our data
+                                                               // for each visit(Stmt)
   else
     protoStmt->mutable_var_decl_stmt_data();
   protoStmt->set_id(stmt->getID());
@@ -685,11 +731,11 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
 
 std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
                                ast::StmtData::DataType dataType) {
-
   switch(statementProto.stmt_case()) {
   case proto::statements::Stmt::kBlockStmt: {
     const auto& stmtProto = statementProto.block_stmt();
-    auto stmt = std::make_shared<BlockStmt>(makeData(dataType), makeLocation(stmtProto));
+    auto stmt =
+        std::make_shared<BlockStmt>(makeData(dataType, stmtProto.data()), makeLocation(stmtProto));
 
     for(const auto& s : stmtProto.statements())
       stmt->push_back(makeStmt(s, dataType));
@@ -699,15 +745,17 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
   }
   case proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
-    auto stmt = std::make_shared<ExprStmt>(makeData(dataType), makeExpr(stmtProto.expr(), dataType),
-                                           makeLocation(stmtProto));
+    auto stmt =
+        std::make_shared<ExprStmt>(makeData(dataType, stmtProto.data()),
+                                   makeExpr(stmtProto.expr(), dataType), makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kReturnStmt: {
     const auto& stmtProto = statementProto.return_stmt();
-    auto stmt = std::make_shared<ReturnStmt>(
-        makeData(dataType), makeExpr(stmtProto.expr(), dataType), makeLocation(stmtProto));
+    auto stmt =
+        std::make_shared<ReturnStmt>(makeData(dataType, stmtProto.data()),
+                                     makeExpr(stmtProto.expr(), dataType), makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -729,7 +777,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
 
     auto stmt = std::make_shared<VarDeclStmt>(
         dataType == StmtData::IIR_DATA_TYPE ? std::make_unique<iir::VarDeclStmtData>()
-                                            : makeData(dataType),
+                                            : makeData(dataType, stmtProto.data()),
         type, stmtProto.name(), stmtProto.dimension(), stmtProto.op().c_str(), initList,
         makeLocation(stmtProto));
     if(dataType == StmtData::IIR_DATA_TYPE)
@@ -747,7 +795,8 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     for(const auto& argName : stmtProto.stencil_call().arguments()) {
       call->Args.push_back(argName);
     }
-    auto stmt = std::make_shared<StencilCallDeclStmt>(makeData(dataType), call, metaloc);
+    auto stmt =
+        std::make_shared<StencilCallDeclStmt>(makeData(dataType, stmtProto.data()), call, metaloc);
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -769,14 +818,15 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto ast = makeAST(stmtProto.vertical_region().ast(), dataType);
     std::shared_ptr<sir::VerticalRegion> verticalRegion =
         std::make_shared<sir::VerticalRegion>(ast, interval, looporder, loc);
-    auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType), verticalRegion, loc);
+    auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType, stmtProto.data()),
+                                                         verticalRegion, loc);
     stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
-    auto stmt = std::make_shared<BoundaryConditionDeclStmt>(makeData(dataType), stmtProto.functor(),
-                                                            makeLocation(stmtProto));
+    auto stmt = std::make_shared<BoundaryConditionDeclStmt>(
+        makeData(dataType, stmtProto.data()), stmtProto.functor(), makeLocation(stmtProto));
     for(const auto& fieldName : stmtProto.fields())
       stmt->getFields().emplace_back(fieldName);
     stmt->setID(stmtProto.id());
@@ -785,7 +835,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
   case proto::statements::Stmt::kIfStmt: {
     const auto& stmtProto = statementProto.if_stmt();
     auto stmt = std::make_shared<IfStmt>(
-        makeData(dataType), makeStmt(stmtProto.cond_part(), dataType),
+        makeData(dataType, stmtProto.data()), makeStmt(stmtProto.cond_part(), dataType),
         makeStmt(stmtProto.then_part(), dataType),
         stmtProto.has_else_part() ? makeStmt(stmtProto.else_part(), dataType) : nullptr,
         makeLocation(stmtProto));
