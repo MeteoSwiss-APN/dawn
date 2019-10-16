@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
@@ -23,15 +23,13 @@
 namespace dawn {
 namespace iir {
 
-void DependencyGraphAccesses::insertStatementAccessesPair(
-    const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
+void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
 
-  if(stmtAccessPair->hasBlockStatements()) {
-    for(const auto& s : stmtAccessPair->getBlockStatements())
-      insertStatementAccessesPair(s);
+  if(!stmt->getChildren().empty()) { // TODO(SAP)
+    for(const auto& s : stmt->getChildren())
+      insertStatement(s);
   } else {
-    const auto& callerAccesses =
-        stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);

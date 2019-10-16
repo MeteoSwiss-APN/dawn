@@ -24,8 +24,6 @@ dawn_protobuf_generate(
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PACKG IIR
   LANGUAGE cpp
-  # this dependency could be relaxed to the usage of "SIR/statements.pb.h" in iir
-  DEPENDS ${sir_proto_cpp_files}
 )
 
 yoda_add_library(
@@ -48,8 +46,6 @@ yoda_add_library(
           AccessUtils.h
           AccessToNameMapper.cpp
           AccessToNameMapper.h
-          BlockStatements.cpp
-          BlockStatements.h
           Cache.cpp
           Cache.h
           ControlFlowDescriptor.cpp
@@ -90,8 +86,6 @@ yoda_add_library(
           NodeUpdateType.h
           Stage.cpp
           Stage.h
-          StatementAccessesPair.cpp
-          StatementAccessesPair.h
           Stencil.cpp
           Stencil.h
           StencilFunctionInstantiation.cpp
