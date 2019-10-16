@@ -68,7 +68,8 @@ public:
       : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()),
         data_(std::move(data)) {}
   Stmt(int id, std::unique_ptr<StmtData> data, StmtKind kind, SourceLocation loc = SourceLocation())
-      : kind_(kind), loc_(loc), statementID_(id), data_(std::move(data)) {}
+      : kind_(kind), loc_(loc), statementID_(id), data_(std::move(data)) {
+  } // TODO(SAP) remove after cleaning init of DoMethod::ast_
   Stmt(const Stmt& stmt)
       : std::enable_shared_from_this<Stmt>(stmt), kind_(stmt.getKind()),
         loc_(stmt.getSourceLocation()), statementID_(UIDGenerator::getInstance()->get()),
@@ -176,7 +177,8 @@ public:
   /// @{
   BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc = SourceLocation());
   BlockStmt(int id, std::unique_ptr<StmtData> data, SourceLocation loc = SourceLocation())
-      : Stmt(id, std::move(data), SK_BlockStmt, loc) {}
+      : Stmt(id, std::move(data), SK_BlockStmt, loc) {
+  } // TODO(SAP) remove after cleaning init of DoMethod::ast_
   BlockStmt(std::unique_ptr<StmtData> data, const std::vector<std::shared_ptr<Stmt>>& statements,
             SourceLocation loc = SourceLocation());
   BlockStmt(const BlockStmt& stmt);

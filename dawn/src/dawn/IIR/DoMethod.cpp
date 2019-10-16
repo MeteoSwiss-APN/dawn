@@ -29,16 +29,17 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logging.h"
+#include <limits>
 #include <memory>
 
 namespace dawn {
 namespace iir {
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
-      metaData_(metaData), ast_{1232132323, std::make_unique<iir::IIRStmtData>()}
-//, ast_{*iir::makeBlockStmt()} // TODO(SAP)
-{}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData),
+      ast_{std::numeric_limits<int>::max(), // TODO(SAP) this number is here to keep IDs the same in
+                                            // tests. Will be removed in the next PR.
+           std::make_unique<iir::IIRStmtData>()} {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
@@ -146,19 +147,19 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
 
   json::json stmtsJson;
   for(const auto& stmt : getChildren()) {
-    json::json node2;
-    node2["stmt"] = ASTStringifier::toString(stmt, 0);
+    json::json stmtNode;
+    stmtNode["stmt"] = ASTStringifier::toString(stmt, 0);
 
     AccessToNameMapper accessToNameMapper(metaData);
     stmt->accept(accessToNameMapper);
 
-    node2["write_accesses"] =
+    stmtNode["write_accesses"] =
         print(metaData, accessToNameMapper,
               stmt->getData<iir::IIRStmtData>().CallerAccesses->getWriteAccesses());
-    node2["read_accesses"] =
+    stmtNode["read_accesses"] =
         print(metaData, accessToNameMapper,
               stmt->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses());
-    stmtsJson.push_back(node2); // TODO(SAP)
+    stmtsJson.push_back(stmtNode);
   }
   node["Stmts"] = stmtsJson;
   return node;
