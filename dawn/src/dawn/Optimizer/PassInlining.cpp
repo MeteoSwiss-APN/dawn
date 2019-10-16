@@ -484,25 +484,23 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
     for(const auto& doMethod : stage.getChildren()) {
-      for(auto stmtAccIt = doMethod->childrenBegin(); stmtAccIt != doMethod->childrenEnd();
-          ++stmtAccIt) {
-        inliner.processStatment(*stmtAccIt);
+      for(auto stmtIt = doMethod->childrenBegin(); stmtIt != doMethod->childrenEnd(); ++stmtIt) {
+        inliner.processStatment(*stmtIt);
 
         if(inliner.inlineCandiatesFound()) {
-          auto& newStmtAccList = inliner.getNewStatements();
+          auto& newStmtList = inliner.getNewStatements();
           // Compute the accesses of the new statements
-          computeAccesses(stencilInstantiation.get(), newStmtAccList);
+          computeAccesses(stencilInstantiation.get(), newStmtList);
           // Erase the old stmt ...
-          stmtAccIt = doMethod->childrenErase(stmtAccIt);
+          stmtIt = doMethod->childrenErase(stmtIt);
 
           // ... and insert the new ones
-          // newStmtAccList will be cleared at the next for iteration, so it is safe to move the
+          // newStmtList will be cleared at the next for iteration, so it is safe to move the
           // elements here
-          stmtAccIt =
-              doMethod->insertChildren(stmtAccIt, std::make_move_iterator(newStmtAccList.begin()),
-                                       std::make_move_iterator(newStmtAccList.end()));
+          stmtIt = doMethod->insertChildren(stmtIt, std::make_move_iterator(newStmtList.begin()),
+                                            std::make_move_iterator(newStmtList.end()));
 
-          std::advance(stmtAccIt, newStmtAccList.size() - 1);
+          std::advance(stmtIt, newStmtList.size() - 1);
         }
       }
       doMethod->update(iir::NodeUpdateType::level);

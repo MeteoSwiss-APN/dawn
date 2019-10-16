@@ -226,9 +226,9 @@ bool PassSetBoundaryCondition::run(
     std::unordered_map<int, iir::Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
-    for(const auto& stmtAccess : iterateIIROverStmt(stencil)) {
+    for(const auto& stmt : iterateIIROverStmt(stencil)) {
 
-      const iir::Accesses& accesses = *(stmtAccess->getData<iir::IIRStmtData>().CallerAccesses);
+      const iir::Accesses& accesses = *(stmt->getData<iir::IIRStmtData>().CallerAccesses);
       const auto& allReadAccesses = accesses.getReadAccesses();
       const auto& allWriteAccesses = accesses.getWriteAccesses();
 

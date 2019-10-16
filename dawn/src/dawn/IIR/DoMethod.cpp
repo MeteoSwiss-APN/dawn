@@ -60,8 +60,8 @@ void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>
 std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
   std::optional<Extents> extents;
 
-  for(auto& stmtAccess : getChildren()) {
-    auto extents_ = iir::computeMaximumExtents(*stmtAccess, accessID);
+  for(auto& stmt : getChildren()) {
+    auto extents_ = iir::computeMaximumExtents(*stmt, accessID);
     if(!extents_)
       continue;
 
