@@ -9,11 +9,18 @@ struct mylibTag {};
 
 mylib::Grid meshType(mylibTag);
 template <typename T>
-using CellField = mylib::FaceData<T>;
+mylib::EdgeData<T> e_fieldType(mylibTag);
 template <typename T>
-using EdgeField = mylib::EdgeData<T>;
+mylib::FaceData<T> c_fieldType(mylibTag);
 template <typename T>
-using NodeField = mylib::VertexData<T>;
+mylib::VertexData<T> v_fieldType(mylibTag);
+
+// template <typename T>
+// using CellField = mylib::FaceData<T>;
+// template <typename T>
+// using EdgeField = mylib::EdgeData<T>;
+// template <typename T>
+// using NodeField = mylib::VertexData<T>;
 
 using Mesh = mylib::Grid;
 
