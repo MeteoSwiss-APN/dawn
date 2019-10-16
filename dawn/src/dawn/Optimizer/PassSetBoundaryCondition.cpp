@@ -219,17 +219,16 @@ bool PassSetBoundaryCondition::run(
     }
   };
 
-  // Loop through all the StmtAccessPair in the stencil forward
+  // Loop through all the statements in the stencil forward
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     DAWN_LOG(INFO) << "analyzing stencil " << stencilInstantiation->getName();
     std::unordered_map<int, iir::Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
-    for(const auto& stmtAccess : iterateIIROver<iir::StatementAccessesPair>(stencil)) {
+    for(const auto& stmt : iterateIIROverStmt(stencil)) {
 
-      const iir::Accesses& accesses =
-          *(stmtAccess->getStatement()->getData<iir::IIRStmtData>().CallerAccesses);
+      const iir::Accesses& accesses = *(stmt->getData<iir::IIRStmtData>().CallerAccesses);
       const auto& allReadAccesses = accesses.getReadAccesses();
       const auto& allWriteAccesses = accesses.getWriteAccesses();
 

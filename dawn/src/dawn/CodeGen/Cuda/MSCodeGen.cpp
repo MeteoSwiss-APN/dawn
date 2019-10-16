@@ -1034,8 +1034,8 @@ void MSCodeGen::generateCudaKernelCode() {
                 const iir::DoMethod& doMethod = *doMethodPtr;
                 if(!doMethod.getInterval().overlaps(interval))
                   continue;
-                for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                  statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+                for(const auto& stmt : doMethod.getChildren()) {
+                  stmt->accept(stencilBodyCXXVisitor);
                   cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
                 }
               }

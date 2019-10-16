@@ -30,7 +30,6 @@ namespace dawn {
 namespace iir {
 
 class DependencyGraphStage;
-class StatementAccessesPair;
 class IIR;
 class StencilMetaInformation;
 
@@ -235,18 +234,16 @@ public:
 
   json::json jsonDump() const;
 
-  /// @brief Run `func` on each StatementAccessesPair of the stencil (or on the given
-  /// StatementAccessesPair of the stages specified in `lifetime`)
+  /// @brief Run `func` on each Stmt of the stencil (or on the given
+  /// Stmt of the stages specified in `lifetime`)
   ///
   /// @param func           Function to run on all statements of each Do-Method
   /// @param updateFields   Update the fields afterwards
   /// @{
-  void forEachStatementAccessesPair(
-      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
-      bool updateFields = false);
-  void forEachStatementAccessesPair(
-      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
-      const Lifetime& lifetime, bool updateFields = false);
+  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+                        bool updateFields = false);
+  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+                        const Lifetime& lifetime, bool updateFields = false);
   /// @}
 
   /// @brief Update the fields of the stages in the stencil (or the stages specified in `lifetime`)
@@ -309,9 +306,8 @@ public:
   sir::Attr& getStencilAttributes();
 
 private:
-  void forEachStatementAccessesPairImpl(
-      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, int startStageIdx,
-      int endStageIdx, bool updateFields);
+  void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+                            int startStageIdx, int endStageIdx, bool updateFields);
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };
 } // namespace iir

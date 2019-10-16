@@ -17,7 +17,6 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -219,7 +218,7 @@ private:
   ///@brief Add the assignment operator of two unique id's to a given domethod
   void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
                                int assigneeID) {
-    // Create the StatementAccessPair of the assignment with the new and old variables
+    // Create the statement of the assignment with the new and old variables
     auto fa_assignee =
         std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
@@ -227,7 +226,6 @@ private:
     auto assignmentExpression =
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
-    auto pair = std::make_unique<iir::StatementAccessesPair>(expAssignment);
     iir::Accesses newAccess;
     newAccess.addWriteExtent(assignmentID,
                              iir::Extents(ast::cartesian_{}, ast::Offsets{ast::cartesian}));
@@ -235,7 +233,7 @@ private:
                             iir::Extents(ast::cartesian_{}, ast::Offsets{ast::cartesian}));
     pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
-    domethod->insertChild(std::move(pair));
+    domethod->insertChild(std::move(expAssignment));
 
     // Add access ids to the expressions
     fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
@@ -248,11 +246,9 @@ private:
   /// @return true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int AccessID) {
 
-    for(const auto& stmtAccessesPair :
-        iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
+    for(const auto& stmt : iterateIIROverStmt(*multiStagePrt_)) {
 
-      const auto& callerAccesses =
-          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // Find first if this statement has a read
       auto readAccessIterator = callerAccesses->getReadAccesses().find(AccessID);
@@ -271,11 +267,9 @@ private:
 
   bool checkReadOnlyAccess(int AccessID) {
 
-    for(const auto& stmtAccessesPair :
-        iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
+    for(const auto& stmt : iterateIIROverStmt(*multiStagePrt_)) {
 
-      const auto& callerAccesses =
-          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // If we find a write-statement we exit
       auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);

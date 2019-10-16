@@ -17,7 +17,6 @@
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/ASTSerializer.h"
@@ -66,19 +65,18 @@ static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
                       dim3plus);
 }
 
-static void
-serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
-                        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
+static void serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
+                                    const std::shared_ptr<iir::Stmt>& stmtAccessPair) {
   // serialize the statement
   ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt(), ast::StmtData::IIR_DATA_TYPE);
-  stmtAccessPair->getStatement()->accept(builder);
+  stmtAccessPair->accept(builder);
 
   // check if caller accesses are initialized, and if so, fill them
-  if(stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses) {
+  if(stmtAccessPair->getData<iir::IIRStmtData>().CallerAccesses) {
     setAccesses(protoStmtAccessPair->mutable_accesses(),
-                stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses);
+                stmtAccessPair->getData<iir::IIRStmtData>().CallerAccesses);
   }
-  DAWN_ASSERT_MSG(!stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CalleeAccesses,
+  DAWN_ASSERT_MSG(!stmtAccessPair->getData<iir::IIRStmtData>().CalleeAccesses,
                   "inlining did not work as we have calee-accesses");
 }
 
@@ -202,9 +200,6 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
 }
 
 static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
-  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())) {
-    leaf->update(iir::NodeUpdateType::level);
-  }
   for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
@@ -707,11 +702,11 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
-          (IIRStage)->insertChild(std::make_unique<iir::DoMethod>(
+          IIRStage->insertChild(std::make_unique<iir::DoMethod>(
               *makeInterval(protoDoMethod.interval()), target->getMetaData()));
 
           auto& IIRDoMethod = (IIRStage)->getChild(doMethodPos++);
-          (IIRDoMethod)->setID(protoDoMethod.domethodid());
+          IIRDoMethod->setID(protoDoMethod.domethodid());
 
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
             auto stmt = makeStmt(protoStmtAccessPair.aststmt(), ast::StmtData::IIR_DATA_TYPE);
@@ -723,10 +718,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             for(auto readAccess : protoStmtAccessPair.accesses().readaccess()) {
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
-            auto insertee = std::make_unique<iir::StatementAccessesPair>(stmt);
-            insertee->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
-                std::move(callerAccesses);
-            (IIRDoMethod)->insertChild(std::move(insertee));
+            stmt->getData<iir::IIRStmtData>().CallerAccesses = std::move(callerAccesses);
+            IIRDoMethod->insertChild(std::move(stmt));
           }
         }
       }
