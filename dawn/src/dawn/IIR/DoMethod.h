@@ -62,8 +62,6 @@ class DoMethod : public IIRNode<Stage, DoMethod, iir::Stmt> {
 public:
   static constexpr const char* name = "DoMethod";
 
-  bool checkDoMethod() const override { return false; }
-
   /// @name Constructors and Assignment
   /// @{
   DoMethod(Interval interval, const StencilMetaInformation& metaData);

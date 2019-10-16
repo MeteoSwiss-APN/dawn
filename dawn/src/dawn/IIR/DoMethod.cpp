@@ -163,7 +163,7 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   }
   node["Stmts"] = stmtsJson;
   return node;
-} // namespace iir
+}
 
 void DoMethod::updateLevel() {
 

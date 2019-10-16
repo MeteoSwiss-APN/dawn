@@ -85,73 +85,44 @@ public:
 
   /// @brief clone the children of another node and store them as children of this object
   /// @param other node from where the children are cloned
-  inline void cloneChildrenFrom(const IIRNode& other) {
-    DAWN_ASSERT(checkDoMethod());
-    cloneChildrenImpl<Child>(other);
-  }
+  inline void cloneChildrenFrom(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
   /// @brief clone the children of another node and store them as children of this object
   /// @param other node from where the children are cloned
   /// @param thisNode smart ptr of this object (specialization for nodes that have no parent)
   inline void cloneChildrenFrom(const IIRNode& other, const SmartPtr<NodeType>& thisNode) {
-    DAWN_ASSERT(checkDoMethod());
     DAWN_ASSERT(thisNode.get() == this);
     cloneChildrenImpl<Child>(other, thisNode);
   }
 
-  virtual bool checkDoMethod() const { return true; }
-
   /// @brief getters and iterator getters
   /// @{
-  inline const Container<SmartPtr<Child>>& getChildren() const {
-    DAWN_ASSERT(checkDoMethod());
-    return children_;
-  }
-  inline Container<SmartPtr<Child>>& getChildren() {
-    DAWN_ASSERT(checkDoMethod());
-    return children_;
-  }
+  inline const Container<SmartPtr<Child>>& getChildren() const { return children_; }
+  inline Container<SmartPtr<Child>>& getChildren() { return children_; }
 
-  inline ChildIterator childrenBegin() {
-    DAWN_ASSERT(checkDoMethod());
-    return children_.begin();
-  }
-  inline ChildIterator childrenEnd() {
-    DAWN_ASSERT(checkDoMethod());
-    return children_.end();
-  }
+  inline ChildIterator childrenBegin() { return children_.begin(); }
+  inline ChildIterator childrenEnd() { return children_.end(); }
 
   /// @brief reverse iterator begin
   inline typename Container<SmartPtr<Child>>::reverse_iterator childrenRBegin() {
-    DAWN_ASSERT(checkDoMethod());
     return children_.rbegin();
   }
   /// @brief reverse iterator end
   inline typename Container<SmartPtr<Child>>::reverse_iterator childrenREnd() {
-    DAWN_ASSERT(checkDoMethod());
     return children_.rend();
   }
 
   /// @brief iterator begin
-  inline ChildConstIterator childrenBegin() const {
-    DAWN_ASSERT(checkDoMethod());
-    return children_.begin();
-  }
+  inline ChildConstIterator childrenBegin() const { return children_.begin(); }
   /// @brief iterator end
-  inline ChildConstIterator childrenEnd() const {
-    DAWN_ASSERT(checkDoMethod());
-    return children_.end();
-  }
+  inline ChildConstIterator childrenEnd() const { return children_.end(); }
 
   inline typename Container<SmartPtr<Child>>::const_reverse_iterator childrenRBegin() const {
-    DAWN_ASSERT(checkDoMethod());
     return children_.rbegin();
   }
   inline typename Container<SmartPtr<Child>>::const_reverse_iterator childrenREnd() const {
-    DAWN_ASSERT(checkDoMethod());
     return children_.rend();
   }
   inline const ChildSmartPtrType& getChild(unsigned long pos) {
-    DAWN_ASSERT(checkDoMethod());
     return getChildImpl<typename std::iterator_traits<ChildIterator>::iterator_category>(pos);
   }
   /// @brief get unique_ptr to parent
@@ -168,7 +139,6 @@ public:
   /// @param childIt iterator pointing to the element being erased
   /// @return iterator to next element
   inline ChildIterator childrenErase(ChildIterator childIt) {
-    DAWN_ASSERT(checkDoMethod());
     auto it_ = children_.erase(childIt);
 
     fixAfterErase();
@@ -182,7 +152,6 @@ public:
   /// @return true if element is found and deleted
   template <typename UnaryPredicate>
   inline bool childrenEraseIf(UnaryPredicate pred) {
-    DAWN_ASSERT(checkDoMethod());
     bool res = RemoveIf(children_, pred);
 
     if(!res)
@@ -196,10 +165,7 @@ public:
   /// Every tree node contains pointers to parent node. When the tree is modified, i.e. a node is
   /// inserted or deleted, the pointers pointing to parent nodes can be invalidated. This method
   /// checks if all these pointers are valid
-  inline bool checkTreeConsistency() const {
-    DAWN_ASSERT(checkDoMethod());
-    return checkTreeConsistencyImpl<Child>();
-  }
+  inline bool checkTreeConsistency() const { return checkTreeConsistencyImpl<Child>(); }
 
   /// @brief virtual method to be implemented by node classes that update the derived info from
   /// children derived infos
@@ -246,7 +212,6 @@ public:
   template <typename TChildSmartPtr>
   void
   setChildrenParent(typename std::enable_if<!is_child_void<TChildSmartPtr>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
     if(!parent_)
       return;
 
@@ -262,7 +227,6 @@ public:
   /// @brief set the parent pointer of the children
   template <typename TChildSmartPtr>
   void setChildrenParent(typename std::enable_if<is_child_void<TChildSmartPtr>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
   }
 
   /// @brief set the parent pointer of a child of this node
@@ -272,7 +236,6 @@ public:
       const std::unique_ptr<TChild>& child,
       typename std::enable_if<!std::is_void<TParent>::value &&
                               !is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
 
     static_assert(std::is_same<TParent, Parent>::value,
                   "The template TParent type of this function should be == Parent. The function is "
@@ -299,22 +262,16 @@ public:
   void setChildParent(
       const std::unique_ptr<TChild>& child,
       typename std::enable_if<std::is_void<TParent>::value ||
-                              is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {
-    DAWN_ASSERT(checkDoMethod());
-  }
+                              is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {}
 
   /// @brief insert a child node (specialization for nodes with a parent node)
   /// @param child node being inserted as a child
-  void insertChild(ChildSmartPtrType&& child) {
-    DAWN_ASSERT(checkDoMethod());
-    insertChildImpl<Parent>(std::move(child));
-  }
+  void insertChild(ChildSmartPtrType&& child) { insertChildImpl<Parent>(std::move(child)); }
 
   /// @brief insert a child node (specialization for nodes without a parent node)
   /// @param child node being inserted as a child
   /// @param thisNode smart ptr to this
   void insertChild(ChildSmartPtrType&& child, const std::unique_ptr<NodeType>& thisNode) {
-    DAWN_ASSERT(checkDoMethod());
     insertChildImpl<Parent, ChildSmartPtrType, std::unique_ptr<NodeType>>(std::move(child),
                                                                           thisNode);
   }
@@ -323,7 +280,6 @@ public:
   /// @param pos iterator with the position where the child will be inserted
   /// @param child node being inserted as a child
   ChildIterator insertChild(ChildIterator pos, ChildSmartPtrType&& child) {
-    DAWN_ASSERT(checkDoMethod());
     return insertChildImpl<Parent>(pos, std::move(child));
   }
 
@@ -333,7 +289,6 @@ public:
   /// @param last iterator to end of the children being inserted
   template <typename Iterator>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last) {
-    DAWN_ASSERT(checkDoMethod());
     return insertChildrenImpl<Iterator, Parent>(pos, first, last);
   }
 
@@ -345,21 +300,16 @@ public:
   template <typename Iterator, typename TChildParent>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
                                const std::unique_ptr<TChildParent>& p) {
-    DAWN_ASSERT(checkDoMethod());
     return insertChildrenImpl<Parent, Iterator, TChildParent>(pos, first, last, p);
   }
 
   /// @brief print tree of pointers
-  void printTree() {
-    DAWN_ASSERT(checkDoMethod());
-    printTreeImpl<Child>();
-  }
+  void printTree() { printTreeImpl<Child>(); }
 
   /// @brief replace a child node by another node (specialization for nodes with a parent node)
   /// @param inputChild child node that will be looked up and replaced
   /// @param withNewChild new child node that will be inserted in the place of the old node
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild) {
-    DAWN_ASSERT(checkDoMethod());
     replaceImpl<Parent>(inputChild, withNewChild);
   }
 
@@ -369,25 +319,17 @@ public:
   /// @param thisNode smart ptr to this node
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
                const std::unique_ptr<NodeType>& thisNode) {
-    DAWN_ASSERT(checkDoMethod());
     replaceImpl<Parent>(inputChild, withNewChild, thisNode);
   }
 
   /// @brief true if there are no children
-  bool childrenEmpty() const {
-    DAWN_ASSERT(checkDoMethod());
-    return children_.empty();
-  }
+  bool childrenEmpty() const { return children_.empty(); }
 
   /// @brief clear the container of chilren
-  void clearChildren() {
-    DAWN_ASSERT(checkDoMethod());
-    children_.clear();
-  }
+  void clearChildren() { children_.clear(); }
 
   /// @brief get the smart pointer of a raw pointer child node
   inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
-    DAWN_ASSERT(checkDoMethod());
     for(const auto& c : children_) {
       if(c.get() == child) {
         return c;
