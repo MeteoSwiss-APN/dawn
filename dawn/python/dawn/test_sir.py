@@ -207,6 +207,17 @@ class TestStmt(VerticalRegionTestBase):
         self.assertEqual(stmt.fields[0], "a")
         self.assertEqual(stmt.fields[1], "b")
 
+    def test_if_stmt(self):
+        stmt = make_if_stmt(self.var_stmt(), self.lit_stmt())
+        self.assertEqual(stmt.cond_part, make_stmt(self.var_stmt()))
+        self.assertEqual(stmt.then_part, make_stmt(self.lit_stmt()))
+        self.assertEqual(str(stmt.else_part), "")
+
+        stmt = make_if_stmt(self.lit_stmt(), self.var_stmt(), self.lit_stmt())
+        self.assertEqual(stmt.cond_part, make_stmt(self.lit_stmt()))
+        self.assertEqual(stmt.then_part, make_stmt(self.var_stmt()))
+        self.assertEqual(stmt.else_part, make_stmt(self.lit_stmt()))
+
 
 class TestExpr(ExprTestBase):
     def test_unary_operator(self):

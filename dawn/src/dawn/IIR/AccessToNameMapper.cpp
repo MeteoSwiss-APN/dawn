@@ -14,6 +14,7 @@
 
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 

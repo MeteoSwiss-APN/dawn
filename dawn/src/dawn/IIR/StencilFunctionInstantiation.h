@@ -19,7 +19,6 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -365,7 +364,7 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  const std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
+  const std::vector<std::shared_ptr<iir::Stmt>>& getStatements() const;
 
   /// @brief Update the fields and global variables
   ///

@@ -352,8 +352,7 @@ bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
           ExprToStencilFunctionInstantiationMap_.end());
 }
 
-const std::vector<std::unique_ptr<StatementAccessesPair>>&
-StencilFunctionInstantiation::getStatementAccessesPairs() const {
+const std::vector<std::shared_ptr<iir::Stmt>>& StencilFunctionInstantiation::getStatements() const {
   return doMethod_->getChildren();
 }
 
@@ -381,9 +380,8 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& statementAccessesPair : doMethod_->getChildren()) {
-    const auto& access =
-        statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+  for(const auto& stmt : doMethod_->getChildren()) {
+    const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -457,11 +455,9 @@ void StencilFunctionInstantiation::update() {
         AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
       // Accumulate the extents of each field in this stage
-      for(const auto& statementAccessesPair : doMethod_->getChildren()) {
-        const auto& access =
-            callerAccesses
-                ? statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses
-                : statementAccessesPair->getStatement()->getData<IIRStmtData>().CalleeAccesses;
+      for(const auto& stmt : doMethod_->getChildren()) {
+        const auto& access = callerAccesses ? stmt->getData<IIRStmtData>().CallerAccesses
+                                            : stmt->getData<IIRStmtData>().CalleeAccesses;
 
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
@@ -599,8 +595,7 @@ void StencilFunctionInstantiation::dump() const {
   for(std::size_t i = 0; i < statements.size(); ++i) {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
-    const auto& callerAccesses =
-        doMethod_->getChild(i)->getStatement()->getData<IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses = doMethod_->getChild(i)->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
