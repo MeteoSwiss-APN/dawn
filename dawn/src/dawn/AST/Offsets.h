@@ -45,7 +45,7 @@ protected:
 
 class CartesianOffset : public HorizontalOffsetImpl {
 public:
-  CartesianOffset(int iOffset, int jOffset) : horizontalOffset_({iOffset, jOffset}) {}
+  CartesianOffset(int iOffset, int jOffset) : horizontalOffset_{iOffset, jOffset} {}
   explicit CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
   CartesianOffset() = default;
 
