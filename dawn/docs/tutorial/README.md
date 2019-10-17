@@ -1,6 +1,6 @@
 # Getting Started using GTClang & dawn
 
-In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. To follow this tutorial, please make sure that you compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag. See the Readme in the dawn subfolder on information on how to do that. We will compile and execute the same stencil three times, once starting from a stencil written in the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++. 
+In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. To follow this tutorial, please make sure that you compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag. The readme in the gtclang subdirectory has instructions on how to do that. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++.
 
 ## Writing a Stencil in the GTClang SIR and Compiling the Stencil
 
@@ -22,7 +22,7 @@ stencil laplacian_stencil {
 };
 ```
 
-We define two fields which will serve as the arguments to our stencil. The variable `dx` is the grid spacing and is read-only (during the stencil run), which is modelled as a global in **GTClang**. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example [wikipedia](https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables)), which close to no boiler plate. Save the stencil as `laplacian_stencil.cpp`.
+This code defines two fields which will serve as the arguments to the stencil. The variable `dx` is the grid spacing and is read-only (during the stencil run), which is modelled as a global in **GTClang**. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example [wikipedia](https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables)), which close to no boiler plate. Save the stencil as `laplacian_stencil.cpp`.
 
 For the purpose of this tutorial we are going to use the `C++-naive` backend. To compile the stencil use:
 ```
@@ -31,7 +31,7 @@ For the purpose of this tutorial we are going to use the `C++-naive` backend. To
 
 ## Writing and Compiling the Driver Code
 
-**GTClang** now wrote a code file for us that can be compiled with any C++11 compliant compiler. However, for the stencil to do something useful some driver code that fills the `in_field` and reads the `out_field`. For the purpose of this exercise we are goanna initialize in field to a wave function `in(x,y) = sin(x)*sin(y)` since the Laplacian of this is the same wave again, but with inverted phase and twice the amplitude, and thus easy to check. The driver code is located in `laplacian_driver.cpp` and should be straight forward. The actual stencil launch is just one line:
+**GTClang** output a c++11-compliant source file. This code reads in a field `in_field`, applies the stencil, and writes the result into `out_field`. To use this, we need a driver. For the purpose of this exercise we are going initialize `in_field` to a wave function `in(x,y) = sin(x)*sin(y)`, since the Laplacian of this is the same wave again, but with inverted phase and twice the amplitude, and thus easy to check. The driver code is located in `laplacian_driver.cpp` and should be straightforward. The actual stencil launch is just one line:
 
 ```
 dawn_generated::cxxnaive::laplacian_stencil laplacian_naive(dom, out, in);
@@ -45,7 +45,7 @@ the run method could now be called in a time loop, for example to simulate diffu
 cmake . && make
 ```
 
-This will place an executable called `laplacian_driver` in the tutorial folder. When run, two `vtk` files will be written. Those can be viewed using (ParaView)[https://www.paraview.org/]. `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations. 
+This will place an executable called `laplacian_driver` in the tutorial directory. When run, two `vtk` files will be written. Those can be viewed using (ParaView)[https://www.paraview.org/]. `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
 
 <img src="img/in.png" width="425"/> <img src="img/out.png" width="425"/> 
 
@@ -93,7 +93,7 @@ The python file should be quite easy to follow. The the bulk of the AST of the s
 
 ## Generate code from SIR using dawn from C++
 
-As a final exercise, the C interface to dawn is again used to compile the same example. This time, the interface is called from a C++ file. This example will use the SIR written to disk by the preceding example, so please make sure that you followed along beforehand. Switch to the cpp example and build the `dawn_standalone` binary:
+As a final exercise, the C interface to dawn is again used to compile the same example. This time, however, the interface is called from a C++ file. This example will use the SIR written to disk by the preceding example, so please make sure that you followed along beforehand. Switch to the cpp example and build the `dawn_standalone` binary:
 
 ```
 cd cpp
@@ -101,5 +101,4 @@ cmake . && make
 ./dawn_standalone
 ```
 
-consider the file `introDawnStandalone.cpp` to see whats happening: the binary SIR written by the last example is deserialized and the C interface to dawn is called to generate C++-naive code once again. Again, you can make sure that the code is still equivalent to our reference by modfying the driver code, simply replace `#include "laplacian_stencil_cxx_naive.cpp` by `cpp/laplacian_stencil_from_standalone.cpp`. 
-
+consider opening the file `introDawnStandalone.cpp` to see whats happening: the binary SIR written by the last example is deserialized and the C interface to dawn is called to generate C++-naive code once again. Again, you can make sure that the code is still equivalent to our reference by modfying the driver code, simply replace `#include "laplacian_stencil_cxx_naive.cpp` by `cpp/laplacian_stencil_from_standalone.cpp`.
