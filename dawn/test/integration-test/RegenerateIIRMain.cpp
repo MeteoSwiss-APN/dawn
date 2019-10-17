@@ -29,9 +29,9 @@ int main(int argc, char* argv[]) {
 
   auto copy_stencil = createCopyStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil, IIRSerializer::SK_Json);
+  IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil, IIRSerializer::Kind::Json);
 
   auto lapl_stencil = createLapStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/lapl_stencil.iir", copy_stencil, IIRSerializer::SK_Json);
+  IIRSerializer::serialize("reference_iir/lapl_stencil.iir", copy_stencil, IIRSerializer::Kind::Json);
 }

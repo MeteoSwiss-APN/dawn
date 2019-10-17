@@ -133,14 +133,14 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<Dia
 
 std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
   // -reorder
-  using ReorderStrategyKind = ReorderStrategy::ReorderStrategyKind;
+  using ReorderStrategyKind = ReorderStrategy::TypeKind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
-                                            .Case("none", ReorderStrategyKind::RK_None)
-                                            .Case("greedy", ReorderStrategyKind::RK_Greedy)
-                                            .Case("scut", ReorderStrategyKind::RK_Partitioning)
-                                            .Default(ReorderStrategyKind::RK_Unknown);
+                                            .Case("none", ReorderStrategyKind::None)
+                                            .Case("greedy", ReorderStrategyKind::Greedy)
+                                            .Case("scut", ReorderStrategyKind::Partitioning)
+                                            .Default(ReorderStrategyKind::Unknown);
 
-  if(reorderStrategy == ReorderStrategyKind::RK_Unknown) {
+  if(reorderStrategy == ReorderStrategyKind::Unknown) {
     diagnostics_->report(
         buildDiag("-reorder", options_->ReorderStrategy, "", {"none", "greedy", "scut"}));
     return nullptr;
@@ -149,21 +149,20 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
   if(options_->MaxCutMSS) {
-    mssSplitStrategy = MultistageSplitStrategy::SS_MaxCut;
+    mssSplitStrategy = MultistageSplitStrategy::MaxCut;
   } else {
-    mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
+    mssSplitStrategy = MultistageSplitStrategy::Optimized;
   }
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 
-  IIRSerializer::SerializationKind serializationKind = IIRSerializer::SK_Json;
+  IIRSerializer::Kind serializationKind = IIRSerializer::Kind::Json;
   if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
     if(options_->IIRFormat == "json") {
-      serializationKind = IIRSerializer::SK_Json;
+      serializationKind = IIRSerializer::Kind::Json;
     } else if(options_->IIRFormat == "byte") {
-      serializationKind = IIRSerializer::SK_Byte;
-
+      serializationKind = IIRSerializer::Kind::Byte;
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }

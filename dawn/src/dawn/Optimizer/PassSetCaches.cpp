@@ -28,7 +28,7 @@ namespace dawn {
 
 namespace {
 
-enum class FirstAccessKind { FK_Read, FK_Write, FK_Mixed };
+enum class FirstAccessKind { Read, Write, Mixed };
 
 /// @brief properties of a cache candidate
 struct CacheCandidate {
@@ -257,7 +257,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
             cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(),
                                            CacheCandidate{iir::Cache::IOPolicy::fill,
                                                           std::optional<iir::Cache::window>(),
-                                                          /* FirstAccessKind::FK_Read, */
+                                                          /* FirstAccessKind::Read, */
                                                           field.getInterval()});
           } else {
 

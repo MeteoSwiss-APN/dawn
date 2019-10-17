@@ -112,7 +112,7 @@ multiStageSplitterDebug() {
         // Max-Cut dependency analysis missing
         //==============================================================================================
         // The missing piece of the max-cut algorithm still requires one check that does not cut
-        // multistages that have loop order depdendencies is the form of:
+        // multistages that have loop order dependendices is the form of:
         //
         // vertical_region(k_start, k_end){
         //    c = a[k-1] + b;
@@ -164,7 +164,7 @@ bool PassMultiStageSplitter::run(
                      const std::string&, const OptimizerContext::OptimizerContextOptions&)>
       multistagesplitter;
 
-  if(strategy_ == MultiStageSplittingStrategy::SS_Optimized) {
+  if(strategy_ == MultiStageSplittingStrategy::Optimized) {
     multistagesplitter = multiStageSplitterOptimized();
   } else {
     multistagesplitter = multiStageSplitterDebug();

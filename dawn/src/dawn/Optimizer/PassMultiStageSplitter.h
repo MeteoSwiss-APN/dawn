@@ -27,9 +27,9 @@ class PassMultiStageSplitter : public Pass {
 public:
   /// @brief Multistage splitting strategies
   enum MultiStageSplittingStrategy {
-    SS_MaxCut, ///< Splitting the multistage into as many multistages as possible while maintaining
+    MaxCut, ///< Splitting the multistage into as many multistages as possible while maintaining
                /// code legality
-    SS_Optimized ///< Optimized splitting of Multistages, only when needed
+    Optimized ///< Optimized splitting of Multistages, only when needed
   };
   PassMultiStageSplitter(OptimizerContext& context, MultiStageSplittingStrategy strategy);
 

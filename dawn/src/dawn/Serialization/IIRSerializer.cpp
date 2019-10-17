@@ -435,7 +435,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
 
 std::string
 IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                             dawn::IIRSerializer::SerializationKind kind) {
+                             Kind kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   /////////////////////////////// WITTODO //////////////////////////////////////////////////////////
   //==------------------------------------------------------------------------------------------==//
@@ -480,7 +480,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   // Encode the message
   std::string str;
   switch(kind) {
-  case dawn::IIRSerializer::SK_Json: {
+  case Kind::Json: {
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
     options.always_print_primitive_fields = true;
@@ -491,7 +491,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
       throw std::runtime_error(dawn::format("cannot serialize IIR: %s", status.ToString()));
     break;
   }
-  case dawn::IIRSerializer::SK_Byte: {
+  case Kind::Byte: {
     if(!protoStencilInstantiation.SerializeToString(&str))
       throw std::runtime_error(dawn::format("cannot serialize IIR:"));
     break;
@@ -745,20 +745,20 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
 }
 
-void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::SerializationKind kind,
+void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Kind kind,
                                     std::shared_ptr<iir::StencilInstantiation>& target) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
   switch(kind) {
-  case dawn::IIRSerializer::SK_Json: {
+  case dawn::IIRSerializer::Kind::Json: {
     auto status = google::protobuf::util::JsonStringToMessage(str, &protoStencilInstantiation);
     if(!status.ok())
       throw std::runtime_error(
           dawn::format("cannot deserialize StencilInstantiation: %s", status.ToString()));
     break;
   }
-  case dawn::IIRSerializer::SK_Byte: {
+  case dawn::IIRSerializer::Kind::Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
       throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
     break;
@@ -775,7 +775,7 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
-                           IIRSerializer::SerializationKind kind) {
+                           IIRSerializer::Kind kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
@@ -790,16 +790,16 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
-                                     IIRSerializer::SerializationKind kind) {
+                                     IIRSerializer::Kind kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
       std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
 
-void dawn::IIRSerializer::serialize(const std::string& file,
+void IIRSerializer::serialize(const std::string& file,
                                     const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                                    dawn::IIRSerializer::SerializationKind kind) {
+                                    dawn::IIRSerializer::Kind kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
     throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
@@ -808,9 +808,9 @@ void dawn::IIRSerializer::serialize(const std::string& file,
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
 }
 
-std::string dawn::IIRSerializer::serializeToString(
+std::string IIRSerializer::serializeToString(
     const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    dawn::IIRSerializer::SerializationKind kind) {
+    dawn::IIRSerializer::Kind kind) {
   return serializeImpl(instantiation, kind);
 }
 

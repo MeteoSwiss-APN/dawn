@@ -31,12 +31,12 @@ class ReorderStrategy {
 public:
   virtual ~ReorderStrategy() {}
 
-  enum ReorderStrategyKind {
-    RK_Unknown,
-    RK_None,         ///< Don't perform any reordering
-    RK_Greedy,       ///< Greedy fusing of the stages until max-halo boundary is reached
-    RK_Partitioning, ///< Use S-cut graph partitioning
-    RK_Permutations  ///< Use Mating and Mutations for genetic Algorithms (this required an
+  enum class TypeKind {
+    Unknown,
+    None,         ///< Don't perform any reordering
+    Greedy,       ///< Greedy fusing of the stages until max-halo boundary is reached
+    Partitioning, ///< Use S-cut graph partitioning
+    Permutations  ///< Use Mating and Mutations for genetic Algorithms (this required an
                      /// existing, correct IIR
   };
 

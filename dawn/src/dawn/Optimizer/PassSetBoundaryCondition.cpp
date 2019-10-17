@@ -58,7 +58,7 @@ static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s
   return fullExtents;
 }
 
-enum FieldType { FT_NotOriginal = -1 };
+enum class FieldType { NotOriginal = -1 };
 } // namespace
 ///
 /// @brief The VisitStencilCalls class traverses the StencilDescAST to determine an order of the
@@ -152,10 +152,10 @@ bool PassSetBoundaryCondition::run(
       if(metadata.isAccessType(iir::FieldAccessType::Field, ID)) {
         return metadata.getAccessIDFromName(stencilInstantiation->getOriginalNameFromAccessID(ID));
       } else {
-        return (int)FieldType::FT_NotOriginal;
+        return static_cast<int>(FieldType::NotOriginal);
       }
     } else {
-      return (int)FieldType::FT_NotOriginal;
+      return static_cast<int>(FieldType::NotOriginal);
     }
   };
 
@@ -239,7 +239,7 @@ bool PassSetBoundaryCondition::run(
       // dirtyFields)
       for(const auto& readaccess : allReadAccesses) {
         int originalID = getOriginalID(readaccess.first);
-        if(originalID == FieldType::FT_NotOriginal)
+        if(originalID == static_cast<int>(FieldType::NotOriginal))
           continue;
         if(!dirtyFields.count(originalID))
           continue;
@@ -309,7 +309,7 @@ bool PassSetBoundaryCondition::run(
       // the fields to modified
       for(const auto& writeaccess : allWriteAccesses) {
         int originalID = getOriginalID(writeaccess.first);
-        if(originalID != FieldType::FT_NotOriginal) {
+        if(originalID != static_cast<int>(FieldType::NotOriginal)) {
           insertExtentsIntoMap(originalID, writeaccess.second, stencilDirtyFields);
         }
       }
