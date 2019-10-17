@@ -113,6 +113,21 @@ void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* fiel
     fieldProto->add_field_dimensions(initializedDimension);
   }
   setLocation(fieldProto->mutable_loc(), field->Loc);
+  proto::statements::Field_LocationType protoLocationType;
+  switch(field->locationType) {
+  case dawn::ast::Expr::LocationType::Cells:
+    protoLocationType = proto::statements::Field_LocationType_Cell;
+    break;
+  case dawn::ast::Expr::LocationType::Edges:
+    protoLocationType = proto::statements::Field_LocationType_Edge;
+    break;
+  case dawn::ast::Expr::LocationType::Vertices:
+    protoLocationType = proto::statements::Field_LocationType_Vertex;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  fieldProto->set_location_type(protoLocationType);
 }
 
 ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto,
@@ -484,6 +499,19 @@ std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto
 
     std::copy(fieldProto.field_dimensions().begin(), fieldProto.field_dimensions().end(),
               field->fieldDimensions.begin());
+  }
+  switch(fieldProto.location_type()) {
+  case proto::statements::Field_LocationType_Cell:
+    field->locationType = ast::Expr::LocationType::Cells;
+    break;
+  case proto::statements::Field_LocationType_Edge:
+    field->locationType = ast::Expr::LocationType::Edges;
+    break;
+  case proto::statements::Field_LocationType_Vertex:
+    field->locationType = ast::Expr::LocationType::Vertices;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
   }
   return field;
 }

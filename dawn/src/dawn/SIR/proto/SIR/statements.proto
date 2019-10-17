@@ -37,6 +37,14 @@ message Field {
   SourceLocation loc = 2;              // Source location
   bool is_temporary = 3;               // Is the field a temporary?
   repeated int32 field_dimensions = 4; // Legal dimension of the field initialized by the user
+
+  enum LocationType {
+    Edge = 0;
+    Vertex = 1;
+    Cell = 2;
+  }
+  // Location where the field is defined on
+  LocationType location_type = 5;
 }
 
 // @brief Directional argument of a StencilFunction
@@ -245,7 +253,7 @@ message ReturnStmt {
 //
 // @ingroup sir_proto
 message VarDeclStmtData {
-  google.protobuf.Int32Value accessID = 1;    // ID of the variable declared in the statement
+  google.protobuf.Int32Value accessID = 1; // ID of the variable declared in the statement
 }
 
 // @brief Declaration of a variable
@@ -282,9 +290,9 @@ message VarDeclStmt {
   // List of expression used for array initialization or just 1 element for variable initialization
   repeated Expr init_list = 5;
 
-  SourceLocation loc = 6; // Source location
+  SourceLocation loc = 6;   // Source location
   VarDeclStmtData data = 7; // Data of this statement
-  int32 ID = 8;           // ID of the Stmt
+  int32 ID = 8;             // ID of the Stmt
 }
 
 // @brief Declaration of a vertical region
@@ -475,12 +483,12 @@ message AccessExprData {
 //
 // @ingroup sir_proto
 message VarAccessExpr {
-  string name = 1;        // Name of the variable
-  Expr index = 2;         // Is it an array access (i.e var[2])?
-  bool is_external = 3;   // Is this an access to a external variable (e.g a global)?
-  SourceLocation loc = 4; // Source location
+  string name = 1;         // Name of the variable
+  Expr index = 2;          // Is it an array access (i.e var[2])?
+  bool is_external = 3;    // Is this an access to a external variable (e.g a global)?
+  SourceLocation loc = 4;  // Source location
   AccessExprData data = 5; // Access data
-  int32 ID = 6;           // ID of the Expr
+  int32 ID = 6;            // ID of the Expr
 }
 
 // @brief Access to a field
@@ -544,11 +552,11 @@ message FieldAccessExpr {
 //
 // @ingroup sir_proto
 message LiteralAccessExpr {
-  string value = 1;       // Value of the literal (e.g "1.24324")
-  BuiltinType type = 2;   // Type of the literal
-  SourceLocation loc = 3; // Source location
+  string value = 1;        // Value of the literal (e.g "1.24324")
+  BuiltinType type = 2;    // Type of the literal
+  SourceLocation loc = 3;  // Source location
   AccessExprData data = 4; // Access data
-  int32 ID = 5;           // ID of the Expr
+  int32 ID = 5;            // ID of the Expr
 }
 
 // @brief Reduction operation over neighbors

@@ -157,6 +157,7 @@ struct Field : public StencilFunctionArg {
 
   bool IsTemporary;
   Array3i fieldDimensions;
+  ast::Expr::LocationType locationType = ast::Expr::LocationType::Cells;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }
