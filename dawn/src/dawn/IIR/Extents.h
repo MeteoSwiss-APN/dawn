@@ -34,10 +34,11 @@ namespace iir {
 
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
-struct Extent { // TODO class?
+class Extent {
   int Minus;
   int Plus;
 
+public:
   /// @name Constructors and Assignment
   /// @{
   Extent() : Minus(0), Plus(0) {}
@@ -130,17 +131,13 @@ protected:
 class CartesianExtent : public HorizontalExtentImpl {
 public:
   CartesianExtent(int iMinus, int iPlus, int jMinus, int jPlus) {
-    m_extents_[0].Minus = iMinus;
-    m_extents_[0].Plus = iPlus;
-    m_extents_[1].Minus = jMinus;
-    m_extents_[1].Plus = jPlus;
+    m_extents_[0] = Extent(iMinus, iPlus);
+    m_extents_[1] = Extent(jMinus, jPlus);
   }
 
   CartesianExtent() {
-    m_extents_[0].Minus = 0;
-    m_extents_[0].Plus = 0;
-    m_extents_[1].Minus = 0;
-    m_extents_[1].Plus = 0;
+    m_extents_[0] = Extent(0, 0);
+    m_extents_[1] = Extent(0, 0);
   }
 
   HorizontalExtentImpl* plus_impl(HorizontalExtentImpl const& other) const override {
@@ -191,10 +188,10 @@ public:
     return m_extents_[0].isPointwise() && m_extents_[1].isPointwise();
   }
 
-  int iMinus() const { return m_extents_[0].Minus; }
-  int iPlus() const { return m_extents_[0].Plus; }
-  int jMinus() const { return m_extents_[1].Minus; }
-  int jPlus() const { return m_extents_[1].Plus; }
+  int iMinus() const { return m_extents_[0].minus(); }
+  int iPlus() const { return m_extents_[0].plus(); }
+  int jMinus() const { return m_extents_[1].minus(); }
+  int jPlus() const { return m_extents_[1].plus(); }
 
 private:
   std::array<Extent, 2> m_extents_;

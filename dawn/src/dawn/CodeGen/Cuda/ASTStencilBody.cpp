@@ -150,8 +150,8 @@ void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& ex
   auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   DAWN_ASSERT(hoffset.offsetI() == 0 && hoffset.offsetJ() == 0);
-  DAWN_ASSERT((offset.verticalOffset() <= vertExtent.Plus) &&
-              (offset.verticalOffset() >= vertExtent.Minus));
+  DAWN_ASSERT((offset.verticalOffset() <= vertExtent.plus()) &&
+              (offset.verticalOffset() >= vertExtent.minus()));
 
   int index = kcacheCenterOffset;
 

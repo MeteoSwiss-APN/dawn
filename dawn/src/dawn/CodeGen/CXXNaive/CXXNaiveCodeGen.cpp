@@ -32,9 +32,10 @@ namespace cxxnaive {
 static std::string makeLoopImpl(const std::pair<int, int>& extent, const std::string& dim,
                                 const std::string& lower, const std::string& upper,
                                 const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(std::get<0>(extent)) + "; " +
-               dim + " " + comparison + " " + upper + "+" + std::to_string(std::get<1>(extent)) +
-               "; " + increment + dim + ")")
+  auto [iextent, jextent] = extent;
+  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(iextent) + "; " + dim + " " +
+               comparison + " " + upper + "+" + std::to_string(jextent) + "; " + increment + dim +
+               ")")
       .str();
 }
 
@@ -58,8 +59,8 @@ static std::string makeKLoop(const std::string dom, bool isBackward,
   const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return isBackward ? makeLoopImpl(std::pair<int, int>(0, 0), "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(std::pair<int, int>(0, 0), "k", lower, upper, "<=", "++");
+  return isBackward ? makeLoopImpl(std::make_pair(0, 0), "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(std::make_pair(0, 0), "k", lower, upper, "<=", "++");
 }
 
 CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,

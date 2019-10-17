@@ -50,12 +50,12 @@ void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>
   const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
       metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).horizontalExtent());
   const auto& vExtents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).verticalExtent();
-  int haloIMinus = abs(hExtents.iMinus());
-  int haloIPlus = abs(hExtents.iPlus());
-  int haloJMinus = abs(hExtents.jMinus());
-  int haloJPlus = abs(hExtents.jPlus());
-  int haloKMinus = abs(vExtents.minus());
-  int haloKPlus = abs(vExtents.plus());
+  int haloIMinus = std::abs(hExtents.iMinus());
+  int haloIPlus = std::abs(hExtents.iPlus());
+  int haloJMinus = std::abs(hExtents.jMinus());
+  int haloJPlus = std::abs(hExtents.jPlus());
+  int haloKMinus = std::abs(vExtents.minus());
+  int haloKPlus = std::abs(vExtents.plus());
   std::string fieldname = stmt->getFields()[0];
 
   // Set up the halos

@@ -38,7 +38,7 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
 
     bool exceeds = false;
 
-    const int numDimensions = 3;
+    constexpr int numDimensions = 3;
     std::array<int, numDimensions> extentsMinus(
         {hExtents.iMinus(), hExtents.jMinus(), vExtents.minus()});
     std::array<int, numDimensions> extentsPlus(
@@ -111,7 +111,7 @@ bool CacheProperties::requiresFill(const iir::Cache& cache) {
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = ms_->getKCacheVertExtent(accessID);
-  return -ext.Minus;
+  return -ext.minus();
 }
 
 bool CacheProperties::isKCached(const int accessID) const {
@@ -161,11 +161,11 @@ int CacheProperties::getStrideCommonCache(int dim, Array3ui blockSize) const {
   return getStrideImpl(dim, blockSize, hExtents.iMinus(), hExtents.iPlus());
 } // namespace cuda
 
-int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, int Minus, int Plus) const {
+int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, int minus, int plus) const {
   if(dim == 0) {
     return 1;
   } else if(dim == 1) {
-    return blockSize[0] - Minus + Plus;
+    return blockSize[0] - minus + plus;
   } else {
     dawn_unreachable("error");
   }
