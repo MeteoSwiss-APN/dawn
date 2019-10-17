@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "36": "__local_fn_36",
    "16": "a",
-   "17": "b",
-   "34": "__local_fn_34"
+   "17": "b"
   },
   "accessIDToType": {
    "16": 6,
@@ -84,7 +84,7 @@
                "is_const": true,
                "is_volatile": false
               },
-              "name": "__local_fn_34",
+              "name": "__local_fn_36",
               "dimension": 0,
               "op": "=",
               "init_list": [
@@ -114,7 +114,7 @@
                  "data": {
                   "accessID": 16
                  },
-                 "ID": 32
+                 "ID": 33
                 }
                }
               ],
@@ -123,14 +123,14 @@
                "Column": -1
               },
               "data": {
-               "accessID": 34
+               "accessID": 36
               },
-              "ID": 36
+              "ID": 38
              }
             },
             "accesses": {
              "writeAccess": {
-              "34": {
+              "36": {
                "extents": [
                 {
                  "minus": 0,
@@ -204,16 +204,16 @@
                 "op": "=",
                 "right": {
                  "var_access_expr": {
-                  "name": "__local_fn_34",
+                  "name": "__local_fn_36",
                   "is_external": false,
                   "loc": {
                    "Line": -1,
                    "Column": -1
                   },
                   "data": {
-                   "accessID": 34
+                   "accessID": 36
                   },
-                  "ID": 35
+                  "ID": 37
                  }
                 },
                 "loc": {
@@ -250,7 +250,7 @@
               }
              },
              "readAccess": {
-              "34": {
+              "36": {
                "extents": [
                 {
                  "minus": 0,
@@ -283,7 +283,7 @@
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 33,
+      "multiStageID": 35,
       "Caches": {}
      }
     ],
@@ -314,5 +314,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/code/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }
