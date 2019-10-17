@@ -373,7 +373,7 @@ IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
 }
 
 IntervalDiff distance(Interval f, Interval s, LoopOrderKind order) {
-  if(order == LoopOrderKind::LK_Backward) {
+  if(order == LoopOrderKind::Backward) {
     return distance(f.upperIntervalLevel(), s.upperIntervalLevel());
   }
   { return distance(f.lowerIntervalLevel(), s.lowerIntervalLevel()); }
@@ -381,7 +381,7 @@ IntervalDiff distance(Interval f, Interval s, LoopOrderKind order) {
 
 Interval::IntervalLevel advance(Interval::IntervalLevel& lev_, LoopOrderKind loopOrder, int step) {
   Interval::IntervalLevel lev = lev_;
-  if(loopOrder == LoopOrderKind::LK_Backward) {
+  if(loopOrder == LoopOrderKind::Backward) {
     lev.offset_ -= step;
   } else {
     lev.offset_ += step;

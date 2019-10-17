@@ -86,7 +86,7 @@ struct Temporary {
     std::cout << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
               << " {"
               << "\n  Type="
-              << (type_ == iir::TemporaryScope::TS_LocalVariable ? "LocalVariable" : "Field")
+              << (type_ == iir::TemporaryScope::LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}\n";
   }
 };
@@ -133,8 +133,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
               // Register the temporary
               AccessIDs.insert(AccessID);
               iir::TemporaryScope ttype =
-                  (isTemporaryField ? iir::TemporaryScope::TS_StencilTemporary
-                                    : iir::TemporaryScope::TS_LocalVariable);
+                  (isTemporaryField ? iir::TemporaryScope::StencilTemporary
+                                    : iir::TemporaryScope::LocalVariable);
 
               temporaries.emplace(AccessID, Temporary(AccessID, ttype, extent));
             }
@@ -166,7 +166,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 
       // we promote local variables into temporary fields if they are accessed out
       // of a local scope
-      if(temporary.type_ == iir::TemporaryScope::TS_LocalVariable) {
+      if(temporary.type_ == iir::TemporaryScope::LocalVariable) {
         // we promote to a temporary any local variable that is accessed in different Do methods
         // Since the Lifetime only records the position within one stencil we additionally check if
         // the accessID is accessed in multiple stencils

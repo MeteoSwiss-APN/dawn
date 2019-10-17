@@ -130,15 +130,15 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
     iir::Cache::window window =
         computeWindowOffset(MS.getLoopOrder(), readInterval, field.getInterval());
 
-    if(((MS.getLoopOrder() == iir::LoopOrderKind::LK_Forward) && window.m_m <= 0 &&
+    if(((MS.getLoopOrder() == iir::LoopOrderKind::Forward) && window.m_m <= 0 &&
         window.m_p <= 0) ||
-       ((MS.getLoopOrder() == iir::LoopOrderKind::LK_Backward) && window.m_m >= 0 &&
+       ((MS.getLoopOrder() == iir::LoopOrderKind::Backward) && window.m_m >= 0 &&
         window.m_p >= 0)) {
       return CacheCandidate{
           iir::Cache::IOPolicy::bpfill,
           std::make_optional(iir::Cache::window{
-              ((MS.getLoopOrder() == iir::LoopOrderKind::LK_Forward) ? window.m_m : 0),
-              ((MS.getLoopOrder() == iir::LoopOrderKind::LK_Forward) ? 0 : window.m_p)}),
+              ((MS.getLoopOrder() == iir::LoopOrderKind::Forward) ? window.m_m : 0),
+              ((MS.getLoopOrder() == iir::LoopOrderKind::Forward) ? 0 : window.m_p)}),
           *interval};
     }
 

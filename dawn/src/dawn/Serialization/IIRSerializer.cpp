@@ -370,9 +370,9 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       // creation of a protobuf multistage
       auto protoMSS = protoStencil->add_multistages();
       // Information other than the children
-      if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::LK_Forward) {
+      if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::Forward) {
         protoMSS->set_looporder(proto::iir::MultiStage::Forward);
-      } else if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::LK_Backward) {
+      } else if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::Backward) {
         protoMSS->set_looporder(proto::iir::MultiStage::Backward);
       } else {
         protoMSS->set_looporder(proto::iir::MultiStage::Parallel);
@@ -671,13 +671,13 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       int stagePos = 0;
       iir::LoopOrderKind looporder;
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Backward) {
-        looporder = iir::LoopOrderKind::LK_Backward;
+        looporder = iir::LoopOrderKind::Backward;
       }
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Forward) {
-        looporder = iir::LoopOrderKind::LK_Forward;
+        looporder = iir::LoopOrderKind::Forward;
       }
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Parallel) {
-        looporder = iir::LoopOrderKind::LK_Parallel;
+        looporder = iir::LoopOrderKind::Parallel;
       }
       (IIRStencil)
           ->insertChild(std::make_unique<iir::MultiStage>(target->getMetaData(), looporder));

@@ -392,7 +392,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
       // compute the partition of the intervals
       auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-      if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+      if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       auto getLoop = [](ast::Expr::LocationType type) {

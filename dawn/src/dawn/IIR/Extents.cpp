@@ -111,11 +111,11 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   const Extent& verticalExtent = extents_[2];
 
   switch(loopOrder) {
-  case LoopOrderKind::LK_Parallel:
+  case LoopOrderKind::Parallel:
     // Any accesses in the vertical are against the loop-order
     return VerticalLoopOrderAccess{true, true};
 
-  case LoopOrderKind::LK_Forward: {
+  case LoopOrderKind::Forward: {
     // Accesses k+1 are against the loop order
     if(verticalExtent.Plus > 0)
       access.CounterLoopOrder = true;
@@ -123,7 +123,7 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
       access.LoopOrder = true;
     break;
   }
-  case LoopOrderKind::LK_Backward:
+  case LoopOrderKind::Backward:
     // Accesses k-1 are against the loop order
     if(verticalExtent.Minus < 0)
       access.CounterLoopOrder = true;
@@ -140,16 +140,16 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
                                                           bool includeCenter) const {
   const Extent& verticalExtent = extents_[2];
 
-  if(loopOrder == LoopOrderKind::LK_Parallel) {
+  if(loopOrder == LoopOrderKind::Parallel) {
     if(includeCenter && verticalExtent.Plus >= 0 && verticalExtent.Minus <= 0)
       return std::make_optional(Extent{0, 0});
     return std::optional<Extent>();
   }
 
   // retrieving the head (Plus) of the extent
-  if((loopOrder == LoopOrderKind::LK_Forward &&
+  if((loopOrder == LoopOrderKind::Forward &&
       loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Backward &&
+     (loopOrder == LoopOrderKind::Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent.Plus < (includeCenter ? 0 : 1))
       return std::optional<Extent>();
@@ -159,9 +159,9 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
         Extent{std::max((includeCenter ? 0 : 1), verticalExtent.Minus), verticalExtent.Plus});
   }
   // retrieving the tail (Minus) of the extent
-  if((loopOrder == LoopOrderKind::LK_Backward &&
+  if((loopOrder == LoopOrderKind::Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Forward &&
+     (loopOrder == LoopOrderKind::Forward &&
       loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent.Minus > (includeCenter ? 0 : -1))
       return std::optional<Extent>();

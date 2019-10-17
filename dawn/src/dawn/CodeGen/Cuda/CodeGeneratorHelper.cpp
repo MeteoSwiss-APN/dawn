@@ -202,14 +202,14 @@ CodeGeneratorHelper::computePartitionOfIntervals(const std::unique_ptr<iir::Mult
 
   // compute the partition of the intervals
   auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+  if(ms->getLoopOrder() == iir::LoopOrderKind::Backward)
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
   return partitionIntervals;
 }
 
 bool CodeGeneratorHelper::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) {
   iir::MultiInterval mInterval{CodeGeneratorHelper::computePartitionOfIntervals(ms)};
-  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel);
+  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::Parallel);
 }
 
 } // namespace cuda

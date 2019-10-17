@@ -225,7 +225,7 @@ struct StencilFunction {
 /// specific vertical interval in a given loop order
 /// @ingroup sir
 struct VerticalRegion {
-  enum LoopOrderKind { LK_Forward = 0, LK_Backward };
+  enum class LoopOrderKind : int { Forward = 0, Backward = 1 };
 
   SourceLocation Loc;                         ///< Source location of the vertical region
   std::shared_ptr<sir::AST> Ast;              ///< AST of the region

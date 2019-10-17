@@ -331,8 +331,8 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   // VerticalRegion.LoopOrder
   auto loopOrder =
       verticalRegionProto.loop_order() == dawn::proto::statements::VerticalRegion::Backward
-          ? sir::VerticalRegion::LK_Backward
-          : sir::VerticalRegion::LK_Forward;
+          ? sir::VerticalRegion::LoopOrderKind::Backward
+          : sir::VerticalRegion::LoopOrderKind::Forward;
 
   return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 }

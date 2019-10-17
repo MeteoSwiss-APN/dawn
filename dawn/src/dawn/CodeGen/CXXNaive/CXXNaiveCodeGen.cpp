@@ -368,14 +368,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
       // compute the partition of the intervals
       auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-      if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+      if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       for(auto interval : partitionIntervals) {
 
         // for each interval, we generate naive nested loops
         stencilRunMethod.addBlockStatement(
-            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward),
+            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::Backward),
                       interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getChildren()) {

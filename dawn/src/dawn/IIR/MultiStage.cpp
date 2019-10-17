@@ -136,7 +136,7 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
     }
     const auto& interval = doMethod->getInterval();
 
-    if(loopOrder_ == LoopOrderKind::LK_Backward) {
+    if(loopOrder_ == LoopOrderKind::Backward) {
       if(interval.bound(Interval::Bound::lower) < level.bound() || !init) {
         level = interval.lowerIntervalLevel();
         init = true;
@@ -195,7 +195,7 @@ MultiInterval MultiStage::computePartitionOfIntervals() const {
 
   // compute the partition of the intervals
   auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if(getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+  if(getLoopOrder() == iir::LoopOrderKind::Backward)
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
   return MultiInterval{partitionIntervals};
 }
@@ -215,7 +215,7 @@ std::vector<std::unique_ptr<DoMethod>> MultiStage::computeOrderedDoMethods() con
 
   // compute the partition of the intervals
   auto partitionIntervals = Interval::computePartition(intervals_v);
-  if((getLoopOrder() == LoopOrderKind::LK_Backward))
+  if((getLoopOrder() == LoopOrderKind::Backward))
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
   std::vector<std::unique_ptr<DoMethod>> orderedDoMethods;

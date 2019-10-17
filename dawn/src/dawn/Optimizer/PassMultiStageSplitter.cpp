@@ -78,7 +78,7 @@ multiStageSplitterOptimized() {
 
         // Clear the graph ...
         graph.clear();
-        curLoopOrder = iir::LoopOrderKind::LK_Parallel;
+        curLoopOrder = iir::LoopOrderKind::Parallel;
 
         // ... and process the current statement again
         graph.insertStatementAccessesPair(stmtAccessesPair);
@@ -192,7 +192,7 @@ bool PassMultiStageSplitter::run(
       auto userSpecifiedLoopOrder = multiStage.getLoopOrder();
 
       // If not proven otherwise, we assume a parralel loop order
-      auto curLoopOrder = iir::LoopOrderKind::LK_Parallel;
+      auto curLoopOrder = iir::LoopOrderKind::Parallel;
 
       // Build the Dependency graph (bottom --> top i.e iterate the stages backwards)
       int stageIndex = multiStage.getChildren().size() - 1;

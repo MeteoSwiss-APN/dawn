@@ -267,13 +267,13 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
   (IIRStencil)
       ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
-                                                      iir::LoopOrderKind::LK_Backward));
+                                                      iir::LoopOrderKind::Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->getCaches().emplace(10, iir::Cache(iir::Cache::TypeKind::IJ, iir::Cache::IOPolicy::fill, 10, std::nullopt,
                                              std::nullopt, std::nullopt));
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
-  IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);
+  IIRMSS->setLoopOrder(iir::LoopOrderKind::Forward);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
   IIRMSS->insertChild(std::make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));

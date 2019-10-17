@@ -52,7 +52,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
@@ -150,7 +150,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 

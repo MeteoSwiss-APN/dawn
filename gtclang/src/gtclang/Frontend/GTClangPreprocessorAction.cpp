@@ -684,15 +684,15 @@ private:
     // Raw lexing does not support lookAheads which makes the lexing slightly cumbersome. We use
     // state based approach here.
     enum LexStateKind {
-      LK_Unknown,                 // State is unknown
-      LK_LexedHash,               // Previously lexed a `#`
-      LK_LexedPragma,             // Previously lexed a `pragma
-      LK_LexedGTClang,            // Previously lexed a `gtclang`
-      LK_LexedValidGTClangPragma, // We lexed a valid `#pragma gtclang CLAUSE`, we now
+      Unknown,                 // State is unknown
+      LexedHash,               // Previously lexed a `#`
+      LexedPragma,             // Previously lexed a `pragma
+      LexedGTClang,            // Previously lexed a `gtclang`
+      LexedValidGTClangPragma, // We lexed a valid `#pragma gtclang CLAUSE`, we now
                                   // look for the next stencil or stencil_function it may apply
     };
 
-    LexStateKind state = LK_Unknown;
+    LexStateKind state = Unknown;
     dawn::sir::Attr curAttribute;
     SourceLocation curStartLoc;
     SourceLocation curEndLoc;
@@ -704,30 +704,30 @@ private:
         continue;
 
       switch(state) {
-      case LK_Unknown:
+      case Unknown:
         // Check for `#`
         if(token_.is(tok::hash)) {
-          state = LK_LexedHash;
+          state = LexedHash;
           curStartLoc = token_.getLocation();
           curAttribute.clear();
           curClause.clear();
         }
         break;
-      case LK_LexedHash:
+      case LexedHash:
         // Check for `pragma`
         if(token_.is(tok::raw_identifier) && token_.getRawIdentifier() == "pragma")
-          state = LK_LexedPragma;
+          state = LexedPragma;
         else
-          state = LK_Unknown;
+          state = Unknown;
         break;
-      case LK_LexedPragma:
+      case LexedPragma:
         // Check for `gtclang`
         if(token_.is(tok::raw_identifier) && token_.getRawIdentifier() == "gtclang")
-          state = LK_LexedGTClang;
+          state = LexedGTClang;
         else
-          state = LK_Unknown;
+          state = Unknown;
         break;
-      case LK_LexedGTClang:
+      case LexedGTClang:
         // Check for `CLAUSE`
         if(token_.is(tok::raw_identifier)) {
           curClause = token_.getRawIdentifier().str();
@@ -747,21 +747,21 @@ private:
             Diagnostics::reportRaw(
                 diag_, curStartLoc, clang::DiagnosticIDs::Warning,
                 dawn::format("invalid clause '%s' for '#pragma gtclang'", curClause));
-            state = LK_Unknown;
+            state = Unknown;
             break;
           }
 
           curEndLoc = token_.getLocation();
-          state = LK_LexedValidGTClangPragma;
+          state = LexedValidGTClangPragma;
 
         } else
-          state = LK_Unknown;
+          state = Unknown;
         break;
-      case LK_LexedValidGTClangPragma:
+      case LexedValidGTClangPragma:
 
         // The pragma is followed by a ',' we have to parse more clauses!
         if(token_.is(tok::comma)) {
-          state = LK_LexedGTClang;
+          state = LexedGTClang;
           break;
         }
 
@@ -795,7 +795,7 @@ private:
         }
 
         // We finished or failed to lex the pragma, start over again
-        state = LK_Unknown;
+        state = Unknown;
       };
 
       rawLexer.LexFromRawLexer(token_);

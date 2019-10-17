@@ -448,7 +448,7 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
                            "    %s\n"
                            "  Expected:\n"
                            "    %s",
-                           LoopOrder, rhs.LoopOrder);
+                           static_cast<int>(LoopOrder), static_cast<int>(rhs.LoopOrder));
     return CompareResult{output, false};
   }
 

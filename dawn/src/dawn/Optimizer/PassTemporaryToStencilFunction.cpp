@@ -602,7 +602,7 @@ bool PassTemporaryToStencilFunction::run(
 
       promoteLocalVariableToTemporaryField(stencilInstantiation.get(), stencilPtr.get(), varID,
                                            stencilPtr->getLifetime(varID),
-                                           iir::TemporaryScope::TS_StencilTemporary);
+                                           iir::TemporaryScope::StencilTemporary);
     }
 
     skipIDs = computeSkipAccessIDs(stencilPtr, stencilInstantiation);
