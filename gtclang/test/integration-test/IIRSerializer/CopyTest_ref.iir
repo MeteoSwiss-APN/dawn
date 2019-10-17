@@ -50,6 +50,7 @@
       "Line": -1,
       "Column": -1
      },
+     "data": {},
      "ID": 12
     }
    }
@@ -72,125 +73,135 @@
        {
         "doMethods": [
          {
-          "stmtaccesspairs": [
-           {
-            "ASTStmt": {
-             "expr_stmt": {
-              "expr": {
-               "assignment_expr": {
-                "left": {
-                 "field_access_expr": {
-                  "name": "field_a",
-                  "offset": [
-                   0,
-                   0,
-                   0
-                  ],
-                  "argument_map": [
-                   -1,
-                   -1,
-                   -1
-                  ],
-                  "argument_offset": [
-                   0,
-                   0,
-                   0
-                  ],
-                  "negate_offset": false,
-                  "loc": {
-                   "Line": 28,
-                   "Column": 50
-                  },
-                  "data": {
-                   "accessID": 9
-                  },
-                  "ID": 14
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "field_a",
+                   "offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 28,
+                    "Column": 50
+                   },
+                   "data": {
+                    "accessID": 9
+                   },
+                   "ID": 27
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "field_access_expr": {
+                   "name": "field_b",
+                   "offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 28,
+                    "Column": 60
+                   },
+                   "data": {
+                    "accessID": 10
+                   },
+                   "ID": 26
+                  }
+                 },
+                 "loc": {
+                  "Line": 28,
+                  "Column": 50
+                 },
+                 "ID": 28
+                }
+               },
+               "loc": {
+                "Line": 28,
+                "Column": 50
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "9": {
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
+                  }
+                 },
+                 "readAccess": {
+                  "10": {
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
+                  }
                  }
-                },
-                "op": "=",
-                "right": {
-                 "field_access_expr": {
-                  "name": "field_b",
-                  "offset": [
-                   0,
-                   0,
-                   0
-                  ],
-                  "argument_map": [
-                   -1,
-                   -1,
-                   -1
-                  ],
-                  "argument_offset": [
-                   0,
-                   0,
-                   0
-                  ],
-                  "negate_offset": false,
-                  "loc": {
-                   "Line": 28,
-                   "Column": 60
-                  },
-                  "data": {
-                   "accessID": 10
-                  },
-                  "ID": 13
-                 }
-                },
-                "loc": {
-                 "Line": 28,
-                 "Column": 50
-                },
-                "ID": 15
-               }
-              },
-              "loc": {
-               "Line": 28,
-               "Column": 50
-              },
-              "ID": 16
+                }
+               },
+               "ID": 25
+              }
              }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
             },
-            "accesses": {
-             "writeAccess": {
-              "9": {
-               "extents": [
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                }
-               ]
-              }
-             },
-             "readAccess": {
-              "10": {
-               "extents": [
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                }
-               ]
-              }
-             }
-            }
+            "data": {},
+            "ID": 24
            }
-          ],
+          },
           "doMethodID": 0,
           "interval": {
            "lower_offset": 0,
@@ -229,6 +240,7 @@
       "Line": -1,
       "Column": -1
      },
+     "data": {},
      "ID": 12
     }
    }
