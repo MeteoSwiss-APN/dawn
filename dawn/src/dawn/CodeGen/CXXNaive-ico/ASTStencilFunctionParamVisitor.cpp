@@ -53,14 +53,7 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::StencilFun
 }
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-
-  std::string fieldName =
-      currentFunction_ ? currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr))
-                       : getName(expr);
-
-  ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
-      << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())
-      << "}+" + fieldName + "_offsets)";
+  DAWN_ASSERT("not implemented");
 }
 
 std::string ASTStencilFunctionParamVisitor::getCodeAndResetStream() {

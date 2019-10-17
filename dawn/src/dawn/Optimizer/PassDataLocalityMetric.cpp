@@ -106,7 +106,7 @@ public:
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 
-  Array3i getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  ast::Offsets getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     return stencilFunCalls_.empty()
                ? field->getOffset()
                : stencilFunCalls_.top()->evalOffsetOfFieldAccessExpr(field, true);
@@ -155,7 +155,7 @@ public:
 
   void processReadAccess(const std::shared_ptr<iir::FieldAccessExpr>& fieldExpr) {
     int AccessID = iir::getAccessID(fieldExpr);
-    int kOffset = fieldExpr->getOffset()[2];
+    int kOffset = fieldExpr->getOffset().verticalOffset();
 
     auto it = fields_.find(AccessID);
     DAWN_ASSERT(it != fields_.end());
@@ -165,7 +165,7 @@ public:
       if(!register_.count(AccessID)) {
 
         // Cache the center access
-        if(getOffset(fieldExpr) == Array3i{{0, 0, 0}})
+        if(getOffset(fieldExpr).isZero())
           register_.insert(AccessID);
 
         // Check if the field is either cached or stored in the texture cache
@@ -180,7 +180,7 @@ public:
       if(!multiStage_.isCached(AccessID)) {
 
         // Check if the center is stored in a register
-        if(!(register_.count(AccessID) && getOffset(fieldExpr) == Array3i{{0, 0, 0}})) {
+        if(!register_.count(AccessID) || !getOffset(fieldExpr).isZero()) {
           numReads_++;
           individualReadWrites_[AccessID].numReads++;
         }

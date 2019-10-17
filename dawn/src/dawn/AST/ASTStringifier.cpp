@@ -229,8 +229,13 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    auto offset = expr->getOffset();
+    auto const& hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
+    std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(),
+                                      offset.verticalOffset()};
+
     if(!expr->hasArguments()) {
-      ss_ << expr->getName() << RangeToString()(expr->getOffset());
+      ss_ << expr->getName() << "[" << ast::toString(offset, ", ") << "]";
     } else {
       ss_ << expr->getName() << "[";
 
@@ -243,7 +248,7 @@ public:
           if(argOffset[i] != 0)
             ss_ << (argOffset[i] > 0 ? "+" : "") << argOffset[i];
         } else {
-          ss_ << expr->getOffset()[i];
+          ss_ << offsetArray[i];
         }
         ss_ << (i == (expr->getArgumentMap().size() - 1) ? "]" : ", ");
       }
