@@ -28,18 +28,21 @@ static constexpr cartesian_ cartesian;
 class HorizontalOffsetImpl {
 public:
   virtual ~HorizontalOffsetImpl() = default;
-  HorizontalOffsetImpl* clone() const { return cloneImpl(); }
+  std::unique_ptr<HorizontalOffsetImpl> clone() const { return cloneImpl(); }
 
   bool operator==(HorizontalOffsetImpl const& other) const { return equalsImpl(other); }
 
-  HorizontalOffsetImpl& operator+=(HorizontalOffsetImpl const& other) { return addImpl(other); }
+  HorizontalOffsetImpl& operator+=(HorizontalOffsetImpl const& other) {
+    addImpl(other);
+    return *this;
+  }
 
   bool isZero() const { return isZeroImpl(); }
 
 protected:
-  virtual HorizontalOffsetImpl* cloneImpl() const = 0;
+  virtual std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const = 0;
   virtual bool equalsImpl(HorizontalOffsetImpl const&) const = 0;
-  virtual HorizontalOffsetImpl& addImpl(HorizontalOffsetImpl const&) = 0;
+  virtual void addImpl(HorizontalOffsetImpl const&) = 0;
   virtual bool isZeroImpl() const = 0;
 };
 
@@ -53,11 +56,11 @@ public:
   int offsetJ() const { return horizontalOffset_[1]; }
 
 protected:
-  HorizontalOffsetImpl* cloneImpl() const override {
-    return new CartesianOffset{horizontalOffset_};
+  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override {
+    return std::make_unique<CartesianOffset>(horizontalOffset_);
   }
   bool equalsImpl(HorizontalOffsetImpl const& other) const override;
-  CartesianOffset& addImpl(HorizontalOffsetImpl const& other) override;
+  void addImpl(HorizontalOffsetImpl const& other) override;
   bool isZeroImpl() const override {
     return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
   }
@@ -73,7 +76,7 @@ public:
       : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
   HorizontalOffset(HorizontalOffset const& other) { *this = other; }
   HorizontalOffset& operator=(HorizontalOffset const& other) {
-    impl_ = std::unique_ptr<HorizontalOffsetImpl>(other.impl_->clone());
+    impl_ = other.impl_->clone();
     return *this;
   }
   HorizontalOffset(HorizontalOffset&& other) = default;
