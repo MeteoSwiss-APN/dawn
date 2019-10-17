@@ -35,7 +35,7 @@ public:
   };
 
   /// @brief Available cache types
-  enum CacheTypeKind {
+  enum class TypeKind {
     IJ,  ///< IJ caches require synchronization capabilities, as different (i,j) grid points are
          ///  processed by parallel cores. GPU backend keeps them in shared memory
     K,   ///< Processing of all the K elements is done by same thread, so resources for K caches can
@@ -46,7 +46,7 @@ public:
   };
 
   /// @brief IO policies of the cache
-  enum CacheIOPolicy {
+  enum class IOPolicy {
     unknown,        ///< Not yet set
     fill_and_flush, ///< Read values from the cached field and write the result back
     fill,           ///< Read values form the cached field but do not write back
@@ -58,7 +58,7 @@ public:
     local           ///< Local only cache, neither read nor write the the cached field
   };
 
-  Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID,
+  Cache(TypeKind type, IOPolicy policy, int AccessID,
         std::optional<Interval> const& interval,
         std::optional<Interval> const& enclosingAccessedInterval, std::optional<window> const& w);
 
@@ -68,12 +68,12 @@ public:
   json::json jsonDump() const;
 
   /// @brief Get the type of cache
-  CacheTypeKind getCacheType() const;
-  std::string getCacheTypeAsString() const;
+  TypeKind getType() const;
+  std::string getTypeAsString() const;
 
   /// @brief Get the I/O policy of the cache
-  CacheIOPolicy getCacheIOPolicy() const;
-  std::string getCacheIOPolicyAsString() const;
+  IOPolicy getIOPolicy() const;
+  std::string getIOPolicyAsString() const;
 
   /// @brief Get the interval of the iteration space from where the cache was accessed
   std::optional<Interval> getInterval() const;
@@ -101,8 +101,8 @@ public:
   std::optional<window> const& getWindow() const { return window_; }
 
 private:
-  CacheTypeKind type_;
-  CacheIOPolicy policy_;
+  TypeKind type_;
+  IOPolicy policy_;
   int AccessID_;
   std::optional<Interval> interval_;
   std::optional<Interval> enclosingAccessedInterval_;
@@ -122,8 +122,8 @@ struct hash<dawn::iir::Cache> {
   size_t operator()(const dawn::iir::Cache& cache) const {
     std::size_t seed = 0;
     dawn::hash_combine(seed, cache.getCachedFieldAccessID(),
-                       static_cast<int>(cache.getCacheIOPolicy()),
-                       static_cast<int>(cache.getCacheType()));
+                       static_cast<int>(cache.getIOPolicy()),
+                       static_cast<int>(cache.getType()));
     return seed;
   }
 };

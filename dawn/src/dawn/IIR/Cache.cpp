@@ -18,42 +18,42 @@
 namespace dawn {
 namespace iir {
 
-static const char* cacheTypeToString(Cache::CacheTypeKind cacheType) {
+static const char* cacheTypeToString(Cache::TypeKind cacheType) {
   switch(cacheType) {
-  case Cache::CacheTypeKind::K:
+  case Cache::TypeKind::K:
     return "K";
-  case Cache::CacheTypeKind::IJ:
+  case Cache::TypeKind::IJ:
     return "IJ";
-  case Cache::CacheTypeKind::IJK:
+  case Cache::TypeKind::IJK:
     return "IJK";
-  case Cache::CacheTypeKind::bypass:
+  case Cache::TypeKind::bypass:
     return "bypass";
   }
   dawn_unreachable(
       std::string("invalid cache type" + std::to_string((unsigned int)cacheType)).c_str());
 }
-static const char* cachePolicyToString(Cache::CacheIOPolicy cachePolicy) {
+static const char* cachePolicyToString(Cache::IOPolicy cachePolicy) {
   switch(cachePolicy) {
-  case Cache::CacheIOPolicy::fill:
+  case Cache::IOPolicy::fill:
     return "fill";
-  case Cache::CacheIOPolicy::flush:
+  case Cache::IOPolicy::flush:
     return "flush";
-  case Cache::CacheIOPolicy::local:
+  case Cache::IOPolicy::local:
     return "local";
-  case Cache::CacheIOPolicy::bpfill:
+  case Cache::IOPolicy::bpfill:
     return "bpfill";
-  case Cache::CacheIOPolicy::epflush:
+  case Cache::IOPolicy::epflush:
     return "epflush";
-  case Cache::CacheIOPolicy::fill_and_flush:
+  case Cache::IOPolicy::fill_and_flush:
     return "fill_and_flush";
-  case Cache::CacheIOPolicy::unknown:
+  case Cache::IOPolicy::unknown:
     return "unknown";
   }
   dawn_unreachable(
       std::string("invalid cache io policy" + std::to_string((unsigned int)cachePolicy)).c_str());
 }
 
-Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
+Cache::Cache(TypeKind type, IOPolicy policy, int fieldAccessID,
              const std::optional<Interval>& interval,
              const std::optional<Interval>& enclosingAccessedInterval,
              const std::optional<window>& w)
@@ -68,7 +68,7 @@ Interval Cache::getWindowInterval(Interval::Bound bound) const {
 }
 
 bool Cache::requiresMemMemoryAccess() const {
-  return (policy_ != CacheIOPolicy::local) || (type_ == CacheTypeKind::bypass);
+  return (policy_ != IOPolicy::local) || (type_ == TypeKind::bypass);
 }
 
 json::json Cache::jsonDump() const {
@@ -107,41 +107,41 @@ std::optional<Interval> Cache::getEnclosingAccessedInterval() const {
   return enclosingAccessedInterval_;
 }
 
-Cache::CacheTypeKind Cache::getCacheType() const { return type_; }
+Cache::TypeKind Cache::getType() const { return type_; }
 
-std::string Cache::getCacheTypeAsString() const {
+std::string Cache::getTypeAsString() const {
   switch(type_) {
-  case IJ:
+  case TypeKind::IJ:
     return "cache_type::ij";
-  case K:
+  case TypeKind::K:
     return "cache_type::k";
-  case IJK:
+  case TypeKind::IJK:
     return "cache_type::ijk";
-  case bypass:
+  case TypeKind::bypass:
     return "cache_type::bypass";
   }
   dawn_unreachable("invalid cache type");
 }
 
-Cache::CacheIOPolicy Cache::getCacheIOPolicy() const { return policy_; }
+Cache::IOPolicy Cache::getIOPolicy() const { return policy_; }
 
 bool Cache::requiresWindow() const {
-  return getCacheIOPolicy() == Cache::bpfill || getCacheIOPolicy() == Cache::epflush;
+  return getIOPolicy() == IOPolicy::bpfill || getIOPolicy() == IOPolicy::epflush;
 }
 
-std::string Cache::getCacheIOPolicyAsString() const {
+std::string Cache::getIOPolicyAsString() const {
   switch(policy_) {
-  case fill_and_flush:
+  case IOPolicy::fill_and_flush:
     return "fill_and_flush";
-  case fill:
+  case IOPolicy::fill:
     return "fill";
-  case flush:
+  case IOPolicy::flush:
     return "flush";
-  case epflush:
+  case IOPolicy::epflush:
     return "epflush";
-  case bpfill:
+  case IOPolicy::bpfill:
     return "bpfill";
-  case local:
+  case IOPolicy::local:
     return "local";
   default:
     dawn_unreachable("invalid cache type");

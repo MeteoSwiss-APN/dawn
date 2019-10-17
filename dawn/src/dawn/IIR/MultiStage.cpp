@@ -117,7 +117,7 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
   return dependencyGraph;
 }
 
-iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+iir::Cache& MultiStage::setCache(iir::Cache::TypeKind type, iir::Cache::IOPolicy policy,
                                  int AccessID, const Interval& interval,
                                  const Interval& enclosingAccessedInterval,
                                  std::optional<iir::Cache::window> w) {
@@ -157,7 +157,7 @@ Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   const auto& cache = getCache(accessID);
   // in the case of epflush, the extent of the cache required is not determined only by the access
   // pattern, but also by the window required to epflush
-  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
+  if(cache.getIOPolicy() == iir::Cache::IOPolicy::epflush) {
     DAWN_ASSERT(cache.getWindow());
     auto window = *(cache.getWindow());
     return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
@@ -200,7 +200,7 @@ MultiInterval MultiStage::computePartitionOfIntervals() const {
   return MultiInterval{partitionIntervals};
 }
 
-Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+Cache& MultiStage::setCache(iir::Cache::TypeKind type, iir::Cache::IOPolicy policy,
                             int AccessID) {
   return derivedInfo_.caches_
       .emplace(AccessID, iir::Cache(type, policy, AccessID, std::optional<Interval>(),

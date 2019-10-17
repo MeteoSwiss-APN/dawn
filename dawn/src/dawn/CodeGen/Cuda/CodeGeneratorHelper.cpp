@@ -120,10 +120,10 @@ bool CodeGeneratorHelper::hasAccessIDMemAccess(const int accessID,
       continue;
     if(!ms->isCached(accessID))
       return true;
-    if(ms->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::bypass) {
+    if(ms->getCache(accessID).getType() == iir::Cache::TypeKind::bypass) {
       return true;
     }
-    if(ms->getCache(accessID).getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) {
+    if(ms->getCache(accessID).getIOPolicy() != iir::Cache::IOPolicy::local) {
       return true;
     }
   }

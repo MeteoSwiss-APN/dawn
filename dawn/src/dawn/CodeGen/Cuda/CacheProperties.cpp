@@ -64,9 +64,9 @@ CacheProperties::CacheProperties(
 std::string CacheProperties::getCacheName(int accessID) const {
 
   const auto& cache = ms_->getCache(accessID);
-  if(cache.getCacheType() == iir::Cache::CacheTypeKind::IJ)
+  if(cache.getType() == iir::Cache::TypeKind::IJ)
     return metadata_.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
-  else if(cache.getCacheType() == iir::Cache::CacheTypeKind::K)
+  else if(cache.getType() == iir::Cache::TypeKind::K)
     return metadata_.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
@@ -78,7 +78,7 @@ bool CacheProperties::isCached(const int accessID) const {
 
 bool CacheProperties::isIJCached(const int accessID) const {
   return isCached(accessID) &&
-         (ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
+         (ms_->getCache(accessID).getType() == iir::Cache::TypeKind::IJ);
 }
 
 int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {
@@ -86,9 +86,9 @@ int CacheProperties::getKCacheIndex(const int accessID, const int offset) const 
 }
 
 bool CacheProperties::requiresFill(const iir::Cache& cache) {
-  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) ||
-          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
-          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
+  return ((cache.getIOPolicy() == iir::Cache::IOPolicy::fill) ||
+          (cache.getIOPolicy() == iir::Cache::IOPolicy::bpfill) ||
+          (cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush));
 }
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
@@ -102,17 +102,17 @@ bool CacheProperties::isKCached(const int accessID) const {
 
 bool CacheProperties::isKCached(const iir::Cache& cache) const {
   bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms_);
-  if(cache.getCacheType() != iir::Cache::CacheTypeKind::K) {
+  if(cache.getType() != iir::Cache::TypeKind::K) {
     return false;
   }
 
-  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) || !solveKLoopInParallel_);
+  return ((cache.getIOPolicy() == iir::Cache::IOPolicy::local) || !solveKLoopInParallel_);
 }
 
 bool CacheProperties::hasIJCaches() const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
-    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+    if(cache.getType() != iir::Cache::TypeKind::IJ)
       continue;
     return true;
   }
@@ -157,8 +157,8 @@ int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
 
 int CacheProperties::getOffsetCommonIJCache(int dim) const { return -extents_[dim].Minus; }
 
-std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const {
-  if(cacheType == iir::Cache::CacheTypeKind::IJ) {
+std::string CacheProperties::getCommonCacheIndexName(iir::Cache::TypeKind cacheType) const {
+  if(cacheType == iir::Cache::TypeKind::IJ) {
     return "ijcacheindex";
   }
   dawn_unreachable("unknown cache type");

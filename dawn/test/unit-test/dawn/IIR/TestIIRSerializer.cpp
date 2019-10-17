@@ -269,7 +269,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
       ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
                                                       iir::LoopOrderKind::LK_Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
-  IIRMSS->getCaches().emplace(10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, std::nullopt,
+  IIRMSS->getCaches().emplace(10, iir::Cache(iir::Cache::TypeKind::IJ, iir::Cache::IOPolicy::fill, 10, std::nullopt,
                                              std::nullopt, std::nullopt));
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiaton);

@@ -119,7 +119,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
 
   std::string index;
   if(cacheProperties_.isCommonCache(accessID)) {
-    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ);
+    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::TypeKind::IJ);
   } else {
     index = "iblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 0)) +
             " + (jblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 1)) +

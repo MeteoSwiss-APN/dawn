@@ -69,7 +69,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
       std::optional<iir::Interval> interval;
-      if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill) {
         interval = cache.getEnclosingAccessedInterval();
       } else {
         interval = cache.getInterval();
@@ -80,7 +80,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
       // for the kcaches with fill, the interval could span beyond the axis of the do methods.
       // We need to extent the axis, to make sure that at least on interval will trigger the begin
       // of the kcache interval
-      if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill) {
         DAWN_ASSERT(interval);
         Levels.insert(interval->lowerLevel());
         Levels.insert(interval->upperLevel());
@@ -666,8 +666,8 @@ void GTCodeGen::generateStencilClasses(
 
         std::vector<iir::Cache> ioCaches;
         for(const auto& cacheP : multiStage.getCaches()) {
-          if((cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
-             (cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush)) {
+          if((cacheP.second.getIOPolicy() == iir::Cache::IOPolicy::bpfill) ||
+             (cacheP.second.getIOPolicy() == iir::Cache::IOPolicy::epflush)) {
             continue;
           }
           ioCaches.push_back(cacheP.second);
@@ -677,12 +677,12 @@ void GTCodeGen::generateStencilClasses(
                               "),")(ioCaches, [&](const iir::Cache& cache) -> std::string {
           std::optional<iir::Interval> cInterval;
 
-          if(cache.getCacheIOPolicy() == iir::Cache::fill) {
+          if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill) {
             cInterval = cache.getEnclosingAccessedInterval();
           } else {
             cInterval = cache.getInterval();
           }
-          DAWN_ASSERT(cInterval || cache.getCacheIOPolicy() == iir::Cache::local);
+          DAWN_ASSERT(cInterval || cache.getIOPolicy() == iir::Cache::IOPolicy::local);
 
           std::string intervalName;
           if(cInterval) {
@@ -691,9 +691,9 @@ void GTCodeGen::generateStencilClasses(
           }
           return (c_gt() + "cache<" +
                   // Type: IJ or K
-                  c_gt() + cache.getCacheTypeAsString() + ", " +
+                  c_gt() + cache.getTypeAsString() + ", " +
                   // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
-                  c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
+                  c_gt() + "cache_io_policy::" + cache.getIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
                   ">(p_" + metadata.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
                   "())")

@@ -454,7 +454,7 @@ void CudaCodeGen::generateStencilRunMethod(
           for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
             if(!ms->isCached(accessID))
               continue;
-            if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+            if(ms->getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
               return false;
           }
 
@@ -530,7 +530,7 @@ void CudaCodeGen::generateStencilRunMethod(
         return false;
       if(!multiStage.isCached(accessID))
         return true;
-      if(multiStage.getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+      if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
         return false;
 
       return true;

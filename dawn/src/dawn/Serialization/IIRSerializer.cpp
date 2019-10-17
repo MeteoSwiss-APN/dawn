@@ -74,42 +74,42 @@ serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
 
 static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   protoCache->set_accessid(cache.getCachedFieldAccessID());
-  switch(cache.getCacheIOPolicy()) {
-  case iir::Cache::bpfill:
+  switch(cache.getIOPolicy()) {
+  case iir::Cache::IOPolicy::bpfill:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_BPFill);
     break;
-  case iir::Cache::epflush:
+  case iir::Cache::IOPolicy::epflush:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_EPFlush);
     break;
-  case iir::Cache::fill:
+  case iir::Cache::IOPolicy::fill:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Fill);
     break;
-  case iir::Cache::fill_and_flush:
+  case iir::Cache::IOPolicy::fill_and_flush:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_FillFlush);
     break;
-  case iir::Cache::flush:
+  case iir::Cache::IOPolicy::flush:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Flush);
     break;
-  case iir::Cache::local:
+  case iir::Cache::IOPolicy::local:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Local);
     break;
-  case iir::Cache::unknown:
+  case iir::Cache::IOPolicy::unknown:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Unknown);
     break;
   default:
     dawn_unreachable("unknown cache policy");
   }
-  switch(cache.getCacheType()) {
-  case iir::Cache::bypass:
+  switch(cache.getType()) {
+  case iir::Cache::TypeKind::bypass:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_Bypass);
     break;
-  case iir::Cache::IJ:
+  case iir::Cache::TypeKind::IJ:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_IJ);
     break;
-  case iir::Cache::IJK:
+  case iir::Cache::TypeKind::IJK:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_IJK);
     break;
-  case iir::Cache::K:
+  case iir::Cache::TypeKind::K:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_K);
     break;
   default:
@@ -130,49 +130,49 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
 }
 
 static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
-  iir::Cache::CacheTypeKind cacheType;
-  iir::Cache::CacheIOPolicy cachePolicy;
+  iir::Cache::TypeKind cacheType;
+  iir::Cache::IOPolicy cachePolicy;
   std::optional<iir::Interval> interval;
   std::optional<iir::Interval> enclosingInverval;
   std::optional<iir::Cache::window> cacheWindow;
   int ID = protoCache->accessid();
   switch(protoCache->type()) {
   case proto::iir::Cache_CacheType_CT_Bypass:
-    cacheType = iir::Cache::bypass;
+    cacheType = iir::Cache::TypeKind::bypass;
     break;
   case proto::iir::Cache_CacheType_CT_IJ:
-    cacheType = iir::Cache::IJ;
+    cacheType = iir::Cache::TypeKind::IJ;
     break;
   case proto::iir::Cache_CacheType_CT_IJK:
-    cacheType = iir::Cache::IJK;
+    cacheType = iir::Cache::TypeKind::IJK;
     break;
   case proto::iir::Cache_CacheType_CT_K:
-    cacheType = iir::Cache::K;
+    cacheType = iir::Cache::TypeKind::K;
     break;
   default:
     dawn_unreachable("unknow cache type");
   }
   switch(protoCache->policy()) {
   case proto::iir::Cache_CachePolicy_CP_BPFill:
-    cachePolicy = iir::Cache::bpfill;
+    cachePolicy = iir::Cache::IOPolicy::bpfill;
     break;
   case proto::iir::Cache_CachePolicy_CP_EPFlush:
-    cachePolicy = iir::Cache::epflush;
+    cachePolicy = iir::Cache::IOPolicy::epflush;
     break;
   case proto::iir::Cache_CachePolicy_CP_Fill:
-    cachePolicy = iir::Cache::fill;
+    cachePolicy = iir::Cache::IOPolicy::fill;
     break;
   case proto::iir::Cache_CachePolicy_CP_FillFlush:
-    cachePolicy = iir::Cache::fill_and_flush;
+    cachePolicy = iir::Cache::IOPolicy::fill_and_flush;
     break;
   case proto::iir::Cache_CachePolicy_CP_Flush:
-    cachePolicy = iir::Cache::flush;
+    cachePolicy = iir::Cache::IOPolicy::flush;
     break;
   case proto::iir::Cache_CachePolicy_CP_Local:
-    cachePolicy = iir::Cache::local;
+    cachePolicy = iir::Cache::IOPolicy::local;
     break;
   case proto::iir::Cache_CachePolicy_CP_Unknown:
-    cachePolicy = iir::Cache::unknown;
+    cachePolicy = iir::Cache::IOPolicy::unknown;
     break;
   default:
     dawn_unreachable("unknown cache policy");

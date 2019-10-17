@@ -122,14 +122,14 @@ public:
     DAWN_ASSERT(it != multiStage_.getCaches().end());
     const iir::Cache& cache = it->second;
 
-    if(cache.getCacheType() == iir::Cache::K) {
-      if(cache.getCacheIOPolicy() == iir::Cache::fill ||
-         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+    if(cache.getType() == iir::Cache::TypeKind::K) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
+         cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numReads_++;
         individualReadWrites_[AccessID].numReads++;
       }
-      if(cache.getCacheIOPolicy() == iir::Cache::flush ||
-         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::flush ||
+         cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numWrites_++;
         individualReadWrites_[AccessID].numWrites++;
       }
@@ -244,13 +244,13 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
     if(multiStage.isCached(AccessID)) {
       const iir::Cache& cache = multiStage.getCaches().find(AccessID)->second;
 
-      if(cache.getCacheType() == iir::Cache::K) {
-        if(cache.getCacheIOPolicy() == iir::Cache::fill ||
-           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+      if(cache.getType() == iir::Cache::TypeKind::K) {
+        if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
+           cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numReads += 1;
         }
-        if(cache.getCacheIOPolicy() == iir::Cache::flush ||
-           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+        if(cache.getIOPolicy() == iir::Cache::IOPolicy::flush ||
+           cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numWrites += 1;
         }
       }
