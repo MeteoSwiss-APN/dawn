@@ -107,9 +107,7 @@ public:
   HorizontalExtentImpl* operator+(HorizontalExtentImpl const& other) const {
     return plus_impl(other);
   }
-  std::unique_ptr<HorizontalExtentImpl> clone() const {
-    return std::unique_ptr<HorizontalExtentImpl>(clone_impl());
-  }
+  std::unique_ptr<HorizontalExtentImpl> clone() const { return clone_impl(); }
 
   void merge(HorizontalExtentImpl const& other) { merge_impl(other); }
   void merge(dawn::ast::HorizontalOffset const& other) { merge_impl(other); }
@@ -125,7 +123,7 @@ protected:
   virtual void merge_impl(dawn::ast::HorizontalOffset const& other) = 0;
   virtual void expand_impl(HorizontalExtentImpl const& other) = 0;
   virtual bool equals_impl(HorizontalExtentImpl const& other) const = 0;
-  virtual HorizontalExtentImpl* clone_impl() const = 0;
+  virtual std::unique_ptr<HorizontalExtentImpl> clone_impl() const = 0;
   virtual bool isPointwise_impl() const = 0;
 };
 
@@ -184,9 +182,9 @@ public:
     return equalI && equalJ;
   }
 
-  HorizontalExtentImpl* clone_impl() const override {
-    return new CartesianExtent(m_extents_[0].minus(), m_extents_[0].plus(), m_extents_[1].minus(),
-                               m_extents_[1].plus());
+  std::unique_ptr<HorizontalExtentImpl> clone_impl() const override {
+    return std::unique_ptr<HorizontalExtentImpl>(new CartesianExtent(
+        m_extents_[0].minus(), m_extents_[0].plus(), m_extents_[1].minus(), m_extents_[1].plus()));
   }
 
   bool isPointwise_impl() const override {

@@ -231,7 +231,7 @@ private:
                              iir::Extents(ast::cartesian_{}, ast::Offsets{ast::cartesian}));
     newAccess.addReadExtent(assigneeID,
                             iir::Extents(ast::cartesian_{}, ast::Offsets{ast::cartesian}));
-    pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
+    expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
     domethod->insertChild(std::move(expAssignment));
 

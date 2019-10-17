@@ -14,7 +14,7 @@
 
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
-#include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -22,22 +22,21 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <streambuf>
-#include <string>
 
 using namespace dawn;
 
 namespace {
 
-class TestComputeMaximumExtent : public ::testing::Test {
+class ComputeMaxExtents : public ::testing::Test {
   std::unique_ptr<dawn::Options> compileOptions_;
 
   dawn::DawnCompiler compiler_;
 
 protected:
-  TestComputeMaximumExtent() : compiler_(compileOptions_.get()) {}
+  ComputeMaxExtents() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
+  const std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -63,63 +62,119 @@ protected:
   }
 };
 
-TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  const auto& metadata = stencilInstantiation->getMetaData();
-  const auto& stencils = stencilInstantiation->getStencils();
+TEST_F(ComputeMaxExtents, test_stencil_01) {
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+      loadTest("compute_extent_test_stencil_01.sir");
+  const auto& metadata = instantiation->getMetaData();
+  const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
+  const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+  auto exts = stencil->getFields();
+  EXPECT_EQ(exts.size(), 3);
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  int lap_id = metadata.getAccessIDFromName("lap");
 
-  ASSERT_TRUE((stencil->getChildren().size() == 1));
-
-  auto const& mss = (*stencil->childrenBegin());
-
-  auto stage1_ptr = mss->childrenBegin();
-  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
-
-  ASSERT_TRUE((stage1->getChildren().size() == 2));
-
-  const auto& doMethod1 = stage1->getChildren().at(0);
-
-  ASSERT_TRUE((doMethod1->getChildren().size() == 1));
-  const auto& stmtAccessPair = doMethod1->getChildren()[0];
-  ASSERT_TRUE((iir::computeMaximumExtents(*stmtAccessPair->getStatement(),
-                                          metadata.getAccessIDFromName("u")) ==
-               iir::Extents(dawn::ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
-
-  EXPECT_EQ(iir::computeMaximumExtents(*stmtAccessPair->getStatement(),
-                                       metadata.getAccessIDFromName("coeff")),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 1, 1)));
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, -2, 2, -2, 2, 0, 0)));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+  EXPECT_EQ(exts.at(lap_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
 }
 
-TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
-  auto stencilInstantiation = loadTest("test_compute_maximum_extent_01.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+TEST_F(ComputeMaxExtents, test_stencil_02) {
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+      loadTest("compute_extent_test_stencil_02.sir");
+  const auto& metadata = instantiation->getMetaData();
+  const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
+  const auto& stencils = IIR->getChildren();
+  ASSERT_TRUE((stencils.size() == 1));
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
+
+  ASSERT_TRUE((stencil->getNumStages() == 3));
+  auto exts = stencil->getFields();
+  EXPECT_EQ(exts.size(), 6);
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  int coeff_id = metadata.getAccessIDFromName("coeff");
+
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, -2, 2, -2, 2, 0, 0)));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+  EXPECT_EQ(exts.at(coeff_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+}
+TEST_F(ComputeMaxExtents, test_stencil_03) {
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+      loadTest("compute_extent_test_stencil_03.sir");
+  const auto& metadata = instantiation->getMetaData();
+  const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
+  const auto& stencils = IIR->getChildren();
+  ASSERT_TRUE((stencils.size() == 1));
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
+
+  ASSERT_TRUE((stencil->getNumStages() == 4));
+  auto exts = stencil->getFields();
+  EXPECT_EQ(exts.size(), 7);
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  int coeff_id = metadata.getAccessIDFromName("coeff");
+
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, -2, 2, -2, 3, 0, 0)));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+  EXPECT_EQ(exts.at(coeff_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 1, 0, 0)));
+}
+
+TEST_F(ComputeMaxExtents, test_stencil_04) {
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+      loadTest("compute_extent_test_stencil_04.sir");
+  const auto& metadata = instantiation->getMetaData();
+  const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
+  const auto& stencils = IIR->getChildren();
 
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 1));
-  ASSERT_TRUE((stencil->getChildren().size() == 1));
+  ASSERT_TRUE((stencil->getNumStages() == 4));
+  auto exts = stencil->getFields();
+  EXPECT_EQ(exts.size(), 6);
 
-  auto const& mss = (*stencil->childrenBegin());
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, -3, 4, -2, 1, 0, 0)));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+}
 
-  auto stage1_ptr = mss->childrenBegin();
-  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
+TEST_F(ComputeMaxExtents, test_stencil_05) {
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+      loadTest("compute_extent_test_stencil_05.sir");
+  const auto& metadata = instantiation->getMetaData();
+  const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
+  const auto& stencils = IIR->getChildren();
 
-  ASSERT_TRUE((stage1->getChildren().size() == 1));
+  ASSERT_TRUE((stencils.size() == 1));
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  const auto& doMethod1 = stage1->getSingleDoMethod();
+  ASSERT_TRUE((stencil->getNumStages() == 4));
+  auto exts = stencil->getFields();
+  EXPECT_EQ(exts.size(), 6);
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
 
-  ASSERT_TRUE((doMethod1.computeMaximumExtents(
-                   stencilInstantiation->getMetaData().getAccessIDFromName("u")) ==
-               iir::Extents(dawn::ast::cartesian_{}, 0, 1, -1, 0, 0, 2)));
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, -3, 4, -2, 1, 0, 0)));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
+            (iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
 }
 
 } // anonymous namespace
