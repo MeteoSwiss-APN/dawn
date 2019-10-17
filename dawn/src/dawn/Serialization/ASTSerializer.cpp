@@ -125,7 +125,7 @@ void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* fiel
     protoLocationType = proto::statements::Field_LocationType_Vertex;
     break;
   default:
-    dawn_unreachable("");
+    dawn_unreachable("unknown location type");
   }
   fieldProto->set_location_type(protoLocationType);
 }
@@ -507,7 +507,7 @@ std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto
     field->locationType = ast::Expr::LocationType::Vertices;
     break;
   default:
-    dawn_unreachable("");
+    dawn_unreachable("unknown location type");
   }
   return field;
 }
