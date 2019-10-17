@@ -140,7 +140,8 @@
       1,
       1,
       1
-     ]
+     ],
+     "location_type": "Cell"
     },
     {
      "name": "field_b",
@@ -153,7 +154,8 @@
       1,
       1,
       1
-     ]
+     ],
+     "location_type": "Cell"
     }
    ]
   }
