@@ -1,6 +1,6 @@
 #pragma once
-
 #include "atlas/mesh.h"
+#include <cassert>
 
 namespace utility {
 namespace impl_ {
@@ -61,11 +61,11 @@ private:
 };
 
 template <typename T>
-Field<T> e_fieldType(atlasTag);
+Field<T> cellFieldType(atlasTag);
 template <typename T>
-Field<T> v_fieldType(atlasTag);
+Field<T> edgeFieldType(atlasTag);
 template <typename T>
-Field<T> c_fieldType(atlasTag);
+Field<T> vertexFieldType(atlasTag);
 
 atlas::Mesh meshType(atlasTag);
 
@@ -121,46 +121,34 @@ auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& o
 }
 template <typename Init, typename Op>
 auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  // for(auto&& obj : cellNeighboursOfCell(m, idx))
-  //   op(init, obj);
-  // return init;
+  assert(false && "function not implemented in the atlas back end");
   return 1;
 }
 
 template <typename Init, typename Op>
 auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  // for(auto&& obj : cellNeighboursOfCell(m, idx))
-  //   op(init, obj);
-  // return init;
+  assert(false && "function not implemented in the atlas back end");
   return 1;
 }
 template <typename Init, typename Op>
 auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  // for(auto&& obj : cellNeighboursOfCell(m, idx))
-  //   op(init, obj);
-  // return init;
+  assert(false && "function not implemented in the atlas back end");
   return 1;
 }
 
 template <typename Init, typename Op>
 auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  // for(auto&& obj : cellNeighboursOfCell(m, idx))
-  //   op(init, obj);
-  // return init;
+  assert(false && "function not implemented in the atlas back end");
   return 1;
 }
 template <typename Init, typename Op>
 auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  // for(auto&& obj : cellNeighboursOfCell(m, idx))
-  //   op(init, obj);
-  // return init;
+  assert(false && "function not implemented in the atlas back end");
   return 1;
 }
 template <typename Init, typename Op>
 auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  // for(auto&& obj : cellNeighboursOfCell(m, idx))
-  //   op(init, obj);
-  // return init;
+  assert(false && "function not implemented in the atlas back end");
   return 1;
 }
 

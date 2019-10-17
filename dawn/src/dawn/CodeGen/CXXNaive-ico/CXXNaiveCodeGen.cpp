@@ -98,7 +98,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // we might need to think about how to get Mesh and Field for a certain tag
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename libtag_t");
+  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
   StencilWrapperClass.changeAccessibility("private");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
@@ -157,7 +157,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const gtclang::mesh_t<libtag_t> &mesh");
+  StencilWrapperConstructor.addArg("const gtclang::mesh_t<LibTag> &mesh");
 
   std::string ctrArgs("(dom");
   auto getLocationTypeString = [](ast::Expr::LocationType type) {
@@ -177,7 +177,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     std::string typeString =
         getLocationTypeString(metadata.getLocationTypeFromAccessID(APIfieldID));
 
-    StencilWrapperConstructor.addArg("gtclang::" + typeString + "field_t<libtag_t, double>& " +
+    StencilWrapperConstructor.addArg("gtclang::" + typeString + "field_t<LibTag, double>& " +
                                      metadata.getNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
@@ -307,18 +307,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
       switch(info.field.getLocation()) {
       case ast::Expr::LocationType::Cells:
-        return std::string("gtclang::cell_field_t<libtag_t, double>");
+        return std::string("gtclang::cell_field_t<LibTag, double>");
       case ast::Expr::LocationType::Vertices:
-        return std::string("gtclang::vertex_field_t<libtag_t, double>");
+        return std::string("gtclang::vertex_field_t<LibTag, double>");
       case ast::Expr::LocationType::Edges:
-        return std::string("gtclang::edge_field_t<libtag_t, double>");
+        return std::string("gtclang::edge_field_t<LibTag, double>");
       default:
         dawn_unreachable("invalid location");
         return std::string("");
       }
     };
 
-    StencilClass.addMember("gtclang::mesh_t<libtag_t> const&", "m_mesh");
+    StencilClass.addMember("gtclang::mesh_t<LibTag> const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
@@ -330,7 +330,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("gtclang::mesh_t<libtag_t> const &mesh");
+    stencilClassCtr.addArg("gtclang::mesh_t<LibTag> const &mesh");
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
@@ -398,11 +398,11 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       auto getLoop = [](ast::Expr::LocationType type) {
         switch(type) {
         case ast::Expr::LocationType::Cells:
-          return "for(auto const& t : getCells(libtag_t{}, m_mesh))";
+          return "for(auto const& t : getCells(LibTag{}, m_mesh))";
         case ast::Expr::LocationType::Vertices:
-          return "for(auto const& t : getVertices(libtag_t{}, m_mesh))";
+          return "for(auto const& t : getVertices(LibTag{}, m_mesh))";
         case ast::Expr::LocationType::Edges:
-          return "for(auto const& t : getEdges(libtag_t{}, m_mesh))";
+          return "for(auto const& t : getEdges(LibTag{}, m_mesh))";
         default:
           dawn_unreachable("invalid type");
           return "";
