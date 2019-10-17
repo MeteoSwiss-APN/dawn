@@ -61,11 +61,11 @@ private:
 };
 
 template <typename T>
-Field<T> e_fieldType(atlasTag);
+Field<T> cellFieldType(atlasTag);
 template <typename T>
-Field<T> v_fieldType(atlasTag);
+Field<T> edgeFieldType(atlasTag);
 template <typename T>
-Field<T> c_fieldType(atlasTag);
+Field<T> vertexFieldType(atlasTag);
 
 atlas::Mesh meshType(atlasTag);
 
