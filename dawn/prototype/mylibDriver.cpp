@@ -8,8 +8,8 @@ using namespace mylibInterface;
 int main() {
   int w = 20;
   Mesh m{w, w, true};
-  CellField<double> out(m);
-  EdgeField<double> in(m);
+  mylib::FaceData<double> out(m);
+  mylib::EdgeData<double> in(m);
 
   // for(auto& f : m.edges()) {
   //   auto center_x = w / 2.f - (1.f / 2) * (f.vertex(0).x() + f.vertex(1).x());
