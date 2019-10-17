@@ -76,7 +76,7 @@ TEST(CompilerTest, CompileCopyStencil) {
   auto stencil_instantiation =
       b.build("generated",
               b.stencil(b.multistage(
-                  dawn::iir::LoopOrderKind::LK_Parallel,
+                  LoopOrderKind::LK_Parallel,
                   b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))))));
   std::ofstream of("/dev/null");
@@ -95,14 +95,13 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   auto stencil_instantiation = b.build(
       "generated",
       b.stencil(b.multistage(
-          dawn::iir::LoopOrderKind::LK_Parallel,
+          LoopOrderKind::LK_Parallel,
           b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                             b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
-          b.stage(b.vregion(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
-              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
-                                                   op::plus, b.at(in_f), b.lit(0.),
-                                                   dawn::ast::Expr::LocationType::Edges))))))));
+          b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                            b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                                 op::plus, b.at(in_f), b.lit(0.),
+                                                                 LocType::Edges))))))));
 
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }

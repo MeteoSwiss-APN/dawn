@@ -37,6 +37,14 @@ message Field {
   SourceLocation loc = 2;              // Source location
   bool is_temporary = 3;               // Is the field a temporary?
   repeated int32 field_dimensions = 4; // Legal dimension of the field initialized by the user
+
+  enum LocationType {
+    Edge = 0;
+    Vertex = 1;
+    Cell = 2;
+  }
+  // Location where the field is defined on
+  LocationType location_type = 5;
 }
 
 // @brief Directional argument of a StencilFunction
