@@ -355,7 +355,7 @@ void GTCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
 
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 

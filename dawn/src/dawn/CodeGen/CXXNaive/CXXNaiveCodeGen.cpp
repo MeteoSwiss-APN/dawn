@@ -217,7 +217,7 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   }
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
   //
   // Members
   //
