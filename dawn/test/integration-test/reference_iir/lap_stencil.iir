@@ -6,9 +6,9 @@
    "32": "out"
   },
   "accessIDToType": {
+   "32": 6,
    "30": 6,
-   "31": 3,
-   "32": 6
+   "31": 3
   },
   "literalIDToName": {},
   "fieldAccessIDs": [

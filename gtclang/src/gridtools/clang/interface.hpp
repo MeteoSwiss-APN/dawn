@@ -19,10 +19,18 @@
 namespace gtclang {
 
 template <typename T>
-void fieldType(...);
+void cellFieldType(...);
+template <typename T>
+void edgeFieldType(...);
+template <typename T>
+void vertexFieldType(...);
 void meshType(...);
 template <typename Tag, typename T>
-using field_t = decltype(fieldType<T>(Tag{}));
+using cell_field_t = decltype(cellFieldType<T>(Tag{}));
+template <typename Tag, typename T>
+using edge_field_t = decltype(edgeFieldType<T>(Tag{}));
+template <typename Tag, typename T>
+using vertex_field_t = decltype(vertexFieldType<T>(Tag{}));
 template <typename Tag>
 using mesh_t = decltype(meshType(Tag{}));
 

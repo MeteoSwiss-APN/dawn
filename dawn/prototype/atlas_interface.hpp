@@ -1,6 +1,6 @@
 #pragma once
-
 #include "atlas/mesh.h"
+#include <cassert>
 
 namespace utility {
 namespace impl_ {
@@ -61,10 +61,17 @@ private:
 };
 
 template <typename T>
-Field<T> fieldType(atlasTag);
+Field<T> cellFieldType(atlasTag);
+template <typename T>
+Field<T> edgeFieldType(atlasTag);
+template <typename T>
+Field<T> vertexFieldType(atlasTag);
+
 atlas::Mesh meshType(atlasTag);
 
 auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
+auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
+auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
 
 std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
@@ -87,11 +94,62 @@ std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& id
   return neighs[idx];
 }
 
+std::vector<int> const& edgeNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    const auto& conn = m.cells().edge_connectivity();
+    neighs[idx] = std::vector<int>{};
+    for(int n = 0; n < conn.cols(idx); ++n) {
+      neighs[idx].emplace_back(conn(idx, n));
+    }
+  }
+  return neighs[idx];
+}
+
 template <typename Init, typename Op>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
   for(auto&& obj : cellNeighboursOfCell(m, idx))
     op(init, obj);
   return init;
+}
+template <typename Init, typename Op>
+auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  for(auto&& obj : edgeNeighboursOfCell(m, idx))
+    op(init, obj);
+  return init;
+}
+template <typename Init, typename Op>
+auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  assert(false && "function not implemented in the atlas back end");
+  return 1;
+}
+
+template <typename Init, typename Op>
+auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  assert(false && "function not implemented in the atlas back end");
+  return 1;
+}
+template <typename Init, typename Op>
+auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  assert(false && "function not implemented in the atlas back end");
+  return 1;
+}
+
+template <typename Init, typename Op>
+auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  assert(false && "function not implemented in the atlas back end");
+  return 1;
+}
+template <typename Init, typename Op>
+auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  assert(false && "function not implemented in the atlas back end");
+  return 1;
+}
+template <typename Init, typename Op>
+auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  assert(false && "function not implemented in the atlas back end");
+  return 1;
 }
 
 } // namespace atlasInterface

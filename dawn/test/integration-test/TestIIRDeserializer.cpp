@@ -211,7 +211,7 @@ void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
   compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get());
 }
 
-TEST(IIRDeserializerTestAgainst, CopyStencil) {
+TEST(IIRDeserializerTest, CopyStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);

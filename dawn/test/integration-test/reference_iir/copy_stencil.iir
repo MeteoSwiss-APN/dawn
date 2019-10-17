@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "11": "in_field",
-   "12": "out_field"
+   "12": "out_field",
+   "11": "in_field"
   },
   "accessIDToType": {
    "11": 6,
@@ -24,12 +24,12 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
-   "11": {
+   "12": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    },
-   "12": {
+   "11": {
     "int1": 1,
     "int2": 1,
     "int3": 1

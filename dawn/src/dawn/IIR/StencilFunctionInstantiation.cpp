@@ -69,19 +69,17 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   return stencilFun;
 }
 
-Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
+ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
     const std::shared_ptr<iir::FieldAccessExpr>& expr, bool applyInitialOffset) const {
 
   // Get the offsets we know so far (i.e the constant offset)
-  Array3i offset = expr->getOffset();
+  ast::Offsets offset = expr->getOffset();
 
   // Apply the initial offset (e.g if we call a function `avg(in(i+1))` we have to shift all
   // accesses of the field `in` by [1, 0, 0])
   if(applyInitialOffset) {
-    const Array3i& initialOffset = getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
-    offset[0] += initialOffset[0];
-    offset[1] += initialOffset[1];
-    offset[2] += initialOffset[2];
+    const ast::Offsets& initialOffset = getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
+    offset += initialOffset;
   }
 
   int sign = expr->negateOffset() ? -1 : 1;
@@ -95,12 +93,16 @@ Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
       const int argOffset = expr->getArgumentOffset()[i];
 
       // Resolve the directions and offsets
+      // Note: Offsets could implement directions, then this could be simplified because we just want to do
+      // offset[my_direction] += sign * argOffset;
+      std::array<int, 3> addOffset{};
       if(isArgDirection(argIndex))
-        offset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
+        addOffset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
       else {
         const auto& instantiatedOffset = getCallerOffsetOfArgOffset(argIndex);
-        offset[instantiatedOffset[0]] += sign * (argOffset + instantiatedOffset[1]);
+        addOffset[instantiatedOffset[0]] = sign * (argOffset + instantiatedOffset[1]);
       }
+      offset += ast::Offsets{ast::cartesian, addOffset};
     }
   }
 
@@ -177,15 +179,15 @@ void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
   ArgumentIndexToStencilFunctionInstantiationMap_[argumentIndex] = func;
 }
 
-const Array3i&
+const ast::Offsets&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
   DAWN_ASSERT(CallerAccessIDToInitialOffsetMap_.count(callerAccessID));
   return CallerAccessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
 void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
-                                                                      const Array3i& offset) {
-  CallerAccessIDToInitialOffsetMap_[callerAccessID] = offset;
+                                                                      const ast::Offsets& offset) {
+  CallerAccessIDToInitialOffsetMap_.emplace(callerAccessID, offset);
 }
 
 bool StencilFunctionInstantiation::isProvidedByStencilFunctionCall(int callerAccessID) const {
@@ -309,11 +311,11 @@ const std::unordered_map<int, std::string>&
 StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
-std::unordered_map<int, Array3i>&
+std::unordered_map<int, ast::Offsets>&
 StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() {
   return CallerAccessIDToInitialOffsetMap_;
 }
-const std::unordered_map<int, Array3i>&
+const std::unordered_map<int, ast::Offsets>&
 StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() const {
   return CallerAccessIDToInitialOffsetMap_;
 }
@@ -622,7 +624,7 @@ void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>&
         int AccessID = stencilInstantiation_->nextUID();
 
         setCallerAccessIDOfArgField(argIdx, AccessID);
-        setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});
+        setCallerInitialOffsetFromAccessID(AccessID, ast::Offsets{ast::cartesian});
       }
     }
   }

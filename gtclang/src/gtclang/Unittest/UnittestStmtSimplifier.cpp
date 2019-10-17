@@ -116,8 +116,9 @@ std::shared_ptr<dawn::sir::VarAccessExpr> var(const std::string& name,
 std::shared_ptr<dawn::sir::FieldAccessExpr> field(const std::string& name, dawn::Array3i offset,
                                                   dawn::Array3i argumentMap,
                                                   dawn::Array3i argumentOffset, bool negateOffset) {
-  return std::make_shared<dawn::sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                                      negateOffset);
+  return std::make_shared<dawn::sir::FieldAccessExpr>(
+      name, dawn::ast::Offsets{dawn::ast::cartesian, offset}, argumentMap, argumentOffset,
+      negateOffset);
 }
 
 std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(const std::string& value,

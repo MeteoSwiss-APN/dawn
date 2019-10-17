@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_ACCESSES_H
 #define DAWN_IIR_ACCESSES_H
 
+#include "dawn/AST/Offsets.h"
 #include "dawn/IIR/Extents.h"
 #include <functional>
 #include <unordered_map>
@@ -47,7 +48,7 @@ public:
   ///
   /// @see Extents::merge
   /// @{
-  void mergeReadOffset(int AccessID, const Array3i& offset);
+  void mergeReadOffset(int AccessID, const ast::Offsets& offset);
   void mergeReadExtent(int AccessID, const Extents& extent);
   /// @}
 
@@ -55,7 +56,7 @@ public:
   ///
   /// @see Extents::merge
   /// @{
-  void mergeWriteOffset(int AccessID, const Array3i& offset);
+  void mergeWriteOffset(int AccessID, const ast::Offsets& offset);
   void mergeWriteExtent(int AccessID, const Extents& extent);
   /// @}
 
