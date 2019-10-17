@@ -626,14 +626,14 @@ bool PassTemporaryToStencilFunction::run(
             for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
               const std::shared_ptr<iir::Stmt> stmt = stmtAccessPair->getStatement();
 
-              DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_VerticalRegionDeclStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_BoundaryConditionDeclStmt));
+              DAWN_ASSERT((stmt->getKind() != iir::Stmt::Kind::ReturnStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::StencilCallDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::VerticalRegionDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::BoundaryConditionDeclStmt));
 
               // We exclude blocks or If/Else stmt
-              if((stmt->getKind() != iir::Stmt::SK_ExprStmt) &&
-                 (stmt->getKind() != iir::Stmt::SK_VarDeclStmt)) {
+              if((stmt->getKind() != iir::Stmt::Kind::ExprStmt) &&
+                 (stmt->getKind() != iir::Stmt::Kind::VarDeclStmt)) {
                 continue;
               }
 
