@@ -120,10 +120,10 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 
           // Is it a temporary?
           bool isTemporaryField =
-              metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID);
+              metadata.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID);
           if(isTemporaryField ||
-             (!metadata.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID) &&
-              metadata.isAccessType(iir::FieldAccessType::FAT_LocalVariable, AccessID))) {
+             (!metadata.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID) &&
+              metadata.isAccessType(iir::FieldAccessType::LocalVariable, AccessID))) {
 
             auto it = temporaries.find(AccessID);
             if(it != temporaries.end()) {
@@ -222,7 +222,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       // Is fieldi a temporary?
       // TODO could it happen that the access is not a temporary (but a local var) and even if it is
       // used in multiple stencils there is no need to promote it ?
-      if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID) &&
+      if(metadata.isAccessType(iir::FieldAccessType::StencilTemporary, accessID) &&
          instantiation->isIDAccessedMultipleStencils(accessID)) {
         updated = true;
         promoteTemporaryFieldToAllocatedField(instantiation, accessID);

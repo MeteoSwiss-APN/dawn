@@ -75,7 +75,7 @@ bool PassTemporaryMerger::run(
         AccessIDOfLastTemporary = nodesToVisit.back().second;
         nodesToVisit.pop_back();
 
-        if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, FromAccessID)) {
+        if(metadata.isAccessType(iir::FieldAccessType::StencilTemporary, FromAccessID)) {
           TemporaryDAG.insertNode(FromAccessID);
           AccessIDOfLastTemporary = FromAccessID;
         }
@@ -92,7 +92,7 @@ bool PassTemporaryMerger::run(
           int ToAccessID = AccessesDAG.getIDFromVertexID(ToVertexID);
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
-          if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, ToAccessID) &&
+          if(metadata.isAccessType(iir::FieldAccessType::StencilTemporary, ToAccessID) &&
              AccessIDOfLastTemporary != -1) {
             TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID,
                                     iir::Extents{0, 0, 0, 0, 0, 0});

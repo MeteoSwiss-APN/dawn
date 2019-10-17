@@ -96,7 +96,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID()))
+        if(metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
@@ -133,7 +133,7 @@ private:
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
+      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary,
                                                "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage

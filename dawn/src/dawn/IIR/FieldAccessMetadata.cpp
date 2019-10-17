@@ -19,19 +19,19 @@ namespace iir {
 
 std::string toString(FieldAccessType type) {
   switch(type) {
-  case FieldAccessType::FAT_GlobalVariable:
+  case FieldAccessType::GlobalVariable:
     return "GlobalVariable";
-  case FieldAccessType::FAT_Literal:
+  case FieldAccessType::Literal:
     return "Literal";
-  case FieldAccessType::FAT_LocalVariable:
+  case FieldAccessType::LocalVariable:
     return "LocalVariable";
-  case FieldAccessType::FAT_StencilTemporary:
+  case FieldAccessType::StencilTemporary:
     return "StencilTemporary";
-  case FieldAccessType::FAT_InterStencilTemporary:
+  case FieldAccessType::InterStencilTemporary:
     return "InterStencilTemporary";
-  case FieldAccessType::FAT_Field:
+  case FieldAccessType::Field:
     return "Field";
-  case FieldAccessType::FAT_APIField:
+  case FieldAccessType::APIField:
     return "APIField";
   }
   return "Unkown";

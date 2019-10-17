@@ -161,7 +161,7 @@ public:
     DAWN_ASSERT(it != fields_.end());
     iir::Field& field = it->second;
 
-    if(field.getIntend() == iir::Field::IK_Input) {
+    if(field.getIntend() == iir::Field::IntendKind::Input) {
       if(!register_.count(AccessID)) {
 
         // Cache the center access
@@ -190,7 +190,7 @@ public:
       }
     }
 
-    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IK_Input)
+    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IntendKind::Input)
       updateTextureCache(AccessID, kOffset);
   }
 
@@ -257,14 +257,14 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
 
     } else {
       switch(field.getIntend()) {
-      case iir::Field::IK_Output:
+      case iir::Field::IntendKind::Output:
         numWrites += 1;
         break;
-      case iir::Field::IK_InputOutput:
+      case iir::Field::IntendKind::InputOutput:
         numReads += 1;
         numWrites += 1;
         break;
-      case iir::Field::IK_Input:
+      case iir::Field::IntendKind::Input:
         numReads += 1;
         break;
       }

@@ -227,7 +227,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
 
   int i = 0;
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),
                                   getStorageType(metadata.getFieldDimensionsMask(fieldID)));
     ++i;
@@ -238,7 +238,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
   }
   for(int accessID :
-      metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+      metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     codeGenProperties.insertAllocateField(metadata.getFieldNameFromAccessID(accessID));
   }
 

@@ -97,7 +97,7 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
     if(accessToNameMapper.hasAccessID(accessID)) {
       accessName = accessToNameMapper.getNameFromAccessID(accessID);
     }
-    if(metadata.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
+    if(metadata.isAccessType(iir::FieldAccessType::Literal, accessID)) {
       continue;
     }
     accessNode["access_id"] = accessID;

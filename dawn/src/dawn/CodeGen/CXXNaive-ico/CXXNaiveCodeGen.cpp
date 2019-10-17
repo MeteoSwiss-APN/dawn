@@ -154,7 +154,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
+  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const Mesh &mesh");
@@ -203,7 +203,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                               fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
@@ -212,10 +212,10 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
     for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+        metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -252,11 +252,11 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   // Members
   //
   // Define allocated memebers if necessary
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>())
+        metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }

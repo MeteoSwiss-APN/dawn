@@ -266,7 +266,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
         Extents const& readAccessExtent = accesses.getReadAccess(accessID);
         std::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
-            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
+            getLoopOrder(), Extents::VerticalLoopOrderDir::InLoopOrder, false);
         Interval computingInterval = doMethod->getInterval();
         if(readAccessInLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
@@ -282,7 +282,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
         std::optional<Extent> readAccessCounterLoopOrder =
             readAccessExtent.getVerticalLoopOrderExtent(
-                getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
+                getLoopOrder(), Extents::VerticalLoopOrderDir::CounterLoopOrder, false);
 
         if(readAccessCounterLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
@@ -346,7 +346,7 @@ std::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() cons
       const Field& field = fieldPair.second;
       int AccessID = fieldPair.first;
 
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
         continue;
 
       if(!interval) {
@@ -430,7 +430,7 @@ bool MultiStage::hasMemAccessTemporaries() const {
 }
 
 bool MultiStage::isMemAccessTemporary(const int accessID) const {
-  if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+  if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
     return false;
   if(!derivedInfo_.caches_.count(accessID))
     return true;

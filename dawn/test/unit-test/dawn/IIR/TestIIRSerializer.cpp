@@ -103,16 +103,16 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
 }
 
 bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::Literal>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::Literal>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::Field>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::Field>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::APIField>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::APIField>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>()));
 
   // we compare the content of the maps since the shared-ptr's are not the same
   IIR_EARLY_EXIT((lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size()));
@@ -176,7 +176,7 @@ protected:
 TEST_F(IIRSerializerTest, EmptySetup) {
   auto desired = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(desired, referenceInstantiaton);
-  desired->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_InterStencilTemporary, 10,
+  desired->getMetaData().insertAccessOfType(iir::FieldAccessType::InterStencilTemporary, 10,
                                             "name");
   IIR_EXPECT_NE(desired, referenceInstantiaton);
 }
@@ -187,17 +187,17 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().addAccessIDNamePair(1, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, -5,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, -5,
                                                           "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Field, 712,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::Field, 712,
                                                           "field0");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_APIField, 10,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
                                                           "field1");
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_APIField, 12,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
                                                           "field2");
   auto deserializedStencilInstantiaion = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiaton);
@@ -206,20 +206,20 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().removeAccessID(12);
   referenceInstantiaton->getMetaData().removeAccessID(10);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_APIField, 12,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
                                                           "field1");
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_APIField, 10,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
                                                           "field2");
 
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::FAT_StencilTemporary, 713,
+      iir::FieldAccessType::StencilTemporary, 713,
       "field3"); // access ids should be globally unique, not only per type
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   // This would fail, since 712 is already present
-  // referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable,
+  // referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable,
   //                                                         712, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 

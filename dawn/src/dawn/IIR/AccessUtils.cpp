@@ -32,7 +32,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
   if(inputFields.count(AccessID)) {
     iir::Field& preField = inputFields.at(AccessID);
     preField.extendInterval(doMethodInterval);
-    preField.setIntend(iir::Field::IK_InputOutput);
+    preField.setIntend(iir::Field::IntendKind::InputOutput);
     inputOutputFields.insert({AccessID, preField});
     inputFields.erase(AccessID);
     return;
@@ -43,7 +43,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
     outputFields.emplace(AccessID,
-                         iir::Field(AccessID, iir::Field::IK_Output, std::optional<iir::Extents>(),
+                         iir::Field(AccessID, iir::Field::IntendKind::Output, std::optional<iir::Extents>(),
                                     writeExtents, doMethodInterval, location));
   }
 }
@@ -64,7 +64,7 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
   if(outputFields.count(AccessID)) {
     iir::Field& preField = outputFields.at(AccessID);
     preField.extendInterval(doMethodInterval);
-    preField.setIntend(iir::Field::IK_InputOutput);
+    preField.setIntend(iir::Field::IntendKind::InputOutput);
     inputOutputFields.insert({AccessID, preField});
 
     outputFields.erase(AccessID);
@@ -76,7 +76,7 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
     inputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
     inputFields.emplace(AccessID,
-                        iir::Field(AccessID, iir::Field::IK_Input, readExtents,
+                        iir::Field(AccessID, iir::Field::IntendKind::Input, readExtents,
                                    std::optional<iir::Extents>(), doMethodInterval, location));
   }
 }

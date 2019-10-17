@@ -27,7 +27,7 @@ Interval Field::computeAccessedInterval() const {
 json::json Field::jsonDump() const {
   json::json node;
   node["accessID"] = accessID_;
-  node["intend"] = intend_;
+  node["intend"] = static_cast<int>(intend_);
   node["extents"] = extents_.jsonDump();
   node["redundant extents"] = extentsRB_.jsonDump();
   std::stringstream ss;
@@ -40,7 +40,7 @@ void mergeField(const Field& sField, Field& dField) {
 
   // Adjust the Intend
   if(dField.getIntend() != sField.getIntend())
-    dField.setIntend(Field::IK_InputOutput);
+    dField.setIntend(Field::IntendKind::InputOutput);
 
   // field accounting for extents of the accesses plus the base extent (i.e. normally redundant
   // computations of the stages)

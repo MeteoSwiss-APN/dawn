@@ -39,15 +39,15 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
       iir::Field::IntendKind toFieldIntend = toField.getIntend();
 
       switch(fromFieldIntend) {
-      case iir::Field::IK_Output:
-        if(!intervalsMatch || toFieldIntend == iir::Field::IK_Input ||
-           toFieldIntend == iir::Field::IK_InputOutput)
+      case iir::Field::IntendKind::Output:
+        if(!intervalsMatch || toFieldIntend == iir::Field::IntendKind::Input ||
+           toFieldIntend == iir::Field::IntendKind::InputOutput)
           return true;
         break;
-      case iir::Field::IK_InputOutput:
+      case iir::Field::IntendKind::InputOutput:
         return true;
-      case iir::Field::IK_Input:
-        if(toFieldIntend == iir::Field::IK_Output || toFieldIntend == iir::Field::IK_InputOutput)
+      case iir::Field::IntendKind::Input:
+        if(toFieldIntend == iir::Field::IntendKind::Output || toFieldIntend == iir::Field::IntendKind::InputOutput)
           return true;
         break;
       }

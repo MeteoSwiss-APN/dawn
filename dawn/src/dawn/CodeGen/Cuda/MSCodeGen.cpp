@@ -676,7 +676,7 @@ void MSCodeGen::generateCudaKernelCode() {
   const auto fields = support::orderMap(ms_->getFields());
 
   auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-    return !metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+    return !metadata_.isAccessType(iir::FieldAccessType::StencilTemporary,
                                    p.second.getAccessID());
   });
   // all the temp fields that are non local cache, and therefore will require the infrastructure

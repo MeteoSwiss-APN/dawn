@@ -262,8 +262,8 @@ std::string StencilFunctionInstantiation::getFieldNameFromAccessID(int AccessID)
   // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID) ||
-          metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID))
+  else if(metadata_.isAccessType(FieldAccessType::Field, AccessID) ||
+          metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
     return metadata_.getFieldNameFromAccessID(AccessID);
   else {
     DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
@@ -285,7 +285,7 @@ const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int 
 std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) const {
   if(isLiteral(accessID)) {
     return getNameFromLiteralAccessID(accessID);
-  } else if(metadata_.isAccessType(FieldAccessType::FAT_Field, accessID) ||
+  } else if(metadata_.isAccessType(FieldAccessType::Field, accessID) ||
             isProvidedByStencilFunctionCall(accessID)) {
     return getOriginalNameFromCallerAccessID(accessID);
   } else {
@@ -389,7 +389,7 @@ void StencilFunctionInstantiation::update() {
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) &&
-         !metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+         !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -401,7 +401,7 @@ void StencilFunctionInstantiation::update() {
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) &&
-         !metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+         !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -414,7 +414,7 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{0, 0, 0, 0, 0, 0},
+      inputFields.emplace(AccessID, Field(AccessID, Field::IntendKind::Input, Extents{0, 0, 0, 0, 0, 0},
                                           Extents{0, 0, 0, 0, 0, 0}, interval_));
       unusedFields_.insert(AccessID);
     }
@@ -464,7 +464,7 @@ void StencilFunctionInstantiation::update() {
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !metadata_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
+             !metadata_.isAccessType(FieldAccessType::Field, accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
@@ -472,7 +472,7 @@ void StencilFunctionInstantiation::update() {
 
         for(const auto& accessPair : access->getReadAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !metadata_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
+             !metadata_.isAccessType(FieldAccessType::Field, accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);

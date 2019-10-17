@@ -148,9 +148,9 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
 
   // retrieving the head (Plus) of the extent
   if((loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
+      loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
+      loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent.Plus < (includeCenter ? 0 : 1))
       return std::optional<Extent>();
 
@@ -160,9 +160,9 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
   }
   // retrieving the tail (Minus) of the extent
   if((loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
+      loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
+      loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent.Minus > (includeCenter ? 0 : -1))
       return std::optional<Extent>();
 

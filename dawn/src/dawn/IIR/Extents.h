@@ -96,7 +96,7 @@ struct Extent {
 /// @ingroup optimizer
 class Extents {
 public:
-  enum class VerticalLoopOrderDir { VL_CounterLoopOrder, VL_InLoopOrder };
+  enum class VerticalLoopOrderDir { CounterLoopOrder, InLoopOrder };
 
   /// @name Constructors and Assignment
   /// @{

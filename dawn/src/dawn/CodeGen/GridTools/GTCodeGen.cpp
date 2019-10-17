@@ -305,7 +305,7 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+          if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                    fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
@@ -318,7 +318,7 @@ void GTCodeGen::generateStencilWrapperRun(
 
   std::vector<std::string> apiFieldNames;
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     apiFieldNames.push_back(name);
   }
@@ -362,17 +362,17 @@ void GTCodeGen::generateStencilWrapperCtr(
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
   for(const auto& fieldID :
-      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(stencilInstantiation, name) +
                                      "/*unused*/");
   }
 
   // Initialize allocated fields
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
     for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+        metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -591,7 +591,7 @@ void GTCodeGen::generateStencilClasses(
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
               .addTemplate(c_gt_intent() +
-                           ((fields[m].getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
+                           ((fields[m].getIntend() == iir::Field::IntendKind::Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -745,7 +745,7 @@ void GTCodeGen::generateStencilClasses(
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
               .addTemplate(c_gt_intent() +
-                           ((field.getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
+                           ((field.getIntend() == iir::Field::IntendKind::Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`

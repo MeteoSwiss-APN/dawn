@@ -77,7 +77,7 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, iir::Field::Intend
   }
   if(MS1Policy.policy_ == iir::Cache::IOPolicy::fill || MS1Policy.policy_ == iir::Cache::IOPolicy::bpfill) {
     if(MS2Policy.policy_ == iir::Cache::IOPolicy::fill || MS2Policy.policy_ == iir::Cache::IOPolicy::bpfill) {
-      if(fieldIntend == iir::Field::IK_Input)
+      if(fieldIntend == iir::Field::IntendKind::Input)
         return CacheCandidate{iir::Cache::IOPolicy::fill, MS1Policy.window_, MS1Policy.interval_};
       else
         return CacheCandidate{iir::Cache::IOPolicy::fill_and_flush, MS1Policy.window_, MS1Policy.interval_};
@@ -93,7 +93,7 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, iir::Field::Intend
 CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTemporaryField,
                                           iir::MultiStage const& MS) {
 
-  if(field.getIntend() == iir::Field::IK_Input) {
+  if(field.getIntend() == iir::Field::IntendKind::Input) {
     std::optional<iir::Interval> interval =
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
     // make sure the access interval has the same boundaries as from any interval of the mss
@@ -102,12 +102,12 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 
     return CacheCandidate{iir::Cache::IOPolicy::fill, std::optional<iir::Cache::window>(), *interval};
   }
-  if(field.getIntend() == iir::Field::IK_Output) {
+  if(field.getIntend() == iir::Field::IntendKind::Output) {
     return CacheCandidate{iir::Cache::IOPolicy::local, std::optional<iir::Cache::window>(),
                           field.getInterval()};
   }
 
-  if(field.getIntend() == iir::Field::IK_InputOutput) {
+  if(field.getIntend() == iir::Field::IntendKind::InputOutput) {
 
     std::optional<iir::Interval> interval =
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
@@ -166,8 +166,8 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
       std::set<int> outputFields;
 
       auto isOutput = [](const iir::Field& field) {
-        return field.getIntend() == iir::Field::IK_Output ||
-               field.getIntend() == iir::Field::IK_InputOutput;
+        return field.getIntend() == iir::Field::IntendKind::Output ||
+               field.getIntend() == iir::Field::IntendKind::InputOutput;
       };
 
       for(const auto& stage : MS.getChildren()) {
@@ -187,12 +187,12 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           }
 
           // Currently we only cache temporaries!
-          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID)) {
+          if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, accessID)) {
             continue;
           }
 
           // Cache the field
-          if(field.getIntend() == iir::Field::IK_Input && outputFields.count(accessID) &&
+          if(field.getIntend() == iir::Field::IntendKind::Input && outputFields.count(accessID) &&
              !field.getExtents().isHorizontalPointwise()) {
 
             iir::Cache& cache = MS.setCache(iir::Cache::TypeKind::IJ, iir::Cache::IOPolicy::local, accessID);
@@ -237,22 +237,22 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(field.getWriteExtents() && !field.getWriteExtents()->isPointwise())
             continue;
 
-          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+          if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary,
                                     field.getAccessID()) &&
-             (field.getIntend() == iir::Field::IK_Output ||
-              (field.getIntend() == iir::Field::IK_Input && field.getExtents().isPointwise())))
+             (field.getIntend() == iir::Field::IntendKind::Output ||
+              (field.getIntend() == iir::Field::IntendKind::Input && field.getExtents().isPointwise())))
             continue;
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
               field,
-              metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+              metadata.isAccessType(iir::FieldAccessType::StencilTemporary,
                                     field.getAccessID()),
               ms);
 
-          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+          if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary,
                                     field.getAccessID()) &&
-             field.getIntend() != iir::Field::IK_Input) {
+             field.getIntend() != iir::Field::IntendKind::Input) {
 
             cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(),
                                            CacheCandidate{iir::Cache::IOPolicy::fill,
@@ -272,7 +272,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
                   fieldInNextMS,
-                  metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                  metadata.isAccessType(iir::FieldAccessType::StencilTemporary,
                                         fieldInNextMS.getAccessID()),
                   nextMS);
               // if the interval of the two cache candidate do not overlap, there is no data

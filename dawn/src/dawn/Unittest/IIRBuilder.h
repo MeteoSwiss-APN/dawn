@@ -95,7 +95,7 @@ public:
   std::shared_ptr<iir::Expr> lit(T&& v) {
     DAWN_ASSERT(si_);
     auto v_str = std::to_string(std::forward<T>(v));
-    int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, v_str);
+    int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, v_str);
     auto expr = std::make_shared<iir::LiteralAccessExpr>(
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));

@@ -38,10 +38,10 @@ CodeGenUtils::buildPlaceholderList(const iir::StencilMetaInformation& metadata,
     if(buildPair) {
       placeholderStatement << "{} = ";
       // TODO(havogt): refactor
-      // metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfoPair.first)
+      // metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary, fieldInfoPair.first)
       // to
       // metadata.isInterStencilTemporary(fieldInfoPair.first)
-      if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+      if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                fieldInfoPair.first)) {
         placeholderStatement << "m_" << fieldName;
       } else {

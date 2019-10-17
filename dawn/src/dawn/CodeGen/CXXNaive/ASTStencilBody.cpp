@@ -105,7 +105,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
     ss_ << "m_globals." << name;
   } else {
     ss_ << name;

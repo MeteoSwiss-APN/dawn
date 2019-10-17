@@ -22,7 +22,7 @@ namespace {
 
 TEST(TestField, Construction) {
 
-  Field f{1, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
+  Field f{1, Field::IntendKind::Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
           Interval{0, 2, 1, -2}};
 
   EXPECT_TRUE((f.getExtents() == Extents{-1, 1, -2, 2, -1, 3}));
@@ -31,20 +31,20 @@ TEST(TestField, Construction) {
   EXPECT_TRUE((f.getInterval() == Interval{0, 2, 1, -2}));
   EXPECT_TRUE((f.computeAccessedInterval() == Interval{0, 2, 0, 1}));
   EXPECT_TRUE((f.getAccessID() == 1));
-  EXPECT_TRUE((f.getIntend() == Field::IntendKind::IK_Input));
+  EXPECT_TRUE((f.getIntend() == Field::IntendKind::Input));
 }
 
 TEST(TestField, Equal) {
 
-  Field f1{1, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
+  Field f1{1, Field::IntendKind::Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
            Interval{0, 2, 1, -2}};
 
-  Field f2{1, Field::IntendKind::IK_Input, Extents{-1, 1, -1, 2, 0, 3}, Extents{0, 0, 1, 0, -1, 2},
+  Field f2{1, Field::IntendKind::Input, Extents{-1, 1, -1, 2, 0, 3}, Extents{0, 0, 1, 0, -1, 2},
            Interval{0, 2, 1, 0}};
 
-  Field f3{1, Field::IntendKind::IK_InputOutput, Extents{-1, 1, -2, 2, 0, 3},
+  Field f3{1, Field::IntendKind::InputOutput, Extents{-1, 1, -2, 2, 0, 3},
            Extents{0, 0, 0, 0, -1, 2}, Interval{0, 2, 1, -2}};
-  Field f4{2, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
+  Field f4{2, Field::IntendKind::Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
            Interval{0, 2, 1, -2}};
 
   EXPECT_TRUE((f1 == f2));
@@ -54,7 +54,7 @@ TEST(TestField, Equal) {
 
 TEST(TestField, Merge) {
 
-  Field f{1, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
+  Field f{1, Field::IntendKind::Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
           Interval{0, 2, 1, -2}};
 
   f.mergeReadExtents({-2, 1, -3, 0, 0, 0});

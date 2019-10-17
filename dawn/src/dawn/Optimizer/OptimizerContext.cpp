@@ -305,7 +305,7 @@ public:
           auto voidExpr = std::make_shared<iir::LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = iir::makeExprStmt(voidExpr);
           int AccessID = -instantiation_->nextUID();
-          metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
+          metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, "0");
           voidExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
           iir::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt, voidStmt);
@@ -448,7 +448,7 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = metadata_.addTmpField(iir::FieldAccessType::FAT_StencilTemporary,
+        AccessID = metadata_.addTmpField(iir::FieldAccessType::StencilTemporary,
                                          stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
@@ -551,7 +551,7 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back(), expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, -AccessID,
+        metadata_.insertAccessOfType(iir::FieldAccessType::Literal, -AccessID,
                                      newExpr->getValue());
         newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
@@ -574,7 +574,7 @@ public:
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
-    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
     expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
   }
 
@@ -600,8 +600,8 @@ bool OptimizerContext::fillIIRFromSIR(
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
-    metadata.addField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
-                                          : iir::FieldAccessType::FAT_APIField),
+    metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
+                                          : iir::FieldAccessType::APIField),
                       field->Name, field->fieldDimensions);
   }
 
