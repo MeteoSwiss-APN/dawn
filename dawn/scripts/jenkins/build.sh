@@ -54,7 +54,7 @@ if [ -n ${INSTALL_DIR} ]; then
 fi
 
 cmake ${CMAKE_ARGS} ../
-make -j2 install
+make -j8 install
 
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
