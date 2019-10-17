@@ -22,38 +22,55 @@
 #include <google/protobuf/util/json_util.h>
 #include <iterator>
 #include <list>
+#include <memory>
+#include <optional>
 #include <tuple>
 #include <utility>
 
 using namespace dawn;
 
 namespace {
+void fillData(iir::IIRStmtData& data, dawn::proto::statements::StmtData const& dataProto) {
+  if(dataProto.has_accesses()) {
+    iir::Accesses callerAccesses;
+    for(auto writeAccess : dataProto.accesses().writeaccess()) {
+      callerAccesses.addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
+    }
+    for(auto readAccess : dataProto.accesses().readaccess()) {
+      callerAccesses.addReadExtent(readAccess.first, makeExtents(&readAccess.second));
+    }
+    data.CallerAccesses = std::move(callerAccesses);
+  }
+}
+
 std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType,
                                         dawn::proto::statements::StmtData const& dataProto) {
   if(dataType == ast::StmtData::SIR_DATA_TYPE)
     return std::make_unique<sir::SIRStmtData>();
   else {
-    iir::IIRStmtData data;
-    std::optional<iir::Accesses> callerAccesses = std::make_optional(iir::Accesses());
-    for(auto writeAccess : dataProto.accesses().writeaccess()) {
-      callerAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
-    }
-    for(auto readAccess : dataProto.accesses().readaccess()) {
-      callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
-    }
-    data.CallerAccesses = std::move(callerAccesses);
-    return std::make_unique<iir::IIRStmtData>(std::move(data));
+    auto data = std::make_unique<iir::IIRStmtData>();
+    fillData(*data, dataProto);
+    return data;
+  }
+}
+
+std::unique_ptr<ast::StmtData>
+makeVarDeclStmtData(ast::StmtData::DataType dataType,
+                    dawn::proto::statements::StmtData const& dataProto,
+                    const dawn::proto::statements::VarDeclStmtData& varDeclStmtDataProto) {
+  if(dataType == ast::StmtData::SIR_DATA_TYPE) {
+    return std::make_unique<sir::SIRStmtData>();
+  } else {
+    iir::VarDeclStmtData tmp;
+    fillData(tmp, dataProto);
+    if(varDeclStmtDataProto.has_accessid())
+      tmp.AccessID = std::make_optional(varDeclStmtDataProto.accessid().value());
+    return std::make_unique<iir::VarDeclStmtData>(tmp);
   }
 }
 
 void fillAccessExprDataFromProto(iir::IIRAccessExprData& data,
                                  const dawn::proto::statements::AccessExprData& dataProto) {
-  if(dataProto.has_accessid())
-    data.AccessID = std::make_optional(dataProto.accessid().value());
-}
-
-void fillVarDeclStmtDataFromProto(iir::VarDeclStmtData& data,
-                                  const dawn::proto::statements::VarDeclStmtData& dataProto) {
   if(dataProto.has_accessid())
     data.AccessID = std::make_optional(dataProto.accessid().value());
 }
@@ -66,11 +83,24 @@ void setAccessExprData(dawn::proto::statements::AccessExprData* dataProto,
   }
 }
 
+void setStmtData(proto::statements::StmtData* protoStmtData, iir::Stmt& stmt) {
+  if(stmt.getDataType() == ast::StmtData::IIR_DATA_TYPE) {
+    if(stmt.getData<iir::IIRStmtData>().CallerAccesses.has_value()) {
+      setAccesses(protoStmtData->mutable_accesses(),
+                  stmt.getData<iir::IIRStmtData>().CallerAccesses);
+    }
+    DAWN_ASSERT_MSG(!stmt.getData<iir::IIRStmtData>().CalleeAccesses,
+                    "inlining did not work as we have callee-accesses");
+  }
+}
+
 void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
-                        const iir::VarDeclStmtData& data) {
-  if(data.AccessID) {
-    auto accessID = dataProto->mutable_accessid();
-    accessID->set_value(*data.AccessID);
+                        const iir::VarDeclStmt& stmt) {
+  if(stmt.getDataType() == ast::StmtData::IIR_DATA_TYPE) {
+    if(stmt.getData<iir::VarDeclStmtData>().AccessID) {
+      auto accessID = dataProto->mutable_accessid();
+      accessID->set_value(*stmt.getData<iir::VarDeclStmtData>().AccessID);
+    }
   }
 }
 } // namespace
@@ -191,6 +221,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {
     currentStmtProto_.pop();
   }
 
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   protoStmt->set_id(stmt->getID());
 }
@@ -202,6 +234,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ExprStmt>& stmt) {
   currentExprProto_.pop();
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -213,6 +248,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   currentExprProto_.pop();
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -238,12 +276,11 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
-  if(dataType_ == ast::StmtData::IIR_DATA_TYPE)
-    setVarDeclStmtData(protoStmt->mutable_var_decl_stmt_data(),
-                       stmt->getData<iir::VarDeclStmtData>()); // TODO(SAP) do this with our data
-                                                               // for each visit(Stmt)
-  else
-    protoStmt->mutable_var_decl_stmt_data();
+
+  setVarDeclStmtData(protoStmt->mutable_var_decl_stmt_data(), *stmt);
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -270,6 +307,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
                                           : dawn::proto::statements::VerticalRegion::Forward);
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -291,6 +331,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -302,6 +345,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& s
     protoStmt->add_fields(fieldName);
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -323,6 +369,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<IfStmt>& stmt) {
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+
+  setStmtData(protoStmt->mutable_data(), *stmt);
+
   protoStmt->set_id(stmt->getID());
 }
 
@@ -776,13 +825,9 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
                                          : Type(typeProto.name(), cvQual);
 
     auto stmt = std::make_shared<VarDeclStmt>(
-        dataType == StmtData::IIR_DATA_TYPE ? std::make_unique<iir::VarDeclStmtData>()
-                                            : makeData(dataType, stmtProto.data()),
-        type, stmtProto.name(), stmtProto.dimension(), stmtProto.op().c_str(), initList,
+        makeVarDeclStmtData(dataType, stmtProto.data(), stmtProto.var_decl_stmt_data()), type,
+        stmtProto.name(), stmtProto.dimension(), stmtProto.op().c_str(), initList,
         makeLocation(stmtProto));
-    if(dataType == StmtData::IIR_DATA_TYPE)
-      fillVarDeclStmtDataFromProto(stmt->getData<iir::VarDeclStmtData>(),
-                                   stmtProto.var_decl_stmt_data());
     stmt->setID(stmtProto.id());
     return stmt;
   }

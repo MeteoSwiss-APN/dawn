@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
@@ -366,12 +367,11 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
           setInterval(protoDoMethod->mutable_interval(), &interval);
           protoDoMethod->set_domethodid(domethod->getID());
 
-          // adding it's children
-          for(const auto& stmt : domethod->getChildren()) {
-            auto protoStmt = protoDoMethod->mutable_ast();
-            ProtoStmtBuilder builder(protoStmt, ast::StmtData::IIR_DATA_TYPE);
-            stmt->accept(builder);
-          }
+          auto protoStmt = protoDoMethod->mutable_ast();
+          ProtoStmtBuilder builder(protoStmt, ast::StmtData::IIR_DATA_TYPE);
+          auto ptr = std::make_shared<ast::BlockStmt>(
+              domethod->getAST()); // TODO takes a copy to allow using shared_from_this()
+          ptr->accept(builder);
         }
       }
     }
@@ -676,22 +676,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
               makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE));
           DAWN_ASSERT(ast);
           IIRDoMethod->setAST(std::move(*ast));
-
-          // TODO(SAP) move access logic
-          // for(const auto& stmt : ast->getChildren()) {
-          //   auto stmt = makeStmt(protoStmtAccessPair.aststmt(), ast::StmtData::IIR_DATA_TYPE);
-
-          //   std::optional<iir::Accesses> callerAccesses = std::make_optional(iir::Accesses());
-          //   for(auto writeAccess : protoStmtAccessPair.accesses().writeaccess()) {
-          //     callerAccesses->addWriteExtent(writeAccess.first,
-          //     makeExtents(&writeAccess.second));
-          //   }
-          //   for(auto readAccess : protoStmtAccessPair.accesses().readaccess()) {
-          //     callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
-          //   }
-          //   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::move(callerAccesses);
-          //   IIRDoMethod->insertChild(std::move(stmt));
-          // }
         }
       }
     }
