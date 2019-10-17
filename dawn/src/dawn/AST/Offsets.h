@@ -163,4 +163,3 @@ std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
 } // namespace dawn::ast
 #endif
-

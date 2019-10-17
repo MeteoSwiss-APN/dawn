@@ -65,16 +65,16 @@ protected:
 };
 
 static void compareExtents(iir::Extents extents, const std::array<int, 6>& ref) {
-  const auto& h_extents =
+  const auto& hExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
-  const auto& v_extents = extents.verticalExtent();
+  const auto& vExtents = extents.verticalExtent();
 
-  EXPECT_EQ(h_extents.iMinus(), ref[0]);
-  EXPECT_EQ(h_extents.iPlus(), ref[1]);
-  EXPECT_EQ(h_extents.jMinus(), ref[2]);
-  EXPECT_EQ(h_extents.jPlus(), ref[3]);
-  EXPECT_EQ(v_extents.minus(), ref[4]);
-  EXPECT_EQ(v_extents.plus(), ref[5]);
+  EXPECT_EQ(hExtents.iMinus(), ref[0]);
+  EXPECT_EQ(hExtents.iPlus(), ref[1]);
+  EXPECT_EQ(hExtents.jMinus(), ref[2]);
+  EXPECT_EQ(hExtents.jPlus(), ref[3]);
+  EXPECT_EQ(vExtents.minus(), ref[4]);
+  EXPECT_EQ(vExtents.plus(), ref[5]);
 }
 
 TEST_F(ComputeStageExtents, test_stencil_01) {

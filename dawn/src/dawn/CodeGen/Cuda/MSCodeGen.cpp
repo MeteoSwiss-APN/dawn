@@ -48,13 +48,13 @@ void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
 
     const int accessID = cache.getCachedFieldAccessID();
     const auto& maxExtents = cacheProperties_.getCacheExtent(accessID);
-    const auto& h_maxExtents =
+    const auto& hMaxExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     kernel.addStatement(
         "__shared__ gridtools::clang::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
-        std::to_string(blockSize_[0] + (h_maxExtents.iPlus() - h_maxExtents.iMinus())) + "*" +
-        std::to_string(blockSize_[1] + (h_maxExtents.jPlus() - h_maxExtents.jMinus())) + "]");
+        std::to_string(blockSize_[0] + (hMaxExtents.iPlus() - hMaxExtents.iMinus())) + "*" +
+        std::to_string(blockSize_[1] + (hMaxExtents.jPlus() - hMaxExtents.jMinus())) + "]");
   }
 }
 
@@ -107,10 +107,10 @@ void MSCodeGen::generateTmpIndexInit(MemberFunction& kernel) const {
     return;
 
   auto maxExtentTmps = CodeGeneratorHelper::computeTempMaxWriteExtent(*(ms_->getParent()));
-  auto h_maxExtentTmps =
+  auto hMaxExtentTmps =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtentTmps.horizontalExtent());
-  kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-h_maxExtentTmps.iMinus()) +
-                      ")*1 + (jblock+" + std::to_string(-h_maxExtentTmps.jMinus()) +
+  kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-hMaxExtentTmps.iMinus()) +
+                      ")*1 + (jblock+" + std::to_string(-hMaxExtentTmps.jMinus()) +
                       ")*jstride_tmp");
 }
 
@@ -683,7 +683,7 @@ void MSCodeGen::generateCudaKernelCode() {
     maxExtents.merge(stage->getExtents());
   }
 
-  auto h_maxExtents =
+  auto hMaxExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   // fields used in the stencil
@@ -707,8 +707,8 @@ void MSCodeGen::generateCudaKernelCode() {
   fnDecl = fnDecl + "__global__ void";
 
   int maxThreadsPerBlock =
-      blockSize_[0] * (blockSize_[1] + h_maxExtents.jPlus() - h_maxExtents.jMinus() +
-                       (h_maxExtents.iMinus() < 0 ? 1 : 0) + (h_maxExtents.iPlus() > 0 ? 1 : 0));
+      blockSize_[0] * (blockSize_[1] + hMaxExtents.jPlus() - hMaxExtents.jMinus() +
+                       (hMaxExtents.iMinus() < 0 ? 1 : 0) + (hMaxExtents.iPlus() > 0 ? 1 : 0));
 
   int nSM = options_.nsms;
   int maxBlocksPerSM = options_.maxBlocksPerSM;
@@ -816,20 +816,20 @@ void MSCodeGen::generateCudaKernelCode() {
   cudaKernel.addComment("Regions (a,h,e) and (c,i,g) are executed by two specialized warp");
 
   // jboundary_limit determines the number of warps required to execute (b,d,f)");
-  int jboundary_limit = (int)nty + h_maxExtents.jPlus() - h_maxExtents.jMinus();
-  int iminus_limit = jboundary_limit + (h_maxExtents.iMinus() < 0 ? 1 : 0);
-  int iplus_limit = iminus_limit + (h_maxExtents.iPlus() > 0 ? 1 : 0);
+  int jboundary_limit = (int)nty + hMaxExtents.jPlus() - hMaxExtents.jMinus();
+  int iminus_limit = jboundary_limit + (hMaxExtents.iMinus() < 0 ? 1 : 0);
+  int iplus_limit = iminus_limit + (hMaxExtents.iPlus() > 0 ? 1 : 0);
 
-  cudaKernel.addStatement("int iblock = " + std::to_string(h_maxExtents.iMinus()) + " - 1");
-  cudaKernel.addStatement("int jblock = " + std::to_string(h_maxExtents.jMinus()) + " - 1");
+  cudaKernel.addStatement("int iblock = " + std::to_string(hMaxExtents.iMinus()) + " - 1");
+  cudaKernel.addStatement("int jblock = " + std::to_string(hMaxExtents.jMinus()) + " - 1");
   cudaKernel.addBlockStatement("if(threadIdx.y < +" + std::to_string(jboundary_limit) + ")", [&]() {
     cudaKernel.addStatement("iblock = threadIdx.x");
-    cudaKernel.addStatement("jblock = (int)threadIdx.y + " + std::to_string(h_maxExtents.jMinus()));
+    cudaKernel.addStatement("jblock = (int)threadIdx.y + " + std::to_string(hMaxExtents.jMinus()));
   });
-  if(h_maxExtents.iMinus() < 0) {
+  if(hMaxExtents.iMinus() < 0) {
     cudaKernel.addBlockStatement(
         "else if(threadIdx.y < +" + std::to_string(iminus_limit) + ")", [&]() {
-          int paddedBoundary_ = paddedBoundary(h_maxExtents.iMinus());
+          int paddedBoundary_ = paddedBoundary(hMaxExtents.iMinus());
 
           // we dedicate one warp to execute regions (a,h,e), so here we make sure we have enough
           //  threads
@@ -839,13 +839,13 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addStatement("iblock = -" + std::to_string(paddedBoundary_) +
                                   " + (int)threadIdx.x % " + std::to_string(paddedBoundary_));
           cudaKernel.addStatement("jblock = (int)threadIdx.x / " + std::to_string(paddedBoundary_) +
-                                  "+" + std::to_string(h_maxExtents.jMinus()));
+                                  "+" + std::to_string(hMaxExtents.jMinus()));
         });
   }
-  if(h_maxExtents.iPlus() > 0) {
+  if(hMaxExtents.iPlus() > 0) {
     cudaKernel.addBlockStatement(
         "else if(threadIdx.y < " + std::to_string(iplus_limit) + ")", [&]() {
-          int paddedBoundary_ = paddedBoundary(h_maxExtents.iPlus());
+          int paddedBoundary_ = paddedBoundary(hMaxExtents.iPlus());
           // we dedicate one warp to execute regions (c,i,g), so here we make sure we have enough
           //    threads
           // we dedicate one warp to execute regions (a,h,e), so here we make sure we have enough
@@ -856,7 +856,7 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addStatement("iblock = threadIdx.x % " + std::to_string(paddedBoundary_) +
                                   " + " + std::to_string(ntx));
           cudaKernel.addStatement("jblock = (int)threadIdx.x / " + std::to_string(paddedBoundary_) +
-                                  "+" + std::to_string(h_maxExtents.jMinus()));
+                                  "+" + std::to_string(hMaxExtents.jMinus()));
         });
   }
 
@@ -1007,7 +1007,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
       for(const auto& stagePtr : ms_->getChildren()) {
         const iir::Stage& stage = *stagePtr;
-        const auto& h_extent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+        const auto& hExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
             stage.getExtents().horizontalExtent());
         iir::MultiInterval enclosingInterval;
 
@@ -1024,10 +1024,10 @@ void MSCodeGen::generateCudaKernelCode() {
         }
 
         cudaKernel.addBlockStatement(
-            "if(iblock >= " + std::to_string(h_extent.iMinus()) +
-                " && iblock <= block_size_i -1 + " + std::to_string(h_extent.iPlus()) +
-                " && jblock >= " + std::to_string(h_extent.jMinus()) +
-                " && jblock <= block_size_j -1 + " + std::to_string(h_extent.jPlus()) + ")",
+            "if(iblock >= " + std::to_string(hExtent.iMinus()) +
+                " && iblock <= block_size_i -1 + " + std::to_string(hExtent.iPlus()) +
+                " && jblock >= " + std::to_string(hExtent.jMinus()) +
+                " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus()) + ")",
             [&]() {
               // Generate Do-Method
               for(const auto& doMethodPtr : stage.getChildren()) {

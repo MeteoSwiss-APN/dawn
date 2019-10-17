@@ -32,17 +32,17 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
   std::unordered_map<int, iir::Extents> specialCaches;
   for(const auto& cacheP : ms->getCaches()) {
     const int accessID = cacheP.first;
-    auto v_extents = ms->getField(accessID).getExtentsRB().verticalExtent();
-    auto h_extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+    auto vExtents = ms->getField(accessID).getExtentsRB().verticalExtent();
+    auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
         ms->getField(accessID).getExtentsRB().horizontalExtent());
 
     bool exceeds = false;
 
     const int numDimensions = 3;
     std::array<int, numDimensions> extentsMinus(
-        {h_extents.iMinus(), h_extents.jMinus(), v_extents.minus()});
+        {hExtents.iMinus(), hExtents.jMinus(), vExtents.minus()});
     std::array<int, numDimensions> extentsPlus(
-        {h_extents.iPlus(), h_extents.jPlus(), v_extents.plus()});
+        {hExtents.iPlus(), hExtents.jPlus(), vExtents.plus()});
 
     for(int i = 0; i < numDimensions; ++i) {
       if(extentsMinus[i] < -maxRedundantLines || extentsPlus[i] > maxRedundantLines) {
@@ -150,15 +150,15 @@ iir::Extents CacheProperties::getCacheExtent(int accessID) const {
 }
 
 int CacheProperties::getStride(int accessID, int dim, Array3ui blockSize) const {
-  auto h_extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+  auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
       getCacheExtent(accessID).horizontalExtent());
-  return getStrideImpl(dim, blockSize, h_extents.iMinus(), h_extents.iPlus());
+  return getStrideImpl(dim, blockSize, hExtents.iMinus(), hExtents.iPlus());
 }
 
 int CacheProperties::getStrideCommonCache(int dim, Array3ui blockSize) const {
-  auto h_extents =
+  auto hExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents_.horizontalExtent());
-  return getStrideImpl(dim, blockSize, h_extents.iMinus(), h_extents.iPlus());
+  return getStrideImpl(dim, blockSize, hExtents.iMinus(), hExtents.iPlus());
 } // namespace cuda
 
 int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, int Minus, int Plus) const {
@@ -173,23 +173,23 @@ int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, int Minus, int P
 
 int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
   DAWN_ASSERT(dim <= 2);
-  auto h_extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+  auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
       getCacheExtent(accessID).horizontalExtent());
   if(dim == 0) {
-    return -h_extents.iMinus();
+    return -hExtents.iMinus();
   } else {
-    return -h_extents.jMinus();
+    return -hExtents.jMinus();
   }
 }
 
 int CacheProperties::getOffsetCommonIJCache(int dim) const {
   DAWN_ASSERT(dim <= 2);
-  auto h_extents =
+  auto hExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents_.horizontalExtent());
   if(dim == 0) {
-    return -h_extents.iMinus();
+    return -hExtents.iMinus();
   } else {
-    return -h_extents.jMinus();
+    return -hExtents.jMinus();
   }
 }
 

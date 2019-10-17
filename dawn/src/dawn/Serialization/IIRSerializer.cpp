@@ -27,19 +27,19 @@
 namespace dawn {
 static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   proto::iir::Extents protoExtents;
-  auto v_extent = extents.verticalExtent();
-  auto h_extent =
+  auto vExtent = extents.verticalExtent();
+  auto hExtent =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
 
   auto protoExtentI = protoExtents.add_extents();
-  protoExtentI->set_minus(h_extent.iMinus());
-  protoExtentI->set_plus(h_extent.iPlus());
+  protoExtentI->set_minus(hExtent.iMinus());
+  protoExtentI->set_plus(hExtent.iPlus());
   auto protoExtentJ = protoExtents.add_extents();
-  protoExtentJ->set_minus(h_extent.jMinus());
-  protoExtentJ->set_plus(h_extent.jPlus());
+  protoExtentJ->set_minus(hExtent.jMinus());
+  protoExtentJ->set_plus(hExtent.jPlus());
   auto protoExtentK = protoExtents.add_extents();
-  protoExtentK->set_minus(v_extent.minus());
-  protoExtentK->set_plus(v_extent.plus());
+  protoExtentK->set_minus(vExtent.minus());
+  protoExtentK->set_plus(vExtent.plus());
 
   return protoExtents;
 }

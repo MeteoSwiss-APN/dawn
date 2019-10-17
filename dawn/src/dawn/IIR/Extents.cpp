@@ -193,13 +193,12 @@ std::string Extents::toString() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
-  auto h_extents = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
-  auto v_extents = extents.verticalExtent_;
+  auto hExtents = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
+  auto vExtents = extents.verticalExtent_;
 
-  os << "[(" + std::to_string(h_extents.iMinus()) + ", " + std::to_string(h_extents.iPlus()) +
-            "), ";
-  os << "(" + std::to_string(h_extents.jMinus()) + ", " + std::to_string(h_extents.jPlus()) + "), ";
-  os << "(" + std::to_string(v_extents.minus()) + ", " + std::to_string(v_extents.plus()) + ")]";
+  os << "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) + "), ";
+  os << "(" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) + "), ";
+  os << "(" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
 
   return os;
 }

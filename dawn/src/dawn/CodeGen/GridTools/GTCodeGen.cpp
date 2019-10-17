@@ -583,13 +583,13 @@ void GTCodeGen::generateStencilClasses(
           // Generate parameter of stage
           std::stringstream ss;
           codegen::Type extent(c_gt() + "extent", ss);
-          auto h_extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+          auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
               fields[m].getExtents().horizontalExtent());
-          auto v_extents = fields[m].getExtents().verticalExtent();
+          auto vExtents = fields[m].getExtents().verticalExtent();
 
-          extent.addTemplate(Twine(h_extents.iMinus()) + ", " + Twine(h_extents.iPlus()));
-          extent.addTemplate(Twine(h_extents.jMinus()) + ", " + Twine(h_extents.jPlus()));
-          extent.addTemplate(Twine(v_extents.minus()) + ", " + Twine(v_extents.plus()));
+          extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
+          extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
+          extent.addTemplate(Twine(vExtents.minus()) + ", " + Twine(vExtents.plus()));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
@@ -714,7 +714,7 @@ void GTCodeGen::generateStencilClasses(
         Structure StageStruct =
             stencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
+        ssMS << c_gt() + "make_stage_withExtent<" << StageStruct.getName()
              << ", " + c_gt() + "extent< ";
         auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
             stage.getExtents().horizontalExtent());
@@ -744,13 +744,13 @@ void GTCodeGen::generateStencilClasses(
           std::stringstream tss;
           codegen::Type extent(c_gt() + "extent", tss);
 
-          auto h_extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+          auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
               field.getExtents().horizontalExtent());
-          auto v_extents = field.getExtents().verticalExtent();
+          auto vExtents = field.getExtents().verticalExtent();
 
-          extent.addTemplate(Twine(h_extents.iMinus()) + ", " + Twine(h_extents.iPlus()));
-          extent.addTemplate(Twine(h_extents.jMinus()) + ", " + Twine(h_extents.jPlus()));
-          extent.addTemplate(Twine(v_extents.minus()) + ", " + Twine(v_extents.plus()));
+          extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
+          extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
+          extent.addTemplate(Twine(vExtents.minus()) + ", " + Twine(vExtents.plus()));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")

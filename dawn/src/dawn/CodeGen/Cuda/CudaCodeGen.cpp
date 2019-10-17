@@ -497,13 +497,13 @@ void CudaCodeGen::generateStencilRunMethod(
     unsigned int ntx = blockSize[0];
     unsigned int nty = blockSize[1];
 
-    auto h_maxExtents =
+    auto hMaxExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     stencilRunMethod.addStatement(
         "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
-        std::to_string(h_maxExtents.jPlus() - h_maxExtents.jMinus() +
-                       (h_maxExtents.iMinus() < 0 ? 1 : 0) + (h_maxExtents.iPlus() > 0 ? 1 : 0)) +
+        std::to_string(hMaxExtents.jPlus() - hMaxExtents.jMinus() +
+                       (hMaxExtents.iMinus() < 0 ? 1 : 0) + (hMaxExtents.iPlus() > 0 ? 1 : 0)) +
         ",1)");
 
     // number of blocks required
@@ -589,12 +589,12 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
                                         iir::Stencil const& stencil) const {
 
   auto maxExtents = CodeGeneratorHelper::computeTempMaxWriteExtent(stencil);
-  auto h_maxExtents =
+  auto hMaxExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   stencilClass.addTypeDef("tmp_halo_t")
-      .addType("gridtools::halo< " + std::to_string(-h_maxExtents.iMinus()) + "," +
-               std::to_string(-h_maxExtents.jMinus()) + ", 0, 0, " +
+      .addType("gridtools::halo< " + std::to_string(-hMaxExtents.iMinus()) + "," +
+               std::to_string(-hMaxExtents.jMinus()) + ", 0, 0, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
 
   stencilClass.addTypeDef(tmpMetadataTypename_)
@@ -612,15 +612,15 @@ void CudaCodeGen::addTmpStorageInit(
   const auto blockSize = stencil.getParent()->getBlockSize();
 
   if(!(tempFields.empty())) {
-    auto h_maxExtents =
+    auto hMaxExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
     ctr.addInit(tmpMetadataName_ + "(" + std::to_string(blockSize[0]) + "+" +
-                std::to_string(-h_maxExtents.iMinus() + h_maxExtents.iPlus()) + ", " +
+                std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
                 std::to_string(blockSize[1]) + "+" +
-                std::to_string(-h_maxExtents.jMinus() + h_maxExtents.jPlus()) +
-                ", (dom_.isize()+ " + std::to_string(blockSize[0]) + " - 1) / " +
-                std::to_string(blockSize[0]) + ", (dom_.jsize()+ " + std::to_string(blockSize[1]) +
-                " - 1) / " + std::to_string(blockSize[1]) + ", dom_.ksize() + 2 * " +
+                std::to_string(-hMaxExtents.jMinus() + hMaxExtents.jPlus()) + ", (dom_.isize()+ " +
+                std::to_string(blockSize[0]) + " - 1) / " + std::to_string(blockSize[0]) +
+                ", (dom_.jsize()+ " + std::to_string(blockSize[1]) + " - 1) / " +
+                std::to_string(blockSize[1]) + ", dom_.ksize() + 2 * " +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
     for(const auto& fieldPair : tempFields) {
       ctr.addInit("m_" + fieldPair.second.Name + "(" + tmpMetadataName_ + ")");

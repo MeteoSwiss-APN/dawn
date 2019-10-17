@@ -36,13 +36,13 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
       int AccessID = it->first;
       ss << accessIDToStringFunction(AccessID);
       ss << ":<";
-      const auto& h_extents =
+      const auto& hExtents =
           dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(it->second.horizontalExtent());
-      const auto& v_extents = it->second.verticalExtent();
+      const auto& vExtents = it->second.verticalExtent();
 
-      ss << h_extents.iMinus() << "," << h_extents.iPlus() << ",";
-      ss << h_extents.jMinus() << "," << h_extents.jPlus() << ",";
-      ss << v_extents.Minus << "," << v_extents.Plus << ">";
+      ss << hExtents.iMinus() << "," << hExtents.iPlus() << ",";
+      ss << hExtents.jMinus() << "," << hExtents.jPlus() << ",";
+      ss << vExtents.Minus << "," << vExtents.Plus << ">";
     }
   };
 
