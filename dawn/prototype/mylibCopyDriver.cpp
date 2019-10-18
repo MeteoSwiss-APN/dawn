@@ -1,9 +1,7 @@
 #include "mylib_interface.hpp"
-
 #include <fstream>
 #include <gridtools/clang_dsl.hpp>
 
-using namespace mylibInterface;
 #include "generated_copyEdgeToCell.hpp"
 
 int main() {
