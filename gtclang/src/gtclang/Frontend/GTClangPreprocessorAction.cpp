@@ -733,15 +733,15 @@ private:
           curClause = token_.getRawIdentifier().str();
 
           if(curClause == "no_codegen")
-            curAttribute.set(dawn::sir::Attr::AK_NoCodeGen);
+            curAttribute.set(dawn::sir::Attr::Kind::NoCodeGen);
           else if(curClause == "merge_stages")
-            curAttribute.set(dawn::sir::Attr::AK_MergeStages);
+            curAttribute.set(dawn::sir::Attr::Kind::MergeStages);
           else if(curClause == "merge_do_methods")
-            curAttribute.set(dawn::sir::Attr::AK_MergeDoMethods);
+            curAttribute.set(dawn::sir::Attr::Kind::MergeDoMethods);
           else if(curClause == "merge_temporaries")
-            curAttribute.set(dawn::sir::Attr::AK_MergeTemporaries);
+            curAttribute.set(dawn::sir::Attr::Kind::MergeTemporaries);
           else if(curClause == "use_kcaches")
-            curAttribute.set(dawn::sir::Attr::AK_UseKCaches);
+            curAttribute.set(dawn::sir::Attr::Kind::UseKCaches);
           else {
             // We don't know this pragma, issue a warning about unknown gtclang pragma
             Diagnostics::reportRaw(
