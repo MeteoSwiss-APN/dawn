@@ -28,43 +28,19 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
                     const int maxRedundantLines) {
 
   iir::Extents maxExtents{ast::cartesian};
+
   std::set<int> accessIDs;
   std::unordered_map<int, iir::Extents> specialCaches;
   for(const auto& cacheP : ms->getCaches()) {
     const int accessID = cacheP.first;
-    auto extent = ms->getField(accessID).getExtentsRB();
-    auto vExtents = extent.verticalExtent();
-    auto const& hExtents = iir::extent_cast<iir::CartesianExtent const&>(extent.horizontalExtent());
+    auto originalExtent = ms->getField(accessID).getExtentsRB();
+    iir::Extents limitedExtent = originalExtent.limit(-maxRedundantLines, maxRedundantLines);
+    maxExtents.merge(limitedExtent);
 
-    bool exceeds = false;
-
-    constexpr int numDimensions = 3;
-    std::array<int, numDimensions> extentsMinus(
-        {hExtents.iMinus(), hExtents.jMinus(), vExtents.minus()});
-    std::array<int, numDimensions> extentsPlus(
-        {hExtents.iPlus(), hExtents.jPlus(), vExtents.plus()});
-
-    for(int i = 0; i < numDimensions; ++i) {
-      if(extentsMinus[i] < -maxRedundantLines || extentsPlus[i] > maxRedundantLines) {
-        exceeds = true;
-      }
-    }
-
-    std::array<int, numDimensions> maxExtentsMinus({0, 0, 0});
-    std::array<int, numDimensions> maxExtentsPlus({0, 0, 0});
-
-    for(int i = 0; i < numDimensions; ++i) {
-      maxExtentsMinus[i] =
-          std::max(-maxRedundantLines, std::min(extentsMinus[i], maxExtentsMinus[i]));
-      maxExtentsPlus[i] = std::min(maxRedundantLines, std::max(extentsPlus[i], maxExtentsPlus[i]));
-    }
-
-    if(!exceeds) {
+    if(limitedExtent == originalExtent) {
       accessIDs.insert(accessID);
     } else {
-      specialCaches.emplace(accessID, iir::Extents(ast::cartesian, extentsMinus[0], extentsPlus[0],
-                                                   extentsMinus[1], extentsPlus[1], extentsMinus[2],
-                                                   extentsPlus[2]));
+      specialCaches.emplace(accessID, originalExtent);
     }
   }
   return CacheProperties{ms, std::move(accessIDs), maxExtents, std::move(specialCaches),

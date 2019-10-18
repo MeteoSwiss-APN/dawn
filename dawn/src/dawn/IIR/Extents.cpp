@@ -24,6 +24,9 @@ namespace iir {
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 
+Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
+    : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
+
 Extents::Extents(ast::cartesian_, const ast::Offsets& offset)
     : horizontalExtent_(ast::cartesian_{}) {
   auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
@@ -70,6 +73,9 @@ bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise()
 
 bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
+}
+Extents Extents::limit(int minus, int plus) const {
+  return Extents{horizontalExtent_.limit(minus, plus), verticalExtent_.limit(minus, plus)};
 }
 
 bool Extents::isPointwise() const {
