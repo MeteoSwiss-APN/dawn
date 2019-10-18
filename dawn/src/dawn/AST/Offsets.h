@@ -28,38 +28,39 @@ static constexpr cartesian_ cartesian;
 class HorizontalOffsetImpl {
 public:
   virtual ~HorizontalOffsetImpl() = default;
-  std::unique_ptr<HorizontalOffsetImpl> clone() const {
-    return std::unique_ptr<HorizontalOffsetImpl>(cloneImpl());
-  }
+  std::unique_ptr<HorizontalOffsetImpl> clone() const { return cloneImpl(); }
 
   bool operator==(HorizontalOffsetImpl const& other) const { return equalsImpl(other); }
 
-  HorizontalOffsetImpl& operator+=(HorizontalOffsetImpl const& other) { return addImpl(other); }
+  HorizontalOffsetImpl& operator+=(HorizontalOffsetImpl const& other) {
+    addImpl(other);
+    return *this;
+  }
 
   bool isZero() const { return isZeroImpl(); }
 
 protected:
-  virtual HorizontalOffsetImpl* cloneImpl() const = 0;
+  virtual std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const = 0;
   virtual bool equalsImpl(HorizontalOffsetImpl const&) const = 0;
-  virtual HorizontalOffsetImpl& addImpl(HorizontalOffsetImpl const&) = 0;
+  virtual void addImpl(HorizontalOffsetImpl const&) = 0;
   virtual bool isZeroImpl() const = 0;
 };
 
 class CartesianOffset : public HorizontalOffsetImpl {
 public:
-  CartesianOffset(int iOffset, int jOffset) : horizontalOffset_({iOffset, jOffset}) {}
-  CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
+  CartesianOffset(int iOffset, int jOffset) : horizontalOffset_{iOffset, jOffset} {}
+  explicit CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
   CartesianOffset() = default;
 
   int offsetI() const { return horizontalOffset_[0]; }
   int offsetJ() const { return horizontalOffset_[1]; }
 
 protected:
-  HorizontalOffsetImpl* cloneImpl() const override {
-    return new CartesianOffset{horizontalOffset_};
+  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override {
+    return std::make_unique<CartesianOffset>(horizontalOffset_);
   }
   bool equalsImpl(HorizontalOffsetImpl const& other) const override;
-  CartesianOffset& addImpl(HorizontalOffsetImpl const& other) override;
+  void addImpl(HorizontalOffsetImpl const& other) override;
   bool isZeroImpl() const override {
     return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
   }
@@ -70,10 +71,10 @@ private:
 
 class HorizontalOffset {
 public:
-  HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
+  explicit HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
   HorizontalOffset(cartesian_, int iOffset, int jOffset)
       : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
-  HorizontalOffset(HorizontalOffset const& other) : impl_(other.impl_->clone()) {}
+  HorizontalOffset(HorizontalOffset const& other) { *this = other; }
   HorizontalOffset& operator=(HorizontalOffset const& other) {
     impl_ = other.impl_->clone();
     return *this;
@@ -108,7 +109,7 @@ public:
       : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
       : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
-  Offsets(cartesian_) : horizontalOffset_(cartesian) {}
+  explicit Offsets(cartesian_) : horizontalOffset_(cartesian) {}
 
   int verticalOffset() const { return verticalOffset_; }
   HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
@@ -163,4 +164,3 @@ std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
 } // namespace dawn::ast
 #endif
-

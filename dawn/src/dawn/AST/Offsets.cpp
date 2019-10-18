@@ -33,11 +33,10 @@ bool CartesianOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
   return so_other.horizontalOffset_ == horizontalOffset_;
 }
 
-CartesianOffset& CartesianOffset::addImpl(HorizontalOffsetImpl const& other) {
+void CartesianOffset::addImpl(HorizontalOffsetImpl const& other) {
   auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
   horizontalOffset_[0] += so_other.horizontalOffset_[0];
   horizontalOffset_[1] += so_other.horizontalOffset_[1];
-  return *this;
 }
 
 } // namespace dawn::ast

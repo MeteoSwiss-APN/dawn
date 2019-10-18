@@ -48,13 +48,13 @@ void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
 
     const int accessID = cache.getCachedFieldAccessID();
     const auto& maxExtents = cacheProperties_.getCacheExtent(accessID);
-    const auto& h_maxExtents =
+    const auto& hMaxExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     kernel.addStatement(
         "__shared__ gridtools::clang::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
-        std::to_string(blockSize_[0] + (h_maxExtents.iPlus() - h_maxExtents.iMinus())) + "*" +
-        std::to_string(blockSize_[1] + (h_maxExtents.jPlus() - h_maxExtents.jMinus())) + "]");
+        std::to_string(blockSize_[0] + (hMaxExtents.iPlus() - hMaxExtents.iMinus())) + "*" +
+        std::to_string(blockSize_[1] + (hMaxExtents.jPlus() - hMaxExtents.jMinus())) + "]");
   }
 }
 
@@ -71,7 +71,7 @@ void MSCodeGen::generateKCacheDecl(MemberFunction& kernel) const {
     auto vertExtent = ms_->getKCacheVertExtent(accessID);
 
     kernel.addStatement("gridtools::clang::float_type " + cacheProperties_.getCacheName(accessID) +
-                        "[" + std::to_string(-vertExtent.Minus + vertExtent.Plus + 1) + "]");
+                        "[" + std::to_string(-vertExtent.minus() + vertExtent.plus() + 1) + "]");
   }
 }
 
@@ -107,10 +107,10 @@ void MSCodeGen::generateTmpIndexInit(MemberFunction& kernel) const {
     return;
 
   auto maxExtentTmps = CodeGeneratorHelper::computeTempMaxWriteExtent(*(ms_->getParent()));
-  auto h_maxExtentTmps =
+  auto hMaxExtentTmps =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtentTmps.horizontalExtent());
-  kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-h_maxExtentTmps.iMinus()) +
-                      ")*1 + (jblock+" + std::to_string(-h_maxExtentTmps.jMinus()) +
+  kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-hMaxExtentTmps.iMinus()) +
+                      ")*1 + (jblock+" + std::to_string(-hMaxExtentTmps.jMinus()) +
                       ")*jstride_tmp");
 }
 
@@ -206,13 +206,13 @@ void MSCodeGen::generatePreFillKCaches(
     if(!extents) {
       continue;
     }
-    auto intervalVertExtent = (*extents).verticalExtent();
+    auto intervalVertExtent = extents->verticalExtent();
 
     DAWN_ASSERT(cache.getInterval());
 
     // if only one level is accessed (the head of the cache) this level will be provided by the fill
     // operation
-    if(intervalVertExtent.Minus == intervalVertExtent.Plus)
+    if(intervalVertExtent.minus() == intervalVertExtent.plus())
       continue;
 
     // check the interval of levels accessed beyond the iteration interval. This will mark all the
@@ -223,11 +223,11 @@ void MSCodeGen::generatePreFillKCaches(
             ? interval.crop(iir::Interval::Bound::upper,
                             // the last level of Minus if not required since will be filled by the
                             // head fill method
-                            {intervalVertExtent.Minus + 1, intervalVertExtent.Plus})
+                            {intervalVertExtent.minus() + 1, intervalVertExtent.plus()})
             : interval.crop(iir::Interval::Bound::lower,
                             // the last level of Plus if not required since will be filled by the
                             // head fill method
-                            {intervalVertExtent.Minus, intervalVertExtent.Plus - 1});
+                            {intervalVertExtent.minus(), intervalVertExtent.plus() - 1});
 
     /// we check if the levels beyond the iteration interval are filled already by the processing of
     /// previous intervals
@@ -273,13 +273,13 @@ void MSCodeGen::generatePreFillKCaches(
             if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
               // the last level is skipped since it will be filled in a normal kcache fill
               // method
-              for(int klev = kcacheProp.intervalVertExtent_.Minus;
-                  klev <= kcacheProp.intervalVertExtent_.Plus; ++klev) {
+              for(int klev = kcacheProp.intervalVertExtent_.minus();
+                  klev <= kcacheProp.intervalVertExtent_.plus(); ++klev) {
                 generateKCacheFillStatement(cudaKernel, fieldIndexMap, kcacheProp, klev);
               }
             } else {
-              for(int klev = kcacheProp.intervalVertExtent_.Plus;
-                  klev >= kcacheProp.intervalVertExtent_.Minus; --klev) {
+              for(int klev = kcacheProp.intervalVertExtent_.plus();
+                  klev >= kcacheProp.intervalVertExtent_.minus(); --klev) {
                 generateKCacheFillStatement(cudaKernel, fieldIndexMap, kcacheProp, klev);
               }
             }
@@ -291,8 +291,8 @@ void MSCodeGen::generatePreFillKCaches(
 std::string MSCodeGen::makeLoopImpl(const iir::Extent extent, const std::string& dim,
                                     const std::string& lower, const std::string& upper,
                                     const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
-               " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
+  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.minus()) + "; " +
+               dim + " " + comparison + " " + upper + "+" + std::to_string(extent.plus()) + "; " +
                increment + dim + ")")
       .str();
 }
@@ -317,7 +317,7 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
       continue;
     }
 
-    auto intervalVertExtent = (*extents).verticalExtent();
+    auto intervalVertExtent = extents->verticalExtent();
 
     iir::Interval::Bound intervalBound = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                                              ? iir::Interval::Bound::lower
@@ -352,8 +352,8 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
           for(const auto& kcacheProp : kcachesProp) {
 
             int offset = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                             ? kcacheProp.intervalVertExtent_.Minus
-                             : kcacheProp.intervalVertExtent_.Plus;
+                             ? kcacheProp.intervalVertExtent_.minus()
+                             : kcacheProp.intervalVertExtent_.plus();
             std::stringstream ss;
             CodeGeneratorHelper::generateFieldAccessDeref(
                 ss, ms_, stencilInstantiation_->getMetaData(), kcacheProp.accessID_, fieldIndexMap,
@@ -509,8 +509,8 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
   const auto& cacheInterval = *(cache.getInterval());
 
   int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                             ? kcacheProp.intervalVertExtent_.Plus
-                             : kcacheProp.intervalVertExtent_.Minus;
+                             ? kcacheProp.intervalVertExtent_.plus()
+                             : kcacheProp.intervalVertExtent_.minus();
 
   // we can not flush the cache beyond the interval where the field is accessed, since that would
   // write un-initialized data back into main memory of the field. If the distance of the
@@ -561,8 +561,8 @@ void MSCodeGen::generateFlushKCaches(MemberFunction& cudaKernel, const iir::Inte
           for(const auto& kcacheProp : kcachesProp) {
             // we flush the last level of the cache, that is determined by its size
             int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                                       ? kcacheProp.intervalVertExtent_.Plus
-                                       : kcacheProp.intervalVertExtent_.Minus;
+                                       ? kcacheProp.intervalVertExtent_.plus()
+                                       : kcacheProp.intervalVertExtent_.minus();
 
             generateKCacheFlushBlockStatement(cudaKernel, interval, fieldIndexMap, kcacheProp,
                                               kcacheTailExtent, "k");
@@ -588,9 +588,9 @@ void MSCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
     auto vertExtent = ms_->getKCacheVertExtent(accessID);
     auto cacheName = cacheProperties_.getCacheName(accessID);
 
-    for(int i = 0; i < -vertExtent.Minus + vertExtent.Plus; ++i) {
+    for(int i = 0; i < -vertExtent.minus() + vertExtent.plus(); ++i) {
       if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
-        int maxCacheIdx = -vertExtent.Minus + vertExtent.Plus;
+        int maxCacheIdx = -vertExtent.minus() + vertExtent.plus();
         cudaKernel.addStatement(cacheName + "[" + std::to_string(maxCacheIdx - i) + "] = " +
                                 cacheName + "[" + std::to_string(maxCacheIdx - i - 1) + "]");
       } else {
@@ -631,8 +631,8 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
             if((policy == iir::Cache::CacheIOPolicy::flush) ||
                (policy == iir::Cache::CacheIOPolicy::fill_and_flush)) {
               kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                                     ? kcacheProp.intervalVertExtent_.Plus
-                                     : kcacheProp.intervalVertExtent_.Minus;
+                                     ? kcacheProp.intervalVertExtent_.plus()
+                                     : kcacheProp.intervalVertExtent_.minus();
             } else if(policy == iir::Cache::CacheIOPolicy::epflush) {
               DAWN_ASSERT(cache.getWindow());
               auto intervalToFlush =
@@ -683,7 +683,7 @@ void MSCodeGen::generateCudaKernelCode() {
     maxExtents.merge(stage->getExtents());
   }
 
-  auto h_maxExtents =
+  auto hMaxExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   // fields used in the stencil
@@ -707,8 +707,8 @@ void MSCodeGen::generateCudaKernelCode() {
   fnDecl = fnDecl + "__global__ void";
 
   int maxThreadsPerBlock =
-      blockSize_[0] * (blockSize_[1] + h_maxExtents.jPlus() - h_maxExtents.jMinus() +
-                       (h_maxExtents.iMinus() < 0 ? 1 : 0) + (h_maxExtents.iPlus() > 0 ? 1 : 0));
+      blockSize_[0] * (blockSize_[1] + hMaxExtents.jPlus() - hMaxExtents.jMinus() +
+                       (hMaxExtents.iMinus() < 0 ? 1 : 0) + (hMaxExtents.iPlus() > 0 ? 1 : 0));
 
   int nSM = options_.nsms;
   int maxBlocksPerSM = options_.maxBlocksPerSM;
@@ -816,20 +816,20 @@ void MSCodeGen::generateCudaKernelCode() {
   cudaKernel.addComment("Regions (a,h,e) and (c,i,g) are executed by two specialized warp");
 
   // jboundary_limit determines the number of warps required to execute (b,d,f)");
-  int jboundary_limit = (int)nty + h_maxExtents.jPlus() - h_maxExtents.jMinus();
-  int iminus_limit = jboundary_limit + (h_maxExtents.iMinus() < 0 ? 1 : 0);
-  int iplus_limit = iminus_limit + (h_maxExtents.iPlus() > 0 ? 1 : 0);
+  int jboundary_limit = (int)nty + hMaxExtents.jPlus() - hMaxExtents.jMinus();
+  int iminus_limit = jboundary_limit + (hMaxExtents.iMinus() < 0 ? 1 : 0);
+  int iplus_limit = iminus_limit + (hMaxExtents.iPlus() > 0 ? 1 : 0);
 
-  cudaKernel.addStatement("int iblock = " + std::to_string(h_maxExtents.iMinus()) + " - 1");
-  cudaKernel.addStatement("int jblock = " + std::to_string(h_maxExtents.jMinus()) + " - 1");
+  cudaKernel.addStatement("int iblock = " + std::to_string(hMaxExtents.iMinus()) + " - 1");
+  cudaKernel.addStatement("int jblock = " + std::to_string(hMaxExtents.jMinus()) + " - 1");
   cudaKernel.addBlockStatement("if(threadIdx.y < +" + std::to_string(jboundary_limit) + ")", [&]() {
     cudaKernel.addStatement("iblock = threadIdx.x");
-    cudaKernel.addStatement("jblock = (int)threadIdx.y + " + std::to_string(h_maxExtents.jMinus()));
+    cudaKernel.addStatement("jblock = (int)threadIdx.y + " + std::to_string(hMaxExtents.jMinus()));
   });
-  if(h_maxExtents.iMinus() < 0) {
+  if(hMaxExtents.iMinus() < 0) {
     cudaKernel.addBlockStatement(
         "else if(threadIdx.y < +" + std::to_string(iminus_limit) + ")", [&]() {
-          int paddedBoundary_ = paddedBoundary(h_maxExtents.iMinus());
+          int paddedBoundary_ = paddedBoundary(hMaxExtents.iMinus());
 
           // we dedicate one warp to execute regions (a,h,e), so here we make sure we have enough
           //  threads
@@ -839,13 +839,13 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addStatement("iblock = -" + std::to_string(paddedBoundary_) +
                                   " + (int)threadIdx.x % " + std::to_string(paddedBoundary_));
           cudaKernel.addStatement("jblock = (int)threadIdx.x / " + std::to_string(paddedBoundary_) +
-                                  "+" + std::to_string(h_maxExtents.jMinus()));
+                                  "+" + std::to_string(hMaxExtents.jMinus()));
         });
   }
-  if(h_maxExtents.iPlus() > 0) {
+  if(hMaxExtents.iPlus() > 0) {
     cudaKernel.addBlockStatement(
         "else if(threadIdx.y < " + std::to_string(iplus_limit) + ")", [&]() {
-          int paddedBoundary_ = paddedBoundary(h_maxExtents.iPlus());
+          int paddedBoundary_ = paddedBoundary(hMaxExtents.iPlus());
           // we dedicate one warp to execute regions (c,i,g), so here we make sure we have enough
           //    threads
           // we dedicate one warp to execute regions (a,h,e), so here we make sure we have enough
@@ -856,7 +856,7 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addStatement("iblock = threadIdx.x % " + std::to_string(paddedBoundary_) +
                                   " + " + std::to_string(ntx));
           cudaKernel.addStatement("jblock = (int)threadIdx.x / " + std::to_string(paddedBoundary_) +
-                                  "+" + std::to_string(h_maxExtents.jMinus()));
+                                  "+" + std::to_string(hMaxExtents.jMinus()));
         });
   }
 
@@ -1007,7 +1007,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
       for(const auto& stagePtr : ms_->getChildren()) {
         const iir::Stage& stage = *stagePtr;
-        const auto& h_extent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+        const auto& hExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
             stage.getExtents().horizontalExtent());
         iir::MultiInterval enclosingInterval;
 
@@ -1024,10 +1024,10 @@ void MSCodeGen::generateCudaKernelCode() {
         }
 
         cudaKernel.addBlockStatement(
-            "if(iblock >= " + std::to_string(h_extent.iMinus()) +
-                " && iblock <= block_size_i -1 + " + std::to_string(h_extent.iPlus()) +
-                " && jblock >= " + std::to_string(h_extent.jMinus()) +
-                " && jblock <= block_size_j -1 + " + std::to_string(h_extent.jPlus()) + ")",
+            "if(iblock >= " + std::to_string(hExtent.iMinus()) +
+                " && iblock <= block_size_i -1 + " + std::to_string(hExtent.iPlus()) +
+                " && jblock >= " + std::to_string(hExtent.jMinus()) +
+                " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus()) + ")",
             [&]() {
               // Generate Do-Method
               for(const auto& doMethodPtr : stage.getChildren()) {

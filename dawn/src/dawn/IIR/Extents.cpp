@@ -70,10 +70,7 @@ void Extents::expand(const Extents& other) {
   verticalExtent_.expand(other.verticalExtent_);
 }
 
-void Extents::resetVerticalExtent() {
-  verticalExtent_.Minus = 0;
-  verticalExtent_.Plus = 0;
-}
+void Extents::resetVerticalExtent() { verticalExtent_ = Extent(0, 0); }
 
 void Extents::merge(const ast::Offsets& offset) {
   horizontalExtent_.merge(offset.horizontalOffset());
@@ -92,8 +89,8 @@ void Extents::add(const Extents& other) {
 }
 
 void Extents::addVerticalCenter() {
-  verticalExtent_.Minus = std::min(verticalExtent_.Minus, 0);
-  verticalExtent_.Plus = std::max(verticalExtent_.Plus, 0);
+  verticalExtent_ =
+      Extent(std::min(verticalExtent_.minus(), 0), std::max(verticalExtent_.plus(), 0));
 }
 
 bool Extents::isHorizontalPointwise() const { return horizontalExtent_.isPointwise(); }
@@ -124,17 +121,17 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
 
   case LoopOrderKind::LK_Forward: {
     // Accesses k+1 are against the loop order
-    if(verticalExtent.Plus > 0)
+    if(verticalExtent.plus() > 0)
       access.CounterLoopOrder = true;
-    if(verticalExtent.Minus < 0)
+    if(verticalExtent.minus() < 0)
       access.LoopOrder = true;
     break;
   }
   case LoopOrderKind::LK_Backward:
     // Accesses k-1 are against the loop order
-    if(verticalExtent.Minus < 0)
+    if(verticalExtent.minus() < 0)
       access.CounterLoopOrder = true;
-    if(verticalExtent.Plus > 0)
+    if(verticalExtent.plus() > 0)
       access.LoopOrder = true;
     break;
   }
@@ -148,7 +145,7 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
   const Extent& verticalExtent = verticalExtent_;
 
   if(loopOrder == LoopOrderKind::LK_Parallel) {
-    if(includeCenter && verticalExtent.Plus >= 0 && verticalExtent.Minus <= 0)
+    if(includeCenter && verticalExtent.plus() >= 0 && verticalExtent.minus() <= 0)
       return std::make_optional(Extent{0, 0});
     return std::optional<Extent>();
   }
@@ -158,24 +155,24 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
       loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
-    if(verticalExtent.Plus < (includeCenter ? 0 : 1))
+    if(verticalExtent.plus() < (includeCenter ? 0 : 1))
       return std::optional<Extent>();
 
     // Accesses k+1 are against the loop order
     return std::make_optional(
-        Extent{std::max((includeCenter ? 0 : 1), verticalExtent.Minus), verticalExtent.Plus});
+        Extent{std::max((includeCenter ? 0 : 1), verticalExtent.minus()), verticalExtent.plus()});
   }
   // retrieving the tail (Minus) of the extent
   if((loopOrder == LoopOrderKind::LK_Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Forward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
-    if(verticalExtent.Minus > (includeCenter ? 0 : -1))
+    if(verticalExtent.minus() > (includeCenter ? 0 : -1))
       return std::optional<Extent>();
 
     // Accesses k-1 are against the loop order
     return std::make_optional(
-        Extent{verticalExtent.Minus, std::min((includeCenter ? 0 : -1), verticalExtent.Plus)});
+        Extent{verticalExtent.minus(), std::min((includeCenter ? 0 : -1), verticalExtent.plus())});
   }
   dawn_unreachable("Non supported loop order");
 }
@@ -193,13 +190,12 @@ std::string Extents::toString() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
-  auto h_extents = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
-  auto v_extents = extents.verticalExtent_;
+  auto hExtents = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
+  auto vExtents = extents.verticalExtent_;
 
-  os << "[(" + std::to_string(h_extents.iMinus()) + ", " + std::to_string(h_extents.iPlus()) +
-            "), ";
-  os << "(" + std::to_string(h_extents.jMinus()) + ", " + std::to_string(h_extents.jPlus()) + "), ";
-  os << "(" + std::to_string(v_extents.minus()) + ", " + std::to_string(v_extents.plus()) + ")]";
+  os << "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) + "), ";
+  os << "(" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) + "), ";
+  os << "(" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
 
   return os;
 }
