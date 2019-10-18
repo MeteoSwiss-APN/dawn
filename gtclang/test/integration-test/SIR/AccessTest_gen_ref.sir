@@ -325,7 +325,8 @@
       1,
       1,
       1
-     ]
+     ],
+     "location_type": "Cell"
     },
     {
      "name": "b",
@@ -338,7 +339,8 @@
       1,
       1,
       1
-     ]
+     ],
+     "location_type": "Cell"
     }
    ]
   }

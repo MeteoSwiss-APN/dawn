@@ -15,7 +15,9 @@
 #ifndef DAWN_AST_ASTEXPR_H
 #define DAWN_AST_ASTEXPR_H
 
-#include "dawn/AST/ASTVisitorHelpers.h"
+#include "ASTVisitorHelpers.h"
+#include "Offsets.h"
+
 #include "dawn/Support/Array.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/SourceLocation.h"
@@ -473,7 +475,7 @@ class FieldAccessExpr : public Expr {
   // The offset known so far. If we have directional or offset arguments, we have to perform a
   // lazy evaluation to compute the real offset once we know the mapping of the directions (and
   // offsets) to the actual arguments of the stencil function.
-  Array3i offset_;
+  Offsets offset_;
 
   // Mapping of the directional and offset arguments of the stencil function.
   // The `argumentMap` stores an index to the argument list of the stencil function with -1
@@ -507,7 +509,7 @@ class FieldAccessExpr : public Expr {
 public:
   /// @name Constructor & Destructor
   /// @{
-  FieldAccessExpr(const std::string& name, Array3i offset = Array3i{{0, 0, 0}},
+  FieldAccessExpr(const std::string& name, const Offsets& offset = Offsets(cartesian),
                   Array3i argumentMap = Array3i{{-1, -1, -1}},
                   Array3i argumentOffset = Array3i{{0, 0, 0}}, bool negateOffset = false,
                   SourceLocation loc = SourceLocation());
@@ -524,7 +526,7 @@ public:
   /// @brief Set the `offset` and reset the argument and argument-offset maps
   ///
   /// This function is used during the inlining when we now all the offsets.
-  void setPureOffset(const Array3i& offset);
+  void setPureOffset(const Offsets& offset);
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
   /// AccessExprData)
@@ -541,8 +543,7 @@ public:
 
   void setName(std::string name) { name_ = name; }
 
-  const Array3i& getOffset() const { return offset_; }
-  Array3i& getOffset() { return offset_; }
+  const Offsets& getOffset() const { return offset_; }
 
   const Array3i& getArgumentMap() const { return argumentMap_; }
   Array3i& getArgumentMap() { return argumentMap_; }

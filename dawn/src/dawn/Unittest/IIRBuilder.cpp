@@ -169,16 +169,16 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
-  return {id, name, false, ast::Expr::LocationType::Cells};
+  return {id, name};
 }
 IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
-                                       asArray(fieldType::ijk));
+                                       asArray(fieldType::ijk), location);
   int accessID = si_->getMetaData().getAccessIDFromName(name);
   si_->getMetaData().addAccessIDLocationPair(accessID, location);
 
-  return {id, name, true, location};
+  return {id, name};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
   DAWN_ASSERT(si_);
@@ -187,9 +187,10 @@ IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID
   return {id, name, iirStmt};
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, accessType access,
-                                          Array3i extent) {
+                                          Array3i offset) {
   DAWN_ASSERT(si_);
-  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, extent);
+  auto expr =
+      std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::cartesian, offset});
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);

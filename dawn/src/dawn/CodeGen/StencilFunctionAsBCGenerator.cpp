@@ -15,16 +15,6 @@ std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Exp
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto printOffset = [](const Array3i& argumentoffsets) {
-    std::string retval = "";
-    std::array<std::string, 3> dims{"i", "j", "k"};
-    for(int i = 0; i < 3; ++i) {
-      retval +=
-          dims[i] + (argumentoffsets[i] != 0 ? " + " + std::to_string(argumentoffsets[i]) + ", "
-                                             : (i < 2 ? ", " : ""));
-    }
-    return retval;
-  };
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {
     size_t pos =
@@ -38,7 +28,9 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
     return pos;
   };
   ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
-                      printOffset(expr->getOffset()));
+                      toString(expr->getOffset(), ", ", [&](std::string const& name, int offset) {
+                        return name + "+" + std::to_string(offset);
+                      }));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {

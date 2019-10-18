@@ -37,7 +37,6 @@ namespace cxxnaive {
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
-  RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
   std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;
@@ -51,21 +50,18 @@ protected:
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
-  template <long unsigned N>
-  std::array<std::string, N> ijkfyOffset(const std::array<int, N>& offsets,
-                                         std::string accessName) {
-    int n = -1;
-    std::array<std::string, N> res;
-    std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
-      ++n;
-      std::array<std::string, 3> indices{"i+", "j+", "k+"};
-
-      return ((n < 4) ? indices[n] : "") + std::to_string(off) +
-             ((stencilContext_ == StencilContext::SC_StencilFunction)
-                  ? "+" + accessName + "_offsets[" + std::to_string(n) + "]"
-                  : "");
-    });
-    return res;
+  std::string ijkfyOffset(const ast::Offsets& offsets, std::string accessName) {
+    int n = 0;
+    return "(" +
+           toString(offsets, ", ",
+                    [&](std::string const& name, int offset) {
+                      std::string ret = name + "+" + std::to_string(offset);
+                      if(stencilContext_ == StencilContext::SC_StencilFunction)
+                        ret += "+" + accessName + "_offsets[" + std::to_string(n) + "]";
+                      ++n;
+                      return ret;
+                    }) +
+           ")";
   }
 
 public:

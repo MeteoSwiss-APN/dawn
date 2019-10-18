@@ -113,6 +113,21 @@ void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* fiel
     fieldProto->add_field_dimensions(initializedDimension);
   }
   setLocation(fieldProto->mutable_loc(), field->Loc);
+  proto::statements::Field_LocationType protoLocationType;
+  switch(field->locationType) {
+  case dawn::ast::Expr::LocationType::Cells:
+    protoLocationType = proto::statements::Field_LocationType_Cell;
+    break;
+  case dawn::ast::Expr::LocationType::Edges:
+    protoLocationType = proto::statements::Field_LocationType_Edge;
+    break;
+  case dawn::ast::Expr::LocationType::Vertices:
+    protoLocationType = proto::statements::Field_LocationType_Vertex;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  fieldProto->set_location_type(protoLocationType);
 }
 
 ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto,
@@ -409,8 +424,12 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   protoExpr->set_name(expr->getName());
 
-  for(int offset : expr->getOffset())
-    protoExpr->add_offset(offset);
+  auto const& hoffset =
+      ast::offset_cast<CartesianOffset const&>(expr->getOffset().horizontalOffset());
+  auto const& voffset = expr->getOffset().verticalOffset();
+  protoExpr->add_offset(hoffset.offsetI());
+  protoExpr->add_offset(hoffset.offsetJ());
+  protoExpr->add_offset(voffset);
 
   for(int argOffset : expr->getArgumentOffset())
     protoExpr->add_argument_offset(argOffset);
@@ -480,6 +499,19 @@ std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto
 
     std::copy(fieldProto.field_dimensions().begin(), fieldProto.field_dimensions().end(),
               field->fieldDimensions.begin());
+  }
+  switch(fieldProto.location_type()) {
+  case proto::statements::Field_LocationType_Cell:
+    field->locationType = ast::Expr::LocationType::Cells;
+    break;
+  case proto::statements::Field_LocationType_Edge:
+    field->locationType = ast::Expr::LocationType::Edges;
+    break;
+  case proto::statements::Field_LocationType_Vertex:
+    field->locationType = ast::Expr::LocationType::Vertices;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
   }
   return field;
 }
@@ -659,8 +691,9 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
                 argumentMap.begin());
     }
 
-    auto expr = std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                                  negateOffset, makeLocation(exprProto));
+    auto expr =
+        std::make_shared<FieldAccessExpr>(name, ast::Offsets{ast::cartesian, offset}, argumentMap,
+                                          argumentOffset, negateOffset, makeLocation(exprProto));
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());

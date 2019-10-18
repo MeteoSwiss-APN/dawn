@@ -1,21 +1,21 @@
 {
  "metadata": {
   "accessIDToName": {
-   "9": "in_field",
-   "10": "out_field"
+   "11": "in_field",
+   "12": "out_field"
   },
   "accessIDToType": {
-   "9": 6,
-   "10": 6
+   "11": 6,
+   "12": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   9,
-   10
+   11,
+   12
   ],
   "APIFieldIDs": [
-   9,
-   10
+   11,
+   12
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -24,33 +24,33 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
-   "9": {
+   "11": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    },
-   "10": {
+   "12": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    }
   },
   "idToStencilCall": {
-   "0": {
+   "1": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_0",
+      "callee": "__code_gen_1",
       "arguments": []
      },
      "loc": {
       "Line": -1,
       "Column": -1
      },
-     "ID": 15
+     "ID": 17
     }
    }
   },
@@ -102,9 +102,9 @@
                    "Column": -1
                   },
                   "data": {
-                   "accessID": 10
+                   "accessID": 12
                   },
-                  "ID": 6
+                  "ID": 8
                  }
                 },
                 "op": "=",
@@ -132,28 +132,28 @@
                    "Column": -1
                   },
                   "data": {
-                   "accessID": 9
+                   "accessID": 11
                   },
-                  "ID": 8
+                  "ID": 10
                  }
                 },
                 "loc": {
                  "Line": -1,
                  "Column": -1
                 },
-                "ID": 12
+                "ID": 14
                }
               },
               "loc": {
                "Line": -1,
                "Column": -1
               },
-              "ID": 14
+              "ID": 16
              }
             },
             "accesses": {
              "writeAccess": {
-              "10": {
+              "12": {
                "extents": [
                 {
                  "minus": 0,
@@ -171,7 +171,7 @@
               }
              },
              "readAccess": {
-              "9": {
+              "11": {
                "extents": [
                 {
                  "minus": 0,
@@ -191,7 +191,7 @@
             }
            }
           ],
-          "doMethodID": 4,
+          "doMethodID": 6,
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -200,15 +200,15 @@
           }
          }
         ],
-        "stageID": 3
+        "stageID": 4
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 2,
+      "multiStageID": 3,
       "Caches": {}
      }
     ],
-    "stencilID": 0,
+    "stencilID": 1,
     "attr": {
      "attributes": []
     }
@@ -222,14 +222,14 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_0",
+      "callee": "__code_gen_1",
       "arguments": []
      },
      "loc": {
       "Line": -1,
       "Column": -1
      },
-     "ID": 15
+     "ID": 17
     }
    }
   ],

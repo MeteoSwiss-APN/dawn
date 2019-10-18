@@ -371,8 +371,9 @@ public:
   /// @brief Assemble FieldAccessExpr
   std::shared_ptr<dawn::sir::FieldAccessExpr>
   makeFieldAccessExpr(const dawn::SourceLocation& loc) const {
-    return std::make_shared<dawn::sir::FieldAccessExpr>(name_, offset_, argumentMap_,
-                                                        argumentOffset_, negateOffset_, loc);
+    return std::make_shared<dawn::sir::FieldAccessExpr>(
+        name_, dawn::ast::Offsets{dawn::ast::cartesian, offset_}, argumentMap_, argumentOffset_,
+        negateOffset_, loc);
   }
 
   void resolve(clang::MemberExpr* expr) {

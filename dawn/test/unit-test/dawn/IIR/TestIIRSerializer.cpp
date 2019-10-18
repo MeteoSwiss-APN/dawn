@@ -289,7 +289,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
   iir::Accesses stmtAccesses;
-  iir::Extents extents({0, 0, 0});
+  iir::Extents extents(ast::Offsets{ast::cartesian});
   stmtAccesses.addReadExtent(42, extents);
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
 

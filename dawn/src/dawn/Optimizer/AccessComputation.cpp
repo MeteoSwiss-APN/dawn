@@ -76,8 +76,8 @@ public:
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
   std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
-    return (stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
-                        : metadata_.getStencilFunctionInstantiation(expr));
+    return stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
+                       : metadata_.getStencilFunctionInstantiation(expr);
   }
 
   /// @brief Add a new access to the caller and callee and register it in the caller and callee
@@ -118,8 +118,8 @@ public:
   /// @{
   void mergeWriteOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     auto getOffset = [&](bool computeInitialOffset) {
-      return (stencilFun_ ? stencilFun_->evalOffsetOfFieldAccessExpr(field, computeInitialOffset)
-                          : field->getOffset());
+      return stencilFun_ ? stencilFun_->evalOffsetOfFieldAccessExpr(field, computeInitialOffset)
+                         : field->getOffset();
     };
 
     for(auto& callerAccesses : callerAccessesList_)
@@ -131,18 +131,18 @@ public:
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarDeclStmt>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
   }
 
   void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
@@ -172,18 +172,18 @@ public:
 
   void mergeReadOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::LiteralAccessExpr>& lit) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(iir::getAccessID(lit), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessID(lit), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(iir::getAccessID(lit), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessID(lit), ast::Offsets{ast::cartesian});
   }
 
   void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
