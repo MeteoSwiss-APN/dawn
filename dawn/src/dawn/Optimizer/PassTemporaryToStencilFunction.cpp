@@ -583,8 +583,8 @@ bool PassTemporaryToStencilFunction::run(
 
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
-          for(auto stmtIt = (*doMethodIt)->childrenRBegin();
-              stmtIt != (*doMethodIt)->childrenREnd(); stmtIt++) {
+          for(auto stmtIt = (*doMethodIt)->getAST().getStatements().rbegin();
+              stmtIt != (*doMethodIt)->getAST().getStatements().rend(); stmtIt++) {
 
             (*stmtIt)->acceptAndReplace(localVariablePromotion);
           }

@@ -138,17 +138,41 @@ public:
   std::vector<std::shared_ptr<iir::Stmt>>& getChildren() { return ast_.getStatements(); }
   // END_TODO
 
-  //  auto childrenBegin() { return ast_.getStatements().begin(); }
-  //  auto childrenEnd() { return ast_.getStatements().end(); }
+  auto childrenBegin() {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().begin();
+  }
+  auto childrenEnd() {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().end();
+  }
 
-  inline auto childrenRBegin() { return ast_.getStatements().rbegin(); }
-  inline auto childrenREnd() { return ast_.getStatements().rend(); }
+  inline auto childrenRBegin() {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().rbegin();
+  }
+  inline auto childrenREnd() {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().rend();
+  }
 
-  //  inline auto childrenBegin() const { return ast_.getStatements().begin(); }
-  //  inline auto childrenEnd() const { return ast_.getStatements().end(); }
+  inline auto childrenBegin() const {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().begin();
+  }
+  inline auto childrenEnd() const {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().end();
+  }
 
-  inline auto childrenRBegin() const { return ast_.getStatements().rbegin(); }
-  inline auto childrenREnd() const { return ast_.getStatements().rend(); }
+  inline auto childrenRBegin() const {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().rbegin();
+  }
+  inline auto childrenREnd() const {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().rend();
+  }
 
   inline auto& getChild(unsigned long pos) { return ast_.getStatements()[pos]; }
 
