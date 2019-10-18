@@ -480,7 +480,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
     DAWN_ASSERT(msNonTempFields.size() > 0);
 
-    iir::Extents maxExtents(ast::cartesian, 0, 0, 0, 0, 0, 0);
+    iir::Extents maxExtents{ast::cartesian};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
       maxExtents.merge(stage->getExtents());
     }

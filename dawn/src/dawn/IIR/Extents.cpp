@@ -22,6 +22,8 @@
 namespace dawn {
 namespace iir {
 
+Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
+
 Extents::Extents(ast::cartesian_, const ast::Offsets& offset)
     : horizontalExtent_(ast::cartesian_{}) {
   auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
@@ -40,25 +42,6 @@ Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2
 }
 
 Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian_{}) {}
-
-Extents::Extents(const Extents& other)
-    : verticalExtent_(other.verticalExtent()), horizontalExtent_(other.horizontalExtent()) {}
-
-Extents::Extents(Extents&& other)
-    : verticalExtent_(other.verticalExtent()), horizontalExtent_(other.horizontalExtent()) {}
-
-Extents& Extents::operator=(const Extents& other) {
-  verticalExtent_ = other.verticalExtent();
-  horizontalExtent_ = other.horizontalExtent();
-  return *this;
-}
-
-Extents& Extents::operator=(Extents&& other) {
-  // TODO is this right?
-  verticalExtent_ = other.verticalExtent();
-  horizontalExtent_ = other.horizontalExtent();
-  return *this;
-}
 
 void Extents::merge(const Extents& other) {
   horizontalExtent_.merge(other.horizontalExtent_);
@@ -84,7 +67,7 @@ Extents Extents::add(const Extents& lhs, const Extents& rhs) {
 }
 
 void Extents::add(const Extents& other) {
-  verticalExtent_.add(other.verticalExtent_);
+  verticalExtent_ += other.verticalExtent_;
   horizontalExtent_.add(other.horizontalExtent_);
 }
 

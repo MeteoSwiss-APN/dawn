@@ -104,7 +104,7 @@ iir::Extents CodeGeneratorHelper::computeTempMaxWriteExtent(iir::Stencil const& 
       makeRange(stencil.getFields(), [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
         return p.second.IsTemporary;
       });
-  iir::Extents maxExtents(ast::cartesian, 0, 0, 0, 0, 0, 0);
+  iir::Extents maxExtents{ast::cartesian};
   for(const auto& fieldPair : tempFields) {
     DAWN_ASSERT(fieldPair.second.field.getWriteExtentsRB());
     maxExtents.merge(*(fieldPair.second.field.getWriteExtentsRB()));

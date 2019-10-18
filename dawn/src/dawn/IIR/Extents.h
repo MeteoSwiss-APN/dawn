@@ -35,6 +35,7 @@ namespace iir {
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
 class Extent {
+private:
   int Minus;
   int Plus;
 
@@ -43,10 +44,6 @@ public:
   /// @{
   Extent() : Minus(0), Plus(0) {}
   Extent(int minus, int plus) : Minus(minus), Plus(plus) {}
-  Extent(const Extent&) = default;
-  Extent(Extent&&) = default;
-  Extent& operator=(const Extent&) = default;
-  Extent& operator=(Extent&&) = default;
   /// @}
 
   int minus() const { return Minus; }
@@ -72,25 +69,18 @@ public:
     return *this;
   }
 
-  Extent& add(const Extent& other) {
+  Extent& operator+=(const Extent& other) {
     Minus += other.Minus;
     Plus += other.Plus;
     return *this;
   }
 
-  Extent& add(int other) {
+  Extent& operator+=(int other) {
     Minus += other;
     Plus += other;
     Minus = std::min(0, Minus);
     Plus = std::max(0, Plus);
     return *this;
-  }
-
-  static Extent add(const Extent& lhs, const Extent& rhs) {
-    Extent sum;
-    sum.Minus = lhs.Minus + rhs.Minus;
-    sum.Plus = lhs.Plus + rhs.Plus;
-    return sum;
   }
 
   bool operator==(const Extent& other) const { return Minus == other.Minus && Plus == other.Plus; }
@@ -99,6 +89,7 @@ public:
   bool isPointwise() const { return Plus == 0 && Minus == 0; }
   /// @}
 };
+Extent operator+(Extent lhs, Extent const& rhs);
 
 class HorizontalExtentImpl {
 public:
@@ -150,8 +141,8 @@ public:
 
   void add_impl(HorizontalExtentImpl const& other) override {
     auto other_cartesian = dynamic_cast<dawn::iir::CartesianExtent const&>(other);
-    m_extents_[0].add(other_cartesian.m_extents_[0]);
-    m_extents_[1].add(other_cartesian.m_extents_[1]);
+    m_extents_[0] += other_cartesian.m_extents_[0];
+    m_extents_[1] += other_cartesian.m_extents_[1];
   }
 
   void merge_impl(HorizontalExtentImpl const& other) override {
@@ -224,6 +215,8 @@ public:
 
   template <typename T>
   friend T extent_cast(HorizontalExtent const&);
+  template <typename T>
+  friend T extent_cast(HorizontalExtent&&);
 
   virtual bool operator==(HorizontalExtent const& other) const {
     return impl_->equals(*other.impl_);
@@ -242,6 +235,10 @@ template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
   return dynamic_cast<T>(*extent.impl_);
 }
+template <typename T>
+T extent_cast(HorizontalExtent&& extent) {
+  return dynamic_cast<T>(*extent.impl_);
+}
 
 /// @brief Three dimensional access extents of a field
 /// @ingroup optimizer
@@ -251,15 +248,10 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  explicit Extents(ast::cartesian_, const ast::Offsets& offset);
+  Extents(ast::cartesian_, const ast::Offsets& offset);
   Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
           int extent3minus, int extent3plus);
-  Extents(ast::cartesian_);
-  Extents(const Extents& other);
-  Extents(Extents&& other);
-  Extents() = delete;
-  Extents& operator=(const Extents& other);
-  Extents& operator=(Extents&&);
+  explicit Extents(ast::cartesian_);
   /// @}
 
   bool hasVerticalCenter() const;

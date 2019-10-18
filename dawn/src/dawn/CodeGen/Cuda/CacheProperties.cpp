@@ -27,7 +27,7 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
                     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                     const int maxRedundantLines) {
 
-  iir::Extents maxExtents(ast::cartesian, 0, 0, 0, 0, 0, 0);
+  iir::Extents maxExtents{ast::cartesian};
   std::set<int> accessIDs;
   std::unordered_map<int, iir::Extents> specialCaches;
   for(const auto& cacheP : ms->getCaches()) {
