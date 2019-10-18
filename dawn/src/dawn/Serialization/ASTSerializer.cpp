@@ -61,11 +61,11 @@ makeVarDeclStmtData(ast::StmtData::DataType dataType,
   if(dataType == ast::StmtData::SIR_DATA_TYPE) {
     return std::make_unique<sir::SIRStmtData>();
   } else {
-    iir::VarDeclStmtData tmp;
-    fillData(tmp, dataProto);
+    auto data = std::make_unique<iir::VarDeclStmtData>();
+    fillData(*data, dataProto);
     if(varDeclStmtDataProto.has_accessid())
-      tmp.AccessID = std::make_optional(varDeclStmtDataProto.accessid().value());
-    return std::make_unique<iir::VarDeclStmtData>(tmp);
+      data->AccessID = std::make_optional(varDeclStmtDataProto.accessid().value());
+    return data;
   }
 }
 

@@ -28,22 +28,6 @@
 #include <optional>
 
 namespace dawn {
-// TODO(SAP)
-// static void serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
-//                                     const std::shared_ptr<iir::Stmt>& stmtAccessPair) {
-//   // serialize the statement
-//   ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt(), ast::StmtData::IIR_DATA_TYPE);
-//   stmtAccessPair->accept(builder);
-
-//   // check if caller accesses are initialized, and if so, fill them
-//   if(stmtAccessPair->getData<iir::IIRStmtData>().CallerAccesses) {
-//     setAccesses(protoStmtAccessPair->mutable_accesses(),
-//                 stmtAccessPair->getData<iir::IIRStmtData>().CallerAccesses);
-//   }
-//   DAWN_ASSERT_MSG(!stmtAccessPair->getData<iir::IIRStmtData>().CalleeAccesses,
-//                   "inlining did not work as we have calee-accesses");
-// }
-
 static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   protoCache->set_accessid(cache.getCachedFieldAccessID());
   switch(cache.getCacheIOPolicy()) {
