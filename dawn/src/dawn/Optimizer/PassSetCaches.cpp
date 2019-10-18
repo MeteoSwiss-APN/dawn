@@ -214,7 +214,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
     // Set K-Caches
     if(!context_.getOptions().DisableKCaches ||
-       stencil.getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
+       stencil.getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
 
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {

@@ -255,14 +255,14 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
 
 TEST_F(IIRSerializerTest, IIRTests) {
   sir::Attr attributes;
-  attributes.set(sir::Attr::AK_MergeStages);
+  attributes.set(sir::Attr::Kind::MergeStages);
   referenceInstantiaton->getIIR()->insertChild(
       std::make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
       referenceInstantiaton->getIIR());
   const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
-  IIRStencil->getStencilAttributes().set(sir::Attr::AK_NoCodeGen);
+  IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
   (IIRStencil)

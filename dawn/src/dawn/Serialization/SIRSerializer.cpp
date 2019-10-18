@@ -176,16 +176,16 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Kind kind) {
     valueProto.set_is_constexpr(value.isConstexpr());
     if(value.has_value()) {
       switch(value.getType()) {
-      case sir::Value::Boolean:
+      case sir::Value::Kind::Boolean:
         valueProto.set_boolean_value(value.getValue<bool>());
         break;
-      case sir::Value::Integer:
+      case sir::Value::Kind::Integer:
         valueProto.set_integer_value(value.getValue<int>());
         break;
-      case sir::Value::Double:
+      case sir::Value::Kind::Double:
         valueProto.set_double_value(value.getValue<double>());
         break;
-      case sir::Value::String:
+      case sir::Value::Kind::String:
         valueProto.set_string_value(value.getValue<std::string>());
         break;
       }

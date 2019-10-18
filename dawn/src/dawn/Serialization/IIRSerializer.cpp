@@ -308,21 +308,21 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     bool valueIsSet = false;
 
     switch(globalToValue.second->getType()) {
-    case sir::Value::Boolean:
+    case sir::Value::Kind::Boolean:
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
-    case sir::Value::Integer:
+    case sir::Value::Kind::Integer:
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
-    case sir::Value::Double:
+    case sir::Value::Kind::Double:
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
         valueIsSet = true;
@@ -344,23 +344,23 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     // Information other than the children
     protoStencil->set_stencilid(stencils->getStencilID());
     auto protoAttribute = protoStencil->mutable_attr();
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeDoMethods)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeStages)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeStages)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_NoCodeGen)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::NoCodeGen)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches);
     }
@@ -422,7 +422,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       auto protoBC = protoIIR->add_boundaryconditions();
       protoBC->set_name(sf->Name);
       for(auto& arg : sf->Args) {
-        DAWN_ASSERT(arg->Kind == sir::StencilFunctionArg::AK_Field);
+        DAWN_ASSERT(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field);
         protoBC->add_args(arg->Name);
       }
 
@@ -606,14 +606,14 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Boolean);
+        value = std::make_shared<sir::Value>(sir::Value::Kind::Boolean);
       } else {
         value = std::make_shared<sir::Value>(GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Integer);
+        value = std::make_shared<sir::Value>(sir::Value::Kind::Integer);
       } else {
         // the explicit cast is needed since in this case GlobalToValue.second.value()
         // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
@@ -622,7 +622,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Double);
+        value = std::make_shared<sir::Value>(sir::Value::Kind::Double);
       } else {
         value = std::make_shared<sir::Value>((double)GlobalToValue.second.value());
       }
@@ -647,23 +647,23 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     for(auto attribute : protoStencils.attr().attributes()) {
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeDoMethods);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeDoMethods);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeStages);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeStages);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeTemporaries);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeTemporaries);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_NoCodeGen);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_UseKCaches);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::UseKCaches);
       }
     }
 
@@ -733,7 +733,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     for(auto& proto_arg : boundaryCondition.args()) {
       auto new_arg = std::make_shared<sir::StencilFunctionArg>();
       new_arg->Name = proto_arg;
-      new_arg->Kind = sir::StencilFunctionArg::AK_Field;
+      new_arg->Kind = sir::StencilFunctionArg::ArgumentKind::Field;
       stencilFunction->Args.push_back(std::move(new_arg));
     }
     auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(

@@ -485,7 +485,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
-        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field)
+        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::Field)
           continue;
         const std::string argName = exprArg->Name;
 

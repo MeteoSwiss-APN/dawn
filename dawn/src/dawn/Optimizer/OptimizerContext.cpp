@@ -115,13 +115,13 @@ public:
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
-        case sir::Value::Boolean:
+        case sir::Value::Kind::Boolean:
           scope_.top()->VariableMap[key] = value.getValue<bool>();
           break;
-        case sir::Value::Integer:
+        case sir::Value::Kind::Integer:
           scope_.top()->VariableMap[key] = value.getValue<int>();
           break;
-        case sir::Value::Double:
+        case sir::Value::Kind::Double:
           scope_.top()->VariableMap[key] = value.getValue<double>();
           break;
         default:
@@ -680,7 +680,7 @@ void OptimizerContext::fillIIR() {
 
   for(const auto& stencil : SIR_->Stencils) {
     DAWN_ASSERT(stencil);
-    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
+    if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
       stencilInstantiationMap_.insert(
           std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(
                                             *getSIR()->GlobalVariableMap, iirStencilFunctions)));
