@@ -366,8 +366,9 @@ void VarAccessExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
 //     FieldAccessExpr
 //===------------------------------------------------------------------------------------------===//
 
-FieldAccessExpr::FieldAccessExpr(const std::string& name, Array3i offset, Array3i argumentMap,
-                                 Array3i argumentOffset, bool negateOffset, SourceLocation loc)
+FieldAccessExpr::FieldAccessExpr(const std::string& name, const Offsets& offset,
+                                 Array3i argumentMap, Array3i argumentOffset, bool negateOffset,
+                                 SourceLocation loc)
     : Expr(Kind::FieldAccessExpr, loc), name_(name), offset_(std::move(offset)),
       argumentMap_(std::move(argumentMap)), argumentOffset_(std::move(argumentOffset)),
       negateOffset_(negateOffset) {}
@@ -392,7 +393,7 @@ FieldAccessExpr& FieldAccessExpr::operator=(FieldAccessExpr expr) {
 
 FieldAccessExpr::~FieldAccessExpr() {}
 
-void FieldAccessExpr::setPureOffset(const Array3i& offset) {
+void FieldAccessExpr::setPureOffset(const Offsets& offset) {
   offset_ = offset;
   argumentMap_ = Array3i{{-1, -1, -1}};
   argumentOffset_ = Array3i{{0, 0, 0}};

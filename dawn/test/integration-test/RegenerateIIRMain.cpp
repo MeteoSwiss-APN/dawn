@@ -27,11 +27,15 @@ int main(int argc, char* argv[]) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>());
 
-  auto copy_stencil = createCopyStencilIIRInMemory(optimizer);
-  UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil, IIRSerializer::Format::Json);
-
-  auto lapl_stencil = createLapStencilIIRInMemory(optimizer);
-  UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/lapl_stencil.iir", copy_stencil, IIRSerializer::Format::Json);
+  {
+    UIDGenerator::getInstance()->reset();
+    auto copy_stencil = createCopyStencilIIRInMemory(optimizer);
+    IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil,
+                             IIRSerializer::Format::Json);
+  }
+  {
+    UIDGenerator::getInstance()->reset();
+    auto lap_stencil = createLapStencilIIRInMemory(optimizer);
+    IIRSerializer::serialize("reference_iir/lap_stencil.iir", lap_stencil, IIRSerializer::Format::Json);
+  }
 }

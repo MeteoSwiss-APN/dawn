@@ -43,16 +43,15 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     interval = make_interval(Interval.Start, Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
-    body_ast = make_ast(
-        [make_assignment_stmt(
-            make_field_access_expr("out", [0, 0, 0]),
+    body_ast = make_ast([
+        make_assignment_stmt(
+            make_field_access_expr("out"),
             make_reduction_over_neighbor_expr("+",
-                make_literal_access_expr("1.0", BuiltinType.Float),
-                make_field_access_expr("in", [1, 0, 0])),
-            "="
-        )
-        ]
-    )
+                                              make_literal_access_expr(
+                                                  "1.0", BuiltinType.Float),
+                                              make_field_access_expr("in")),
+            "=")
+    ])
 
     vertical_region_stmt = make_vertical_region_decl_stmt(
         body_ast, interval, VerticalRegion.Forward)

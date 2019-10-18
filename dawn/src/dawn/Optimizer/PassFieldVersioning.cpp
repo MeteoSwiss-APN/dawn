@@ -19,7 +19,6 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
@@ -126,8 +125,8 @@ bool PassFieldVersioning::run(
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
           oldGraph = newGraph->clone();
 
-          auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
-          newGraph->insertStatementAccessesPair(stmtAccessesPair);
+          auto& stmt = doMethod.getChildren()[stmtIndex];
+          newGraph->insertStatement(stmt);
 
           // Try to resolve race-conditions by using double buffering if necessary
           auto rc = fixRaceCondition(stencilInstantiation, newGraph.get(), stencil, doMethod,
@@ -140,7 +139,7 @@ bool PassFieldVersioning::run(
             // We fixed a race condition (this means some fields have changed and our current graph
             // is invalid)
             newGraph = oldGraph;
-            newGraph->insertStatementAccessesPair(stmtAccessesPair);
+            newGraph->insertStatement(stmt);
           }
           doMethod.update(iir::NodeUpdateType::level);
         }
@@ -167,7 +166,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  iir::Stmt& statement = *doMethod.getChildren()[index]->getStatement();
+  iir::Stmt& statement = *doMethod.getChildren()[index];
 
   int numRenames = 0;
 

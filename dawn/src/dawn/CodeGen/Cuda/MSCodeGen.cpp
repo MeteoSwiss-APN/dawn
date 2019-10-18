@@ -137,7 +137,7 @@ void MSCodeGen::generateKCacheFillStatement(MemberFunction& cudaKernel,
   std::stringstream ss;
   CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_->getMetaData(),
                                                 kcacheProp.accessID_, fieldIndexMap,
-                                                Array3i{0, 0, klev});
+                                                ast::Offsets(ast::cartesian, 0, 0, klev));
   cudaKernel.addStatement(
       kcacheProp.name_ + "[" +
       std::to_string(cacheProperties_.getKCacheIndex(kcacheProp.accessID_, klev)) +
@@ -349,7 +349,7 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
             std::stringstream ss;
             CodeGeneratorHelper::generateFieldAccessDeref(
                 ss, ms_, stencilInstantiation_->getMetaData(), kcacheProp.accessID_, fieldIndexMap,
-                Array3i{0, 0, offset});
+                ast::Offsets{ast::cartesian, 0, 0, offset});
             cudaKernel.addStatement(
                 kcacheProp.name_ + "[" +
                 std::to_string(cacheProperties_.getKCacheIndex(kcacheProp.accessID_, offset)) +
@@ -476,7 +476,8 @@ void MSCodeGen::generateKCacheFlushStatement(MemberFunction& cudaKernel,
                                              const int offset) const {
   std::stringstream ss;
   CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_->getMetaData(),
-                                                accessID, fieldIndexMap, Array3i{0, 0, offset});
+                                                accessID, fieldIndexMap,
+                                                ast::Offsets{ast::cartesian, 0, 0, offset});
   cudaKernel.addStatement(ss.str() + "= " + cacheName + "[" +
                           std::to_string(cacheProperties_.getKCacheIndex(accessID, offset)) + "]");
 }
@@ -1019,8 +1020,8 @@ void MSCodeGen::generateCudaKernelCode() {
                 const iir::DoMethod& doMethod = *doMethodPtr;
                 if(!doMethod.getInterval().overlaps(interval))
                   continue;
-                for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                  statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+                for(const auto& stmt : doMethod.getChildren()) {
+                  stmt->accept(stencilBodyCXXVisitor);
                   cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
                 }
               }

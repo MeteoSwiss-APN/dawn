@@ -13,6 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTStringifier.h"
+#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -20,25 +25,26 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logging.h"
+#include <limits>
+#include <memory>
 
 namespace dawn {
 namespace iir {
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData) {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
+      metaData_(metaData), ast_{std::make_unique<iir::IIRStmtData>()} {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
-
-  cloneMS->cloneChildrenFrom(*this);
+  cloneMS->ast_ = iir::BlockStmt{ast_};
   return cloneMS;
 }
 
@@ -53,8 +59,8 @@ void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>
 std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
   std::optional<Extents> extents;
 
-  for(auto& stmtAccess : getChildren()) {
-    auto extents_ = iir::computeMaximumExtents(*stmtAccess->getStatement(), accessID);
+  for(auto& stmt : getChildren()) {
+    auto extents_ = iir::computeMaximumExtents(*stmt, accessID);
     if(!extents_)
       continue;
 
@@ -98,6 +104,32 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
+namespace {
+json::json print(const StencilMetaInformation& metadata,
+                 const AccessToNameMapper& accessToNameMapper,
+                 const std::unordered_map<int, Extents>& accesses) {
+  json::json node;
+  for(const auto& accessPair : accesses) {
+    json::json accessNode;
+    int accessID = accessPair.first;
+    std::string accessName = "unknown";
+    if(accessToNameMapper.hasAccessID(accessID)) {
+      accessName = accessToNameMapper.getNameFromAccessID(accessID);
+    }
+    if(metadata.isAccessType(iir::FieldAccessType::Literal, accessID)) {
+      continue;
+    }
+    accessNode["access_id"] = accessID;
+    accessNode["name"] = accessName;
+    std::stringstream ss;
+    ss << accessPair.second;
+    accessNode["extents"] = ss.str();
+    node.push_back(accessNode);
+  }
+  return node;
+}
+} // namespace
+
 json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   json::json node;
   node["ID"] = id_;
@@ -112,8 +144,20 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   node["Fields"] = fieldsJson;
 
   json::json stmtsJson;
-  for(const auto& stmt : children_) {
-    stmtsJson.push_back(stmt->jsonDump(metaData));
+  for(const auto& stmt : getChildren()) {
+    json::json stmtNode;
+    stmtNode["stmt"] = ASTStringifier::toString(stmt, 0);
+
+    AccessToNameMapper accessToNameMapper(metaData);
+    stmt->accept(accessToNameMapper);
+
+    stmtNode["write_accesses"] =
+        print(metaData, accessToNameMapper,
+              stmt->getData<iir::IIRStmtData>().CallerAccesses->getWriteAccesses());
+    stmtNode["read_accesses"] =
+        print(metaData, accessToNameMapper,
+              stmt->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses());
+    stmtsJson.push_back(stmtNode);
   }
   node["Stmts"] = stmtsJson;
   return node;
@@ -136,9 +180,8 @@ void DoMethod::updateLevel() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& statementAccessesPair : children_) {
-    const auto& access =
-        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+  for(const auto& stmt : getChildren()) {
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -192,9 +235,8 @@ void DoMethod::updateLevel() {
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
-  for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
-    const auto& access =
-        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+  for(const auto& stmt : getChildren()) {
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
@@ -233,8 +275,8 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  for(auto const& statementAccessPair : children_) {
-    const std::shared_ptr<iir::Stmt>& root = statementAccessPair->getStatement();
+  for(auto const& stmt : getChildren()) {
+    const std::shared_ptr<iir::Stmt>& root = stmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 

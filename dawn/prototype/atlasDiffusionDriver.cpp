@@ -2,6 +2,7 @@
 #include <gridtools/clang_dsl.hpp>
 
 #include "atlas/functionspace/CellColumns.h"
+#include "atlas/functionspace/EdgeColumns.h"
 #include "atlas/grid.h"
 #include "atlas/mesh/actions/BuildCellCentres.h"
 #include "atlas/mesh/actions/BuildEdges.h"
@@ -9,7 +10,8 @@
 #include "atlas/option/Options.h"
 #include "atlas/output/Gmsh.h"
 #include "atlas_interface.hpp"
-#include "generated.hpp"
+
+#include "generated_Diffusion.hpp"
 
 int main() {
 
@@ -19,9 +21,9 @@ int main() {
 
   int nb_levels = 1;
   atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
+  atlas::Field out{fs.createField<double>(atlas::option::name("out"))};
 
   atlas::Field in{fs.createField<double>(atlas::option::name("in"))};
-  atlas::Field out{fs.createField<double>(atlas::option::name("out"))};
 
   atlas::mesh::actions::build_edges(mesh);
   atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
@@ -52,9 +54,9 @@ int main() {
   atlas::output::Gmsh gmesh("mymesh.msh");
   gmesh.write(mesh);
 
-  for(int i = 0; i < 100; ++i) {
+  for(int i = 0; i < 500; ++i) {
     in.metadata().set("step", i);
-    gmesh.write(in);
+    gmesh.write(out);
 
     atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
     atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);

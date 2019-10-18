@@ -23,8 +23,7 @@
 // TODO skipAllImplicitNodes should be refactored to be only called for Exprs (not Stmts)
 // to reflect the change in clang 9
 
-namespace gtclang {
-namespace clang_compat {
+namespace gtclang::clang_compat {
 
 #if CLANG_VERSION_MAJOR < 9
 template <typename StmtT>
@@ -46,7 +45,6 @@ StmtT* skipAllImplicitNodes(StmtT* s) {
   return s;
 }
 #endif
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_IMPLICIT_NODES_H

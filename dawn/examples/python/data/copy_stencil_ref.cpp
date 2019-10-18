@@ -1,6 +1,6 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms22_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
+__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
 
   // Start kernel
   const unsigned int nx = isize;
@@ -101,7 +101,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      copy_stencil_stencil11_ms22_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
+      copy_stencil_stencil11_ms23_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
       };
 
       // stopping timers

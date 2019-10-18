@@ -15,6 +15,8 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/ASTConverter.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -602,7 +604,7 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
                                           : iir::FieldAccessType::APIField),
-                      field->Name, field->fieldDimensions);
+                      field->Name, field->fieldDimensions, field->locationType);
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),

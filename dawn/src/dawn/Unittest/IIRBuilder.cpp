@@ -15,7 +15,6 @@
 #include "IIRBuilder.h"
 
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
@@ -170,16 +169,16 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 IIRBuilder::Field IIRBuilder::field(std::string const& name, FieldType ft) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, asArray(ft));
-  return {id, name, false, ast::Expr::LocationType::Cells};
+  return {id, name};
 }
 IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
-                                       asArray(FieldType::ijk));
+                                       asArray(FieldType::ijk), location);
   int accessID = si_->getMetaData().getAccessIDFromName(name);
   si_->getMetaData().addAccessIDLocationPair(accessID, location);
 
-  return {id, name, true, location};
+  return {id, name};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
   DAWN_ASSERT(si_);
@@ -188,9 +187,10 @@ IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID
   return {id, name, iirStmt};
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, AccessType access,
-                                          Array3i extent) {
+                                          Array3i offset) {
   DAWN_ASSERT(si_);
-  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, extent);
+  auto expr =
+      std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::cartesian, offset});
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
@@ -207,29 +207,23 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
-IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
-  DAWN_ASSERT(si_);
+std::shared_ptr<iir::Stmt> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto stmt = iir::makeExprStmt(std::move(expr));
-  auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-  return {std::move(stmt), std::move(sap)};
+  return stmt;
 }
-IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
-                                        StmtData&& caseElse) {
+std::shared_ptr<iir::Stmt> IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond,
+                                              std::shared_ptr<iir::Stmt>&& caseThen,
+                                              std::shared_ptr<iir::Stmt>&& caseElse) {
   DAWN_ASSERT(si_);
   auto condStmt = iir::makeExprStmt(std::move(cond));
-  auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
-  auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
-  if(caseThen.sap)
-    sap->insertBlockStatement(std::move(caseThen.sap));
-  if(caseElse.sap)
-    sap->insertBlockStatement(std::move(caseElse.sap));
-  return {std::move(stmt), std::move(sap)};
+  auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen), std::move(caseElse));
+  return stmt;
 }
-IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
+
+std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
   DAWN_ASSERT(var.decl);
-  auto sap = std::make_unique<iir::StatementAccessesPair>(var.decl);
-  return {std::move(var.decl), std::move(sap)};
+  return var.decl;
 }
 
 } // namespace iir

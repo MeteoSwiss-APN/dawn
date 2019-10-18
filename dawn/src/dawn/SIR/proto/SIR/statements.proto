@@ -37,6 +37,14 @@ message Field {
   SourceLocation loc = 2;              // Source location
   bool is_temporary = 3;               // Is the field a temporary?
   repeated int32 field_dimensions = 4; // Legal dimension of the field initialized by the user
+
+  enum LocationType {
+    Edge = 0;
+    Vertex = 1;
+    Cell = 2;
+  }
+  // Location where the field is defined on
+  LocationType location_type = 5;
 }
 
 // @brief Directional argument of a StencilFunction
@@ -168,9 +176,41 @@ message StencilCall {
   repeated string arguments = 3; // Fields passed as arguments during the stencil call
 }
 
+/* ===-----------------------------------------------------------------------------------------===*/
+//      Accesses
+/* ===-----------------------------------------------------------------------------------------===*/
+// @brief Extent attached to a FieldAccess
+//
+// Each filed-access has extents in each dimension that define how far the accesses are in the
+// respective dimension
+message Extent {
+  int32 minus = 1;
+  int32 plus = 2;
+}
+
+message Extents {
+  // the three dimensions of an access-extent [Extent<i>, Extent<j>, Extent<k>]
+  repeated Extent extents = 1;
+}
+
+message Accesses {
+  // Map of all the write accesses [their accessID] to the Extents of the access
+  map<int32, Extents> writeAccess = 1;
+
+  // Map of all the read accesses [their accessID] to the Extents of the access
+  map<int32, Extents> readAccess = 2;
+}
+
 /*===------------------------------------------------------------------------------------------===*\
  *     AST
 \*===------------------------------------------------------------------------------------------===*/
+
+// @brief Data of Stmts
+//
+// @ingroup sir_proto
+message StmtData {
+  Accesses accesses = 1; // All the accesses of the statement
+}
 
 // @brief This is a union of all the statements
 // @ingroup sir_proto
@@ -220,7 +260,8 @@ message Expr {
 message BlockStmt {
   repeated Stmt statements = 1; // List of statements
   SourceLocation loc = 2;       // Source location
-  int32 ID = 3;                 // ID of the Stmt
+  StmtData data = 3;            // Generic Stmt's data container
+  int32 ID = 4;                 // ID of the Stmt
 }
 
 // @brief A statement wrapping an expression
@@ -229,7 +270,8 @@ message BlockStmt {
 message ExprStmt {
   Expr expr = 1;          // Expression
   SourceLocation loc = 2; // Source location
-  int32 ID = 3;           // ID of the Stmt
+  StmtData data = 3;      // Generic Stmt's data container
+  int32 ID = 4;           // ID of the Stmt
 }
 
 // @brief Return statement
@@ -238,14 +280,15 @@ message ExprStmt {
 message ReturnStmt {
   Expr expr = 1;          // Expression to return
   SourceLocation loc = 2; // Source location
-  int32 ID = 3;           // ID of the Stmt
+  StmtData data = 3;      // Generic Stmt's data container
+  int32 ID = 4;           // ID of the Stmt
 }
 
 // @brief Data of a VarDeclStmt
 //
 // @ingroup sir_proto
 message VarDeclStmtData {
-  google.protobuf.Int32Value accessID = 1;    // ID of the variable declared in the statement
+  google.protobuf.Int32Value accessID = 1; // ID of the variable declared in the statement
 }
 
 // @brief Declaration of a variable
@@ -282,9 +325,10 @@ message VarDeclStmt {
   // List of expression used for array initialization or just 1 element for variable initialization
   repeated Expr init_list = 5;
 
-  SourceLocation loc = 6; // Source location
-  VarDeclStmtData data = 7; // Data of this statement
-  int32 ID = 8;           // ID of the Stmt
+  SourceLocation loc = 6;                 // Source location
+  StmtData data = 7;                      // Generic Stmt's data container
+  VarDeclStmtData var_decl_stmt_data = 8; // Data of this statement
+  int32 ID = 9;                           // ID of the Stmt
 }
 
 // @brief Declaration of a vertical region
@@ -293,7 +337,8 @@ message VarDeclStmt {
 message VerticalRegionDeclStmt {
   VerticalRegion vertical_region = 1;
   SourceLocation loc = 2; // Source location
-  int32 ID = 3;           // ID of the Stmt
+  StmtData data = 3;      // Generic Stmt's data container
+  int32 ID = 4;           // ID of the Stmt
 }
 
 // @brief Declaration of a stencil call
@@ -302,7 +347,8 @@ message VerticalRegionDeclStmt {
 message StencilCallDeclStmt {
   StencilCall stencil_call = 1;
   SourceLocation loc = 2; // Source location
-  int32 ID = 3;           // ID of the Stmt
+  StmtData data = 3;      // Generic Stmt's data container
+  int32 ID = 4;           // ID of the Stmt
 }
 
 // @brief Declaration of a boundary condition
@@ -312,7 +358,8 @@ message BoundaryConditionDeclStmt {
   string functor = 1;         // Identifier of the boundary condition functor
   repeated string fields = 2; // List of field arguments to apply the functor to
   SourceLocation loc = 3;     // Source location
-  int32 ID = 4;               // ID of the Stmt
+  StmtData data = 4;          // Generic Stmt's data container
+  int32 ID = 5;               // ID of the Stmt
 }
 
 // @brief Represent an if/then/else block
@@ -331,7 +378,8 @@ message IfStmt {
   Stmt then_part = 2;     // Then part
   Stmt else_part = 3;     // Else part (can be empty)
   SourceLocation loc = 4; // Source location
-  int32 ID = 5;           // ID of the Stmt
+  StmtData data = 5;      // Generic Stmt's data container
+  int32 ID = 6;           // ID of the Stmt
 }
 
 // @brief Apply the unary operations to an expression
@@ -475,12 +523,12 @@ message AccessExprData {
 //
 // @ingroup sir_proto
 message VarAccessExpr {
-  string name = 1;        // Name of the variable
-  Expr index = 2;         // Is it an array access (i.e var[2])?
-  bool is_external = 3;   // Is this an access to a external variable (e.g a global)?
-  SourceLocation loc = 4; // Source location
+  string name = 1;         // Name of the variable
+  Expr index = 2;          // Is it an array access (i.e var[2])?
+  bool is_external = 3;    // Is this an access to a external variable (e.g a global)?
+  SourceLocation loc = 4;  // Source location
   AccessExprData data = 5; // Access data
-  int32 ID = 6;           // ID of the Expr
+  int32 ID = 6;            // ID of the Expr
 }
 
 // @brief Access to a field
@@ -544,11 +592,11 @@ message FieldAccessExpr {
 //
 // @ingroup sir_proto
 message LiteralAccessExpr {
-  string value = 1;       // Value of the literal (e.g "1.24324")
-  BuiltinType type = 2;   // Type of the literal
-  SourceLocation loc = 3; // Source location
+  string value = 1;        // Value of the literal (e.g "1.24324")
+  BuiltinType type = 2;    // Type of the literal
+  SourceLocation loc = 3;  // Source location
   AccessExprData data = 4; // Access data
-  int32 ID = 5;           // ID of the Expr
+  int32 ID = 5;            // ID of the Expr
 }
 
 // @brief Reduction operation over neighbors

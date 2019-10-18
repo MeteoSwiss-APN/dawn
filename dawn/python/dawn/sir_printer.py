@@ -49,6 +49,10 @@ class SIRPrinter:
     def visit_fun_call_expr(self, expr):
         return expr.callee + "(" + ",".join(self.visit_expr(x) for x in expr.arguments) + ")"
 
+    def visit_reduction_over_neighbor_expr(self, expr):
+        return "reduce(" + expr.op + ", init=" + self.visit_expr(expr.init) + ", rhs=" \
+            + self.visit_expr(expr.rhs) + ")"
+
     def visit_expr(self, expr):
         if expr.WhichOneof("expr") == "unary_operator":
             return self.visit_unary_operator(expr.unary_operator)
@@ -70,6 +74,8 @@ class SIRPrinter:
             return self.visit_field_access_expr(expr.field_access_expr)
         elif expr.WhichOneof("expr") == "literal_access_expr":
             return self.visit_literal_access_expr(expr.literal_access_expr)
+        elif expr.WhichOneof("expr") == "reduction_over_neighbor_expr":
+            return self.visit_reduction_over_neighbor_expr(expr.reduction_over_neighbor_expr)
         else:
             raise ValueError("Unknown expression")
 

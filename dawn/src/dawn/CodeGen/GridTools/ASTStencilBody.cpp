@@ -28,7 +28,7 @@ ASTStencilBody::ASTStencilBody(
     const iir::StencilMetaInformation& metadata,
     const std::unordered_set<iir::IntervalProperties>& intervalProperties)
     : ASTCodeGenCXX(), metadata_(metadata), intervalProperties_(intervalProperties),
-      offsetPrinter_(",", "(", ")"), currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
+      currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
@@ -150,9 +150,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
     ss_ << currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr))
-        << offsetPrinter_(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false));
+        << "(" << currentFunction_->evalOffsetOfFieldAccessExpr(expr, false) << ")";
   } else
-    ss_ << getName(expr) << offsetPrinter_(expr->getOffset());
+    ss_ << getName(expr) << "(" << expr->getOffset() << ")";
 
   if(!nestingOfStencilFunArgLists_)
     ss_ << ")";

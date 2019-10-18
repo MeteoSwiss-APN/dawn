@@ -154,7 +154,8 @@ public:
 
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
-  int addField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
+  int addField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions,
+               ast::Expr::LocationType = ast::Expr::LocationType::Cells);
 
   int addTmpField(FieldAccessType type, const std::string& basename, const Array3i fieldDimensions);
 
