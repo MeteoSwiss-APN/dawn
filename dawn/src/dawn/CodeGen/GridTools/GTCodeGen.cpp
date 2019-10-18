@@ -744,13 +744,13 @@ void GTCodeGen::generateStencilClasses(
           std::stringstream tss;
           codegen::Type extent(c_gt() + "extent", tss);
 
-          auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+          auto fieldHExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
               field.getExtents().horizontalExtent());
-          auto vExtents = field.getExtents().verticalExtent();
+          auto fieldVExtents = field.getExtents().verticalExtent();
 
-          extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
-          extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
-          extent.addTemplate(Twine(vExtents.minus()) + ", " + Twine(vExtents.plus()));
+          extent.addTemplate(Twine(fieldHExtents.iMinus()) + ", " + Twine(fieldHExtents.iPlus()));
+          extent.addTemplate(Twine(fieldHExtents.jMinus()) + ", " + Twine(fieldHExtents.jPlus()));
+          extent.addTemplate(Twine(fieldVExtents.minus()) + ", " + Twine(fieldVExtents.plus()));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
