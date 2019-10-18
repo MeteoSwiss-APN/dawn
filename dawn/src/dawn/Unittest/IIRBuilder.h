@@ -27,9 +27,9 @@
 namespace dawn {
 namespace iir {
 
-enum class fieldType { ijk, ij, ik, jk, i, j, k };
+enum class FieldType { ijk, ij, ik, jk, i, j, k };
 
-enum class op {
+enum class Op {
   multiply,
   plus,
   minus,
@@ -45,7 +45,7 @@ enum class op {
   locigalOr,
   logicalNot
 };
-enum class accessType { r, rw };
+enum class AccessType { r, rw };
 
 // \brief Short syntax to build an IIR in a consistent state
 //
@@ -70,22 +70,22 @@ class IIRBuilder {
   };
 
 public:
-  Field field(std::string const& name, fieldType ft = fieldType::ijk);
+  Field field(std::string const& name, FieldType ft = FieldType::ijk);
   Field field(std::string const& name, ast::Expr::LocationType location);
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
-  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
                                                     ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                        std::shared_ptr<iir::Expr>&& rhs, op operation);
+                                        std::shared_ptr<iir::Expr>&& rhs, Op operation);
 
   std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs,
-                                        op operation = op::assign);
+                                        Op operation = Op::assign);
 
-  std::shared_ptr<iir::Expr> unaryExpr(std::shared_ptr<iir::Expr>&& expr, op operation);
+  std::shared_ptr<iir::Expr> unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation);
 
   std::shared_ptr<iir::Expr> conditionalExpr(std::shared_ptr<iir::Expr>&& cond,
                                              std::shared_ptr<iir::Expr>&& caseThen,
@@ -104,7 +104,7 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r,
+  std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r,
                                 Array3i extent = {});
 
   std::shared_ptr<iir::Expr> at(Field const& field, Array3i extent);

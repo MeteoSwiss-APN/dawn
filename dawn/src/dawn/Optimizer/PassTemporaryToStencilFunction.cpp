@@ -205,7 +205,7 @@ public:
     if(!tmpFunction_->hasArg(expr->getName()) && expr != tmpFieldAccessExpr_) {
 
       int genLineKey = static_cast<std::underlying_type<SourceLocation::ReservedSL>::type>(
-          SourceLocation::ReservedSL::SL_Generated);
+          SourceLocation::ReservedSL::Generated);
       tmpFunction_->Args.push_back(
           std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
 

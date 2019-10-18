@@ -70,8 +70,8 @@ TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
 
   IIRBuilder b;
-  auto in_f = b.field("in_field", fieldType::ijk);
-  auto out_f = b.field("out_field", fieldType::ijk);
+  auto in_f = b.field("in_field", FieldType::ijk);
+  auto out_f = b.field("out_field", FieldType::ijk);
 
   auto stencil_instantiation =
       b.build("generated",
@@ -101,7 +101,7 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
           b.stage(b.vregion(
               dawn::sir::Interval::Start, dawn::sir::Interval::End,
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
-                                                   op::plus, b.at(in_f), b.lit(0.),
+                                                   Op::plus, b.at(in_f), b.lit(0.),
                                                    dawn::ast::Expr::LocationType::Edges))))))));
 
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
