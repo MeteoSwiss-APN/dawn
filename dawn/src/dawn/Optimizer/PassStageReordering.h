@@ -29,13 +29,13 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageReordering : public Pass {
 public:
-  PassStageReordering(OptimizerContext& context, ReorderStrategy::TypeKind strategy);
+  PassStageReordering(OptimizerContext& context, ReorderStrategy::Kind strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 
 private:
-  ReorderStrategy::TypeKind strategy_;
+  ReorderStrategy::Kind strategy_;
 };
 
 } // namespace dawn

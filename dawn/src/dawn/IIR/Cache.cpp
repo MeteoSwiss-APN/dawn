@@ -18,15 +18,15 @@
 namespace dawn {
 namespace iir {
 
-static const char* cacheTypeToString(Cache::TypeKind cacheType) {
+static const char* cacheTypeToString(Cache::CacheType cacheType) {
   switch(cacheType) {
-  case Cache::TypeKind::K:
+  case Cache::CacheType::K:
     return "K";
-  case Cache::TypeKind::IJ:
+  case Cache::CacheType::IJ:
     return "IJ";
-  case Cache::TypeKind::IJK:
+  case Cache::CacheType::IJK:
     return "IJK";
-  case Cache::TypeKind::bypass:
+  case Cache::CacheType::bypass:
     return "bypass";
   }
   dawn_unreachable(
@@ -53,7 +53,7 @@ static const char* cachePolicyToString(Cache::IOPolicy cachePolicy) {
       std::string("invalid cache io policy" + std::to_string((unsigned int)cachePolicy)).c_str());
 }
 
-Cache::Cache(TypeKind type, IOPolicy policy, int fieldAccessID,
+Cache::Cache(CacheType type, IOPolicy policy, int fieldAccessID,
              const std::optional<Interval>& interval,
              const std::optional<Interval>& enclosingAccessedInterval,
              const std::optional<window>& w)
@@ -68,7 +68,7 @@ Interval Cache::getWindowInterval(Interval::Bound bound) const {
 }
 
 bool Cache::requiresMemMemoryAccess() const {
-  return (policy_ != IOPolicy::local) || (type_ == TypeKind::bypass);
+  return (policy_ != IOPolicy::local) || (type_ == CacheType::bypass);
 }
 
 json::json Cache::jsonDump() const {
@@ -107,17 +107,17 @@ std::optional<Interval> Cache::getEnclosingAccessedInterval() const {
   return enclosingAccessedInterval_;
 }
 
-Cache::TypeKind Cache::getType() const { return type_; }
+Cache::CacheType Cache::getType() const { return type_; }
 
 std::string Cache::getTypeAsString() const {
   switch(type_) {
-  case TypeKind::IJ:
+  case CacheType::IJ:
     return "cache_type::ij";
-  case TypeKind::K:
+  case CacheType::K:
     return "cache_type::k";
-  case TypeKind::IJK:
+  case CacheType::IJK:
     return "cache_type::ijk";
-  case TypeKind::bypass:
+  case CacheType::bypass:
     return "cache_type::bypass";
   }
   dawn_unreachable("invalid cache type");

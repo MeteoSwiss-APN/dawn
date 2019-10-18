@@ -28,7 +28,7 @@ namespace {
     EXPECT_TRUE(bool(comp)) << comp.why();                                                         \
   } while(0);
 
-class SIRSerializerTest : public ::testing::TestWithParam<SIRSerializer::Kind> {
+class SIRSerializerTest : public ::testing::TestWithParam<SIRSerializer::Format> {
 protected:
   virtual void SetUp() override { sirRef = std::make_shared<SIR>(); }
   virtual void TearDown() override { sirRef.reset(); }
@@ -80,7 +80,7 @@ TEST_P(StencilTest, AST) {
 }
 
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, StencilTest,
-                        ::testing::Values(SIRSerializer::Kind::Json, SIRSerializer::Kind::Byte));
+                        ::testing::Values(SIRSerializer::Format::Json, SIRSerializer::Format::Byte));
 
 class StencilFunctionTest : public SIRSerializerTest {
   virtual void SetUp() override {
@@ -128,7 +128,7 @@ TEST_P(StencilFunctionTest, Intervals) {
 }
 
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, StencilFunctionTest,
-                        ::testing::Values(SIRSerializer::Kind::Json, SIRSerializer::Kind::Byte));
+                        ::testing::Values(SIRSerializer::Format::Json, SIRSerializer::Format::Byte));
 
 class GlobalVariableTest : public SIRSerializerTest {
   virtual void SetUp() override {
@@ -148,6 +148,6 @@ TEST_P(GlobalVariableTest, Value) {
 }
 
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, GlobalVariableTest,
-                        ::testing::Values(SIRSerializer::Kind::Json, SIRSerializer::Kind::Byte));
+                        ::testing::Values(SIRSerializer::Format::Json, SIRSerializer::Format::Byte));
 
 } // anonymous namespace

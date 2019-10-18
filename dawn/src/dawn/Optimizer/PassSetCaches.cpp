@@ -195,7 +195,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(field.getIntend() == iir::Field::IntendKind::Input && outputFields.count(accessID) &&
              !field.getExtents().isHorizontalPointwise()) {
 
-            iir::Cache& cache = MS.setCache(iir::Cache::TypeKind::IJ, iir::Cache::IOPolicy::local, accessID);
+            iir::Cache& cache = MS.setCache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::local, accessID);
 
             if(context_.getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
@@ -292,7 +292,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
           // Set the cache
           iir::Cache& cache =
-              ms.setCache(iir::Cache::TypeKind::K, cacheCandidate.policy_, field.getAccessID(), interval,
+              ms.setCache(iir::Cache::CacheType::K, cacheCandidate.policy_, field.getAccessID(), interval,
                           enclosingAccessedInterval, cacheCandidate.window_);
 
           if(context_.getOptions().ReportPassSetCaches) {

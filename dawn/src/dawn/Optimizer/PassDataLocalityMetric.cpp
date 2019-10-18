@@ -122,7 +122,7 @@ public:
     DAWN_ASSERT(it != multiStage_.getCaches().end());
     const iir::Cache& cache = it->second;
 
-    if(cache.getType() == iir::Cache::TypeKind::K) {
+    if(cache.getType() == iir::Cache::CacheType::K) {
       if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
          cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numReads_++;
@@ -244,7 +244,7 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
     if(multiStage.isCached(AccessID)) {
       const iir::Cache& cache = multiStage.getCaches().find(AccessID)->second;
 
-      if(cache.getType() == iir::Cache::TypeKind::K) {
+      if(cache.getType() == iir::Cache::CacheType::K) {
         if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
            cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numReads += 1;

@@ -42,7 +42,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
 void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
-    if(cache.getType() != iir::Cache::TypeKind::IJ)
+    if(cache.getType() != iir::Cache::CacheType::IJ)
       continue;
     DAWN_ASSERT(cache.getIOPolicy() == iir::Cache::IOPolicy::local);
 
@@ -60,7 +60,7 @@ void MSCodeGen::generateKCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
 
-    if(cache.getType() != iir::Cache::TypeKind::K)
+    if(cache.getType() != iir::Cache::CacheType::K)
       continue;
 
     if(cache.getIOPolicy() != iir::Cache::IOPolicy::local && solveKLoopInParallel_)
@@ -80,7 +80,7 @@ int MSCodeGen::paddedBoundary(int value) {
 void MSCodeGen::generateIJCacheIndexInit(MemberFunction& kernel) const {
   if(cacheProperties_.isThereACommonCache()) {
     kernel.addStatement(
-        "int " + cacheProperties_.getCommonCacheIndexName(iir::Cache::TypeKind::IJ) +
+        "int " + cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheType::IJ) +
         "= iblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(0)) +
         " + (jblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(1)) + ")*" +
         std::to_string(cacheProperties_.getStrideCommonCache(1, blockSize_)));
@@ -410,7 +410,7 @@ bool MSCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::S
     // If any IJ cache is used after the last synchronized stage,
     // we will need to sync again after the last stage of the vertical loop
     for(const auto& cache : ms_->getCaches()) {
-      if(cache.second.getType() != iir::Cache::TypeKind::IJ)
+      if(cache.second.getType() != iir::Cache::CacheType::IJ)
         continue;
 
       if(fields.count(cache.first)) {

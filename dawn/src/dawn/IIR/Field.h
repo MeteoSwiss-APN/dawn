@@ -35,7 +35,7 @@ class StencilInstantiation;
 /// @ingroup optimizer
 class Field {
 public:
-  enum class IntendKind { Output = 0, InputOutput, Input };
+  enum class IntendKind { Output = 0, InputOutput = 1, Input = 2 };
 
 private:
   int accessID_;               ///< Unique AccessID of the field

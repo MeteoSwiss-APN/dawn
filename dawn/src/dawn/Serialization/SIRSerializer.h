@@ -28,8 +28,8 @@ class SIRSerializer {
 public:
   SIRSerializer() = delete;
 
-  /// @brief Type of serialization algorithm to use
-  enum class Kind {
+  /// @brief Serialization format to use
+  enum class Format {
     Json, ///< JSON serialization
     Byte  ///< Protobuf's internal byte format
   };
@@ -41,7 +41,7 @@ public:
   /// @throws std::exception    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
   static std::shared_ptr<SIR> deserialize(const std::string& file,
-                                          Kind kind = Kind::Json);
+                                          Format kind = Format::Json);
 
   /// @brief Deserialize the SIR from the given JSON formatted `string`
   ///
@@ -50,7 +50,7 @@ public:
   /// @throws std::exception    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
   static std::shared_ptr<SIR> deserializeFromString(const std::string& str,
-                                                    Kind kind = Kind::Json);
+                                                    Format kind = Format::Json);
 
   /// @brief Serialize the SIR as a Json or Byte formatted string to `file`
   ///
@@ -58,14 +58,14 @@ public:
   /// @param sir    SIR to serialize
   /// @param kind   The kind of serialization to use to write to `file` (Json or Byte)
   /// @throws std::exception    Failed to open `file`
-  static void serialize(const std::string& file, const SIR* sir, Kind kind = Kind::Json);
+  static void serialize(const std::string& file, const SIR* sir, Format kind = Format::Json);
 
   /// @brief Serialize the SIR as a Json or Byte formatted string
   ///
   /// @param sir    SIR to serialize
   /// @param kind   The kind of serialization to use when writing to the string (Json or Byte)
   /// @returns JSON formatted strong of `sir`
-  static std::string serializeToString(const SIR* sir, Kind kind = Kind::Json);
+  static std::string serializeToString(const SIR* sir, Format kind = Format::Json);
 };
 
 } // namespace dawn

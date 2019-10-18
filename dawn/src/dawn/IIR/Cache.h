@@ -35,7 +35,7 @@ public:
   };
 
   /// @brief Available cache types
-  enum class TypeKind {
+  enum class CacheType {
     IJ,  ///< IJ caches require synchronization capabilities, as different (i,j) grid points are
          ///  processed by parallel cores. GPU backend keeps them in shared memory
     K,   ///< Processing of all the K elements is done by same thread, so resources for K caches can
@@ -58,7 +58,7 @@ public:
     local           ///< Local only cache, neither read nor write the the cached field
   };
 
-  Cache(TypeKind type, IOPolicy policy, int AccessID,
+  Cache(CacheType type, IOPolicy policy, int AccessID,
         std::optional<Interval> const& interval,
         std::optional<Interval> const& enclosingAccessedInterval, std::optional<window> const& w);
 
@@ -68,7 +68,7 @@ public:
   json::json jsonDump() const;
 
   /// @brief Get the type of cache
-  TypeKind getType() const;
+  CacheType getType() const;
   std::string getTypeAsString() const;
 
   /// @brief Get the I/O policy of the cache
@@ -101,7 +101,7 @@ public:
   std::optional<window> const& getWindow() const { return window_; }
 
 private:
-  TypeKind type_;
+  CacheType type_;
   IOPolicy policy_;
   int AccessID_;
   std::optional<Interval> interval_;

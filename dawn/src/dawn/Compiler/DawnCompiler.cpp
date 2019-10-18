@@ -133,7 +133,7 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<Dia
 
 std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
   // -reorder
-  using ReorderStrategyKind = ReorderStrategy::TypeKind;
+  using ReorderStrategyKind = ReorderStrategy::Kind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
                                             .Case("none", ReorderStrategyKind::None)
                                             .Case("greedy", ReorderStrategyKind::Greedy)
@@ -157,12 +157,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 
-  IIRSerializer::Kind serializationKind = IIRSerializer::Kind::Json;
+  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
   if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
     if(options_->IIRFormat == "json") {
-      serializationKind = IIRSerializer::Kind::Json;
+      serializationKind = IIRSerializer::Format::Json;
     } else if(options_->IIRFormat == "byte") {
-      serializationKind = IIRSerializer::Kind::Byte;
+      serializationKind = IIRSerializer::Format::Byte;
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }

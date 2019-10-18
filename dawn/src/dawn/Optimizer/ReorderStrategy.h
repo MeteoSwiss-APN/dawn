@@ -31,7 +31,7 @@ class ReorderStrategy {
 public:
   virtual ~ReorderStrategy() {}
 
-  enum class TypeKind {
+  enum class Kind {
     Unknown,
     None,         ///< Don't perform any reordering
     Greedy,       ///< Greedy fusing of the stages until max-halo boundary is reached

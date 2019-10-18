@@ -24,7 +24,7 @@
 namespace dawn {
 
 PassStageReordering::PassStageReordering(OptimizerContext& context,
-                                         ReorderStrategy::TypeKind strategy)
+                                         ReorderStrategy::Kind strategy)
     : Pass(context, "PassStageReordering"), strategy_(strategy) {
   dependencies_.push_back("PassSetStageGraph");
 }
@@ -37,15 +37,15 @@ bool PassStageReordering::run(
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    if(strategy_ == ReorderStrategy::TypeKind::None)
+    if(strategy_ == ReorderStrategy::Kind::None)
       continue;
 
     std::unique_ptr<ReorderStrategy> strategy;
     switch(strategy_) {
-    case ReorderStrategy::TypeKind::Greedy:
+    case ReorderStrategy::Kind::Greedy:
       strategy = std::make_unique<ReoderStrategyGreedy>();
       break;
-    case ReorderStrategy::TypeKind::Partitioning:
+    case ReorderStrategy::Kind::Partitioning:
       strategy = std::make_unique<ReoderStrategyPartitioning>();
       break;
     default:

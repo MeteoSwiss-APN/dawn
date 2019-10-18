@@ -10,7 +10,7 @@
 //  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
-//===------------------------------------------------------------------------------------------===//
+//===----------------------------------------TypeKind--------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
@@ -100,16 +100,16 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
     dawn_unreachable("unknown cache policy");
   }
   switch(cache.getType()) {
-  case iir::Cache::TypeKind::bypass:
+  case iir::Cache::CacheType::bypass:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_Bypass);
     break;
-  case iir::Cache::TypeKind::IJ:
+  case iir::Cache::CacheType::IJ:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_IJ);
     break;
-  case iir::Cache::TypeKind::IJK:
+  case iir::Cache::CacheType::IJK:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_IJK);
     break;
-  case iir::Cache::TypeKind::K:
+  case iir::Cache::CacheType::K:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_K);
     break;
   default:
@@ -130,7 +130,7 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
 }
 
 static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
-  iir::Cache::TypeKind cacheType;
+  iir::Cache::CacheType cacheType;
   iir::Cache::IOPolicy cachePolicy;
   std::optional<iir::Interval> interval;
   std::optional<iir::Interval> enclosingInverval;
@@ -138,16 +138,16 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
   int ID = protoCache->accessid();
   switch(protoCache->type()) {
   case proto::iir::Cache_CacheType_CT_Bypass:
-    cacheType = iir::Cache::TypeKind::bypass;
+    cacheType = iir::Cache::CacheType::bypass;
     break;
   case proto::iir::Cache_CacheType_CT_IJ:
-    cacheType = iir::Cache::TypeKind::IJ;
+    cacheType = iir::Cache::CacheType::IJ;
     break;
   case proto::iir::Cache_CacheType_CT_IJK:
-    cacheType = iir::Cache::TypeKind::IJK;
+    cacheType = iir::Cache::CacheType::IJK;
     break;
   case proto::iir::Cache_CacheType_CT_K:
-    cacheType = iir::Cache::TypeKind::K;
+    cacheType = iir::Cache::CacheType::K;
     break;
   default:
     dawn_unreachable("unknow cache type");
@@ -435,7 +435,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
 
 std::string
 IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                             Kind kind) {
+                             Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   /////////////////////////////// WITTODO //////////////////////////////////////////////////////////
   //==------------------------------------------------------------------------------------------==//
@@ -480,7 +480,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   // Encode the message
   std::string str;
   switch(kind) {
-  case Kind::Json: {
+  case Format::Json: {
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
     options.always_print_primitive_fields = true;
@@ -491,7 +491,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
       throw std::runtime_error(dawn::format("cannot serialize IIR: %s", status.ToString()));
     break;
   }
-  case Kind::Byte: {
+  case Format::Byte: {
     if(!protoStencilInstantiation.SerializeToString(&str))
       throw std::runtime_error(dawn::format("cannot serialize IIR:"));
     break;
@@ -745,20 +745,20 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
 }
 
-void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Kind kind,
+void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind,
                                     std::shared_ptr<iir::StencilInstantiation>& target) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
   switch(kind) {
-  case dawn::IIRSerializer::Kind::Json: {
+  case dawn::IIRSerializer::Format::Json: {
     auto status = google::protobuf::util::JsonStringToMessage(str, &protoStencilInstantiation);
     if(!status.ok())
       throw std::runtime_error(
           dawn::format("cannot deserialize StencilInstantiation: %s", status.ToString()));
     break;
   }
-  case dawn::IIRSerializer::Kind::Byte: {
+  case dawn::IIRSerializer::Format::Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
       throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
     break;
@@ -775,7 +775,7 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Kind 
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
-                           IIRSerializer::Kind kind) {
+                           IIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
@@ -790,7 +790,7 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
-                                     IIRSerializer::Kind kind) {
+                                     IIRSerializer::Format kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
       std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
@@ -799,7 +799,7 @@ IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* c
 
 void IIRSerializer::serialize(const std::string& file,
                                     const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                                    dawn::IIRSerializer::Kind kind) {
+                                    dawn::IIRSerializer::Format kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
     throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
@@ -810,7 +810,7 @@ void IIRSerializer::serialize(const std::string& file,
 
 std::string IIRSerializer::serializeToString(
     const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    dawn::IIRSerializer::Kind kind) {
+    dawn::IIRSerializer::Format kind) {
   return serializeImpl(instantiation, kind);
 }
 

@@ -140,7 +140,7 @@ private:
       renameAccessIDInMultiStage(multiStagePrt_.get(), oldID, newID);
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
-      iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::TypeKind::IJ, iir::Cache::IOPolicy::local, newID);
+      iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::local, newID);
       originalNameToCache_.emplace_back(
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
                                   accessIDToDataLocality_.find(oldID)->second});

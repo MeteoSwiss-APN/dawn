@@ -117,7 +117,7 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
   return dependencyGraph;
 }
 
-iir::Cache& MultiStage::setCache(iir::Cache::TypeKind type, iir::Cache::IOPolicy policy,
+iir::Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy,
                                  int AccessID, const Interval& interval,
                                  const Interval& enclosingAccessedInterval,
                                  std::optional<iir::Cache::window> w) {
@@ -200,7 +200,7 @@ MultiInterval MultiStage::computePartitionOfIntervals() const {
   return MultiInterval{partitionIntervals};
 }
 
-Cache& MultiStage::setCache(iir::Cache::TypeKind type, iir::Cache::IOPolicy policy,
+Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy,
                             int AccessID) {
   return derivedInfo_.caches_
       .emplace(AccessID, iir::Cache(type, policy, AccessID, std::optional<Interval>(),

@@ -46,7 +46,7 @@ protected:
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
     std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Kind::Json);
+        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
     // Report diganostics
