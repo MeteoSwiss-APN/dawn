@@ -99,7 +99,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses.addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
   // And add the statement to it
-  IIRDoMethod->insertChild(std::move(stmt));
+  IIRDoMethod->getAST().push_back(std::move(stmt));
   IIRDoMethod->updateLevel();
 
   // Add the control flow descriptor to the IIR
@@ -261,7 +261,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
       std::make_optional(std::move(callerAccesses1));
 
   // And add the statement to it
-  IIRDoMethod1->insertChild(std::move(stmt1));
+  IIRDoMethod1->getAST().push_back(std::move(stmt1));
   IIRDoMethod1->updateLevel();
 
   auto plusTmp1 = std::make_shared<ast::BinaryOperator>(rhsTmpT1, std::string("+"), rhsTmpT2);
@@ -285,7 +285,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses2));
   // And add the statement to it
-  IIRDoMethod2->insertChild(std::move(stmt2));
+  IIRDoMethod2->getAST().push_back(std::move(stmt2));
   IIRDoMethod2->updateLevel();
 
   // Add the control flow descriptor to the IIR

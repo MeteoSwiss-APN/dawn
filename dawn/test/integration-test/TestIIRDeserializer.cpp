@@ -85,8 +85,8 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
           ASSERT_EQ(lhsDoMethod->getChildren().size(), rhsDoMethod->getChildren().size());
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {
-            const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
-            const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
+            const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
+            const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
             // check the statement (and its data)
             EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
           }

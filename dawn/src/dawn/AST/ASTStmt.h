@@ -169,6 +169,8 @@ class BlockStmt : public Stmt {
 
 public:
   using StatementList = std::vector<std::shared_ptr<Stmt>>;
+  using StmtConstIterator = StatementList::const_iterator;
+  using StmtIterator = StatementList::iterator;
 
   /// @name Constructor & Destructor
   /// @{
@@ -201,6 +203,8 @@ public:
                     "Trying to insert child Stmt with different data type");
     statements_.push_back(stmt);
   }
+
+  StmtIterator erase(StmtConstIterator position) { return statements_.erase(position); }
 
   // TODO(SAP): this non-const getter is a source of problems: no runtime checks on data
   // type when user changes the vector!

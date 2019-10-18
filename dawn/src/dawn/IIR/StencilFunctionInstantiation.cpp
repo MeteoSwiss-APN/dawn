@@ -93,8 +93,8 @@ ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
       const int argOffset = expr->getArgumentOffset()[i];
 
       // Resolve the directions and offsets
-      // Note: Offsets could implement directions, then this could be simplified because we just want to do
-      // offset[my_direction] += sign * argOffset;
+      // Note: Offsets could implement directions, then this could be simplified because we just
+      // want to do offset[my_direction] += sign * argOffset;
       std::array<int, 3> addOffset{};
       if(isArgDirection(argIndex))
         addOffset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
@@ -595,7 +595,8 @@ void StencilFunctionInstantiation::dump() const {
   for(std::size_t i = 0; i < statements.size(); ++i) {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
-    const auto& callerAccesses = doMethod_->getChild(i)->getData<IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses =
+        doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },

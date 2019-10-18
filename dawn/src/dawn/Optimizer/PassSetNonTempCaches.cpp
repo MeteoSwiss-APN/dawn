@@ -231,7 +231,7 @@ private:
     newAccess.addReadExtent(assigneeID, iir::Extents(ast::Offsets{ast::cartesian}));
     expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
-    domethod->insertChild(std::move(expAssignment));
+    domethod->getAST().push_back(std::move(expAssignment));
 
     // Add access ids to the expressions
     fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);

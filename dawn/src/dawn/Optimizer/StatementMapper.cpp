@@ -39,7 +39,7 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
 void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    scope_.top()->doMethod_.insertChild(std::shared_ptr<iir::Stmt>{stmt});
+    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
   }
 }
 

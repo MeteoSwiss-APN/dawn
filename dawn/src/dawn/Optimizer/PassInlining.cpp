@@ -483,7 +483,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
+    for(auto& doMethod : stage.getChildren()) {
       for(auto stmtIt = doMethod->getAST().getStatements().begin();
           stmtIt != doMethod->getAST().getStatements().end(); ++stmtIt) {
         inliner.processStatment(*stmtIt);
@@ -493,7 +493,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
           // Compute the accesses of the new statements
           computeAccesses(stencilInstantiation.get(), newStmtList);
           // Erase the old stmt ...
-          stmtIt = doMethod->childrenErase(stmtIt);
+          stmtIt = doMethod->getAST().getStatements().erase(stmtIt);
 
           // ... and insert the new ones
           // newStmtList will be cleared at the next for iteration, so it is safe to move the
