@@ -61,7 +61,7 @@ static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
   int dim2plus = protoExtents->extents()[1].plus();
   int dim3minus = protoExtents->extents()[2].minus();
   int dim3plus = protoExtents->extents()[2].plus();
-  return iir::Extents(dawn::ast::cartesian_{}, dim1minus, dim1plus, dim2minus, dim2plus, dim3minus,
+  return iir::Extents(ast::cartesian, dim1minus, dim1plus, dim2minus, dim2plus, dim3minus,
                       dim3plus);
 }
 

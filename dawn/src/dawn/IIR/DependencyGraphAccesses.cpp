@@ -293,7 +293,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
+    nodeExtents.emplace(vertex.VertexID, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
   }
 
   // Start from the output nodes and follow all paths
