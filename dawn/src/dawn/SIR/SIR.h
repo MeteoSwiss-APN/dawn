@@ -153,7 +153,8 @@ struct StencilFunctionArg {
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
   Field(const std::string& name, SourceLocation loc = SourceLocation())
-      : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false), fieldDimensions({{0, 0, 0}}) {}
+      : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
+        fieldDimensions({{0, 0, 0}}) {}
 
   bool IsTemporary;
   Array3i fieldDimensions;
@@ -171,7 +172,9 @@ struct Direction : public StencilFunctionArg {
   Direction(const std::string& name, SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Direction, loc} {}
 
-  static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Direction; }
+  static bool classof(const StencilFunctionArg* arg) {
+    return arg->Kind == ArgumentKind::Direction;
+  }
 };
 
 /// @brief Representation of an Offset (e.g `i + 1`)

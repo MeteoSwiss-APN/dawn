@@ -428,7 +428,7 @@ bool MSCodeGen::checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval 
   if(cache.getIOPolicy() == iir::Cache::IOPolicy::epflush) {
     auto epflushWindowInterval = cache.getWindowInterval(
         (ms_->getLoopOrder() == iir::LoopOrderKind::Forward) ? iir::Interval::Bound::upper
-                                                                : iir::Interval::Bound::lower);
+                                                             : iir::Interval::Bound::lower);
     return epflushWindowInterval.overlaps(interval);
   } else {
     return cacheInterval.contains(interval);
@@ -677,8 +677,7 @@ void MSCodeGen::generateCudaKernelCode() {
   const auto fields = support::orderMap(ms_->getFields());
 
   auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-    return !metadata_.isAccessType(iir::FieldAccessType::StencilTemporary,
-                                   p.second.getAccessID());
+    return !metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
   });
   // all the temp fields that are non local cache, and therefore will require the infrastructure
   // of
@@ -1055,10 +1054,8 @@ void MSCodeGen::generateCudaKernelCode() {
     if(!solveKLoopInParallel_) {
       generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
                                 iir::Cache::IOPolicy::fill_and_flush);
-      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
-                                iir::Cache::IOPolicy::flush);
-      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
-                                iir::Cache::IOPolicy::epflush);
+      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::IOPolicy::flush);
+      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::IOPolicy::epflush);
     }
 
     lastKCell = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)

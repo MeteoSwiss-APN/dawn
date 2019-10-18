@@ -40,8 +40,7 @@ public:
   /// @param kind   The kind of serialization used in `file` (Json or Byte)
   /// @throws std::exception    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
-  static std::shared_ptr<SIR> deserialize(const std::string& file,
-                                          Format kind = Format::Json);
+  static std::shared_ptr<SIR> deserialize(const std::string& file, Format kind = Format::Json);
 
   /// @brief Deserialize the SIR from the given JSON formatted `string`
   ///

@@ -237,8 +237,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
       codeGenProperties.setParamBC(field);
     }
   }
-  for(int accessID :
-      metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+  for(int accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     codeGenProperties.insertAllocateField(metadata.getFieldNameFromAccessID(accessID));
   }
 

@@ -80,7 +80,8 @@ TEST_P(StencilTest, AST) {
 }
 
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, StencilTest,
-                        ::testing::Values(SIRSerializer::Format::Json, SIRSerializer::Format::Byte));
+                        ::testing::Values(SIRSerializer::Format::Json,
+                                          SIRSerializer::Format::Byte));
 
 class StencilFunctionTest : public SIRSerializerTest {
   virtual void SetUp() override {
@@ -128,7 +129,8 @@ TEST_P(StencilFunctionTest, Intervals) {
 }
 
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, StencilFunctionTest,
-                        ::testing::Values(SIRSerializer::Format::Json, SIRSerializer::Format::Byte));
+                        ::testing::Values(SIRSerializer::Format::Json,
+                                          SIRSerializer::Format::Byte));
 
 class GlobalVariableTest : public SIRSerializerTest {
   virtual void SetUp() override {
@@ -148,6 +150,7 @@ TEST_P(GlobalVariableTest, Value) {
 }
 
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, GlobalVariableTest,
-                        ::testing::Values(SIRSerializer::Format::Json, SIRSerializer::Format::Byte));
+                        ::testing::Values(SIRSerializer::Format::Json,
+                                          SIRSerializer::Format::Byte));
 
 } // anonymous namespace

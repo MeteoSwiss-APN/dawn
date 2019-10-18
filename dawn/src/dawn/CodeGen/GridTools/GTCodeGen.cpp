@@ -370,8 +370,7 @@ void GTCodeGen::generateStencilWrapperCtr(
   // Initialize allocated fields
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -589,8 +588,9 @@ void GTCodeGen::generateStencilClasses(
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_intent() +
-                           ((fields[m].getIntend() == iir::Field::IntendKind::Input) ? "in" : "inout"))
+              .addTemplate(c_gt_intent() + ((fields[m].getIntend() == iir::Field::IntendKind::Input)
+                                                ? "in"
+                                                : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));

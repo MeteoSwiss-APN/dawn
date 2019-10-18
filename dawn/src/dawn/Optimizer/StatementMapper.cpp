@@ -313,8 +313,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       // if a global is replaced by its value it becomes a de-facto literal negate access id
       int AccessID = -instantiation_->nextUID();
 
-      metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID,
-                                   newExpr->getValue());
+      metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, newExpr->getValue());
       newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
     } else {

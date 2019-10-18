@@ -77,8 +77,7 @@ bool CacheProperties::isCached(const int accessID) const {
 }
 
 bool CacheProperties::isIJCached(const int accessID) const {
-  return isCached(accessID) &&
-         (ms_->getCache(accessID).getType() == iir::Cache::CacheType::IJ);
+  return isCached(accessID) && (ms_->getCache(accessID).getType() == iir::Cache::CacheType::IJ);
 }
 
 int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {

@@ -168,11 +168,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     DAWN_LOG(INFO) << "Generating SIR file " << generatedFilename;
 
     if(context_->getOptions().SIRFormat == "json") {
-      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(),
-                                     dawn::SIRSerializer::Format::Json);
+      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
     } else if(context_->getOptions().SIRFormat == "byte") {
-      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(),
-                                     dawn::SIRSerializer::Format::Byte);
+      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Byte);
 
     } else {
       dawn_unreachable("Unknown SIRFormat option");

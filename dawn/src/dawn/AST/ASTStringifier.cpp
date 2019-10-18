@@ -105,8 +105,9 @@ public:
     ss_ << "vertical-region : ";
     ss_ << *stmt->getVerticalRegion()->VerticalInterval.get();
     ss_ << " ["
-        << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward ? "forward"
-                                                                                    : "backward")
+        << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
+                ? "forward"
+                : "backward")
         << "]\n";
     ss_ << ASTStringifier::toString(*stmt->getVerticalRegion()->Ast, curIndent_);
   }

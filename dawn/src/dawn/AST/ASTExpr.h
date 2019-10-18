@@ -642,7 +642,9 @@ public:
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   std::shared_ptr<Expr> clone() const override;
   bool equals(const Expr* other) const override;
-  static bool classof(const Expr* expr) { return expr->getKind() == Kind::ReductionOverNeighborExpr; }
+  static bool classof(const Expr* expr) {
+    return expr->getKind() == Kind::ReductionOverNeighborExpr;
+  }
   ACCEPTVISITOR(Expr, ReductionOverNeighborExpr)
 };
 

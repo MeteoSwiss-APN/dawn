@@ -58,8 +58,7 @@ public:
     local           ///< Local only cache, neither read nor write the the cached field
   };
 
-  Cache(CacheType type, IOPolicy policy, int AccessID,
-        std::optional<Interval> const& interval,
+  Cache(CacheType type, IOPolicy policy, int AccessID, std::optional<Interval> const& interval,
         std::optional<Interval> const& enclosingAccessedInterval, std::optional<window> const& w);
 
   /// @brief Get the AccessID of the field
@@ -121,8 +120,7 @@ template <>
 struct hash<dawn::iir::Cache> {
   size_t operator()(const dawn::iir::Cache& cache) const {
     std::size_t seed = 0;
-    dawn::hash_combine(seed, cache.getCachedFieldAccessID(),
-                       static_cast<int>(cache.getIOPolicy()),
+    dawn::hash_combine(seed, cache.getCachedFieldAccessID(), static_cast<int>(cache.getIOPolicy()),
                        static_cast<int>(cache.getType()));
     return seed;
   }

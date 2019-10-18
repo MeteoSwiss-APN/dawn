@@ -454,7 +454,9 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::BoundaryConditionDeclStmt; }
+  static bool classof(const Stmt* stmt) {
+    return stmt->getKind() == Kind::BoundaryConditionDeclStmt;
+  }
   ACCEPTVISITOR(Stmt, BoundaryConditionDeclStmt)
 };
 

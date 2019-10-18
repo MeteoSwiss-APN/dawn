@@ -23,8 +23,7 @@
 
 namespace dawn {
 
-PassStageReordering::PassStageReordering(OptimizerContext& context,
-                                         ReorderStrategy::Kind strategy)
+PassStageReordering::PassStageReordering(OptimizerContext& context, ReorderStrategy::Kind strategy)
     : Pass(context, "PassStageReordering"), strategy_(strategy) {
   dependencies_.push_back("PassSetStageGraph");
 }

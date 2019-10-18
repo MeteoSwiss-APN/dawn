@@ -689,7 +689,7 @@ private:
       LexedPragma,             // Previously lexed a `pragma
       LexedGTClang,            // Previously lexed a `gtclang`
       LexedValidGTClangPragma, // We lexed a valid `#pragma gtclang CLAUSE`, we now
-                                  // look for the next stencil or stencil_function it may apply
+                               // look for the next stencil or stencil_function it may apply
     };
 
     LexStateKind state = Unknown;

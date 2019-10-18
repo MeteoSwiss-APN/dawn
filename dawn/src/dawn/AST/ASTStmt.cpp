@@ -137,8 +137,8 @@ void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
 
 VarDeclStmt::VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
                          int dimension, const char* op, InitList initList, SourceLocation loc)
-    : Stmt(std::move(data), Kind::VarDeclStmt, loc), type_(type), name_(name), dimension_(dimension),
-      op_(op), initList_(std::move(initList)) {}
+    : Stmt(std::move(data), Kind::VarDeclStmt, loc), type_(type), name_(name),
+      dimension_(dimension), op_(op), initList_(std::move(initList)) {}
 
 VarDeclStmt::VarDeclStmt(const VarDeclStmt& stmt)
     : Stmt(stmt), type_(stmt.getType()), name_(stmt.getName()), dimension_(stmt.getDimension()),
@@ -353,7 +353,8 @@ bool IfStmt::equals(const Stmt* other) const {
     sameElse = !(hasElse() ^ otherPtr->hasElse());
   return otherPtr && Stmt::equals(other) &&
          subStmts_[OperandKind::Cond]->equals(otherPtr->subStmts_[OperandKind::Cond].get()) &&
-         subStmts_[OperandKind::Then]->equals(otherPtr->subStmts_[OperandKind::Then].get()) && sameElse;
+         subStmts_[OperandKind::Then]->equals(otherPtr->subStmts_[OperandKind::Then].get()) &&
+         sameElse;
 }
 void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
                              std::shared_ptr<Stmt> const& newStmt) {

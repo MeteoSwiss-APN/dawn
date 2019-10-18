@@ -37,7 +37,8 @@ bool PassTemporaryMerger::run(
 
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
-    stencilNeedsMergePass |= stencilPtr->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries);
+    stencilNeedsMergePass |=
+        stencilPtr->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries);
 
   if(!(context_.getOptions().MergeTemporaries || stencilNeedsMergePass))
     return true;

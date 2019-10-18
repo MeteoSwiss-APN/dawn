@@ -47,7 +47,8 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
       case iir::Field::IntendKind::InputOutput:
         return true;
       case iir::Field::IntendKind::Input:
-        if(toFieldIntend == iir::Field::IntendKind::Output || toFieldIntend == iir::Field::IntendKind::InputOutput)
+        if(toFieldIntend == iir::Field::IntendKind::Output ||
+           toFieldIntend == iir::Field::IntendKind::InputOutput)
           return true;
         break;
       }

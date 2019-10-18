@@ -37,7 +37,7 @@ public:
     Greedy,       ///< Greedy fusing of the stages until max-halo boundary is reached
     Partitioning, ///< Use S-cut graph partitioning
     Permutations  ///< Use Mating and Mutations for genetic Algorithms (this required an
-                     /// existing, correct IIR
+                  /// existing, correct IIR
   };
 
   /// @brief Reorder the stages of the `stencilPtr` according to the implemented strategy

@@ -130,9 +130,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
             } else {
               // Register the temporary
               AccessIDs.insert(AccessID);
-              iir::TemporaryScope ttype =
-                  (isTemporaryField ? iir::TemporaryScope::StencilTemporary
-                                    : iir::TemporaryScope::LocalVariable);
+              iir::TemporaryScope ttype = (isTemporaryField ? iir::TemporaryScope::StencilTemporary
+                                                            : iir::TemporaryScope::LocalVariable);
 
               temporaries.emplace(AccessID, Temporary(AccessID, ttype, extent));
             }

@@ -555,8 +555,7 @@ static std::shared_ptr<sir::AST> makeAST(const dawn::proto::statements::AST& ast
   return ast;
 }
 
-static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
-                                            SIRSerializer::Format kind) {
+static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   using namespace sir;
   ProtobufLogger::init();
@@ -684,7 +683,8 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
 
 } // anonymous namespace
 
-std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file, SIRSerializer::Format kind) {
+std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file,
+                                                SIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(

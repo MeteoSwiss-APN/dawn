@@ -133,8 +133,7 @@ private:
   /// @brief computes additional information of kcaches for those kache with IO synchronization
   /// policy
   std::unordered_map<iir::Extents, std::vector<KCacheProperties>>
-  buildKCacheProperties(const iir::Interval& interval,
-                        const iir::Cache::IOPolicy policy) const;
+  buildKCacheProperties(const iir::Interval& interval, const iir::Cache::IOPolicy policy) const;
 
   /// @brief generates the kcache flush statement, that can be guarded by a conitional to protect
   /// for out-of-bounds or not, depending on the distance from the interval being executed to the

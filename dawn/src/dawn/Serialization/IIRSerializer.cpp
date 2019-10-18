@@ -715,9 +715,9 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Forma
   computeInitialDerivedInfo(target);
 }
 
-std::shared_ptr<iir::StencilInstantiation>
-IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
-                           IIRSerializer::Format kind) {
+std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
+                                                                      OptimizerContext* context,
+                                                                      IIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
@@ -740,8 +740,8 @@ IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* c
 }
 
 void IIRSerializer::serialize(const std::string& file,
-                                    const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                                    dawn::IIRSerializer::Format kind) {
+                              const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                              dawn::IIRSerializer::Format kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
     throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
@@ -750,9 +750,9 @@ void IIRSerializer::serialize(const std::string& file,
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
 }
 
-std::string IIRSerializer::serializeToString(
-    const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    dawn::IIRSerializer::Format kind) {
+std::string
+IIRSerializer::serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                                 dawn::IIRSerializer::Format kind) {
   return serializeImpl(instantiation, kind);
 }
 

@@ -255,9 +255,11 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
       auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
         // Adjust the Intend
-        if(it->second.getIntend() == Field::IntendKind::Input && field.getIntend() == Field::IntendKind::Output)
+        if(it->second.getIntend() == Field::IntendKind::Input &&
+           field.getIntend() == Field::IntendKind::Output)
           it->second.setIntend(Field::IntendKind::InputOutput);
-        else if(it->second.getIntend() == Field::IntendKind::Output && field.getIntend() == Field::IntendKind::Input)
+        else if(it->second.getIntend() == Field::IntendKind::Output &&
+                field.getIntend() == Field::IntendKind::Input)
           it->second.setIntend(Field::IntendKind::InputOutput);
 
         // Merge the Extent

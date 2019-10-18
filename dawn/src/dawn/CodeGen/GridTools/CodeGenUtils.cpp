@@ -41,8 +41,7 @@ CodeGenUtils::buildPlaceholderList(const iir::StencilMetaInformation& metadata,
       // metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary, fieldInfoPair.first)
       // to
       // metadata.isInterStencilTemporary(fieldInfoPair.first)
-      if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
-                               fieldInfoPair.first)) {
+      if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary, fieldInfoPair.first)) {
         placeholderStatement << "m_" << fieldName;
       } else {
         placeholderStatement << fieldName;

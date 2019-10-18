@@ -174,7 +174,8 @@ private:
   }
 
   /// Construct a binary twine.
-  explicit Twine(const Twine& LHS, const Twine& RHS) : lhsKind_(NodeKind::Twine), rhsKind_(NodeKind::Twine) {
+  explicit Twine(const Twine& LHS, const Twine& RHS)
+      : lhsKind_(NodeKind::Twine), rhsKind_(NodeKind::Twine) {
     this->lhs_.twine = &LHS;
     this->rhs_.twine = &RHS;
     assert(isValid() && "Invalid twine!");
@@ -203,7 +204,9 @@ private:
   bool isUnary() const { return getRHSKind() == NodeKind::Empty && !isNullary(); }
 
   /// Check if this is a binary twine.
-  bool isBinary() const { return getLHSKind() != NodeKind::Null && getRHSKind() != NodeKind::Empty; }
+  bool isBinary() const {
+    return getLHSKind() != NodeKind::Null && getRHSKind() != NodeKind::Empty;
+  }
 
   /// Check if this is a valid twine (satisfying the invariants on
   /// order and number of arguments).
@@ -268,13 +271,15 @@ public:
   }
 
   /// Construct from an std::string.
-  /*implicit*/ Twine(const std::string& Str) : lhsKind_(NodeKind::StdString), rhsKind_(NodeKind::Empty) {
+  /*implicit*/ Twine(const std::string& Str)
+      : lhsKind_(NodeKind::StdString), rhsKind_(NodeKind::Empty) {
     lhs_.stdString = &Str;
     assert(isValid() && "Invalid twine!");
   }
 
   /// Construct from a StringRef.
-  /*implicit*/ Twine(const StringRef& Str) : lhsKind_(NodeKind::StringRef), rhsKind_(NodeKind::Empty) {
+  /*implicit*/ Twine(const StringRef& Str)
+      : lhsKind_(NodeKind::StringRef), rhsKind_(NodeKind::Empty) {
     lhs_.stringRef = &Str;
     assert(isValid() && "Invalid twine!");
   }
@@ -287,7 +292,9 @@ public:
   }
 
   /// Construct from a char.
-  explicit Twine(char Val) : lhsKind_(NodeKind::Char), rhsKind_(NodeKind::Empty) { lhs_.character = Val; }
+  explicit Twine(char Val) : lhsKind_(NodeKind::Char), rhsKind_(NodeKind::Empty) {
+    lhs_.character = Val;
+  }
 
   /// Construct from a signed char.
   explicit Twine(signed char Val) : lhsKind_(NodeKind::Char), rhsKind_(NodeKind::Empty) {
@@ -300,7 +307,9 @@ public:
   }
 
   /// Construct a twine to print \p Val as an unsigned decimal integer.
-  explicit Twine(unsigned Val) : lhsKind_(NodeKind::DecUI), rhsKind_(NodeKind::Empty) { lhs_.decUI = Val; }
+  explicit Twine(unsigned Val) : lhsKind_(NodeKind::DecUI), rhsKind_(NodeKind::Empty) {
+    lhs_.decUI = Val;
+  }
 
   /// Construct a twine to print \p Val as a signed decimal integer.
   explicit Twine(int Val) : lhsKind_(NodeKind::DecI), rhsKind_(NodeKind::Empty) { lhs_.decI = Val; }
@@ -311,10 +320,13 @@ public:
   }
 
   /// Construct a twine to print \p Val as a signed decimal integer.
-  explicit Twine(const long& Val) : lhsKind_(NodeKind::DecL), rhsKind_(NodeKind::Empty) { lhs_.decL = &Val; }
+  explicit Twine(const long& Val) : lhsKind_(NodeKind::DecL), rhsKind_(NodeKind::Empty) {
+    lhs_.decL = &Val;
+  }
 
   /// Construct a twine to print \p Val as an unsigned decimal integer.
-  explicit Twine(const unsigned long long& Val) : lhsKind_(NodeKind::DecULL), rhsKind_(NodeKind::Empty) {
+  explicit Twine(const unsigned long long& Val)
+      : lhsKind_(NodeKind::DecULL), rhsKind_(NodeKind::Empty) {
     lhs_.decULL = &Val;
   }
 

@@ -46,9 +46,8 @@ public:
   /// @param context The OptimizerContext in which we register the Instantiation
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated IIR on success or `NULL`
-  static std::shared_ptr<iir::StencilInstantiation> deserialize(const std::string& file,
-                                                                dawn::OptimizerContext* context,
-                                                                Format kind = Format::Json);
+  static std::shared_ptr<iir::StencilInstantiation>
+  deserialize(const std::string& file, dawn::OptimizerContext* context, Format kind = Format::Json);
 
   /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
   ///

@@ -199,8 +199,7 @@ MultiInterval MultiStage::computePartitionOfIntervals() const {
   return MultiInterval{partitionIntervals};
 }
 
-Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy,
-                            int AccessID) {
+Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy, int AccessID) {
   return derivedInfo_.caches_
       .emplace(AccessID, iir::Cache(type, policy, AccessID, std::optional<Interval>(),
                                     std::optional<Interval>(), std::optional<iir::Cache::window>()))

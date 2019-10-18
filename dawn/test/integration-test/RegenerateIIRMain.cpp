@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
   {
     UIDGenerator::getInstance()->reset();
     auto lap_stencil = createLapStencilIIRInMemory(optimizer);
-    IIRSerializer::serialize("reference_iir/lap_stencil.iir", lap_stencil, IIRSerializer::Format::Json);
+    IIRSerializer::serialize("reference_iir/lap_stencil.iir", lap_stencil,
+                             IIRSerializer::Format::Json);
   }
 }

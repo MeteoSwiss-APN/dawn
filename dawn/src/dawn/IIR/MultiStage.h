@@ -125,13 +125,11 @@ public:
   std::shared_ptr<DependencyGraphAccesses> getDependencyGraphOfAxis() const;
 
   /// @brief Set a cache
-  iir::Cache& setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy,
-                       int AccessID, Interval const& interval,
-                       const Interval& enclosingAccessedInterval,
+  iir::Cache& setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy, int AccessID,
+                       Interval const& interval, const Interval& enclosingAccessedInterval,
                        std::optional<iir::Cache::window> w);
 
-  iir::Cache& setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy,
-                       int AccessID);
+  iir::Cache& setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy, int AccessID);
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the
   /// access)

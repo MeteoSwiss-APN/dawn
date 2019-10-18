@@ -79,8 +79,8 @@ TEST(IntervalAlgorithms, computeWindowOffset) {
 
   EXPECT_EQ((Cache::window{-3, 0}),
             (computeWindowOffset(LoopOrderKind::Forward, Interval{-2, 1}, Interval{1, 10})));
-  EXPECT_EQ((Cache::window{0, 2}), (computeWindowOffset(LoopOrderKind::Backward,
-                                                        Interval{10, 10 + 2}, Interval{0, 10})));
+  EXPECT_EQ((Cache::window{0, 2}),
+            (computeWindowOffset(LoopOrderKind::Backward, Interval{10, 10 + 2}, Interval{0, 10})));
 }
 
 } // anonymous namespace

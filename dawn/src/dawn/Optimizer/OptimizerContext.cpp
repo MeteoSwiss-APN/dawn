@@ -553,8 +553,7 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back(), expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        metadata_.insertAccessOfType(iir::FieldAccessType::Literal, -AccessID,
-                                     newExpr->getValue());
+        metadata_.insertAccessOfType(iir::FieldAccessType::Literal, -AccessID, newExpr->getValue());
         newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
       } else {

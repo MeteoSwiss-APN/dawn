@@ -42,9 +42,9 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
   if(outputFields.count(AccessID)) {
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    outputFields.emplace(AccessID,
-                         iir::Field(AccessID, iir::Field::IntendKind::Output, std::optional<iir::Extents>(),
-                                    writeExtents, doMethodInterval, location));
+    outputFields.emplace(AccessID, iir::Field(AccessID, iir::Field::IntendKind::Output,
+                                              std::optional<iir::Extents>(), writeExtents,
+                                              doMethodInterval, location));
   }
 }
 
