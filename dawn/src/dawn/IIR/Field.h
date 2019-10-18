@@ -47,7 +47,7 @@ private:
   Interval interval_; ///< Enclosing Interval from the iteration space
                       ///  from where the Field has been accessed
 
-  bool unstrucutred_ = false;
+  bool unstrucutred_;
   ast::Expr::LocationType location_ = ast::Expr::LocationType::Cells;
 
 public:
@@ -58,31 +58,15 @@ public:
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval)
-      : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(readExtents, writeExtents)),
-        extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
+      : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
+        extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(false) {}
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval,
         ast::Expr::LocationType location)
-      : Field(accessID, intend, readExtents, writeExtents, interval) {
-    unstrucutred_ = true;
-    location_ = location;
-  }
-
-  Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
-        std::optional<Extents>&& writeExtents, Interval&& interval)
-      : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        extentsRB_(std::move(extents_)), interval_(std::move(interval)) {}
-
-  Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
-        std::optional<Extents>&& writeExtents, Interval&& interval,
-        ast::Expr::LocationType location)
-      : Field(accessID, intend, readExtents, writeExtents, interval) {
-    unstrucutred_ = true;
-    location_ = location;
-  }
+      : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
+        extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(true),
+        location_(location) {}
 
   /// @name Operators
   /// @{
