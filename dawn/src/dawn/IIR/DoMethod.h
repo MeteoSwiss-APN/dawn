@@ -213,16 +213,18 @@ public:
     DAWN_ASSERT_MSG(false, "unreachable");
     return ast_.getStatements().insert(pos, std::move(child));
   }
-
+  // TODO(SAP) remove
   template <typename Iterator>
   auto insertChildren(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos, Iterator first,
                       Iterator last) {
+    DAWN_ASSERT_MSG(false, "unreachable");
     return ast_.getStatements().insert(pos, first, last);
   }
-
+  // TODO(SAP) remove
   template <typename Iterator>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
                                const std::unique_ptr<DoMethod>&) {
+    DAWN_ASSERT_MSG(false, "unreachable");
     return ast_.getStatements().insert(pos, first, last);
   }
 

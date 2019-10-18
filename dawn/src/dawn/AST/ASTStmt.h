@@ -182,19 +182,24 @@ public:
   virtual ~BlockStmt();
   /// @}
 
+  template <typename InputIterator>
+  StmtIterator insert(StmtConstIterator position, InputIterator first, InputIterator last) {
+    std::for_each(first, last, [&](const std::shared_ptr<Stmt>& stmt) {
+      DAWN_ASSERT(stmt);
+      DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
+                      "Trying to insert child Stmt with different data type");
+    });
+    return statements_.insert(position, first, last);
+  }
+
   template <class Range>
   void insert_back(Range&& range) {
     insert_back(std::begin(range), std::end(range));
   }
 
-  template <class Iterator>
-  void insert_back(Iterator begin, Iterator end) {
-    std::for_each(begin, end, [&](const std::shared_ptr<Stmt>& stmt) {
-      DAWN_ASSERT(stmt);
-      DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
-                      "Trying to insert child Stmt with different data type");
-    });
-    statements_.insert(statements_.end(), begin, end);
+  template <class InputIterator>
+  void insert_back(InputIterator begin, InputIterator end) {
+    insert(statements_.end(), begin, end);
   }
 
   void push_back(std::shared_ptr<Stmt>&& stmt) {

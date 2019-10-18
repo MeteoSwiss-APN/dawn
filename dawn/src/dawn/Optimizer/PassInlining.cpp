@@ -498,8 +498,8 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
           // ... and insert the new ones
           // newStmtList will be cleared at the next for iteration, so it is safe to move the
           // elements here
-          stmtIt = doMethod->insertChildren(stmtIt, std::make_move_iterator(newStmtList.begin()),
-                                            std::make_move_iterator(newStmtList.end()));
+          stmtIt = doMethod->getAST().insert(stmtIt, std::make_move_iterator(newStmtList.begin()),
+                                             std::make_move_iterator(newStmtList.end()));
 
           std::advance(stmtIt, newStmtList.size() - 1);
         }
