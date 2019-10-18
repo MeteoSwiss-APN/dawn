@@ -484,7 +484,8 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
     for(const auto& doMethod : stage.getChildren()) {
-      for(auto stmtIt = doMethod->childrenBegin(); stmtIt != doMethod->childrenEnd(); ++stmtIt) {
+      for(auto stmtIt = doMethod->getAST().getStatements().begin();
+          stmtIt != doMethod->getAST().getStatements().end(); ++stmtIt) {
         inliner.processStatment(*stmtIt);
 
         if(inliner.inlineCandiatesFound()) {

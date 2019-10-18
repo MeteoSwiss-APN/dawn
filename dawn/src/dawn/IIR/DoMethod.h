@@ -131,20 +131,21 @@ public:
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 
+  // TODO(SAP) removing getChildren() must be the last thing to remove
   const std::vector<std::shared_ptr<iir::Stmt>>& getChildren() const {
     return ast_.getStatements();
   }
-
   std::vector<std::shared_ptr<iir::Stmt>>& getChildren() { return ast_.getStatements(); }
+  // END_TODO
 
-  auto childrenBegin() { return ast_.getStatements().begin(); }
-  auto childrenEnd() { return ast_.getStatements().end(); }
+  //  auto childrenBegin() { return ast_.getStatements().begin(); }
+  //  auto childrenEnd() { return ast_.getStatements().end(); }
 
   inline auto childrenRBegin() { return ast_.getStatements().rbegin(); }
   inline auto childrenREnd() { return ast_.getStatements().rend(); }
 
-  inline auto childrenBegin() const { return ast_.getStatements().begin(); }
-  inline auto childrenEnd() const { return ast_.getStatements().end(); }
+  //  inline auto childrenBegin() const { return ast_.getStatements().begin(); }
+  //  inline auto childrenEnd() const { return ast_.getStatements().end(); }
 
   inline auto childrenRBegin() const { return ast_.getStatements().rbegin(); }
   inline auto childrenREnd() const { return ast_.getStatements().rend(); }
@@ -207,6 +208,7 @@ public:
 
   void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
   iir::BlockStmt const& getAST() const { return ast_; }
+  iir::BlockStmt& getAST() { return ast_; }
 };
 
 } // namespace iir

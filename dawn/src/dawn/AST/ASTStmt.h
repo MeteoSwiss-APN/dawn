@@ -195,14 +195,14 @@ public:
     statements_.insert(statements_.end(), begin, end);
   }
 
-  void push_back(const std::shared_ptr<Stmt>& stmt) {
+  void push_back(std::shared_ptr<Stmt>&& stmt) {
     DAWN_ASSERT(stmt);
     DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
                     "Trying to insert child Stmt with different data type");
     statements_.push_back(stmt);
   }
 
-  // TODO refactor_AST: this non-const getter is a source of problems: no runtime checks on data
+  // TODO(SAP): this non-const getter is a source of problems: no runtime checks on data
   // type when user changes the vector!
   std::vector<std::shared_ptr<Stmt>>& getStatements() { return statements_; }
   const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }

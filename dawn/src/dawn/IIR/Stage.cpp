@@ -274,15 +274,15 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                   "DoMethods have incompatible intervals!");
 
   to->setDependencyGraph(dependencyGraph);
-  to->insertChildren(to->childrenEnd(), std::make_move_iterator(from->childrenBegin()),
-                     std::make_move_iterator(from->childrenEnd()));
+  to->getAST().insert_back(std::make_move_iterator(from->getAST().getStatements().begin()),
+                           std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
 std::vector<std::unique_ptr<Stage>>
 Stage::split(std::deque<int>& splitterIndices,
              const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
-  DoMethod& thisDoMethod = getSingleDoMethod();
+  const DoMethod& thisDoMethod = getSingleDoMethod();
 
   DAWN_ASSERT(thisDoMethod.getChildren().size() >= 2);
   DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
@@ -290,11 +290,12 @@ Stage::split(std::deque<int>& splitterIndices,
   std::vector<std::unique_ptr<Stage>> newStages;
 
   splitterIndices.push_back(thisDoMethod.getChildren().size() - 1);
-  auto prevSplitterIndex = thisDoMethod.childrenBegin();
+  auto prevSplitterIndex = thisDoMethod.getAST().getStatements().begin();
 
   // Create new stages
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
-    auto nextSplitterIndex = std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
+    auto nextSplitterIndex =
+        std::next(thisDoMethod.getAST().getStatements().begin(), splitterIndices[i] + 1);
 
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
@@ -305,9 +306,7 @@ Stage::split(std::deque<int>& splitterIndices,
       doMethod.setDependencyGraph((*graphs)[i]);
 
     // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)
-    for(auto it = prevSplitterIndex; it != nextSplitterIndex; ++it) {
-      doMethod.insertChild(std::move(*it));
-    }
+    doMethod.getAST().insert_back(prevSplitterIndex, nextSplitterIndex);
 
     // Update the fields of the new doMethod
     doMethod.update(NodeUpdateType::level);
