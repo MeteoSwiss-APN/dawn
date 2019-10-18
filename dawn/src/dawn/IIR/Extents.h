@@ -96,21 +96,20 @@ public:
   HorizontalExtentImpl() = default;
   virtual ~HorizontalExtentImpl() = default;
 
-  HorizontalExtentImpl* operator+(HorizontalExtentImpl const& other) const {
-    return plus_impl(other);
+  HorizontalExtentImpl& operator+=(HorizontalExtentImpl const& other) {
+    add_impl(other);
+    return *this;
   }
   std::unique_ptr<HorizontalExtentImpl> clone() const { return clone_impl(); }
 
   void merge(HorizontalExtentImpl const& other) { merge_impl(other); }
   void merge(dawn::ast::HorizontalOffset const& other) { merge_impl(other); }
   void expand(HorizontalExtentImpl const& other) { expand_impl(other); }
-  void add(HorizontalExtentImpl const& other) { add_impl(other); }
   bool equals(HorizontalExtentImpl const& other) const { return equals_impl(other); }
   bool isPointwise() const { return isPointwise_impl(); }
 
 protected:
   virtual void add_impl(HorizontalExtentImpl const& other) = 0;
-  virtual HorizontalExtentImpl* plus_impl(HorizontalExtentImpl const& other) const = 0;
   virtual void merge_impl(HorizontalExtentImpl const& other) = 0;
   virtual void merge_impl(dawn::ast::HorizontalOffset const& other) = 0;
   virtual void expand_impl(HorizontalExtentImpl const& other) = 0;
@@ -129,14 +128,6 @@ public:
   CartesianExtent() {
     m_extents_[0] = Extent(0, 0);
     m_extents_[1] = Extent(0, 0);
-  }
-
-  HorizontalExtentImpl* plus_impl(HorizontalExtentImpl const& other) const override {
-    auto other_cartesian = dynamic_cast<dawn::iir::CartesianExtent const&>(other);
-    return new CartesianExtent(m_extents_[0].minus() + other_cartesian.m_extents_[0].minus(),
-                               m_extents_[0].plus() + other_cartesian.m_extents_[0].plus(),
-                               m_extents_[1].minus() + other_cartesian.m_extents_[1].minus(),
-                               m_extents_[1].plus() + other_cartesian.m_extents_[1].plus());
   }
 
   void add_impl(HorizontalExtentImpl const& other) override {
@@ -204,13 +195,12 @@ public:
   }
   HorizontalExtent& operator=(HorizontalExtent&& other) = default;
 
-  virtual ~HorizontalExtent() = default;
-
   HorizontalExtent(HorizontalExtentImpl* impl)
       : impl_(std::unique_ptr<HorizontalExtentImpl>(impl)) {}
 
-  HorizontalExtent operator+(HorizontalExtent const& other) const {
-    return {*impl_ + *other.impl_};
+  HorizontalExtent& operator+=(HorizontalExtent const& other) {
+    *impl_ += *other.impl_;
+    return *this;
   }
 
   template <typename T>
@@ -218,14 +208,12 @@ public:
   template <typename T>
   friend T extent_cast(HorizontalExtent&&);
 
-  virtual bool operator==(HorizontalExtent const& other) const {
-    return impl_->equals(*other.impl_);
-  }
-  virtual void merge(const HorizontalExtent& other) { impl_->merge(*other.impl_); }
-  virtual void merge(const dawn::ast::HorizontalOffset& other) { impl_->merge(other); }
-  virtual void expand(const HorizontalExtent& other) { impl_->expand(*other.impl_); }
-  virtual bool isPointwise() const { return impl_->isPointwise(); }
-  virtual void add(const HorizontalExtent& other) { impl_->add(*other.impl_); }
+  bool operator==(HorizontalExtent const& other) const { return impl_->equals(*other.impl_); }
+  bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
+  void merge(const HorizontalExtent& other) { impl_->merge(*other.impl_); }
+  void merge(const dawn::ast::HorizontalOffset& other) { impl_->merge(other); }
+  void expand(const HorizontalExtent& other) { impl_->expand(*other.impl_); }
+  bool isPointwise() const { return impl_->isPointwise(); }
 
 private:
   std::unique_ptr<HorizontalExtentImpl> impl_;
@@ -278,13 +266,6 @@ public:
   /// @brief Check if extent is pointwise all directions, i.e. zero extent
   bool isPointwise() const;
 
-  /// @brief Add `this` and `other` and compute the direction sum of the two
-  ///
-  /// @b Example:
-  ///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
-  ///   `{-1, 2, -1, 1, 0, 0}`.
-  static Extents add(const Extents& lhs, const Extents& rhs);
-
   /// @brief add the center of the stencil to the vertical extent
   ///   i.e. make sure that (0,0) is included in the vertical extent
   void addVerticalCenter();
@@ -330,11 +311,20 @@ public:
   Extent const& verticalExtent() const { return verticalExtent_; }
   HorizontalExtent const& horizontalExtent() const { return horizontalExtent_; }
 
+  Extents& operator+=(const Extents& other);
+
 private:
-  void add(const Extents& other);
+  // void add(const Extents& other);
   Extent verticalExtent_;
   HorizontalExtent horizontalExtent_;
 };
+
+/// @brief Add `this` and `other` and compute the direction sum of the two
+///
+/// @b Example:
+///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
+///   `{-1, 2, -1, 1, 0, 0}`.
+Extents operator+(Extents lhs, const Extents& rhs);
 
 } // namespace iir
 } // namespace dawn

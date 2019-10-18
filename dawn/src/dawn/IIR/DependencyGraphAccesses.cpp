@@ -334,7 +334,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
       // Follow edges of the current node and update the node extents
       for(const Edge& edge : *adjacencyList[curNode]) {
-        nodeExtents.at(edge.ToVertexID).merge(iir::Extents::add(curExtent, edge.Data));
+        nodeExtents.at(edge.ToVertexID).merge(curExtent + edge.Data);
         nodesToVisit.push_back(edge.ToVertexID);
       }
     }

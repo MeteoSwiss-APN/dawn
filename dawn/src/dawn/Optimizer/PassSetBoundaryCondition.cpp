@@ -51,7 +51,7 @@ static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s
     for(const auto& fieldPair : stage.getFields()) {
       const iir::Field& field = fieldPair.second;
       fullExtents.merge(field.getExtents());
-      fullExtents = iir::Extents::add(fullExtents, stageExtent);
+      fullExtents += stageExtent;
     }
   }
 

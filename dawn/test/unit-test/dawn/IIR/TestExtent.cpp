@@ -33,8 +33,8 @@ static void compareExtents(iir::Extents extents, const std::array<int, 6>& ref) 
 }
 
 TEST(ExtentsTest, Construction) {
-  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 0});
-  compareExtents(extents, {-1, -1, 1, 1, 0, 0});
+  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 2});
+  compareExtents(extents, {-1, -1, 1, 1, 2, 2});
 }
 
 TEST(ExtentsTest, PointWise) {
@@ -72,10 +72,9 @@ TEST(ExtentsTest, Merge3) {
 
 TEST(ExtentsTest, Add) {
   Extents extents(dawn::ast::cartesian_{}, -2, 2, 0, 0, 0, 0);
-  auto addedExtents =
-      dawn::iir::Extents::add(extents, Extents(dawn::ast::cartesian_{}, -2, 2, 0, 0, 0, 0));
-
-  compareExtents(addedExtents, {-4, 4, 0, 0, 0, 0});
+  compareExtents(extents + extents, {-4, 4, 0, 0, 0, 0});
+  extents += extents;
+  compareExtents(extents, {-4, 4, 0, 0, 0, 0});
 }
 
 TEST(ExtentsTest, addCenter) {

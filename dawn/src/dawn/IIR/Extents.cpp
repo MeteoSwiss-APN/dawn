@@ -60,16 +60,12 @@ void Extents::merge(const ast::Offsets& offset) {
   verticalExtent_.merge(offset.verticalOffset());
 }
 
-Extents Extents::add(const Extents& lhs, const Extents& rhs) {
-  Extents sum = lhs;
-  sum.add(rhs);
-  return sum;
-}
-
-void Extents::add(const Extents& other) {
+Extents& Extents::operator+=(const Extents& other) {
   verticalExtent_ += other.verticalExtent_;
-  horizontalExtent_.add(other.horizontalExtent_);
+  horizontalExtent_ += other.horizontalExtent_;
+  return *this;
 }
+Extents operator+(Extents lhs, const Extents& rhs) { return lhs += rhs; }
 
 void Extents::addVerticalCenter() {
   verticalExtent_ =

@@ -96,7 +96,7 @@ void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {
 void Accesses::addReadExtent(int AccessID, const Extents& extent) {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
-    it->second = Extents::add(it->second, extent);
+    it->second += extent;
   else
     readAccesses_.emplace(AccessID, extent);
 }
@@ -104,7 +104,7 @@ void Accesses::addReadExtent(int AccessID, const Extents& extent) {
 void Accesses::addWriteExtent(int AccessID, const Extents& extent) {
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
-    it->second = Extents::add(it->second, extent);
+    it->second += extent;
   else
     writeAccesses_.emplace(AccessID, extent);
 }
