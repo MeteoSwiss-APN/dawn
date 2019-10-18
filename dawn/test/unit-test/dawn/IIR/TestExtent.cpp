@@ -19,22 +19,24 @@ using namespace dawn;
 using namespace iir;
 namespace {
 
-static void compareExtents(iir::Extents extents, const std::array<int, 6>& ref) {
-  const auto& hExtents =
-      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
-  const auto& vExtents = extents.verticalExtent();
-
-  EXPECT_EQ(hExtents.iMinus(), ref[0]);
-  EXPECT_EQ(hExtents.iPlus(), ref[1]);
-  EXPECT_EQ(hExtents.jMinus(), ref[2]);
-  EXPECT_EQ(hExtents.jPlus(), ref[3]);
-  EXPECT_EQ(vExtents.minus(), ref[4]);
-  EXPECT_EQ(vExtents.plus(), ref[5]);
-}
-
 TEST(ExtentsTest, Construction) {
+  Extents expected(ast::cartesian, -1, -1, 1, 1, 2, 2);
+
   Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 2});
-  compareExtents(extents, {-1, -1, 1, 1, 2, 2});
+  EXPECT_EQ(extents, expected);
+
+  Extents extents2 = extents;
+  EXPECT_EQ(extents2, expected);
+
+  Extents extents3 = std::move(extents2);
+  EXPECT_EQ(extents3, expected);
+
+  Extents extents4{extents3};
+  EXPECT_EQ(extents3, expected);
+  EXPECT_EQ(extents4, expected);
+
+  Extents extents5{std::move(extents4)};
+  EXPECT_EQ(extents5, expected);
 }
 
 TEST(ExtentsTest, PointWise) {
@@ -42,9 +44,13 @@ TEST(ExtentsTest, PointWise) {
   EXPECT_FALSE(extents1.isHorizontalPointwise());
   EXPECT_TRUE(extents1.isVerticalPointwise());
 
-  Extents extents2(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 0, 0, 1});
-  EXPECT_TRUE(extents2.isHorizontalPointwise());
-  EXPECT_FALSE(extents2.isVerticalPointwise());
+  Extents extents2(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 1, 0, 0});
+  EXPECT_FALSE(extents2.isHorizontalPointwise());
+  EXPECT_TRUE(extents2.isVerticalPointwise());
+
+  Extents extents3(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 0, 0, 1});
+  EXPECT_TRUE(extents3.isHorizontalPointwise());
+  EXPECT_FALSE(extents3.isVerticalPointwise());
 }
 
 TEST(ExtentsTest, Merge1) {
@@ -52,7 +58,7 @@ TEST(ExtentsTest, Merge1) {
   Extents extentsToMerge(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 3, 2, 1});
   extents.merge(extentsToMerge);
 
-  compareExtents(extents, {-1, 3, 1, 2, 0, 1});
+  EXPECT_EQ(extents, Extents(ast::cartesian, -1, 3, 1, 2, 0, 1));
 }
 
 TEST(ExtentsTest, Merge2) {
@@ -60,27 +66,27 @@ TEST(ExtentsTest, Merge2) {
   Extents extentsToMerge(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -2, 2, 0});
   extents.merge(extentsToMerge);
 
-  compareExtents(extents, {-2, -1, 1, 2, 0, 0});
+  EXPECT_EQ(extents, Extents(ast::cartesian, -2, -1, 1, 2, 0, 0));
 }
 
 TEST(ExtentsTest, Merge3) {
   Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 0});
   extents.merge(ast::Offsets{ast::cartesian, -2, 0, 0});
 
-  compareExtents(extents, {-2, -1, 0, 1, 0, 0});
+  EXPECT_EQ(extents, Extents(ast::cartesian, -2, -1, 0, 1, 0, 0));
 }
 
 TEST(ExtentsTest, Add) {
   Extents extents(dawn::ast::cartesian_{}, -2, 2, 0, 0, 0, 0);
-  compareExtents(extents + extents, {-4, 4, 0, 0, 0, 0});
+  EXPECT_EQ(extents + extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
   extents += extents;
-  compareExtents(extents, {-4, 4, 0, 0, 0, 0});
+  EXPECT_EQ(extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
 }
 
 TEST(ExtentsTest, addCenter) {
   Extents extents(dawn::ast::cartesian_{}, 1, 1, -2, -2, 3, 3);
   extents.addVerticalCenter();
-  compareExtents(extents, {1, 1, -2, -2, 0, 3});
+  EXPECT_EQ(extents, Extents(ast::cartesian, 1, 1, -2, -2, 0, 3));
 }
 
 TEST(ExtentsTest, Stringify) {

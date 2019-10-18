@@ -35,59 +35,43 @@ namespace iir {
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
 class Extent {
-private:
-  int Minus;
-  int Plus;
 
 public:
   /// @name Constructors and Assignment
   /// @{
-  Extent() : Minus(0), Plus(0) {}
-  Extent(int minus, int plus) : Minus(minus), Plus(plus) {}
+  Extent(int minus, int plus) : minus_(minus), plus_(plus) {}
+  Extent() : Extent(0, 0) {}
   /// @}
 
-  int minus() const { return Minus; }
-  int plus() const { return Plus; }
+  int minus() const { return minus_; }
+  int plus() const { return plus_; }
 
   /// @name Operators
   /// @{
   Extent& merge(const Extent& other) {
-    Minus = std::min(Minus, other.Minus);
-    Plus = std::max(Plus, other.Plus);
+    minus_ = std::min(minus_, other.minus_);
+    plus_ = std::max(plus_, other.plus_);
     return *this;
   }
-
-  Extent& expand(const Extent& other) {
-    Minus = Minus + other.Minus;
-    Plus = Plus + other.Plus;
-    return *this;
-  }
-
-  Extent& merge(int other) {
-    Minus = std::min(Minus, other < 0 ? other : 0);
-    Plus = std::max(Plus, other > 0 ? other : 0);
-    return *this;
-  }
+  Extent& merge(int other) { return merge(Extent{0, 0}); }
 
   Extent& operator+=(const Extent& other) {
-    Minus += other.Minus;
-    Plus += other.Plus;
+    minus_ += other.minus_;
+    plus_ += other.plus_;
     return *this;
   }
 
-  Extent& operator+=(int other) {
-    Minus += other;
-    Plus += other;
-    Minus = std::min(0, Minus);
-    Plus = std::max(0, Plus);
-    return *this;
+  bool operator==(const Extent& other) const {
+    return minus_ == other.minus_ && plus_ == other.plus_;
   }
-
-  bool operator==(const Extent& other) const { return Minus == other.Minus && Plus == other.Plus; }
   bool operator!=(const Extent& other) const { return !(*this == other); }
 
-  bool isPointwise() const { return Plus == 0 && Minus == 0; }
+  bool isPointwise() const { return plus_ == 0 && minus_ == 0; }
   /// @}
+  //
+private:
+  int minus_;
+  int plus_;
 };
 Extent operator+(Extent lhs, Extent const& rhs);
 
@@ -104,7 +88,6 @@ public:
 
   void merge(HorizontalExtentImpl const& other) { merge_impl(other); }
   void merge(dawn::ast::HorizontalOffset const& other) { merge_impl(other); }
-  void expand(HorizontalExtentImpl const& other) { expand_impl(other); }
   bool equals(HorizontalExtentImpl const& other) const { return equals_impl(other); }
   bool isPointwise() const { return isPointwise_impl(); }
 
@@ -112,7 +95,6 @@ protected:
   virtual void add_impl(HorizontalExtentImpl const& other) = 0;
   virtual void merge_impl(HorizontalExtentImpl const& other) = 0;
   virtual void merge_impl(dawn::ast::HorizontalOffset const& other) = 0;
-  virtual void expand_impl(HorizontalExtentImpl const& other) = 0;
   virtual bool equals_impl(HorizontalExtentImpl const& other) const = 0;
   virtual std::unique_ptr<HorizontalExtentImpl> clone_impl() const = 0;
   virtual bool isPointwise_impl() const = 0;
@@ -120,15 +102,10 @@ protected:
 
 class CartesianExtent : public HorizontalExtentImpl {
 public:
-  CartesianExtent(int iMinus, int iPlus, int jMinus, int jPlus) {
-    m_extents_[0] = Extent(iMinus, iPlus);
-    m_extents_[1] = Extent(jMinus, jPlus);
-  }
+  CartesianExtent(int iMinus, int iPlus, int jMinus, int jPlus)
+      : m_extents_{Extent(iMinus, iPlus), Extent(jMinus, jPlus)} {}
 
-  CartesianExtent() {
-    m_extents_[0] = Extent(0, 0);
-    m_extents_[1] = Extent(0, 0);
-  }
+  CartesianExtent() : CartesianExtent(0, 0, 0, 0) {}
 
   void add_impl(HorizontalExtentImpl const& other) override {
     auto other_cartesian = dynamic_cast<dawn::iir::CartesianExtent const&>(other);
@@ -148,17 +125,10 @@ public:
     m_extents_[1].merge(Extent(offset_cartesian.offsetJ(), offset_cartesian.offsetJ()));
   }
 
-  void expand_impl(HorizontalExtentImpl const& other) override {
-    auto other_cartesian = dynamic_cast<dawn::iir::CartesianExtent const&>(other);
-    m_extents_[0].expand(other_cartesian.m_extents_[0]);
-    m_extents_[1].expand(other_cartesian.m_extents_[1]);
-  }
-
   bool equals_impl(HorizontalExtentImpl const& other) const override {
     auto other_cartesian = dynamic_cast<dawn::iir::CartesianExtent const&>(other);
-    bool equalI = m_extents_[0] == other_cartesian.m_extents_[0];
-    bool equalJ = m_extents_[1] == other_cartesian.m_extents_[1];
-    return equalI && equalJ;
+    return m_extents_[0] == other_cartesian.m_extents_[0] &&
+           m_extents_[1] == other_cartesian.m_extents_[1];
   }
 
   std::unique_ptr<HorizontalExtentImpl> clone_impl() const override {
@@ -185,10 +155,8 @@ public:
   HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
       : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
 
-  HorizontalExtent() = delete;
   HorizontalExtent(HorizontalExtent const& other) : impl_(other.impl_->clone()) {}
-  HorizontalExtent(HorizontalExtent&& other) : impl_(std::move(other.impl_)) {}
-
+  HorizontalExtent(HorizontalExtent&& other) = default;
   HorizontalExtent& operator=(HorizontalExtent const& other) {
     impl_ = other.impl_->clone();
     return *this;
@@ -212,7 +180,6 @@ public:
   bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
   void merge(const HorizontalExtent& other) { impl_->merge(*other.impl_); }
   void merge(const dawn::ast::HorizontalOffset& other) { impl_->merge(other); }
-  void expand(const HorizontalExtent& other) { impl_->expand(*other.impl_); }
   bool isPointwise() const { return impl_->isPointwise(); }
 
 private:
@@ -251,8 +218,6 @@ public:
   ///   `{-2, 1, 0, 0, 0, 1}`.
   void merge(const Extents& other);
   void merge(const ast::Offsets& offset);
-
-  void expand(const Extents& other);
 
   /// @brief resets vertical extants to {0, 0}
   void resetVerticalExtent();

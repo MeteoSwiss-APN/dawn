@@ -63,13 +63,13 @@ void mergeFields(std::unordered_map<int, Field> const& sourceFields,
 
     auto readExtentsRB = sField.getReadExtents();
     if(readExtentsRB && baseExtents) {
-      readExtentsRB->expand(*baseExtents);
+      *readExtentsRB += *baseExtents;
       sField.setReadExtentsRB(readExtentsRB);
     }
 
     auto writeExtentsRB = sField.getWriteExtents();
     if(writeExtentsRB && baseExtents) {
-      writeExtentsRB->expand(*baseExtents);
+      *writeExtentsRB += *baseExtents;
       sField.setWriteExtentsRB(writeExtentsRB);
     }
 

@@ -48,11 +48,6 @@ void Extents::merge(const Extents& other) {
   verticalExtent_.merge(other.verticalExtent_);
 }
 
-void Extents::expand(const Extents& other) {
-  horizontalExtent_.expand(other.horizontalExtent_);
-  verticalExtent_.expand(other.verticalExtent_);
-}
-
 void Extents::resetVerticalExtent() { verticalExtent_ = Extent(0, 0); }
 
 void Extents::merge(const ast::Offsets& offset) {
@@ -67,10 +62,7 @@ Extents& Extents::operator+=(const Extents& other) {
 }
 Extents operator+(Extents lhs, const Extents& rhs) { return lhs += rhs; }
 
-void Extents::addVerticalCenter() {
-  verticalExtent_ =
-      Extent(std::min(verticalExtent_.minus(), 0), std::max(verticalExtent_.plus(), 0));
-}
+void Extents::addVerticalCenter() { verticalExtent_.merge(0); }
 
 bool Extents::isHorizontalPointwise() const { return horizontalExtent_.isPointwise(); }
 
