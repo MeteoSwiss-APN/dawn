@@ -22,7 +22,7 @@ namespace {
 TEST(ExtentsTest, Construction) {
   Extents expected(ast::cartesian, -1, -1, 1, 1, 2, 2);
 
-  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 2});
+  Extents extents(ast::Offsets{ast::cartesian, -1, 1, 2});
   EXPECT_EQ(extents, expected);
 
   Extents extents2 = extents;
@@ -40,64 +40,64 @@ TEST(ExtentsTest, Construction) {
 }
 
 TEST(ExtentsTest, PointWise) {
-  Extents extents1(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 0, 1, 0});
+  Extents extents1(ast::Offsets{ast::cartesian, 0, 1, 0});
   EXPECT_FALSE(extents1.isHorizontalPointwise());
   EXPECT_TRUE(extents1.isVerticalPointwise());
 
-  Extents extents2(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 1, 0, 0});
+  Extents extents2(ast::Offsets{ast::cartesian, 1, 0, 0});
   EXPECT_FALSE(extents2.isHorizontalPointwise());
   EXPECT_TRUE(extents2.isVerticalPointwise());
 
-  Extents extents3(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 0, 0, 1});
+  Extents extents3(ast::Offsets{ast::cartesian, 0, 0, 1});
   EXPECT_TRUE(extents3.isHorizontalPointwise());
   EXPECT_FALSE(extents3.isVerticalPointwise());
 }
 
 TEST(ExtentsTest, Merge1) {
-  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 0});
-  Extents extentsToMerge(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 3, 2, 1});
+  Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
+  Extents extentsToMerge(ast::Offsets{ast::cartesian, 3, 2, 1});
   extents.merge(extentsToMerge);
 
   EXPECT_EQ(extents, Extents(ast::cartesian, -1, 3, 1, 2, 0, 1));
 }
 
 TEST(ExtentsTest, Merge2) {
-  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 0});
-  Extents extentsToMerge(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -2, 2, 0});
+  Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
+  Extents extentsToMerge(ast::Offsets{ast::cartesian, -2, 2, 0});
   extents.merge(extentsToMerge);
 
   EXPECT_EQ(extents, Extents(ast::cartesian, -2, -1, 1, 2, 0, 0));
 }
 
 TEST(ExtentsTest, Merge3) {
-  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, -1, 1, 0});
+  Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
   extents.merge(ast::Offsets{ast::cartesian, -2, 0, 0});
 
   EXPECT_EQ(extents, Extents(ast::cartesian, -2, -1, 0, 1, 0, 0));
 }
 
 TEST(ExtentsTest, Add) {
-  Extents extents(dawn::ast::cartesian_{}, -2, 2, 0, 0, 0, 0);
+  Extents extents(dawn::ast::cartesian, -2, 2, 0, 0, 0, 0);
   EXPECT_EQ(extents + extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
   extents += extents;
   EXPECT_EQ(extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
 }
 
 TEST(ExtentsTest, addCenter) {
-  Extents extents(dawn::ast::cartesian_{}, 1, 1, -2, -2, 3, 3);
+  Extents extents(dawn::ast::cartesian, 1, 1, -2, -2, 3, 3);
   extents.addVerticalCenter();
   EXPECT_EQ(extents, Extents(ast::cartesian, 1, 1, -2, -2, 0, 3));
 }
 
 TEST(ExtentsTest, Stringify) {
-  Extents extents(dawn::ast::cartesian_{}, ast::Offsets{ast::cartesian, 1, -1, 2});
+  Extents extents(ast::Offsets{ast::cartesian, 1, -1, 2});
   std::stringstream ss;
   ss << extents;
   EXPECT_STREQ(ss.str().c_str(), "[(1, 1), (-1, -1), (2, 2)]");
 }
 
 TEST(ExtentsTest, verticalLoopOrder) {
-  Extents extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, -1, 2);
+  Extents extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2);
   EXPECT_EQ(extents.getVerticalLoopOrderExtent(iir::LoopOrderKind::LK_Forward,
                                                Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
                                                false),

@@ -259,7 +259,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Extents(ast::cartesian_, const ast::Offsets& offset);
+  Extents(const ast::Offsets& offset);
   Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
           int extent3minus, int extent3plus);
   Extents(HorizontalExtent const& hExtent, Extent const& vExtent);

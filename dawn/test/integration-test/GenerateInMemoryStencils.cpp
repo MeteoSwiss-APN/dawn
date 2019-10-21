@@ -95,8 +95,8 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
 
   // Add the accesses:
   iir::Accesses callerAccesses;
-  callerAccesses.addWriteExtent(out_fieldID, iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
-  callerAccesses.addReadExtent(in_fieldID, iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
+  callerAccesses.addWriteExtent(out_fieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
+  callerAccesses.addReadExtent(in_fieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
   // And add the statement to it
   IIRDoMethod->insertChild(std::move(stmt));
@@ -156,7 +156,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto IIRStage1 = std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
   auto IIRStage2 = std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
 
-  IIRStage1->setExtents(iir::Extents(ast::cartesian_{}, -1, +1, -1, +1, 0, 0));
+  IIRStage1->setExtents(iir::Extents(ast::cartesian, -1, +1, -1, +1, 0, 0));
 
   // Create one doMethod inside the Stage that spans the full domain
   IIRStage1->insertChild(std::make_unique<iir::DoMethod>(
@@ -255,8 +255,8 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   // Add the accesses:
   iir::Accesses callerAccesses1;
-  callerAccesses1.addWriteExtent(tmpFieldID, iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
-  callerAccesses1.addReadExtent(inFieldID, iir::Extents(ast::cartesian_{}, -2, 2, -2, 2, 0, 0));
+  callerAccesses1.addWriteExtent(tmpFieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
+  callerAccesses1.addReadExtent(inFieldID, iir::Extents(ast::cartesian, -2, 2, -2, 2, 0, 0));
   stmt1->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses1));
 
@@ -280,8 +280,8 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   // Add the accesses to the statement:
   iir::Accesses callerAccesses2;
-  callerAccesses2.addWriteExtent(outFieldID, iir::Extents(ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
-  callerAccesses2.addReadExtent(tmpFieldID, iir::Extents(ast::cartesian_{}, -1, 1, -1, 1, 0, 0));
+  callerAccesses2.addWriteExtent(outFieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
+  callerAccesses2.addReadExtent(tmpFieldID, iir::Extents(ast::cartesian, -1, 1, -1, 1, 0, 0));
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses2));
   // And add the statement to it

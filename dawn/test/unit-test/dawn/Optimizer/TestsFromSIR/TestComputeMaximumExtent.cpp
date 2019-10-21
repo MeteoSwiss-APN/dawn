@@ -72,9 +72,9 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
   ASSERT_TRUE((stencil->getStage(0)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  ASSERT_TRUE(
+      (stencil->getStage(1)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 
@@ -90,10 +90,10 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   ASSERT_TRUE((doMethod1->getChildren().size() == 1));
   const auto& stmt = doMethod1->getChildren()[0];
   ASSERT_TRUE((iir::computeMaximumExtents(*stmt, metadata.getAccessIDFromName("u")) ==
-               iir::Extents(dawn::ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
+               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
 
   EXPECT_EQ(iir::computeMaximumExtents(*stmt, metadata.getAccessIDFromName("coeff")),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 1, 1)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 1, 1)));
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
@@ -117,7 +117,7 @@ TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
 
   ASSERT_TRUE((doMethod1.computeMaximumExtents(
                    stencilInstantiation->getMetaData().getAccessIDFromName("u")) ==
-               iir::Extents(dawn::ast::cartesian_{}, 0, 1, -1, 0, 0, 2)));
+               iir::Extents(dawn::ast::cartesian, 0, 1, -1, 0, 0, 2)));
 }
 
 } // anonymous namespace

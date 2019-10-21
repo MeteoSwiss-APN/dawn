@@ -73,9 +73,9 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
   ASSERT_TRUE((stencil->getStage(0)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  ASSERT_TRUE(
+      (stencil->getStage(1)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 
