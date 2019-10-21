@@ -126,7 +126,7 @@ yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOU
 
 if(DAWN_PYTHON)
   if(NOT DEFINED PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3.4 REQUIRED)
+    find_package(PythonInterp 3 REQUIRED)
   endif()
   add_subdirectory(python)
 endif()
