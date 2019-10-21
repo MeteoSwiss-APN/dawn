@@ -175,9 +175,6 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::Location
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
                                        asArray(fieldType::ijk), location);
-  int accessID = si_->getMetaData().getAccessIDFromName(name);
-  si_->getMetaData().addAccessIDLocationPair(accessID, location);
-
   return {id, name};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
