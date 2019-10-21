@@ -22,6 +22,8 @@
 
 namespace dawn::ast {
 
+class Offsets;
+
 struct cartesian_ {};
 static constexpr cartesian_ cartesian;
 
@@ -122,6 +124,9 @@ public:
   friend T offset_cast(HorizontalOffset const& offset);
   template <typename T>
   friend T offset_cast(HorizontalOffset&& offset);
+  template <typename CartFn, typename UnstructuredFn>
+  friend auto offset_dispatch(Offsets const& extents, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn);
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
@@ -146,7 +151,7 @@ public:
 
   Offsets(unstructured_, bool hasOffset, int k)
       : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k) {}
-  Offsets(unstructured_) : horizontalOffset_(unstructured) {}
+  explicit Offsets(unstructured_) : horizontalOffset_(unstructured) {}
   int verticalOffset() const { return verticalOffset_; }
   HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
 
@@ -197,6 +202,19 @@ std::string toString(Offsets const& offset, std::string const& sep = ",");
  * consider
  */
 std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
+
+template <typename CartFn, typename UnstructuredFn>
+auto offset_dispatch(Offsets const& offsets, CartFn const& cartFn,
+                     UnstructuredFn const& unstructuredFn) {
+  HorizontalOffsetImpl* ptr = offsets.horizontalOffset().impl_.get();
+  if(auto cartesianOffset = dynamic_cast<CartesianOffset const*>(ptr)) {
+    return cartFn(*cartesianOffset, offsets.verticalOffset());
+  } else if(auto unstructuredOffset = dynamic_cast<UnstructuredOffset const*>(ptr)) {
+    return unstructuredFn(*unstructuredOffset, offsets.verticalOffset());
+  } else {
+    dawn_unreachable("unknown offset class");
+  }
+}
 
 } // namespace dawn::ast
 #endif

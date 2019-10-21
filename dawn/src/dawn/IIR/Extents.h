@@ -32,6 +32,8 @@
 namespace dawn {
 namespace iir {
 
+class Extents;
+
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
 class Extent {
@@ -211,6 +213,10 @@ public:
   HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
       : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
 
+  HorizontalExtent(ast::unstructured_) : impl_(std::make_unique<UnstructuredExtent>()) {}
+  HorizontalExtent(ast::unstructured_, bool hasExtent)
+      : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {}
+
   HorizontalExtent(HorizontalExtent const& other) : impl_(other.impl_->clone()) {}
   HorizontalExtent(HorizontalExtent&& other) = default;
   HorizontalExtent& operator=(HorizontalExtent const& other) {
@@ -230,6 +236,9 @@ public:
   friend T extent_cast(HorizontalExtent const&);
   template <typename T>
   friend T extent_cast(HorizontalExtent&&);
+  template <typename CartFn, typename UnstructuredFn>
+  friend auto extent_dispatch(Extents const& extents, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn);
 
   bool operator==(HorizontalExtent const& other) const { return impl_->equals(*other.impl_); }
   bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
@@ -259,11 +268,15 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Extents(const ast::Offsets& offset);
+  Extents(ast::Offsets const& offset);
+  Extents(HorizontalExtent const& hExtent, Extent const& vExtent);
+
   Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
           int extent3minus, int extent3plus);
-  Extents(HorizontalExtent const& hExtent, Extent const& vExtent);
   explicit Extents(ast::cartesian_);
+
+  Extents(ast::unstructured_, bool hasOffset, Extent const& vExtent);
+  explicit Extents(ast::unstructured_);
   /// @}
 
   bool hasVerticalCenter() const;
@@ -271,7 +284,8 @@ public:
   /// @brief Limits the same extents, but limited to the interval [minus, plus]
   Extents limit(int minus, int plus) const;
 
-  /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
+  /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the
+  /// two
   ///
   /// @b Example:
   ///   If `this` is `{-1, 1, 0, 0, 0, 0}` and `other` is `{-2, 0, 0, 0, 1}` the result will be
@@ -311,10 +325,11 @@ public:
   /// non-pointwise extent is considered a counter-loop- and loop order access.
   VerticalLoopOrderAccess getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const;
 
-  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or CounterLoopOrder
-  /// return non initialized optional<Extent> if the full extent is accessed in a counterloop order
-  /// manner
-  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or parallel)
+  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or
+  /// CounterLoopOrder return non initialized optional<Extent> if the full extent is accessed in a
+  /// counterloop order manner
+  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or
+  /// parallel)
   /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
   ///            InLoopOrder/CounterLoopOrder
   /// @param includeCenter determines whether center is considered part of the loopOrderPolicy
@@ -348,6 +363,19 @@ Extents operator+(Extents lhs, const Extents& rhs);
 
 std::ostream& operator<<(std::ostream& os, const Extents& extent);
 std::string to_string(Extents const& extent);
+
+template <typename CartFn, typename UnstructuredFn>
+auto extent_dispatch(Extents const& extents, CartFn const& cartFn,
+                     UnstructuredFn const& unstructuredFn) {
+  HorizontalExtentImpl* ptr = extents.horizontalExtent().impl_.get();
+  if(auto cartesianExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
+    return cartFn(*cartesianExtent, extents.verticalExtent());
+  } else if(auto unstructuredExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
+    return unstructuredFn(*unstructuredExtent, extents.verticalExtent());
+  } else {
+    dawn_unreachable("unknown extent class");
+  }
+}
 
 } // namespace iir
 } // namespace dawn

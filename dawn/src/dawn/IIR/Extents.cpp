@@ -27,21 +27,28 @@ Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
-Extents::Extents(const ast::Offsets& offset)
-    : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
-      horizontalExtent_(ast::cartesian) {
-  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
-
-  horizontalExtent_ = HorizontalExtent(ast::cartesian, hOffset.offsetI(), hOffset.offsetI(),
-                                       hOffset.offsetJ(), hOffset.offsetJ());
-}
+Extents::Extents(ast::Offsets const& offset)
+    : Extents(offset_dispatch(offset,
+                              [](ast::CartesianOffset const& hOffset, int) {
+                                return HorizontalExtent(ast::cartesian, hOffset.offsetI(),
+                                                        hOffset.offsetI(), hOffset.offsetJ(),
+                                                        hOffset.offsetJ());
+                              },
+                              [](ast::UnstructuredOffset const& hOffset, int) {
+                                return HorizontalExtent(ast::unstructured, hOffset.hasOffset());
+                              }),
+              Extent{offset.verticalOffset(), offset.verticalOffset()}) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
-    : verticalExtent_(extent3minus, extent3plus),
-      horizontalExtent_(ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus) {}
-
+    : Extents(
+          HorizontalExtent{ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus},
+          Extent{extent3minus, extent3plus}) {}
 Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian) {}
+
+Extents::Extents(ast::unstructured_, bool hasOffset, Extent const& vExtent)
+    : Extents(HorizontalExtent{ast::unstructured, hasOffset}, Extent{vExtent}) {}
+Extents::Extents(ast::unstructured_) : horizontalExtent_(ast::unstructured) {}
 
 void Extents::merge(const Extents& other) {
   horizontalExtent_.merge(other.horizontalExtent_);
