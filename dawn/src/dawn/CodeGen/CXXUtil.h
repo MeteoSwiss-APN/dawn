@@ -68,15 +68,10 @@ inline std::string twineToStr(const Twine& twine) {
 
 } // namespace internal
 
-template <typename T>
-inline Twine makeTwine(T&& arg) {
-  return Twine(arg);
-}
-
 /// @brief Convert variadic pack to Twine
 template <typename T, typename... Args>
 inline Twine makeTwine(T&& arg, Args&&... args) {
-  return Twine(arg) + makeTwine(args...);
+  return (Twine(arg) + ... + Twine(args));
 }
 
 /// @brief Clear the string stream and return it again

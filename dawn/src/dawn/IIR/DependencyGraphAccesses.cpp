@@ -69,16 +69,13 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
   if(data.isHorizontalPointwise() && data.isVerticalPointwise())
     return " [style = dashed]";
   else {
-    // TODO wrong
     const auto& hExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(data.horizontalExtent());
     const auto& vExtents = data.verticalExtent();
-    std::string extentsStr =
-        std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) + ", ";
-    extentsStr +=
-        std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) + ", ";
-    extentsStr += std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus());
-    return extentsStr;
+    return " [label = \"<" + std::to_string(hExtents.iMinus()) + ", " +
+           std::to_string(hExtents.iPlus()) + ", " + std::to_string(hExtents.jMinus()) + ", " +
+           std::to_string(hExtents.jPlus()) + ", " + std::to_string(vExtents.minus()) + ", " +
+           std::to_string(vExtents.plus()) + ">\"]";
   }
 }
 
