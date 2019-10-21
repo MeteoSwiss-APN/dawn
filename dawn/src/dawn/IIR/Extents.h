@@ -53,7 +53,7 @@ public:
     plus_ = std::max(plus_, other.plus_);
     return *this;
   }
-  Extent& merge(int other) { return merge(Extent{0, 0}); }
+  Extent& merge(int other) { return merge(Extent{other, other}); }
 
   Extent limit(int minus, int plus) const {
     return {std::max(minus, minus_), std::min(plus, plus_)};
