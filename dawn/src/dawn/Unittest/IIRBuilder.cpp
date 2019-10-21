@@ -186,19 +186,41 @@ IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID
   int id = si_->getMetaData().addStmt(true, iirStmt);
   return {id, name, iirStmt};
 }
+std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, accessType access) {
+  if(unstructured_)
+    return at(field, access, ast::Offsets{ast::unstructured});
+  else
+    return at(field, access, ast::Offsets{ast::cartesian});
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, Array3i const& offset) {
+  DAWN_ASSERT(!unstructured_);
+  return at(field, accessType::r, offset);
+}
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, accessType access,
-                                          Array3i offset) {
+                                          Array3i const& offset) {
+  DAWN_ASSERT(!unstructured_);
+  return at(field, accessType::r, ast::Offsets{ast::cartesian, offset});
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, hOffsetType hOffset,
+                                          int vOffset) {
   DAWN_ASSERT(si_);
-  auto expr =
-      std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::cartesian, offset});
+  DAWN_ASSERT(unstructured_);
+  return at(field, accessType::r, hOffset, vOffset);
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, accessType access,
+                                          hOffsetType hOffset, int vOffset) {
+  DAWN_ASSERT(unstructured_);
+  return at(field, accessType::r,
+            ast::Offsets{ast::unstructured, hOffset == hOffsetType::withOffset, vOffset});
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, accessType access,
+                                          ast::Offsets const& offset) {
+  DAWN_ASSERT(si_);
+  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, offset);
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
-}
-std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, Array3i extent) {
-  DAWN_ASSERT(si_);
-  return at(field, accessType::r, extent);
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);

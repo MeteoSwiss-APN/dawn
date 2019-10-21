@@ -46,6 +46,7 @@ enum class op {
   logicalNot
 };
 enum class accessType { r, rw };
+enum class hOffsetType { withOffset, noOffset };
 
 // \brief Short syntax to build an IIR in a consistent state
 //
@@ -64,6 +65,11 @@ class IIRBuilder {
   };
 
 public:
+  IIRBuilder(ast::unstructured_)
+      : si_(std::make_shared<iir::StencilInstantiation>()), unstructured_(true) {}
+  IIRBuilder(ast::cartesian_ = ast::cartesian)
+      : si_(std::make_shared<iir::StencilInstantiation>()), unstructured_(false) {}
+
   Field field(std::string const& name, fieldType ft = fieldType::ijk);
   Field field(std::string const& name, ast::Expr::LocationType location);
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
@@ -98,11 +104,19 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r,
-                                Array3i extent = {});
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r);
+  // cartesian only
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, Array3i const& offset);
+  std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);
+  //
 
-  std::shared_ptr<iir::Expr> at(Field const& field, Array3i extent);
+  // unstructured only
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, hOffsetType hOffset,
+                                int vOffset);
+  std::shared_ptr<iir::Expr> at(Field const& field, hOffsetType hOffset, int vOffset);
+  //
 
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, ast::Offsets const& offset);
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
   std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
@@ -176,10 +190,9 @@ public:
   dawn::codegen::stencilInstantiationContext build(std::string const& name,
                                                    std::unique_ptr<iir::Stencil> stencil);
 
-  IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}
-
 private:
   std::shared_ptr<iir::StencilInstantiation> si_;
+  bool unstructured_ = false;
 };
 } // namespace iir
 } // namespace dawn
