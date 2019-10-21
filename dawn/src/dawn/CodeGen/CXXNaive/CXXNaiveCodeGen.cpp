@@ -33,10 +33,8 @@ namespace {
 std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
                          const std::string& upper, const std::string& comparison,
                          const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
-               comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim +
-               ")")
-      .str();
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
+         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
 }
 
 std::string makeIJLoop(int iExtent, int jExtent, const std::string dom, const std::string& dim) {
@@ -381,7 +379,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
-                auto extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+                auto const& extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
 
                 stencilRunMethod.addBlockStatement(

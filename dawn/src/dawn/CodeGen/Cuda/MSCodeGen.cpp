@@ -107,7 +107,7 @@ void MSCodeGen::generateTmpIndexInit(MemberFunction& kernel) const {
     return;
 
   auto maxExtentTmps = CodeGeneratorHelper::computeTempMaxWriteExtent(*(ms_->getParent()));
-  auto hMaxExtentTmps =
+  auto const& hMaxExtentTmps =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtentTmps.horizontalExtent());
   kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-hMaxExtentTmps.iMinus()) +
                       ")*1 + (jblock+" + std::to_string(-hMaxExtentTmps.jMinus()) +
@@ -291,10 +291,9 @@ void MSCodeGen::generatePreFillKCaches(
 std::string MSCodeGen::makeLoopImpl(const iir::Extent extent, const std::string& dim,
                                     const std::string& lower, const std::string& upper,
                                     const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.minus()) + "; " +
-               dim + " " + comparison + " " + upper + "+" + std::to_string(extent.plus()) + "; " +
-               increment + dim + ")")
-      .str();
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(extent.minus()) + "; " + dim +
+         " " + comparison + " " + upper + "+" + std::to_string(extent.plus()) + "; " + increment +
+         dim + ")";
 }
 
 void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
@@ -678,12 +677,12 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
 
 void MSCodeGen::generateCudaKernelCode() {
 
-  iir::Extents maxExtents(ast::cartesian, 0, 0, 0, 0, 0, 0);
+  iir::Extents maxExtents(ast::cartesian);
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms_)) {
     maxExtents.merge(stage->getExtents());
   }
 
-  auto hMaxExtents =
+  auto const& hMaxExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   // fields used in the stencil

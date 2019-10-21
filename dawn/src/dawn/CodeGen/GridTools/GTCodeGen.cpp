@@ -583,9 +583,9 @@ void GTCodeGen::generateStencilClasses(
           // Generate parameter of stage
           std::stringstream ss;
           codegen::Type extent(c_gt() + "extent", ss);
-          auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+          auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
               fields[m].getExtents().horizontalExtent());
-          auto vExtents = fields[m].getExtents().verticalExtent();
+          auto const& vExtents = fields[m].getExtents().verticalExtent();
 
           extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
           extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
@@ -716,7 +716,7 @@ void GTCodeGen::generateStencilClasses(
 
         ssMS << c_gt() + "make_stage_withExtent<" << StageStruct.getName()
              << ", " + c_gt() + "extent< ";
-        auto hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+        auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
             stage.getExtents().horizontalExtent());
         ssMS << hExtents.iMinus() << ", " << hExtents.iPlus() << ", " << hExtents.jMinus() << ", "
              << hExtents.jPlus() << "> >(";
@@ -744,9 +744,9 @@ void GTCodeGen::generateStencilClasses(
           std::stringstream tss;
           codegen::Type extent(c_gt() + "extent", tss);
 
-          auto fieldHExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+          auto const& fieldHExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
               field.getExtents().horizontalExtent());
-          auto fieldVExtents = field.getExtents().verticalExtent();
+          auto const& fieldVExtents = field.getExtents().verticalExtent();
 
           extent.addTemplate(Twine(fieldHExtents.iMinus()) + ", " + Twine(fieldHExtents.iPlus()));
           extent.addTemplate(Twine(fieldHExtents.jMinus()) + ", " + Twine(fieldHExtents.jPlus()));

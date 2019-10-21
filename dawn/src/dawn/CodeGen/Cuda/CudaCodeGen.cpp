@@ -497,7 +497,7 @@ void CudaCodeGen::generateStencilRunMethod(
     unsigned int ntx = blockSize[0];
     unsigned int nty = blockSize[1];
 
-    auto hMaxExtents =
+    auto const& hMaxExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     stencilRunMethod.addStatement(
@@ -589,7 +589,7 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
                                         iir::Stencil const& stencil) const {
 
   auto maxExtents = CodeGeneratorHelper::computeTempMaxWriteExtent(stencil);
-  auto hMaxExtents =
+  auto const& hMaxExtents =
       dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   stencilClass.addTypeDef("tmp_halo_t")
@@ -612,7 +612,7 @@ void CudaCodeGen::addTmpStorageInit(
   const auto blockSize = stencil.getParent()->getBlockSize();
 
   if(!(tempFields.empty())) {
-    auto hMaxExtents =
+    auto const& hMaxExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
     ctr.addInit(tmpMetadataName_ + "(" + std::to_string(blockSize[0]) + "+" +
                 std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
