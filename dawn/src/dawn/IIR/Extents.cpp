@@ -161,20 +161,16 @@ bool Extents::operator==(const Extents& other) const {
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
 std::string Extents::toString() const {
-  std::stringstream ss;
-  ss << (*this);
-  return ss.str();
+  auto hExtents = extent_cast<CartesianExtent const&>(horizontalExtent());
+  auto vExtents = verticalExtent_;
+
+  return "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) +
+         "), (" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) +
+         "), (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
-  auto hExtents = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
-  auto vExtents = extents.verticalExtent_;
-
-  os << "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) + "), ";
-  os << "(" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) + "), ";
-  os << "(" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
-
-  return os;
+  return os << extents.toString();
 }
 
 } // namespace iir

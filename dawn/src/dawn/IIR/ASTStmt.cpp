@@ -92,7 +92,7 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
   const auto& callerAccesses = stmt.getData<IIRStmtData>().CallerAccesses;
 
   if(callerAccesses->hasReadAccess(accessID))
-    extents = std::make_optional(std::move(callerAccesses->getReadAccess(accessID)));
+    extents = std::make_optional(callerAccesses->getReadAccess(accessID));
 
   if(callerAccesses->hasWriteAccess(accessID)) {
     if(extents)
@@ -106,7 +106,7 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
       if(extents)
         extents->merge(*childExtent);
       else
-        extents.swap(childExtent);
+        extents = std::move(childExtent);
     }
 
   return extents;

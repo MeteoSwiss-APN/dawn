@@ -346,8 +346,8 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
     cudaKernel.addBlockStatement(
         "if(iblock >= " + std::to_string(horizontalExtent.iMinus()) +
             " && iblock <= block_size_i -1 + " + std::to_string(horizontalExtent.iPlus()) +
-            " && jblock >= " + std::to_string(horizontalExtent.iMinus()) +
-            " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent.iPlus()) + ")",
+            " && jblock >= " + std::to_string(horizontalExtent.jMinus()) +
+            " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent.jPlus()) + ")",
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
 
@@ -467,7 +467,7 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
 
     if(applyEpflush) {
       auto cacheName = cacheProperties_.getCacheName(accessID);
-      auto intervalVertExtent = (*extents).verticalExtent();
+      auto intervalVertExtent = extents->verticalExtent();
 
       DAWN_ASSERT(intervalFields.count(accessID));
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();

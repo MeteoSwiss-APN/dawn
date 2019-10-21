@@ -147,14 +147,14 @@ int CacheProperties::getStrideCommonCache(int dim, Array3ui blockSize) const {
 }
 
 int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
-  DAWN_ASSERT(dim <= 2);
+  DAWN_ASSERT(dim <= 1);
   auto const& extent = getCacheExtent(accessID);
   auto const& hExtents = iir::extent_cast<iir::CartesianExtent const&>(extent.horizontalExtent());
   return dim == 0 ? -hExtents.iMinus() : -hExtents.jMinus();
 }
 
 int CacheProperties::getOffsetCommonIJCache(int dim) const {
-  DAWN_ASSERT(dim <= 2);
+  DAWN_ASSERT(dim <= 1);
   auto const& hExtents = iir::extent_cast<iir::CartesianExtent const&>(extents_.horizontalExtent());
   return dim == 0 ? -hExtents.iMinus() : -hExtents.jMinus();
 }

@@ -69,6 +69,7 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
   if(data.isHorizontalPointwise() && data.isVerticalPointwise())
     return " [style = dashed]";
   else {
+    // TODO wrong
     const auto& hExtents =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(data.horizontalExtent());
     const auto& vExtents = data.verticalExtent();
