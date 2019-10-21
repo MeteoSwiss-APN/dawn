@@ -35,9 +35,31 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
+template <typename T>
+static std::vector<T> parseTokenizedString(const std::string& data, const char sep) {
+  std::vector<T> output;
+  std::istringstream idata{data};
+  std::string token;
+  while(std::getline(idata, token, sep)) {
+    std::istringstream ss{token};
+    T val;
+    ss >> val;
+    output.emplace_back(val);
+  }
+  return output;
+}
+
+static std::array<int, 3> parseDomainSize(const std::string& domainSize) {
+  const auto tokens = parseTokenizedString<int>(domainSize, ',');
+  DAWN_ASSERT(tokens.size() == 3);
+  return std::array<int, 3>{tokens[0], tokens[1], tokens[2]};
+}
+
 CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                         int maxHaloPoints, int nsms, int maxBlocksPerSM, std::string domainSize)
-    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
+                         int maxHaloPoints, int nsms, int maxBlocksPerSM,
+                         const std::string& domainSize)
+    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM,
+                                                          parseDomainSize(domainSize)} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 

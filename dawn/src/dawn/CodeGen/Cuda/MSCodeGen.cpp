@@ -700,17 +700,13 @@ void MSCodeGen::generateCudaKernelCode() {
   int nSM = options_.nsms;
   int maxBlocksPerSM = options_.maxBlocksPerSM;
 
-  std::string domain_size = options_.domainSize;
-  if(nSM > 0 && !domain_size.empty()) {
+  if(nSM > 0) {
     if(maxBlocksPerSM <= 0) {
       throw std::runtime_error("--max-blocks-sm must be defined");
     }
-    std::istringstream idomain_size(domain_size);
-    std::string arg;
-    getline(idomain_size, arg, ',');
-    int isize = std::stoi(arg);
-    getline(idomain_size, arg, ',');
-    int jsize = std::stoi(arg);
+
+    const int isize = options_.domainSize[0];
+    const int jsize = options_.domainSize[1];
 
     int minBlocksPerSM = isize * jsize / (blockSize_[0] * blockSize_[1]);
     if(solveKLoopInParallel_)

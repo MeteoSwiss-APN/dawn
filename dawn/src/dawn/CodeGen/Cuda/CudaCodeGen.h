@@ -20,10 +20,10 @@
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
+#include <array>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 namespace dawn {
 namespace iir {
@@ -42,14 +42,14 @@ class CudaCodeGen : public CodeGen {
 public:
   ///@brief constructor
   CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints,
-              int nsms, int maxBlocksPerSM, std::string domainSize);
+              int nsms, int maxBlocksPerSM, const std::string& domainSize);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
   struct CudaCodeGenOptions {
     int nsms;
     int maxBlocksPerSM;
-    std::string domainSize;
+    std::array<int, 3> domainSize;
   };
 
 private:
