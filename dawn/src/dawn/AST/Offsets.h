@@ -71,10 +71,13 @@ protected:
 private:
   std::array<int, 2> horizontalOffset_;
 };
+
 class UnstructuredOffset : public HorizontalOffsetImpl {
 public:
   UnstructuredOffset() = default;
   UnstructuredOffset(bool hasOffset) : hasOffset_(hasOffset) {}
+
+  bool hasOffset() const { return hasOffset_; }
 
 protected:
   std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override {

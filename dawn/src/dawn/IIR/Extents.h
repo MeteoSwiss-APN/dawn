@@ -91,7 +91,7 @@ public:
   std::unique_ptr<HorizontalExtentImpl> clone() const { return clone_impl(); }
 
   void merge(HorizontalExtentImpl const& other) { merge_impl(other); }
-  void merge(ast::HorizontalOffset const& other) { merge_impl(other); }
+  void merge(dawn::ast::HorizontalOffset const& other) { merge_impl(other); }
   bool equals(HorizontalExtentImpl const& other) const { return equals_impl(other); }
   bool isPointwise() const { return isPointwise_impl(); }
   std::unique_ptr<HorizontalExtentImpl> limit(int minus, int plus) const {
@@ -101,7 +101,7 @@ public:
 protected:
   virtual void add_impl(HorizontalExtentImpl const& other) = 0;
   virtual void merge_impl(HorizontalExtentImpl const& other) = 0;
-  virtual void merge_impl(ast::HorizontalOffset const& other) = 0;
+  virtual void merge_impl(dawn::ast::HorizontalOffset const& other) = 0;
   virtual bool equals_impl(HorizontalExtentImpl const& other) const = 0;
   virtual std::unique_ptr<HorizontalExtentImpl> clone_impl() const = 0;
   virtual bool isPointwise_impl() const = 0;
@@ -116,6 +116,12 @@ public:
 
   CartesianExtent() : CartesianExtent(0, 0, 0, 0) {}
 
+  int iMinus() const { return extents_[0].minus(); }
+  int iPlus() const { return extents_[0].plus(); }
+  int jMinus() const { return extents_[1].minus(); }
+  int jPlus() const { return extents_[1].plus(); }
+
+protected:
   void add_impl(HorizontalExtentImpl const& other) override {
     auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
     extents_[0] += otherCartesian.extents_[0];
@@ -128,8 +134,8 @@ public:
     extents_[1].merge(otherCartesian.extents_[1]);
   }
 
-  void merge_impl(ast::HorizontalOffset const& offset) override {
-    auto const& offsetCartesian = ast::offset_cast<ast::CartesianOffset const&>(offset);
+  void merge_impl(dawn::ast::HorizontalOffset const& offset) override {
+    auto const& offsetCartesian = dawn::ast::offset_cast<ast::CartesianOffset const&>(offset);
     extents_[0].merge(Extent(offsetCartesian.offsetI(), offsetCartesian.offsetI()));
     extents_[1].merge(Extent(offsetCartesian.offsetJ(), offsetCartesian.offsetJ()));
   }
@@ -153,13 +159,50 @@ public:
                                              extents_[1].limit(minus, plus));
   }
 
-  int iMinus() const { return extents_[0].minus(); }
-  int iPlus() const { return extents_[0].plus(); }
-  int jMinus() const { return extents_[1].minus(); }
-  int jPlus() const { return extents_[1].plus(); }
-
 private:
   std::array<Extent, 2> extents_;
+};
+class UnstructuredExtent : public HorizontalExtentImpl {
+public:
+  UnstructuredExtent(bool hasExtent) : hasExtent_{hasExtent} {}
+  UnstructuredExtent() : UnstructuredExtent(false) {}
+
+  bool hasExtent() const { return hasExtent_; }
+
+protected:
+  void add_impl(HorizontalExtentImpl const& other) override {
+    auto const& otherUnstructured = dynamic_cast<UnstructuredExtent const&>(other);
+    hasExtent_ = hasExtent_ || otherUnstructured.hasExtent_;
+  }
+
+  void merge_impl(HorizontalExtentImpl const& other) override {
+    auto const& otherUnstructured = dynamic_cast<UnstructuredExtent const&>(other);
+    hasExtent_ = hasExtent_ || otherUnstructured.hasExtent_;
+  }
+
+  void merge_impl(ast::HorizontalOffset const& offset) override {
+    auto const& otherOffset = ast::offset_cast<ast::UnstructuredOffset const&>(offset);
+    hasExtent_ = hasExtent_ || otherOffset.hasOffset();
+  }
+
+  bool equals_impl(HorizontalExtentImpl const& other) const override {
+    auto const& otherUnstructured = dynamic_cast<dawn::iir::UnstructuredExtent const&>(other);
+    return hasExtent_ == otherUnstructured.hasExtent_;
+  }
+
+  std::unique_ptr<HorizontalExtentImpl> clone_impl() const override {
+    return std::make_unique<UnstructuredExtent>(hasExtent_);
+  }
+
+  bool isPointwise_impl() const override { return !hasExtent_; }
+
+  // TODO totally unclear what this should do...
+  std::unique_ptr<HorizontalExtentImpl> limit_impl(int minus, int plus) const override {
+    return clone();
+  }
+
+private:
+  bool hasExtent_;
 };
 
 class HorizontalExtent {
@@ -191,7 +234,7 @@ public:
   bool operator==(HorizontalExtent const& other) const { return impl_->equals(*other.impl_); }
   bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
   void merge(const HorizontalExtent& other) { impl_->merge(*other.impl_); }
-  void merge(const ast::HorizontalOffset& other) { impl_->merge(other); }
+  void merge(const dawn::ast::HorizontalOffset& other) { impl_->merge(other); }
   bool isPointwise() const { return impl_->isPointwise(); }
   HorizontalExtent limit(int minus, int plus) const { return impl_->limit(minus, plus); }
 
