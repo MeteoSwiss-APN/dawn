@@ -618,13 +618,16 @@ bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundary
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
 
   for(const auto& vertexIDExtentsPair : extentMap) {
-    const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-        vertexIDExtentsPair.second.horizontalExtent());
-    if(hExtents.iPlus() > maxHorizontalBoundaryExtent ||
-       hExtents.iMinus() < -maxHorizontalBoundaryExtent ||
-       hExtents.jPlus() > maxHorizontalBoundaryExtent ||
-       hExtents.jMinus() < -maxHorizontalBoundaryExtent)
+    if(extent_dispatch(vertexIDExtentsPair.second,
+                       [&](iir::CartesianExtent const& hExtent, Extent const&) {
+                         return hExtent.iPlus() > maxHorizontalBoundaryExtent ||
+                                hExtent.iMinus() < -maxHorizontalBoundaryExtent ||
+                                hExtent.jPlus() > maxHorizontalBoundaryExtent ||
+                                hExtent.jMinus() < -maxHorizontalBoundaryExtent;
+                       },
+                       [](iir::UnstructuredExtent const&, Extent const&) { return false; })) {
       return true;
+    }
   }
   return false;
 }
