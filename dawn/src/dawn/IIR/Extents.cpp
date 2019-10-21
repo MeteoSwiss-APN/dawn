@@ -32,16 +32,16 @@ Extents::Extents(const ast::Offsets& offset)
       horizontalExtent_(ast::cartesian) {
   auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
-  horizontalExtent_ = HorizontalExtent(ast::cartesian_{}, hOffset.offsetI(), hOffset.offsetI(),
+  horizontalExtent_ = HorizontalExtent(ast::cartesian, hOffset.offsetI(), hOffset.offsetI(),
                                        hOffset.offsetJ(), hOffset.offsetJ());
 }
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
     : verticalExtent_(extent3minus, extent3plus),
-      horizontalExtent_(ast::cartesian_{}, extent1minus, extent1plus, extent2minus, extent2plus) {}
+      horizontalExtent_(ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus) {}
 
-Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian_{}) {}
+Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian) {}
 
 void Extents::merge(const Extents& other) {
   horizontalExtent_.merge(other.horizontalExtent_);

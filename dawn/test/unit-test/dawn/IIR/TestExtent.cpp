@@ -77,14 +77,14 @@ TEST(ExtentsTest, Merge3) {
 }
 
 TEST(ExtentsTest, Add) {
-  Extents extents(dawn::ast::cartesian_{}, -2, 2, 0, 0, 0, 0);
+  Extents extents(dawn::ast::cartesian, -2, 2, 0, 0, 0, 0);
   EXPECT_EQ(extents + extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
   extents += extents;
   EXPECT_EQ(extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
 }
 
 TEST(ExtentsTest, addCenter) {
-  Extents extents(dawn::ast::cartesian_{}, 1, 1, -2, -2, 3, 3);
+  Extents extents(dawn::ast::cartesian, 1, 1, -2, -2, 3, 3);
   extents.addVerticalCenter();
   EXPECT_EQ(extents, Extents(ast::cartesian, 1, 1, -2, -2, 0, 3));
 }
@@ -97,7 +97,7 @@ TEST(ExtentsTest, Stringify) {
 }
 
 TEST(ExtentsTest, verticalLoopOrder) {
-  Extents extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, -1, 2);
+  Extents extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2);
   EXPECT_EQ(extents.getVerticalLoopOrderExtent(iir::LoopOrderKind::LK_Forward,
                                                Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
                                                false),

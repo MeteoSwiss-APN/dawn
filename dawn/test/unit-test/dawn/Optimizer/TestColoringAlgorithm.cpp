@@ -33,7 +33,7 @@ public:
   TestGraph() : Base(iir::StencilMetaInformation{sir::GlobalVariableMap{}}) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
-    Base::insertEdge(IDFrom, IDTo, iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0));
+    Base::insertEdge(IDFrom, IDTo, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
   }
 };
 

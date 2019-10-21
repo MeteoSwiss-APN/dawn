@@ -79,11 +79,11 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
   int lap_id = metadata.getAccessIDFromName("lap");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, -2, 2, -2, 2, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, -2, 2, -2, 2, 0, 0)));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
   EXPECT_EQ(exts.at(lap_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, -1, 1, -1, 1, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_02) {
@@ -103,11 +103,11 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
   int coeff_id = metadata.getAccessIDFromName("coeff");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, -2, 2, -2, 2, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, -2, 2, -2, 2, 0, 0)));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
   EXPECT_EQ(exts.at(coeff_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 }
 TEST_F(ComputeMaxExtents, test_stencil_03) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
@@ -126,11 +126,11 @@ TEST_F(ComputeMaxExtents, test_stencil_03) {
   int coeff_id = metadata.getAccessIDFromName("coeff");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, -2, 2, -2, 3, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, -2, 2, -2, 3, 0, 0)));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
   EXPECT_EQ(exts.at(coeff_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 1, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 1, 0, 0)));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_04) {
@@ -150,9 +150,9 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
   int u_id = metadata.getAccessIDFromName("u");
   int out_id = metadata.getAccessIDFromName("out");
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, -3, 4, -2, 1, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, -3, 4, -2, 1, 0, 0)));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_05) {
@@ -172,9 +172,9 @@ TEST_F(ComputeMaxExtents, test_stencil_05) {
   int out_id = metadata.getAccessIDFromName("out");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, -3, 4, -2, 1, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, -3, 4, -2, 1, 0, 0)));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(),
-            (iir::Extents(dawn::ast::cartesian_{}, 0, 0, 0, 0, 0, 0)));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 }
 
 } // anonymous namespace
