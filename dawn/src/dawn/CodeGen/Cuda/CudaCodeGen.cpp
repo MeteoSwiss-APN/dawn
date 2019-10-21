@@ -23,6 +23,7 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
@@ -49,10 +50,10 @@ static std::vector<T> parseTokenizedString(const std::string& data, const char s
   return output;
 }
 
-static std::array<int, 3> parseDomainSize(const std::string& domainSize) {
+static Array3i parseDomainSize(const std::string& domainSize) {
   const auto tokens = parseTokenizedString<int>(domainSize, ',');
   DAWN_ASSERT(tokens.size() == 3);
-  return std::array<int, 3>{tokens[0], tokens[1], tokens[2]};
+  return Array3i{tokens[0], tokens[1], tokens[2]};
 }
 
 CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
