@@ -36,10 +36,8 @@ namespace dawn {
 namespace iir {
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData),
-      ast_{std::numeric_limits<int>::max(), // TODO(SAP) this number is here to keep IDs the same in
-                                            // tests. Will be removed in the next PR.
-           std::make_unique<iir::IIRStmtData>()} {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
+      metaData_(metaData), ast_{std::make_unique<iir::IIRStmtData>()} {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);

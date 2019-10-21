@@ -70,47 +70,41 @@ public:
 
   /// @name Operators
   /// @{
-  inline bool operator==(const Field& other) const {
+  bool operator==(const Field& other) const {
     return (accessID_ == other.accessID_ && intend_ == other.intend_);
   }
-  inline bool operator!=(const Field& other) const { return !(*this == other); }
-  inline bool operator<(const Field& other) const {
+  bool operator!=(const Field& other) const { return !(*this == other); }
+  bool operator<(const Field& other) const {
     return (intend_ < other.intend_ || (intend_ == other.intend_ && accessID_ < other.accessID_));
   }
   /// @}
 
   /// @brief getters
   /// @{
-  inline Interval const& getInterval() const { return interval_; }
+  Interval const& getInterval() const { return interval_; }
 
-  inline std::optional<Extents> const& getReadExtents() const { return extents_.getReadExtents(); }
-  inline std::optional<Extents> const& getWriteExtents() const {
-    return extents_.getWriteExtents();
-  }
+  std::optional<Extents> const& getReadExtents() const { return extents_.getReadExtents(); }
+  std::optional<Extents> const& getWriteExtents() const { return extents_.getWriteExtents(); }
 
-  inline std::optional<Extents> const& getReadExtentsRB() const {
-    return extentsRB_.getReadExtents();
-  }
-  inline std::optional<Extents> const& getWriteExtentsRB() const {
-    return extentsRB_.getWriteExtents();
-  }
+  std::optional<Extents> const& getReadExtentsRB() const { return extentsRB_.getReadExtents(); }
+  std::optional<Extents> const& getWriteExtentsRB() const { return extentsRB_.getWriteExtents(); }
 
   json::json jsonDump() const;
 
-  inline Extents const& getExtents() const { return extents_.getExtents(); }
-  inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }
+  Extents const& getExtents() const { return extents_.getExtents(); }
+  Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }
 
-  inline IntendKind getIntend() const { return intend_; }
-  inline int getAccessID() const { return accessID_; }
+  IntendKind getIntend() const { return intend_; }
+  int getAccessID() const { return accessID_; }
   /// @}
 
   /// @brief setters
   /// @{
-  inline void setIntend(IntendKind intend) { intend_ = intend; }
-  inline void setReadExtentsRB(Extents const& extents) { extentsRB_.setReadExtents(extents); }
-  inline void setWriteExtentsRB(Extents const& extents) { extentsRB_.setWriteExtents(extents); }
-  inline void setReadExtentsRB(std::optional<Extents> const& extents);
-  inline void setWriteExtentsRB(std::optional<Extents> const& extents);
+  void setIntend(IntendKind intend) { intend_ = intend; }
+  void setReadExtentsRB(Extents const& extents) { extentsRB_.setReadExtents(extents); }
+  void setWriteExtentsRB(Extents const& extents) { extentsRB_.setWriteExtents(extents); }
+  void setReadExtentsRB(std::optional<Extents> const& extents);
+  void setWriteExtentsRB(std::optional<Extents> const& extents);
   /// @}
 
   // Enclosing interval where accesses where recorded,
@@ -119,31 +113,31 @@ public:
 
   /// @brief merge of the extents
   /// @{
-  inline void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
-  inline void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
-  inline void mergeReadExtents(std::optional<Extents> const& extents) {
+  void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
+  void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
+  void mergeReadExtents(std::optional<Extents> const& extents) {
     extents_.mergeReadExtents(extents);
   }
-  inline void mergeWriteExtents(std::optional<Extents> const& extents) {
+  void mergeWriteExtents(std::optional<Extents> const& extents) {
     extents_.mergeWriteExtents(extents);
   }
 
-  inline void mergeReadExtentsRB(Extents const& extents) { extentsRB_.mergeReadExtents(extents); }
-  inline void mergeWriteExtentsRB(Extents const& extents) { extentsRB_.mergeWriteExtents(extents); }
+  void mergeReadExtentsRB(Extents const& extents) { extentsRB_.mergeReadExtents(extents); }
+  void mergeWriteExtentsRB(Extents const& extents) { extentsRB_.mergeWriteExtents(extents); }
 
-  inline void mergeReadExtentsRB(std::optional<Extents> const& extents) {
+  void mergeReadExtentsRB(std::optional<Extents> const& extents) {
     extentsRB_.mergeReadExtents(extents);
   }
-  inline void mergeWriteExtentsRB(std::optional<Extents> const& extents) {
+  void mergeWriteExtentsRB(std::optional<Extents> const& extents) {
     extentsRB_.mergeWriteExtents(extents);
   }
   /// @}
   ///
-  inline void extendInterval(Interval const& interval) { interval_.merge(interval); }
+  void extendInterval(Interval const& interval) { interval_.merge(interval); }
 
-  inline ast::Expr::LocationType getLocation() { return location_; }
+  ast::Expr::LocationType getLocation() { return location_; }
 
-  inline bool isUnstructured() { return unstrucutred_; }
+  bool isUnstructured() { return unstrucutred_; }
 };
 
 /// @brief merges all the fields from sourceFields into destinationFields

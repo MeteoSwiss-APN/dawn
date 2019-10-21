@@ -220,16 +220,15 @@ TEST(IIRDeserializerTest, CopyStencil) {
 
   // read IIR from file
   auto copy_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/copy_stencil.iir");
-  UIDGenerator::getInstance()->reset();
 
   // generate IIR in memory
-  auto copy_stencil_memory = createCopyStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
+  auto copy_stencil_memory = createCopyStencilIIRInMemory(optimizer);
 
   compareIIRs(copy_stencil_from_file, copy_stencil_memory);
 }
 
-TEST(IIRDeserializerTest, LaplStencil) {
+TEST(IIRDeserializerTest, LapStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);
@@ -238,11 +237,10 @@ TEST(IIRDeserializerTest, LaplStencil) {
 
   // read IIR from file
   auto lap_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/lap_stencil.iir");
-  UIDGenerator::getInstance()->reset();
 
   // generate IIR in memory
-  auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
+  auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
 
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);
 }

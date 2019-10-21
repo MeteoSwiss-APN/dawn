@@ -206,6 +206,7 @@ public:
   void clearChildren() { ast_.getStatements().clear(); }
 
   void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
+  iir::BlockStmt const& getAST() const { return ast_; }
 };
 
 } // namespace iir
