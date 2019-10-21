@@ -28,21 +28,18 @@ Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(ast::cartesian_, const ast::Offsets& offset)
-    : horizontalExtent_(ast::cartesian_{}) {
+    : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
+      horizontalExtent_(ast::cartesian) {
   auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   horizontalExtent_ = HorizontalExtent(ast::cartesian_{}, hOffset.offsetI(), hOffset.offsetI(),
                                        hOffset.offsetJ(), hOffset.offsetJ());
-  verticalExtent_ = Extent(offset.verticalOffset(), offset.verticalOffset());
 }
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
-    : horizontalExtent_(ast::cartesian_{}) {
-  horizontalExtent_ =
-      HorizontalExtent(ast::cartesian_{}, extent1minus, extent1plus, extent2minus, extent2plus);
-  verticalExtent_ = Extent(extent3minus, extent3plus);
-}
+    : verticalExtent_(extent3minus, extent3plus),
+      horizontalExtent_(ast::cartesian_{}, extent1minus, extent1plus, extent2minus, extent2plus) {}
 
 Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian_{}) {}
 
@@ -89,8 +86,6 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   if(isVerticalPointwise())
     return access;
 
-  const Extent& verticalExtent = verticalExtent_;
-
   switch(loopOrder) {
   case LoopOrderKind::LK_Parallel:
     // Any accesses in the vertical are against the loop-order
@@ -98,17 +93,17 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
 
   case LoopOrderKind::LK_Forward: {
     // Accesses k+1 are against the loop order
-    if(verticalExtent.plus() > 0)
+    if(verticalExtent_.plus() > 0)
       access.CounterLoopOrder = true;
-    if(verticalExtent.minus() < 0)
+    if(verticalExtent_.minus() < 0)
       access.LoopOrder = true;
     break;
   }
   case LoopOrderKind::LK_Backward:
     // Accesses k-1 are against the loop order
-    if(verticalExtent.minus() < 0)
+    if(verticalExtent_.minus() < 0)
       access.CounterLoopOrder = true;
-    if(verticalExtent.plus() > 0)
+    if(verticalExtent_.plus() > 0)
       access.LoopOrder = true;
     break;
   }
@@ -119,10 +114,8 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
 std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
                                                           VerticalLoopOrderDir loopOrderPolicy,
                                                           bool includeCenter) const {
-  const Extent& verticalExtent = verticalExtent_;
-
   if(loopOrder == LoopOrderKind::LK_Parallel) {
-    if(includeCenter && verticalExtent.plus() >= 0 && verticalExtent.minus() <= 0)
+    if(includeCenter && verticalExtent_.plus() >= 0 && verticalExtent_.minus() <= 0)
       return std::make_optional(Extent{0, 0});
     return std::optional<Extent>();
   }
@@ -132,24 +125,24 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
       loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
-    if(verticalExtent.plus() < (includeCenter ? 0 : 1))
+    if(verticalExtent_.plus() < (includeCenter ? 0 : 1))
       return std::optional<Extent>();
 
     // Accesses k+1 are against the loop order
     return std::make_optional(
-        Extent{std::max((includeCenter ? 0 : 1), verticalExtent.minus()), verticalExtent.plus()});
+        Extent{std::max((includeCenter ? 0 : 1), verticalExtent_.minus()), verticalExtent_.plus()});
   }
   // retrieving the tail (Minus) of the extent
   if((loopOrder == LoopOrderKind::LK_Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Forward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
-    if(verticalExtent.minus() > (includeCenter ? 0 : -1))
+    if(verticalExtent_.minus() > (includeCenter ? 0 : -1))
       return std::optional<Extent>();
 
     // Accesses k-1 are against the loop order
-    return std::make_optional(
-        Extent{verticalExtent.minus(), std::min((includeCenter ? 0 : -1), verticalExtent.plus())});
+    return std::make_optional(Extent{verticalExtent_.minus(),
+                                     std::min((includeCenter ? 0 : -1), verticalExtent_.plus())});
   }
   dawn_unreachable("Non supported loop order");
 }
