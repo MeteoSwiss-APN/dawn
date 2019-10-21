@@ -70,7 +70,7 @@ option(DAWN_PYTHON_EXAMPLES "Build the python examples of generating HIR" OFF)
 
 if( DAWN_BUNDLE_PYTHON )
   if(NOT DEFINED PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3.5 REQUIRED)
+    find_package(PythonInterp 3 REQUIRED)
   endif()
 endif()
 
