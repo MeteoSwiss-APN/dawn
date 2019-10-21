@@ -25,6 +25,9 @@ namespace dawn::ast {
 struct cartesian_ {};
 static constexpr cartesian_ cartesian;
 
+struct unstructured_ {};
+static constexpr unstructured_ unstructured;
+
 class HorizontalOffsetImpl {
 public:
   virtual ~HorizontalOffsetImpl() = default;
@@ -68,12 +71,33 @@ protected:
 private:
   std::array<int, 2> horizontalOffset_;
 };
+class UnstructuredOffset : public HorizontalOffsetImpl {
+public:
+  UnstructuredOffset() = default;
+  UnstructuredOffset(bool hasOffset) : hasOffset_(hasOffset) {}
+
+protected:
+  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override {
+    return std::make_unique<UnstructuredOffset>(hasOffset_);
+  }
+  bool equalsImpl(HorizontalOffsetImpl const& other) const override;
+  void addImpl(HorizontalOffsetImpl const& other) override;
+  bool isZeroImpl() const override { return !hasOffset_; }
+
+private:
+  bool hasOffset_ = false;
+};
 
 class HorizontalOffset {
 public:
   explicit HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
   HorizontalOffset(cartesian_, int iOffset, int jOffset)
       : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
+
+  HorizontalOffset(unstructured_) : impl_(std::make_unique<UnstructuredOffset>()) {}
+  HorizontalOffset(unstructured_, bool hasOffset)
+      : impl_(std::make_unique<UnstructuredOffset>(hasOffset)) {}
+
   HorizontalOffset(HorizontalOffset const& other) { *this = other; }
   HorizontalOffset& operator=(HorizontalOffset const& other) {
     impl_ = other.impl_->clone();
@@ -93,6 +117,8 @@ public:
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
+  template <typename T>
+  friend T offset_cast(HorizontalOffset&& offset);
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
@@ -100,6 +126,10 @@ private:
 
 template <typename T>
 T offset_cast(HorizontalOffset const& offset) {
+  return dynamic_cast<T>(*offset.impl_);
+}
+template <typename T>
+T offset_cast(HorizontalOffset&& offset) {
   return dynamic_cast<T>(*offset.impl_);
 }
 
@@ -111,6 +141,9 @@ public:
       : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
   explicit Offsets(cartesian_) : horizontalOffset_(cartesian) {}
 
+  Offsets(unstructured_, bool hasOffset, int k)
+      : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k) {}
+  Offsets(unstructured_) : horizontalOffset_(unstructured) {}
   int verticalOffset() const { return verticalOffset_; }
   HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
 

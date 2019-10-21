@@ -29,14 +29,22 @@ std::string toString(Offsets const& offsets, std::string const& sep) {
 }
 
 bool CartesianOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
-  auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
-  return so_other.horizontalOffset_ == horizontalOffset_;
+  auto const& co_other = dynamic_cast<CartesianOffset const&>(other);
+  return co_other.horizontalOffset_ == horizontalOffset_;
 }
 
 void CartesianOffset::addImpl(HorizontalOffsetImpl const& other) {
-  auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
-  horizontalOffset_[0] += so_other.horizontalOffset_[0];
-  horizontalOffset_[1] += so_other.horizontalOffset_[1];
+  auto const& co_other = dynamic_cast<CartesianOffset const&>(other);
+  horizontalOffset_[0] += co_other.horizontalOffset_[0];
+  horizontalOffset_[1] += co_other.horizontalOffset_[1];
+}
+bool UnstructuredOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
+  auto const& uo_other = dynamic_cast<UnstructuredOffset const&>(other);
+  return uo_other.hasOffset_ == hasOffset_;
+}
+void UnstructuredOffset::addImpl(HorizontalOffsetImpl const& other) {
+  auto const& uo_other = dynamic_cast<UnstructuredOffset const&>(other);
+  hasOffset_ = hasOffset_ || uo_other.hasOffset_;
 }
 
 } // namespace dawn::ast
