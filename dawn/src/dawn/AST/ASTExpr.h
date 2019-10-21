@@ -38,9 +38,9 @@ class Expr : public std::enable_shared_from_this<Expr> {
 public:
   /// @brief Discriminator for RTTI (dyn_cast<> et al.)
   enum class Kind {
+    UnaryOperator,
     BinaryOperator,
     AssignmentExpr,
-    UnaryOperator,
     TernaryOperator,
     FunCallExpr,
     StencilFunCallExpr,
