@@ -65,7 +65,7 @@ void Accesses::mergeReadOffset(int AccessID, const ast::Offsets& offset) {
   if(it != readAccesses_.end()) {
     it->second.merge(offset);
   } else {
-    readAccesses_.emplace(AccessID, Extents(ast::cartesian, offset));
+    readAccesses_.emplace(AccessID, Extents(offset));
   }
 }
 
@@ -82,7 +82,7 @@ void Accesses::mergeWriteOffset(int AccessID, const ast::Offsets& offset) {
   if(it != writeAccesses_.end())
     it->second.merge(offset);
   else
-    writeAccesses_.emplace(AccessID, Extents(ast::cartesian, offset));
+    writeAccesses_.emplace(AccessID, Extents(offset));
 }
 
 void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {

@@ -27,7 +27,7 @@ Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
-Extents::Extents(ast::cartesian_, const ast::Offsets& offset)
+Extents::Extents(const ast::Offsets& offset)
     : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
       horizontalExtent_(ast::cartesian) {
   auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
