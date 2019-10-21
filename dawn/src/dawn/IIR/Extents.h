@@ -280,11 +280,6 @@ public:
                                                    VerticalLoopOrderDir loopOrderPolicy,
                                                    bool includeCenter) const;
 
-  /// @brief format extents in string
-  /// @brief Convert to stream
-  friend std::ostream& operator<<(std::ostream& os, const Extents& extent);
-  std::string toString() const;
-
   /// @brief Comparison operators
   /// @{
   bool operator==(const Extents& other) const;
@@ -308,6 +303,9 @@ private:
 ///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
 ///   `{-1, 2, -1, 1, 0, 0}`.
 Extents operator+(Extents lhs, const Extents& rhs);
+
+std::ostream& operator<<(std::ostream& os, const Extents& extent);
+std::string to_string(Extents const& extent);
 
 } // namespace iir
 } // namespace dawn

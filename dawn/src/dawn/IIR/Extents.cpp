@@ -153,9 +153,9 @@ bool Extents::operator==(const Extents& other) const {
 
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
-std::string Extents::toString() const {
-  auto hExtents = extent_cast<CartesianExtent const&>(horizontalExtent());
-  auto vExtents = verticalExtent_;
+std::string to_string(const Extents& extent) {
+  auto const& hExtents = extent_cast<CartesianExtent const&>(extent.horizontalExtent());
+  auto const& vExtents = extent.verticalExtent();
 
   return "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) +
          "), (" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) +
@@ -163,7 +163,7 @@ std::string Extents::toString() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
-  return os << extents.toString();
+  return os << to_string(extents);
 }
 
 } // namespace iir
