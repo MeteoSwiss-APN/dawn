@@ -583,9 +583,10 @@ void GTCodeGen::generateStencilClasses(
           // Generate parameter of stage
           std::stringstream ss;
           codegen::Type extent(c_gt() + "extent", ss);
-          auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-              fields[m].getExtents().horizontalExtent());
-          auto const& vExtents = fields[m].getExtents().verticalExtent();
+          auto extents = fields[m].getExtents();
+          auto const& hExtents =
+              iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+          auto const& vExtents = extents.verticalExtent();
 
           extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
           extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
@@ -744,9 +745,10 @@ void GTCodeGen::generateStencilClasses(
           std::stringstream tss;
           codegen::Type extent(c_gt() + "extent", tss);
 
-          auto const& fieldHExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-              field.getExtents().horizontalExtent());
-          auto const& fieldVExtents = field.getExtents().verticalExtent();
+          auto extents = field.getExtents();
+          auto const& fieldHExtents =
+              iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
+          auto const& fieldVExtents = extents.verticalExtent();
 
           extent.addTemplate(Twine(fieldHExtents.iMinus()) + ", " + Twine(fieldHExtents.iPlus()));
           extent.addTemplate(Twine(fieldHExtents.jMinus()) + ", " + Twine(fieldHExtents.jPlus()));

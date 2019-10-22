@@ -168,11 +168,13 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 }
 IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
+  DAWN_ASSERT(!unstructured_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
   return {id, name};
 }
 IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
   DAWN_ASSERT(si_);
+  DAWN_ASSERT(unstructured_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
                                        asArray(fieldType::ijk), location);
   return {id, name};

@@ -116,7 +116,9 @@ public:
 };
 
 PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
-    : Pass(context, "PassSetBoundaryCondition") {}
+    : Pass(context, "PassSetBoundaryCondition") {
+  dependencies_.push_back("PassComputeStageExtents");
+}
 
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

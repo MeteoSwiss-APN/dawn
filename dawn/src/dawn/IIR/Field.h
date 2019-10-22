@@ -91,8 +91,8 @@ public:
 
   json::json jsonDump() const;
 
-  Extents const& getExtents() const { return extents_.getExtents(); }
-  Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }
+  Extents getExtents() const { return extents_.getExtents(); }
+  Extents getExtentsRB() const { return extentsRB_.getExtents(); }
 
   IntendKind getIntend() const { return intend_; }
   int getAccessID() const { return accessID_; }
