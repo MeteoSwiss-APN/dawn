@@ -291,7 +291,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, iir::Extents(dawn::ast::cartesian));
+    nodeExtents.emplace(vertex.VertexID, iir::Extents{});
   }
 
   // Start from the output nodes and follow all paths
@@ -625,7 +625,8 @@ bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundary
                                 hExtent.jPlus() > maxHorizontalBoundaryExtent ||
                                 hExtent.jMinus() < -maxHorizontalBoundaryExtent;
                        },
-                       [](iir::UnstructuredExtent const&, Extent const&) { return false; })) {
+                       [](iir::UnstructuredExtent const&, Extent const&) { return false; },
+                       [](Extent const&) { return false; })) {
       return true;
     }
   }

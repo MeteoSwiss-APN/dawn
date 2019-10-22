@@ -58,6 +58,7 @@ public:
   Extent& merge(int other) { return merge(Extent{other, other}); }
 
   Extent limit(int minus, int plus) const {
+    DAWN_ASSERT(minus <= 0 && plus >= 0);
     return {std::max(minus, minus_), std::min(plus, plus_)};
   }
 
@@ -93,7 +94,7 @@ public:
   std::unique_ptr<HorizontalExtentImpl> clone() const { return clone_impl(); }
 
   void merge(HorizontalExtentImpl const& other) { merge_impl(other); }
-  void merge(dawn::ast::HorizontalOffset const& other) { merge_impl(other); }
+  void merge(ast::HorizontalOffset const& other) { merge_impl(other); }
   bool equals(HorizontalExtentImpl const& other) const { return equals_impl(other); }
   bool isPointwise() const { return isPointwise_impl(); }
   std::unique_ptr<HorizontalExtentImpl> limit(int minus, int plus) const {
@@ -103,7 +104,7 @@ public:
 protected:
   virtual void add_impl(HorizontalExtentImpl const& other) = 0;
   virtual void merge_impl(HorizontalExtentImpl const& other) = 0;
-  virtual void merge_impl(dawn::ast::HorizontalOffset const& other) = 0;
+  virtual void merge_impl(ast::HorizontalOffset const& other) = 0;
   virtual bool equals_impl(HorizontalExtentImpl const& other) const = 0;
   virtual std::unique_ptr<HorizontalExtentImpl> clone_impl() const = 0;
   virtual bool isPointwise_impl() const = 0;
@@ -136,8 +137,8 @@ protected:
     extents_[1].merge(otherCartesian.extents_[1]);
   }
 
-  void merge_impl(dawn::ast::HorizontalOffset const& offset) override {
-    auto const& offsetCartesian = dawn::ast::offset_cast<ast::CartesianOffset const&>(offset);
+  void merge_impl(ast::HorizontalOffset const& offset) override {
+    auto const& offsetCartesian = ast::offset_cast<ast::CartesianOffset const&>(offset);
     extents_[0].merge(Extent(offsetCartesian.offsetI(), offsetCartesian.offsetI()));
     extents_[1].merge(Extent(offsetCartesian.offsetJ(), offsetCartesian.offsetJ()));
   }
@@ -209,6 +210,22 @@ private:
 
 class HorizontalExtent {
 public:
+  // the default constructed horizontal extents creates a null-extent that can be compared to all
+  // kind of grids
+  HorizontalExtent() = default;
+
+  HorizontalExtent(ast::HorizontalOffset const& hOffset) {
+    *this = offset_dispatch(hOffset,
+                            [](ast::CartesianOffset const& cOffset) {
+                              return HorizontalExtent(ast::cartesian, cOffset.offsetI(),
+                                                      cOffset.offsetI(), cOffset.offsetJ(),
+                                                      cOffset.offsetJ());
+                            },
+                            [](ast::UnstructuredOffset const& uOffset) {
+                              return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+                            });
+  }
+
   HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
   HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
       : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
@@ -217,35 +234,60 @@ public:
   HorizontalExtent(ast::unstructured_, bool hasExtent)
       : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {}
 
-  HorizontalExtent(HorizontalExtent const& other) : impl_(other.impl_->clone()) {}
+  HorizontalExtent(HorizontalExtent const& other)
+      : impl_(other.impl_ ? other.impl_->clone() : nullptr) {}
   HorizontalExtent(HorizontalExtent&& other) = default;
   HorizontalExtent& operator=(HorizontalExtent const& other) {
-    impl_ = other.impl_->clone();
+    if(other.impl_)
+      impl_ = other.impl_->clone();
     return *this;
   }
   HorizontalExtent& operator=(HorizontalExtent&& other) = default;
 
   HorizontalExtent(std::unique_ptr<HorizontalExtentImpl> impl) : impl_(std::move(impl)) {}
 
-  HorizontalExtent& operator+=(HorizontalExtent const& other) {
-    *impl_ += *other.impl_;
-    return *this;
-  }
-
   template <typename T>
   friend T extent_cast(HorizontalExtent const&);
-  template <typename T>
-  friend T extent_cast(HorizontalExtent&&);
-  template <typename CartFn, typename UnstructuredFn>
+  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
   friend auto extent_dispatch(Extents const& extents, CartFn const& cartFn,
-                              UnstructuredFn const& unstructuredFn);
+                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
 
-  bool operator==(HorizontalExtent const& other) const { return impl_->equals(*other.impl_); }
+  bool operator==(HorizontalExtent const& other) const {
+    if(impl_ && other.impl_)
+      return impl_->equals(*other.impl_);
+    else if(impl_)
+      return isPointwise();
+    else if(other.impl_)
+      return other.isPointwise();
+    else
+      return true;
+  }
   bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
-  void merge(const HorizontalExtent& other) { impl_->merge(*other.impl_); }
-  void merge(const dawn::ast::HorizontalOffset& other) { impl_->merge(other); }
-  bool isPointwise() const { return impl_->isPointwise(); }
-  HorizontalExtent limit(int minus, int plus) const { return impl_->limit(minus, plus); }
+  HorizontalExtent& operator+=(HorizontalExtent const& other) {
+    if(impl_ && other.impl_)
+      *impl_ += *other.impl_;
+    else if(other.impl_)
+      *this = other;
+
+    return *this;
+  }
+  void merge(const HorizontalExtent& other) {
+    if(impl_ && other.impl_)
+      impl_->merge(*other.impl_);
+    else if(other.impl_)
+      *this = other;
+  }
+  void merge(const ast::HorizontalOffset& other) {
+    if(impl_)
+      impl_->merge(other);
+    else
+      *this = other;
+  }
+  bool isPointwise() const { return impl_ ? impl_->isPointwise() : true; }
+  HorizontalExtent limit(int minus, int plus) const {
+    DAWN_ASSERT(minus <= 0 && plus >= 0);
+    return impl_ ? impl_->limit(minus, plus) : *this;
+  }
 
 private:
   std::unique_ptr<HorizontalExtentImpl> impl_;
@@ -253,11 +295,8 @@ private:
 
 template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
-  return dynamic_cast<T>(*extent.impl_);
-}
-template <typename T>
-T extent_cast(HorizontalExtent&& extent) {
-  return dynamic_cast<T>(*extent.impl_);
+  static CartesianExtent nullExtent{};
+  return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
 
 /// @brief Three dimensional access extents of a field
@@ -268,6 +307,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  Extents();
   Extents(ast::Offsets const& offset);
   Extents(HorizontalExtent const& hExtent, Extent const& vExtent);
 
@@ -302,7 +342,9 @@ public:
   /// @brief Check if extent is pointwise in the horizontal direction, i.e. zero extent
   bool isVerticalPointwise() const;
 
-  /// @brief Check if extent is pointwise all directions, i.e. zero extent
+  /// @brief Check if extent is pointwise all directions, i.e. zero extent (which corresponds to
+  /// the default initialized
+  // extent)
   bool isPointwise() const;
 
   /// @brief add the center of the stencil to the vertical extent
@@ -364,14 +406,16 @@ Extents operator+(Extents lhs, const Extents& rhs);
 std::ostream& operator<<(std::ostream& os, const Extents& extent);
 std::string to_string(Extents const& extent);
 
-template <typename CartFn, typename UnstructuredFn>
+template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
 auto extent_dispatch(Extents const& extents, CartFn const& cartFn,
-                     UnstructuredFn const& unstructuredFn) {
+                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
   HorizontalExtentImpl* ptr = extents.horizontalExtent().impl_.get();
   if(auto cartesianExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
     return cartFn(*cartesianExtent, extents.verticalExtent());
   } else if(auto unstructuredExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
     return unstructuredFn(*unstructuredExtent, extents.verticalExtent());
+  } else if(!ptr) {
+    return zeroFn(extents.verticalExtent());
   } else {
     dawn_unreachable("unknown extent class");
   }

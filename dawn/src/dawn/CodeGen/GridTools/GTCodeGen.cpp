@@ -714,7 +714,7 @@ void GTCodeGen::generateStencilClasses(
         Structure StageStruct =
             stencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << c_gt() + "make_stage_withExtent<" << StageStruct.getName()
+        ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
              << ", " + c_gt() + "extent< ";
         auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
             stage.getExtents().horizontalExtent());

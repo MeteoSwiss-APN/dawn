@@ -24,19 +24,12 @@ namespace iir {
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 
+Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(ast::Offsets const& offset)
-    : Extents(offset_dispatch(offset,
-                              [](ast::CartesianOffset const& hOffset, int) {
-                                return HorizontalExtent(ast::cartesian, hOffset.offsetI(),
-                                                        hOffset.offsetI(), hOffset.offsetJ(),
-                                                        hOffset.offsetJ());
-                              },
-                              [](ast::UnstructuredOffset const& hOffset, int) {
-                                return HorizontalExtent(ast::unstructured, hOffset.hasOffset());
-                              }),
+    : Extents(HorizontalExtent{offset.horizontalOffset()},
               Extent{offset.verticalOffset(), offset.verticalOffset()}) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
@@ -79,6 +72,7 @@ bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
 Extents Extents::limit(int minus, int plus) const {
+  DAWN_ASSERT(minus <= 0 && plus >= 0);
   return Extents{horizontalExtent_.limit(minus, plus), verticalExtent_.limit(minus, plus)};
 }
 

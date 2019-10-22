@@ -125,7 +125,7 @@ public:
   template <typename T>
   friend T offset_cast(HorizontalOffset&& offset);
   template <typename CartFn, typename UnstructuredFn>
-  friend auto offset_dispatch(Offsets const& extents, CartFn const& cartFn,
+  friend auto offset_dispatch(HorizontalOffset const& extents, CartFn const& cartFn,
                               UnstructuredFn const& unstructuredFn);
 
 private:
@@ -204,13 +204,13 @@ std::string toString(Offsets const& offset, std::string const& sep = ",");
 std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
 template <typename CartFn, typename UnstructuredFn>
-auto offset_dispatch(Offsets const& offsets, CartFn const& cartFn,
+auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
                      UnstructuredFn const& unstructuredFn) {
-  HorizontalOffsetImpl* ptr = offsets.horizontalOffset().impl_.get();
+  HorizontalOffsetImpl* ptr = hOffset.impl_.get();
   if(auto cartesianOffset = dynamic_cast<CartesianOffset const*>(ptr)) {
-    return cartFn(*cartesianOffset, offsets.verticalOffset());
+    return cartFn(*cartesianOffset);
   } else if(auto unstructuredOffset = dynamic_cast<UnstructuredOffset const*>(ptr)) {
-    return unstructuredFn(*unstructuredOffset, offsets.verticalOffset());
+    return unstructuredFn(*unstructuredOffset);
   } else {
     dawn_unreachable("unknown offset class");
   }

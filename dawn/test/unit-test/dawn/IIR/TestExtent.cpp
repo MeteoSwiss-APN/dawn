@@ -38,6 +38,12 @@ TEST(ExtentsTest, Construction) {
   Extents extents5{std::move(extents4)};
   EXPECT_EQ(extents5, expected);
 }
+TEST(ExtentsTest, EmptyConstruction) {
+  EXPECT_EQ(Extents(ast::cartesian), Extents());
+  EXPECT_NE(Extents(ast::cartesian, -1, 1, -1, 1, -1, 1), Extents());
+
+  EXPECT_EQ(Extents(), Extents());
+}
 
 TEST(ExtentsTest, PointWise) {
   Extents extents1(ast::Offsets{ast::cartesian, 0, 1, 0});
@@ -51,29 +57,36 @@ TEST(ExtentsTest, PointWise) {
   Extents extents3(ast::Offsets{ast::cartesian, 0, 0, 1});
   EXPECT_TRUE(extents3.isHorizontalPointwise());
   EXPECT_FALSE(extents3.isVerticalPointwise());
+
+  EXPECT_TRUE(Extents().isPointwise());
 }
 
-TEST(ExtentsTest, Merge1) {
+TEST(ExtentsTest, MergeWithExtent) {
   Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
   Extents extentsToMerge(ast::Offsets{ast::cartesian, 3, 2, 1});
   extents.merge(extentsToMerge);
 
   EXPECT_EQ(extents, Extents(ast::cartesian, -1, 3, 1, 2, 0, 1));
+
+  Extents emptyExtent;
+  emptyExtent.merge(Extents());
+  EXPECT_EQ(emptyExtent, Extents());
+  emptyExtent.merge(Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
+  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
+  emptyExtent.merge(Extents());
+  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
 }
 
-TEST(ExtentsTest, Merge2) {
+TEST(ExtentsTest, MergeWithOffset) {
   Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
-  Extents extentsToMerge(ast::Offsets{ast::cartesian, -2, 2, 0});
-  extents.merge(extentsToMerge);
-
+  extents.merge(ast::Offsets{ast::cartesian, -2, 2, 0});
   EXPECT_EQ(extents, Extents(ast::cartesian, -2, -1, 1, 2, 0, 0));
-}
 
-TEST(ExtentsTest, Merge3) {
-  Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
-  extents.merge(ast::Offsets{ast::cartesian, -2, 0, 0});
-
-  EXPECT_EQ(extents, Extents(ast::cartesian, -2, -1, 0, 1, 0, 0));
+  Extents emptyExtent;
+  emptyExtent.merge(ast::Offsets{ast::cartesian, 0, 0, 0});
+  EXPECT_EQ(emptyExtent, Extents());
+  emptyExtent.merge(ast::Offsets{ast::cartesian, 1, 2, 3});
+  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, 0, 1, 0, 2, 0, 3));
 }
 
 TEST(ExtentsTest, Add) {
@@ -81,6 +94,11 @@ TEST(ExtentsTest, Add) {
   EXPECT_EQ(extents + extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
   extents += extents;
   EXPECT_EQ(extents, Extents(ast::cartesian, -4, 4, 0, 0, 0, 0));
+
+  Extents emptyExtent;
+  EXPECT_EQ(emptyExtent + extents, extents);
+  EXPECT_EQ(extents + emptyExtent, extents);
+  EXPECT_EQ(emptyExtent + emptyExtent, emptyExtent);
 }
 
 TEST(ExtentsTest, addCenter) {
