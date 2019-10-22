@@ -164,36 +164,70 @@ private:
 
 class HorizontalExtent {
 public:
+  // the default constructed horizontal extents creates a null-extent that can be compared to all
+  // kind of grids
+  HorizontalExtent() = default;
+
+  HorizontalExtent(ast::HorizontalOffset const& offset) {
+    auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset);
+    *this = HorizontalExtent(ast::cartesian, hOffset.offsetI(), hOffset.offsetI(),
+                             hOffset.offsetJ(), hOffset.offsetJ());
+  }
   HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
   HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
       : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
 
-  HorizontalExtent(HorizontalExtent const& other) : impl_(other.impl_->clone()) {}
+  HorizontalExtent(HorizontalExtent const& other)
+      : impl_(other.impl_ ? other.impl_->clone() : nullptr) {}
   HorizontalExtent(HorizontalExtent&& other) = default;
   HorizontalExtent& operator=(HorizontalExtent const& other) {
-    impl_ = other.impl_->clone();
+    if(other.impl_)
+      impl_ = other.impl_->clone();
     return *this;
   }
   HorizontalExtent& operator=(HorizontalExtent&& other) = default;
 
   HorizontalExtent(std::unique_ptr<HorizontalExtentImpl> impl) : impl_(std::move(impl)) {}
 
-  HorizontalExtent& operator+=(HorizontalExtent const& other) {
-    *impl_ += *other.impl_;
-    return *this;
-  }
-
   template <typename T>
   friend T extent_cast(HorizontalExtent const&);
-  template <typename T>
-  friend T extent_cast(HorizontalExtent&&);
 
-  bool operator==(HorizontalExtent const& other) const { return impl_->equals(*other.impl_); }
+  bool operator==(HorizontalExtent const& other) const {
+    if(impl_ && other.impl_)
+      return impl_->equals(*other.impl_);
+    else if(impl_)
+      return isPointwise();
+    else if(other.impl_)
+      return other.isPointwise();
+    else
+      return true;
+  }
   bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
-  void merge(const HorizontalExtent& other) { impl_->merge(*other.impl_); }
-  void merge(const ast::HorizontalOffset& other) { impl_->merge(other); }
-  bool isPointwise() const { return impl_->isPointwise(); }
-  HorizontalExtent limit(int minus, int plus) const { return impl_->limit(minus, plus); }
+  HorizontalExtent& operator+=(HorizontalExtent const& other) {
+    if(impl_ && other.impl_)
+      *impl_ += *other.impl_;
+    else if(other.impl_)
+      *this = other;
+
+    return *this;
+  }
+  void merge(const HorizontalExtent& other) {
+    if(impl_ && other.impl_)
+      impl_->merge(*other.impl_);
+    else if(other.impl_)
+      *this = other;
+  }
+  void merge(const ast::HorizontalOffset& other) {
+    if(impl_)
+      impl_->merge(other);
+    else
+      *this = other;
+  }
+  bool isPointwise() const { return impl_ ? impl_->isPointwise() : true; }
+  HorizontalExtent limit(int minus, int plus) const {
+    DAWN_ASSERT(minus <= 0 && plus >= 0);
+    return impl_ ? impl_->limit(minus, plus) : *this;
+  }
 
 private:
   std::unique_ptr<HorizontalExtentImpl> impl_;
@@ -201,11 +235,8 @@ private:
 
 template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
-  return dynamic_cast<T>(*extent.impl_);
-}
-template <typename T>
-T extent_cast(HorizontalExtent&& extent) {
-  return dynamic_cast<T>(*extent.impl_);
+  static CartesianExtent nullExtent{};
+  return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
 
 /// @brief Three dimensional access extents of a field
@@ -216,6 +247,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  Extents();
   Extents(const ast::Offsets& offset);
   Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
           int extent3minus, int extent3plus);
@@ -245,7 +277,9 @@ public:
   /// @brief Check if extent is pointwise in the horizontal direction, i.e. zero extent
   bool isVerticalPointwise() const;
 
-  /// @brief Check if extent is pointwise all directions, i.e. zero extent
+  /// @brief Check if extent is pointwise all directions, i.e. zero extent (which corresponds to the
+  /// default initialized
+  // extent)
   bool isPointwise() const;
 
   /// @brief add the center of the stencil to the vertical extent
