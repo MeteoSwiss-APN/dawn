@@ -12,18 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(NOT CMAKE_BUILD_TYPE)
-set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-    "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
-endif()
-
 if(NOT BUILD_SHARED_LIBS)
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries." FORCE)
-endif()
-
-if(NOT CMAKE_INSTALL_PREFIX)
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE STRING
-    "Install path prefix, prepended onto install directories." FORCE)
 endif()
 
 cmake_minimum_required(VERSION 3.3)
@@ -32,6 +22,20 @@ project(dawn
     DESCRIPTION "Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models"
     HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
     LANGUAGES C CXX)
+
+set(default_build_type "RelWithDebInfo")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH
+  "Path prefix prepended onto install directories." FORCE)
+endif()
 
 set(YODA_ROOT CACHE PATH "path to yoda package")
 
