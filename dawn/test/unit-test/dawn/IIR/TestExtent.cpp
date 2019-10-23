@@ -43,6 +43,15 @@ TEST(ExtentsTest, EmptyConstruction) {
   EXPECT_NE(Extents(ast::cartesian, -1, 1, -1, 1, -1, 1), Extents());
 
   EXPECT_EQ(Extents(), Extents());
+
+  Extents nullExtent;
+  Extents extents1{ast::cartesian, -1, 1, -1, 1, -1, 1};
+  extents1 = nullExtent;
+  EXPECT_EQ(extents1, nullExtent);
+
+  Extents extents2{ast::cartesian, -1, 1, -1, 1, -1, 1};
+  extents2 = std::move(nullExtent);
+  EXPECT_EQ(extents2, nullExtent);
 }
 
 TEST(ExtentsTest, PointWise) {
