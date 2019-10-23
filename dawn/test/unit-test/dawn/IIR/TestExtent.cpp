@@ -81,9 +81,9 @@ TEST(ExtentsTest, MergeWithExtent) {
   emptyExtent.merge(Extents());
   EXPECT_EQ(emptyExtent, Extents());
   emptyExtent.merge(Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
-  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
+  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, 0, 0, 1, 0, 0));
   emptyExtent.merge(Extents());
-  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
+  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, 0, 0, 1, 0, 0));
 }
 
 TEST(ExtentsTest, MergeWithOffset) {
