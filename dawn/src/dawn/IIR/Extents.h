@@ -88,27 +88,27 @@ public:
   virtual ~HorizontalExtentImpl() = default;
 
   HorizontalExtentImpl& operator+=(HorizontalExtentImpl const& other) {
-    add_impl(other);
+    addImpl(other);
     return *this;
   }
-  std::unique_ptr<HorizontalExtentImpl> clone() const { return clone_impl(); }
+  std::unique_ptr<HorizontalExtentImpl> clone() const { return cloneImpl(); }
 
-  void merge(HorizontalExtentImpl const& other) { merge_impl(other); }
-  void merge(ast::HorizontalOffset const& other) { merge_impl(other); }
-  bool equals(HorizontalExtentImpl const& other) const { return equals_impl(other); }
-  bool isPointwise() const { return isPointwise_impl(); }
+  void merge(HorizontalExtentImpl const& other) { mergeImpl(other); }
+  void merge(ast::HorizontalOffset const& other) { mergeImpl(other); }
+  bool operator==(HorizontalExtentImpl const& other) const { return equalsImpl(other); }
+  bool isPointwise() const { return isPointwiseImpl(); }
   std::unique_ptr<HorizontalExtentImpl> limit(int minus, int plus) const {
-    return limit_impl(minus, plus);
+    return limitImpl(minus, plus);
   }
 
 protected:
-  virtual void add_impl(HorizontalExtentImpl const& other) = 0;
-  virtual void merge_impl(HorizontalExtentImpl const& other) = 0;
-  virtual void merge_impl(ast::HorizontalOffset const& other) = 0;
-  virtual bool equals_impl(HorizontalExtentImpl const& other) const = 0;
-  virtual std::unique_ptr<HorizontalExtentImpl> clone_impl() const = 0;
-  virtual bool isPointwise_impl() const = 0;
-  virtual std::unique_ptr<HorizontalExtentImpl> limit_impl(int minus, int plus) const = 0;
+  virtual void addImpl(HorizontalExtentImpl const& other) = 0;
+  virtual void mergeImpl(HorizontalExtentImpl const& other) = 0;
+  virtual void mergeImpl(ast::HorizontalOffset const& other) = 0;
+  virtual bool equalsImpl(HorizontalExtentImpl const& other) const = 0;
+  virtual std::unique_ptr<HorizontalExtentImpl> cloneImpl() const = 0;
+  virtual bool isPointwiseImpl() const = 0;
+  virtual std::unique_ptr<HorizontalExtentImpl> limitImpl(int minus, int plus) const = 0;
 };
 
 class CartesianExtent : public HorizontalExtentImpl {
@@ -125,39 +125,39 @@ public:
   int jPlus() const { return extents_[1].plus(); }
 
 protected:
-  void add_impl(HorizontalExtentImpl const& other) override {
+  void addImpl(HorizontalExtentImpl const& other) override {
     auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
     extents_[0] += otherCartesian.extents_[0];
     extents_[1] += otherCartesian.extents_[1];
   }
 
-  void merge_impl(HorizontalExtentImpl const& other) override {
+  void mergeImpl(HorizontalExtentImpl const& other) override {
     auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
     extents_[0].merge(otherCartesian.extents_[0]);
     extents_[1].merge(otherCartesian.extents_[1]);
   }
 
-  void merge_impl(ast::HorizontalOffset const& offset) override {
+  void mergeImpl(ast::HorizontalOffset const& offset) override {
     auto const& offsetCartesian = ast::offset_cast<ast::CartesianOffset const&>(offset);
     extents_[0].merge(Extent(offsetCartesian.offsetI(), offsetCartesian.offsetI()));
     extents_[1].merge(Extent(offsetCartesian.offsetJ(), offsetCartesian.offsetJ()));
   }
 
-  bool equals_impl(HorizontalExtentImpl const& other) const override {
+  bool equalsImpl(HorizontalExtentImpl const& other) const override {
     auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
     return extents_[0] == otherCartesian.extents_[0] && extents_[1] == otherCartesian.extents_[1];
   }
 
-  std::unique_ptr<HorizontalExtentImpl> clone_impl() const override {
+  std::unique_ptr<HorizontalExtentImpl> cloneImpl() const override {
     return std::make_unique<CartesianExtent>(extents_[0].minus(), extents_[0].plus(),
                                              extents_[1].minus(), extents_[1].plus());
   }
 
-  bool isPointwise_impl() const override {
+  bool isPointwiseImpl() const override {
     return extents_[0].isPointwise() && extents_[1].isPointwise();
   }
 
-  std::unique_ptr<HorizontalExtentImpl> limit_impl(int minus, int plus) const override {
+  std::unique_ptr<HorizontalExtentImpl> limitImpl(int minus, int plus) const override {
     return std::make_unique<CartesianExtent>(extents_[0].limit(minus, plus),
                                              extents_[1].limit(minus, plus));
   }
@@ -173,34 +173,34 @@ public:
   bool hasExtent() const { return hasExtent_; }
 
 protected:
-  void add_impl(HorizontalExtentImpl const& other) override {
+  void addImpl(HorizontalExtentImpl const& other) override {
     auto const& otherUnstructured = dynamic_cast<UnstructuredExtent const&>(other);
     hasExtent_ = hasExtent_ || otherUnstructured.hasExtent_;
   }
 
-  void merge_impl(HorizontalExtentImpl const& other) override {
+  void mergeImpl(HorizontalExtentImpl const& other) override {
     auto const& otherUnstructured = dynamic_cast<UnstructuredExtent const&>(other);
     hasExtent_ = hasExtent_ || otherUnstructured.hasExtent_;
   }
 
-  void merge_impl(ast::HorizontalOffset const& offset) override {
+  void mergeImpl(ast::HorizontalOffset const& offset) override {
     auto const& otherOffset = ast::offset_cast<ast::UnstructuredOffset const&>(offset);
     hasExtent_ = hasExtent_ || otherOffset.hasOffset();
   }
 
-  bool equals_impl(HorizontalExtentImpl const& other) const override {
+  bool equalsImpl(HorizontalExtentImpl const& other) const override {
     auto const& otherUnstructured = dynamic_cast<dawn::iir::UnstructuredExtent const&>(other);
     return hasExtent_ == otherUnstructured.hasExtent_;
   }
 
-  std::unique_ptr<HorizontalExtentImpl> clone_impl() const override {
+  std::unique_ptr<HorizontalExtentImpl> cloneImpl() const override {
     return std::make_unique<UnstructuredExtent>(hasExtent_);
   }
 
-  bool isPointwise_impl() const override { return !hasExtent_; }
+  bool isPointwiseImpl() const override { return !hasExtent_; }
 
   // TODO totally unclear what this should do...
-  std::unique_ptr<HorizontalExtentImpl> limit_impl(int minus, int plus) const override {
+  std::unique_ptr<HorizontalExtentImpl> limitImpl(int minus, int plus) const override {
     return clone();
   }
 
@@ -240,6 +240,8 @@ public:
   HorizontalExtent& operator=(HorizontalExtent const& other) {
     if(other.impl_)
       impl_ = other.impl_->clone();
+    else
+      impl_ = nullptr;
     return *this;
   }
   HorizontalExtent& operator=(HorizontalExtent&& other) = default;
@@ -254,7 +256,7 @@ public:
 
   bool operator==(HorizontalExtent const& other) const {
     if(impl_ && other.impl_)
-      return impl_->equals(*other.impl_);
+      return *impl_ == *other.impl_;
     else if(impl_)
       return isPointwise();
     else if(other.impl_)
@@ -283,7 +285,7 @@ public:
     else
       *this = other;
   }
-  bool isPointwise() const { return impl_ ? impl_->isPointwise() : true; }
+  bool isPointwise() const { return !impl_ || impl_->isPointwise(); }
   HorizontalExtent limit(int minus, int plus) const {
     DAWN_ASSERT(minus <= 0 && plus >= 0);
     return impl_ ? impl_->limit(minus, plus) : *this;
@@ -324,8 +326,7 @@ public:
   /// @brief Limits the same extents, but limited to the interval [minus, plus]
   Extents limit(int minus, int plus) const;
 
-  /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the
-  /// two
+  /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
   /// @b Example:
   ///   If `this` is `{-1, 1, 0, 0, 0, 0}` and `other` is `{-2, 0, 0, 0, 1}` the result will be
@@ -342,8 +343,8 @@ public:
   /// @brief Check if extent is pointwise in the horizontal direction, i.e. zero extent
   bool isVerticalPointwise() const;
 
-  /// @brief Check if extent is pointwise all directions, i.e. zero extent (which corresponds to
-  /// the default initialized
+  /// @brief Check if extent is pointwise all directions, i.e. zero extent (which corresponds to the
+  /// default initialized
   // extent)
   bool isPointwise() const;
 
@@ -367,11 +368,10 @@ public:
   /// non-pointwise extent is considered a counter-loop- and loop order access.
   VerticalLoopOrderAccess getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const;
 
-  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or
-  /// CounterLoopOrder return non initialized optional<Extent> if the full extent is accessed in a
-  /// counterloop order manner
-  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or
-  /// parallel)
+  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or CounterLoopOrder
+  /// return non initialized optional<Extent> if the full extent is accessed in a counterloop order
+  /// manner
+  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or parallel)
   /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
   ///            InLoopOrder/CounterLoopOrder
   /// @param includeCenter determines whether center is considered part of the loopOrderPolicy

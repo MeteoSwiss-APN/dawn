@@ -12,8 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(AST)
-add_subdirectory(Optimizer)
-add_subdirectory(IIR)
-add_subdirectory(SIR)
-add_subdirectory(Support)
+dawn_add_unittest_impl(
+  NAME DawnUnittestAST
+  SOURCES
+          TestOffset.cpp
+          TestMain.cpp
+)
+target_include_directories(DawnUnittestAST PUBLIC $<TARGET_PROPERTY:DawnASTObjects,INCLUDE_DIRECTORIES>)
+
