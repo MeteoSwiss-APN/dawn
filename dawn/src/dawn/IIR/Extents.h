@@ -236,7 +236,7 @@ private:
 
 template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
-  static CartesianExtent nullExtent{};
+  static std::remove_reference_t<T> nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
 
