@@ -509,7 +509,7 @@ class FieldAccessExpr : public Expr {
 public:
   /// @name Constructor & Destructor
   /// @{
-  FieldAccessExpr(const std::string& name, const Offsets& offset = Offsets(cartesian),
+  FieldAccessExpr(const std::string& name, const Offsets& offset = Offsets(),
                   Array3i argumentMap = Array3i{{-1, -1, -1}},
                   Array3i argumentOffset = Array3i{{0, 0, 0}}, bool negateOffset = false,
                   SourceLocation loc = SourceLocation());
