@@ -94,8 +94,7 @@ bool PassTemporaryMerger::run(
 
           if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, ToAccessID) &&
              AccessIDOfLastTemporary != -1) {
-            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID,
-                                    iir::Extents(ast::cartesian));
+            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID, iir::Extents{});
             newAccessIDOfLastTemporary = ToAccessID;
           }
 
@@ -130,7 +129,7 @@ bool PassTemporaryMerger::run(
           continue;
 
         if(FromLifetime.overlaps(ToLifetime)) {
-          TemporaryDAG.insertEdge(FromAccessID, ToAccessID, iir::Extents(ast::cartesian));
+          TemporaryDAG.insertEdge(FromAccessID, ToAccessID, iir::Extents{});
         }
       }
     }

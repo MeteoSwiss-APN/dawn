@@ -95,6 +95,8 @@ private:
 
 class HorizontalOffset {
 public:
+  // the default constructed horizontal offset creates a null-offset that can be compared to all
+  // kind of grids
   HorizontalOffset() = default;
 
   explicit HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
@@ -139,11 +141,9 @@ public:
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
-  template <typename T>
-  friend T offset_cast(HorizontalOffset&& offset);
-  template <typename CartFn, typename UnstructuredFn>
-  friend auto offset_dispatch(HorizontalOffset const& extents, CartFn const& cartFn,
-                              UnstructuredFn const& unstructuredFn);
+  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+  friend auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
@@ -153,10 +153,6 @@ template <typename T>
 T offset_cast(HorizontalOffset const& offset) {
   static std::remove_reference_t<T> nullOffset{};
   return offset.impl_ ? dynamic_cast<T>(*offset.impl_) : nullOffset;
-}
-template <typename T>
-T offset_cast(HorizontalOffset&& offset) {
-  return dynamic_cast<T>(*offset.impl_);
 }
 
 class Offsets {
@@ -224,9 +220,12 @@ std::string toString(Offsets const& offset, std::string const& sep = ",");
  */
 std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
-template <typename CartFn, typename UnstructuredFn>
+template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
 auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
-                     UnstructuredFn const& unstructuredFn) {
+                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
+  if(hOffset.isZero())
+    return zeroFn();
+
   HorizontalOffsetImpl* ptr = hOffset.impl_.get();
   if(auto cartesianOffset = dynamic_cast<CartesianOffset const*>(ptr)) {
     return cartFn(*cartesianOffset);

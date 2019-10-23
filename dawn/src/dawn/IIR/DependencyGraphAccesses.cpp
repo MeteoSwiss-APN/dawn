@@ -69,8 +69,7 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
   if(data.isHorizontalPointwise() && data.isVerticalPointwise())
     return " [style = dashed]";
   else {
-    const auto& hExtents =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(data.horizontalExtent());
+    const auto& hExtents = extent_cast<CartesianExtent const&>(data.horizontalExtent());
     const auto& vExtents = data.verticalExtent();
     return " [label = \"<" + std::to_string(hExtents.iMinus()) + ", " +
            std::to_string(hExtents.iPlus()) + ", " + std::to_string(hExtents.jMinus()) + ", " +
@@ -551,8 +550,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
     std::vector<int> extentsVec;
 
     auto vExtent = extents.verticalExtent();
-    auto hExtent =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+    auto hExtent = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
 
     extentsVec.push_back(hExtent.iMinus());
     extentsVec.push_back(hExtent.iPlus());

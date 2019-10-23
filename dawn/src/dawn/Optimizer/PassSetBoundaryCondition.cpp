@@ -38,7 +38,7 @@ namespace {
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
 static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
-  iir::Extents fullExtents(ast::cartesian);
+  iir::Extents fullExtents;
   iir::Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
@@ -188,7 +188,7 @@ bool PassSetBoundaryCondition::run(
   }
 
   auto calculateHaloExtents = [&](std::string fieldname) {
-    iir::Extents fullExtent(ast::cartesian);
+    iir::Extents fullExtent;
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before

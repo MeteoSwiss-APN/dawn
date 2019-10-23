@@ -47,7 +47,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExp
 }
 
 void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
-  const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+  const auto& hExtents = iir::extent_cast<iir::CartesianExtent const&>(
       metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).horizontalExtent());
   const auto& vExtents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).verticalExtent();
   int haloIMinus = std::abs(hExtents.iMinus());

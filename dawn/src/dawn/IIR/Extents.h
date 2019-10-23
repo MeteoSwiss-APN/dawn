@@ -223,7 +223,8 @@ public:
                             },
                             [](ast::UnstructuredOffset const& uOffset) {
                               return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
-                            });
+                            },
+                            []() { return HorizontalExtent(); });
   }
 
   HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
@@ -297,7 +298,7 @@ private:
 
 template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
-  static CartesianExtent nullExtent{};
+  static std::remove_reference_t<T> nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
 
@@ -409,13 +410,14 @@ std::string to_string(Extents const& extent);
 template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
 auto extent_dispatch(Extents const& extents, CartFn const& cartFn,
                      UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
+  if(extents.isHorizontalPointwise())
+    return zeroFn(extents.verticalExtent());
+
   HorizontalExtentImpl* ptr = extents.horizontalExtent().impl_.get();
   if(auto cartesianExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
     return cartFn(*cartesianExtent, extents.verticalExtent());
   } else if(auto unstructuredExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
     return unstructuredFn(*unstructuredExtent, extents.verticalExtent());
-  } else if(!ptr) {
-    return zeroFn(extents.verticalExtent());
   } else {
     dawn_unreachable("unknown extent class");
   }

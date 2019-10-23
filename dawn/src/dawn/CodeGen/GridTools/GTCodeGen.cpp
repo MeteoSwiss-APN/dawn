@@ -717,8 +717,8 @@ void GTCodeGen::generateStencilClasses(
 
         ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
              << ", " + c_gt() + "extent< ";
-        auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-            stage.getExtents().horizontalExtent());
+        auto const& hExtents =
+            iir::extent_cast<iir::CartesianExtent const&>(stage.getExtents().horizontalExtent());
         ssMS << hExtents.iMinus() << ", " << hExtents.iPlus() << ", " << hExtents.jMinus() << ", "
              << hExtents.jPlus() << "> >(";
 
@@ -867,7 +867,7 @@ void GTCodeGen::generateStencilClasses(
 
     for(const auto& parameterTypeFullExtentsPair : parameterTypeToFullExtentsMap) {
       const auto& parameterType = parameterTypeFullExtentsPair.first;
-      const auto& fullExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+      const auto& fullExtents = iir::extent_cast<iir::CartesianExtent const&>(
           parameterTypeFullExtentsPair.second.horizontalExtent());
       for(int dim = 0; dim < 2; ++dim) {
         std::string at_call = "template at<" + std::to_string(dim) + ">()";
