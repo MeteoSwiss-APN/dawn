@@ -91,7 +91,6 @@ public:
   std::unique_ptr<HorizontalExtentImpl> clone() const { return cloneImpl(); }
 
   void merge(HorizontalExtentImpl const& other) { mergeImpl(other); }
-  void merge(ast::HorizontalOffset const& other) { mergeImpl(other); }
   void addCenter() { addCenterImpl(); }
   bool operator==(HorizontalExtentImpl const& other) const { return equalsImpl(other); }
   bool isPointwise() const { return isPointwiseImpl(); }
@@ -102,7 +101,6 @@ public:
 protected:
   virtual void addImpl(HorizontalExtentImpl const& other) = 0;
   virtual void mergeImpl(HorizontalExtentImpl const& other) = 0;
-  virtual void mergeImpl(ast::HorizontalOffset const& other) = 0;
   virtual void addCenterImpl() = 0;
   virtual bool equalsImpl(HorizontalExtentImpl const& other) const = 0;
   virtual std::unique_ptr<HorizontalExtentImpl> cloneImpl() const = 0;
@@ -128,12 +126,6 @@ public:
     auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
     extents_[0].merge(otherCartesian.extents_[0]);
     extents_[1].merge(otherCartesian.extents_[1]);
-  }
-
-  void mergeImpl(ast::HorizontalOffset const& offset) override {
-    auto const& offsetCartesian = ast::offset_cast<ast::CartesianOffset const&>(offset);
-    extents_[0].merge(Extent(offsetCartesian.offsetI(), offsetCartesian.offsetI()));
-    extents_[1].merge(Extent(offsetCartesian.offsetJ(), offsetCartesian.offsetJ()));
   }
 
   void addCenterImpl() override { mergeImpl(CartesianExtent()); }
@@ -226,12 +218,7 @@ public:
       impl_->addCenter();
     }
   }
-  void merge(const ast::HorizontalOffset& other) {
-    if(impl_)
-      impl_->merge(other);
-    else
-      *this = other;
-  }
+  void merge(const ast::HorizontalOffset& other) { merge(HorizontalExtent{other}); }
   bool isPointwise() const { return !impl_ || impl_->isPointwise(); }
   HorizontalExtent limit(int minus, int plus) const {
     DAWN_ASSERT(minus <= 0 && plus >= 0);
