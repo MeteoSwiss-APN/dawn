@@ -155,12 +155,23 @@ bool Extents::operator==(const Extents& other) const {
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
 std::string to_string(const Extents& extent) {
-  auto const& hExtents = extent_cast<CartesianExtent const&>(extent.horizontalExtent());
   auto const& vExtents = extent.verticalExtent();
 
-  return "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) +
-         "), (" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) +
-         "), (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
+  using namespace std::string_literals;
+  return "["s +
+         extent_dispatch(extent.horizontalExtent(),
+                         [&](CartesianExtent const& hExtents) {
+                           return "("s + std::to_string(hExtents.iMinus()) + ", " +
+                                  std::to_string(hExtents.iPlus()) + "), (" +
+                                  std::to_string(hExtents.jMinus()) + ", " +
+                                  std::to_string(hExtents.jPlus()) + ")";
+                         },
+                         [&](UnstructuredExtent const& hExtents) {
+                           return hExtents.hasExtent() ? "<has_horizontal_extent>"s
+                                                       : "<no_horizontal_extent>"s;
+                         },
+                         [&]() { return "<no_horizontal_extent>"s; }) +
+         ", (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
