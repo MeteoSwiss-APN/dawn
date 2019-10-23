@@ -21,11 +21,29 @@
 
 namespace dawn::ast {
 
-std::ostream& operator<<(std::ostream& os, Offsets const& offset) { return os << toString(offset); }
+std::string toString(unstructured_, Offsets const& offset) {
+  auto const& hoffset = offset_cast<UnstructuredOffset const&>(offset.horizontalOffset());
+  auto const& voffset = offset.verticalOffset();
 
-std::string toString(Offsets const& offsets, std::string const& sep) {
-  return toString(offsets, sep,
+  using namespace std::string_literals;
+  return (hoffset.hasOffset() ? "<has_horizontal_offset>"s : "<no_horizontal_offset>"s) + ", " +
+         std::to_string(voffset);
+}
+
+std::string toString(cartesian_, Offsets const& offsets, std::string const& sep) {
+  return toString(cartesian, offsets, sep,
                   [](std::string const&, int offset) { return std::to_string(offset); });
+}
+
+std::string toString(Offsets const& offset) {
+  return offset_dispatch(offset.horizontalOffset(),
+                         [&](CartesianOffset const&) { return toString(cartesian, offset); },
+                         [&](UnstructuredOffset const&) { return toString(unstructured, offset); },
+                         [&]() {
+                           using namespace std::string_literals;
+                           return "<no_horizontalOffset>, "s +
+                                  std::to_string(offset.verticalOffset());
+                         });
 }
 
 bool CartesianOffset::equalsImpl(HorizontalOffsetImpl const& other) const {

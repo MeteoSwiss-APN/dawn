@@ -53,7 +53,7 @@ protected:
   std::string ijkfyOffset(const ast::Offsets& offsets, std::string accessName) {
     int n = 0;
     return "(" +
-           toString(offsets, ", ",
+           toString(ast::cartesian, offsets, ", ",
                     [&](std::string const& name, int offset) {
                       std::string ret = name + "+" + std::to_string(offset);
                       if(stencilContext_ == StencilContext::SC_StencilFunction)

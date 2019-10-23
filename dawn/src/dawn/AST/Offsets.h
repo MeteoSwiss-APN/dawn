@@ -190,13 +190,16 @@ private:
   int verticalOffset_ = 0;
 };
 
+std::string toString(unstructured_, Offsets const& offset);
+
 /**
  * For each component of :offset, calls `offset_to_string(name_of_offset, offset_value)`.
  * Concatenates all non-zero stringified offsets using :sep as a delimiter.
  */
 template <typename F>
-std::string toString(Offsets const& offset, std::string const& sep, F&& offset_to_string) {
-  auto const& hoffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
+std::string toString(cartesian_, Offsets const& offset, std::string const& sep,
+                     F const& offset_to_string) {
+  auto const& hoffset = offset_cast<CartesianOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
   std::string s;
   std::string csep = "";
@@ -212,13 +215,8 @@ std::string toString(Offsets const& offset, std::string const& sep, F&& offset_t
     s += csep + ret;
   return s;
 }
-std::string toString(Offsets const& offset, std::string const& sep = ",");
-
-/**
- * \brief the default printer prints "i, j, k" for cartesian grids. For non-standard use cases,
- * consider
- */
-std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
+std::string toString(cartesian_, Offsets const& offset, std::string const& sep = ", ");
+std::string toString(Offsets const& offset);
 
 template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
 auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,

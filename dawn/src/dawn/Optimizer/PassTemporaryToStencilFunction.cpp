@@ -139,8 +139,9 @@ std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAc
 /// @brief create the name of a newly created stencil function associated to a tmp computations
 std::string makeOnTheFlyFunctionName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
                                      const iir::Interval& interval) {
+  // TODO: Does not support unstructured grids right now
   return makeOnTheFlyFunctionCandidateName(expr, interval) + "_" +
-         toString(expr->getOffset(), "_", [](std::string const& name, int offset) {
+         toString(ast::cartesian, expr->getOffset(), "_", [](std::string const& name, int offset) {
            return name + "_" + ((offset < 0) ? "minus" : "") + std::to_string(std::abs(offset));
          });
 }

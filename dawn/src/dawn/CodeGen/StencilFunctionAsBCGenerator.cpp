@@ -27,10 +27,11 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
     DAWN_ASSERT_MSG(pos < function_->Args.size(), "");
     return pos;
   };
-  ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
-                      toString(expr->getOffset(), ", ", [&](std::string const& name, int offset) {
-                        return name + "+" + std::to_string(offset);
-                      }));
+  ss_ << dawn::format(
+      "data_field_%i(%s)", getArgumentIndex(expr->getName()),
+      toString(ast::cartesian, expr->getOffset(), ", ", [&](std::string const& name, int offset) {
+        return name + "+" + std::to_string(offset);
+      }));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
