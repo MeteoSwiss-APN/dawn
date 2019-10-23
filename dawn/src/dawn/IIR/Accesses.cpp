@@ -33,22 +33,23 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
   auto printMap = [&](const MapType& map, const char* intent) {
     for(auto it = map.begin(), end = map.end(); it != end; ++it) {
       ss << (it != map.begin() ? " " : "") << intent << ":";
-      int AccessID = it->first;
+      auto const& [AccessID, extent] = *it;
       ss << accessIDToStringFunction(AccessID);
       ss << ":<";
 
-      extent_dispatch(it->second,
-                      [&](iir::CartesianExtent const& hExtent, Extent const& vExtent) {
+      auto const& vExtent = extent.verticalExtent();
+      extent_dispatch(extent.horizontalExtent(),
+                      [&](iir::CartesianExtent const& hExtent) {
                         ss << hExtent.iMinus() << "," << hExtent.iPlus() << ",";
                         ss << hExtent.jMinus() << "," << hExtent.jPlus() << ",";
                         ss << vExtent.minus() << "," << vExtent.plus();
                       },
-                      [&](iir::UnstructuredExtent const& hExtent, Extent const& vExtent) {
+                      [&](iir::UnstructuredExtent const& hExtent) {
                         ss << (hExtent.hasExtent() ? "<has_horizontal_extent>"
                                                    : "<no_horizontal_extent>")
                            << ", " << vExtent.minus() << "," << vExtent.plus();
                       },
-                      [&](Extent const& vExtent) {
+                      [&]() {
                         ss << "<no_horizontal_extent>"
                            << ", " << vExtent.minus() << "," << vExtent.plus();
                       });
