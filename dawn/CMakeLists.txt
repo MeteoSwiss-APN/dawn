@@ -92,10 +92,10 @@ if(DAWN_PYTHON)
 endif()
 
 # Build dawn
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_BINARY_DIR}/src)
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/src/dawn/Support/External)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/src)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/test/utils/googletest/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/src/dawn/Support/External)
 
 add_subdirectory(src)
 add_subdirectory(cmake)

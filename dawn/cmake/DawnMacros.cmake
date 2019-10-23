@@ -102,8 +102,8 @@ macro(dawn_gen_install_config)
   set(DAWN_CONFIGURE_PROTOBUF_VERSION ${DAWN_PROTOBUF_VERSION})
 
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/install/dawnConfig.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
+    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/install/dawnConfig.cmake
     INSTALL_DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
     PATH_VARS
       DAWN_CONFIGURE_ROOT
@@ -116,7 +116,7 @@ macro(dawn_gen_install_config)
 
   install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/dawnConfigVersion.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/install/dawnConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/install/dawnConfig.cmake"
     DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
   )
 
@@ -128,7 +128,7 @@ macro(dawn_gen_install_config)
   set(DAWN_CONFIGURE_LIB_DIR "")
   set(DAWN_CONFIGURE_CMAKE_DIR "${PROJECT_BINARY_DIR}")
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
     ${PROJECT_BINARY_DIR}/dawnConfig.cmake
     INSTALL_DESTINATION ${PROJECT_BINARY_DIR}
     PATH_VARS
