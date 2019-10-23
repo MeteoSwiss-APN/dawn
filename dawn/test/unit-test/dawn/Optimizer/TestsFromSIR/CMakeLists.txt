@@ -8,5 +8,5 @@ dawn_add_unittest_impl(
   GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}/../Passes" "--gtest_color=yes"
 )
 
-target_include_directories(DawnUnittestOptimizerFromSIR PUBLIC "${CMAKE_SOURCE_DIR}")
+target_include_directories(DawnUnittestOptimizerFromSIR PUBLIC "${DAWN_SOURCE_DIR}")
 

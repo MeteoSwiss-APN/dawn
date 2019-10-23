@@ -26,5 +26,5 @@ yoda_add_unittest(
     GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}" "--gtest_color=yes"
   )
 
-target_include_directories(DawnUnittestOptimizerPasses PUBLIC "${CMAKE_SOURCE_DIR}")
+target_include_directories(DawnUnittestOptimizerPasses PUBLIC "${DAWN_SOURCE_DIR}")
 
