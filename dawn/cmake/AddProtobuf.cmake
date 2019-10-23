@@ -12,17 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(Protobuf 3.4 NO_MODULE REQUIRED)
-
-get_property(Protobuf_INCLUDE_DIRS 
-  TARGET protobuf::libprotobuf 
-  PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-)
-
-get_property(Protobuf_PROTOC_EXECUTABLE 
-  TARGET protobuf::protoc 
-  PROPERTY LOCATION
-)
+find_package(Protobuf REQUIRED)
 
 # Get the <root> directory of protobuf by assuming protoc is installed in <root>/bin/protoc
 get_filename_component(root_bin_dir ${Protobuf_PROTOC_EXECUTABLE} DIRECTORY)
@@ -37,7 +27,7 @@ yoda_export_package(
   NAME Protobuf
   FOUND ${Protobuf_FOUND}
   EXECUTABLE "${Protobuf_PROTOC_EXECUTABLE}"
-  INCLUDE_DIRS "${Protobuf_INCLUDE_DIRS}"
+  INCLUDE_DIRS "${Protobuf_INCLUDE_DIR}"
   LIBRARIES "protobuf::libprotobuf"
   VERSION "${Protobuf_VERSION}"
   # https://stackoverflow.com/questions/34474091/protobuf-inline-not-in-headers
