@@ -131,64 +131,6 @@ public:
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 
-  // TODO(SAP) removing getChildren() must be the last thing to do
-  const std::vector<std::shared_ptr<iir::Stmt>>& getChildren() const {
-    return ast_.getStatements();
-  }
-  std::vector<std::shared_ptr<iir::Stmt>>& getChildren() { return ast_.getStatements(); }
-  // END_TODO
-
-  // TODO(SAP) remove
-  auto childrenBegin() {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().begin();
-  }
-  // TODO(SAP) remove
-  auto childrenEnd() {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().end();
-  }
-  // TODO(SAP) remove
-  inline auto childrenRBegin() {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().rbegin();
-  }
-  // TODO(SAP) remove
-  inline auto childrenREnd() {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().rend();
-  }
-  // TODO(SAP) remove
-  inline auto childrenBegin() const {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().begin();
-  }
-  inline auto childrenEnd() const {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().end();
-  }
-  // TODO(SAP) remove
-  inline auto childrenRBegin() const {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().rbegin();
-  }
-  // TODO(SAP) remove
-  inline auto childrenREnd() const {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().rend();
-  }
-  // TODO(SAP) remove
-  inline auto& getChild(unsigned long pos) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements()[pos];
-  }
-  // TODO(SAP) remove
-  template <typename T>
-  inline auto childrenErase(T childIt) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    auto it_ = ast_.getStatements().erase(childIt);
-    return it_;
-  }
   // TODO(SAP) remove
   inline bool checkTreeConsistency() const { return true; }
 
@@ -197,63 +139,8 @@ public:
   void setChildrenParent(TChildSmartPtr* = 0) {}
   // TODO(SAP) remove
   void setChildParent(const std::shared_ptr<iir::Stmt>& child) {}
-  // TODO(SAP) remove
-  void insertChild(std::shared_ptr<iir::Stmt>&& child) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    ast_.getStatements().push_back(child);
-  }
-  // TODO(SAP) remove
-  void insertChild(std::shared_ptr<iir::Stmt>&& child, const std::unique_ptr<DoMethod>& thisNode) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    ast_.getStatements().push_back(child);
-  }
-  // TODO(SAP) remove
-  auto insertChild(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos,
-                   std::shared_ptr<iir::Stmt>&& child) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().insert(pos, std::move(child));
-  }
-  // TODO(SAP) remove
-  template <typename Iterator>
-  auto insertChildren(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos, Iterator first,
-                      Iterator last) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().insert(pos, first, last);
-  }
-  // TODO(SAP) remove
-  template <typename Iterator>
-  ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
-                               const std::unique_ptr<DoMethod>&) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().insert(pos, first, last);
-  }
 
   void printTree() {}
-  // TODO(SAP) remove
-  void replace(const std::shared_ptr<iir::Stmt>& inputChild,
-               std::shared_ptr<iir::Stmt>& withNewChild) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
-    *it = withNewChild;
-  }
-  // TODO(SAP) remove
-  void replace(const std::shared_ptr<iir::Stmt>& inputChild,
-               std::shared_ptr<iir::Stmt>& withNewChild, const std::unique_ptr<DoMethod>&) {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
-    *it = withNewChild;
-  }
-
-  // TODO(SAP) remove
-  bool childrenEmpty() const {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    return ast_.getStatements().empty();
-  }
-  // TODO(SAP) remove
-  void clearChildren() {
-    DAWN_ASSERT_MSG(false, "unreachable");
-    ast_.getStatements().clear();
-  }
 
   void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
   iir::BlockStmt const& getAST() const { return ast_; }
@@ -266,7 +153,7 @@ template <typename RootNode>
 auto iterateIIROverStmt(const RootNode& root) {
   std::vector<std::shared_ptr<iir::Stmt>> allStmts;
   for(auto& doMethod : iterateIIROver<iir::DoMethod>(root)) {
-    std::copy(doMethod->getChildren().begin(), doMethod->getChildren().end(),
+    std::copy(doMethod->getAST().getStatements().begin(), doMethod->getAST().getStatements().end(),
               std::back_inserter(allStmts));
   }
   return allStmts;

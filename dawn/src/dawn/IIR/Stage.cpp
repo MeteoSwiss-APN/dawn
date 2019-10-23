@@ -210,7 +210,7 @@ void Stage::updateGlobalVariablesInfo() {
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
-    for(const auto& stmt : doMethod.getChildren()) {
+    for(const auto& stmt : doMethod.getAST().getStatements()) {
       const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
@@ -284,12 +284,12 @@ Stage::split(std::deque<int>& splitterIndices,
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
-  DAWN_ASSERT(thisDoMethod.getChildren().size() >= 2);
+  DAWN_ASSERT(thisDoMethod.getAST().getStatements().size() >= 2);
   DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
 
   std::vector<std::unique_ptr<Stage>> newStages;
 
-  splitterIndices.push_back(thisDoMethod.getChildren().size() - 1);
+  splitterIndices.push_back(thisDoMethod.getAST().getStatements().size() - 1);
   auto prevSplitterIndex = thisDoMethod.getAST().getStatements().begin();
 
   // Create new stages

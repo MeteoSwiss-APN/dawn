@@ -122,10 +122,11 @@ bool PassFieldVersioning::run(
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
         // Iterate statements bottom -> top
-        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
+        for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0;
+            --stmtIndex) {
           oldGraph = newGraph->clone();
 
-          auto& stmt = doMethod.getChildren()[stmtIndex];
+          auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
           newGraph->insertStatement(stmt);
 
           // Try to resolve race-conditions by using double buffering if necessary
@@ -166,7 +167,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  iir::Stmt& statement = *doMethod.getChildren()[index];
+  iir::Stmt& statement = *doMethod.getAST().getStatements()[index];
 
   int numRenames = 0;
 

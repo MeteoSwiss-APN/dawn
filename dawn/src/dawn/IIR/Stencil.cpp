@@ -218,7 +218,7 @@ void Stencil::forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<i
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
     for(const auto& doMethodPtr : stage->getChildren()) {
-      func(doMethodPtr->getChildren());
+      func(doMethodPtr->getAST().getStatements());
       if(updateFields) {
         doMethodPtr->update(iir::NodeUpdateType::level);
       }
@@ -478,7 +478,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
         DoMethod& doMethod = *doMethodPtr;
 
         int statementIdx = 0;
-        for(const auto& stmt : doMethod.getChildren()) {
+        for(const auto& stmt : doMethod.getAST().getStatements()) {
           const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
 
           auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {

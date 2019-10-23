@@ -58,8 +58,9 @@ bool PassStageSplitter::run(
         oldGraph = newGraph->clone();
 
         // Build the Dependency graph (bottom to top)
-        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
-          auto& stmt = doMethod.getChildren()[stmtIndex];
+        for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0;
+            --stmtIndex) {
+          auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
 
           newGraph->insertStatement(stmt);
 

@@ -390,7 +390,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
                               const iir::DoMethod& doMethod = *doMethodPtr;
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
-                              for(const auto& stmt : doMethod.getChildren()) {
+                              for(const auto& stmt : doMethod.getAST().getStatements()) {
                                 stmt->accept(stencilBodyCXXVisitor);
                                 stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }

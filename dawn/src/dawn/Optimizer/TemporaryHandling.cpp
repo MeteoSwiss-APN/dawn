@@ -42,7 +42,8 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   std::vector<std::shared_ptr<iir::Stmt>>& stmts = stencil->getStage(lifetime.Begin.StagePos)
                                                        ->getChildren()
                                                        .at(lifetime.Begin.DoMethodIndex)
-                                                       ->getChildren();
+                                                       ->getAST()
+                                                       .getStatements();
   std::shared_ptr<iir::Stmt> oldStatement = stmts[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be a `VarDeclStmt`. For example
@@ -114,7 +115,8 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   std::vector<std::shared_ptr<iir::Stmt>>& stmts = stencil->getStage(lifetime.Begin.StagePos)
                                                        ->getChildren()
                                                        .at(lifetime.Begin.DoMethodIndex)
-                                                       ->getChildren();
+                                                       ->getAST()
+                                                       .getStatements();
   std::shared_ptr<iir::Stmt> oldStatement = stmts[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example

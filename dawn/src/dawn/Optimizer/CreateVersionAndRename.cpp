@@ -95,8 +95,9 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
   renameAccessIDInExpr(instantiation, AccessID, newAccessID, expr);
 
   // Recompute the accesses of the current statement (only works with single Do-Methods - for now)
-  computeAccesses(instantiation,
-                  stencil->getStage(curStageIdx)->getSingleDoMethod().getChildren()[curStmtIdx]);
+  computeAccesses(
+      instantiation,
+      stencil->getStage(curStageIdx)->getSingleDoMethod().getAST().getStatements()[curStmtIdx]);
 
   // Rename the statement and accesses
   for(int stageIdx = curStageIdx;
@@ -107,19 +108,19 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
 
     if(stageIdx == curStageIdx) {
       for(int i = dir == RenameDirection::Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
-          dir == RenameDirection::Above ? (i >= 0) : (i < doMethod.getChildren().size());
+          dir == RenameDirection::Above ? (i >= 0) : (i < doMethod.getAST().getStatements().size());
           dir == RenameDirection::Above ? (--i) : (++i)) {
         renameAccessIDInStmts(&instantiation->getMetaData(), AccessID, newAccessID,
-                              doMethod.getChildren()[i]);
+                              doMethod.getAST().getStatements()[i]);
         renameAccessIDInAccesses(&instantiation->getMetaData(), AccessID, newAccessID,
-                                 doMethod.getChildren()[i]);
+                                 doMethod.getAST().getStatements()[i]);
       }
 
     } else {
       renameAccessIDInStmts(&instantiation->getMetaData(), AccessID, newAccessID,
-                            doMethod.getChildren());
+                            doMethod.getAST().getStatements());
       renameAccessIDInAccesses(&instantiation->getMetaData(), AccessID, newAccessID,
-                               doMethod.getChildren());
+                               doMethod.getAST().getStatements());
     }
 
     // Update the fields of the doMethod and stage levels

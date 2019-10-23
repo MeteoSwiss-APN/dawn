@@ -517,7 +517,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
   for(const auto& multiStage : stencilPtr->getChildren()) {
     iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
-      for(const auto& stmt : doMethod->getChildren()) {
+      for(const auto& stmt : doMethod->getAST().getStatements()) {
         graph.insertStatement(stmt);
       }
     }
@@ -620,7 +620,7 @@ bool PassTemporaryToStencilFunction::run(
               continue;
             }
 
-            for(const auto& stmt : doMethodPtr->getChildren()) {
+            for(const auto& stmt : doMethodPtr->getAST().getStatements()) {
 
               DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
                           (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
@@ -662,7 +662,7 @@ bool PassTemporaryToStencilFunction::run(
                       iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{stmt});
                   blockStmt->accept(statementMapper);
 
-                  DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
+                  DAWN_ASSERT(tmpStmtDoMethod.getAST().getStatements().size() == 1);
 
                   std::shared_ptr<iir::Stmt>& replacementStmt =
                       *(tmpStmtDoMethod.getAST().getStatements().begin());
