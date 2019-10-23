@@ -516,7 +516,7 @@ bool Stencil::isEmpty() const {
   for(const auto& MS : getChildren())
     for(const auto& stage : MS->getChildren())
       for(const auto& doMethod : stage->getChildren())
-        if(!doMethod->childrenEmpty())
+        if(!doMethod->getAST().isEmpty())
           return false;
 
   return true;

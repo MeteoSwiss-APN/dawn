@@ -668,7 +668,7 @@ bool PassTemporaryToStencilFunction::run(
                       *(tmpStmtDoMethod.getAST().getStatements().begin());
                   computeAccesses(stencilInstantiation.get(), replacementStmt);
 
-                  doMethodPtr->replace(stmt, replacementStmt);
+                  doMethodPtr->getAST().replaceChildren(stmt, replacementStmt);
                   doMethodPtr->update(iir::NodeUpdateType::level);
                 }
 

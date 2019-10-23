@@ -196,7 +196,7 @@ private:
         instantiation_->getMetaData(), instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod =
         std::make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
-    domethod->clearChildren();
+    domethod->getAST().getStatements().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
       int assignmentID = assignmentIDs[i];

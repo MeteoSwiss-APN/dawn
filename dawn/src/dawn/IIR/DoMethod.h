@@ -229,21 +229,31 @@ public:
   }
 
   void printTree() {}
-
+  // TODO(SAP) remove
   void replace(const std::shared_ptr<iir::Stmt>& inputChild,
                std::shared_ptr<iir::Stmt>& withNewChild) {
+    DAWN_ASSERT_MSG(false, "unreachable");
     auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
     *it = withNewChild;
   }
-
+  // TODO(SAP) remove
   void replace(const std::shared_ptr<iir::Stmt>& inputChild,
                std::shared_ptr<iir::Stmt>& withNewChild, const std::unique_ptr<DoMethod>&) {
+    DAWN_ASSERT_MSG(false, "unreachable");
     auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
     *it = withNewChild;
   }
 
-  bool childrenEmpty() const { return ast_.getStatements().empty(); }
-  void clearChildren() { ast_.getStatements().clear(); }
+  // TODO(SAP) remove
+  bool childrenEmpty() const {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    return ast_.getStatements().empty();
+  }
+  // TODO(SAP) remove
+  void clearChildren() {
+    DAWN_ASSERT_MSG(false, "unreachable");
+    ast_.getStatements().clear();
+  }
 
   void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
   iir::BlockStmt const& getAST() const { return ast_; }
