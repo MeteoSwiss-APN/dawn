@@ -22,7 +22,7 @@
 #include "llvm/Option/Option.h"
 
 namespace gtclang::clang_compat::CompilerInvocation {
-#if CLANG_VERSION_MAJOR < 9
+#if CLANG_VERSION_MAJOR <= 9
 inline bool CreateFromArgs(clang::CompilerInvocation& Res, llvm::opt::ArgStringList& ccArgs,
                            clang::DiagnosticsEngine& Diags) {
   return clang::CompilerInvocation::CreateFromArgs(
