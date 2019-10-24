@@ -1,5 +1,5 @@
 {
- "filename": "AccessTest.cpp",
+ "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,11 +29,8 @@
                   "left": {
                    "field_access_expr": {
                     "name": "b",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -67,11 +64,11 @@
                             "left": {
                              "field_access_expr": {
                               "name": "a",
-                              "offset": [
-                               1,
-                               0,
-                               0
-                              ],
+                              "vertical_offset": 0,
+                              "cartesian_offset": {
+                               "i_offset": 1,
+                               "j_offset": 0
+                              },
                               "argument_map": [
                                -1,
                                -1,
@@ -95,11 +92,11 @@
                             "right": {
                              "field_access_expr": {
                               "name": "a",
-                              "offset": [
-                               -1,
-                               0,
-                               0
-                              ],
+                              "vertical_offset": 0,
+                              "cartesian_offset": {
+                               "i_offset": -1,
+                               "j_offset": 0
+                              },
                               "argument_map": [
                                -1,
                                -1,
@@ -130,11 +127,11 @@
                           "right": {
                            "field_access_expr": {
                             "name": "a",
-                            "offset": [
-                             0,
-                             1,
-                             0
-                            ],
+                            "vertical_offset": 0,
+                            "cartesian_offset": {
+                             "i_offset": 0,
+                             "j_offset": 1
+                            },
                             "argument_map": [
                              -1,
                              -1,
@@ -165,11 +162,11 @@
                         "right": {
                          "field_access_expr": {
                           "name": "a",
-                          "offset": [
-                           0,
-                           -1,
-                           0
-                          ],
+                          "vertical_offset": 0,
+                          "cartesian_offset": {
+                           "i_offset": 0,
+                           "j_offset": -1
+                          },
                           "argument_map": [
                            -1,
                            -1,
@@ -200,11 +197,8 @@
                       "right": {
                        "field_access_expr": {
                         "name": "a",
-                        "offset": [
-                         0,
-                         0,
-                         -1
-                        ],
+                        "vertical_offset": -1,
+                        "zero_offset": {},
                         "argument_map": [
                          -1,
                          -1,
@@ -235,11 +229,11 @@
                     "right": {
                      "field_access_expr": {
                       "name": "a",
-                      "offset": [
-                       0,
-                       1,
-                       1
-                      ],
+                      "vertical_offset": 1,
+                      "cartesian_offset": {
+                       "i_offset": 0,
+                       "j_offset": 1
+                      },
                       "argument_map": [
                        -1,
                        -1,

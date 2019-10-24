@@ -1,5 +1,5 @@
 {
- "filename": "StencilFnCallTest.cpp",
+ "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,11 +29,8 @@
                   "left": {
                    "field_access_expr": {
                     "name": "b",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -61,11 +58,8 @@
                      {
                       "field_access_expr": {
                        "name": "a",
-                       "offset": [
-                        0,
-                        0,
-                        0
-                       ],
+                       "vertical_offset": 0,
+                       "zero_offset": {},
                        "argument_map": [
                         -1,
                         -1,
@@ -193,11 +187,8 @@
           "expr": {
            "field_access_expr": {
             "name": "a",
-            "offset": [
-             0,
-             0,
-             0
-            ],
+            "vertical_offset": 0,
+            "zero_offset": {},
             "argument_map": [
              -1,
              -1,
