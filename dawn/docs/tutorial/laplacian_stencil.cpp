@@ -7,9 +7,9 @@ globals {
 };
 
 stencil laplacian_stencil {
-  /* output fields */
+  // output fields
   storage_ijk out_field;
-  /* input fields */
+  // input fields
   storage_ijk in_field;
 
   Do() {

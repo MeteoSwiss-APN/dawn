@@ -5,22 +5,22 @@
 
 using namespace gridtools::clang;
 
-//#include "laplacian_stencil_cxx_naive.cpp"
+#include "laplacian_stencil_cxx_naive.cpp"
 //#include "laplacian_stencil_from_python.cpp"
-#include "cpp/laplacian_stencil_from_standalone.cpp"
+//#include "cpp/laplacian_stencil_from_standalone.cpp"
 
 #include <fstream>
 
 #include <tuple>
 #include <vector>
 
-using positon_vector = std::vector<std::tuple<double, double>>;
+using position_vector = std::vector<std::tuple<double, double>>;
 
 // write gridtools storage as vtk
-void to_VTK(const std::string& fname, const positon_vector& positions, const storage_ijk_t& field,
+void to_VTK(const std::string& fname, const position_vector& positions, const storage_ijk_t& field,
             int dimension) {
   auto field_v = make_host_view(field);
-  auto at = [dimension](positon_vector pos, int i, int j) { return pos[i * dimension + j]; };
+  auto at = [dimension](position_vector pos, int i, int j) { return pos[i * dimension + j]; };
 
   // vtk header
   std::ofstream os;
@@ -68,7 +68,7 @@ int main() {
   // grid spacing
   double dx = L / (N - 1);
   // genereate positions for convenience
-  positon_vector positions;
+  position_vector positions;
   for(int i = 0; i < N; i++) {
     for(int j = 0; j < N; j++) {
       positions.push_back({i * dx, j * dx});
@@ -76,7 +76,7 @@ int main() {
   }
 
   // position lookup convenience function
-  auto at = [N](positon_vector pos, int i, int j) { return pos[i * N + j]; };
+  auto at = [N](position_vector pos, int i, int j) { return pos[i * N + j]; };
 
   // populate in field
   auto in_v = make_host_view(in);
