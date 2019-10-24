@@ -244,8 +244,8 @@ public:
     auto inlineResult = tryInlineStencilFunction(strategy_, func, oldStmt_, newStmts_,
                                                  AccessIDOfCaller, instantiation_);
 
-    // Compute the index of the statement of our current stencil-function call
-    const int stmtIdxOfFunc = oldSize - 1;
+    // Computes the iterator to the statement of our current stencil-function call
+    const auto funCallStmtIt = newStmts_.begin() + (oldSize - 1);
     if(inlineResult.first) {
       if(func->hasReturn()) {
         std::shared_ptr<Inliner>& inliner = inlineResult.second;
@@ -253,20 +253,14 @@ public:
         DAWN_ASSERT(inliner->getNewExpr());
 
         // We need to change the current statement s.t instead of calling the stencil-function it
-        // accesses the precomputed value. In addition the statement needs to be last again (we
-        // push backed all the new statements). Hence, we need to insert an empty statement in the
-        // back -> swap with our statement -> replace the expr in our statement and evict the empty
-        // statement)
-        newStmts_.emplace_back(nullptr); // TODO(SAP)
-        std::iter_swap(newStmts_.begin() + stmtIdxOfFunc, std::prev(newStmts_.end()));
-
-        iir::replaceOldExprWithNewExprInStmt(newStmts_[newStmts_.size() - 1], expr,
-                                             inliner->getNewExpr());
-      }
-
-      // Erase the statement of the original stencil function call. The statment is either empty
-      // (in case it had a return value) or it just contains the function call which we inlined.
-      newStmts_.erase(newStmts_.begin() + stmtIdxOfFunc);
+        // accesses the precomputed value. In addition, this statement needs to be last again (we
+        // push backed all the new statements).
+        iir::replaceOldExprWithNewExprInStmt(*funCallStmtIt, expr, inliner->getNewExpr());
+        // Moves it to the end
+        std::rotate(funCallStmtIt, std::next(funCallStmtIt), newStmts_.end());
+      } else
+        // Erase the statement of the original stencil function call.
+        newStmts_.erase(funCallStmtIt);
 
       // Remove the function
       metadata_.removeStencilFunctionInstantiation(expr, curStencilFunctioninstantiation_);

@@ -25,7 +25,7 @@ namespace iir {
 
 void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
 
-  if(!stmt->getChildren().empty()) { // TODO(SAP)
+  if(!stmt->getChildren().empty()) {
     for(const auto& s : stmt->getChildren())
       insertStatement(s);
   } else {
