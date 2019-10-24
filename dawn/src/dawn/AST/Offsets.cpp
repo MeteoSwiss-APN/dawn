@@ -41,7 +41,7 @@ std::string toString(Offsets const& offset) {
                          [&](UnstructuredOffset const&) { return toString(unstructured, offset); },
                          [&]() {
                            using namespace std::string_literals;
-                           return "<no_horizontalOffset>, "s +
+                           return "<no_horizontal_offset>, "s +
                                   std::to_string(offset.verticalOffset());
                          });
 }
