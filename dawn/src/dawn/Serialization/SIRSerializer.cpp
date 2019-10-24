@@ -432,12 +432,17 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
                                       makeLocation(exprProto)));
     };
 
-    Array3i offset{{0, 0, 0}};
-    if(!exprProto.offset().empty()) {
-      if(exprProto.offset().size() > 3)
-        throwException("offset");
-
-      std::copy(exprProto.offset().begin(), exprProto.offset().end(), offset.begin());
+    ast::Offsets offset;
+    if(exprProto.has_cartesian_offset()) {
+      offset = ast::Offsets{ast::cartesian, exprProto.cartesian_offset().i_offset(),
+                            exprProto.cartesian_offset().j_offset(), exprProto.vertical_offset()};
+    } else if(exprProto.has_unstructured_offset()) {
+      offset = ast::Offsets{ast::unstructured, exprProto.unstructured_offset().has_offset(),
+                            exprProto.vertical_offset()};
+    } else if(exprProto.has_zero_offset()) {
+      offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
+    } else {
+      throw std::runtime_error("missing offset");
     }
 
     Array3i argumentOffset{{0, 0, 0}};
@@ -458,9 +463,8 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
                 argumentMap.begin());
     }
 
-    return std::make_shared<sir::FieldAccessExpr>(name, ast::Offsets{ast::cartesian, offset},
-                                                  argumentMap, argumentOffset, negateOffset,
-                                                  makeLocation(exprProto));
+    return std::make_shared<sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
+                                                  negateOffset, makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kLiteralAccessExpr: {
     const auto& exprProto = expressionProto.literal_access_expr();

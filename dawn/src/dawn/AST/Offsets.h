@@ -158,6 +158,8 @@ T offset_cast(HorizontalOffset const& offset) {
 class Offsets {
 public:
   Offsets() = default;
+  Offsets(HorizontalOffset const& hOffset, int vOffset)
+      : horizontalOffset_(hOffset), verticalOffset_(vOffset) {}
 
   Offsets(cartesian_, int i, int j, int k)
       : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
