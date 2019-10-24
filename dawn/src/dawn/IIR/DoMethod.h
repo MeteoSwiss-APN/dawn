@@ -35,7 +35,7 @@ class StencilMetaInformation;
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod : public IIRNode<Stage, DoMethod, iir::Stmt> {
+class DoMethod : public IIRNode<Stage, DoMethod, void> {
   Interval interval_;
   long unsigned int id_;
 
@@ -130,17 +130,6 @@ public:
   /// @brief update the derived info from the children (currently no information are propagated,
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
-
-  // TODO(SAP) remove
-  inline bool checkTreeConsistency() const { return true; }
-
-  // TODO(SAP) remove
-  template <typename TChildSmartPtr>
-  void setChildrenParent(TChildSmartPtr* = 0) {}
-  // TODO(SAP) remove
-  void setChildParent(const std::shared_ptr<iir::Stmt>& child) {}
-
-  void printTree() {}
 
   void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
   iir::BlockStmt const& getAST() const { return ast_; }
