@@ -302,8 +302,8 @@ bool Stencil::compareDerivedInfo() const {
                       "derived info and computed on the fly fields:"
                       " field id " +
                       std::to_string(accessID) + ", on the fly [" +
-                      fieldsOnTheFly.at(accessID).getExtentsRB().toString() +
-                      "], derived info precomputed [" + extentsRB.toString())
+                      to_string(fieldsOnTheFly.at(accessID).getExtentsRB()) +
+                      "], derived info precomputed [" + to_string(extentsRB))
               .c_str());
       return false;
     }
@@ -312,8 +312,8 @@ bool Stencil::compareDerivedInfo() const {
                                    "derived info and computed on the fly fields:"
                                    " field id " +
                                    std::to_string(accessID) + ", on the fly [" +
-                                   fieldsOnTheFly.at(accessID).getExtents().toString() +
-                                   "], derived info precomputed [" + extents.toString())
+                                   to_string(fieldsOnTheFly.at(accessID).getExtents()) +
+                                   "], derived info precomputed [" + to_string(extents))
                            .c_str());
       return false;
     }

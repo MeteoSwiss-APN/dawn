@@ -414,8 +414,8 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{0, 0, 0, 0, 0, 0},
-                                          Extents{0, 0, 0, 0, 0, 0}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{ast::cartesian},
+                                          Extents{ast::cartesian}, interval_));
       unusedFields_.insert(AccessID);
     }
   }

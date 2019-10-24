@@ -22,12 +22,12 @@ namespace {
 
 TEST(TestField, Construction) {
 
-  Field f{1, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
-          Interval{0, 2, 1, -2}};
+  Field f{1, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+          Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
 
-  EXPECT_TRUE((f.getExtents() == Extents{-1, 1, -2, 2, -1, 3}));
-  EXPECT_TRUE((f.getReadExtents() == Extents{-1, 1, -2, 2, 0, 3}));
-  EXPECT_TRUE((f.getWriteExtents() == Extents{0, 0, 0, 0, -1, 2}));
+  EXPECT_TRUE((f.getExtents() == Extents(dawn::ast::cartesian, -1, 1, -2, 2, -1, 3)));
+  EXPECT_TRUE((f.getReadExtents() == Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3)));
+  EXPECT_TRUE((f.getWriteExtents() == Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2)));
   EXPECT_TRUE((f.getInterval() == Interval{0, 2, 1, -2}));
   EXPECT_TRUE((f.computeAccessedInterval() == Interval{0, 2, 0, 1}));
   EXPECT_TRUE((f.getAccessID() == 1));
@@ -36,16 +36,16 @@ TEST(TestField, Construction) {
 
 TEST(TestField, Equal) {
 
-  Field f1{1, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
-           Interval{0, 2, 1, -2}};
+  Field f1{1, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
 
-  Field f2{1, Field::IntendKind::IK_Input, Extents{-1, 1, -1, 2, 0, 3}, Extents{0, 0, 1, 0, -1, 2},
-           Interval{0, 2, 1, 0}};
+  Field f2{1, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian, -1, 1, -1, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 1, 0, -1, 2), Interval{0, 2, 1, 0}};
 
-  Field f3{1, Field::IntendKind::IK_InputOutput, Extents{-1, 1, -2, 2, 0, 3},
-           Extents{0, 0, 0, 0, -1, 2}, Interval{0, 2, 1, -2}};
-  Field f4{2, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
-           Interval{0, 2, 1, -2}};
+  Field f3{1, Field::IntendKind::IK_InputOutput, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
+  Field f4{2, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
 
   EXPECT_TRUE((f1 == f2));
   EXPECT_TRUE((f1 != f3));
@@ -54,12 +54,12 @@ TEST(TestField, Equal) {
 
 TEST(TestField, Merge) {
 
-  Field f{1, Field::IntendKind::IK_Input, Extents{-1, 1, -2, 2, 0, 3}, Extents{0, 0, 0, 0, -1, 2},
-          Interval{0, 2, 1, -2}};
+  Field f{1, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+          Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
 
-  f.mergeReadExtents({-2, 1, -3, 0, 0, 0});
-  EXPECT_TRUE((f.getReadExtents() == Extents{-2, 1, -3, 2, 0, 3}));
-  EXPECT_TRUE((f.getWriteExtents() == Extents{0, 0, 0, 0, -1, 2}));
-  EXPECT_TRUE((f.getExtents() == Extents{-2, 1, -3, 2, -1, 3}));
-}
+  f.mergeReadExtents(Extents(dawn::ast::cartesian, -2, 1, -3, 0, 0, 0));
+  EXPECT_TRUE((f.getReadExtents() == Extents(dawn::ast::cartesian, -2, 1, -3, 2, 0, 3)));
+  EXPECT_TRUE((f.getWriteExtents() == Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2)));
+  EXPECT_TRUE((f.getExtents() == Extents(dawn::ast::cartesian, -2, 1, -3, 2, -1, 3)));
+} // namespace
 } // anonymous namespace

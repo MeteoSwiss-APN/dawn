@@ -1,9 +1,14 @@
 Compiling and running the prototype (until we have a proper setup)
 
-1. Compile Dawn
-2. cd <path/to/dawn> && ./bundle/build/dawn-prefix/src/dawn-build/bin/unittest/DawnCUnittest --gtest_also_run_disabled_tests 2>./prototype/generated.hpp && clang-format -i ./prototype/generated.hpp
-   --> This will run the disabled CodeGenPlayground test that generated and outputs code
-3. For "lukas_lib": cd prototype && g++ mylibDriver.cpp mylib.cpp -o out -std=c++17 -I../../gtclang/src; ./out
+1. Compile Dawn and make sure to switch to the dawn/dawn directory
+
+2. cd <path/to/dawn> && ./bundle/build/dawn-prefix/src/dawn-build/bin/unittest/DawnCUnittest --gtest_also_run_disabled_tests && clang-format -i ./prototype/*.hpp
+   --> This will run the disabled CodeGenPlayground tests that generated and outputs code
+
+3. For "lukas_lib": cd prototype && g++ mylib[TestCase]Driver.cpp mylib.cpp -o out -std=c++17 -I../../gtclang/src; ./out
    --> paraview of_..vtk
-4. For atlas: cd prototype && g++ -o out atlasDriver.cpp -std=c++17 -I../../gtclang/src -I<path/to/atlas>/include -I<path/to/eckit>/include -L</path/to/atlas>/lib -latlas -L<path/to/eckit>/lib -leckit; ./out
+
+4. For atlas: cd prototype && g++ -o out atlas[TestCase]Driver.cpp -std=c++17 -I../../gtclang/src -I<path/to/atlas>/include -I<path/to/eckit>/include -L</path/to/atlas>/lib -latlas -L<path/to/eckit>/lib -leckit; ./out
    --> gmsh mymesh.msh
+
+NOTE: TestCase is curently one of [Copy|Diffusion]

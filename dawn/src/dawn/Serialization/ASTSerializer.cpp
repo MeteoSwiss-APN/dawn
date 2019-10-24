@@ -28,6 +28,7 @@
 #include <utility>
 
 using namespace dawn;
+using namespace ast;
 
 namespace {
 void fillData(iir::IIRStmtData& data, dawn::proto::statements::StmtData const& dataProto) {
@@ -105,15 +106,22 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 }
 } // namespace
 
-using namespace ast;
-
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  for(auto extent : extents.getExtents()) {
-    auto protoExtent = protoExtents.add_extents();
-    protoExtent->set_minus(extent.Minus);
-    protoExtent->set_plus(extent.Plus);
-  }
+  auto vExtent = extents.verticalExtent();
+  auto const& hExtent =
+      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+
+  auto protoExtentI = protoExtents.add_extents();
+  protoExtentI->set_minus(hExtent.iMinus());
+  protoExtentI->set_plus(hExtent.iPlus());
+  auto protoExtentJ = protoExtents.add_extents();
+  protoExtentJ->set_minus(hExtent.jMinus());
+  protoExtentJ->set_plus(hExtent.jPlus());
+  auto protoExtentK = protoExtents.add_extents();
+  protoExtentK->set_minus(vExtent.minus());
+  protoExtentK->set_plus(vExtent.plus());
+
   return protoExtents;
 }
 
@@ -135,7 +143,7 @@ iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
   int dim2plus = protoExtents->extents()[1].plus();
   int dim3minus = protoExtents->extents()[2].minus();
   int dim3plus = protoExtents->extents()[2].plus();
-  return iir::Extents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus);
+  return {ast::cartesian, dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus};
 }
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);

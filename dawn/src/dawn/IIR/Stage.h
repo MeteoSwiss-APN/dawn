@@ -53,7 +53,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
   struct DerivedInfo {
 
-    DerivedInfo() : extents_{0, 0, 0, 0, 0, 0} {}
+    DerivedInfo() : extents_{ast::cartesian} {}
     DerivedInfo(DerivedInfo&&) = default;
     DerivedInfo(const DerivedInfo&) = default;
     DerivedInfo& operator=(DerivedInfo&&) = default;

@@ -153,7 +153,7 @@ public:
   Interval extendInterval(const Extent& verticalExtent) const;
 
   inline Interval extendInterval(const Extents& extents) const {
-    return extendInterval(extents[2]);
+    return extendInterval(extents.verticalExtent());
   }
 
   /// @brief Convert to SIR Interval
