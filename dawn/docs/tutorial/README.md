@@ -42,7 +42,7 @@ laplacian_naive.run(out, in);   //launch stencil
 the run method could now be called in a time loop, for example to simulate diffusion. To facilitate the compilation, a `CMakeLists.txt` file has been provided. To compile the code:
 
 ```
-cmake . && make
+mkdir build && cd build && cmake .. && make
 ```
 
 This will place an executable called `laplacian_driver` in the tutorial directory. When run, two `vtk` files will be written. Those can be viewed using (ParaView)[https://www.paraview.org/]. `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
@@ -97,7 +97,9 @@ As a final exercise, the C interface to dawn is again used to compile the same e
 
 ```
 cd cpp
-cmake . && make
+mkdir build
+cd build
+cmake .. && make
 ./dawn_standalone
 ```
 

@@ -7,32 +7,20 @@ add_executable(laplacian_driver laplacian_driver.cpp)
 # defines symbol BACKEND_MC
 target_compile_definitions(laplacian_driver PRIVATE BACKEND_MC)
 
-find_path(gtclang_install 
-    NAMES clang_dsl.hpp 
-    #PATHS ${CMAKE_CURRENT_LIST_DIR}/../../../gtclang/bundle/install/include/gridtools
-    PATHS /dev/null
-    PATH_SUFFIXES include
+set(GTCLANG_INCLUDE_DIR "" CACHE PATH "gtclang include directory")
+set(GRIDTOOLS_INCLUDE_DIR "" CACHE PATH "gridtools include directory")
+
+find_path(GTCLANG_INCLUDE_DIRS
+    NAMES gridtools/clang_dsl.hpp 
+    HINTS ${CMAKE_CURRENT_LIST_DIR}/../../../gtclang/bundle/install/include/ ${GTCLANG_INCLUDE_DIR}
     )
 
-find_path(gridtools_install 
-    NAMES stencil_functions.hpp 
-    #PATHS ${CMAKE_CURRENT_LIST_DIR}/../../../gtclang/bundle/build/gridtools-prefix/src/gridtools/include/gridtools/stencil_composition
-    PATHS /dev/null
-    PATH_SUFFIXES gridtools/include
+find_path(GRIDTOOLS_INCLUDE_DIRS
+    NAMES gridtools/stencil_composition/stencil_composition.hpp 
+    HINTS ${CMAKE_CURRENT_LIST_DIR}/../../../gtclang/bundle/build/gridtools-prefix/src/gridtools/include/ ${GRIDTOOLS_INCLUDE_DIR}
     )
 
-if(gtclang_install)
-    set(GTCLANG_INCLUDE_DIR "${gtclang_install}/../" CACHE PATH "gtclang include directory")
-endif()
-
-if(gridtools_install)
-    set(GRIDTOOLS_INCLUDE_DIR "${gridtools_install}/../../" CACHE PATH "gridtools include directory")
-endif()
-
-message(STATUS ${GTCLANG_INCLUDE_DIR})
-message(STATUS ${GRIDTOOLS_INCLUDE_DIR})
+mark_as_advanced(GRIDTOOLS_INCLUDE_DIRS GTCLANG_INCLUDE_DIRS)
 
 # includes: gtclang and gridtools for GTClang example
-target_include_directories(laplacian_driver PRIVATE ${GTCLANG_INCLUDE_DIR} ${GRIDTOOLS_INCLUDE_DIR})
-
-#example suffix ()
+target_include_directories(laplacian_driver PRIVATE ${GTCLANG_INCLUDE_DIRS} ${GRIDTOOLS_INCLUDE_DIRS})
