@@ -20,11 +20,16 @@
 
 namespace dawn {
 
-bool PassManager::runAllPassesOnStecilInstantiation(
-    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassManager::runPassesOnStecilInstantiationImpl(
+    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    bool debugBuild) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
+    if(debugBuild && !pass->isDebug()) {
+      continue;
+    }
+
     for(const auto& dependency : pass->getDependencies())
       if(std::find(passesRan.begin(), passesRan.end(), dependency) == passesRan.end()) {
         DiagnosticsBuilder diag(DiagnosticsKind::Error);
@@ -40,6 +45,16 @@ bool PassManager::runAllPassesOnStecilInstantiation(
     passesRan.emplace_back(pass->getName());
   }
   return true;
+}
+
+bool PassManager::runAllPassesOnStecilInstantiation(
+    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+  return runPassesOnStecilInstantiationImpl(context, instantiation, false);
+}
+
+bool PassManager::runAllDebugPassesOnStecilInstantiation(
+    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+  return runPassesOnStecilInstantiationImpl(context, instantiation, true);
 }
 
 bool PassManager::runPassOnStecilInstantiation(

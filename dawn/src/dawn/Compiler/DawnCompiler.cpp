@@ -226,7 +226,17 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
-      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(*optimizer, instantiation))
+
+      bool successfulCompilation = false;
+      if(getOptions().Debug) {
+        successfulCompilation = optimizer->getPassManager().runAllDebugPassesOnStecilInstantiation(
+            *optimizer, instantiation);
+      } else {
+        successfulCompilation = optimizer->getPassManager().runAllPassesOnStecilInstantiation(
+            *optimizer, instantiation);
+      }
+
+      if(!successfulCompilation)
         return nullptr;
 
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"

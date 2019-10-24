@@ -33,6 +33,10 @@ class PassManager : public NonCopyable {
   std::list<std::unique_ptr<Pass>> passes_;
   std::unordered_map<std::string, int> passCounter_;
 
+  bool runPassesOnStecilInstantiationImpl(
+      OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+      bool debugBuild);
+
 public:
   /// @brief Create a new pass at the end of the pass list
   template <class T, typename... Args>
@@ -49,6 +53,12 @@ public:
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool runAllPassesOnStecilInstantiation(
+      OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+
+  /// @brief Run all passes on the `instantiation` which are markes as debug, i.e. the passes
+  /// required to generate correct (parallel) code
+  /// @returns `true` on success, `false` otherwise
+  bool runAllDebugPassesOnStecilInstantiation(
       OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation);
 
   /// @brief Run the given pass on the `instantiation`
