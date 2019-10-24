@@ -206,21 +206,10 @@ public:
   }
 
   /// @brief inserts `stmt` at the end of the block
-  void push_back(std::shared_ptr<Stmt>&& stmt) {
-    DAWN_ASSERT(stmt);
-    DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
-                    "Trying to insert child Stmt with different data type");
-    statements_.push_back(stmt);
-  }
+  void push_back(std::shared_ptr<Stmt>&& stmt);
 
   /// @brief substitutes stmt at `position` with `replacement`
-  void substitute(StmtConstIterator position, std::shared_ptr<Stmt>&& replacement) {
-    DAWN_ASSERT(replacement);
-    DAWN_ASSERT(position >= statements_.cbegin() && position < statements_.cend());
-    DAWN_ASSERT_MSG((checkSameDataType(*replacement)),
-                    "Trying to insert child Stmt with different data type");
-    statements_[StatementList::size_type(position - statements_.cbegin())] = replacement;
-  }
+  void substitute(StmtConstIterator position, std::shared_ptr<Stmt>&& replacement);
 
   /// @brief removes stmt at `position` from the block
   StmtIterator erase(StmtConstIterator position) { return statements_.erase(position); }
