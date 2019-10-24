@@ -212,7 +212,7 @@ public:
       void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
         for(auto it = stmt->getStatements().begin(); it != stmt->getStatements().end();) {
           if(needsRemoval(*it)) {
-            it = stmt->getStatements().erase(it);
+            it = stmt->erase(it);
           } else {
             (*it)->accept(*this);
             ++it;
@@ -275,12 +275,12 @@ public:
         if(result) {
           BlockStmt* thenBody = dyn_cast<iir::BlockStmt>(stmt->getThenStmt().get());
           DAWN_ASSERT_MSG(thenBody, "then-body of if-statment should be a BlockStmt!");
-          for(auto& s : thenBody->getStatements())
+          for(const auto& s : thenBody->getStatements())
             s->accept(*this);
         } else if(stmt->hasElse()) {
           BlockStmt* elseBody = dyn_cast<iir::BlockStmt>(stmt->getElseStmt().get());
           DAWN_ASSERT_MSG(elseBody, "else-body of if-statment should be a BlockStmt!");
-          for(auto& s : elseBody->getStatements())
+          for(const auto& s : elseBody->getStatements())
             s->accept(*this);
         }
       } else {

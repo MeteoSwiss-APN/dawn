@@ -182,6 +182,7 @@ public:
   virtual ~BlockStmt();
   /// @}
 
+  /// @brief inserts stmts from (iterators) `first` to `last` into the block at `position`
   template <typename InputIterator>
   StmtIterator insert(StmtConstIterator position, InputIterator first, InputIterator last) {
     std::for_each(first, last, [&](const std::shared_ptr<Stmt>& stmt) {
@@ -192,16 +193,19 @@ public:
     return statements_.insert(position, first, last);
   }
 
+  /// @brief inserts stmts in `range` at the end of the block
   template <class Range>
   void insert_back(Range&& range) {
     insert_back(std::begin(range), std::end(range));
   }
 
+  /// @brief inserts stmts from (iterators) `begin` to `end` at the end of the block
   template <class InputIterator>
   void insert_back(InputIterator begin, InputIterator end) {
     insert(statements_.end(), begin, end);
   }
 
+  /// @brief inserts `stmt` at the end of the block
   void push_back(std::shared_ptr<Stmt>&& stmt) {
     DAWN_ASSERT(stmt);
     DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
@@ -209,11 +213,22 @@ public:
     statements_.push_back(stmt);
   }
 
+  /// @brief substitutes stmt at `position` with `replacement`
+  void substitute(StmtConstIterator position, std::shared_ptr<Stmt>&& replacement) {
+    DAWN_ASSERT(replacement);
+    DAWN_ASSERT(position >= statements_.cbegin() && position < statements_.cend());
+    DAWN_ASSERT_MSG((checkSameDataType(*replacement)),
+                    "Trying to insert child Stmt with different data type");
+    statements_[StatementList::size_type(position - statements_.cbegin())] = replacement;
+  }
+
+  /// @brief removes stmt at `position` from the block
   StmtIterator erase(StmtConstIterator position) { return statements_.erase(position); }
 
-  // TODO(SAP): this non-const getter is a source of problems: no runtime checks on data
-  // type when user changes the vector!
-  std::vector<std::shared_ptr<Stmt>>& getStatements() { return statements_; }
+  /// @brief removes all stmts from the block
+  void clear() { statements_.clear(); }
+
+  /// @brief returns a const reference to the container of the statements in the block
   const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }
 
   virtual std::shared_ptr<Stmt> clone() const override;
@@ -223,6 +238,7 @@ public:
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
 
+  /// @brief whether it's an empty block or not
   bool isEmpty() const { return statements_.empty(); }
 
   ACCEPTVISITOR(Stmt, BlockStmt)

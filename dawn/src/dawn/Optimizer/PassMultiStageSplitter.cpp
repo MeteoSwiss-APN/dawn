@@ -53,7 +53,7 @@ multiStageSplitterOptimized() {
 
     // Iterate statements backwards
     for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0; --stmtIndex) {
-      auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
+      const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
       graph.insertStatement(stmt);
 
       // Check for read-before-write conflicts in the loop order and counter loop order.
@@ -139,7 +139,7 @@ multiStageSplitterDebug() {
     // even though this statement is independent from all other statements, we still need to
     // ensure the proper loop order and cannot just assume parallel.
     for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0; --stmtIndex) {
-      auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
+      const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
       graph.insertStatement(stmt);
 
       // Check for read-before-write conflicts in the loop order.

@@ -319,7 +319,7 @@ class DetectInlineCandiates : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
-  std::shared_ptr<iir::Stmt>* oldStmt_;
+  iir::BlockStmt::StmtConstIterator oldStmt_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
   std::unordered_map<std::shared_ptr<iir::Expr>, std::shared_ptr<iir::Expr>>
@@ -350,10 +350,10 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(std::shared_ptr<iir::Stmt>& stmt) {
+  void processStatement(iir::BlockStmt::StmtConstIterator stmt) {
     // Reset the state
     inlineCandiatesFound_ = false;
-    oldStmt_ = &stmt;
+    oldStmt_ = stmt;
     newStmts_.clear();
 
     // Detect the stencil functions suitable for inlining
@@ -369,7 +369,7 @@ public:
   /// Note that the accesses are not computed!
   std::vector<std::shared_ptr<iir::Stmt>>& getNewStatements() {
     if(!replacmentOfOldStmtMap_.empty()) {
-      newStmts_.push_back(std::move(*oldStmt_));
+      newStmts_.push_back(*std::make_move_iterator(oldStmt_));
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(newStmts_[newStmts_.size() - 1], oldNewPair.first,
@@ -486,14 +486,14 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
     for(auto& doMethod : stage.getChildren()) {
       for(auto stmtIt = doMethod->getAST().getStatements().begin();
           stmtIt != doMethod->getAST().getStatements().end(); ++stmtIt) {
-        inliner.processStatment(*stmtIt);
+        inliner.processStatement(stmtIt);
 
         if(inliner.inlineCandiatesFound()) {
           auto& newStmtList = inliner.getNewStatements();
           // Compute the accesses of the new statements
           computeAccesses(stencilInstantiation.get(), newStmtList);
           // Erase the old stmt ...
-          stmtIt = doMethod->getAST().getStatements().erase(stmtIt);
+          stmtIt = doMethod->getAST().erase(stmtIt);
 
           // ... and insert the new ones
           // newStmtList will be cleared at the next for iteration, so it is safe to move the

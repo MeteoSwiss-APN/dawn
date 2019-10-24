@@ -33,7 +33,7 @@ ASTConverter::StmtMap& ASTConverter::getStmtMap() {
 
 void ASTConverter::visit(const std::shared_ptr<sir::BlockStmt>& blockStmt) {
   iir::BlockStmt::StatementList statementList;
-  for(auto& stmt : blockStmt->getStatements()) {
+  for(const auto& stmt : blockStmt->getStatements()) {
     stmt->accept(*this);
     statementList.push_back(stmtMap_.at(stmt));
   }

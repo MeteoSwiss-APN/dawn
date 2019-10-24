@@ -126,7 +126,7 @@ bool PassFieldVersioning::run(
             --stmtIndex) {
           oldGraph = newGraph->clone();
 
-          auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
+          const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
           newGraph->insertStatement(stmt);
 
           // Try to resolve race-conditions by using double buffering if necessary

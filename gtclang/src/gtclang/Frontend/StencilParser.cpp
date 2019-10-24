@@ -557,7 +557,7 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
     if(method->getNameAsString() == "__boundary_condition__generated__") {
       auto allBoundaryConditions = parseBoundaryConditions(method);
       for(const auto& boundayCondition : allBoundaryConditions) {
-        currentParserRecord_->CurrentStencil->StencilDescAst->getRoot()->getStatements().push_back(
+        currentParserRecord_->CurrentStencil->StencilDescAst->getRoot()->push_back(
             boundayCondition);
       }
     }
