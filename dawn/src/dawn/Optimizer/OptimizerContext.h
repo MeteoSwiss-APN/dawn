@@ -124,7 +124,7 @@ public:
   bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
 
     bool retval;
-    if(options_.Debug)
+    if(true) // temporarily forced to true to see if other backends break
       retval = p->isDebug();
     else
       retval = true;

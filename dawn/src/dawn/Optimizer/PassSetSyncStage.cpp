@@ -71,7 +71,8 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
   return false;
 }
 
-PassSetSyncStage::PassSetSyncStage(OptimizerContext& context) : Pass(context, "PassSetSyncStage") {}
+PassSetSyncStage::PassSetSyncStage(OptimizerContext& context)
+    : Pass(context, "PassSetSyncStage", true) {}
 
 bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(instantiation->getIIR()))) {

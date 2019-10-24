@@ -37,7 +37,7 @@ OPT(int, MaxHaloPoints, 3, "max-halo", "",
 OPT(std::string, block_size, "", "block-size", "",
         "block size for tiled computations", "", true, false)
 OPT(bool, Debug, false, "debug", "",
-    "Compile to debug backend", "", false, true)
+    "Do not optimize, only run passes which are needed for correct parallel code", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assigment (SSA) form", "", false, true)
 OPT(bool, MergeTemporaries, false, "merge-temporaries", "", 

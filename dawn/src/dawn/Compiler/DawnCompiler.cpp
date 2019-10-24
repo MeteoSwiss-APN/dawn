@@ -179,6 +179,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
 
+    // NOTE MR: the inline pass is marked as `required for debug build', but is only necessary
+    //          in some situations (see comment below)
+
     // Setup pass interface
     optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
     // This pass is currently broken and needs to be redesigned before it can be enabled
@@ -227,17 +230,10 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
 
-      bool successfulCompilation = false;
-      if(getOptions().Debug) {
-        successfulCompilation = optimizer->getPassManager().runAllDebugPassesOnStecilInstantiation(
-            *optimizer, instantiation);
-      } else {
-        successfulCompilation = optimizer->getPassManager().runAllPassesOnStecilInstantiation(
-            *optimizer, instantiation);
-      }
-
-      if(!successfulCompilation)
+      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(*optimizer,
+                                                                        instantiation)) {
         return nullptr;
+      }
 
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
                      << instantiation->getName() << "`";
