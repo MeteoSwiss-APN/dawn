@@ -17,6 +17,7 @@
 from collections import Iterable
 from sys import path as sys_path
 from typing import List, TypeVar
+from enum import Enum
 
 from dawn.config import __dawn_install_protobuf_module__
 
@@ -57,6 +58,11 @@ StmtType = TypeVar('Stmt',
                    BoundaryConditionDeclStmt,
                    IfStmt
                    )
+
+class LocationType(Enum):
+    Cell = 0
+    Edge = 1
+    Vertex = 2
 
 
 def to_json(msg):
@@ -122,7 +128,7 @@ def make_ast(root: List[StmtType]) -> AST:
     return ast
 
 
-def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1, 1, 1]) -> Field:
+def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1, 1, 1], location_type: LocationType = LocationType.Cell) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
@@ -133,6 +139,12 @@ def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1
     field.name = name
     field.is_temporary = is_temporary
     field.field_dimensions.extend(dimensions)
+    if location_type == LocationType.Cell:
+        field.location_type = Field.Cell
+    elif location_type == LocationType.Edge:
+        field.location_type = Field.Edge
+    elif location_type == LocationType.Vertex:
+        field.location_type = Field.Vertex
     return field
 
 
@@ -411,10 +423,10 @@ def make_if_stmt(cond_part: StmtType, then_part: StmtType, else_part: StmtType =
     :param else_part:   Else part.
     """
     stmt = IfStmt()
-    stmt.expr.CopyFrom(make_stmt(cond_part))
-    stmt.expr.CopyFrom(make_stmt(then_part))
+    stmt.cond_part.CopyFrom(make_stmt(cond_part))
+    stmt.then_part.CopyFrom(make_stmt(then_part))
     if else_part:
-        stmt.expr.CopyFrom(make_stmt(else_part))
+        stmt.else_part.CopyFrom(make_stmt(else_part))
     return stmt
 
 
@@ -605,6 +617,7 @@ __all__ = [
     'make_interval',
     'BuiltinType',
     'SourceLocation',
+    'LocationType',
     'Type',
     'make_type',
     'Dimension',

@@ -499,7 +499,7 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
   using namespace clang;
   using namespace llvm;
 
-  currentParserRecord_ = llvm::make_unique<ParserRecord>(kind);
+  currentParserRecord_ = std::make_unique<ParserRecord>(kind);
   currentParserRecord_->CurrentCXXRecordDecl = recordDecl;
 
   if(currentParserRecord_->CurrentKind == SK_Stencil) {

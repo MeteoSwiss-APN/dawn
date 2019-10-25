@@ -70,8 +70,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents(ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     iir::Field& field = fieldPair.second;
@@ -97,8 +97,9 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(),
+            ((iir::Extents(ast::cartesian, -1, 1, -1, 1, 0, 0))));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), ((iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0))));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     iir::Field& field = fieldPair.second;
@@ -127,9 +128,9 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents(ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0)));
+  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     iir::Field& field = fieldPair.second;
@@ -175,8 +176,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents(ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     iir::Field& field = fieldPair.second;

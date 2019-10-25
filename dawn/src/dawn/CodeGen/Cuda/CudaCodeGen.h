@@ -33,8 +33,8 @@ class StencilInstantiation;
 namespace codegen {
 namespace cuda {
 
-/// @brief GridTools C++ code generation for the gridtools_clang DSL
-/// @ingroup cxxnaive
+/// @brief CUDA code generation for cartesian grids
+/// @ingroup cxxnaive cartesian
 class CudaCodeGen : public CodeGen {
 
   std::unordered_map<int, CacheProperties> cachePropertyMap_;

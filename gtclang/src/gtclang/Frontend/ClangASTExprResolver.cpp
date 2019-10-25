@@ -86,7 +86,7 @@ public:
 
   /// @brief Create a new stencil function
   bool push(clang::CXXConstructExpr* expr) {
-    scope_.push(llvm::make_unique<Scope>());
+    scope_.push(std::make_unique<Scope>());
     scope_.top()->Kind = FK_StencilFunction;
 
     std::string callee = getClassNameFromConstructExpr(expr);
@@ -113,7 +113,7 @@ public:
 
   /// @brief Create a new c++ function
   bool push(clang::CallExpr* expr) {
-    scope_.push(llvm::make_unique<Scope>());
+    scope_.push(std::make_unique<Scope>());
     scope_.top()->Kind = FK_CXXFunction;
 
     DAWN_ASSERT_MSG(expr->getDirectCallee(), "only C-function calls are supported");
@@ -371,8 +371,9 @@ public:
   /// @brief Assemble FieldAccessExpr
   std::shared_ptr<dawn::sir::FieldAccessExpr>
   makeFieldAccessExpr(const dawn::SourceLocation& loc) const {
-    return std::make_shared<dawn::sir::FieldAccessExpr>(name_, offset_, argumentMap_,
-                                                        argumentOffset_, negateOffset_, loc);
+    return std::make_shared<dawn::sir::FieldAccessExpr>(
+        name_, dawn::ast::Offsets{dawn::ast::cartesian, offset_}, argumentMap_, argumentOffset_,
+        negateOffset_, loc);
   }
 
   void resolve(clang::MemberExpr* expr) {

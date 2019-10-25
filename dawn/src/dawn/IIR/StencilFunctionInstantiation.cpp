@@ -69,19 +69,17 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   return stencilFun;
 }
 
-Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
+ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
     const std::shared_ptr<iir::FieldAccessExpr>& expr, bool applyInitialOffset) const {
 
   // Get the offsets we know so far (i.e the constant offset)
-  Array3i offset = expr->getOffset();
+  ast::Offsets offset = expr->getOffset();
 
   // Apply the initial offset (e.g if we call a function `avg(in(i+1))` we have to shift all
   // accesses of the field `in` by [1, 0, 0])
   if(applyInitialOffset) {
-    const Array3i& initialOffset = getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
-    offset[0] += initialOffset[0];
-    offset[1] += initialOffset[1];
-    offset[2] += initialOffset[2];
+    const ast::Offsets& initialOffset = getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
+    offset += initialOffset;
   }
 
   int sign = expr->negateOffset() ? -1 : 1;
@@ -95,12 +93,16 @@ Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
       const int argOffset = expr->getArgumentOffset()[i];
 
       // Resolve the directions and offsets
+      // Note: Offsets could implement directions, then this could be simplified because we just
+      // want to do offset[my_direction] += sign * argOffset;
+      std::array<int, 3> addOffset{};
       if(isArgDirection(argIndex))
-        offset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
+        addOffset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
       else {
         const auto& instantiatedOffset = getCallerOffsetOfArgOffset(argIndex);
-        offset[instantiatedOffset[0]] += sign * (argOffset + instantiatedOffset[1]);
+        addOffset[instantiatedOffset[0]] = sign * (argOffset + instantiatedOffset[1]);
       }
+      offset += ast::Offsets{ast::cartesian, addOffset};
     }
   }
 
@@ -177,15 +179,15 @@ void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
   ArgumentIndexToStencilFunctionInstantiationMap_[argumentIndex] = func;
 }
 
-const Array3i&
+const ast::Offsets&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
   DAWN_ASSERT(CallerAccessIDToInitialOffsetMap_.count(callerAccessID));
   return CallerAccessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
 void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
-                                                                      const Array3i& offset) {
-  CallerAccessIDToInitialOffsetMap_[callerAccessID] = offset;
+                                                                      const ast::Offsets& offset) {
+  CallerAccessIDToInitialOffsetMap_.emplace(callerAccessID, offset);
 }
 
 bool StencilFunctionInstantiation::isProvidedByStencilFunctionCall(int callerAccessID) const {
@@ -309,11 +311,11 @@ const std::unordered_map<int, std::string>&
 StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
-std::unordered_map<int, Array3i>&
+std::unordered_map<int, ast::Offsets>&
 StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() {
   return CallerAccessIDToInitialOffsetMap_;
 }
-const std::unordered_map<int, Array3i>&
+const std::unordered_map<int, ast::Offsets>&
 StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() const {
   return CallerAccessIDToInitialOffsetMap_;
 }
@@ -350,8 +352,7 @@ bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
           ExprToStencilFunctionInstantiationMap_.end());
 }
 
-const std::vector<std::unique_ptr<StatementAccessesPair>>&
-StencilFunctionInstantiation::getStatementAccessesPairs() const {
+const std::vector<std::shared_ptr<iir::Stmt>>& StencilFunctionInstantiation::getStatements() const {
   return doMethod_->getChildren();
 }
 
@@ -379,9 +380,8 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& statementAccessesPair : doMethod_->getChildren()) {
-    const auto& access =
-        statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+  for(const auto& stmt : doMethod_->getChildren()) {
+    const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -414,8 +414,8 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{0, 0, 0, 0, 0, 0},
-                                          Extents{0, 0, 0, 0, 0, 0}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{ast::cartesian},
+                                          Extents{ast::cartesian}, interval_));
       unusedFields_.insert(AccessID);
     }
   }
@@ -455,11 +455,9 @@ void StencilFunctionInstantiation::update() {
         AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
       // Accumulate the extents of each field in this stage
-      for(const auto& statementAccessesPair : doMethod_->getChildren()) {
-        const auto& access =
-            callerAccesses
-                ? statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses
-                : statementAccessesPair->getStatement()->getData<IIRStmtData>().CalleeAccesses;
+      for(const auto& stmt : doMethod_->getChildren()) {
+        const auto& access = callerAccesses ? stmt->getData<IIRStmtData>().CallerAccesses
+                                            : stmt->getData<IIRStmtData>().CalleeAccesses;
 
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
@@ -597,8 +595,7 @@ void StencilFunctionInstantiation::dump() const {
   for(std::size_t i = 0; i < statements.size(); ++i) {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
-    const auto& callerAccesses =
-        doMethod_->getChild(i)->getStatement()->getData<IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses = doMethod_->getChild(i)->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
@@ -627,7 +624,7 @@ void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>&
         int AccessID = stencilInstantiation_->nextUID();
 
         setCallerAccessIDOfArgField(argIdx, AccessID);
-        setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});
+        setCallerInitialOffsetFromAccessID(AccessID, ast::Offsets{ast::cartesian});
       }
     }
   }

@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/CodeGen/GridTools/CodeGenUtils.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -584,8 +583,13 @@ void GTCodeGen::generateStencilClasses(
           // Generate parameter of stage
           std::stringstream ss;
           codegen::Type extent(c_gt() + "extent", ss);
-          for(auto& e : fields[m].getExtents().getExtents())
-            extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
+          auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+              fields[m].getExtents().horizontalExtent());
+          auto const& vExtents = fields[m].getExtents().verticalExtent();
+
+          extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
+          extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
+          extent.addTemplate(Twine(vExtents.minus()) + ", " + Twine(vExtents.plus()));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
@@ -626,8 +630,8 @@ void GTCodeGen::generateStencilClasses(
 
         stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
         stencilBodyCGVisitor.setIndent(doMethod.getIndent());
-        for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-          statementAccessesPair->getStatement()->accept(stencilBodyCGVisitor);
+        for(const auto& stmt : stencilFun->getStatements()) {
+          stmt->accept(stencilBodyCGVisitor);
           doMethod.indentStatment();
           doMethod << stencilBodyCGVisitor.getCodeAndResetStream();
         }
@@ -712,9 +716,10 @@ void GTCodeGen::generateStencilClasses(
 
         ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
              << ", " + c_gt() + "extent< ";
-        auto extents = stage.getExtents().getExtents();
-        ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
-             << extents[1].Plus << "> >(";
+        auto const& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+            stage.getExtents().horizontalExtent());
+        ssMS << hExtents.iMinus() << ", " << hExtents.iPlus() << ", " << hExtents.jMinus() << ", "
+             << hExtents.jPlus() << "> >(";
 
         const auto fields = stage.getOrderedFields();
 
@@ -738,8 +743,14 @@ void GTCodeGen::generateStencilClasses(
           // Generate parameter of stage
           std::stringstream tss;
           codegen::Type extent(c_gt() + "extent", tss);
-          for(auto& e : field.getExtents().getExtents())
-            extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
+
+          auto const& fieldHExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+              field.getExtents().horizontalExtent());
+          auto const& fieldVExtents = field.getExtents().verticalExtent();
+
+          extent.addTemplate(Twine(fieldHExtents.iMinus()) + ", " + Twine(fieldHExtents.iPlus()));
+          extent.addTemplate(Twine(fieldHExtents.jMinus()) + ", " + Twine(fieldHExtents.jPlus()));
+          extent.addTemplate(Twine(fieldVExtents.minus()) + ", " + Twine(fieldVExtents.plus()));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
@@ -789,8 +800,8 @@ void GTCodeGen::generateStencilClasses(
           DoMethodCodeGen.startBody();
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
-          for(const auto& statementAccessesPair : doMethod.getChildren()) {
-            statementAccessesPair->getStatement()->accept(stencilBodyCGVisitor);
+          for(const auto& stmt : doMethod.getChildren()) {
+            stmt->accept(stencilBodyCGVisitor);
             DoMethodCodeGen << stencilBodyCGVisitor.getCodeAndResetStream();
           }
         }
@@ -854,8 +865,9 @@ void GTCodeGen::generateStencilClasses(
 
     for(const auto& parameterTypeFullExtentsPair : parameterTypeToFullExtentsMap) {
       const auto& parameterType = parameterTypeFullExtentsPair.first;
-      const auto& fullExtents = parameterTypeFullExtentsPair.second;
-      for(int dim = 0; dim < fullExtents.getSize() - 1; ++dim) {
+      const auto& fullExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+          parameterTypeFullExtentsPair.second.horizontalExtent());
+      for(int dim = 0; dim < 2; ++dim) {
         std::string at_call = "template at<" + std::to_string(dim) + ">()";
 
         // assert for + accesses
@@ -865,7 +877,8 @@ void GTCodeGen::generateStencilClasses(
         // https://github.com/MeteoSwiss-APN/dawn/issues/108
         // ===---------------------------------------------------------------------------------===
         const int staggeringOffset = (dim == 2) ? -1 : 0;
-        int compRHSide = fullExtents[dim].Plus + staggeringOffset;
+        int compRHSide =
+            ((dim == 0) ? fullExtents.iPlus() : fullExtents.jPlus()) + staggeringOffset;
         if(compRHSide > 0)
           StencilConstructor.addStatement("static_assert((static_cast<int>(" + parameterType +
                                           "::storage_info_t::halo_t::" + at_call +
@@ -873,7 +886,7 @@ void GTCodeGen::generateStencilClasses(
                                           parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
         // assert for - accesses
-        compRHSide = fullExtents[dim].Minus;
+        compRHSide = ((dim == 0) ? fullExtents.iMinus() : fullExtents.jMinus());
         if(compRHSide < 0)
           StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + parameterType +
                                           "::storage_info_t::halo_t::" + at_call +

@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
@@ -23,15 +23,13 @@
 namespace dawn {
 namespace iir {
 
-void DependencyGraphAccesses::insertStatementAccessesPair(
-    const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
+void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
 
-  if(stmtAccessPair->hasBlockStatements()) {
-    for(const auto& s : stmtAccessPair->getBlockStatements())
-      insertStatementAccessesPair(s);
+  if(!stmt->getChildren().empty()) { // TODO(SAP)
+    for(const auto& s : stmt->getChildren())
+      insertStatement(s);
   } else {
-    const auto& callerAccesses =
-        stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);
@@ -70,11 +68,15 @@ const char* DependencyGraphAccesses::edgeDataToString(const EdgeData& data) cons
 std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
   if(data.isHorizontalPointwise() && data.isVerticalPointwise())
     return " [style = dashed]";
-  else
-    return RangeToString(", ", " [label = \"<",
-                         ">\"]")(data.getExtents(), [](const Extent& extent) {
-      return std::to_string(extent.Minus) + ", " + std::to_string(extent.Plus);
-    });
+  else {
+    const auto& hExtents =
+        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(data.horizontalExtent());
+    const auto& vExtents = data.verticalExtent();
+    return " [label = \"<" + std::to_string(hExtents.iMinus()) + ", " +
+           std::to_string(hExtents.iPlus()) + ", " + std::to_string(hExtents.jMinus()) + ", " +
+           std::to_string(hExtents.jPlus()) + ", " + std::to_string(vExtents.minus()) + ", " +
+           std::to_string(vExtents.plus()) + ">\"]";
+  }
 }
 
 const char* DependencyGraphAccesses::getDotShape() const { return "circle"; }
@@ -289,7 +291,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, iir::Extents{0, 0, 0, 0, 0, 0});
+    nodeExtents.emplace(vertex.VertexID, iir::Extents(dawn::ast::cartesian));
   }
 
   // Start from the output nodes and follow all paths
@@ -330,7 +332,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
       // Follow edges of the current node and update the node extents
       for(const Edge& edge : *adjacencyList[curNode]) {
-        nodeExtents.at(edge.ToVertexID).merge(iir::Extents::add(curExtent, edge.Data));
+        nodeExtents.at(edge.ToVertexID).merge(curExtent + edge.Data);
         nodesToVisit.push_back(edge.ToVertexID);
       }
     }
@@ -547,10 +549,18 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
 
   auto extentsToVec = [&](const Extents& extents) {
     std::vector<int> extentsVec;
-    for(const Extent& extent : extents.getExtents()) {
-      extentsVec.push_back(extent.Minus);
-      extentsVec.push_back(extent.Plus);
-    }
+
+    auto vExtent = extents.verticalExtent();
+    auto hExtent =
+        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+
+    extentsVec.push_back(hExtent.iMinus());
+    extentsVec.push_back(hExtent.iPlus());
+    extentsVec.push_back(hExtent.jMinus());
+    extentsVec.push_back(hExtent.jPlus());
+    extentsVec.push_back(vExtent.minus());
+    extentsVec.push_back(vExtent.plus());
+
     return extentsVec;
   };
 
@@ -608,11 +618,12 @@ bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundary
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
 
   for(const auto& vertexIDExtentsPair : extentMap) {
-    const iir::Extents& extents = vertexIDExtentsPair.second;
-    if(extents[0].Plus > maxHorizontalBoundaryExtent ||
-       extents[0].Minus < -maxHorizontalBoundaryExtent ||
-       extents[1].Plus > maxHorizontalBoundaryExtent ||
-       extents[1].Minus < -maxHorizontalBoundaryExtent)
+    const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+        vertexIDExtentsPair.second.horizontalExtent());
+    if(hExtents.iPlus() > maxHorizontalBoundaryExtent ||
+       hExtents.iMinus() < -maxHorizontalBoundaryExtent ||
+       hExtents.jPlus() > maxHorizontalBoundaryExtent ||
+       hExtents.jMinus() < -maxHorizontalBoundaryExtent)
       return true;
   }
   return false;

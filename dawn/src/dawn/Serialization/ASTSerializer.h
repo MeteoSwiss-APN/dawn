@@ -17,7 +17,6 @@
 
 #include "dawn/AST/ASTFwd.h"
 #include "dawn/AST/ASTStmt.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -41,6 +40,13 @@ void setDirection(dawn::proto::statements::Direction* directionProto,
 void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* offset);
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
+
+dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents);
+
+void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
+                 const std::optional<iir::Accesses>& accesses);
+
+iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents);
 
 class ProtoStmtBuilder : public ast::ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;

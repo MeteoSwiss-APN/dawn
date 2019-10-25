@@ -19,7 +19,6 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -200,8 +199,8 @@ StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
   OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
 
-  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
-    stmtAccessesPair->getStatement()->accept(orignalNameGetter);
+  for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
+    stmt->accept(orignalNameGetter);
     if(orignalNameGetter.hasName())
       return orignalNameGetter.getName();
   }
@@ -257,14 +256,12 @@ void StencilInstantiation::dump() const {
           PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
                                  doMethod->getInterval().toString());
 
-          const auto& statementAccessesPairs = doMethod->getChildren();
-          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
-            std::cout << "\e[1m"
-                      << ast::ASTStringifier::toString(statementAccessesPairs[m]->getStatement(),
-                                                       5 * DAWN_PRINT_INDENT)
+          const auto& stmts = doMethod->getChildren();
+          for(std::size_t m = 0; m < stmts.size(); ++m) {
+            std::cout << "\e[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
                       << "\e[0m";
-            std::cout << statementAccessesPairs[m]
-                             ->getStatement()
+            std::cout << stmts[m]
+
                              ->getData<IIRStmtData>()
                              .CallerAccesses->toString(
                                  [&](int AccessID) {
@@ -290,13 +287,12 @@ void StencilInstantiation::dump() const {
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions
   for(const auto& stencilFun : metadata_.getStencilFunctionInstantiations()) {
-    const auto& statementAccessesPairs = stencilFun->getStatementAccessesPairs();
+    const auto& stmts = stencilFun->getStatements();
 
-    for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {
-      std::cout << "\nACCESSES: line "
-                << statementAccessesPairs[i]->getStatement()->getSourceLocation().Line << ": "
-                << statementAccessesPairs[i]
-                       ->getStatement()
+    for(std::size_t i = 0; i < stmts.size(); ++i) {
+      std::cout << "\nACCESSES: line " << stmts[i]->getSourceLocation().Line << ": "
+                << stmts[i]
+
                        ->getData<iir::IIRStmtData>()
                        .CalleeAccesses->reportAccesses(stencilFun.get())
                 << "\n";
@@ -305,12 +301,9 @@ void StencilInstantiation::reportAccesses() const {
 
   // Stages
 
-  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
-    std::cout << "\nACCESSES: line " << stmtAccessesPair->getStatement()->getSourceLocation().Line
-              << ": "
-              << stmtAccessesPair->getStatement()
-                     ->getData<iir::IIRStmtData>()
-                     .CallerAccesses->reportAccesses(metadata_)
+  for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
+    std::cout << "\nACCESSES: line " << stmt->getSourceLocation().Line << ": "
+              << stmt->getData<iir::IIRStmtData>().CallerAccesses->reportAccesses(metadata_)
               << "\n";
   }
 }

@@ -24,8 +24,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Version.h"
 
-namespace gtclang {
-namespace clang_compat {
+namespace gtclang::clang_compat {
 #if CLANG_VERSION_MAJOR < 8
 inline ::clang::SourceLocation getEndLoc(::clang::CXXBaseSpecifier const& base) {
   return base.getLocStart();
@@ -59,7 +58,6 @@ inline ::clang::SourceLocation getEndLoc(::clang::Expr const& expr) { return exp
 inline ::clang::SourceLocation getBeginLoc(::clang::Stmt const& stmt) { return stmt.getBeginLoc(); }
 inline ::clang::SourceLocation getEndLoc(::clang::Stmt const& stmt) { return stmt.getEndLoc(); }
 #endif
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_SOURCELOCATION_H

@@ -15,16 +15,6 @@ std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Exp
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto printOffset = [](const Array3i& argumentoffsets) {
-    std::string retval = "";
-    std::array<std::string, 3> dims{"i", "j", "k"};
-    for(int i = 0; i < 3; ++i) {
-      retval +=
-          dims[i] + (argumentoffsets[i] != 0 ? " + " + std::to_string(argumentoffsets[i]) + ", "
-                                             : (i < 2 ? ", " : ""));
-    }
-    return retval;
-  };
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {
     size_t pos =
@@ -38,7 +28,9 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
     return pos;
   };
   ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
-                      printOffset(expr->getOffset()));
+                      toString(expr->getOffset(), ", ", [&](std::string const& name, int offset) {
+                        return name + "+" + std::to_string(offset);
+                      }));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
@@ -55,13 +47,15 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExp
 }
 
 void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
-  iir::Extents extents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt);
-  int haloIMinus = abs(extents[0].Minus);
-  int haloIPlus = abs(extents[0].Plus);
-  int haloJMinus = abs(extents[1].Minus);
-  int haloJPlus = abs(extents[1].Plus);
-  int haloKMinus = abs(extents[2].Minus);
-  int haloKPlus = abs(extents[2].Plus);
+  const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+      metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).horizontalExtent());
+  const auto& vExtents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).verticalExtent();
+  int haloIMinus = std::abs(hExtents.iMinus());
+  int haloIPlus = std::abs(hExtents.iPlus());
+  int haloJMinus = std::abs(hExtents.jMinus());
+  int haloJPlus = std::abs(hExtents.jPlus());
+  int haloKMinus = std::abs(vExtents.minus());
+  int haloKPlus = std::abs(vExtents.plus());
   std::string fieldname = stmt->getFields()[0];
 
   // Set up the halos

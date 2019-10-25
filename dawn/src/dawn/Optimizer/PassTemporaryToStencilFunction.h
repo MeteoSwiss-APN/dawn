@@ -42,10 +42,10 @@ struct SkipIDs {
 /// by a stencil function. Each reference to the temporary is later replaced by the stencil function
 /// call.
 /// * Input: well formed SIR and IIR with the list of mss/stages, temporaries used and
-/// <statement,accesses> pairs
+/// statements with accesses already computed
 /// * Output: modified SIR, new stencil functions are inserted and calls. Temporary fields are
-/// removed. New stencil functions instantiations are inserted into the IIR. <statement,accesses>
-/// pairs are recomputed
+/// removed. New stencil functions instantiations are inserted into the IIR. Statements' accesses
+/// are recomputed
 /// @ingroup optimizer
 ///
 /// This pass is not necessary to create legal code and is hence not in the debug-group

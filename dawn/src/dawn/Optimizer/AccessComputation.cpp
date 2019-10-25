@@ -15,9 +15,9 @@
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <iostream>
@@ -76,8 +76,8 @@ public:
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
   std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
-    return (stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
-                        : metadata_.getStencilFunctionInstantiation(expr));
+    return stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
+                       : metadata_.getStencilFunctionInstantiation(expr);
   }
 
   /// @brief Add a new access to the caller and callee and register it in the caller and callee
@@ -118,8 +118,8 @@ public:
   /// @{
   void mergeWriteOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     auto getOffset = [&](bool computeInitialOffset) {
-      return (stencilFun_ ? stencilFun_->evalOffsetOfFieldAccessExpr(field, computeInitialOffset)
-                          : field->getOffset());
+      return stencilFun_ ? stencilFun_->evalOffsetOfFieldAccessExpr(field, computeInitialOffset)
+                         : field->getOffset();
     };
 
     for(auto& callerAccesses : callerAccessesList_)
@@ -131,18 +131,18 @@ public:
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarDeclStmt>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
   }
 
   void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
@@ -172,18 +172,18 @@ public:
 
   void mergeReadOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(iir::getAccessID(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessID(var), ast::Offsets{ast::cartesian});
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::LiteralAccessExpr>& lit) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(iir::getAccessID(lit), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessID(lit), ast::Offsets{ast::cartesian});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(iir::getAccessID(lit), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessID(lit), ast::Offsets{ast::cartesian});
   }
 
   void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
@@ -329,7 +329,7 @@ public:
 
     std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;
-    computeAccesses(curStencilFunCall, curStencilFunCall->getStatementAccessesPairs());
+    computeAccesses(curStencilFunCall, curStencilFunCall->getStatements());
 
     // Compute the fields to get the IOPolicy of the arguments
     curStencilFunCall->update();
@@ -451,22 +451,21 @@ public:
 } // anonymous namespace
 
 void computeAccesses(iir::StencilInstantiation* instantiation,
-                     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
-  for(const auto& statementAccessesPair : statementAccessesPairs) {
+                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+  for(const auto& stmt : stmts) {
     DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair->getStatement(),
-                        nullptr);
-    statementAccessesPair->getStatement()->accept(mapper);
+    AccessMapper mapper(instantiation->getMetaData(), stmt, nullptr);
+    stmt->accept(mapper);
   }
 }
 
 void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
-  for(const auto& statementAccessesPair : statementAccessesPairs) {
+    ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+  for(const auto& stmt : stmts) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getMetaData(),
-                        statementAccessesPair->getStatement(), stencilFunctionInstantiation);
-    statementAccessesPair->getStatement()->accept(mapper);
+                        stmt, stencilFunctionInstantiation);
+    stmt->accept(mapper);
   }
 }
 

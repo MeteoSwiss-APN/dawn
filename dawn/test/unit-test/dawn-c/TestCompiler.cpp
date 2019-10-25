@@ -76,14 +76,14 @@ TEST(CompilerTest, CompileCopyStencil) {
   auto stencil_instantiation =
       b.build("generated",
               b.stencil(b.multistage(
-                  dawn::iir::LoopOrderKind::LK_Parallel,
+                  LoopOrderKind::LK_Parallel,
                   b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))))));
   std::ofstream of("/dev/null");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
-TEST(CompilerTest, DISABLED_CodeGenPlayground) {
+TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
@@ -95,16 +95,50 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   auto stencil_instantiation = b.build(
       "generated",
       b.stencil(b.multistage(
-          dawn::iir::LoopOrderKind::LK_Parallel,
+          LoopOrderKind::LK_Parallel,
           b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                             b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
-          b.stage(b.vregion(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
-              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
-                                                   op::plus, b.at(in_f), b.lit(0.),
-                                                   dawn::ast::Expr::LocationType::Edges))))))));
+          b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                            b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                                 op::plus, b.at(in_f), b.lit(0.),
+                                                                 LocType::Edges))))))));
 
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
+  std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
+
+TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+
+  IIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Cells);
+  auto out_f = b.field("out_field", LocType::Cells);
+  auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
+
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::LK_Parallel,
+          b.stage(b.vregion(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
+              b.stmt(b.assignExpr(b.at(cnt),
+                                  b.reduceOverNeighborExpr(op::plus, b.lit(1), b.lit(0),
+                                                           dawn::ast::Expr::LocationType::Cells))),
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   op::plus, b.at(in_f),
+                                                   b.binaryExpr(b.unaryExpr(b.at(cnt), op::minus),
+                                                                b.at(in_f), op::multiply),
+                                                   dawn::ast::Expr::LocationType::Cells))),
+              b.stmt(b.assignExpr(b.at(out_f),
+                                  b.binaryExpr(b.at(in_f),
+                                               b.binaryExpr(b.lit(0.1), b.at(out_f), op::multiply),
+                                               op::plus))))))));
+
+  std::ofstream of("prototype/generated_Diffusion.hpp");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
 }
 
 } // anonymous namespace

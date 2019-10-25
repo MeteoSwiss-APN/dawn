@@ -20,9 +20,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/Basic/Version.h"
 
-namespace gtclang {
-namespace clang_compat {
-namespace Expr {
+namespace gtclang::clang_compat::Expr {
 #if CLANG_VERSION_MAJOR < 8
 using EvalResultInt = ::llvm::APSInt;
 inline int64_t getInt(EvalResultInt const& res) { return res.getExtValue(); }
@@ -32,8 +30,6 @@ using EvalResultInt = ::clang::Expr::EvalResult;
 inline int64_t getInt(EvalResultInt const& res) { return res.Val.getInt().getExtValue(); }
 
 #endif
-} // namespace Expr
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat::Expr
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_EVALRESULT_H

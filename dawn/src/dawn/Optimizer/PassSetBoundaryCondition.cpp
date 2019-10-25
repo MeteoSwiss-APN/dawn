@@ -38,7 +38,7 @@ namespace {
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
 static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
-  iir::Extents fullExtents{0, 0, 0, 0, 0, 0};
+  iir::Extents fullExtents(ast::cartesian);
   iir::Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
@@ -51,7 +51,7 @@ static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s
     for(const auto& fieldPair : stage.getFields()) {
       const iir::Field& field = fieldPair.second;
       fullExtents.merge(field.getExtents());
-      fullExtents.add(stageExtent);
+      fullExtents += stageExtent;
     }
   }
 
@@ -186,7 +186,7 @@ bool PassSetBoundaryCondition::run(
   }
 
   auto calculateHaloExtents = [&](std::string fieldname) {
-    iir::Extents fullExtent{0, 0, 0, 0, 0, 0};
+    iir::Extents fullExtent(ast::cartesian);
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before
@@ -219,17 +219,16 @@ bool PassSetBoundaryCondition::run(
     }
   };
 
-  // Loop through all the StmtAccessPair in the stencil forward
+  // Loop through all the statements in the stencil forward
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     DAWN_LOG(INFO) << "analyzing stencil " << stencilInstantiation->getName();
     std::unordered_map<int, iir::Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
-    for(const auto& stmtAccess : iterateIIROver<iir::StatementAccessesPair>(stencil)) {
+    for(const auto& stmt : iterateIIROverStmt(stencil)) {
 
-      const iir::Accesses& accesses =
-          *(stmtAccess->getStatement()->getData<iir::IIRStmtData>().CallerAccesses);
+      const iir::Accesses& accesses = *(stmt->getData<iir::IIRStmtData>().CallerAccesses);
       const auto& allReadAccesses = accesses.getReadAccesses();
       const auto& allWriteAccesses = accesses.getWriteAccesses();
 
@@ -277,10 +276,10 @@ bool PassSetBoundaryCondition::run(
         // condition. These calls are then replaced by {boundary_condition, stencil_call}
         AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
 
-        for(std::shared_ptr<iir::Stmt>& stmt : controlFlow.getStatements()) {
+        for(std::shared_ptr<iir::Stmt>& controlFlowStmt : controlFlow.getStatements()) {
           visitor.reset();
 
-          stmt->accept(visitor);
+          controlFlowStmt->accept(visitor);
           std::vector<std::shared_ptr<iir::Stmt>> stencilCallWithBC_;
           stencilCallWithBC_.emplace_back(IDtoBCpair->second);
           for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
@@ -288,13 +287,13 @@ bool PassSetBoundaryCondition::run(
             auto newBlockStmt = iir::makeBlockStmt();
             std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
                       std::back_inserter(newBlockStmt->getStatements()));
-            if(oldStencilCall == stmt) {
+            if(oldStencilCall == controlFlowStmt) {
               // Replace the the statement directly
               DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);
-              stmt = newBlockStmt;
+              controlFlowStmt = newBlockStmt;
             } else {
               // Recursively replace the statement
-              iir::replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
+              iir::replaceOldStmtWithNewStmtInStmt(controlFlowStmt, oldStencilCall, newBlockStmt);
             }
             stencilCallWithBC_.pop_back();
           }

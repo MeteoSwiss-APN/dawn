@@ -16,7 +16,6 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -77,13 +76,13 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
           IIR_EARLY_EXIT((lhsDoMethod->getID() == rhsDoMethod->getID()));
           IIR_EARLY_EXIT((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
 
-          // checking each of the StmtAccesspairs
+          // checking each of the statements
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement (and its data)
-            IIR_EARLY_EXIT((lhsStmt->getStatement()->equals(rhsStmt->getStatement().get())));
+            IIR_EARLY_EXIT((lhsStmt->equals(rhsStmt.get())));
           }
         }
       }
@@ -290,12 +289,11 @@ TEST_F(IIRSerializerTest, IIRTests) {
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
   iir::Accesses stmtAccesses;
-  iir::Extents extents({0, 0, 0});
+  iir::Extents extents(ast::Offsets{ast::cartesian});
   stmtAccesses.addReadExtent(42, extents);
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
-  auto stmtAccessPair = std::make_unique<iir::StatementAccessesPair>(stmt);
 
-  (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
+  IIRDoMethod->insertChild(std::move(stmt));
   std::string varName = "foo";
   auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
                                           std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
@@ -304,19 +302,17 @@ TEST_F(IIRSerializerTest, IIRTests) {
   varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(varDeclStmtAccesses));
   varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(33);
-  auto varDeclSAP = std::make_unique<iir::StatementAccessesPair>(varDeclStmt);
 
-  (IIRDoMethod)->insertChild(std::move(varDeclSAP));
+  IIRDoMethod->insertChild(std::move(varDeclStmt));
 
-  auto getNthChild = [](std::shared_ptr<iir::StencilInstantiation>& si,
-                        int n) -> std::shared_ptr<iir::Stmt> {
+  auto&& getNthChild = [](std::shared_ptr<iir::StencilInstantiation>& si,
+                          int n) -> std::shared_ptr<iir::Stmt> {
     auto& iir = si->getIIR();
     auto& stencil = iir->getChild(0);
     auto& ms = stencil->getChild(0);
     auto& stage = ms->getChild(0);
     auto& doMethod = stage->getChild(0);
-    auto& sap = doMethod->getChild(n);
-    return sap->getStatement();
+    return doMethod->getChild(n);
   };
 
   deserialized = serializeAndDeserializeRef();
@@ -327,14 +323,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(deserialized->getIIR()
-                                                   ->getChild(0)
-                                                   ->getChild(0)
-                                                   ->getChild(0)
-                                                   ->getChild(0)
-                                                   ->getChild(0)
-                                                   ->getStatement())
-          ->getExpr());
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0))->getExpr());
   deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
       std::make_optional<int>(50);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);

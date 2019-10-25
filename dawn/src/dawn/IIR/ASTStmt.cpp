@@ -25,10 +25,6 @@ namespace iir {
 //     IIRStmtData
 //===------------------------------------------------------------------------------------------===//
 
-IIRStmtData::IIRStmtData(const IIRStmtData& other)
-    : StackTrace(other.StackTrace), CallerAccesses(other.CallerAccesses),
-      CalleeAccesses(other.CalleeAccesses) {}
-
 bool IIRStmtData::operator==(const IIRStmtData& rhs) const {
   return StackTrace == rhs.StackTrace && CallerAccesses == rhs.CallerAccesses &&
          CalleeAccesses == rhs.CalleeAccesses;
@@ -110,7 +106,7 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
       if(extents)
         extents->merge(*childExtent);
       else
-        extents = childExtent;
+        extents = std::move(childExtent);
     }
 
   return extents;
