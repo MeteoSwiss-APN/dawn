@@ -51,7 +51,7 @@ TEST(ExtentsTest, EmptyConstruction) {
 
   Extents extents2{ast::cartesian, -1, 1, -1, 1, -1, 1};
   extents2 = std::move(nullExtent);
-  EXPECT_EQ(extents2, nullExtent);
+  EXPECT_EQ(extents2, Extents());
 }
 
 TEST(ExtentsTest, PointWise) {
