@@ -288,10 +288,8 @@ void StencilInstantiation::reportAccesses() const {
 
     for(std::size_t i = 0; i < stmts.size(); ++i) {
       std::cout << "\nACCESSES: line " << stmts[i]->getSourceLocation().Line << ": "
-                << stmts[i]
-
-                       ->getData<iir::IIRStmtData>()
-                       .CalleeAccesses->reportAccesses(stencilFun.get())
+                << stmts[i]->getData<iir::IIRStmtData>().CalleeAccesses->reportAccesses(
+                       stencilFun.get())
                 << "\n";
     }
   }

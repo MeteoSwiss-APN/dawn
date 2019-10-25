@@ -25,7 +25,7 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end)
-        field_a = field_b; // EXPECTED_ACCESSES: W:field_a:<0,0,0,0,0,0> %and% R:field_b:<0,0,0,0,0,0>
+        field_a = field_b; // EXPECTED_ACCESSES: W:field_a:<<no_horizontal_extent>,0,0> %and% R:field_b:<<no_horizontal_extent>,0,0>
   }
 };
 
