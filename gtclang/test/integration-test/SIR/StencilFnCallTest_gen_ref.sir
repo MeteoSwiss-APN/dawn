@@ -1,5 +1,5 @@
 {
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
+ "filename": "/home/lukas/documents/work/dawn2/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,8 +29,11 @@
                   "left": {
                    "field_access_expr": {
                     "name": "b",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,
@@ -47,7 +50,7 @@
                      "Column": 9
                     },
                     "data": {},
-                    "ID": 9
+                    "ID": 7
                    }
                   },
                   "op": "=",
@@ -58,8 +61,11 @@
                      {
                       "field_access_expr": {
                        "name": "a",
-                       "vertical_offset": 0,
-                       "zero_offset": {},
+                       "offset": [
+                        0,
+                        0,
+                        0
+                       ],
                        "argument_map": [
                         -1,
                         -1,
@@ -76,7 +82,7 @@
                         "Column": 16
                        },
                        "data": {},
-                       "ID": 8
+                       "ID": 9
                       }
                      }
                     ],
@@ -84,7 +90,7 @@
                      "Line": 36,
                      "Column": 13
                     },
-                    "ID": 7
+                    "ID": 8
                    }
                   },
                   "loc": {
@@ -187,8 +193,11 @@
           "expr": {
            "field_access_expr": {
             "name": "a",
-            "vertical_offset": 0,
-            "zero_offset": {},
+            "offset": [
+             0,
+             0,
+             0
+            ],
             "argument_map": [
              -1,
              -1,

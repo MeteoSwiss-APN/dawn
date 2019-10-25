@@ -1,5 +1,5 @@
 {
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "/home/lukas/documents/work/dawn2/gtclang/test/integration-test/SIR/AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,8 +29,11 @@
                   "left": {
                    "field_access_expr": {
                     "name": "b",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,
@@ -47,7 +50,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 15
+                    "ID": 4
                    }
                   },
                   "op": "=",
@@ -64,11 +67,11 @@
                             "left": {
                              "field_access_expr": {
                               "name": "a",
-                              "vertical_offset": 0,
-                              "cartesian_offset": {
-                               "i_offset": 1,
-                               "j_offset": 0
-                              },
+                              "offset": [
+                               1,
+                               0,
+                               0
+                              ],
                               "argument_map": [
                                -1,
                                -1,
@@ -85,18 +88,18 @@
                                "Column": 11
                               },
                               "data": {},
-                              "ID": 9
+                              "ID": 5
                              }
                             },
                             "op": "+",
                             "right": {
                              "field_access_expr": {
                               "name": "a",
-                              "vertical_offset": 0,
-                              "cartesian_offset": {
-                               "i_offset": -1,
-                               "j_offset": 0
-                              },
+                              "offset": [
+                               -1,
+                               0,
+                               0
+                              ],
                               "argument_map": [
                                -1,
                                -1,
@@ -113,25 +116,25 @@
                                "Column": 22
                               },
                               "data": {},
-                              "ID": 8
+                              "ID": 6
                              }
                             },
                             "loc": {
                              "Line": 29,
                              "Column": 11
                             },
-                            "ID": 10
+                            "ID": 7
                            }
                           },
                           "op": "+",
                           "right": {
                            "field_access_expr": {
                             "name": "a",
-                            "vertical_offset": 0,
-                            "cartesian_offset": {
-                             "i_offset": 0,
-                             "j_offset": 1
-                            },
+                            "offset": [
+                             0,
+                             1,
+                             0
+                            ],
                             "argument_map": [
                              -1,
                              -1,
@@ -148,25 +151,25 @@
                              "Column": 33
                             },
                             "data": {},
-                            "ID": 7
+                            "ID": 8
                            }
                           },
                           "loc": {
                            "Line": 29,
                            "Column": 11
                           },
-                          "ID": 11
+                          "ID": 9
                          }
                         },
                         "op": "+",
                         "right": {
                          "field_access_expr": {
                           "name": "a",
-                          "vertical_offset": 0,
-                          "cartesian_offset": {
-                           "i_offset": 0,
-                           "j_offset": -1
-                          },
+                          "offset": [
+                           0,
+                           -1,
+                           0
+                          ],
                           "argument_map": [
                            -1,
                            -1,
@@ -183,22 +186,25 @@
                            "Column": 47
                           },
                           "data": {},
-                          "ID": 6
+                          "ID": 10
                          }
                         },
                         "loc": {
                          "Line": 29,
                          "Column": 11
                         },
-                        "ID": 12
+                        "ID": 11
                        }
                       },
                       "op": "+",
                       "right": {
                        "field_access_expr": {
                         "name": "a",
-                        "vertical_offset": -1,
-                        "zero_offset": {},
+                        "offset": [
+                         0,
+                         0,
+                         -1
+                        ],
                         "argument_map": [
                          -1,
                          -1,
@@ -215,7 +221,7 @@
                          "Column": 61
                         },
                         "data": {},
-                        "ID": 5
+                        "ID": 12
                        }
                       },
                       "loc": {
@@ -229,11 +235,11 @@
                     "right": {
                      "field_access_expr": {
                       "name": "a",
-                      "vertical_offset": 1,
-                      "cartesian_offset": {
-                       "i_offset": 0,
-                       "j_offset": 1
-                      },
+                      "offset": [
+                       0,
+                       1,
+                       1
+                      ],
                       "argument_map": [
                        -1,
                        -1,
@@ -250,14 +256,14 @@
                        "Column": 72
                       },
                       "data": {},
-                      "ID": 4
+                      "ID": 14
                      }
                     },
                     "loc": {
                      "Line": 29,
                      "Column": 11
                     },
-                    "ID": 14
+                    "ID": 15
                    }
                   },
                   "loc": {
