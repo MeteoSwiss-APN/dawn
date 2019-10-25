@@ -57,7 +57,7 @@ public:
 
   void limit(Extent const& other) {
     minus_ = std::max(minus_, other.minus_);
-    plus_ = std::max(plus_, other.plus_);
+    plus_ = std::min(plus_, other.plus_);
   }
 
   Extent& operator+=(const Extent& other) {
