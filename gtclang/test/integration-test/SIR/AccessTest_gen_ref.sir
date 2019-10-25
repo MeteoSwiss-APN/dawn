@@ -1,5 +1,5 @@
 {
- "filename": "/home/lukas/documents/work/dawn2/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -50,7 +50,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 15
                    }
                   },
                   "op": "=",
@@ -88,7 +88,7 @@
                                "Column": 11
                               },
                               "data": {},
-                              "ID": 5
+                              "ID": 9
                              }
                             },
                             "op": "+",
@@ -116,14 +116,14 @@
                                "Column": 22
                               },
                               "data": {},
-                              "ID": 6
+                              "ID": 8
                              }
                             },
                             "loc": {
                              "Line": 29,
                              "Column": 11
                             },
-                            "ID": 7
+                            "ID": 10
                            }
                           },
                           "op": "+",
@@ -151,14 +151,14 @@
                              "Column": 33
                             },
                             "data": {},
-                            "ID": 8
+                            "ID": 7
                            }
                           },
                           "loc": {
                            "Line": 29,
                            "Column": 11
                           },
-                          "ID": 9
+                          "ID": 11
                          }
                         },
                         "op": "+",
@@ -186,14 +186,14 @@
                            "Column": 47
                           },
                           "data": {},
-                          "ID": 10
+                          "ID": 6
                          }
                         },
                         "loc": {
                          "Line": 29,
                          "Column": 11
                         },
-                        "ID": 11
+                        "ID": 12
                        }
                       },
                       "op": "+",
@@ -221,7 +221,7 @@
                          "Column": 61
                         },
                         "data": {},
-                        "ID": 12
+                        "ID": 5
                        }
                       },
                       "loc": {
@@ -256,14 +256,14 @@
                        "Column": 72
                       },
                       "data": {},
-                      "ID": 14
+                      "ID": 4
                      }
                     },
                     "loc": {
                      "Line": 29,
                      "Column": 11
                     },
-                    "ID": 15
+                    "ID": 14
                    }
                   },
                   "loc": {
