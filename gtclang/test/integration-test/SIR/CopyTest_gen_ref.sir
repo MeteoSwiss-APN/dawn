@@ -1,5 +1,5 @@
 {
- "filename": "CopyTest.cpp",
+ "filename": "/home/lukas/documents/work/dawn2/gtclang/test/integration-test/SIR/CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -50,7 +50,7 @@
                      "Column": 9
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "op": "=",
@@ -78,7 +78,7 @@
                      "Column": 19
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "loc": {
