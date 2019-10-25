@@ -430,6 +430,8 @@ namespace std {
 template <>
 struct hash<dawn::iir::Extents> {
   size_t operator()(const dawn::iir::Extents& extent) const {
+    // TODO: Note this is only used from cartesian CodeGen right now. This will throw a bad_cast for
+    // unstructured extents right now.
     auto const& hextent =
         dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extent.horizontalExtent());
     auto const& vextent = extent.verticalExtent();
