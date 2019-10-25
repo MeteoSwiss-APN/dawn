@@ -34,7 +34,9 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
   for(const auto& cacheP : ms->getCaches()) {
     const int accessID = cacheP.first;
     auto originalExtent = ms->getField(accessID).getExtentsRB();
-    iir::Extents limitedExtent = originalExtent.limit(-maxRedundantLines, maxRedundantLines);
+    iir::Extents limitedExtent = originalExtent.limit(
+        {ast::cartesian, -maxRedundantLines, maxRedundantLines, -maxRedundantLines,
+         maxRedundantLines, -maxRedundantLines, maxRedundantLines});
     maxExtents.merge(limitedExtent);
 
     if(limitedExtent == originalExtent) {

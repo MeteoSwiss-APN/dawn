@@ -55,8 +55,8 @@ public:
   }
   Extent& merge(int other) { return merge(Extent{other, other}); }
 
-  Extent limit(int minus, int plus) const {
-    return {std::max(minus, minus_), std::min(plus, plus_)};
+  Extent limit(Extent const& other) const {
+    return {std::max(minus_, other.minus()), std::min(plus_, other.plus())};
   }
 
   Extent& operator+=(const Extent& other) {
@@ -94,8 +94,8 @@ public:
   void addCenter() { addCenterImpl(); }
   bool operator==(HorizontalExtentImpl const& other) const { return equalsImpl(other); }
   bool isPointwise() const { return isPointwiseImpl(); }
-  std::unique_ptr<HorizontalExtentImpl> limit(int minus, int plus) const {
-    return limitImpl(minus, plus);
+  std::unique_ptr<HorizontalExtentImpl> limit(HorizontalExtentImpl const& other) const {
+    return limitImpl(other);
   }
 
 protected:
@@ -105,7 +105,8 @@ protected:
   virtual bool equalsImpl(HorizontalExtentImpl const& other) const = 0;
   virtual std::unique_ptr<HorizontalExtentImpl> cloneImpl() const = 0;
   virtual bool isPointwiseImpl() const = 0;
-  virtual std::unique_ptr<HorizontalExtentImpl> limitImpl(int minus, int plus) const = 0;
+  virtual std::unique_ptr<HorizontalExtentImpl>
+  limitImpl(HorizontalExtentImpl const& other) const = 0;
 };
 
 class CartesianExtent : public HorizontalExtentImpl {
@@ -144,9 +145,11 @@ public:
     return extents_[0].isPointwise() && extents_[1].isPointwise();
   }
 
-  std::unique_ptr<HorizontalExtentImpl> limitImpl(int minus, int plus) const override {
-    return std::make_unique<CartesianExtent>(extents_[0].limit(minus, plus),
-                                             extents_[1].limit(minus, plus));
+  std::unique_ptr<HorizontalExtentImpl>
+  limitImpl(HorizontalExtentImpl const& other) const override {
+    auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
+    return std::make_unique<CartesianExtent>(extents_[0].limit(otherCartesian.extents_[0]),
+                                             extents_[1].limit(otherCartesian.extents_[1]));
   }
 
   int iMinus() const { return extents_[0].minus(); }
@@ -208,7 +211,7 @@ public:
 
     return *this;
   }
-  void merge(const HorizontalExtent& other) {
+  void merge(HorizontalExtent const& other) {
     if(impl_ && other.impl_)
       impl_->merge(*other.impl_);
     else if(impl_)
@@ -218,11 +221,10 @@ public:
       impl_->addCenter();
     }
   }
-  void merge(const ast::HorizontalOffset& other) { merge(HorizontalExtent{other}); }
+  void merge(ast::HorizontalOffset const& other) { merge(HorizontalExtent{other}); }
   bool isPointwise() const { return !impl_ || impl_->isPointwise(); }
-  HorizontalExtent limit(int minus, int plus) const {
-    DAWN_ASSERT(minus <= 0 && plus >= 0);
-    return impl_ ? impl_->limit(minus, plus) : *this;
+  HorizontalExtent limit(HorizontalExtent const& other) const {
+    return impl_ ? impl_->limit(*other.impl_) : *this;
   }
 
 private:
@@ -231,7 +233,11 @@ private:
 
 template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
-  static std::remove_reference_t<T> nullExtent{};
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<HorizontalExtentImpl, PlainT>,
+                "Can only be casted to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  static PlainT nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
 
@@ -253,8 +259,8 @@ public:
 
   bool hasVerticalCenter() const;
 
-  /// @brief Limits the same extents, but limited to the interval [minus, plus]
-  Extents limit(int minus, int plus) const;
+  /// @brief Limits the same extents, but limited to the extent given by other
+  Extents limit(Extents const& other) const;
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///

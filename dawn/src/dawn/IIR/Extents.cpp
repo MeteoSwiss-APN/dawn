@@ -67,9 +67,9 @@ bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise()
 bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
-Extents Extents::limit(int minus, int plus) const {
-  DAWN_ASSERT(minus <= 0 && plus >= 0);
-  return Extents{horizontalExtent_.limit(minus, plus), verticalExtent_.limit(minus, plus)};
+Extents Extents::limit(Extents const& other) const {
+  return Extents{horizontalExtent_.limit(other.horizontalExtent()),
+                 verticalExtent_.limit(other.verticalExtent())};
 }
 
 bool Extents::isPointwise() const {

@@ -117,7 +117,11 @@ private:
 
 template <typename T>
 T offset_cast(HorizontalOffset const& offset) {
-  static std::remove_reference_t<T> nullOffset{};
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<HorizontalOffsetImpl, PlainT>,
+                "Can only be casted to a valid horizontal offset implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  static PlainT nullOffset{};
   return offset.impl_ ? dynamic_cast<T>(*offset.impl_) : nullOffset;
 }
 
