@@ -29,8 +29,7 @@ Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(const ast::Offsets& offset)
-    : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
-      horizontalExtent_(offset.horizontalOffset()) {}
+    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
