@@ -40,7 +40,7 @@ public:
   /// @name Constructors and Assignment
   /// @{
   Extent(int minus, int plus) : minus_(minus), plus_(plus) {}
-  Extent(int extent) : Extent(extent, extent) {}
+  explicit Extent(int extent) : Extent(extent, extent) {}
   Extent() : Extent(0, 0) {}
   /// @}
 
@@ -49,12 +49,11 @@ public:
 
   /// @name Operators
   /// @{
-  Extent& merge(const Extent& other) {
+  void merge(const Extent& other) {
     minus_ = std::min(minus_, other.minus_);
     plus_ = std::max(plus_, other.plus_);
-    return *this;
   }
-  Extent& merge(int other) { return merge(Extent{other, other}); }
+  void merge(int other) { merge(Extent{other, other}); }
 
   Extent limit(Extent const& other) const {
     return {std::max(minus_, other.minus()), std::min(plus_, other.plus())};
