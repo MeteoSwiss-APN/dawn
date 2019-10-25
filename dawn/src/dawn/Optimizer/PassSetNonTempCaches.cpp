@@ -227,8 +227,8 @@ private:
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
     iir::Accesses newAccess;
-    newAccess.addWriteExtent(assignmentID, iir::Extents(ast::Offsets{ast::cartesian}));
-    newAccess.addReadExtent(assigneeID, iir::Extents(ast::Offsets{ast::cartesian}));
+    newAccess.addWriteExtent(assignmentID, iir::Extents(ast::cartesian));
+    newAccess.addReadExtent(assigneeID, iir::Extents(ast::cartesian));
     expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
     domethod->insertChild(std::move(expAssignment));

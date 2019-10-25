@@ -50,8 +50,10 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
       for(const auto& fieldP : stencil->getFields()) {
         const auto& field = fieldP.second;
 
-        auto jExtents = field.field.getExtentsRB()[1];
-        if(jExtents.Plus != 0 || jExtents.Minus != 0) {
+        auto const& hExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+            field.field.getExtentsRB().horizontalExtent());
+
+        if(hExtent.jPlus() != 0 || hExtent.jMinus() != 0) {
           verticalPattern = false;
         }
       }

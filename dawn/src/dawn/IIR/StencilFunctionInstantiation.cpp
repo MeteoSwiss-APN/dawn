@@ -93,8 +93,8 @@ ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
       const int argOffset = expr->getArgumentOffset()[i];
 
       // Resolve the directions and offsets
-      // Note: Offsets could implement directions, then this could be simplified because we just want to do
-      // offset[my_direction] += sign * argOffset;
+      // Note: Offsets could implement directions, then this could be simplified because we just
+      // want to do offset[my_direction] += sign * argOffset;
       std::array<int, 3> addOffset{};
       if(isArgDirection(argIndex))
         addOffset[getCallerDimensionOfArgDirection(argIndex)] += sign * argOffset;
@@ -414,8 +414,8 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{0, 0, 0, 0, 0, 0},
-                                          Extents{0, 0, 0, 0, 0, 0}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{ast::cartesian},
+                                          Extents{ast::cartesian}, interval_));
       unusedFields_.insert(AccessID);
     }
   }
