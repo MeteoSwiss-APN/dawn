@@ -40,7 +40,7 @@ public:
   /// @name Constructors and Assignment
   /// @{
   Extent(int minus, int plus) : minus_(minus), plus_(plus) {}
-  explicit Extent(int extent) : Extent(extent, extent) {}
+  explicit Extent(int offset) : Extent(offset, offset) {}
   Extent() : Extent(0, 0) {}
   /// @}
 
