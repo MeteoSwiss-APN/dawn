@@ -83,8 +83,11 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_a",
-                   "vertical_offset": 0,
-                   "zero_offset": {},
+                   "offset": [
+                    0,
+                    0,
+                    0
+                   ],
                    "argument_map": [
                     -1,
                     -1,
@@ -110,8 +113,11 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_b",
-                   "vertical_offset": 0,
-                   "zero_offset": {},
+                   "offset": [
+                    0,
+                    0,
+                    0
+                   ],
                    "argument_map": [
                     -1,
                     -1,
@@ -148,20 +154,38 @@
                 "accesses": {
                  "writeAccess": {
                   "9": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
                   }
                  },
                  "readAccess": {
                   "10": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
                   }
                  }
                 }
@@ -223,5 +247,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }

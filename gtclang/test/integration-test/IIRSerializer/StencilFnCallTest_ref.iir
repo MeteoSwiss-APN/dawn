@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "36": "__local_fn_36",
    "16": "a",
-   "17": "b",
-   "36": "__local_fn_36"
+   "17": "b"
   },
   "accessIDToType": {
    "16": 6,
@@ -93,8 +93,11 @@
                 {
                  "field_access_expr": {
                   "name": "a",
-                  "vertical_offset": 0,
-                  "zero_offset": {},
+                  "offset": [
+                   0,
+                   0,
+                   0
+                  ],
                   "argument_map": [
                    -1,
                    -1,
@@ -125,20 +128,38 @@
                 "accesses": {
                  "writeAccess": {
                   "36": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
                   }
                  },
                  "readAccess": {
                   "16": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
                   }
                  }
                 }
@@ -156,8 +177,11 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "vertical_offset": 0,
-                   "zero_offset": {},
+                   "offset": [
+                    0,
+                    0,
+                    0
+                   ],
                    "argument_map": [
                     -1,
                     -1,
@@ -209,20 +233,38 @@
                 "accesses": {
                  "writeAccess": {
                   "17": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
                   }
                  },
                  "readAccess": {
                   "36": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
                   }
                  }
                 }
@@ -284,5 +326,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }

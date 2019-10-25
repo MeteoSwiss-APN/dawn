@@ -1,5 +1,5 @@
 {
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/CopyTest.cpp",
+ "filename": "CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,8 +29,11 @@
                   "left": {
                    "field_access_expr": {
                     "name": "field_a",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,
@@ -54,8 +57,11 @@
                   "right": {
                    "field_access_expr": {
                     "name": "field_b",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,
