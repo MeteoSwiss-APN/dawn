@@ -47,11 +47,11 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
                       [&](iir::UnstructuredExtent const& hExtent) {
                         ss << (hExtent.hasExtent() ? "<has_horizontal_extent>"
                                                    : "<no_horizontal_extent>")
-                           << ", " << vExtent.minus() << "," << vExtent.plus();
+                           << "," << vExtent.minus() << "," << vExtent.plus();
                       },
                       [&]() {
                         ss << "<no_horizontal_extent>"
-                           << ", " << vExtent.minus() << "," << vExtent.plus();
+                           << "," << vExtent.minus() << "," << vExtent.plus();
                       });
       ss << ">";
     }
