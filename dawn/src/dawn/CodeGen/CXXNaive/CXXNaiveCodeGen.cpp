@@ -29,38 +29,36 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
-                                const std::string& lower, const std::string& upper,
-                                const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
-               " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
-               increment + dim + ")")
-      .str();
+namespace {
+std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
+                         const std::string& upper, const std::string& comparison,
+                         const std::string& increment) {
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
+         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
 }
 
-static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
-                              const std::string& dim) {
-  return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
+std::string makeIJLoop(int iExtent, int jExtent, const std::string dom, const std::string& dim) {
+  return makeLoopImpl(iExtent, jExtent, dim, dom + "." + dim + "minus()",
                       dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
 }
 
-static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
-                                     iir::Interval::Bound bound) {
+std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
+                              iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound)
              ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
                    ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
              : std::to_string(interval.bound(bound));
 }
 
-static std::string makeKLoop(const std::string dom, bool isBackward,
-                             iir::Interval const& interval) {
+std::string makeKLoop(const std::string dom, bool isBackward, iir::Interval const& interval) {
 
   const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
+  return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
 }
+} // namespace
 
 CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                                  int maxHaloPoint)
@@ -379,10 +377,13 @@ void CXXNaiveCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
+                auto const& extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+                    stage.getExtents().horizontalExtent());
+
                 stencilRunMethod.addBlockStatement(
-                    makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
+                    makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
                       stencilRunMethod.addBlockStatement(
-                          makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
+                          makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&]() {
                             // Generate Do-Method
                             for(const auto& doMethodPtr : stage.getChildren()) {
                               const iir::DoMethod& doMethod = *doMethodPtr;

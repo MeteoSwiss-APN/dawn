@@ -187,6 +187,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   llvm::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
       new clang_compat::llvm::vfs::InMemoryFileSystem);
   clang::FileManager files(clang::FileSystemOptions(), memFS);
+  context_->getASTContext().getDiagnostics().Reset();
   clang::SourceManager sources(context_->getASTContext().getDiagnostics(), files);
 
   std::string code;

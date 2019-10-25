@@ -74,8 +74,8 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
 }
 
 Interval Interval::extendInterval(const Extent& verticalExtent) const {
-  return Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_ + verticalExtent.Minus,
-                  upper_.offset_ + verticalExtent.Plus);
+  return Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_ + verticalExtent.minus(),
+                  upper_.offset_ + verticalExtent.plus());
 }
 
 Interval Interval::crop(Bound bound, std::array<int, 2> window) const {

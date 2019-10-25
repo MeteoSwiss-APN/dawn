@@ -47,13 +47,15 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExp
 }
 
 void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
-  iir::Extents extents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt);
-  int haloIMinus = abs(extents[0].Minus);
-  int haloIPlus = abs(extents[0].Plus);
-  int haloJMinus = abs(extents[1].Minus);
-  int haloJPlus = abs(extents[1].Plus);
-  int haloKMinus = abs(extents[2].Minus);
-  int haloKPlus = abs(extents[2].Plus);
+  const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+      metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).horizontalExtent());
+  const auto& vExtents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).verticalExtent();
+  int haloIMinus = std::abs(hExtents.iMinus());
+  int haloIPlus = std::abs(hExtents.iPlus());
+  int haloJMinus = std::abs(hExtents.jMinus());
+  int haloJPlus = std::abs(hExtents.jPlus());
+  int haloKMinus = std::abs(vExtents.minus());
+  int haloKPlus = std::abs(vExtents.plus());
   std::string fieldname = stmt->getFields()[0];
 
   // Set up the halos

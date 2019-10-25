@@ -27,26 +27,20 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
                     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                     const int maxRedundantLines) {
 
-  iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
+  iir::Extents maxExtents{ast::cartesian};
+
   std::set<int> accessIDs;
   std::unordered_map<int, iir::Extents> specialCaches;
   for(const auto& cacheP : ms->getCaches()) {
     const int accessID = cacheP.first;
-    auto extents = ms->getField(accessID).getExtentsRB();
-    bool exceeds = false;
-    for(int i = 0; i < 3; ++i) {
-      if(extents[i].Minus < -maxRedundantLines || extents[i].Plus > maxRedundantLines) {
-        exceeds = true;
-      }
-      maxExtents[i].Minus =
-          std::max(-maxRedundantLines, std::min(extents[i].Minus, maxExtents[i].Minus));
-      maxExtents[i].Plus =
-          std::min(maxRedundantLines, std::max(extents[i].Plus, maxExtents[i].Plus));
-    }
-    if(!exceeds) {
+    auto originalExtent = ms->getField(accessID).getExtentsRB();
+    iir::Extents limitedExtent = originalExtent.limit(-maxRedundantLines, maxRedundantLines);
+    maxExtents.merge(limitedExtent);
+
+    if(limitedExtent == originalExtent) {
       accessIDs.insert(accessID);
     } else {
-      specialCaches.emplace(accessID, extents);
+      specialCaches.emplace(accessID, originalExtent);
     }
   }
   return CacheProperties{ms, std::move(accessIDs), maxExtents, std::move(specialCaches),
@@ -92,7 +86,7 @@ bool CacheProperties::requiresFill(const iir::Cache& cache) {
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = ms_->getKCacheVertExtent(accessID);
-  return -ext.Minus;
+  return -ext.minus();
 }
 
 bool CacheProperties::isKCached(const int accessID) const {
@@ -122,7 +116,7 @@ bool CacheProperties::accessIsCached(const int accessID) const {
   return ms_->isCached(accessID) && (isIJCached(accessID) || isKCached(accessID));
 }
 
-iir::Extents CacheProperties::getCacheExtent(int accessID) const {
+iir::Extents const& CacheProperties::getCacheExtent(int accessID) const {
   if(isCommonCache(accessID)) {
     return extents_;
   } else {
@@ -130,31 +124,39 @@ iir::Extents CacheProperties::getCacheExtent(int accessID) const {
   }
 }
 
+namespace {
+int getStrideImpl(int dim, Array3ui blockSize, iir::Extents const& extents) {
+  auto const& hExtents = iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
+  if(dim == 0) {
+    return 1;
+  } else if(dim == 1) {
+    return blockSize[0] - hExtents.iMinus() + hExtents.iPlus();
+  } else {
+    dawn_unreachable("error");
+  }
+}
+} // namespace
+
 int CacheProperties::getStride(int accessID, int dim, Array3ui blockSize) const {
-  auto extents = getCacheExtent(accessID);
-  return getStrideImpl(dim, blockSize, extents);
+  return getStrideImpl(dim, blockSize, getCacheExtent(accessID));
 }
 
 int CacheProperties::getStrideCommonCache(int dim, Array3ui blockSize) const {
   return getStrideImpl(dim, blockSize, extents_);
 }
 
-int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const {
-  if(dim == 0) {
-    return 1;
-  } else if(dim == 1) {
-    return blockSize[0] - extents[0].Minus + extents[0].Plus;
-  } else {
-    dawn_unreachable("error");
-  }
-}
-
 int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
-  auto extents = getCacheExtent(accessID);
-  return -extents[dim].Minus;
+  DAWN_ASSERT(dim <= 1);
+  auto const& extent = getCacheExtent(accessID);
+  auto const& hExtents = iir::extent_cast<iir::CartesianExtent const&>(extent.horizontalExtent());
+  return dim == 0 ? -hExtents.iMinus() : -hExtents.jMinus();
 }
 
-int CacheProperties::getOffsetCommonIJCache(int dim) const { return -extents_[dim].Minus; }
+int CacheProperties::getOffsetCommonIJCache(int dim) const {
+  DAWN_ASSERT(dim <= 1);
+  auto const& hExtents = iir::extent_cast<iir::CartesianExtent const&>(extents_.horizontalExtent());
+  return dim == 0 ? -hExtents.iMinus() : -hExtents.jMinus();
+}
 
 std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheType cacheType) const {
   if(cacheType == iir::Cache::CacheType::IJ) {

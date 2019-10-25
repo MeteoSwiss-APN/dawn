@@ -475,7 +475,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
     DAWN_ASSERT(msNonTempFields.size() > 0);
 
-    iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
+    iir::Extents maxExtents{ast::cartesian};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
       maxExtents.merge(stage->getExtents());
     }
@@ -492,10 +492,13 @@ void CudaCodeGen::generateStencilRunMethod(
     unsigned int ntx = blockSize[0];
     unsigned int nty = blockSize[1];
 
+    auto const& hMaxExtents =
+        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+
     stencilRunMethod.addStatement(
         "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
-        std::to_string(maxExtents[1].Plus - maxExtents[1].Minus +
-                       (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)) +
+        std::to_string(hMaxExtents.jPlus() - hMaxExtents.jMinus() +
+                       (hMaxExtents.iMinus() < 0 ? 1 : 0) + (hMaxExtents.iPlus() > 0 ? 1 : 0)) +
         ",1)");
 
     // number of blocks required
@@ -581,9 +584,12 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
                                         iir::Stencil const& stencil) const {
 
   auto maxExtents = CodeGeneratorHelper::computeTempMaxWriteExtent(stencil);
+  auto const& hMaxExtents =
+      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+
   stencilClass.addTypeDef("tmp_halo_t")
-      .addType("gridtools::halo< " + std::to_string(-maxExtents[0].Minus) + "," +
-               std::to_string(-maxExtents[1].Minus) + ", 0, 0, " +
+      .addType("gridtools::halo< " + std::to_string(-hMaxExtents.iMinus()) + "," +
+               std::to_string(-hMaxExtents.jMinus()) + ", 0, 0, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
 
   stencilClass.addTypeDef(tmpMetadataTypename_)
@@ -601,10 +607,12 @@ void CudaCodeGen::addTmpStorageInit(
   const auto blockSize = stencil.getParent()->getBlockSize();
 
   if(!(tempFields.empty())) {
+    auto const& hMaxExtents =
+        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
     ctr.addInit(tmpMetadataName_ + "(" + std::to_string(blockSize[0]) + "+" +
-                std::to_string(-maxExtents[0].Minus + maxExtents[0].Plus) + ", " +
+                std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
                 std::to_string(blockSize[1]) + "+" +
-                std::to_string(-maxExtents[1].Minus + maxExtents[1].Plus) + ", (dom_.isize()+ " +
+                std::to_string(-hMaxExtents.jMinus() + hMaxExtents.jPlus()) + ", (dom_.isize()+ " +
                 std::to_string(blockSize[0]) + " - 1) / " + std::to_string(blockSize[0]) +
                 ", (dom_.jsize()+ " + std::to_string(blockSize[1]) + " - 1) / " +
                 std::to_string(blockSize[1]) + ", dom_.ksize() + 2 * " +

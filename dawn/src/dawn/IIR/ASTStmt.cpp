@@ -106,7 +106,7 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
       if(extents)
         extents->merge(*childExtent);
       else
-        extents = childExtent;
+        extents = std::move(childExtent);
     }
 
   return extents;
