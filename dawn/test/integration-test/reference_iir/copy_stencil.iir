@@ -1,12 +1,12 @@
 {
  "metadata": {
   "accessIDToName": {
-   "12": "out_field",
-   "11": "in_field"
+   "11": "in_field",
+   "12": "out_field"
   },
   "accessIDToType": {
-   "11": 6,
-   "12": 6
+   "12": 6,
+   "11": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -24,12 +24,12 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
-   "12": {
+   "11": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    },
-   "11": {
+   "12": {
     "int1": 1,
     "int2": 1,
     "int3": 1
@@ -83,11 +83,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out_field",
-                   "offset": [
-                    0,
-                    0,
-                    0
-                   ],
+                   "vertical_offset": 0,
+                   "zero_offset": {},
                    "argument_map": [
                     -1,
                     -1,
@@ -113,11 +110,8 @@
                  "right": {
                   "field_access_expr": {
                    "name": "in_field",
-                   "offset": [
-                    0,
-                    0,
-                    0
-                   ],
+                   "vertical_offset": 0,
+                   "zero_offset": {},
                    "argument_map": [
                     -1,
                     -1,
@@ -154,38 +148,20 @@
                 "accesses": {
                  "writeAccess": {
                   "12": {
-                   "extents": [
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    }
-                   ]
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
                   }
                  },
                  "readAccess": {
                   "11": {
-                   "extents": [
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    }
-                   ]
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
                   }
                  }
                 }
