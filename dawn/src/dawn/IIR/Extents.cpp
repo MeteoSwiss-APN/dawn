@@ -23,14 +23,21 @@ namespace dawn {
 namespace iir {
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
+Extent merge(Extent lhs, Extent const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extent limit(Extent lhs, Extent const& rhs) {
+  lhs.limit(rhs);
+  return rhs;
+}
 
 Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(ast::Offsets const& offset)
-    : Extents(HorizontalExtent{offset.horizontalOffset()},
-              Extent{offset.verticalOffset(), offset.verticalOffset()}) {}
+    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
@@ -61,6 +68,14 @@ Extents& Extents::operator+=(const Extents& other) {
   return *this;
 }
 Extents operator+(Extents lhs, const Extents& rhs) { return lhs += rhs; }
+Extents merge(Extents lhs, Extents const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extents limit(Extents lhs, Extents const& rhs) {
+  lhs.limit(rhs);
+  return lhs;
+}
 
 void Extents::addVerticalCenter() { verticalExtent_.merge(0); }
 
@@ -71,9 +86,9 @@ bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise()
 bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
-Extents Extents::limit(Extents const& other) const {
-  return Extents{horizontalExtent_.limit(other.horizontalExtent()),
-                 verticalExtent_.limit(other.verticalExtent())};
+void Extents::limit(Extents const& other) {
+  horizontalExtent_.limit(other.horizontalExtent());
+  verticalExtent_.limit(other.verticalExtent());
 }
 
 bool Extents::isPointwise() const {

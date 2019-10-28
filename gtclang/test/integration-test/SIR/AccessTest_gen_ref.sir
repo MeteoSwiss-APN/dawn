@@ -1,5 +1,5 @@
 {
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",

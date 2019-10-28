@@ -40,7 +40,7 @@ TEST(TestField, Equal) {
            Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
 
   Field f2{1, Field::IntendKind::IK_Input, Extents(dawn::ast::cartesian, -1, 1, -1, 2, 0, 3),
-           Extents(dawn::ast::cartesian, 0, 0, 1, 0, -1, 2), Interval{0, 2, 1, 0}};
+           Extents(dawn::ast::cartesian, 0, 0, 0, 1, -1, 2), Interval{0, 2, 1, 0}};
 
   Field f3{1, Field::IntendKind::IK_InputOutput, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
            Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};

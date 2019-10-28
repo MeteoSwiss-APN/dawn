@@ -65,6 +65,7 @@ void UnstructuredOffset::addImpl(HorizontalOffsetImpl const& other) {
   hasOffset_ = hasOffset_ || uo_other.hasOffset_;
 }
 
+Offsets operator+(Offsets o1, Offsets const& o2) { return o1 += o2; }
 } // namespace dawn::ast
 
 #endif

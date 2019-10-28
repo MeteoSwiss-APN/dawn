@@ -1,5 +1,5 @@
 {
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/CopyTest.cpp",
+ "filename": "CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",
