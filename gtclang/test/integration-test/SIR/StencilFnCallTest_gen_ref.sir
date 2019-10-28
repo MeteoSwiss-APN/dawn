@@ -1,5 +1,5 @@
 {
- "filename": "/home/lukas/documents/work/dawn2/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
+ "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -50,7 +50,7 @@
                      "Column": 9
                     },
                     "data": {},
-                    "ID": 7
+                    "ID": 9
                    }
                   },
                   "op": "=",
@@ -82,7 +82,7 @@
                         "Column": 16
                        },
                        "data": {},
-                       "ID": 9
+                       "ID": 8
                       }
                      }
                     ],
@@ -90,7 +90,7 @@
                      "Line": 36,
                      "Column": 13
                     },
-                    "ID": 8
+                    "ID": 7
                    }
                   },
                   "loc": {
