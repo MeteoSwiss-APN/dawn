@@ -81,18 +81,18 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     instantiation->getMetaData().removeAccessID(accessID);
   }
   // Register the field
-  instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                  accessID, fieldname);
+  instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary, accessID,
+                                                  fieldname);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
 }
 
 void promoteTemporaryFieldToAllocatedField(iir::StencilInstantiation* instantiation, int AccessID) {
-  DAWN_ASSERT(instantiation->getMetaData().isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                        AccessID));
-  instantiation->getMetaData().moveRegisteredFieldTo(
-      iir::FieldAccessType::FAT_InterStencilTemporary, AccessID);
+  DAWN_ASSERT(
+      instantiation->getMetaData().isAccessType(iir::FieldAccessType::StencilTemporary, AccessID));
+  instantiation->getMetaData().moveRegisteredFieldTo(iir::FieldAccessType::InterStencilTemporary,
+                                                     AccessID);
 }
 
 void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiation,

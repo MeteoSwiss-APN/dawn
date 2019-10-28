@@ -10,7 +10,7 @@
 //  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
-//===------------------------------------------------------------------------------------------===//
+//===----------------------------------------TypeKind--------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTStmt.h"
@@ -30,42 +30,42 @@
 namespace dawn {
 static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   protoCache->set_accessid(cache.getCachedFieldAccessID());
-  switch(cache.getCacheIOPolicy()) {
-  case iir::Cache::bpfill:
+  switch(cache.getIOPolicy()) {
+  case iir::Cache::IOPolicy::bpfill:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_BPFill);
     break;
-  case iir::Cache::epflush:
+  case iir::Cache::IOPolicy::epflush:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_EPFlush);
     break;
-  case iir::Cache::fill:
+  case iir::Cache::IOPolicy::fill:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Fill);
     break;
-  case iir::Cache::fill_and_flush:
+  case iir::Cache::IOPolicy::fill_and_flush:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_FillFlush);
     break;
-  case iir::Cache::flush:
+  case iir::Cache::IOPolicy::flush:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Flush);
     break;
-  case iir::Cache::local:
+  case iir::Cache::IOPolicy::local:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Local);
     break;
-  case iir::Cache::unknown:
+  case iir::Cache::IOPolicy::unknown:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Unknown);
     break;
   default:
     dawn_unreachable("unknown cache policy");
   }
-  switch(cache.getCacheType()) {
-  case iir::Cache::bypass:
+  switch(cache.getType()) {
+  case iir::Cache::CacheType::bypass:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_Bypass);
     break;
-  case iir::Cache::IJ:
+  case iir::Cache::CacheType::IJ:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_IJ);
     break;
-  case iir::Cache::IJK:
+  case iir::Cache::CacheType::IJK:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_IJK);
     break;
-  case iir::Cache::K:
+  case iir::Cache::CacheType::K:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_K);
     break;
   default:
@@ -86,49 +86,49 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
 }
 
 static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
-  iir::Cache::CacheTypeKind cacheType;
-  iir::Cache::CacheIOPolicy cachePolicy;
+  iir::Cache::CacheType cacheType;
+  iir::Cache::IOPolicy cachePolicy;
   std::optional<iir::Interval> interval;
   std::optional<iir::Interval> enclosingInverval;
   std::optional<iir::Cache::window> cacheWindow;
   int ID = protoCache->accessid();
   switch(protoCache->type()) {
   case proto::iir::Cache_CacheType_CT_Bypass:
-    cacheType = iir::Cache::bypass;
+    cacheType = iir::Cache::CacheType::bypass;
     break;
   case proto::iir::Cache_CacheType_CT_IJ:
-    cacheType = iir::Cache::IJ;
+    cacheType = iir::Cache::CacheType::IJ;
     break;
   case proto::iir::Cache_CacheType_CT_IJK:
-    cacheType = iir::Cache::IJK;
+    cacheType = iir::Cache::CacheType::IJK;
     break;
   case proto::iir::Cache_CacheType_CT_K:
-    cacheType = iir::Cache::K;
+    cacheType = iir::Cache::CacheType::K;
     break;
   default:
     dawn_unreachable("unknow cache type");
   }
   switch(protoCache->policy()) {
   case proto::iir::Cache_CachePolicy_CP_BPFill:
-    cachePolicy = iir::Cache::bpfill;
+    cachePolicy = iir::Cache::IOPolicy::bpfill;
     break;
   case proto::iir::Cache_CachePolicy_CP_EPFlush:
-    cachePolicy = iir::Cache::epflush;
+    cachePolicy = iir::Cache::IOPolicy::epflush;
     break;
   case proto::iir::Cache_CachePolicy_CP_Fill:
-    cachePolicy = iir::Cache::fill;
+    cachePolicy = iir::Cache::IOPolicy::fill;
     break;
   case proto::iir::Cache_CachePolicy_CP_FillFlush:
-    cachePolicy = iir::Cache::fill_and_flush;
+    cachePolicy = iir::Cache::IOPolicy::fill_and_flush;
     break;
   case proto::iir::Cache_CachePolicy_CP_Flush:
-    cachePolicy = iir::Cache::flush;
+    cachePolicy = iir::Cache::IOPolicy::flush;
     break;
   case proto::iir::Cache_CachePolicy_CP_Local:
-    cachePolicy = iir::Cache::local;
+    cachePolicy = iir::Cache::IOPolicy::local;
     break;
   case proto::iir::Cache_CachePolicy_CP_Unknown:
-    cachePolicy = iir::Cache::unknown;
+    cachePolicy = iir::Cache::IOPolicy::unknown;
     break;
   default:
     dawn_unreachable("unknown cache policy");
@@ -261,21 +261,21 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     bool valueIsSet = false;
 
     switch(globalToValue.second->getType()) {
-    case sir::Value::Boolean:
+    case sir::Value::Kind::Boolean:
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
-    case sir::Value::Integer:
+    case sir::Value::Kind::Integer:
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
-    case sir::Value::Double:
+    case sir::Value::Kind::Double:
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
         valueIsSet = true;
@@ -297,23 +297,23 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     // Information other than the children
     protoStencil->set_stencilid(stencils->getStencilID());
     auto protoAttribute = protoStencil->mutable_attr();
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeDoMethods)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeStages)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeStages)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_NoCodeGen)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::NoCodeGen)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
+    if(stencils->getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches);
     }
@@ -323,9 +323,9 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       // creation of a protobuf multistage
       auto protoMSS = protoStencil->add_multistages();
       // Information other than the children
-      if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::LK_Forward) {
+      if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::Forward) {
         protoMSS->set_looporder(proto::iir::MultiStage::Forward);
-      } else if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::LK_Backward) {
+      } else if(multistages->getLoopOrder() == dawn::iir::LoopOrderKind::Backward) {
         protoMSS->set_looporder(proto::iir::MultiStage::Backward);
       } else {
         protoMSS->set_looporder(proto::iir::MultiStage::Parallel);
@@ -375,7 +375,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       auto protoBC = protoIIR->add_boundaryconditions();
       protoBC->set_name(sf->Name);
       for(auto& arg : sf->Args) {
-        DAWN_ASSERT(arg->Kind == sir::StencilFunctionArg::AK_Field);
+        DAWN_ASSERT(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field);
         protoBC->add_args(arg->Name);
       }
 
@@ -388,7 +388,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
 
 std::string
 IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                             dawn::IIRSerializer::SerializationKind kind) {
+                             Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   /////////////////////////////// WITTODO //////////////////////////////////////////////////////////
   //==------------------------------------------------------------------------------------------==//
@@ -433,7 +433,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   // Encode the message
   std::string str;
   switch(kind) {
-  case dawn::IIRSerializer::SK_Json: {
+  case Format::Json: {
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
     options.always_print_primitive_fields = true;
@@ -444,7 +444,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
       throw std::runtime_error(dawn::format("cannot serialize IIR: %s", status.ToString()));
     break;
   }
-  case dawn::IIRSerializer::SK_Byte: {
+  case Format::Byte: {
     if(!protoStencilInstantiation.SerializeToString(&str))
       throw std::runtime_error(dawn::format("cannot serialize IIR:"));
     break;
@@ -559,14 +559,14 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Boolean);
+        value = std::make_shared<sir::Value>(sir::Value::Kind::Boolean);
       } else {
         value = std::make_shared<sir::Value>(GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Integer);
+        value = std::make_shared<sir::Value>(sir::Value::Kind::Integer);
       } else {
         // the explicit cast is needed since in this case GlobalToValue.second.value()
         // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
@@ -575,7 +575,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Double);
+        value = std::make_shared<sir::Value>(sir::Value::Kind::Double);
       } else {
         value = std::make_shared<sir::Value>((double)GlobalToValue.second.value());
       }
@@ -600,23 +600,23 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     for(auto attribute : protoStencils.attr().attributes()) {
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeDoMethods);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeDoMethods);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeStages);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeStages);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeTemporaries);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeTemporaries);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_NoCodeGen);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::AK_UseKCaches);
+        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::UseKCaches);
       }
     }
 
@@ -624,13 +624,13 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       int stagePos = 0;
       iir::LoopOrderKind looporder;
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Backward) {
-        looporder = iir::LoopOrderKind::LK_Backward;
+        looporder = iir::LoopOrderKind::Backward;
       }
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Forward) {
-        looporder = iir::LoopOrderKind::LK_Forward;
+        looporder = iir::LoopOrderKind::Forward;
       }
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Parallel) {
-        looporder = iir::LoopOrderKind::LK_Parallel;
+        looporder = iir::LoopOrderKind::Parallel;
       }
       (IIRStencil)
           ->insertChild(std::make_unique<iir::MultiStage>(target->getMetaData(), looporder));
@@ -675,7 +675,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     for(auto& proto_arg : boundaryCondition.args()) {
       auto new_arg = std::make_shared<sir::StencilFunctionArg>();
       new_arg->Name = proto_arg;
-      new_arg->Kind = sir::StencilFunctionArg::AK_Field;
+      new_arg->Kind = sir::StencilFunctionArg::ArgumentKind::Field;
       stencilFunction->Args.push_back(std::move(new_arg));
     }
     auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(
@@ -687,20 +687,20 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
 }
 
-void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::SerializationKind kind,
+void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind,
                                     std::shared_ptr<iir::StencilInstantiation>& target) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
   switch(kind) {
-  case dawn::IIRSerializer::SK_Json: {
+  case dawn::IIRSerializer::Format::Json: {
     auto status = google::protobuf::util::JsonStringToMessage(str, &protoStencilInstantiation);
     if(!status.ok())
       throw std::runtime_error(
           dawn::format("cannot deserialize StencilInstantiation: %s", status.ToString()));
     break;
   }
-  case dawn::IIRSerializer::SK_Byte: {
+  case dawn::IIRSerializer::Format::Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
       throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
     break;
@@ -715,9 +715,9 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
   computeInitialDerivedInfo(target);
 }
 
-std::shared_ptr<iir::StencilInstantiation>
-IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
-                           IIRSerializer::SerializationKind kind) {
+std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
+                                                                      OptimizerContext* context,
+                                                                      IIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
@@ -732,16 +732,16 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
-                                     IIRSerializer::SerializationKind kind) {
+                                     IIRSerializer::Format kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
       std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
 
-void dawn::IIRSerializer::serialize(const std::string& file,
-                                    const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                                    dawn::IIRSerializer::SerializationKind kind) {
+void IIRSerializer::serialize(const std::string& file,
+                              const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                              dawn::IIRSerializer::Format kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
     throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
@@ -750,9 +750,9 @@ void dawn::IIRSerializer::serialize(const std::string& file,
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
 }
 
-std::string dawn::IIRSerializer::serializeToString(
-    const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    dawn::IIRSerializer::SerializationKind kind) {
+std::string
+IIRSerializer::serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                                 dawn::IIRSerializer::Format kind) {
   return serializeImpl(instantiation, kind);
 }
 

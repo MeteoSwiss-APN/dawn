@@ -31,11 +31,12 @@ int main(int argc, char* argv[]) {
     UIDGenerator::getInstance()->reset();
     auto copy_stencil = createCopyStencilIIRInMemory(optimizer);
     IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil,
-                             IIRSerializer::SK_Json);
+                             IIRSerializer::Format::Json);
   }
   {
     UIDGenerator::getInstance()->reset();
     auto lap_stencil = createLapStencilIIRInMemory(optimizer);
-    IIRSerializer::serialize("reference_iir/lap_stencil.iir", lap_stencil, IIRSerializer::SK_Json);
+    IIRSerializer::serialize("reference_iir/lap_stencil.iir", lap_stencil,
+                             IIRSerializer::Format::Json);
   }
 }

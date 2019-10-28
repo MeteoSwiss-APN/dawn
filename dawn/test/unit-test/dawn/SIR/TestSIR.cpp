@@ -235,30 +235,30 @@ TEST(SIRIntervalTest, Comparison) {
 TEST(SIRValueTest, Construction) {
   // sir::Value empty;
   // EXPECT_TRUE(empty.empty());
-  // EXPECT_EQ(empty.getType(), sir::Value::None);
+  // EXPECT_EQ(empty.getType(), sir::Value::Kind::None);
 
   // Test Boolean
   sir::Value valueBoolean(bool(true));
   // valueBoolean.setValue(bool(true));
-  EXPECT_EQ(valueBoolean.getType(), sir::Value::Boolean);
+  EXPECT_EQ(valueBoolean.getType(), sir::Value::Kind::Boolean);
   EXPECT_EQ(valueBoolean.getValue<bool>(), true);
 
   // Test Integer
   sir::Value valueInteger(int(5));
   // valueInteger.setValue();
-  EXPECT_EQ(valueInteger.getType(), sir::Value::Integer);
+  EXPECT_EQ(valueInteger.getType(), sir::Value::Kind::Integer);
   EXPECT_EQ(valueInteger.getValue<int>(), 5);
 
   // Test Double
   sir::Value valueDouble(double(5.0));
   // valueDouble.setValue();
-  EXPECT_EQ(valueDouble.getType(), sir::Value::Double);
+  EXPECT_EQ(valueDouble.getType(), sir::Value::Kind::Double);
   EXPECT_EQ(valueDouble.getValue<double>(), 5.0);
 
   // Test String
   sir::Value valueString(std::string("string"));
   // valueString.setValue(std::string("string"));
-  EXPECT_EQ(valueString.getType(), sir::Value::String);
+  EXPECT_EQ(valueString.getType(), sir::Value::Kind::String);
   EXPECT_EQ(valueString.getValue<std::string>(), "string");
 }
 

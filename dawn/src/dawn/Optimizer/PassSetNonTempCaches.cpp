@@ -95,7 +95,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID()))
+        if(metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
@@ -132,14 +132,15 @@ private:
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
+      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary,
                                                "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage
       renameAccessIDInMultiStage(multiStagePrt_.get(), oldID, newID);
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
-      iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
+      iir::Cache& cache =
+          multiStagePrt_->setCache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::local, newID);
       originalNameToCache_.emplace_back(
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
                                   accessIDToDataLocality_.find(oldID)->second});
@@ -309,8 +310,8 @@ bool dawn::PassSetNonTempCaches::run(
       std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
       for(const auto& nametoCache : allCachedFields) {
         std::cout << " Cached: " << nametoCache.name
-                  << " : Type: " << nametoCache.cache.getCacheTypeAsString() << ":"
-                  << nametoCache.cache.getCacheIOPolicyAsString();
+                  << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
+                  << nametoCache.cache.getIOPolicyAsString();
       }
       if(allCachedFields.size() == 0) {
         std::cout << " no fields cached";

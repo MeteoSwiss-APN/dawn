@@ -42,9 +42,9 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
 void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
-    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+    if(cache.getType() != iir::Cache::CacheType::IJ)
       continue;
-    DAWN_ASSERT(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local);
+    DAWN_ASSERT(cache.getIOPolicy() == iir::Cache::IOPolicy::local);
 
     const int accessID = cache.getCachedFieldAccessID();
     const auto& maxExtents = cacheProperties_.getCacheExtent(accessID);
@@ -62,10 +62,10 @@ void MSCodeGen::generateKCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
 
-    if(cache.getCacheType() != iir::Cache::CacheTypeKind::K)
+    if(cache.getType() != iir::Cache::CacheType::K)
       continue;
 
-    if(cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local && solveKLoopInParallel_)
+    if(cache.getIOPolicy() != iir::Cache::IOPolicy::local && solveKLoopInParallel_)
       continue;
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = ms_->getKCacheVertExtent(accessID);
@@ -82,7 +82,7 @@ int MSCodeGen::paddedBoundary(int value) {
 void MSCodeGen::generateIJCacheIndexInit(MemberFunction& kernel) const {
   if(cacheProperties_.isThereACommonCache()) {
     kernel.addStatement(
-        "int " + cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
+        "int " + cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheType::IJ) +
         "= iblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(0)) +
         " + (jblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(1)) + ")*" +
         std::to_string(cacheProperties_.getStrideCommonCache(1, blockSize_)));
@@ -93,7 +93,7 @@ iir::Interval::IntervalLevel
 MSCodeGen::computeNextLevelToProcess(const iir::Interval& interval,
                                      iir::LoopOrderKind loopOrder) const {
   iir::Interval::IntervalLevel intervalLevel;
-  if(loopOrder == iir::LoopOrderKind::LK_Backward) {
+  if(loopOrder == iir::LoopOrderKind::Backward) {
     intervalLevel = interval.upperIntervalLevel();
   } else {
     intervalLevel = interval.lowerIntervalLevel();
@@ -219,7 +219,7 @@ void MSCodeGen::generatePreFillKCaches(
     // levels of the kcache that will be accessed but are not filled (they will have to be
     // prefilled) at the beginning of the processing of the interval
     auto outOfRangeAccessedInterval =
-        (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+        (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
             ? interval.crop(iir::Interval::Bound::upper,
                             // the last level of Minus if not required since will be filled by the
                             // head fill method
@@ -245,7 +245,7 @@ void MSCodeGen::generatePreFillKCaches(
       iir::Interval preFillInterval(firstInterval.lowerLevel(), lastInterval.upperLevel(),
                                     firstInterval.lowerOffset(), lastInterval.upperOffset());
 
-      auto preFillMarkLevel = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+      auto preFillMarkLevel = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                                   ? interval.upperIntervalLevel()
                                   : interval.lowerIntervalLevel();
 
@@ -270,7 +270,7 @@ void MSCodeGen::generatePreFillKCaches(
             " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent.jPlus()) + ")",
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
-            if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+            if(ms_->getLoopOrder() == iir::LoopOrderKind::Backward) {
               // the last level is skipped since it will be filled in a normal kcache fill
               // method
               for(int klev = kcacheProp.intervalVertExtent_.minus();
@@ -318,12 +318,12 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
 
     auto intervalVertExtent = extents->verticalExtent();
 
-    iir::Interval::Bound intervalBound = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+    iir::Interval::Bound intervalBound = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                                              ? iir::Interval::Bound::lower
                                              : iir::Interval::Bound::upper;
 
     const bool cacheEndWithinInterval =
-        (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+        (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
             ? interval.bound(intervalBound) >= cacheInterval.bound(intervalBound)
             : interval.bound(intervalBound) <= cacheInterval.bound(intervalBound);
 
@@ -350,7 +350,7 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
 
-            int offset = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            int offset = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                              ? kcacheProp.intervalVertExtent_.minus()
                              : kcacheProp.intervalVertExtent_.plus();
             std::stringstream ss;
@@ -378,7 +378,7 @@ std::string MSCodeGen::makeKLoop(const std::string dom, iir::Interval const& int
     lower = "kleg_lower_bound";
     upper = "kleg_upper_bound";
   }
-  return (loopOrder == iir::LoopOrderKind::LK_Backward)
+  return (loopOrder == iir::LoopOrderKind::Backward)
              ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
              : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
@@ -417,7 +417,7 @@ bool MSCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::S
     // If any IJ cache is used after the last synchronized stage,
     // we will need to sync again after the last stage of the vertical loop
     for(const auto& cache : ms_->getCaches()) {
-      if(cache.second.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+      if(cache.second.getType() != iir::Cache::CacheType::IJ)
         continue;
 
       if(fields.count(cache.first)) {
@@ -432,10 +432,10 @@ bool MSCodeGen::checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval 
   DAWN_ASSERT(cache.getInterval());
 
   const iir::Interval& cacheInterval = *(cache.getInterval());
-  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
+  if(cache.getIOPolicy() == iir::Cache::IOPolicy::epflush) {
     auto epflushWindowInterval = cache.getWindowInterval(
-        (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Forward) ? iir::Interval::Bound::upper
-                                                                : iir::Interval::Bound::lower);
+        (ms_->getLoopOrder() == iir::LoopOrderKind::Forward) ? iir::Interval::Bound::upper
+                                                             : iir::Interval::Bound::lower);
     return epflushWindowInterval.overlaps(interval);
   } else {
     return cacheInterval.contains(interval);
@@ -444,7 +444,7 @@ bool MSCodeGen::checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval 
 
 std::unordered_map<iir::Extents, std::vector<MSCodeGen::KCacheProperties>>
 MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
-                                 const iir::Cache::CacheIOPolicy policy) const {
+                                 const iir::Cache::IOPolicy policy) const {
 
   std::unordered_map<iir::Extents, std::vector<KCacheProperties>> kCacheProperty;
   auto intervalFields = ms_->computeFieldsAtInterval(interval);
@@ -453,10 +453,10 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
     const int accessID = IDCachePair.first;
     const auto& cache = IDCachePair.second;
 
-    if(policy != cache.getCacheIOPolicy()) {
+    if(policy != cache.getIOPolicy()) {
       continue;
     }
-    DAWN_ASSERT(policy != iir::Cache::CacheIOPolicy::local);
+    DAWN_ASSERT(policy != iir::Cache::IOPolicy::local);
     DAWN_ASSERT(cache.getInterval());
     auto extents = ms_->computeExtents(accessID, interval);
     if(!extents) {
@@ -495,7 +495,7 @@ std::string MSCodeGen::kBegin(const std::string dom, iir::LoopOrderKind loopOrde
   std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return (loopOrder == iir::LoopOrderKind::LK_Backward) ? upper : lower;
+  return (loopOrder == iir::LoopOrderKind::Backward) ? upper : lower;
 }
 
 void MSCodeGen::generateKCacheFlushBlockStatement(
@@ -507,7 +507,7 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
   const auto& cache = ms_->getCache(accessID);
   const auto& cacheInterval = *(cache.getInterval());
 
-  int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+  int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                              ? kcacheProp.intervalVertExtent_.plus()
                              : kcacheProp.intervalVertExtent_.minus();
 
@@ -525,7 +525,7 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
     std::stringstream pred;
     std::string intervalKBegin = kBegin("dom", ms_->getLoopOrder(), cacheInterval);
 
-    if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+    if(ms_->getLoopOrder() == iir::LoopOrderKind::Backward) {
       pred << "if( " + intervalKBegin + " - " + currentKLevel +
                   " >= " + std::to_string(std::abs(kcacheTailExtent)) + ")";
     } else {
@@ -541,7 +541,7 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
 
 void MSCodeGen::generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
                                      const std::unordered_map<int, Array3i>& fieldIndexMap,
-                                     iir::Cache::CacheIOPolicy policy) const {
+                                     iir::Cache::IOPolicy policy) const {
   cudaKernel.addComment("Flush of kcaches");
 
   auto kCacheProperty = buildKCacheProperties(interval, policy);
@@ -559,7 +559,7 @@ void MSCodeGen::generateFlushKCaches(MemberFunction& cudaKernel, const iir::Inte
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
             // we flush the last level of the cache, that is determined by its size
-            int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                                        ? kcacheProp.intervalVertExtent_.plus()
                                        : kcacheProp.intervalVertExtent_.minus();
 
@@ -588,7 +588,7 @@ void MSCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
     auto cacheName = cacheProperties_.getCacheName(accessID);
 
     for(int i = 0; i < -vertExtent.minus() + vertExtent.plus(); ++i) {
-      if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+      if(ms_->getLoopOrder() == iir::LoopOrderKind::Backward) {
         int maxCacheIdx = -vertExtent.minus() + vertExtent.plus();
         cudaKernel.addStatement(cacheName + "[" + std::to_string(maxCacheIdx - i) + "] = " +
                                 cacheName + "[" + std::to_string(maxCacheIdx - i - 1) + "]");
@@ -602,12 +602,12 @@ void MSCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
 
 void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
                                           const std::unordered_map<int, Array3i>& fieldIndexMap,
-                                          const iir::Cache::CacheIOPolicy policy) const {
+                                          const iir::Cache::IOPolicy policy) const {
   cudaKernel.addComment("Final flush of kcaches");
 
-  DAWN_ASSERT((policy == iir::Cache::CacheIOPolicy::epflush) ||
-              (policy == iir::Cache::CacheIOPolicy::flush) ||
-              (policy == iir::Cache::CacheIOPolicy::fill_and_flush));
+  DAWN_ASSERT((policy == iir::Cache::IOPolicy::epflush) ||
+              (policy == iir::Cache::IOPolicy::flush) ||
+              (policy == iir::Cache::IOPolicy::fill_and_flush));
   auto kCacheProperty = buildKCacheProperties(interval, policy);
 
   for(const auto& kcachePropPair : kCacheProperty) {
@@ -627,16 +627,16 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
             DAWN_ASSERT((cache.getInterval()));
 
             int kcacheTailExtent;
-            if((policy == iir::Cache::CacheIOPolicy::flush) ||
-               (policy == iir::Cache::CacheIOPolicy::fill_and_flush)) {
-              kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            if((policy == iir::Cache::IOPolicy::flush) ||
+               (policy == iir::Cache::IOPolicy::fill_and_flush)) {
+              kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                                      ? kcacheProp.intervalVertExtent_.plus()
                                      : kcacheProp.intervalVertExtent_.minus();
-            } else if(policy == iir::Cache::CacheIOPolicy::epflush) {
+            } else if(policy == iir::Cache::IOPolicy::epflush) {
               DAWN_ASSERT(cache.getWindow());
               auto intervalToFlush =
                   cache
-                      .getWindowInterval((ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                      .getWindowInterval((ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                                              ? iir::Interval::Bound::lower
                                              : iir::Interval::Bound::upper)
                       .intersect(interval);
@@ -645,7 +645,7 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
                                1;
               DAWN_ASSERT(distance_.rangeType_ == iir::IntervalDiff::RangeType::literal);
 
-              kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+              kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                                      ? distance_.value
                                      : -distance_.value;
             } else {
@@ -689,8 +689,7 @@ void MSCodeGen::generateCudaKernelCode() {
   const auto fields = support::orderMap(ms_->getFields());
 
   auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-    return !metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                   p.second.getAccessID());
+    return !metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
   });
   // all the temp fields that are non local cache, and therefore will require the infrastructure
   // of
@@ -1046,14 +1045,14 @@ void MSCodeGen::generateCudaKernelCode() {
       }
 
       if(!solveKLoopInParallel_) {
-        generateFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::CacheIOPolicy::flush);
+        generateFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::IOPolicy::flush);
         generateFlushKCaches(cudaKernel, interval, fieldIndexMap,
-                             iir::Cache::CacheIOPolicy::fill_and_flush);
+                             iir::Cache::IOPolicy::fill_and_flush);
       }
 
       generateKCacheSlide(cudaKernel, interval);
       cudaKernel.addComment("increment iterators");
-      std::string incStr = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";
+      std::string incStr = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward) ? "-=" : "+=";
 
       for(auto index : indexIterators) {
         if(index.second[2]) {
@@ -1067,14 +1066,12 @@ void MSCodeGen::generateCudaKernelCode() {
     });
     if(!solveKLoopInParallel_) {
       generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
-                                iir::Cache::CacheIOPolicy::fill_and_flush);
-      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
-                                iir::Cache::CacheIOPolicy::flush);
-      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
-                                iir::Cache::CacheIOPolicy::epflush);
+                                iir::Cache::IOPolicy::fill_and_flush);
+      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::IOPolicy::flush);
+      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::IOPolicy::epflush);
     }
 
-    lastKCell = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+    lastKCell = (ms_->getLoopOrder() == iir::LoopOrderKind::Backward)
                     ? interval.lowerIntervalLevel()
                     : interval.upperIntervalLevel();
     firstInterval = false;
