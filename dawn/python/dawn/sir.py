@@ -547,7 +547,7 @@ def make_field_access_expr(name: str, offset = None,
     :param argument_offset: Offset to the directional and offset arguments.
     :param negate_offset:   Negate the offset in the end.
     """
-    assert(offset is None or isinstance(offset, list))
+    assert offset is None or isinstance(offset, list)
 
     expr = FieldAccessExpr()
     expr.name = name
@@ -555,7 +555,7 @@ def make_field_access_expr(name: str, offset = None,
         expr.zero_offset.SetInParent()
 
     elif len(offset) == 3:
-        assert(all(isinstance(x, int) for x in offset))
+        assert all(isinstance(x, int) for x in offset)
 
         expr.cartesian_offset.i_offset = offset[0]
         expr.cartesian_offset.j_offset = offset[1]
@@ -563,8 +563,11 @@ def make_field_access_expr(name: str, offset = None,
         expr.vertical_offset = offset[2]
 
     elif len(offset) == 2:
-        assert(isinstance(offset[0], bool))
-        assert(isinstance(offset[1], int))
+        assert isinstance(offset[0], bool)
+        assert isinstance(offset[1], int)
+        assert argument_map == [-1, -1, -1]
+        assert argument_offset == [0, 0, 0]
+        assert negate_offset == False
 
         expr.unstructured_offset.has_offset = offset[0]
         expr.vertical_offset = offset[1]
