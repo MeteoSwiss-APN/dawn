@@ -43,12 +43,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
                                   ->getChildren()
                                   .at(lifetime.Begin.DoMethodIndex)
                                   ->getAST();
-  //  const std::vector<std::shared_ptr<iir::Stmt>>& stmts =
-  //  stencil->getStage(lifetime.Begin.StagePos)
-  //                                                             ->getChildren()
-  //                                                             .at(lifetime.Begin.DoMethodIndex)
-  //                                                             ->getAST()
-  //                                                             .getStatements();
+
   const std::shared_ptr<iir::Stmt> oldStatement =
       blockStmt.getStatements()[lifetime.Begin.StatementIndex];
 

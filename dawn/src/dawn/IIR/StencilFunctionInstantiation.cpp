@@ -657,7 +657,7 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
   // check that the list of <statement,access> are set for all statements
   DAWN_ASSERT_MSG(
       (getAST()->getRoot()->getStatements().size() == doMethod_->getAST().getStatements().size()),
-      "AST has different number of statements as the statement accesses pairs");
+      "AST has different number of statements with respect to DoMethod's AST");
 }
 
 } // namespace iir
