@@ -21,7 +21,7 @@
 #include "clang/Basic/Version.h"
 
 namespace gtclang::clang_compat::FileUtil {
-#if CLANG_VERSION_MAJOR <= 9
+#if CLANG_VERSION_MAJOR < 10
 inline const clang::FileEntry* getFile(clang::FileManager& files, ::llvm::StringRef filename) {
   return files.getFile(filename);
 }
