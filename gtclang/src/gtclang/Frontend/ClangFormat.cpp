@@ -68,12 +68,10 @@ std::string ClangFormat::format(const std::string& code) {
   clang::tooling::Replacements replacements =
       clang::format::reformat(style, codeBuffer->getBuffer(), ranges, "X.cpp", &incompleteFormat);
 
-  std::string changedCode =
-      clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements).get();
+  auto result = clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements);
+  DAWN_LOG(INFO) << "Done reformatting stencil code: " << (result.takeError() ? "FAIL" : "Success");
 
-  DAWN_LOG(INFO) << "Done reformatting stencil code: "
-                 << (changedCode.empty() ? "FAIL" : "Success");
-  return changedCode.empty() ? code : changedCode;
+  return result.takeError() ? code : result.get();
 }
 
 } // namespace gtclang
