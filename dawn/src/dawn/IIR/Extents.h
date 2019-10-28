@@ -225,8 +225,6 @@ public:
   void limit(HorizontalExtent const& other) {
     if(impl_ && other.impl_)
       impl_->limit(*other.impl_);
-    else if(other.impl_)
-      *this = other;
   }
 
 private:
