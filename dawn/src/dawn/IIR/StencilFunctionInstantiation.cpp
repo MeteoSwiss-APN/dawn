@@ -580,7 +580,7 @@ void StencilFunctionInstantiation::dump() const {
       } else {
         int callerAccessID = getCallerAccessIDOfArgField(argIdx);
         std::cout << metadata_.getFieldNameFromAccessID(callerAccessID) << "  "
-                  << getCallerInitialOffsetFromAccessID(callerAccessID);
+                  << to_string(getCallerInitialOffsetFromAccessID(callerAccessID));
       }
 
     } else {

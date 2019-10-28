@@ -161,7 +161,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
               currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
           ss_ << ", "
               << "pw_" + accessName << ".cloneWithOffset(std::array<int, 3>{"
-              << toString(ast::cartesian, offset) << "})";
+              << to_string(ast::cartesian, offset) << "})";
         }
       }
       ss_ << ")";

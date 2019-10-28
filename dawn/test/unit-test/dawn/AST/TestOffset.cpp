@@ -191,29 +191,29 @@ TEST(OffsetsTest, verticalOffset) {
   EXPECT_EQ(Offsets(unstructured, true, 3).verticalOffset(), 3);
 }
 
-TEST(OffsetsTest, toString) {
-  // default toString
-  EXPECT_EQ(toString(Offsets(cartesian)), "<no_horizontal_offset>, 0");
-  EXPECT_EQ(toString(Offsets(cartesian, 0, 0, 0)), "<no_horizontal_offset>, 0");
-  EXPECT_EQ(toString(Offsets(cartesian, 0, 0, 1)), "<no_horizontal_offset>, 1");
-  EXPECT_EQ(toString(Offsets(cartesian, 1, 0, 1)), "1, 0, 1");
+TEST(OffsetsTest, to_string) {
+  // default to_string
+  EXPECT_EQ(to_string(Offsets(cartesian)), "<no_horizontal_offset>, 0");
+  EXPECT_EQ(to_string(Offsets(cartesian, 0, 0, 0)), "<no_horizontal_offset>, 0");
+  EXPECT_EQ(to_string(Offsets(cartesian, 0, 0, 1)), "<no_horizontal_offset>, 1");
+  EXPECT_EQ(to_string(Offsets(cartesian, 1, 0, 1)), "1, 0, 1");
 
-  EXPECT_EQ(toString(Offsets(unstructured, false, 4)), "<no_horizontal_offset>, 4");
-  EXPECT_EQ(toString(Offsets(unstructured, true, 2)), "<has_horizontal_offset>, 2");
+  EXPECT_EQ(to_string(Offsets(unstructured, false, 4)), "<no_horizontal_offset>, 4");
+  EXPECT_EQ(to_string(Offsets(unstructured, true, 2)), "<has_horizontal_offset>, 2");
 
-  EXPECT_EQ(toString(Offsets()), "<no_horizontal_offset>, 0");
+  EXPECT_EQ(to_string(Offsets()), "<no_horizontal_offset>, 0");
 
-  // toString with grid type
-  EXPECT_EQ(toString(cartesian, Offsets()), "0, 0, 0");
-  EXPECT_EQ(toString(cartesian, Offsets(cartesian, 1, 2, 3)), "1, 2, 3");
-  EXPECT_EQ(toString(cartesian, Offsets(cartesian, 1, 2, 3), ";"), "1;2;3");
+  // to_string with grid type
+  EXPECT_EQ(to_string(cartesian, Offsets()), "0, 0, 0");
+  EXPECT_EQ(to_string(cartesian, Offsets(cartesian, 1, 2, 3)), "1, 2, 3");
+  EXPECT_EQ(to_string(cartesian, Offsets(cartesian, 1, 2, 3), ";"), "1;2;3");
   auto toString1 = [](std::string const& n, int i) { return ""; };
-  EXPECT_EQ(toString(cartesian, Offsets(cartesian, 0, 2, 3), ";", toString1), "");
+  EXPECT_EQ(to_string(cartesian, Offsets(cartesian, 0, 2, 3), ";", toString1), "");
   auto toString2 = [](std::string const& n, int i) { return i > 0 ? n : ""; };
-  EXPECT_EQ(toString(cartesian, Offsets(cartesian, 0, 2, 3), ";", toString2), "j;k");
+  EXPECT_EQ(to_string(cartesian, Offsets(cartesian, 0, 2, 3), ";", toString2), "j;k");
 
-  EXPECT_EQ(toString(unstructured, Offsets()), "<no_horizontal_offset>, 0");
-  EXPECT_EQ(toString(unstructured, Offsets(unstructured, false, 4)), "<no_horizontal_offset>, 4");
+  EXPECT_EQ(to_string(unstructured, Offsets()), "<no_horizontal_offset>, 0");
+  EXPECT_EQ(to_string(unstructured, Offsets(unstructured, false, 4)), "<no_horizontal_offset>, 4");
 }
 
 } // namespace

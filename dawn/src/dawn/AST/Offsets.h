@@ -20,6 +20,9 @@
 #include <memory>
 #include <vector>
 
+namespace dawn::iir {
+class HorizontalExtent;
+}
 namespace dawn::ast {
 
 class Offsets;
@@ -141,9 +144,8 @@ public:
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
-  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
-  friend auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
-                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
+  friend std::string to_string(Offsets const& offset);
+  friend class iir::HorizontalExtent;
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
@@ -195,15 +197,13 @@ private:
 };
 Offsets operator+(Offsets o1, Offsets const& o2);
 
-std::string toString(unstructured_, Offsets const& offset);
-
 /**
  * For each component of :offset, calls `offset_to_string(name_of_offset, offset_value)`.
  * Concatenates all non-zero stringified offsets using :sep as a delimiter.
  */
 template <typename F>
-std::string toString(cartesian_, Offsets const& offset, std::string const& sep,
-                     F const& offset_to_string) {
+std::string to_string(cartesian_, Offsets const& offset, std::string const& sep,
+                      F const& offset_to_string) {
   auto const& hoffset = offset_cast<CartesianOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
   std::string s;
@@ -220,24 +220,11 @@ std::string toString(cartesian_, Offsets const& offset, std::string const& sep,
     s += csep + ret;
   return s;
 }
-std::string toString(cartesian_, Offsets const& offset, std::string const& sep = ", ");
-std::string toString(Offsets const& offset);
+std::string to_string(cartesian_, Offsets const& offset, std::string const& sep = ",");
 
-template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
-auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
-                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
-  if(hOffset.isZero())
-    return zeroFn();
+std::string to_string(unstructured_, Offsets const& offset);
 
-  HorizontalOffsetImpl* ptr = hOffset.impl_.get();
-  if(auto cartesianOffset = dynamic_cast<CartesianOffset const*>(ptr)) {
-    return cartFn(*cartesianOffset);
-  } else if(auto unstructuredOffset = dynamic_cast<UnstructuredOffset const*>(ptr)) {
-    return unstructuredFn(*unstructuredOffset);
-  } else {
-    dawn_unreachable("unknown offset class");
-  }
-}
+std::string to_string(Offsets const& offset);
 
 } // namespace dawn::ast
 #endif

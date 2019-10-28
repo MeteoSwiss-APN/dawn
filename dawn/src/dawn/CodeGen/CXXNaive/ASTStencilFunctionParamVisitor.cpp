@@ -59,7 +59,7 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAcces
                        : getName(expr);
 
   ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
-      << "std::array<int, 3>{" << toString(ast::cartesian, expr->getOffset())
+      << "std::array<int, 3>{" << to_string(ast::cartesian, expr->getOffset())
       << "}+" + fieldName + "_offsets)";
 }
 

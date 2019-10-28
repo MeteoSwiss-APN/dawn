@@ -141,7 +141,7 @@ std::string makeOnTheFlyFunctionName(const std::shared_ptr<iir::FieldAccessExpr>
                                      const iir::Interval& interval) {
   // TODO: Does not support unstructured grids right now
   return makeOnTheFlyFunctionCandidateName(expr, interval) + "_" +
-         toString(ast::cartesian, expr->getOffset(), "_", [](std::string const& name, int offset) {
+         to_string(ast::cartesian, expr->getOffset(), "_", [](std::string const& name, int offset) {
            return name + "_" + ((offset < 0) ? "minus" : "") + std::to_string(std::abs(offset));
          });
 }

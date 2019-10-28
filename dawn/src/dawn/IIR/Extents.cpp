@@ -170,23 +170,29 @@ bool Extents::operator==(const Extents& other) const {
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
 std::string to_string(const Extents& extent) {
-  auto const& vExtents = extent.verticalExtent();
-
   using namespace std::string_literals;
-  return "["s +
-         extent_dispatch(extent.horizontalExtent(),
-                         [&](CartesianExtent const& hExtents) {
-                           return "("s + std::to_string(hExtents.iMinus()) + ", " +
-                                  std::to_string(hExtents.iPlus()) + "), (" +
-                                  std::to_string(hExtents.jMinus()) + ", " +
-                                  std::to_string(hExtents.jPlus()) + ")";
-                         },
-                         [&](UnstructuredExtent const& hExtents) {
-                           return hExtents.hasExtent() ? "<has_horizontal_extent>"s
-                                                       : "<no_horizontal_extent>"s;
-                         },
-                         [&]() { return "<no_horizontal_extent>"s; }) +
-         ", (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
+  std::string hExtentString;
+  auto const& hExtent = extent.horizontalExtent();
+  HorizontalExtentImpl* ptr = hExtent.impl_.get();
+
+  if(hExtent.isPointwise()) {
+    hExtentString = "<no_horizontal_extent>"s;
+
+  } else if(auto cExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
+    hExtentString = "("s + std::to_string(cExtent->iMinus()) + "," +
+                    std::to_string(cExtent->iPlus()) + "),(" + std::to_string(cExtent->jMinus()) +
+                    "," + std::to_string(cExtent->jPlus()) + ")";
+
+  } else if(auto uExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
+    hExtentString = uExtent->hasExtent() ? "<has_horizontal_extent>"s : "<no_horizontal_extent>"s;
+
+  } else {
+    dawn_unreachable("unknown extent class");
+  }
+
+  auto const& vExtents = extent.verticalExtent();
+  return "["s + hExtentString + ",(" + std::to_string(vExtents.minus()) + "," +
+         std::to_string(vExtents.plus()) + ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {

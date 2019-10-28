@@ -21,29 +21,34 @@
 
 namespace dawn::ast {
 
-std::string toString(unstructured_, Offsets const& offset) {
+std::string to_string(unstructured_, Offsets const& offset) {
   auto const& hoffset = offset_cast<UnstructuredOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
 
   using namespace std::string_literals;
-  return (hoffset.hasOffset() ? "<has_horizontal_offset>"s : "<no_horizontal_offset>"s) + ", " +
+  return (hoffset.hasOffset() ? "<has_horizontal_offset>"s : "<no_horizontal_offset>"s) + "," +
          std::to_string(voffset);
 }
 
-std::string toString(cartesian_, Offsets const& offsets, std::string const& sep) {
-  return toString(cartesian, offsets, sep,
-                  [](std::string const&, int offset) { return std::to_string(offset); });
+std::string to_string(cartesian_, Offsets const& offsets, std::string const& sep) {
+  return to_string(cartesian, offsets, sep,
+                   [](std::string const&, int offset) { return std::to_string(offset); });
 }
 
-std::string toString(Offsets const& offset) {
-  return offset_dispatch(offset.horizontalOffset(),
-                         [&](CartesianOffset const&) { return toString(cartesian, offset); },
-                         [&](UnstructuredOffset const&) { return toString(unstructured, offset); },
-                         [&]() {
-                           using namespace std::string_literals;
-                           return "<no_horizontal_offset>, "s +
-                                  std::to_string(offset.verticalOffset());
-                         });
+std::string to_string(Offsets const& offset) {
+  using namespace std::string_literals;
+  auto const& hOffset = offset.horizontalOffset();
+  if(hOffset.isZero())
+    return "<no_horizontal_offset>,"s + std::to_string(offset.verticalOffset());
+
+  HorizontalOffsetImpl* ptr = hOffset.impl_.get();
+  if(dynamic_cast<CartesianOffset const*>(ptr)) {
+    return to_string(cartesian, offset);
+  } else if(dynamic_cast<UnstructuredOffset const*>(ptr)) {
+    return to_string(unstructured, offset);
+  } else {
+    dawn_unreachable("unknown offset class");
+  }
 }
 
 bool CartesianOffset::equalsImpl(HorizontalOffsetImpl const& other) const {

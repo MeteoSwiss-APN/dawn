@@ -232,7 +232,7 @@ public:
     auto offset = expr->getOffset();
 
     if(!expr->hasArguments()) {
-      ss_ << expr->getName() << "[" << ast::toString(offset) << "]";
+      ss_ << expr->getName() << "[" << ast::to_string(offset) << "]";
     } else {
       auto hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
 
