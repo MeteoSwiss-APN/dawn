@@ -193,6 +193,7 @@ private:
   HorizontalOffset horizontalOffset_;
   int verticalOffset_ = 0;
 };
+Offsets operator+(Offsets o1, Offsets const& o2);
 
 std::string toString(unstructured_, Offsets const& offset);
 

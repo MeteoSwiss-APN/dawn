@@ -41,7 +41,7 @@ class Extent {
 public:
   /// @name Constructors and Assignment
   /// @{
-  Extent(int minus, int plus) : minus_(minus), plus_(plus) {}
+  Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(minus <= plus); }
   explicit Extent(int offset) : Extent(offset, offset) {}
   Extent() : Extent(0, 0) {}
   /// @}
