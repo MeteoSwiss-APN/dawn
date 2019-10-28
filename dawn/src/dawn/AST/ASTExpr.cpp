@@ -28,10 +28,10 @@ namespace ast {
 
 UnaryOperator::UnaryOperator(const std::shared_ptr<Expr>& operand, std::string op,
                              SourceLocation loc)
-    : Expr(EK_UnaryOperator, loc), operand_(operand), op_(std::move(op)) {}
+    : Expr(Kind::UnaryOperator, loc), operand_(operand), op_(std::move(op)) {}
 
 UnaryOperator::UnaryOperator(const UnaryOperator& expr)
-    : Expr(EK_UnaryOperator, expr.getSourceLocation()), operand_(expr.getOperand()->clone()),
+    : Expr(Kind::UnaryOperator, expr.getSourceLocation()), operand_(expr.getOperand()->clone()),
       op_(expr.getOp()) {}
 
 UnaryOperator& UnaryOperator::operator=(UnaryOperator expr) {
@@ -65,17 +65,17 @@ void UnaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
 
 BinaryOperator::BinaryOperator(const std::shared_ptr<Expr>& left, std::string op,
                                const std::shared_ptr<Expr>& right, SourceLocation loc)
-    : Expr(EK_BinaryOperator, loc), operands_{left, right}, op_(std::move(op)) {}
+    : Expr(Kind::BinaryOperator, loc), operands_{left, right}, op_(std::move(op)) {}
 
 BinaryOperator::BinaryOperator(const BinaryOperator& expr)
-    : Expr(EK_BinaryOperator, expr.getSourceLocation()), operands_{expr.getLeft()->clone(),
-                                                                   expr.getRight()->clone()},
+    : Expr(Kind::BinaryOperator, expr.getSourceLocation()), operands_{expr.getLeft()->clone(),
+                                                                      expr.getRight()->clone()},
       op_(expr.getOp()) {}
 
 BinaryOperator& BinaryOperator::operator=(BinaryOperator expr) {
   assign(expr);
-  operands_[OK_Left] = expr.getLeft();
-  operands_[OK_Right] = expr.getRight();
+  operands_[Left] = expr.getLeft();
+  operands_[Right] = expr.getRight();
   op_ = expr.getOp();
   return *this;
 }
@@ -89,8 +89,8 @@ std::shared_ptr<Expr> BinaryOperator::clone() const {
 bool BinaryOperator::equals(const Expr* other) const {
   const BinaryOperator* otherPtr = dyn_cast<BinaryOperator>(other);
   return otherPtr && Expr::equals(other) &&
-         operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
-         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
+         operands_[Left]->equals(otherPtr->operands_[Left].get()) &&
+         operands_[Right]->equals(otherPtr->operands_[Right].get()) && op_ == otherPtr->op_;
 }
 
 void BinaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -107,19 +107,19 @@ AssignmentExpr::AssignmentExpr(const std::shared_ptr<Expr>& left,
                                const std::shared_ptr<Expr>& right, std::string op,
                                SourceLocation loc)
     : BinaryOperator(left, std::move(op), right, loc) {
-  kind_ = EK_AssignmentExpr;
+  kind_ = Kind::AssignmentExpr;
 }
 
 AssignmentExpr::AssignmentExpr(const AssignmentExpr& expr)
     : BinaryOperator(expr.getLeft()->clone(), expr.getOp(), expr.getRight()->clone(),
                      expr.getSourceLocation()) {
-  kind_ = EK_AssignmentExpr;
+  kind_ = Kind::AssignmentExpr;
 }
 
 AssignmentExpr& AssignmentExpr::operator=(AssignmentExpr expr) {
   assign(expr);
-  operands_[OK_Left] = expr.getLeft();
-  operands_[OK_Right] = expr.getRight();
+  operands_[Left] = expr.getLeft();
+  operands_[Right] = expr.getRight();
   op_ = expr.getOp();
   return *this;
 }
@@ -133,18 +133,18 @@ std::shared_ptr<Expr> AssignmentExpr::clone() const {
 bool AssignmentExpr::equals(const Expr* other) const {
   const AssignmentExpr* otherPtr = dyn_cast<AssignmentExpr>(other);
   return otherPtr && Expr::equals(other) &&
-         operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
-         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
+         operands_[Left]->equals(otherPtr->operands_[Left].get()) &&
+         operands_[Right]->equals(otherPtr->operands_[Right].get()) && op_ == otherPtr->op_;
 }
 
 //===------------------------------------------------------------------------------------------===//
 //     NOPExpr
 //===------------------------------------------------------------------------------------------===//
 
-NOPExpr::NOPExpr(SourceLocation loc) : Expr(EK_NOPExpr, loc) { kind_ = EK_NOPExpr; }
+NOPExpr::NOPExpr(SourceLocation loc) : Expr(Kind::NOPExpr, loc) { kind_ = Kind::NOPExpr; }
 
-NOPExpr::NOPExpr(const NOPExpr& expr) : Expr(EK_NOPExpr, expr.getSourceLocation()) {
-  kind_ = EK_NOPExpr;
+NOPExpr::NOPExpr(const NOPExpr& expr) : Expr(Kind::NOPExpr, expr.getSourceLocation()) {
+  kind_ = Kind::NOPExpr;
 }
 
 NOPExpr& NOPExpr::operator=(NOPExpr expr) {
@@ -165,18 +165,18 @@ bool NOPExpr::equals(const Expr* other) const { return true; }
 TernaryOperator::TernaryOperator(const std::shared_ptr<Expr>& cond,
                                  const std::shared_ptr<Expr>& left,
                                  const std::shared_ptr<Expr>& right, SourceLocation loc)
-    : Expr(EK_TernaryOperator, loc), operands_{cond, left, right} {}
+    : Expr(Kind::TernaryOperator, loc), operands_{cond, left, right} {}
 
 TernaryOperator::TernaryOperator(const TernaryOperator& expr)
-    : Expr(EK_TernaryOperator, expr.getSourceLocation()), operands_{expr.getCondition()->clone(),
-                                                                    expr.getLeft()->clone(),
-                                                                    expr.getRight()->clone()} {}
+    : Expr(Kind::TernaryOperator, expr.getSourceLocation()), operands_{expr.getCondition()->clone(),
+                                                                       expr.getLeft()->clone(),
+                                                                       expr.getRight()->clone()} {}
 
 TernaryOperator& TernaryOperator::operator=(TernaryOperator expr) {
   assign(expr);
-  operands_[OK_Cond] = expr.getCondition();
-  operands_[OK_Left] = expr.getLeft();
-  operands_[OK_Right] = expr.getRight();
+  operands_[Cond] = expr.getCondition();
+  operands_[Left] = expr.getLeft();
+  operands_[Right] = expr.getRight();
   return *this;
 }
 
@@ -189,9 +189,9 @@ std::shared_ptr<Expr> TernaryOperator::clone() const {
 bool TernaryOperator::equals(const Expr* other) const {
   const TernaryOperator* otherPtr = dyn_cast<TernaryOperator>(other);
   return otherPtr && Expr::equals(other) &&
-         operands_[OK_Cond]->equals(otherPtr->operands_[OK_Cond].get()) &&
-         operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
-         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get());
+         operands_[Cond]->equals(otherPtr->operands_[Cond].get()) &&
+         operands_[Left]->equals(otherPtr->operands_[Left].get()) &&
+         operands_[Right]->equals(otherPtr->operands_[Right].get());
 }
 
 void TernaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -205,10 +205,10 @@ void TernaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
 //===------------------------------------------------------------------------------------------===//
 
 FunCallExpr::FunCallExpr(const std::string& callee, SourceLocation loc)
-    : Expr(EK_FunCallExpr, loc), callee_(callee) {}
+    : Expr(Kind::FunCallExpr, loc), callee_(callee) {}
 
 FunCallExpr::FunCallExpr(const FunCallExpr& expr)
-    : Expr(EK_FunCallExpr, expr.getSourceLocation()), callee_(expr.getCallee()) {
+    : Expr(Kind::FunCallExpr, expr.getSourceLocation()), callee_(expr.getCallee()) {
   for(auto e : expr.getArguments())
     arguments_.push_back(e->clone());
 }
@@ -248,12 +248,12 @@ void FunCallExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
 
 StencilFunCallExpr::StencilFunCallExpr(const std::string& callee, SourceLocation loc)
     : FunCallExpr(callee, loc) {
-  kind_ = EK_StencilFunCallExpr;
+  kind_ = Kind::StencilFunCallExpr;
 }
 
 StencilFunCallExpr::StencilFunCallExpr(const StencilFunCallExpr& expr)
     : FunCallExpr(expr.getCallee(), expr.getSourceLocation()) {
-  kind_ = EK_StencilFunCallExpr;
+  kind_ = Kind::StencilFunCallExpr;
   for(auto e : expr.getArguments())
     arguments_.push_back(e->clone());
 }
@@ -287,11 +287,11 @@ bool StencilFunCallExpr::equals(const Expr* other) const {
 
 StencilFunArgExpr::StencilFunArgExpr(int direction, int offset, int argumentIndex,
                                      SourceLocation loc)
-    : Expr(EK_StencilFunArgExpr, loc), dimension_(direction), offset_(offset),
+    : Expr(Kind::StencilFunArgExpr, loc), dimension_(direction), offset_(offset),
       argumentIndex_(argumentIndex) {}
 
 StencilFunArgExpr::StencilFunArgExpr(const StencilFunArgExpr& expr)
-    : Expr(EK_StencilFunArgExpr, expr.getSourceLocation()), dimension_(expr.getDimension()),
+    : Expr(Kind::StencilFunArgExpr, expr.getSourceLocation()), dimension_(expr.getDimension()),
       offset_(expr.getOffset()), argumentIndex_(expr.getArgumentIndex()) {}
 
 StencilFunArgExpr& StencilFunArgExpr::operator=(StencilFunArgExpr expr) {
@@ -320,10 +320,10 @@ bool StencilFunArgExpr::equals(const Expr* other) const {
 
 VarAccessExpr::VarAccessExpr(const std::string& name, std::shared_ptr<Expr> index,
                              SourceLocation loc)
-    : Expr(EK_VarAccessExpr, loc), name_(name), index_(index), isExternal_(false) {}
+    : Expr(Kind::VarAccessExpr, loc), name_(name), index_(index), isExternal_(false) {}
 
 VarAccessExpr::VarAccessExpr(const VarAccessExpr& expr)
-    : Expr(EK_VarAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
+    : Expr(Kind::VarAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
       index_(expr.getIndex()), isExternal_(expr.isExternal()) {
   data_ = expr.data_ ? expr.data_->clone() : nullptr;
 }
@@ -368,12 +368,12 @@ void VarAccessExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
 FieldAccessExpr::FieldAccessExpr(const std::string& name, const Offsets& offset,
                                  Array3i argumentMap, Array3i argumentOffset, bool negateOffset,
                                  SourceLocation loc)
-    : Expr(EK_FieldAccessExpr, loc), name_(name), offset_(std::move(offset)),
+    : Expr(Kind::FieldAccessExpr, loc), name_(name), offset_(std::move(offset)),
       argumentMap_(std::move(argumentMap)), argumentOffset_(std::move(argumentOffset)),
       negateOffset_(negateOffset) {}
 
 FieldAccessExpr::FieldAccessExpr(const FieldAccessExpr& expr)
-    : Expr(EK_FieldAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
+    : Expr(Kind::FieldAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
       offset_(expr.getOffset()), argumentMap_(expr.getArgumentMap()),
       argumentOffset_(expr.getArgumentOffset()), negateOffset_(expr.negateOffset()) {
   data_ = expr.data_ ? expr.data_->clone() : nullptr;
@@ -416,10 +416,10 @@ bool FieldAccessExpr::equals(const Expr* other) const {
 
 LiteralAccessExpr::LiteralAccessExpr(const std::string& value, BuiltinTypeID builtinType,
                                      SourceLocation loc)
-    : Expr(EK_LiteralAccessExpr, loc), value_(value), builtinType_(builtinType) {}
+    : Expr(Kind::LiteralAccessExpr, loc), value_(value), builtinType_(builtinType) {}
 
 LiteralAccessExpr::LiteralAccessExpr(const LiteralAccessExpr& expr)
-    : Expr(EK_LiteralAccessExpr, expr.getSourceLocation()), value_(expr.getValue()),
+    : Expr(Kind::LiteralAccessExpr, expr.getSourceLocation()), value_(expr.getValue()),
       builtinType_(expr.getBuiltinType()) {
   data_ = expr.data_ ? expr.data_->clone() : nullptr;
 }
@@ -450,11 +450,11 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& init,
                                                      ast::Expr::LocationType rhs_location,
                                                      SourceLocation loc)
-    : Expr(EK_ReductionOverNeighborExpr, loc), op_(op),
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op),
       rhs_location_(rhs_location), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
-    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
+    : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
       rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
                                                       expr.getInit()->clone()} {}
 

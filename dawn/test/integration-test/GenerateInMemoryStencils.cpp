@@ -52,7 +52,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
@@ -80,9 +80,9 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
   rhs->setID(target->nextUID());
 
-  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirInField->Name, sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
+  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
+                                                  sirInField->fieldDimensions);
+  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField,
                                                    sirOutField->Name, sirOutField->fieldDimensions);
 
   lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
@@ -149,7 +149,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
@@ -220,12 +220,12 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   rhsTmpT3->setID(target->nextUID());
   rhsTmpT4->setID(target->nextUID());
 
-  int inFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                 sirInField->Name, sirInField->fieldDimensions);
-  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_StencilTemporary,
+  int inFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
+                                                 sirInField->fieldDimensions);
+  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::StencilTemporary,
                                                   sirTmpField->Name, sirTmpField->fieldDimensions);
-  int outFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirOutField->Name, sirOutField->fieldDimensions);
+  int outFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirOutField->Name,
+                                                  sirOutField->fieldDimensions);
 
   lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
   rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);

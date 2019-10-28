@@ -572,14 +572,14 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
     jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
-    if(metaData_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
+    if(metaData_.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
       jvertex["type"] = "field_temporary";
-    else if(metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::Field, AccessID))
       jvertex["type"] = "field";
-    else if(metaData_.isAccessType(FieldAccessType::FAT_LocalVariable, AccessID) ||
-            metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::LocalVariable, AccessID) ||
+            metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
       jvertex["type"] = "variable";
-    else if(metaData_.isAccessType(iir::FieldAccessType::FAT_Literal, AccessID))
+    else if(metaData_.isAccessType(iir::FieldAccessType::Literal, AccessID))
       jvertex["type"] = "literal";
     else
       dawn_unreachable("invalid vertex type");

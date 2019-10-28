@@ -99,7 +99,7 @@ ProtobufLogger* ProtobufLogger::instance_ = nullptr;
 //     Serialization
 //===------------------------------------------------------------------------------------------===//
 
-static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKind kind) {
+static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   ProtobufLogger::init();
 
@@ -176,16 +176,16 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
     valueProto.set_is_constexpr(value.isConstexpr());
     if(value.has_value()) {
       switch(value.getType()) {
-      case sir::Value::Boolean:
+      case sir::Value::Kind::Boolean:
         valueProto.set_boolean_value(value.getValue<bool>());
         break;
-      case sir::Value::Integer:
+      case sir::Value::Kind::Integer:
         valueProto.set_integer_value(value.getValue<int>());
         break;
-      case sir::Value::Double:
+      case sir::Value::Kind::Double:
         valueProto.set_double_value(value.getValue<double>());
         break;
-      case sir::Value::String:
+      case sir::Value::Kind::String:
         valueProto.set_string_value(value.getValue<std::string>());
         break;
       }
@@ -197,7 +197,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
   // Encode the message
   std::string str;
   switch(kind) {
-  case dawn::SIRSerializer::SK_Json: {
+  case dawn::SIRSerializer::Format::Json: {
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
     options.always_print_primitive_fields = true;
@@ -207,7 +207,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
       throw std::runtime_error(format("cannot serialize SIR: %s", status.ToString()));
     break;
   }
-  case dawn::SIRSerializer::SK_Byte: {
+  case dawn::SIRSerializer::Format::Byte: {
     if(!sirProto.SerializeToString(&str))
       throw std::runtime_error(dawn::format(
           "cannot deserialize SIR: %s", ProtobufLogger::getInstance().getErrorMessagesAndReset()));
@@ -220,7 +220,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
   return str;
 }
 
-void SIRSerializer::serialize(const std::string& file, const SIR* sir, SerializationKind kind) {
+void SIRSerializer::serialize(const std::string& file, const SIR* sir, SIRSerializer::Format kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
     throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
@@ -229,7 +229,7 @@ void SIRSerializer::serialize(const std::string& file, const SIR* sir, Serializa
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
 }
 
-std::string SIRSerializer::serializeToString(const SIR* sir, SerializationKind kind) {
+std::string SIRSerializer::serializeToString(const SIR* sir, SIRSerializer::Format kind) {
   return serializeImpl(sir, kind);
 }
 
@@ -331,8 +331,8 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   // VerticalRegion.LoopOrder
   auto loopOrder =
       verticalRegionProto.loop_order() == dawn::proto::statements::VerticalRegion::Backward
-          ? sir::VerticalRegion::LK_Backward
-          : sir::VerticalRegion::LK_Forward;
+          ? sir::VerticalRegion::LoopOrderKind::Backward
+          : sir::VerticalRegion::LoopOrderKind::Forward;
 
   return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 }
@@ -555,8 +555,7 @@ static std::shared_ptr<sir::AST> makeAST(const dawn::proto::statements::AST& ast
   return ast;
 }
 
-static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
-                                            SIRSerializer::SerializationKind kind) {
+static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   using namespace sir;
   ProtobufLogger::init();
@@ -564,20 +563,20 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
   // Decode the string
   sir::proto::SIR sirProto;
   switch(kind) {
-  case dawn::SIRSerializer::SK_Json: {
+  case dawn::SIRSerializer::Format::Json: {
     auto status = google::protobuf::util::JsonStringToMessage(str, &sirProto);
     if(!status.ok())
       throw std::runtime_error(dawn::format("cannot deserialize SIR: %s", status.ToString()));
     break;
   }
-  case dawn::SIRSerializer::SK_Byte: {
+  case dawn::SIRSerializer::Format::Byte: {
     if(!sirProto.ParseFromString(str))
       throw std::runtime_error(dawn::format(
           "cannot deserialize SIR: %s", ProtobufLogger::getInstance().getErrorMessagesAndReset()));
     break;
   }
   default:
-    dawn_unreachable("invalid SerializationKind");
+    dawn_unreachable("invalid serialization Kind");
   }
 
   // Convert protobuf SIR to SIR
@@ -684,7 +683,8 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
 
 } // anonymous namespace
 
-std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file, SerializationKind kind) {
+std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file,
+                                                SIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
@@ -695,7 +695,7 @@ std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file, Seriali
 }
 
 std::shared_ptr<SIR> SIRSerializer::deserializeFromString(const std::string& str,
-                                                          SerializationKind kind) {
+                                                          SIRSerializer::Format kind) {
   return deserializeImpl(str, kind);
 }
 

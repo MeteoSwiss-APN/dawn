@@ -116,7 +116,7 @@ public:
       if(skip) {
         return false;
       }
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
         return false;
 
       if(field.getExtents().isHorizontalPointwise())
@@ -202,7 +202,7 @@ public:
     if(!tmpFunction_->hasArg(expr->getName()) && expr != tmpFieldAccessExpr_) {
 
       int genLineKey = static_cast<std::underlying_type<SourceLocation::ReservedSL>::type>(
-          SourceLocation::ReservedSL::SL_Generated);
+          SourceLocation::ReservedSL::Generated);
       tmpFunction_->Args.push_back(
           std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
 
@@ -214,7 +214,7 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
-    if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, iir::getAccessID(expr))) {
+    if(!metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, iir::getAccessID(expr))) {
       // record the var access as an argument to the stencil funcion
       dawn_unreachable_internal("All the var access should have been promoted to temporaries");
     }
@@ -257,7 +257,7 @@ public:
     if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       DAWN_ASSERT(tmpFieldAccessExpr_);
       const int accessID = iir::getAccessID(tmpFieldAccessExpr_);
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
         return expr;
 
       DAWN_ASSERT(tmpFunction_);
@@ -530,14 +530,14 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
       const auto& field = fieldPair.second;
 
       // we dont consider non temporary fields
-      if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID())) {
+      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, field.getAccessID())) {
         skipIDs.appendAccessIDsToMS(multiStage->getID(), field.getAccessID());
         continue;
       }
       // The scope of the temporary has to be a MS.
       // TODO Note the algorithm is not mathematically
       // complete here. We need to make sure that first access is always a write
-      if(field.getIntend() != iir::Field::IK_InputOutput) {
+      if(field.getIntend() != iir::Field::IntendKind::InputOutput) {
         skipIDs.appendAccessIDsToMS(multiStage->getID(), field.getAccessID());
         continue;
       }
@@ -594,12 +594,12 @@ bool PassTemporaryToStencilFunction::run(
 
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
-      if(metadata.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varID))
+      if(metadata.isAccessType(iir::FieldAccessType::GlobalVariable, varID))
         continue;
 
       promoteLocalVariableToTemporaryField(stencilInstantiation.get(), stencilPtr.get(), varID,
                                            stencilPtr->getLifetime(varID),
-                                           iir::TemporaryScope::TS_StencilTemporary);
+                                           iir::TemporaryScope::StencilTemporary);
     }
 
     skipIDs = computeSkipAccessIDs(stencilPtr, stencilInstantiation);
@@ -622,14 +622,14 @@ bool PassTemporaryToStencilFunction::run(
 
             for(const auto& stmt : doMethodPtr->getChildren()) {
 
-              DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_VerticalRegionDeclStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_BoundaryConditionDeclStmt));
+              DAWN_ASSERT((stmt->getKind() != iir::Stmt::Kind::ReturnStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::StencilCallDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::VerticalRegionDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::BoundaryConditionDeclStmt));
 
               // We exclude blocks or If/Else stmt
-              if((stmt->getKind() != iir::Stmt::SK_ExprStmt) &&
-                 (stmt->getKind() != iir::Stmt::SK_VarDeclStmt)) {
+              if((stmt->getKind() != iir::Stmt::Kind::ExprStmt) &&
+                 (stmt->getKind() != iir::Stmt::Kind::VarDeclStmt)) {
                 continue;
               }
 

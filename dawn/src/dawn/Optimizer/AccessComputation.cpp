@@ -220,13 +220,13 @@ public:
       } else {
         appliedAccessIDs.insert(AccessID);
 
-        if(field.getIntend() == iir::Field::IK_Input ||
-           field.getIntend() == iir::Field::IK_InputOutput)
+        if(field.getIntend() == iir::Field::IntendKind::Input ||
+           field.getIntend() == iir::Field::IntendKind::InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addReadExtent(AccessID, std::forward<TExtent>(extent));
 
-        if(field.getIntend() == iir::Field::IK_Output ||
-           field.getIntend() == iir::Field::IK_InputOutput)
+        if(field.getIntend() == iir::Field::IntendKind::Output ||
+           field.getIntend() == iir::Field::IntendKind::InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addWriteExtent(AccessID, std::forward<TExtent>(extent));
       }
@@ -431,12 +431,12 @@ public:
       const iir::Field& field =
           functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
 
-      if(field.getIntend() == iir::Field::IK_Input ||
-         field.getIntend() == iir::Field::IK_InputOutput)
+      if(field.getIntend() == iir::Field::IntendKind::Input ||
+         field.getIntend() == iir::Field::IntendKind::InputOutput)
         mergeReadExtent(expr, field.getExtents());
 
-      if(field.getIntend() == iir::Field::IK_Output ||
-         field.getIntend() == iir::Field::IK_InputOutput)
+      if(field.getIntend() == iir::Field::IntendKind::Output ||
+         field.getIntend() == iir::Field::IntendKind::InputOutput)
         mergeWriteExtent(expr, field.getExtents());
 
       ArgumentIndex += 1;

@@ -37,7 +37,8 @@ bool PassTemporaryMerger::run(
 
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
-    stencilNeedsMergePass |= stencilPtr->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries);
+    stencilNeedsMergePass |=
+        stencilPtr->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries);
 
   if(!(context_.getOptions().MergeTemporaries || stencilNeedsMergePass))
     return true;
@@ -75,7 +76,7 @@ bool PassTemporaryMerger::run(
         AccessIDOfLastTemporary = nodesToVisit.back().second;
         nodesToVisit.pop_back();
 
-        if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, FromAccessID)) {
+        if(metadata.isAccessType(iir::FieldAccessType::StencilTemporary, FromAccessID)) {
           TemporaryDAG.insertNode(FromAccessID);
           AccessIDOfLastTemporary = FromAccessID;
         }
@@ -92,7 +93,7 @@ bool PassTemporaryMerger::run(
           int ToAccessID = AccessesDAG.getIDFromVertexID(ToVertexID);
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
-          if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, ToAccessID) &&
+          if(metadata.isAccessType(iir::FieldAccessType::StencilTemporary, ToAccessID) &&
              AccessIDOfLastTemporary != -1) {
             TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID,
                                     iir::Extents(ast::cartesian));

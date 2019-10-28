@@ -230,7 +230,7 @@ void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
             sir::makeVerticalRegionDeclStmt(std::make_shared<sir::VerticalRegion>(
                 std::make_shared<sir::AST>(std::make_shared<sir::BlockStmt>(*blockstmt)),
                 std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
-                sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
+                sir::VerticalRegion::LoopOrderKind::Forward))}));
     auto allFields = dawn::sir::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
     for(const auto& a : allFields) {
       sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));

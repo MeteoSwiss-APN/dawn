@@ -219,11 +219,11 @@ public:
     if((level_[0] + offset_[0]) <= (level_[1] + offset_[1]))
       return std::make_pair(
           std::make_shared<dawn::sir::Interval>(level_[0], level_[1], offset_[0], offset_[1]),
-          dawn::sir::VerticalRegion::LK_Forward);
+          dawn::sir::VerticalRegion::LoopOrderKind::Forward);
     else
       return std::make_pair(
           std::make_shared<dawn::sir::Interval>(level_[1], level_[0], offset_[1], offset_[0]),
-          dawn::sir::VerticalRegion::LK_Backward);
+          dawn::sir::VerticalRegion::LoopOrderKind::Backward);
   }
 
   /// @brief Get vertical index name (i.e loop variable in the range-based for loop)
