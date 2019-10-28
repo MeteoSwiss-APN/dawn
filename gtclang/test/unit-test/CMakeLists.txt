@@ -19,6 +19,7 @@ include(yodaAddUnittest)
 set(GTCLANG_UNITTEST_EXTERNAL_LIBRARIES
   GTClangUnittestStatic
   GTClangStatic
+  DawnStatic
   ${GTCLANG_EXTERNAL_LIBRARIES}
 )
 

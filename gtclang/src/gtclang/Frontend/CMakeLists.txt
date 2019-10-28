@@ -45,6 +45,6 @@ yoda_add_library(
 )
 
 target_include_directories(GTClangFrontendObjects PRIVATE
-  $<TARGET_PROPERTY:Dawn::DawnShared,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:DawnShared,INTERFACE_INCLUDE_DIRECTORIES>
 )
 

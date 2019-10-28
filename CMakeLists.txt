@@ -28,6 +28,11 @@ option(GTCLANG_BUILD_GT_CPU_EXAMPLES "Build GridTools GPU examples. Requires GTC
 option(GTCLANG_BUILD_CUDA_EXAMPLES "Build CUDA GPU examples." OFF)
 option(DAWN_PYTHON "Enable python bindings for dawn. Requires the google.protobuf python package." ON)
 set(PYTHON_PROTOBUF_DIR "/usr/lib/python3/dist-packages" CACHE PATH "Path to the google protobuf python package.")
+set(YODA_ROOT CACHE PATH "path to yoda package")
+
+if("${YODA_ROOT}" STREQUAL "")
+    message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
+endif()
 
 set(default_build_type "RelWithDebInfo")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -43,14 +48,11 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   "Path prefix prepended onto install directories." FORCE)
 endif()
 
-set(YODA_ROOT CACHE PATH "path to yoda package")
-
-if("${YODA_ROOT}" STREQUAL "")
-    message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
-endif()
-
 set(DAWN_SOURCE_DIR "${CMAKE_SOURCE_DIR}/dawn")
 set(GTCLANG_SOURCE_DIR "${CMAKE_SOURCE_DIR}/gtclang")
+
+set(DAWN_BINARY_DIR "${CMAKE_BINARY_DIR}/dawn")
+set(GTCLANG_BINARY_DIR "${CMAKE_BINARY_DIR}/gtclang")
 
 list(APPEND CMAKE_MODULE_PATH "${YODA_ROOT}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${DAWN_SOURCE_DIR}/cmake")
@@ -89,6 +91,10 @@ yoda_add_target_clean_all(
 )
 
 add_subdirectory(utils)
+
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/utils)
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/utils/googletest/include)
+
 add_subdirectory(dawn)
 add_subdirectory(gtclang)
 

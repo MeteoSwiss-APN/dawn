@@ -39,8 +39,8 @@ make_config_string("Asserts" ${GTCLANG_ASSERTS})
 yoda_report_result("Configuration summary" ${config_info})
 
 # Include the packages (and set the correct, libraries, includes etc.)
-foreach(package bash ccache Python3 Boost clang-format Clang OpenMP Threads)
-  include("Add${package}")
+foreach(package bash ccache Python3 clang-format Clang Threads)
+  include(Add${package})
   yoda_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
@@ -71,12 +71,16 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 # Output summary of the packages
 yoda_report_result("Package summary" ${package_info})
 
+gtclang_set_cxx_flags()
+
 # TODO: Determine best method to get Protobuf_LIBRARIES variable here and add to rpath
 
 # Build gtclang
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_BINARY_DIR}/src)
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
+include_directories(${DAWN_SOURCE_DIR}/src)
+include_directories(${DAWN_BINARY_DIR}/src)
+
+include_directories(${GTCLANG_SOURCE_DIR}/src)
+include_directories(${GTCLANG_BINARY_DIR}/src)
 
 add_subdirectory(src)
 

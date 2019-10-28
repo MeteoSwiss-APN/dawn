@@ -40,6 +40,7 @@ yoda_add_executable(
   NAME gtclang
   SOURCES Driver/gtclang.cpp
   DEPENDS GTClangStatic
+          DawnStatic
           ${GTCLANG_EXTERNAL_LIBRARIES}
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin
   INSTALL_DESTINATION ${GTCLANG_INSTALL_BIN_DIR}

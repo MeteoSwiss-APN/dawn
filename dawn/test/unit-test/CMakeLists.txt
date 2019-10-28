@@ -33,7 +33,7 @@ macro(dawn_add_unittest_impl)
   yoda_add_unittest(
     NAME ${ARG_NAME}
     SOURCES ${ARG_SOURCES}
-    DEPENDS DawnUnittestStatic DawnCStatic DawnStatic  ${DAWN_EXTERNAL_LIBRARIES} gtest
+    DEPENDS DawnUnittestStatic DawnCStatic DawnStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
     GTEST_ARGS --gtest_color=yes
   )
