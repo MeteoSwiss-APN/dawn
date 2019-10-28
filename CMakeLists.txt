@@ -23,13 +23,7 @@ project(dawn
     HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
     LANGUAGES C CXX)
 
-option(GTCLANG_BUILD_GT_CPU_EXAMPLES "Build GridTools CPU examples. Requires GTCLANG_ENABLE_GRIDTOOLS=ON." OFF)
-option(GTCLANG_BUILD_GT_CPU_EXAMPLES "Build GridTools GPU examples. Requires GTCLANG_ENABLE_GRIDTOOLS=ON." OFF)
-option(GTCLANG_BUILD_CUDA_EXAMPLES "Build CUDA GPU examples." OFF)
-option(DAWN_PYTHON "Enable python bindings for dawn. Requires the google.protobuf python package." ON)
-set(PYTHON_PROTOBUF_DIR "/usr/lib/python3/dist-packages" CACHE PATH "Path to the google protobuf python package.")
-set(YODA_ROOT CACHE PATH "path to yoda package")
-
+set(YODA_ROOT CACHE PATH "Path to yoda package.")
 if("${YODA_ROOT}" STREQUAL "")
     message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
 endif()
@@ -87,11 +81,10 @@ yoda_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/dawn-cmake
 )
 
-add_subdirectory(utils)
-
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/utils)
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/utils/googletest/include)
 
+add_subdirectory(utils)
 add_subdirectory(dawn)
 add_subdirectory(gtclang)
 

@@ -77,8 +77,6 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 # Output summary of the packages
 yoda_report_result("Package summary" ${package_info})
 
-# TODO: Determine best method to get Protobuf_LIBRARIES variable here and add to rpath
-
 # Build gtclang
 include_directories(${DAWN_SOURCE_DIR}/src)
 include_directories(${DAWN_BINARY_DIR}/src)
@@ -101,6 +99,7 @@ if(GTCLANG_DOCUMENTATION)
   add_subdirectory(docs)
 endif()
 
+# Install CMake package configuration
 gtclang_gen_install_config()
 
 # Install headers

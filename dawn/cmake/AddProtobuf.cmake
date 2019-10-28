@@ -14,10 +14,8 @@
 
 find_package(Protobuf REQUIRED)
 
-# Get the <root> directory of protobuf by assuming protoc is installed in <root>/bin/protoc
-get_filename_component(root_bin_dir ${Protobuf_PROTOC_EXECUTABLE} DIRECTORY)
-get_filename_component(root_dir ${root_bin_dir} DIRECTORY)
-get_filename_component(root_dir ${root_dir} ABSOLUTE)
+get_filename_component(protobuf_lib_dir ${Protobuf_LIBRARY} DIRECTORY)
+yoda_enable_full_rpath("${protobuf_lib_dir}")
 
 yoda_export_package(
   NAME Protobuf

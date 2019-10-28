@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Unittest/FlagManager.h"
-#include "gtclang/Support/Config.h"
+#include "gtclang/Unittest/Config.h"
 
 namespace gtclang {
 

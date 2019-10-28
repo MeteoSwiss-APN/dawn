@@ -34,6 +34,9 @@ option(DAWN_DOCUMENTATION "Enable documentation" OFF)
 # Build examples
 option(DAWN_EXAMPLES "Compile the examples" OFF)
 
+# Python directory (optional, set this if outside Protobuf_DIR)
+set(PYTHON_PROTOBUF_DIR "/usr/lib/python3/dist-packages" CACHE PATH "Path to the google protobuf python package.")
+
 # Export options for meta projects
 yoda_export_options(DAWN 
   DAWN_ASSERTS 
