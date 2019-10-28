@@ -160,6 +160,10 @@ TEST(ExtentsTest, Limit) {
                   Extents{ast::cartesian, -1, 2, -2, 1, 0, 0}),
             Extents(ast::cartesian, -1, 1, -1, 1, 0, 0));
 
+  EXPECT_EQ(limit(Extents{ast::cartesian, -2, 1, -1, 2, 0, 0}, Extents{}), Extents());
+  EXPECT_EQ(limit(Extents{}, Extents{ast::cartesian, -2, 1, -1, 2, 0, 0}), Extents());
+  EXPECT_EQ(limit(Extents{}, Extents{}), Extents());
+
   EXPECT_EQ(limit(Extents{ast::unstructured, true, Extent{-3, 5}},
                   Extents{ast::unstructured, false, Extent{-1, 8}}),
             Extents(ast::unstructured, false, Extent{-1, 5}));
