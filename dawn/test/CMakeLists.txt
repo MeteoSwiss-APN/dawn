@@ -12,8 +12,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(utils)
-
 if(DAWN_TESTING)
   add_subdirectory(unit-test)
   add_subdirectory(integration-test)

@@ -25,15 +25,6 @@ if(GTCLANG_HAS_CUDA)
   find_package(SLURM)
 endif(GTCLANG_HAS_CUDA)
 
-# Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
-
-# Set C++ flags (Note that the LLVM/Clang package might add some other flags)
-gtclang_set_cxx_flags()
-
-# Add custom targets
-yoda_add_target_clean_all()
-
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
   yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
@@ -48,7 +39,7 @@ make_config_string("Asserts" ${GTCLANG_ASSERTS})
 yoda_report_result("Configuration summary" ${config_info})
 
 # Include the packages (and set the correct, libraries, includes etc.)
-foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads)
+foreach(package bash ccache Python3 Boost clang-format Clang OpenMP Threads)
   include("Add${package}")
   yoda_create_package_string(${package} info)
   list(APPEND package_info ${info})
@@ -62,7 +53,7 @@ foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads
 endforeach()
 
 if(GTCLANG_BUILD_GT_CPU_EXAMPLES OR GTCLANG_BUILD_GT_GPU_EXAMPLES OR GTCLANG_BUILD_CUDA_EXAMPLES)
-  include("AddGridTools")
+  include(AddGridTools)
   if(GridTools_FOUND)
     yoda_create_package_string(GridTools info)
     list(APPEND package_info ${info})
@@ -80,19 +71,7 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 # Output summary of the packages
 yoda_report_result("Package summary" ${package_info})
 
-# Support of RPATH-exports of dawn
-if(NOT(DEFINED DAWN_RPATH_DIR))
-   message(FATAL_ERROR "DAWN_RPATH_DIR is not exported by DAWN")
-endif()
-yoda_enable_full_rpath("${DAWN_RPATH_DIR}")
-
-# Add clang-format target
-set(format_directories
-  "${CMAKE_SOURCE_DIR}/src"
-  "${CMAKE_SOURCE_DIR}/test/unit-test"
-)
-
-yoda_add_target_clang_format(DIRECTORIES ${format_directories} EXTENSION ".h;.cpp")
+# TODO: Determine best method to get Protobuf_LIBRARIES variable here and add to rpath
 
 # Build gtclang
 include_directories(${CMAKE_SOURCE_DIR}/src)

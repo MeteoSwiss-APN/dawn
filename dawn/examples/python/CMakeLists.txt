@@ -13,8 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 # Protobuf_DIR is <protobuf_root>/lib/cmake/protobuf
-get_filename_component(camke_dir  "${Protobuf_DIR}" DIRECTORY)
-get_filename_component(lib_dir "${camke_dir}" DIRECTORY)
+get_filename_component(cmake_dir  "${Protobuf_DIR}" DIRECTORY)
+get_filename_component(lib_dir "${cmake_dir}" DIRECTORY)
 get_filename_component(protobuf_root "${lib_dir}" DIRECTORY)
 
 #

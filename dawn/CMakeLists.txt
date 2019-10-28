@@ -22,23 +22,6 @@ include(DawnOptions)
 include(DawnDefinitions)
 include(DawnMacros)
 
-# Set C++ standard
-yoda_set_cxx_standard(c++17)
-
-# Set C++ flags
-dawn_set_cxx_flags()
-
-# Add custom targets
-yoda_add_target_clean_all(
-  ${CMAKE_BINARY_DIR}/docs
-  ${CMAKE_BINARY_DIR}/sphinx
-  ${CMAKE_BINARY_DIR}/src
-  ${CMAKE_BINARY_DIR}/test
-  ${CMAKE_BINARY_DIR}/bin
-  ${CMAKE_BINARY_DIR}/python
-  ${CMAKE_BINARY_DIR}/dawn-cmake
-)
-
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
   yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
@@ -60,7 +43,7 @@ if(DAWN_DOCUMENTATION)
 endif()
 
 foreach(package bash Protobuf ccache clang-format ${doc_packages})
-  include("Add${package}")
+  include(Add${package})
   yoda_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
@@ -75,14 +58,12 @@ endforeach()
 # Enable RPath support
 yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
 
+dawn_set_cxx_flags()
 
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
 
 yoda_report_result("Package summary" ${package_info})
-
-# Add clang-format target
-yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test EXTENSION ".h;.cpp")
 
 if(DAWN_PYTHON)
   if(NOT DEFINED PYTHON_EXECUTABLE)

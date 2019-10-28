@@ -91,7 +91,7 @@ macro(gtclang_gen_install_config)
   set(GTCLANG_INSTALL_ROOT "")
 
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/gtclangConfig.cmake.in 
+    ${GTCLANG_SOURCE_DIR}/cmake/templates/gtclangConfig.cmake.in 
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/gtclangConfig.cmake
     INSTALL_DESTINATION ${GTCLANG_INSTALL_CMAKE_DIR}
     PATH_VARS 

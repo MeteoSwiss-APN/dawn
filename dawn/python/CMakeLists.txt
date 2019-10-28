@@ -15,10 +15,17 @@
 # Protobuf_DIR is <protobuf_root>/lib/cmake/protobuf
 get_filename_component(camke_dir  "${Protobuf_DIR}" DIRECTORY)
 get_filename_component(lib_dir "${camke_dir}" DIRECTORY)
-get_filename_component(protobuf_root "${lib_dir}" DIRECTORY)
+
+if(PYTHON_PROTOBUF_DIR)
+  set(protobuf_python "${PYTHON_PROTOBUF_DIR}")
+else()
+  get_filename_component(protobuf_root "${lib_dir}" DIRECTORY)
+  set(protobuf_python "${protobuf_root}/python")
+endif()
+
+get_property(protobuf_root TARGET protobuf::libprotobuf PROPERTY DIRECTORY)
 
 # Check the python libraries were installed in <protobuf_root>/python/
-set(protobuf_python "${protobuf_root}/python")
 set(protobuf_init_py "${protobuf_python}/google/protobuf/__init__.py")
 
 if(NOT EXISTS "${protobuf_init_py}")
@@ -31,7 +38,7 @@ if(NOT EXISTS "${protobuf_init_py}")
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
 
-  set(config_in "${CMAKE_SOURCE_DIR}/python/dawn/config.py.in")
+  set(config_in "${DAWN_SOURCE_DIR}/python/dawn/config.py.in")
   set(config_out "${CMAKE_BINARY_DIR}/python/dawn/config.py")
   configure_file(${config_in} ${config_out})
 

@@ -18,10 +18,6 @@ find_package(Protobuf REQUIRED)
 get_filename_component(root_bin_dir ${Protobuf_PROTOC_EXECUTABLE} DIRECTORY)
 get_filename_component(root_dir ${root_bin_dir} DIRECTORY)
 get_filename_component(root_dir ${root_dir} ABSOLUTE)
-set(DAWN_PROTOBUF_ROOT ${root_dir})
-
-# set the path to the install-directory of protobuf
-set(DAWN_PROTOBUF_RPATH_DIR ${DAWN_PROTOBUF_ROOT}/lib)
 
 yoda_export_package(
   NAME Protobuf
