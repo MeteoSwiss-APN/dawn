@@ -42,6 +42,7 @@ public:
   /// @name Constructors and Assignment
   /// @{
   Extent(int minus, int plus) : minus_(minus), plus_(plus) {}
+  explicit Extent(int offset) : Extent(offset, offset) {}
   Extent() : Extent(0, 0) {}
   /// @}
 
@@ -50,16 +51,17 @@ public:
 
   /// @name Operators
   /// @{
-  Extent& merge(const Extent& other) {
+  void merge(const Extent& other) {
     minus_ = std::min(minus_, other.minus_);
     plus_ = std::max(plus_, other.plus_);
-    return *this;
   }
-  Extent& merge(int other) { return merge(Extent{other, other}); }
+  void merge(int other) { merge(Extent{other, other}); }
 
-  Extent limit(Extent const& other) const {
-    DAWN_ASSERT(other.minus() <= 0 && other.plus() >= 0);
-    return {std::max(minus_, other.minus()), std::min(plus_, other.plus())};
+  void limit(Extent const& other) {
+    DAWN_ASSERT(minus_ <= 0 && plus_ >= 0);
+    DAWN_ASSERT(other.minus_ <= 0 && other.plus_ >= 0);
+    minus_ = std::max(minus_, other.minus_);
+    plus_ = std::min(plus_, other.plus_);
   }
 
   Extent& operator+=(const Extent& other) {
@@ -81,6 +83,8 @@ private:
   int plus_;
 };
 Extent operator+(Extent lhs, Extent const& rhs);
+Extent merge(Extent lhs, Extent const& rhs);
+Extent limit(Extent lhs, Extent const& rhs);
 
 class HorizontalExtentImpl {
 public:
@@ -97,9 +101,7 @@ public:
   void addCenter() { addCenterImpl(); }
   bool operator==(HorizontalExtentImpl const& other) const { return equalsImpl(other); }
   bool isPointwise() const { return isPointwiseImpl(); }
-  std::unique_ptr<HorizontalExtentImpl> limit(HorizontalExtentImpl const& other) const {
-    return limitImpl(other);
-  }
+  void limit(HorizontalExtentImpl const& other) { limitImpl(other); }
 
 protected:
   virtual void addImpl(HorizontalExtentImpl const& other) = 0;
@@ -108,8 +110,7 @@ protected:
   virtual bool equalsImpl(HorizontalExtentImpl const& other) const = 0;
   virtual std::unique_ptr<HorizontalExtentImpl> cloneImpl() const = 0;
   virtual bool isPointwiseImpl() const = 0;
-  virtual std::unique_ptr<HorizontalExtentImpl>
-  limitImpl(HorizontalExtentImpl const& other) const = 0;
+  virtual void limitImpl(HorizontalExtentImpl const& other) = 0;
 };
 
 class CartesianExtent : public HorizontalExtentImpl {
@@ -154,11 +155,10 @@ protected:
     return extents_[0].isPointwise() && extents_[1].isPointwise();
   }
 
-  std::unique_ptr<HorizontalExtentImpl>
-  limitImpl(HorizontalExtentImpl const& other) const override {
+  void limitImpl(HorizontalExtentImpl const& other) override {
     auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
-    return std::make_unique<CartesianExtent>(extents_[0].limit(otherCartesian.extents_[0]),
-                                             extents_[1].limit(otherCartesian.extents_[1]));
+    extents_[0].limit(otherCartesian.extents_[0]);
+    extents_[1].limit(otherCartesian.extents_[1]);
   }
 
 private:
@@ -195,10 +195,9 @@ protected:
 
   bool isPointwiseImpl() const override { return !hasExtent_; }
 
-  std::unique_ptr<HorizontalExtentImpl>
-  limitImpl(HorizontalExtentImpl const& other) const override {
+  void limitImpl(HorizontalExtentImpl const& other) override {
     auto const& otherUnstructured = dynamic_cast<dawn::iir::UnstructuredExtent const&>(other);
-    return std::make_unique<UnstructuredExtent>(hasExtent_ && otherUnstructured.hasExtent_);
+    hasExtent_ = hasExtent_ && otherUnstructured.hasExtent_;
   }
 
 private:
@@ -283,8 +282,11 @@ public:
   }
   void merge(ast::HorizontalOffset const& other) { merge(HorizontalExtent{other}); }
   bool isPointwise() const { return !impl_ || impl_->isPointwise(); }
-  HorizontalExtent limit(HorizontalExtent const& other) const {
-    return impl_ ? impl_->limit(*other.impl_) : *this;
+  void limit(HorizontalExtent const& other) {
+    if(impl_ && other.impl_)
+      impl_->limit(*other.impl_);
+    else if(other.impl_)
+      *this = other;
   }
 
 private:
@@ -324,7 +326,7 @@ public:
   bool hasVerticalCenter() const;
 
   /// @brief Limits the same extents, but limited to the extent given by other
-  Extents limit(Extents const& other) const;
+  void limit(Extents const& other);
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
@@ -402,6 +404,8 @@ private:
 ///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
 ///   `{-1, 2, -1, 1, 0, 0}`.
 Extents operator+(Extents lhs, const Extents& rhs);
+Extents merge(Extents lhs, Extents const& rhs);
+Extents limit(Extents lhs, Extents const& rhs);
 
 std::ostream& operator<<(std::ostream& os, const Extents& extent);
 std::string to_string(Extents const& extent);
