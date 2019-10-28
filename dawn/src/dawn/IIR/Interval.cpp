@@ -346,6 +346,21 @@ Interval Interval::intersect(const Interval& other) const {
                   upperLevel_.offset_};
 }
 
+Interval Interval::carve(const Interval& other) const {
+  DAWN_ASSERT(lowerBound() <= upperBound());
+  DAWN_ASSERT(other.lowerBound() <= other.upperBound());
+  DAWN_ASSERT(!strictlyContains(other));
+
+  IntervalLevel lowerLevel_ =
+      (lowerBound() < other.upperBound()) ? other.upperIntervalLevel() : lower_;
+
+  IntervalLevel upperLevel_ =
+      (upperBound() > other.lowerBound()) ? other.lowerIntervalLevel() : upper_;
+
+  return Interval{lowerLevel_.levelMark_, upperLevel_.levelMark_, lowerLevel_.offset_,
+                  upperLevel_.offset_};
+}
+
 void Interval::invert() {
   IntervalLevel tmp = lower_;
   lower_ = upper_;

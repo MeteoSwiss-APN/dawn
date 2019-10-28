@@ -27,37 +27,31 @@ bool PassIntervalPartitioner::run(
   }
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    for(auto& multiStage : stencilPtr->getChildren()) {
-      auto cloneMS = multiStage->clone();
+    for(const auto& multiStage : stencilPtr->getChildren()) {
 
+      // Compute the partition of intervals. Assumption is that the returned partition is order
+      // according to an ascending order of intervals.
       auto multiInterval = multiStage->computePartitionOfIntervals();
 
-      // empty out the multistage
-      for(auto cloneStageIt = cloneMS->childrenBegin(); cloneStageIt != cloneMS->childrenEnd();
-          ++cloneStageIt) {
-        auto cloneDoMethodIt = (*cloneStageIt)->childrenBegin();
-        while(cloneDoMethodIt != (*cloneStageIt)->childrenEnd()) {
-          cloneDoMethodIt = (*cloneStageIt)->childrenErase(cloneDoMethodIt);
-        }
-      }
-
       for(const auto& interval : multiInterval.getIntervals()) {
-
-        auto cloneStageIt = cloneMS->childrenBegin();
-        for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();
-            ++stageIt, ++cloneStageIt) {
-
-          for(auto doMethodIt = (*stageIt)->childrenBegin();
-              doMethodIt != (*stageIt)->childrenEnd(); ++doMethodIt) {
-            if((*doMethodIt)->getInterval().overlaps(interval)) {
-              auto doMAtInterval = (*doMethodIt)->clone();
+        for(auto& stage : multiStage->getChildren()) {
+          for(auto doMethodIt = stage->childrenBegin(); doMethodIt != stage->childrenEnd();
+              ++doMethodIt) {
+            auto& doMethod = *doMethodIt;
+            if(doMethod->getInterval().overlaps(interval)) {
+              // Create a clone of the current doMethod, set its interval to `interval' and insert
+              // it into the current stage before the current doMethod.
+              auto doMAtInterval = doMethod->clone();
               doMAtInterval->setInterval(interval);
-              (*cloneStageIt)->insertChild(std::move(doMAtInterval));
+              doMethodIt = stage->insertChild(doMethodIt, std::move(doMAtInterval));
+              ++doMethodIt; // this should point back to the original doMethod
+              // The current doMethod shouldn't cover the interval that is now covered by the new
+              // clone. So we carve it out.
+              doMethod->setInterval(doMethod->getInterval().carve(interval));
             }
           }
         }
       }
-      stencilPtr->replace(multiStage, cloneMS);
     }
   }
 

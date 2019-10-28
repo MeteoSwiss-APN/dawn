@@ -84,6 +84,10 @@ public:
   /// @brief computes the intersection of two intervals
   Interval intersect(const Interval& other) const;
 
+  /// @brief Computes an Interval where `other' is carved away from this Interval. `other' must not
+  /// be strictly contained in this Interval.
+  Interval carve(const Interval& other) const;
+
   /// @brief crop the interval around the window of one of the bounds of the interval
   /// (notice that the window can specify offsets so that the cropped interval can also extend and
   /// go beyod the limits of the
@@ -128,6 +132,11 @@ public:
   /// @brief Check if `this` fully contains `other`
   bool contains(const Interval& other) const {
     return other.lowerBound() >= lowerBound() && other.upperBound() <= upperBound();
+  }
+
+  /// @brief Check if `this` fully strictly contains `other`
+  bool strictlyContains(const Interval& other) const {
+    return other.lowerBound() > lowerBound() && other.upperBound() < upperBound();
   }
 
   /// @brief Check if `this` is adjacent to `other`

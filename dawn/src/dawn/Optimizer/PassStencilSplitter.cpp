@@ -75,7 +75,7 @@ bool PassStencilSplitter::run(
       std::set<int> fieldsInNewStencil;
 
       // Iterate the multi-stage of the old `stencil` and insert its stages into `newStencil`
-      for(const auto& multiStagePtr : stencil.getChildren()) {
+      for(auto& multiStagePtr : stencil.getChildren()) {
         iir::MultiStage& multiStage = *multiStagePtr;
 
         // Create an empty multi-stage in the current stencil with the same parameter as
@@ -83,16 +83,17 @@ bool PassStencilSplitter::run(
         newStencil->insertChild(std::make_unique<iir::MultiStage>(
             stencilInstantiation->getMetaData(), multiStage.getLoopOrder()));
 
-        for(const auto& stagePtr : multiStage.getChildren()) {
+        for(auto& stagePtr : multiStage.getChildren()) {
           if(newStencil->isEmpty() ||
              mergePossible(fieldsInNewStencil, stagePtr.get(), MaxFieldPerStencil)) {
+            const auto& stageFields = stagePtr->getFields();
 
             // We can safely insert the stage into the current multi-stage of the `newStencil`
-            newStencil->getChildren().back()->insertChild(stagePtr->clone());
+            newStencil->getChildren().back()->insertChild(std::move(stagePtr));
 
             // Update fields of the `newStencil`. Note that the indivudual stages do not need to
             // update their fields as they remain the same.
-            for(const auto& fieldPair : stagePtr->getFields())
+            for(const auto& fieldPair : stageFields)
               fieldsInNewStencil.insert(fieldPair.second.getAccessID());
 
           } else {
@@ -107,7 +108,7 @@ bool PassStencilSplitter::run(
             // Re-create the current multi-stage in the `newStencil` and insert the stage
             newStencil2->insertChild(std::make_unique<iir::MultiStage>(
                 stencilInstantiation->getMetaData(), multiStage.getLoopOrder()));
-            newStencil2->getChildren().back()->insertChild(stagePtr->clone());
+            newStencil2->getChildren().back()->insertChild(std::move(stagePtr));
           }
         }
       }
