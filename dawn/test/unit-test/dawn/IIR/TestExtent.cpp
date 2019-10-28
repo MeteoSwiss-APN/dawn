@@ -73,17 +73,14 @@ TEST(ExtentsTest, PointWise) {
 TEST(ExtentsTest, MergeWithExtent) {
   Extents extents(ast::Offsets{ast::cartesian, -1, 1, 0});
   Extents extentsToMerge(ast::Offsets{ast::cartesian, 3, 2, 1});
-  extents.merge(extentsToMerge);
+  EXPECT_EQ(merge(extents, extentsToMerge), Extents(ast::cartesian, -1, 3, 1, 2, 0, 1));
 
-  EXPECT_EQ(extents, Extents(ast::cartesian, -1, 3, 1, 2, 0, 1));
-
-  Extents emptyExtent;
-  emptyExtent.merge(Extents());
-  EXPECT_EQ(emptyExtent, Extents());
-  emptyExtent.merge(Extents(ast::cartesian, -1, -1, 1, 1, 0, 0));
-  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, 0, 0, 1, 0, 0));
-  emptyExtent.merge(Extents());
-  EXPECT_EQ(emptyExtent, Extents(ast::cartesian, -1, 0, 0, 1, 0, 0));
+  EXPECT_EQ(merge(Extents(), Extents()), Extents());
+  EXPECT_EQ(merge(Extents(ast::cartesian, -1, -1, 1, 1, 0, 0), Extents()),
+            Extents(ast::cartesian, -1, 0, 0, 1, 0, 0));
+  EXPECT_EQ(merge(Extents(ast::cartesian, -1, 2, -2, 1, 0, 0),
+                  Extents(ast::cartesian, -2, 1, -1, 2, 0, 0)),
+            Extents(ast::cartesian, -2, 2, -2, 2, 0, 0));
 }
 
 TEST(ExtentsTest, MergeWithOffset) {
@@ -96,6 +93,15 @@ TEST(ExtentsTest, MergeWithOffset) {
   EXPECT_EQ(emptyExtent, Extents());
   emptyExtent.merge(ast::Offsets{ast::cartesian, 1, 2, 3});
   EXPECT_EQ(emptyExtent, Extents(ast::cartesian, 0, 1, 0, 2, 0, 3));
+}
+TEST(ExtentsTest, Limit) {
+  EXPECT_EQ(limit(Extents{ast::cartesian, -2, 2, -2, 2, 0, 0},
+                  Extents{ast::cartesian, -1, 1, -1, 1, 0, 0}),
+            Extents(ast::cartesian, -1, 1, -1, 1, 0, 0));
+
+  EXPECT_EQ(limit(Extents{ast::cartesian, -2, 1, -1, 2, 0, 0},
+                  Extents{ast::cartesian, -1, 2, -2, 1, 0, 0}),
+            Extents(ast::cartesian, -1, 1, -1, 1, 0, 0));
 }
 
 TEST(ExtentsTest, Add) {

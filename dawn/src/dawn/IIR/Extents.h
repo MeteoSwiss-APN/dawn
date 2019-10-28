@@ -224,7 +224,7 @@ public:
   bool isPointwise() const { return !impl_ || impl_->isPointwise(); }
   void limit(HorizontalExtent const& other) {
     if(impl_ && other.impl_)
-      impl_->merge(*other.impl_);
+      impl_->limit(*other.impl_);
     else if(other.impl_)
       *this = other;
   }
@@ -252,7 +252,7 @@ public:
   /// @name Constructors and Assignment
   /// @{
   Extents();
-  Extents(const ast::Offsets& offset);
+  explicit Extents(const ast::Offsets& offset);
   Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
           int extent3minus, int extent3plus);
   Extents(HorizontalExtent const& hExtent, Extent const& vExtent);
