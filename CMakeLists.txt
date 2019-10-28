@@ -76,9 +76,6 @@ include(yodaInit)
 
 yoda_init()
 
-# Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
-
 # Add custom targets
 yoda_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/docs

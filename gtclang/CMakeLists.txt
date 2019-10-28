@@ -23,7 +23,13 @@ if(GTCLANG_HAS_CUDA)
   include(GTClangSetupCUDA)
   gtclang_setup_CUDA()
   find_package(SLURM)
-endif(GTCLANG_HAS_CUDA)
+endif()
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+
+# Set C++ flags (Note that the LLVM/Clang package might add some other flags)
+gtclang_set_cxx_flags()
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
@@ -70,8 +76,6 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 
 # Output summary of the packages
 yoda_report_result("Package summary" ${package_info})
-
-gtclang_set_cxx_flags()
 
 # TODO: Determine best method to get Protobuf_LIBRARIES variable here and add to rpath
 

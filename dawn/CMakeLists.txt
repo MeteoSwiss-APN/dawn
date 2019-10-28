@@ -22,6 +22,12 @@ include(DawnOptions)
 include(DawnDefinitions)
 include(DawnMacros)
 
+# Set C++ standard
+yoda_set_cxx_standard(c++17)
+
+# Set C++ flags
+dawn_set_cxx_flags()
+
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
   yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
@@ -57,8 +63,6 @@ endforeach()
 
 # Enable RPath support
 yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
-
-dawn_set_cxx_flags()
 
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
