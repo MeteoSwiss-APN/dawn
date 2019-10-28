@@ -23,18 +23,21 @@ namespace dawn {
 namespace iir {
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
+Extent merge(Extent lhs, Extent const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extent limit(Extent lhs, Extent const& rhs) {
+  lhs.limit(rhs);
+  return rhs;
+}
 
+Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(const ast::Offsets& offset)
-    : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
-      horizontalExtent_(ast::cartesian) {
-  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
-
-  horizontalExtent_ = HorizontalExtent(ast::cartesian, hOffset.offsetI(), hOffset.offsetI(),
-                                       hOffset.offsetJ(), hOffset.offsetJ());
-}
+    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
@@ -61,6 +64,14 @@ Extents& Extents::operator+=(const Extents& other) {
   return *this;
 }
 Extents operator+(Extents lhs, const Extents& rhs) { return lhs += rhs; }
+Extents merge(Extents lhs, Extents const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extents limit(Extents lhs, Extents const& rhs) {
+  lhs.limit(rhs);
+  return lhs;
+}
 
 void Extents::addVerticalCenter() { verticalExtent_.merge(0); }
 
@@ -71,8 +82,9 @@ bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise()
 bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
-Extents Extents::limit(int minus, int plus) const {
-  return Extents{horizontalExtent_.limit(minus, plus), verticalExtent_.limit(minus, plus)};
+void Extents::limit(Extents const& other) {
+  horizontalExtent_.limit(other.horizontalExtent());
+  verticalExtent_.limit(other.verticalExtent());
 }
 
 bool Extents::isPointwise() const {

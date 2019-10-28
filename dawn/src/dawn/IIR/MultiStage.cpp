@@ -159,10 +159,9 @@ Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
     DAWN_ASSERT(cache.getWindow());
     auto window = *(cache.getWindow());
-    return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
-  } else {
-    return vertExtent;
+    vertExtent.merge(iir::Extent{window.m_m, window.m_p});
   }
+  return vertExtent;
 }
 
 std::optional<Extents> MultiStage::computeExtents(const int accessID,
