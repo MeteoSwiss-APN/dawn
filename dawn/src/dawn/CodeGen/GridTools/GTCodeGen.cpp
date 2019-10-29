@@ -438,7 +438,7 @@ void GTCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember("globals_gp_t", "m_globals_gp");
     // update globals
     stencilWrapperClass.addMemberFunction("void", "update_globals")
-        .addStatement("update_global_parameter(m_globals_gp, m_globals)");
+        .addStatement(c_gt() + "update_global_parameter(m_globals_gp, m_globals)");
   }
 
   // Stencil members
