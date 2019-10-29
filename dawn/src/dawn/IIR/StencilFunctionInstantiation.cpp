@@ -353,7 +353,7 @@ bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
 }
 
 const std::vector<std::shared_ptr<iir::Stmt>>& StencilFunctionInstantiation::getStatements() const {
-  return doMethod_->getChildren();
+  return doMethod_->getAST().getStatements();
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -380,7 +380,7 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& stmt : doMethod_->getChildren()) {
+  for(const auto& stmt : doMethod_->getAST().getStatements()) {
     const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
@@ -456,7 +456,7 @@ void StencilFunctionInstantiation::update() {
         AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
       // Accumulate the extents of each field in this stage
-      for(const auto& stmt : doMethod_->getChildren()) {
+      for(const auto& stmt : doMethod_->getAST().getStatements()) {
         const auto& access = callerAccesses ? stmt->getData<IIRStmtData>().CallerAccesses
                                             : stmt->getData<IIRStmtData>().CalleeAccesses;
 
@@ -596,7 +596,8 @@ void StencilFunctionInstantiation::dump() const {
   for(std::size_t i = 0; i < statements.size(); ++i) {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
-    const auto& callerAccesses = doMethod_->getChild(i)->getData<IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses =
+        doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
@@ -655,8 +656,9 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
   }
 
   // check that the list of <statement,access> are set for all statements
-  DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == doMethod_->getChildren().size()),
-                  "AST has different number of statements as the statement accesses pairs");
+  DAWN_ASSERT_MSG(
+      (getAST()->getRoot()->getStatements().size() == doMethod_->getAST().getStatements().size()),
+      "AST has different number of statements with respect to DoMethod's AST");
 }
 
 } // namespace iir

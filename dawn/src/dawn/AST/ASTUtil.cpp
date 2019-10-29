@@ -183,11 +183,11 @@ public:
       : oldStmt_(oldStmt), newStmt_(newStmt) {}
 
   void visit(const std::shared_ptr<BlockStmt>& stmt) override {
-    for(auto& s : stmt->getStatements()) {
-      if(s == oldStmt_)
-        s = newStmt_;
-      else
-        s->accept(*this);
+    for(auto it = stmt->getStatements().cbegin(); it != stmt->getStatements().cend(); ++it) {
+      if(*it == oldStmt_) {
+        stmt->substitute(it, std::move(newStmt_));
+      } else
+        (*it)->accept(*this);
     }
   }
 

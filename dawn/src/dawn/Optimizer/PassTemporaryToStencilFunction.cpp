@@ -517,7 +517,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
   for(const auto& multiStage : stencilPtr->getChildren()) {
     iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
-      for(const auto& stmt : doMethod->getChildren()) {
+      for(const auto& stmt : doMethod->getAST().getStatements()) {
         graph.insertStatement(stmt);
       }
     }
@@ -583,8 +583,8 @@ bool PassTemporaryToStencilFunction::run(
 
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
-          for(auto stmtIt = (*doMethodIt)->childrenRBegin();
-              stmtIt != (*doMethodIt)->childrenREnd(); stmtIt++) {
+          for(auto stmtIt = (*doMethodIt)->getAST().getStatements().rbegin();
+              stmtIt != (*doMethodIt)->getAST().getStatements().rend(); stmtIt++) {
 
             (*stmtIt)->acceptAndReplace(localVariablePromotion);
           }
@@ -620,7 +620,7 @@ bool PassTemporaryToStencilFunction::run(
               continue;
             }
 
-            for(const auto& stmt : doMethodPtr->getChildren()) {
+            for(const auto& stmt : doMethodPtr->getAST().getStatements()) {
 
               DAWN_ASSERT((stmt->getKind() != iir::Stmt::Kind::ReturnStmt) &&
                           (stmt->getKind() != iir::Stmt::Kind::StencilCallDeclStmt) &&
@@ -662,12 +662,13 @@ bool PassTemporaryToStencilFunction::run(
                       iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{stmt});
                   blockStmt->accept(statementMapper);
 
-                  DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
+                  DAWN_ASSERT(tmpStmtDoMethod.getAST().getStatements().size() == 1);
 
-                  std::shared_ptr<iir::Stmt>& replacementStmt = *(tmpStmtDoMethod.childrenBegin());
+                  const std::shared_ptr<iir::Stmt>& replacementStmt =
+                      *(tmpStmtDoMethod.getAST().getStatements().begin());
                   computeAccesses(stencilInstantiation.get(), replacementStmt);
 
-                  doMethodPtr->replace(stmt, replacementStmt);
+                  doMethodPtr->getAST().replaceChildren(stmt, replacementStmt);
                   doMethodPtr->update(iir::NodeUpdateType::level);
                 }
 

@@ -285,8 +285,7 @@ bool PassSetBoundaryCondition::run(
           for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
             stencilCallWithBC_.emplace_back(oldStencilCall);
             auto newBlockStmt = iir::makeBlockStmt();
-            std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
-                      std::back_inserter(newBlockStmt->getStatements()));
+            newBlockStmt->insert_back(stencilCallWithBC_);
             if(oldStencilCall == controlFlowStmt) {
               // Replace the the statement directly
               DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);

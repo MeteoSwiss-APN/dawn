@@ -49,6 +49,21 @@ BlockStmt& BlockStmt::operator=(BlockStmt const& stmt) {
 
 BlockStmt::~BlockStmt() {}
 
+void BlockStmt::push_back(std::shared_ptr<Stmt>&& stmt) {
+  DAWN_ASSERT(stmt);
+  DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
+                  "Trying to insert child Stmt with different data type");
+  statements_.push_back(stmt);
+}
+
+void BlockStmt::substitute(StmtConstIterator position, std::shared_ptr<Stmt>&& replacement) {
+  DAWN_ASSERT(replacement);
+  DAWN_ASSERT(position >= statements_.cbegin() && position < statements_.cend());
+  DAWN_ASSERT_MSG((checkSameDataType(*replacement)),
+                  "Trying to insert child Stmt with different data type");
+  statements_[StatementList::size_type(position - statements_.cbegin())] = replacement;
+}
+
 std::shared_ptr<Stmt> BlockStmt::clone() const { return std::make_shared<BlockStmt>(*this); }
 
 bool BlockStmt::equals(const Stmt* other) const {

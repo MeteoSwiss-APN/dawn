@@ -235,7 +235,7 @@ public:
 
   virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
     appendNewAccesses();
-    for(auto& s : stmt->getStatements()) {
+    for(const auto& s : stmt->getStatements()) {
 
       DAWN_ASSERT(!curStatementStack_.empty());
 
