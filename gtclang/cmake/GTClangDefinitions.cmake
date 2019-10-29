@@ -50,7 +50,7 @@ set(GTCLANG_FULL_VERSION
     CACHE STRING "Full version string of gtclang" FORCE)
 
 # Building configs
-set(GTCLANG_DSL_INCLUDES "${CMAKE_SOURCE_DIR}/src" "${CMAKE_INSTALL_PREFIX}/include")
+set(GTCLANG_DSL_INCLUDES "${GTCLANG_SOURCE_DIR}/src" "${CMAKE_INSTALL_PREFIX}/include")
 
 # Testing configs
 set(GTCLANG_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/gtclang")
@@ -67,9 +67,3 @@ set(GTCLANG_INSTALL_LIB_DIR lib
     CACHE INTERNAL "Relative path of the library install location " FORCE)
 set(GTCLANG_INSTALL_CMAKE_DIR cmake 
     CACHE INTERNAL "Relative path of the cmake install location" FORCE)
-
-# Building configs
-set(GTCLANG_DSL_INCLUDES 
-  "${CMAKE_SOURCE_DIR}/src" 
-  "${CMAKE_INSTALL_PREFIX}/${GTCLANG_INSTALL_INCLUDE_DIR}"
-)
