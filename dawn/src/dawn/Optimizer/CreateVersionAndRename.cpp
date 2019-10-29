@@ -22,7 +22,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
                            iir::Stencil* stencil, int curStageIdx, int curStmtIdx,
                            std::shared_ptr<iir::Expr>& expr, RenameDirection dir) {
   int newAccessID = -1;
-  if(instantiation->getMetaData().isAccessType(iir::FieldAccessType::FAT_Field, AccessID)) {
+  if(instantiation->getMetaData().isAccessType(iir::FieldAccessType::Field, AccessID)) {
     if(instantiation->getMetaData().variableHasMultipleVersions(AccessID)) {
       // Field is already multi-versioned, append a new version
       const auto versions = instantiation->getMetaData().getVersionsOf(AccessID);
@@ -30,7 +30,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
       // Set the second to last field to be a temporary (only the first and the last field will be
       // real storages, all other versions will be temporaries)
       int lastAccessID = versions->back();
-      instantiation->getMetaData().moveRegisteredFieldTo(iir::FieldAccessType::FAT_StencilTemporary,
+      instantiation->getMetaData().moveRegisteredFieldTo(iir::FieldAccessType::StencilTemporary,
                                                          lastAccessID);
 
       // The field with version 0 contains the original name
@@ -42,7 +42,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
 
       // Register the new field
       newAccessID = instantiation->getMetaData().insertAccessOfType(
-          iir::FieldAccessType::FAT_InterStencilTemporary,
+          iir::FieldAccessType::InterStencilTemporary,
           originalName + "_" + std::to_string(versions->size()));
 
       // and register in field-versioning
@@ -53,7 +53,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
           instantiation->getMetaData().getFieldNameFromAccessID(AccessID);
 
       newAccessID = instantiation->getMetaData().insertAccessOfType(
-          iir::FieldAccessType::FAT_InterStencilTemporary, originalName + "_0");
+          iir::FieldAccessType::InterStencilTemporary, originalName + "_0");
 
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
@@ -75,7 +75,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
 
       // Register the new variable
       newAccessID = instantiation->getMetaData().insertAccessOfType(
-          iir::FieldAccessType::FAT_LocalVariable,
+          iir::FieldAccessType::LocalVariable,
           originalName + "_" + std::to_string(versions->size()));
 
       instantiation->getMetaData().addFieldVersionIDPair(originalID, newAccessID);
@@ -85,7 +85,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
           instantiation->getMetaData().getFieldNameFromAccessID(AccessID);
 
       newAccessID = instantiation->getMetaData().insertAccessOfType(
-          iir::FieldAccessType::FAT_LocalVariable, originalName + "_0");
+          iir::FieldAccessType::LocalVariable, originalName + "_0");
       // Register the new *and* old variable as being multi-versioned
       instantiation->getMetaData().addFieldVersionIDPair(AccessID, newAccessID);
     }

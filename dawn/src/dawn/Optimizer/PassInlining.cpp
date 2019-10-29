@@ -147,7 +147,7 @@ public:
       appendNewStatement(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
-      metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary, AccessIDOfCaller_,
+      metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary, AccessIDOfCaller_,
                                    returnFieldName);
       std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
           ->getData<iir::IIRAccessExprData>()
@@ -303,7 +303,7 @@ public:
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
     int AccessID = iir::getAccessID(expr);
-    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
   }
 };
 

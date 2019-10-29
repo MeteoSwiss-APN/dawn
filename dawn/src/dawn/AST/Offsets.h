@@ -71,25 +71,42 @@ private:
 
 class HorizontalOffset {
 public:
+  HorizontalOffset() = default;
+
   explicit HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
   HorizontalOffset(cartesian_, int iOffset, int jOffset)
       : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
   HorizontalOffset(HorizontalOffset const& other) { *this = other; }
   HorizontalOffset& operator=(HorizontalOffset const& other) {
-    impl_ = other.impl_->clone();
+    if(other.impl_)
+      impl_ = other.impl_->clone();
+    else
+      impl_ = nullptr;
     return *this;
   }
   HorizontalOffset(HorizontalOffset&& other) = default;
   HorizontalOffset& operator=(HorizontalOffset&& other) = default;
 
-  bool operator==(HorizontalOffset const& other) const { return *impl_ == *other.impl_; }
+  bool operator==(HorizontalOffset const& other) const {
+    if(impl_ && other.impl_)
+      return *impl_ == *other.impl_;
+    else if(impl_)
+      return isZero();
+    else if(other.impl_)
+      return other.isZero();
+    else
+      return true;
+  }
   bool operator!=(HorizontalOffset const& other) const { return !(*this == other); }
 
   HorizontalOffset& operator+=(HorizontalOffset const& other) {
-    *impl_ += *other.impl_;
+    if(impl_ && other.impl_)
+      *impl_ += *other.impl_;
+    else if(other.impl_)
+      *this = other;
     return *this;
   }
-  bool isZero() const { return impl_->isZero(); }
+  bool isZero() const { return !impl_ || impl_->isZero(); }
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
@@ -100,11 +117,18 @@ private:
 
 template <typename T>
 T offset_cast(HorizontalOffset const& offset) {
-  return dynamic_cast<T>(*offset.impl_);
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<HorizontalOffsetImpl, PlainT>,
+                "Can only be casted to a valid horizontal offset implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  static PlainT nullOffset{};
+  return offset.impl_ ? dynamic_cast<T>(*offset.impl_) : nullOffset;
 }
 
 class Offsets {
 public:
+  Offsets() = default;
+
   Offsets(cartesian_, int i, int j, int k)
       : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
@@ -125,6 +149,7 @@ public:
     return *this;
   }
 
+  // corresponds to the default initialized offset
   bool isZero() const { return verticalOffset_ == 0 && horizontalOffset_.isZero(); }
 
 private:

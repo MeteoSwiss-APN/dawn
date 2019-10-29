@@ -41,13 +41,13 @@ bool IIRAccessExprData::equals(AccessExprData const* other) const {
 
 int getAccessID(const std::shared_ptr<Expr>& expr) {
   switch(expr->getKind()) {
-  case ast::Expr::EK_FieldAccessExpr:
+  case ast::Expr::Kind::FieldAccessExpr:
     return *std::dynamic_pointer_cast<FieldAccessExpr>(expr)->getData<IIRAccessExprData>().AccessID;
-  case ast::Expr::EK_LiteralAccessExpr:
+  case ast::Expr::Kind::LiteralAccessExpr:
     return *std::dynamic_pointer_cast<LiteralAccessExpr>(expr)
                 ->getData<IIRAccessExprData>()
                 .AccessID;
-  case ast::Expr::EK_VarAccessExpr:
+  case ast::Expr::Kind::VarAccessExpr:
     return *std::dynamic_pointer_cast<VarAccessExpr>(expr)->getData<IIRAccessExprData>().AccessID;
   default:
     throw std::runtime_error("Invalid Expr to get access id from");

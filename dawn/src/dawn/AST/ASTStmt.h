@@ -49,22 +49,22 @@ struct StmtData {
 class Stmt : public std::enable_shared_from_this<Stmt> {
 public:
   /// @brief Discriminator for RTTI (dyn_cast<> et al.)
-  enum StmtKind {
-    SK_BlockStmt,
-    SK_ExprStmt,
-    SK_ReturnStmt,
-    SK_VarDeclStmt,
-    SK_StencilCallDeclStmt,
-    SK_VerticalRegionDeclStmt,
-    SK_BoundaryConditionDeclStmt,
-    SK_IfStmt
+  enum class Kind {
+    BlockStmt,
+    ExprStmt,
+    ReturnStmt,
+    VarDeclStmt,
+    StencilCallDeclStmt,
+    VerticalRegionDeclStmt,
+    BoundaryConditionDeclStmt,
+    IfStmt
   };
 
   using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
 
   /// @name Constructor & Destructor
   /// @{
-  Stmt(std::unique_ptr<StmtData> data, StmtKind kind, SourceLocation loc = SourceLocation())
+  Stmt(std::unique_ptr<StmtData> data, Kind kind, SourceLocation loc = SourceLocation())
       : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()),
         data_(std::move(data)) {}
   Stmt(const Stmt& stmt)
@@ -83,7 +83,7 @@ public:
   virtual std::shared_ptr<Stmt> clone() const = 0;
 
   /// @brief Get kind of Stmt (used by RTTI dyn_cast<> et al.)
-  StmtKind getKind() const { return kind_; }
+  Kind getKind() const { return kind_; }
 
   /// @brief Get original source location
   const SourceLocation& getSourceLocation() const { return loc_; }
@@ -149,7 +149,7 @@ protected:
     data_ = other.data_->clone();
   }
 
-  StmtKind kind_;
+  Kind kind_;
   SourceLocation loc_;
 
   int statementID_;
@@ -222,7 +222,7 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BlockStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
@@ -264,7 +264,7 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ExprStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::ExprStmt; }
   ACCEPTVISITOR(Stmt, ExprStmt)
 };
 
@@ -299,7 +299,7 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ReturnStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::ReturnStmt; }
   ACCEPTVISITOR(Stmt, ReturnStmt)
 };
 
@@ -345,7 +345,7 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VarDeclStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VarDeclStmt; }
   ACCEPTVISITOR(Stmt, VarDeclStmt)
 
 private:
@@ -385,7 +385,7 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VerticalRegionDeclStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VerticalRegionDeclStmt; }
   ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
 };
 
@@ -436,7 +436,7 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_StencilCallDeclStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::StencilCallDeclStmt; }
   ACCEPTVISITOR(Stmt, StencilCallDeclStmt)
 };
 
@@ -468,7 +468,9 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BoundaryConditionDeclStmt; }
+  static bool classof(const Stmt* stmt) {
+    return stmt->getKind() == Kind::BoundaryConditionDeclStmt;
+  }
   ACCEPTVISITOR(Stmt, BoundaryConditionDeclStmt)
 };
 
@@ -479,8 +481,8 @@ public:
 /// @brief This represents an if/then/else block
 /// @ingroup ast
 class IfStmt : public Stmt {
-  enum OperandKind { OK_Cond, OK_Then, OK_Else, OK_End };
-  std::shared_ptr<Stmt> subStmts_[OK_End];
+  enum OperandKind { Cond = 0, Then, Else, End };
+  std::shared_ptr<Stmt> subStmts_[End];
 
 public:
   /// @name Constructor & Destructor
@@ -497,37 +499,37 @@ public:
   // type when user changes the substatements! (should have only setters and const getters)
 
   const std::shared_ptr<Expr>& getCondExpr() const {
-    return dyn_cast<ExprStmt>(subStmts_[OK_Cond].get())->getExpr();
+    return dyn_cast<ExprStmt>(subStmts_[Cond].get())->getExpr();
   }
   std::shared_ptr<Expr>& getCondExpr() {
-    return dyn_cast<ExprStmt>(subStmts_[OK_Cond].get())->getExpr();
+    return dyn_cast<ExprStmt>(subStmts_[Cond].get())->getExpr();
   }
 
-  const std::shared_ptr<Stmt>& getCondStmt() const { return subStmts_[OK_Cond]; }
-  std::shared_ptr<Stmt>& getCondStmt() { return subStmts_[OK_Cond]; }
+  const std::shared_ptr<Stmt>& getCondStmt() const { return subStmts_[Cond]; }
+  std::shared_ptr<Stmt>& getCondStmt() { return subStmts_[Cond]; }
 
-  const std::shared_ptr<Stmt>& getThenStmt() const { return subStmts_[OK_Then]; }
-  std::shared_ptr<Stmt>& getThenStmt() { return subStmts_[OK_Then]; }
+  const std::shared_ptr<Stmt>& getThenStmt() const { return subStmts_[Then]; }
+  std::shared_ptr<Stmt>& getThenStmt() { return subStmts_[Then]; }
   void setThenStmt(std::shared_ptr<Stmt>& thenStmt) {
     DAWN_ASSERT_MSG((checkSameDataType(*thenStmt)),
                     "Trying to set substmt with different data type");
-    subStmts_[OK_Then] = thenStmt;
+    subStmts_[Then] = thenStmt;
   }
 
-  const std::shared_ptr<Stmt>& getElseStmt() const { return subStmts_[OK_Else]; }
-  std::shared_ptr<Stmt>& getElseStmt() { return subStmts_[OK_Else]; }
+  const std::shared_ptr<Stmt>& getElseStmt() const { return subStmts_[Else]; }
+  std::shared_ptr<Stmt>& getElseStmt() { return subStmts_[Else]; }
   bool hasElse() const { return getElseStmt() != nullptr; }
   void setElseStmt(std::shared_ptr<Stmt>& elseStmt) {
     DAWN_ASSERT_MSG((checkSameDataType(*elseStmt)),
                     "Trying to set substmt with different data type");
-    subStmts_[OK_Else] = elseStmt;
+    subStmts_[Else] = elseStmt;
   }
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_IfStmt; }
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::IfStmt; }
   virtual StmtRangeType getChildren() override {
-    return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], OK_End - 1);
+    return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], End - 1);
   }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;

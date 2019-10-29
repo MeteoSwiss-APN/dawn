@@ -128,7 +128,7 @@ void Stencil::updateFromChildren() {
     const Field& field = fieldPair.second;
 
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
-    bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
+    bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
     Array3i specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
 
     derivedInfo_.fields_.emplace(
@@ -255,10 +255,12 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
       auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
         // Adjust the Intend
-        if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
-          it->second.setIntend(Field::IK_InputOutput);
-        else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
-          it->second.setIntend(Field::IK_InputOutput);
+        if(it->second.getIntend() == Field::IntendKind::Input &&
+           field.getIntend() == Field::IntendKind::Output)
+          it->second.setIntend(Field::IntendKind::InputOutput);
+        else if(it->second.getIntend() == Field::IntendKind::Output &&
+                field.getIntend() == Field::IntendKind::Input)
+          it->second.setIntend(Field::IntendKind::InputOutput);
 
         // Merge the Extent
         it->second.mergeReadExtents(field.getReadExtents());

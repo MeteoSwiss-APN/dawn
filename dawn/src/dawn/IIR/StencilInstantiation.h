@@ -34,7 +34,7 @@ class OptimizerContext;
 
 namespace iir {
 
-enum class TemporaryScope { TS_LocalVariable, TS_StencilTemporary };
+enum class TemporaryScope { LocalVariable, StencilTemporary };
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
@@ -79,9 +79,9 @@ public:
   /// @brief Get the value of the global variable `name`
   const sir::Value& getGlobalVariableValue(const std::string& name) const;
 
-  enum RenameDirection {
-    RD_Above, ///< Rename all fields above the current statement
-    RD_Below  ///< Rename all fields below the current statement
+  enum class RenameDirection {
+    Above, ///< Rename all fields above the current statement
+    Below  ///< Rename all fields below the current statement
   };
 
   /// @brief Get the list of stencils

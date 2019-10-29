@@ -133,10 +133,10 @@ bool PassFieldVersioning::run(
           auto rc = fixRaceCondition(stencilInstantiation, newGraph.get(), stencil, doMethod,
                                      loopOrder, stageIdx, stmtIndex);
 
-          if(rc == RCKind::RK_Unresolvable) {
+          if(rc == RCKind::Unresolvable) {
             // Nothing we can do ... bail out
             return false;
-          } else if(rc == RCKind::RK_Fixed) {
+          } else if(rc == RCKind::Fixed) {
             // We fixed a race condition (this means some fields have changed and our current graph
             // is invalid)
             newGraph = oldGraph;
@@ -231,7 +231,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   }
 
   if(stencilSCCs->empty())
-    return RCKind::RK_Nothing;
+    return RCKind::Nothing;
 
   // Check whether our statement is an `ExprStmt` and contains an `AssignmentExpr`. If not,
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`, nothing
@@ -244,7 +244,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     if(context_.getOptions().DumpRaceConditionGraph)
       graph->toDot("rc_" + instantiation->getName() + ".dot");
     reportRaceCondition(statement, *instantiation, context_);
-    return RCKind::RK_Unresolvable;
+    return RCKind::Unresolvable;
   }
 
   // Get AccessIDs of the LHS and RHS
@@ -260,7 +260,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       if(context_.getOptions().DumpRaceConditionGraph)
         graph->toDot("rc_" + instantiation->getName() + ".dot");
       reportRaceCondition(statement, *instantiation, context_);
-      return RCKind::RK_Unresolvable;
+      return RCKind::Unresolvable;
     }
   }
 
@@ -294,7 +294,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     std::cout << "\n";
 
   numRenames_ += numRenames;
-  return RCKind::RK_Fixed;
+  return RCKind::Fixed;
 }
 
 } // namespace dawn

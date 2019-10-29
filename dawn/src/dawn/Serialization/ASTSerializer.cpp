@@ -325,7 +325,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
 
   // VerticalRegion.LoopOrder
   verticalRegionProto->set_loop_order(verticalRegion->LoopOrder ==
-                                              dawn::sir::VerticalRegion::LK_Backward
+                                              dawn::sir::VerticalRegion::LoopOrderKind::Backward
                                           ? dawn::proto::statements::VerticalRegion::Backward
                                           : dawn::proto::statements::VerticalRegion::Forward);
 
@@ -893,10 +893,10 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     sir::VerticalRegion::LoopOrderKind looporder;
     switch(stmtProto.vertical_region().loop_order()) {
     case proto::statements::VerticalRegion_LoopOrder_Forward:
-      looporder = sir::VerticalRegion::LK_Forward;
+      looporder = sir::VerticalRegion::LoopOrderKind::Forward;
       break;
     case proto::statements::VerticalRegion_LoopOrder_Backward:
-      looporder = sir::VerticalRegion::LK_Backward;
+      looporder = sir::VerticalRegion::LoopOrderKind::Backward;
       break;
     default:
       dawn_unreachable("no looporder specified");

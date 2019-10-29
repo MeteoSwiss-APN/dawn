@@ -23,18 +23,21 @@ namespace dawn {
 namespace iir {
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
+Extent merge(Extent lhs, Extent const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extent limit(Extent lhs, Extent const& rhs) {
+  lhs.limit(rhs);
+  return rhs;
+}
 
+Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(const ast::Offsets& offset)
-    : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
-      horizontalExtent_(ast::cartesian) {
-  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
-
-  horizontalExtent_ = HorizontalExtent(ast::cartesian, hOffset.offsetI(), hOffset.offsetI(),
-                                       hOffset.offsetJ(), hOffset.offsetJ());
-}
+    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
@@ -61,6 +64,14 @@ Extents& Extents::operator+=(const Extents& other) {
   return *this;
 }
 Extents operator+(Extents lhs, const Extents& rhs) { return lhs += rhs; }
+Extents merge(Extents lhs, Extents const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extents limit(Extents lhs, Extents const& rhs) {
+  lhs.limit(rhs);
+  return lhs;
+}
 
 void Extents::addVerticalCenter() { verticalExtent_.merge(0); }
 
@@ -71,8 +82,9 @@ bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise()
 bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
-Extents Extents::limit(int minus, int plus) const {
-  return Extents{horizontalExtent_.limit(minus, plus), verticalExtent_.limit(minus, plus)};
+void Extents::limit(Extents const& other) {
+  horizontalExtent_.limit(other.horizontalExtent());
+  verticalExtent_.limit(other.verticalExtent());
 }
 
 bool Extents::isPointwise() const {
@@ -87,11 +99,11 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
     return access;
 
   switch(loopOrder) {
-  case LoopOrderKind::LK_Parallel:
+  case LoopOrderKind::Parallel:
     // Any accesses in the vertical are against the loop-order
     return VerticalLoopOrderAccess{true, true};
 
-  case LoopOrderKind::LK_Forward: {
+  case LoopOrderKind::Forward: {
     // Accesses k+1 are against the loop order
     if(verticalExtent_.plus() > 0)
       access.CounterLoopOrder = true;
@@ -99,7 +111,7 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
       access.LoopOrder = true;
     break;
   }
-  case LoopOrderKind::LK_Backward:
+  case LoopOrderKind::Backward:
     // Accesses k-1 are against the loop order
     if(verticalExtent_.minus() < 0)
       access.CounterLoopOrder = true;
@@ -114,17 +126,17 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
 std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
                                                           VerticalLoopOrderDir loopOrderPolicy,
                                                           bool includeCenter) const {
-  if(loopOrder == LoopOrderKind::LK_Parallel) {
+  if(loopOrder == LoopOrderKind::Parallel) {
     if(includeCenter && verticalExtent_.plus() >= 0 && verticalExtent_.minus() <= 0)
       return std::make_optional(Extent{0, 0});
     return std::optional<Extent>();
   }
 
   // retrieving the head (Plus) of the extent
-  if((loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
+  if((loopOrder == LoopOrderKind::Forward &&
+      loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
+     (loopOrder == LoopOrderKind::Backward &&
+      loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent_.plus() < (includeCenter ? 0 : 1))
       return std::optional<Extent>();
 
@@ -133,10 +145,10 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
         Extent{std::max((includeCenter ? 0 : 1), verticalExtent_.minus()), verticalExtent_.plus()});
   }
   // retrieving the tail (Minus) of the extent
-  if((loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
+  if((loopOrder == LoopOrderKind::Backward &&
+      loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
+     (loopOrder == LoopOrderKind::Forward &&
+      loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent_.minus() > (includeCenter ? 0 : -1))
       return std::optional<Extent>();
 

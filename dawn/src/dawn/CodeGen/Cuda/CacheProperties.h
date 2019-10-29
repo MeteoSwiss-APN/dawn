@@ -67,7 +67,7 @@ struct CacheProperties {
   int getOffsetCommonIJCache(int dim) const;
 
   /// @brief returns the name of the index of a common cache @see isCommonCache
-  std::string getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const;
+  std::string getCommonCacheIndexName(iir::Cache::CacheType cacheType) const;
   /// @brief true if there is at least one common cache (@see isCommonCache)
   bool isThereACommonCache() const;
 

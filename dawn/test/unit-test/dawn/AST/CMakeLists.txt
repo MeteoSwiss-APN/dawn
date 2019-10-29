@@ -12,32 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-yoda_add_library(
-  NAME DawnAST
-  SOURCES AST.h
-          AST.cpp
-          ASTExpr.cpp
-          ASTExpr.h
-          ASTFwd.h
-          ASTStmt.cpp
-          ASTStmt.h
-          ASTStringifier.cpp
-          ASTStringifier.h
-          ASTUtil.h
-          ASTUtil.cpp
-          ASTVisitor.cpp
-          ASTVisitor.h
-          ASTVisitorHelpers.h
-          Offsets.h
-          Offsets.cpp
-  OBJECT
+dawn_add_unittest_impl(
+  NAME DawnUnittestAST
+  SOURCES
+          TestOffset.cpp
+          TestMain.cpp
 )
+target_include_directories(DawnUnittestAST PUBLIC $<TARGET_PROPERTY:DawnASTObjects,INCLUDE_DIRECTORIES>)
 
-yoda_combine_libraries(
-  NAME DawnAST
-  OBJECTS DawnASTObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSupportStatic DawnSIRStatic
-  VERSION ${DAWN_VERSION}
-  EXPORT_GROUP DawnTargets
-)

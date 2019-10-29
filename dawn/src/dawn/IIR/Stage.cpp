@@ -216,13 +216,13 @@ void Stage::updateGlobalVariablesInfo() {
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
         // Does this AccessID correspond to a field access?
-        if(metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+        if(metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
         }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        if(metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+        if(metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
         }
       }

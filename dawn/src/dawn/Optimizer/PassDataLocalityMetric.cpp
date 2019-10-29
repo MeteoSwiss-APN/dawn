@@ -122,14 +122,14 @@ public:
     DAWN_ASSERT(it != multiStage_.getCaches().end());
     const iir::Cache& cache = it->second;
 
-    if(cache.getCacheType() == iir::Cache::K) {
-      if(cache.getCacheIOPolicy() == iir::Cache::fill ||
-         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+    if(cache.getType() == iir::Cache::CacheType::K) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
+         cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numReads_++;
         individualReadWrites_[AccessID].numReads++;
       }
-      if(cache.getCacheIOPolicy() == iir::Cache::flush ||
-         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::flush ||
+         cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numWrites_++;
         individualReadWrites_[AccessID].numWrites++;
       }
@@ -161,7 +161,7 @@ public:
     DAWN_ASSERT(it != fields_.end());
     iir::Field& field = it->second;
 
-    if(field.getIntend() == iir::Field::IK_Input) {
+    if(field.getIntend() == iir::Field::IntendKind::Input) {
       if(!register_.count(AccessID)) {
 
         // Cache the center access
@@ -190,7 +190,7 @@ public:
       }
     }
 
-    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IK_Input)
+    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IntendKind::Input)
       updateTextureCache(AccessID, kOffset);
   }
 
@@ -244,27 +244,27 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
     if(multiStage.isCached(AccessID)) {
       const iir::Cache& cache = multiStage.getCaches().find(AccessID)->second;
 
-      if(cache.getCacheType() == iir::Cache::K) {
-        if(cache.getCacheIOPolicy() == iir::Cache::fill ||
-           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+      if(cache.getType() == iir::Cache::CacheType::K) {
+        if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
+           cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numReads += 1;
         }
-        if(cache.getCacheIOPolicy() == iir::Cache::flush ||
-           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+        if(cache.getIOPolicy() == iir::Cache::IOPolicy::flush ||
+           cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numWrites += 1;
         }
       }
 
     } else {
       switch(field.getIntend()) {
-      case iir::Field::IK_Output:
+      case iir::Field::IntendKind::Output:
         numWrites += 1;
         break;
-      case iir::Field::IK_InputOutput:
+      case iir::Field::IntendKind::InputOutput:
         numReads += 1;
         numWrites += 1;
         break;
-      case iir::Field::IK_Input:
+      case iir::Field::IntendKind::Input:
         numReads += 1;
         break;
       }

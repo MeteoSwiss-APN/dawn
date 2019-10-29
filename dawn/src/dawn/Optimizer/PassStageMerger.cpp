@@ -31,7 +31,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
-        sir::Attr::AK_MergeStages, sir::Attr::AK_MergeDoMethods);
+        sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
   bool MergeStages = context_.getOptions().MergeStages;
   bool MergeDoMethods = context_.getOptions().MergeDoMethods;
@@ -52,9 +52,9 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     // Do we need to run the analysis for thist stencil?
     const std::shared_ptr<iir::DependencyGraphStage>& stageDAG = stencil.getStageDependencyGraph();
     bool MergeDoMethodsOfStencil =
-        stencil.getStencilAttributes().has(sir::Attr::AK_MergeDoMethods) || MergeDoMethods;
+        stencil.getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods) || MergeDoMethods;
     bool MergeStagesOfStencil =
-        stencil.getStencilAttributes().has(sir::Attr::AK_MergeStages) || MergeStages;
+        stencil.getStencilAttributes().has(sir::Attr::Kind::MergeStages) || MergeStages;
 
     // Nope
     if(!MergeStagesOfStencil && !MergeDoMethodsOfStencil)

@@ -221,24 +221,24 @@ void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt>& stmt,
 
 namespace {
 
-enum OpKind {
-  OK_Plus,         // std::plus
-  OK_Minus,        // std::minus
-  OK_Multiplies,   // std::multiplies
-  OK_Divides,      // std::divides
-  OK_Modulus,      // std::modulus
-  OK_Negate,       // std::negate
-  OK_EqualTo,      // std::equal_to
-  OK_NotEqualTo,   // std::not_equal_to
-  OK_Greater,      // std::greater
-  OK_Less,         // std::less
-  OK_GreaterEqual, // std::greater_equal
-  OK_LessEqual,    // std::less_equal
-  OK_LogicalAnd,   // std::logical_and
-  OK_LogicalOr,    // std::logical_or
-  OK_LogicalNot,   // std::logical_not
+enum class OpKind {
+  Plus,         // std::plus
+  Minus,        // std::minus
+  Multiplies,   // std::multiplies
+  Divides,      // std::divides
+  Modulus,      // std::modulus
+  Negate,       // std::negate
+  EqualTo,      // std::equal_to
+  NotEqualTo,   // std::not_equal_to
+  Greater,      // std::greater
+  Less,         // std::less
+  GreaterEqual, // std::greater_equal
+  LessEqual,    // std::less_equal
+  LogicalAnd,   // std::logical_and
+  LogicalOr,    // std::logical_or
+  LogicalNot,   // std::logical_not
 
-  Op_Nop
+  Nop
 };
 
 /// @brief String to OpKind
@@ -246,21 +246,21 @@ enum OpKind {
 /// Note that we do not evaluate bit-wise operations and the modulo operator
 OpKind toOpKind(const char* op) {
   return StringSwitch<OpKind>(op)
-      .Case("+", OK_Plus)
-      .Case("-", OK_Minus)
-      .Case("*", OK_Multiplies)
-      .Case("/", OK_Divides)
-      .Case("-", OK_Negate)
-      .Case("==", OK_EqualTo)
-      .Case("!=", OK_NotEqualTo)
-      .Case(">", OK_Greater)
-      .Case("<", OK_Less)
-      .Case(">=", OK_GreaterEqual)
-      .Case("<=", OK_LessEqual)
-      .Case("&&", OK_LogicalAnd)
-      .Case("||", OK_LogicalOr)
-      .Case("!", OK_LogicalNot)
-      .Default(Op_Nop);
+      .Case("+", OpKind::Plus)
+      .Case("-", OpKind::Minus)
+      .Case("*", OpKind::Multiplies)
+      .Case("/", OpKind::Divides)
+      .Case("-", OpKind::Negate)
+      .Case("==", OpKind::EqualTo)
+      .Case("!=", OpKind::NotEqualTo)
+      .Case(">", OpKind::Greater)
+      .Case("<", OpKind::Less)
+      .Case(">=", OpKind::GreaterEqual)
+      .Case("<=", OpKind::LessEqual)
+      .Case("&&", OpKind::LogicalAnd)
+      .Case("||", OpKind::LogicalOr)
+      .Case("!", OpKind::LogicalNot)
+      .Default(OpKind::Nop);
 }
 
 /// @brief Evaluate the given functor
@@ -275,10 +275,10 @@ static bool evalImpl(ResultType& result, ValueTypes... operands) {
 //
 bool evalUnary(const char* opStr, double& result, double operand) {
   switch(toOpKind(opStr)) {
-  case OK_Negate:
-  case OK_Minus:
+  case OpKind::Negate:
+  case OpKind::Minus:
     return evalImpl<std::negate<double>>(result, operand);
-  case OK_LogicalNot:
+  case OpKind::LogicalNot:
     return evalImpl<std::logical_not<double>>(result, operand);
   default:
     return false;
@@ -290,29 +290,29 @@ bool evalUnary(const char* opStr, double& result, double operand) {
 //
 bool evalBinary(const char* opStr, double& result, double op1, double op2) {
   switch(toOpKind(opStr)) {
-  case OK_Plus:
+  case OpKind::Plus:
     return evalImpl<std::plus<double>>(result, op1, op2);
-  case OK_Minus:
+  case OpKind::Minus:
     return evalImpl<std::minus<double>>(result, op1, op2);
-  case OK_Multiplies:
+  case OpKind::Multiplies:
     return evalImpl<std::multiplies<double>>(result, op1, op2);
-  case OK_Divides:
+  case OpKind::Divides:
     return evalImpl<std::divides<double>>(result, op1, op2);
-  case OK_EqualTo:
+  case OpKind::EqualTo:
     return evalImpl<std::equal_to<double>>(result, op1, op2);
-  case OK_NotEqualTo:
+  case OpKind::NotEqualTo:
     return evalImpl<std::not_equal_to<double>>(result, op1, op2);
-  case OK_Greater:
+  case OpKind::Greater:
     return evalImpl<std::greater<double>>(result, op1, op2);
-  case OK_Less:
+  case OpKind::Less:
     return evalImpl<std::less<double>>(result, op1, op2);
-  case OK_GreaterEqual:
+  case OpKind::GreaterEqual:
     return evalImpl<std::greater_equal<double>>(result, op1, op2);
-  case OK_LessEqual:
+  case OpKind::LessEqual:
     return evalImpl<std::less_equal<double>>(result, op1, op2);
-  case OK_LogicalAnd:
+  case OpKind::LogicalAnd:
     return evalImpl<std::logical_and<double>>(result, op1, op2);
-  case OK_LogicalOr:
+  case OpKind::LogicalOr:
     return evalImpl<std::logical_or<double>>(result, op1, op2);
   default:
     return false;

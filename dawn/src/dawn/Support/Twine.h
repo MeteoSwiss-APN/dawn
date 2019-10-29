@@ -88,55 +88,55 @@ namespace dawn {
 /// @ingroup support
 class Twine {
   /// NodeKind - Represent the type of an argument.
-  enum NodeKind : unsigned char {
+  enum class NodeKind : unsigned char {
     /// An empty string; the result of concatenating anything with it is also
     /// empty.
-    NullKind,
+    Null,
 
     /// The empty string.
-    EmptyKind,
+    Empty,
 
     /// A pointer to a Twine instance.
-    TwineKind,
+    Twine,
 
     /// A pointer to a C string instance.
-    CStringKind,
+    CString,
 
     /// A pointer to an std::string instance.
-    StdStringKind,
+    StdString,
 
     /// A pointer to a StringRef instance.
-    StringRefKind,
+    StringRef,
 
     /// A pointer to a SmallString instance.
-    SmallStringKind,
+    SmallString,
 
     /// A char value, to render as a character.
-    CharKind,
+    Char,
 
     /// An unsigned int value, to render as an unsigned decimal integer.
-    DecUIKind,
+    DecUI,
 
     /// An int value, to render as a signed decimal integer.
-    DecIKind,
+    DecI,
 
     /// A pointer to an unsigned long value, to render as an unsigned decimal
     /// integer.
-    DecULKind,
+    DecUL,
 
     /// A pointer to a long value, to render as a signed decimal integer.
-    DecLKind,
+    DecL,
 
     /// A pointer to an unsigned long long value, to render as an unsigned
     /// decimal integer.
-    DecULLKind,
+    DecULL,
 
     /// A pointer to a long long value, to render as a signed decimal integer.
-    DecLLKind,
+    DecLL,
 
     /// A pointer to a uint64_t value, to render as an unsigned hexadecimal
     /// integer.
-    UHexKind
+    UHex
   };
 
   union Child {
@@ -168,13 +168,14 @@ private:
   NodeKind rhsKind_;
 
 private:
-  /// Construct a nullary twine; the kind must be NullKind or EmptyKind.
-  explicit Twine(NodeKind Kind) : lhsKind_(Kind), rhsKind_(EmptyKind) {
+  /// Construct a nullary twine; the kind must be NodeKind::Null or NodeKind::Empty.
+  explicit Twine(NodeKind Kind) : lhsKind_(Kind), rhsKind_(NodeKind::Empty) {
     assert(isNullary() && "Invalid kind!");
   }
 
   /// Construct a binary twine.
-  explicit Twine(const Twine& LHS, const Twine& RHS) : lhsKind_(TwineKind), rhsKind_(TwineKind) {
+  explicit Twine(const Twine& LHS, const Twine& RHS)
+      : lhsKind_(NodeKind::Twine), rhsKind_(NodeKind::Twine) {
     this->lhs_.twine = &LHS;
     this->rhs_.twine = &RHS;
     assert(isValid() && "Invalid twine!");
@@ -191,39 +192,41 @@ private:
   Twine& operator=(const Twine& Other) = delete;
 
   /// Check for the null twine.
-  bool isNull() const { return getLHSKind() == NullKind; }
+  bool isNull() const { return getLHSKind() == NodeKind::Null; }
 
   /// Check for the empty twine.
-  bool isEmpty() const { return getLHSKind() == EmptyKind; }
+  bool isEmpty() const { return getLHSKind() == NodeKind::Empty; }
 
   /// Check if this is a nullary twine (null or empty).
   bool isNullary() const { return isNull() || isEmpty(); }
 
   /// Check if this is a unary twine.
-  bool isUnary() const { return getRHSKind() == EmptyKind && !isNullary(); }
+  bool isUnary() const { return getRHSKind() == NodeKind::Empty && !isNullary(); }
 
   /// Check if this is a binary twine.
-  bool isBinary() const { return getLHSKind() != NullKind && getRHSKind() != EmptyKind; }
+  bool isBinary() const {
+    return getLHSKind() != NodeKind::Null && getRHSKind() != NodeKind::Empty;
+  }
 
   /// Check if this is a valid twine (satisfying the invariants on
   /// order and number of arguments).
   bool isValid() const {
     // Nullary twines always have Empty on the RHS.
-    if(isNullary() && getRHSKind() != EmptyKind)
+    if(isNullary() && getRHSKind() != NodeKind::Empty)
       return false;
 
     // Null should never appear on the RHS.
-    if(getRHSKind() == NullKind)
+    if(getRHSKind() == NodeKind::Null)
       return false;
 
     // The RHS cannot be non-empty if the LHS is empty.
-    if(getRHSKind() != EmptyKind && getLHSKind() == EmptyKind)
+    if(getRHSKind() != NodeKind::Empty && getLHSKind() == NodeKind::Empty)
       return false;
 
     // A twine child should always be binary.
-    if(getLHSKind() == TwineKind && !lhs_.twine->isBinary())
+    if(getLHSKind() == NodeKind::Twine && !lhs_.twine->isBinary())
       return false;
-    if(getRHSKind() == TwineKind && !rhs_.twine->isBinary())
+    if(getRHSKind() == NodeKind::Twine && !rhs_.twine->isBinary())
       return false;
 
     return true;
@@ -246,7 +249,7 @@ public:
   /// @{
 
   /// Construct from an empty string.
-  /*implicit*/ Twine() : lhsKind_(EmptyKind), rhsKind_(EmptyKind) {
+  /*implicit*/ Twine() : lhsKind_(NodeKind::Empty), rhsKind_(NodeKind::Empty) {
     assert(isValid() && "Invalid twine!");
   }
 
@@ -257,69 +260,78 @@ public:
   /// We take care here to optimize "" into the empty twine -- this will be
   /// optimized out for string constants. This allows Twine arguments have
   /// default "" values, without introducing unnecessary string constants.
-  /*implicit*/ Twine(const char* Str) : rhsKind_(EmptyKind) {
+  /*implicit*/ Twine(const char* Str) : rhsKind_(NodeKind::Empty) {
     if(Str[0] != '\0') {
       lhs_.cString = Str;
-      lhsKind_ = CStringKind;
+      lhsKind_ = NodeKind::CString;
     } else
-      lhsKind_ = EmptyKind;
+      lhsKind_ = NodeKind::Empty;
 
     assert(isValid() && "Invalid twine!");
   }
 
   /// Construct from an std::string.
-  /*implicit*/ Twine(const std::string& Str) : lhsKind_(StdStringKind), rhsKind_(EmptyKind) {
+  /*implicit*/ Twine(const std::string& Str)
+      : lhsKind_(NodeKind::StdString), rhsKind_(NodeKind::Empty) {
     lhs_.stdString = &Str;
     assert(isValid() && "Invalid twine!");
   }
 
   /// Construct from a StringRef.
-  /*implicit*/ Twine(const StringRef& Str) : lhsKind_(StringRefKind), rhsKind_(EmptyKind) {
+  /*implicit*/ Twine(const StringRef& Str)
+      : lhsKind_(NodeKind::StringRef), rhsKind_(NodeKind::Empty) {
     lhs_.stringRef = &Str;
     assert(isValid() && "Invalid twine!");
   }
 
   /// Construct from a SmallString.
   /*implicit*/ Twine(const SmallVectorImpl<char>& Str)
-      : lhsKind_(SmallStringKind), rhsKind_(EmptyKind) {
+      : lhsKind_(NodeKind::SmallString), rhsKind_(NodeKind::Empty) {
     lhs_.smallString = &Str;
     assert(isValid() && "Invalid twine!");
   }
 
   /// Construct from a char.
-  explicit Twine(char Val) : lhsKind_(CharKind), rhsKind_(EmptyKind) { lhs_.character = Val; }
+  explicit Twine(char Val) : lhsKind_(NodeKind::Char), rhsKind_(NodeKind::Empty) {
+    lhs_.character = Val;
+  }
 
   /// Construct from a signed char.
-  explicit Twine(signed char Val) : lhsKind_(CharKind), rhsKind_(EmptyKind) {
+  explicit Twine(signed char Val) : lhsKind_(NodeKind::Char), rhsKind_(NodeKind::Empty) {
     lhs_.character = static_cast<char>(Val);
   }
 
   /// Construct from an unsigned char.
-  explicit Twine(unsigned char Val) : lhsKind_(CharKind), rhsKind_(EmptyKind) {
+  explicit Twine(unsigned char Val) : lhsKind_(NodeKind::Char), rhsKind_(NodeKind::Empty) {
     lhs_.character = static_cast<char>(Val);
   }
 
   /// Construct a twine to print \p Val as an unsigned decimal integer.
-  explicit Twine(unsigned Val) : lhsKind_(DecUIKind), rhsKind_(EmptyKind) { lhs_.decUI = Val; }
+  explicit Twine(unsigned Val) : lhsKind_(NodeKind::DecUI), rhsKind_(NodeKind::Empty) {
+    lhs_.decUI = Val;
+  }
 
   /// Construct a twine to print \p Val as a signed decimal integer.
-  explicit Twine(int Val) : lhsKind_(DecIKind), rhsKind_(EmptyKind) { lhs_.decI = Val; }
+  explicit Twine(int Val) : lhsKind_(NodeKind::DecI), rhsKind_(NodeKind::Empty) { lhs_.decI = Val; }
 
   /// Construct a twine to print \p Val as an unsigned decimal integer.
-  explicit Twine(const unsigned long& Val) : lhsKind_(DecULKind), rhsKind_(EmptyKind) {
+  explicit Twine(const unsigned long& Val) : lhsKind_(NodeKind::DecUL), rhsKind_(NodeKind::Empty) {
     lhs_.decUL = &Val;
   }
 
   /// Construct a twine to print \p Val as a signed decimal integer.
-  explicit Twine(const long& Val) : lhsKind_(DecLKind), rhsKind_(EmptyKind) { lhs_.decL = &Val; }
+  explicit Twine(const long& Val) : lhsKind_(NodeKind::DecL), rhsKind_(NodeKind::Empty) {
+    lhs_.decL = &Val;
+  }
 
   /// Construct a twine to print \p Val as an unsigned decimal integer.
-  explicit Twine(const unsigned long long& Val) : lhsKind_(DecULLKind), rhsKind_(EmptyKind) {
+  explicit Twine(const unsigned long long& Val)
+      : lhsKind_(NodeKind::DecULL), rhsKind_(NodeKind::Empty) {
     lhs_.decULL = &Val;
   }
 
   /// Construct a twine to print \p Val as a signed decimal integer.
-  explicit Twine(const long long& Val) : lhsKind_(DecLLKind), rhsKind_(EmptyKind) {
+  explicit Twine(const long long& Val) : lhsKind_(NodeKind::DecLL), rhsKind_(NodeKind::Empty) {
     lhs_.decLL = &Val;
   }
 
@@ -330,7 +342,7 @@ public:
 
   /// Construct as the concatenation of a C string and a StringRef.
   /*implicit*/ Twine(const char* LHS, const StringRef& RHS)
-      : lhsKind_(CStringKind), rhsKind_(StringRefKind) {
+      : lhsKind_(NodeKind::CString), rhsKind_(NodeKind::StringRef) {
     this->lhs_.cString = LHS;
     this->rhs_.stringRef = &RHS;
     assert(isValid() && "Invalid twine!");
@@ -338,7 +350,7 @@ public:
 
   /// Construct as the concatenation of a StringRef and a C string.
   /*implicit*/ Twine(const StringRef& LHS, const char* RHS)
-      : lhsKind_(StringRefKind), rhsKind_(CStringKind) {
+      : lhsKind_(NodeKind::StringRef), rhsKind_(NodeKind::CString) {
     this->lhs_.stringRef = &LHS;
     this->rhs_.cString = RHS;
     assert(isValid() && "Invalid twine!");
@@ -346,7 +358,7 @@ public:
 
   /// Create a 'null' string, which is an empty string that always
   /// concatenates to form another empty string.
-  static Twine createNull() { return Twine(NullKind); }
+  static Twine createNull() { return Twine(NodeKind::Null); }
 
   /// @}
   /// @name Numeric Conversions
@@ -357,7 +369,7 @@ public:
     Child LHS, RHS;
     LHS.uHex = &Val;
     RHS.twine = nullptr;
-    return Twine(LHS, UHexKind, RHS, EmptyKind);
+    return Twine(LHS, NodeKind::UHex, RHS, NodeKind::Empty);
   }
 
   /// @}
@@ -371,15 +383,15 @@ public:
   /// Return true if this twine can be dynamically accessed as a single
   /// StringRef value with getSingleStringRef().
   bool isSingleStringRef() const {
-    if(getRHSKind() != EmptyKind)
+    if(getRHSKind() != NodeKind::Empty)
       return false;
 
     switch(getLHSKind()) {
-    case EmptyKind:
-    case CStringKind:
-    case StdStringKind:
-    case StringRefKind:
-    case SmallStringKind:
+    case NodeKind::Empty:
+    case NodeKind::CString:
+    case NodeKind::StdString:
+    case NodeKind::StringRef:
+    case NodeKind::SmallString:
       return true;
     default:
       return false;
@@ -409,15 +421,15 @@ public:
     switch(getLHSKind()) {
     default:
       dawn_unreachable("Out of sync with isSingleStringRef");
-    case EmptyKind:
+    case NodeKind::Empty:
       return StringRef();
-    case CStringKind:
+    case NodeKind::CString:
       return StringRef(lhs_.cString);
-    case StdStringKind:
+    case NodeKind::StdString:
       return StringRef(*lhs_.stdString);
-    case StringRefKind:
+    case NodeKind::StringRef:
       return *lhs_.stringRef;
-    case SmallStringKind:
+    case NodeKind::SmallString:
       return StringRef(lhs_.smallString->data(), lhs_.smallString->size());
     }
   }
@@ -461,7 +473,7 @@ public:
 inline Twine Twine::concat(const Twine& Suffix) const {
   // Concatenation with null is null.
   if(isNull() || Suffix.isNull())
-    return Twine(NullKind);
+    return Twine(NodeKind::Null);
 
   // Concatenation with empty yields the other side.
   if(isEmpty())
@@ -474,7 +486,7 @@ inline Twine Twine::concat(const Twine& Suffix) const {
   Child NewLHS, NewRHS;
   NewLHS.twine = this;
   NewRHS.twine = &Suffix;
-  NodeKind NewLHSKind = TwineKind, NewRHSKind = TwineKind;
+  NodeKind NewLHSKind = NodeKind::Twine, NewRHSKind = NodeKind::Twine;
   if(isUnary()) {
     NewLHS = lhs_;
     NewLHSKind = getLHSKind();
