@@ -16,6 +16,8 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/Array.h"
+#include <algorithm>
 
 namespace dawn {
 
@@ -26,22 +28,10 @@ PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "P
 bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& IIR = stencilInstantiation->getIIR();
 
-  std::array<unsigned int, 3> blockSize{0, 0, 0};
-  if(!context_.getOptions().block_size.empty()) {
-    std::string blockSizeStr = context_.getOptions().block_size;
-    std::istringstream idomain_size(blockSizeStr);
-    std::string arg;
-    getline(idomain_size, arg, ',');
-    unsigned int iBlockSize = std::stoi(arg);
-    getline(idomain_size, arg, ',');
-    unsigned int jBlockSize = std::stoi(arg);
-    getline(idomain_size, arg, ',');
-    unsigned int kBlockSize = std::stoi(arg);
-
-    assert(arg.empty());
-
-    blockSize = {iBlockSize, jBlockSize, kBlockSize};
-  } else {
+  Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().block_size_i),
+                     static_cast<unsigned int>(context_.getOptions().block_size_j),
+                     static_cast<unsigned int>(context_.getOptions().block_size_k)};
+  if(std::all_of(blockSize.begin(), blockSize.end(), [](unsigned int size) { return size == 0; })) {
     bool verticalPattern = true;
     for(const auto& stage : iterateIIROver<iir::Stage>(*IIR)) {
       if(!stage->getExtents().isHorizontalPointwise()) {

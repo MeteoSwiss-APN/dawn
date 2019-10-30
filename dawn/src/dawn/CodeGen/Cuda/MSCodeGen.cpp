@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/Support/Array.h"
 #include "dawn/Support/ContainerUtils.h"
 #include "dawn/Support/IndexRange.h"
 #include <functional>
@@ -711,15 +712,13 @@ void MSCodeGen::generateCudaKernelCode() {
   int nSM = options_.nsms;
   int maxBlocksPerSM = options_.maxBlocksPerSM;
 
-  if(nSM > 0) {
+  const Array2i domainSize{options_.domainSize[0], options_.domainSize[1]};
+  if(nSM > 0 && domainSize[0] * domainSize[1] > 0) {
     if(maxBlocksPerSM <= 0) {
       throw std::runtime_error("--max-blocks-sm must be defined");
     }
 
-    const int isize = options_.domainSize[0];
-    const int jsize = options_.domainSize[1];
-
-    int minBlocksPerSM = isize * jsize / (blockSize_[0] * blockSize_[1]);
+    int minBlocksPerSM = domainSize[0] * domainSize[1] / (blockSize_[0] * blockSize_[1]);
     if(solveKLoopInParallel_)
       minBlocksPerSM *= 80 / blockSize_[2];
     minBlocksPerSM /= nSM;
