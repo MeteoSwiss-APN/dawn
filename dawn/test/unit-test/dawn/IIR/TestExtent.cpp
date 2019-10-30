@@ -194,18 +194,18 @@ TEST(ExtentsTest, Add) {
 }
 
 TEST(ExtentsTest, Stringify) {
-  EXPECT_EQ(to_string(Extents()), "[<no_horizontal_extent>, (0, 0)]");
+  EXPECT_EQ(to_string(Extents()), "[<no_horizontal_extent>,(0,0)]");
 
-  EXPECT_EQ(to_string(Extents(ast::cartesian)), "[<no_horizontal_extent>, (0, 0)]");
+  EXPECT_EQ(to_string(Extents(ast::cartesian)), "[<no_horizontal_extent>,(0,0)]");
   EXPECT_EQ(to_string(Extents(ast::cartesian, 0, 0, 0, 0, -1, 1)),
-            "[<no_horizontal_extent>, (-1, 1)]");
-  EXPECT_EQ(to_string(Extents(ast::cartesian, -1, 1, -2, 2, -3, 3)), "[(-1, 1), (-2, 2), (-3, 3)]");
+            "[<no_horizontal_extent>,(-1,1)]");
+  EXPECT_EQ(to_string(Extents(ast::cartesian, -1, 1, -2, 2, -3, 3)), "[(-1,1),(-2,2),(-3,3)]");
 
-  EXPECT_EQ(to_string(Extents(ast::unstructured)), "[<no_horizontal_extent>, (0, 0)]");
+  EXPECT_EQ(to_string(Extents(ast::unstructured)), "[<no_horizontal_extent>,(0,0)]");
   EXPECT_EQ(to_string(Extents(ast::unstructured, false, Extent(-1, 3))),
-            "[<no_horizontal_extent>, (-1, 3)]");
+            "[<no_horizontal_extent>,(-1,3)]");
   EXPECT_EQ(to_string(Extents(ast::unstructured, true, Extent(0, 0))),
-            "[<has_horizontal_extent>, (0, 0)]");
+            "[<has_horizontal_extent>,(0,0)]");
 }
 
 TEST(ExtentsTest, verticalLoopOrder) {
