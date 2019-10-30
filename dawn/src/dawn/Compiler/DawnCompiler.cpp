@@ -204,7 +204,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassSetCaches>();
     optimizer->checkAndPushBack<PassComputeStageExtents>();
     optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-    optimizer->checkAndPushBack<PassSetBlockSize>();
+    if(getOptions().Backend == "cuda") {
+      optimizer->checkAndPushBack<PassSetBlockSize>();
+    }
     optimizer->checkAndPushBack<PassDataLocalityMetric>();
     optimizer->checkAndPushBack<PassSetSyncStage>();
     // Since both cuda code generation as well as serialization do not support stencil-functions, we

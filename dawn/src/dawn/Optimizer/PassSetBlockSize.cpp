@@ -51,15 +51,10 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
     for(const auto& stencil : (*IIR).getChildren()) {
       for(const auto& fieldP : stencil->getFields()) {
         const auto& field = fieldP.second;
+        auto const& hExtent extent_cast<CartesianExtent const&>(
+            field.field.getExtentsRB().horizontalExtent());
 
-        verticalPattern =
-            verticalPattern &&
-            extent_dispatch(field.field.getExtentsRB().horizontalExtent(),
-                            [](iir::CartesianExtent const& hExtent) {
-                              return hExtent.jPlus() == 0 && hExtent.jMinus() == 0;
-                            },
-                            [](iir::UnstructuredExtent const& hExtent) { return true; },
-                            [] { return true; });
+        verticalPattern = verticalPattern && hExtent.jPlus() == 0 && hExtent.jMinus() == 0;
       }
     }
 
