@@ -175,6 +175,7 @@ set(directories
   ${cwd}/PassSetBoundaryCondition
   ${cwd}/SIR
   ${cwd}/IIRSerializer
+  ${cwd}/Regression
 )
 
 list(APPEND compiler_flags -std=c++11 -O2)
