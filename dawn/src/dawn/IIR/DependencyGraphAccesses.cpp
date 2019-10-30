@@ -25,7 +25,7 @@ namespace iir {
 
 void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
 
-  if(!stmt->getChildren().empty()) { // TODO(SAP)
+  if(!stmt->getChildren().empty()) {
     for(const auto& s : stmt->getChildren())
       insertStatement(s);
   } else {
@@ -69,8 +69,7 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
   if(data.isHorizontalPointwise() && data.isVerticalPointwise())
     return " [style = dashed]";
   else {
-    const auto& hExtents =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(data.horizontalExtent());
+    const auto& hExtents = extent_cast<CartesianExtent const&>(data.horizontalExtent());
     const auto& vExtents = data.verticalExtent();
     return " [label = \"<" + std::to_string(hExtents.iMinus()) + ", " +
            std::to_string(hExtents.iPlus()) + ", " + std::to_string(hExtents.jMinus()) + ", " +
@@ -291,7 +290,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, iir::Extents(dawn::ast::cartesian));
+    nodeExtents.emplace(vertex.VertexID, iir::Extents{});
   }
 
   // Start from the output nodes and follow all paths
@@ -551,8 +550,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
     std::vector<int> extentsVec;
 
     auto vExtent = extents.verticalExtent();
-    auto hExtent =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+    auto hExtent = extent_cast<CartesianExtent const&>(extents.horizontalExtent());
 
     extentsVec.push_back(hExtent.iMinus());
     extentsVec.push_back(hExtent.iPlus());
@@ -572,14 +570,14 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
     jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
-    if(metaData_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
+    if(metaData_.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
       jvertex["type"] = "field_temporary";
-    else if(metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::Field, AccessID))
       jvertex["type"] = "field";
-    else if(metaData_.isAccessType(FieldAccessType::FAT_LocalVariable, AccessID) ||
-            metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::LocalVariable, AccessID) ||
+            metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
       jvertex["type"] = "variable";
-    else if(metaData_.isAccessType(iir::FieldAccessType::FAT_Literal, AccessID))
+    else if(metaData_.isAccessType(iir::FieldAccessType::Literal, AccessID))
       jvertex["type"] = "literal";
     else
       dawn_unreachable("invalid vertex type");
@@ -618,12 +616,12 @@ bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundary
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
 
   for(const auto& vertexIDExtentsPair : extentMap) {
-    const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-        vertexIDExtentsPair.second.horizontalExtent());
-    if(hExtents.iPlus() > maxHorizontalBoundaryExtent ||
-       hExtents.iMinus() < -maxHorizontalBoundaryExtent ||
-       hExtents.jPlus() > maxHorizontalBoundaryExtent ||
-       hExtents.jMinus() < -maxHorizontalBoundaryExtent)
+    auto const& hExtent =
+        extent_cast<iir::CartesianExtent const&>(vertexIDExtentsPair.second.horizontalExtent());
+    if(hExtent.iPlus() > maxHorizontalBoundaryExtent ||
+       hExtent.iMinus() < -maxHorizontalBoundaryExtent ||
+       hExtent.jPlus() > maxHorizontalBoundaryExtent ||
+       hExtent.jMinus() < -maxHorizontalBoundaryExtent)
       return true;
   }
   return false;

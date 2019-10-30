@@ -23,7 +23,7 @@ namespace iir {
 /// @enum LoopOrderKind
 /// @brief Loop order of a multi-stage and stages
 /// @ingroup optimizer
-enum class LoopOrderKind { LK_Forward = 0, LK_Backward, LK_Parallel };
+enum class LoopOrderKind { Forward = 0, Backward, Parallel };
 
 /// @fn loopOrdersAreCompatible
 /// @brief Check if loop order `l1` is compatible with loop order `l2` (meaning they are the same or

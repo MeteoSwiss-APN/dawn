@@ -35,7 +35,7 @@ class StencilMetaInformation;
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod : public IIRNode<Stage, DoMethod, iir::Stmt> {
+class DoMethod : public IIRNode<Stage, DoMethod, void> {
   Interval interval_;
   long unsigned int id_;
 
@@ -131,82 +131,9 @@ public:
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 
-  const std::vector<std::shared_ptr<iir::Stmt>>& getChildren() const {
-    return ast_.getStatements();
-  }
-
-  std::vector<std::shared_ptr<iir::Stmt>>& getChildren() { return ast_.getStatements(); }
-
-  auto childrenBegin() { return ast_.getStatements().begin(); }
-  auto childrenEnd() { return ast_.getStatements().end(); }
-
-  inline auto childrenRBegin() { return ast_.getStatements().rbegin(); }
-  inline auto childrenREnd() { return ast_.getStatements().rend(); }
-
-  inline auto childrenBegin() const { return ast_.getStatements().begin(); }
-  inline auto childrenEnd() const { return ast_.getStatements().end(); }
-
-  inline auto childrenRBegin() const { return ast_.getStatements().rbegin(); }
-  inline auto childrenREnd() const { return ast_.getStatements().rend(); }
-
-  inline auto& getChild(unsigned long pos) { return ast_.getStatements()[pos]; }
-
-  template <typename T>
-  inline auto childrenErase(T childIt) {
-    auto it_ = ast_.getStatements().erase(childIt);
-    return it_;
-  }
-
-  inline bool checkTreeConsistency() const { return true; }
-
-  /// @brief set the parent pointer of the children
-  template <typename TChildSmartPtr>
-  void setChildrenParent(TChildSmartPtr* = 0) {}
-
-  void setChildParent(const std::shared_ptr<iir::Stmt>& child) {}
-
-  void insertChild(std::shared_ptr<iir::Stmt>&& child) { ast_.getStatements().push_back(child); }
-
-  void insertChild(std::shared_ptr<iir::Stmt>&& child, const std::unique_ptr<DoMethod>& thisNode) {
-    ast_.getStatements().push_back(child);
-  }
-
-  auto insertChild(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos,
-                   std::shared_ptr<iir::Stmt>&& child) {
-    return ast_.getStatements().insert(pos, std::move(child));
-  }
-
-  template <typename Iterator>
-  auto insertChildren(std::vector<std::shared_ptr<iir::Stmt>>::const_iterator pos, Iterator first,
-                      Iterator last) {
-    return ast_.getStatements().insert(pos, first, last);
-  }
-
-  template <typename Iterator>
-  ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
-                               const std::unique_ptr<DoMethod>&) {
-    return ast_.getStatements().insert(pos, first, last);
-  }
-
-  void printTree() {}
-
-  void replace(const std::shared_ptr<iir::Stmt>& inputChild,
-               std::shared_ptr<iir::Stmt>& withNewChild) {
-    auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
-    *it = withNewChild;
-  }
-
-  void replace(const std::shared_ptr<iir::Stmt>& inputChild,
-               std::shared_ptr<iir::Stmt>& withNewChild, const std::unique_ptr<DoMethod>&) {
-    auto it = std::find(ast_.getStatements().begin(), ast_.getStatements().end(), inputChild);
-    *it = withNewChild;
-  }
-
-  bool childrenEmpty() const { return ast_.getStatements().empty(); }
-  void clearChildren() { ast_.getStatements().clear(); }
-
   void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
   iir::BlockStmt const& getAST() const { return ast_; }
+  iir::BlockStmt& getAST() { return ast_; }
 };
 
 } // namespace iir
@@ -215,7 +142,7 @@ template <typename RootNode>
 auto iterateIIROverStmt(const RootNode& root) {
   std::vector<std::shared_ptr<iir::Stmt>> allStmts;
   for(auto& doMethod : iterateIIROver<iir::DoMethod>(root)) {
-    std::copy(doMethod->getChildren().begin(), doMethod->getChildren().end(),
+    std::copy(doMethod->getAST().getStatements().begin(), doMethod->getAST().getStatements().end(),
               std::back_inserter(allStmts));
   }
   return allStmts;

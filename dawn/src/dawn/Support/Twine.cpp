@@ -21,7 +21,7 @@ namespace dawn {
 
 std::string Twine::str() const {
   // If we're storing only a std::string, just return it.
-  if(lhsKind_ == StdStringKind && rhsKind_ == EmptyKind)
+  if(lhsKind_ == NodeKind::StdString && rhsKind_ == NodeKind::Empty)
     return *lhs_.stdString;
 
   // Otherwise, flatten and copy the contents first.
@@ -39,10 +39,10 @@ void Twine::toVector(SmallVectorImpl<char>& Out) const {
 StringRef Twine::toNullTerminatedStringRef(SmallVectorImpl<char>& Out) const {
   if(isUnary()) {
     switch(getLHSKind()) {
-    case CStringKind:
+    case NodeKind::CString:
       // Already null terminated, yay!
       return StringRef(lhs_.cString);
-    case StdStringKind: {
+    case NodeKind::StdString: {
       const std::string* str = lhs_.stdString;
       return StringRef(str->c_str(), str->size());
     }
@@ -58,47 +58,47 @@ StringRef Twine::toNullTerminatedStringRef(SmallVectorImpl<char>& Out) const {
 
 void Twine::printOneChild(std::ostream& OS, Child Ptr, NodeKind Kind) const {
   switch(Kind) {
-  case Twine::NullKind:
+  case Twine::NodeKind::Null:
     break;
-  case Twine::EmptyKind:
+  case Twine::NodeKind::Empty:
     break;
-  case Twine::TwineKind:
+  case Twine::NodeKind::Twine:
     Ptr.twine->print(OS);
     break;
-  case Twine::CStringKind:
+  case Twine::NodeKind::CString:
     OS << Ptr.cString;
     break;
-  case Twine::StdStringKind:
+  case Twine::NodeKind::StdString:
     OS << *Ptr.stdString;
     break;
-  case Twine::StringRefKind:
+  case Twine::NodeKind::StringRef:
     OS << Ptr.stringRef->str();
     break;
-  case Twine::SmallStringKind:
+  case Twine::NodeKind::SmallString:
     OS << StringRef(Ptr.smallString->data(), Ptr.smallString->size()).str();
     break;
-  case Twine::CharKind:
+  case Twine::NodeKind::Char:
     OS << Ptr.character;
     break;
-  case Twine::DecUIKind:
+  case Twine::NodeKind::DecUI:
     OS << Ptr.decUI;
     break;
-  case Twine::DecIKind:
+  case Twine::NodeKind::DecI:
     OS << Ptr.decI;
     break;
-  case Twine::DecULKind:
+  case Twine::NodeKind::DecUL:
     OS << *Ptr.decUL;
     break;
-  case Twine::DecLKind:
+  case Twine::NodeKind::DecL:
     OS << *Ptr.decL;
     break;
-  case Twine::DecULLKind:
+  case Twine::NodeKind::DecULL:
     OS << *Ptr.decULL;
     break;
-  case Twine::DecLLKind:
+  case Twine::NodeKind::DecLL:
     OS << *Ptr.decLL;
     break;
-  case Twine::UHexKind:
+  case Twine::NodeKind::UHex:
     OS << *Ptr.uHex;
     break;
   }
@@ -106,51 +106,51 @@ void Twine::printOneChild(std::ostream& OS, Child Ptr, NodeKind Kind) const {
 
 void Twine::printOneChildRepr(std::ostream& OS, Child Ptr, NodeKind Kind) const {
   switch(Kind) {
-  case Twine::NullKind:
+  case Twine::NodeKind::Null:
     OS << "null";
     break;
-  case Twine::EmptyKind:
+  case Twine::NodeKind::Empty:
     OS << "empty";
     break;
-  case Twine::TwineKind:
+  case Twine::NodeKind::Twine:
     OS << "rope:";
     Ptr.twine->printRepr(OS);
     break;
-  case Twine::CStringKind:
+  case Twine::NodeKind::CString:
     OS << "cstring:\"" << Ptr.cString << "\"";
     break;
-  case Twine::StdStringKind:
+  case Twine::NodeKind::StdString:
     OS << "std::string:\"" << Ptr.stdString << "\"";
     break;
-  case Twine::StringRefKind:
+  case Twine::NodeKind::StringRef:
     OS << "stringref:\"" << Ptr.stringRef->str() << "\"";
     break;
-  case Twine::SmallStringKind:
+  case Twine::NodeKind::SmallString:
     OS << "smallstring:\"" << StringRef(Ptr.smallString->data(), Ptr.smallString->size()).str()
        << "\"";
     break;
-  case Twine::CharKind:
+  case Twine::NodeKind::Char:
     OS << "char:\"" << Ptr.character << "\"";
     break;
-  case Twine::DecUIKind:
+  case Twine::NodeKind::DecUI:
     OS << "decUI:\"" << Ptr.decUI << "\"";
     break;
-  case Twine::DecIKind:
+  case Twine::NodeKind::DecI:
     OS << "decI:\"" << Ptr.decI << "\"";
     break;
-  case Twine::DecULKind:
+  case Twine::NodeKind::DecUL:
     OS << "decUL:\"" << *Ptr.decUL << "\"";
     break;
-  case Twine::DecLKind:
+  case Twine::NodeKind::DecL:
     OS << "decL:\"" << *Ptr.decL << "\"";
     break;
-  case Twine::DecULLKind:
+  case Twine::NodeKind::DecULL:
     OS << "decULL:\"" << *Ptr.decULL << "\"";
     break;
-  case Twine::DecLLKind:
+  case Twine::NodeKind::DecLL:
     OS << "decLL:\"" << *Ptr.decLL << "\"";
     break;
-  case Twine::UHexKind:
+  case Twine::NodeKind::UHex:
     OS << "uhex:\"" << Ptr.uHex << "\"";
     break;
   }

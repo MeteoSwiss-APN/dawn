@@ -53,12 +53,6 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
   struct DerivedInfo {
 
-    DerivedInfo() : extents_{ast::cartesian} {}
-    DerivedInfo(DerivedInfo&&) = default;
-    DerivedInfo(const DerivedInfo&) = default;
-    DerivedInfo& operator=(DerivedInfo&&) = default;
-    DerivedInfo& operator=(const DerivedInfo&) = default;
-
     void clear();
 
     /// Declaration of the fields of this stage
@@ -69,8 +63,9 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
     std::unordered_set<int> globalVariables_;
     std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
 
-    Extents extents_;
-    bool requiresSync_ = false;
+    // Further data (not cleared!)
+    Extents extents_;           // valid after PassComputeStageExtents
+    bool requiresSync_ = false; // valid after PassSetSyncStage
   };
 
   DerivedInfo derivedInfo_;

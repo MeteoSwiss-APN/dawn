@@ -23,25 +23,32 @@ namespace dawn {
 namespace iir {
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
+Extent merge(Extent lhs, Extent const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extent limit(Extent lhs, Extent const& rhs) {
+  lhs.limit(rhs);
+  return rhs;
+}
 
+Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
-Extents::Extents(const ast::Offsets& offset)
-    : verticalExtent_(offset.verticalOffset(), offset.verticalOffset()),
-      horizontalExtent_(ast::cartesian) {
-  auto const& hOffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
-
-  horizontalExtent_ = HorizontalExtent(ast::cartesian, hOffset.offsetI(), hOffset.offsetI(),
-                                       hOffset.offsetJ(), hOffset.offsetJ());
-}
+Extents::Extents(ast::Offsets const& offset)
+    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
-    : verticalExtent_(extent3minus, extent3plus),
-      horizontalExtent_(ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus) {}
-
+    : Extents(
+          HorizontalExtent{ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus},
+          Extent{extent3minus, extent3plus}) {}
 Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian) {}
+
+Extents::Extents(ast::unstructured_, bool hasOffset, Extent const& vExtent)
+    : Extents(HorizontalExtent{ast::unstructured, hasOffset}, Extent{vExtent}) {}
+Extents::Extents(ast::unstructured_) : horizontalExtent_(ast::unstructured) {}
 
 void Extents::merge(const Extents& other) {
   horizontalExtent_.merge(other.horizontalExtent_);
@@ -61,6 +68,14 @@ Extents& Extents::operator+=(const Extents& other) {
   return *this;
 }
 Extents operator+(Extents lhs, const Extents& rhs) { return lhs += rhs; }
+Extents merge(Extents lhs, Extents const& rhs) {
+  lhs.merge(rhs);
+  return lhs;
+}
+Extents limit(Extents lhs, Extents const& rhs) {
+  lhs.limit(rhs);
+  return lhs;
+}
 
 void Extents::addVerticalCenter() { verticalExtent_.merge(0); }
 
@@ -71,8 +86,9 @@ bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise()
 bool Extents::hasVerticalCenter() const {
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
-Extents Extents::limit(int minus, int plus) const {
-  return Extents{horizontalExtent_.limit(minus, plus), verticalExtent_.limit(minus, plus)};
+void Extents::limit(Extents const& other) {
+  horizontalExtent_.limit(other.horizontalExtent());
+  verticalExtent_.limit(other.verticalExtent());
 }
 
 bool Extents::isPointwise() const {
@@ -87,11 +103,11 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
     return access;
 
   switch(loopOrder) {
-  case LoopOrderKind::LK_Parallel:
+  case LoopOrderKind::Parallel:
     // Any accesses in the vertical are against the loop-order
     return VerticalLoopOrderAccess{true, true};
 
-  case LoopOrderKind::LK_Forward: {
+  case LoopOrderKind::Forward: {
     // Accesses k+1 are against the loop order
     if(verticalExtent_.plus() > 0)
       access.CounterLoopOrder = true;
@@ -99,7 +115,7 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
       access.LoopOrder = true;
     break;
   }
-  case LoopOrderKind::LK_Backward:
+  case LoopOrderKind::Backward:
     // Accesses k-1 are against the loop order
     if(verticalExtent_.minus() < 0)
       access.CounterLoopOrder = true;
@@ -114,17 +130,17 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
 std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
                                                           VerticalLoopOrderDir loopOrderPolicy,
                                                           bool includeCenter) const {
-  if(loopOrder == LoopOrderKind::LK_Parallel) {
+  if(loopOrder == LoopOrderKind::Parallel) {
     if(includeCenter && verticalExtent_.plus() >= 0 && verticalExtent_.minus() <= 0)
       return std::make_optional(Extent{0, 0});
     return std::optional<Extent>();
   }
 
   // retrieving the head (Plus) of the extent
-  if((loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
+  if((loopOrder == LoopOrderKind::Forward &&
+      loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
+     (loopOrder == LoopOrderKind::Backward &&
+      loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent_.plus() < (includeCenter ? 0 : 1))
       return std::optional<Extent>();
 
@@ -133,10 +149,10 @@ std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrde
         Extent{std::max((includeCenter ? 0 : 1), verticalExtent_.minus()), verticalExtent_.plus()});
   }
   // retrieving the tail (Minus) of the extent
-  if((loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
+  if((loopOrder == LoopOrderKind::Backward &&
+      loopOrderPolicy == VerticalLoopOrderDir::CounterLoopOrder) ||
+     (loopOrder == LoopOrderKind::Forward &&
+      loopOrderPolicy == VerticalLoopOrderDir::InLoopOrder)) {
     if(verticalExtent_.minus() > (includeCenter ? 0 : -1))
       return std::optional<Extent>();
 
@@ -154,12 +170,29 @@ bool Extents::operator==(const Extents& other) const {
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
 std::string to_string(const Extents& extent) {
-  auto const& hExtents = extent_cast<CartesianExtent const&>(extent.horizontalExtent());
-  auto const& vExtents = extent.verticalExtent();
+  using namespace std::string_literals;
+  std::string hExtentString;
+  auto const& hExtent = extent.horizontalExtent();
+  HorizontalExtentImpl* ptr = hExtent.impl_.get();
 
-  return "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) +
-         "), (" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) +
-         "), (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
+  if(hExtent.isPointwise()) {
+    hExtentString = "<no_horizontal_extent>"s;
+
+  } else if(auto cExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
+    hExtentString = "("s + std::to_string(cExtent->iMinus()) + "," +
+                    std::to_string(cExtent->iPlus()) + "),(" + std::to_string(cExtent->jMinus()) +
+                    "," + std::to_string(cExtent->jPlus()) + ")";
+
+  } else if(auto uExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
+    hExtentString = uExtent->hasExtent() ? "<has_horizontal_extent>"s : "<no_horizontal_extent>"s;
+
+  } else {
+    dawn_unreachable("unknown extent class");
+  }
+
+  auto const& vExtents = extent.verticalExtent();
+  return "["s + hExtentString + ",(" + std::to_string(vExtents.minus()) + "," +
+         std::to_string(vExtents.plus()) + ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {

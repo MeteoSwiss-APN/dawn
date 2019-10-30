@@ -150,8 +150,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
 
       // Bundle all the statements in a block statements
       auto newBlockStmt = iir::makeBlockStmt();
-      std::copy(newStencilCalls.begin(), newStencilCalls.end(),
-                std::back_inserter(newBlockStmt->getStatements()));
+      newBlockStmt->insert_back(newStencilCalls);
 
       if(oldStencilCall == stmt) {
         // Replace the the statement directly

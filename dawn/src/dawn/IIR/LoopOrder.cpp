@@ -20,7 +20,7 @@ namespace dawn {
 namespace iir {
 
 bool loopOrdersAreCompatible(LoopOrderKind l1, LoopOrderKind l2) {
-  return (l1 == l2 || l1 == LoopOrderKind::LK_Parallel || l2 == LoopOrderKind::LK_Parallel);
+  return (l1 == l2 || l1 == LoopOrderKind::Parallel || l2 == LoopOrderKind::Parallel);
 }
 
 std::ostream& operator<<(std::ostream& os, LoopOrderKind loopOrder) {
@@ -29,11 +29,11 @@ std::ostream& operator<<(std::ostream& os, LoopOrderKind loopOrder) {
 
 const char* loopOrderToString(LoopOrderKind loopOrder) {
   switch(loopOrder) {
-  case LoopOrderKind::LK_Forward:
+  case LoopOrderKind::Forward:
     return "forward";
-  case LoopOrderKind::LK_Backward:
+  case LoopOrderKind::Backward:
     return "backward";
-  case LoopOrderKind::LK_Parallel:
+  case LoopOrderKind::Parallel:
     return "parallel";
   }
   dawn_unreachable(
@@ -41,7 +41,7 @@ const char* loopOrderToString(LoopOrderKind loopOrder) {
 }
 
 void increment(int& lev, LoopOrderKind order) {
-  if(order == LoopOrderKind::LK_Backward) {
+  if(order == LoopOrderKind::Backward) {
     lev--;
   } else {
     lev++;
@@ -49,7 +49,7 @@ void increment(int& lev, LoopOrderKind order) {
 }
 
 void increment(int& lev, LoopOrderKind order, int step) {
-  if(order == LoopOrderKind::LK_Backward) {
+  if(order == LoopOrderKind::Backward) {
     lev -= step;
   } else {
     lev += step;
@@ -57,7 +57,7 @@ void increment(int& lev, LoopOrderKind order, int step) {
 }
 
 bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order) {
-  if(order == LoopOrderKind::LK_Backward) {
+  if(order == LoopOrderKind::Backward) {
     if(level >= limit) {
       return true;
     }

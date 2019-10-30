@@ -71,7 +71,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt
   RangeToString fieldArgs(",", "(", ");");
 
   ss_ << fieldArgs(nonTempFields, [&](const std::pair<const int, iir::Stencil::FieldInfo>& fieldp) {
-    if(metadata_.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary, fieldp.first)) {
+    if(metadata_.isAccessType(iir::FieldAccessType::InterStencilTemporary, fieldp.first)) {
       return "m_" + fieldp.second.Name;
     } else {
       return fieldp.second.Name;
@@ -99,7 +99,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, iir::getAccessID(expr))) {
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, iir::getAccessID(expr))) {
     ss_ << "m_globals.";
   }
 

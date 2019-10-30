@@ -22,7 +22,6 @@ void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
     readAccessExtents_->merge(extents);
   else
     readAccessExtents_ = std::make_optional(extents);
-  updateTotalExtents();
 }
 json::json FieldAccessExtents::jsonDump() const {
   json::json node;
@@ -50,8 +49,6 @@ void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
     writeAccessExtents_->merge(extents);
   else
     writeAccessExtents_ = std::make_optional(extents);
-
-  updateTotalExtents();
 }
 void FieldAccessExtents::mergeReadExtents(std::optional<Extents> const& extents) {
   if(extents)
@@ -64,20 +61,23 @@ void FieldAccessExtents::mergeWriteExtents(std::optional<Extents> const& extents
 
 void FieldAccessExtents::setReadExtents(Extents const& extents) {
   readAccessExtents_ = std::make_optional(extents);
-  updateTotalExtents();
 }
 void FieldAccessExtents::setWriteExtents(Extents const& extents) {
   writeAccessExtents_ = std::make_optional(extents);
-  updateTotalExtents();
 }
 
-void FieldAccessExtents::updateTotalExtents() {
-  if(readAccessExtents_) {
-    totalExtents_ = *readAccessExtents_;
-    if(writeAccessExtents_)
-      totalExtents_.merge(*writeAccessExtents_);
+Extents FieldAccessExtents::getExtents() const {
+  if(readAccessExtents_ && writeAccessExtents_) {
+    auto totalExtents = *readAccessExtents_;
+    totalExtents.merge(*writeAccessExtents_);
+    return totalExtents;
+  } else if(readAccessExtents_) {
+    return *readAccessExtents_;
   } else if(writeAccessExtents_) {
-    totalExtents_ = *writeAccessExtents_;
+    return *writeAccessExtents_;
+  } else {
+    DAWN_ASSERT("no extents available");
+    dawn_unreachable("");
   }
 }
 

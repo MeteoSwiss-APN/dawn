@@ -12,6 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+add_subdirectory(AST)
 add_subdirectory(Optimizer)
 add_subdirectory(IIR)
 add_subdirectory(SIR)

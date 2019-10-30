@@ -120,7 +120,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
     if(!nestingOfStencilFunArgLists_)
       ss_ << "eval(";
     else
@@ -150,9 +150,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
     ss_ << currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr)) << "("
-        << currentFunction_->evalOffsetOfFieldAccessExpr(expr, false) << ")";
+        << to_string(ast::cartesian, currentFunction_->evalOffsetOfFieldAccessExpr(expr, false))
+        << ")";
   } else
-    ss_ << getName(expr) << "(" << expr->getOffset() << ")";
+    ss_ << getName(expr) << "(" << to_string(ast::cartesian, expr->getOffset()) << ")";
 
   if(!nestingOfStencilFunArgLists_)
     ss_ << ")";
