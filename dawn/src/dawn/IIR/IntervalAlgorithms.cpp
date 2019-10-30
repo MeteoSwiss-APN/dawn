@@ -57,10 +57,10 @@ MultiInterval substract(const iir::Interval& int1, const MultiInterval& int2) {
 
 Cache::window computeWindowOffset(LoopOrderKind loopOrder, iir::Interval const& accessInterval,
                                   iir::Interval const& computeInterval) {
-  return Cache::window{(accessInterval.lowerBound() - ((loopOrder == LoopOrderKind::LK_Backward)
+  return Cache::window{(accessInterval.lowerBound() - ((loopOrder == LoopOrderKind::Backward)
                                                            ? computeInterval.upperBound()
                                                            : computeInterval.lowerBound())),
-                       (accessInterval.upperBound() - ((loopOrder == LoopOrderKind::LK_Backward)
+                       (accessInterval.upperBound() - ((loopOrder == LoopOrderKind::Backward)
                                                            ? computeInterval.upperBound()
                                                            : computeInterval.lowerBound()))};
 }

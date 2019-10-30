@@ -154,7 +154,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
+  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const gtclang::mesh_t<LibTag> &mesh");
@@ -203,7 +203,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                               fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
@@ -212,10 +212,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -245,18 +244,17 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   }
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
 
   stencilWrapperClass.addComment("Members");
   //
   // Members
   //
   // Define allocated memebers if necessary
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>())
+    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
@@ -392,7 +390,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
       // compute the partition of the intervals
       auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-      if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+      if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       auto getLoop = [](ast::Expr::LocationType type) {
@@ -421,7 +419,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               const iir::DoMethod& doMethod = *doMethodPtr;
               if(!doMethod.getInterval().overlaps(interval))
                 continue;
-              for(const auto& stmt : doMethod.getChildren()) {
+              for(const auto& stmt : doMethod.getAST().getStatements()) {
                 stmt->accept(stencilBodyCXXVisitor);
                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
@@ -485,7 +483,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
-        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field)
+        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::Field)
           continue;
         const std::string argName = exprArg->Name;
 

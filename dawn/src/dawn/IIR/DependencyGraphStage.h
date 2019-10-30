@@ -28,7 +28,7 @@ class StencilInstantiation;
 /// @enum DependencyGraphStageEdgeKind
 /// @brief Type of edges
 /// @ingroup optimizer
-enum class DependencyGraphStageEdgeData { EK_Depends };
+enum class DependencyGraphStageEdgeData { Depends };
 
 /// @brief Dependency graph of the stages
 /// @ingroup optimizer

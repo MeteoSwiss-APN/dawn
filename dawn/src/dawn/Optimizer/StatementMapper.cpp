@@ -39,7 +39,7 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
 void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    scope_.top()->doMethod_.insertChild(std::shared_ptr<iir::Stmt>{stmt});
+    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
   }
 }
 
@@ -307,20 +307,19 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 
       auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-      iir::replaceOldExprWithNewExprInStmt((*(scope_.top()->doMethod_.childrenRBegin())), expr,
-                                           newExpr);
+      iir::replaceOldExprWithNewExprInStmt(
+          (*(scope_.top()->doMethod_.getAST().getStatements().rbegin())), expr, newExpr);
 
       // if a global is replaced by its value it becomes a de-facto literal negate access id
       int AccessID = -instantiation_->nextUID();
 
-      metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
-                                   newExpr->getValue());
+      metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, newExpr->getValue());
       newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
     } else {
       int AccessID = 0;
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
-        AccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, varname);
+      if(!metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, varname)) {
+        AccessID = metadata_.insertAccessOfType(iir::FieldAccessType::GlobalVariable, varname);
       } else {
         AccessID = metadata_.getAccessIDFromName(varname);
       }
@@ -352,7 +351,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr)
   if(function)
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
   else
-    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 }

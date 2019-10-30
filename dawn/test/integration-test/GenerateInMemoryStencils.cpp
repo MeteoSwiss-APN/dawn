@@ -52,7 +52,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
@@ -80,9 +80,9 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
   rhs->setID(target->nextUID());
 
-  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirInField->Name, sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
+  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
+                                                  sirInField->fieldDimensions);
+  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField,
                                                    sirOutField->Name, sirOutField->fieldDimensions);
 
   lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
@@ -99,7 +99,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses.addReadExtent(in_fieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
   // And add the statement to it
-  IIRDoMethod->insertChild(std::move(stmt));
+  IIRDoMethod->getAST().push_back(std::move(stmt));
   IIRDoMethod->updateLevel();
 
   // Add the control flow descriptor to the IIR
@@ -149,7 +149,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
@@ -220,12 +220,12 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   rhsTmpT3->setID(target->nextUID());
   rhsTmpT4->setID(target->nextUID());
 
-  int inFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                 sirInField->Name, sirInField->fieldDimensions);
-  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_StencilTemporary,
+  int inFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
+                                                 sirInField->fieldDimensions);
+  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::StencilTemporary,
                                                   sirTmpField->Name, sirTmpField->fieldDimensions);
-  int outFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirOutField->Name, sirOutField->fieldDimensions);
+  int outFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirOutField->Name,
+                                                  sirOutField->fieldDimensions);
 
   lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
   rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
@@ -261,7 +261,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
       std::make_optional(std::move(callerAccesses1));
 
   // And add the statement to it
-  IIRDoMethod1->insertChild(std::move(stmt1));
+  IIRDoMethod1->getAST().push_back(std::move(stmt1));
   IIRDoMethod1->updateLevel();
 
   auto plusTmp1 = std::make_shared<ast::BinaryOperator>(rhsTmpT1, std::string("+"), rhsTmpT2);
@@ -285,7 +285,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses2));
   // And add the statement to it
-  IIRDoMethod2->insertChild(std::move(stmt2));
+  IIRDoMethod2->getAST().push_back(std::move(stmt2));
   IIRDoMethod2->updateLevel();
 
   // Add the control flow descriptor to the IIR

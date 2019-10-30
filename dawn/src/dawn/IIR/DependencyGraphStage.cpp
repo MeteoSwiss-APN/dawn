@@ -19,7 +19,7 @@ namespace dawn {
 namespace iir {
 
 void DependencyGraphStage::insertEdge(int StageIDFrom, int StageIDTo) {
-  Base::insertEdge(StageIDFrom, StageIDTo, DependencyGraphStage::EdgeData::EK_Depends);
+  Base::insertEdge(StageIDFrom, StageIDTo, DependencyGraphStage::EdgeData::Depends);
 }
 
 bool DependencyGraphStage::depends(int StageIDFrom, int StageIDTo) const {

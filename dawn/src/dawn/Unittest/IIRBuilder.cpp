@@ -20,55 +20,55 @@
 namespace dawn {
 namespace iir {
 namespace {
-Array3i asArray(fieldType ft) {
+Array3i asArray(FieldType ft) {
   switch(ft) {
-  case fieldType::ijk:
+  case FieldType::ijk:
     return Array3i{1, 1, 1};
-  case fieldType::ij:
+  case FieldType::ij:
     return Array3i{1, 1, 0};
-  case fieldType::ik:
+  case FieldType::ik:
     return Array3i{1, 0, 1};
-  case fieldType::jk:
+  case FieldType::jk:
     return Array3i{0, 1, 1};
-  case fieldType::i:
+  case FieldType::i:
     return Array3i{1, 0, 0};
-  case fieldType::j:
+  case FieldType::j:
     return Array3i{0, 1, 0};
-  case fieldType::k:
+  case FieldType::k:
     return Array3i{0, 0, 1};
   }
   dawn_unreachable("Unreachable");
 }
-std::string toStr(op operation, std::vector<op> const& valid_ops) {
+std::string toStr(Op operation, std::vector<Op> const& valid_ops) {
   DAWN_ASSERT(std::find(valid_ops.begin(), valid_ops.end(), operation) != valid_ops.end());
   switch(operation) {
-  case op::plus:
+  case Op::plus:
     return "+";
-  case op::minus:
+  case Op::minus:
     return "-";
-  case op::multiply:
+  case Op::multiply:
     return "*";
-  case op::assign:
+  case Op::assign:
     return "";
-  case op::divide:
+  case Op::divide:
     return "/";
-  case op::equal:
+  case Op::equal:
     return "==";
-  case op::notEqual:
+  case Op::notEqual:
     return "!=";
-  case op::greater:
+  case Op::greater:
     return ">";
-  case op::less:
+  case Op::less:
     return "<";
-  case op::greaterEqual:
+  case Op::greaterEqual:
     return ">=";
-  case op::lessEqual:
+  case Op::lessEqual:
     return "<=";
-  case op::logicalAnd:
+  case Op::logicalAnd:
     return "&&";
-  case op::locigalOr:
+  case Op::locigalOr:
     return "||";
-  case op::logicalNot:
+  case Op::logicalNot:
     return "!";
   }
   dawn_unreachable("Unreachable");
@@ -120,31 +120,31 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return map;
 }
 std::shared_ptr<iir::Expr>
-IIRBuilder::reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
+IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                    std::shared_ptr<iir::Expr>&& init,
                                    ast::Expr::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
-      toStr(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), std::move(rhs),
+      toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), rhs_location);
   expr->setID(si_->nextUID());
   return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                                  std::shared_ptr<iir::Expr>&& rhs, op operation) {
+                                                  std::shared_ptr<iir::Expr>&& rhs, Op operation) {
   DAWN_ASSERT(si_);
   auto binop = std::make_shared<iir::BinaryOperator>(
       std::move(lhs),
       toStr(operation,
-            {op::multiply, op::plus, op::minus, op::divide, op::equal, op::notEqual, op::greater,
-             op::less, op::greaterEqual, op::lessEqual, op::logicalAnd, op::locigalOr}),
+            {Op::multiply, Op::plus, Op::minus, Op::divide, Op::equal, Op::notEqual, Op::greater,
+             Op::less, Op::greaterEqual, Op::lessEqual, Op::logicalAnd, Op::locigalOr}),
       std::move(rhs));
   binop->setID(si_->nextUID());
   return binop;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation) {
   DAWN_ASSERT(si_);
   auto ret = std::make_shared<iir::UnaryOperator>(
-      std::move(expr), toStr(operation, {op::plus, op::minus, op::logicalNot}));
+      std::move(expr), toStr(operation, {Op::plus, Op::minus, Op::logicalNot}));
   ret->setID(si_->nextUID());
   return ret;
 }
@@ -158,11 +158,11 @@ std::shared_ptr<iir::Expr> IIRBuilder::conditionalExpr(std::shared_ptr<iir::Expr
   return ret;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                                  std::shared_ptr<iir::Expr>&& rhs, op operation) {
+                                                  std::shared_ptr<iir::Expr>&& rhs, Op operation) {
   DAWN_ASSERT(si_);
   auto binop = std::make_shared<iir::AssignmentExpr>(
       std::move(lhs), std::move(rhs),
-      toStr(operation, {op::assign, op::multiply, op::plus, op::minus, op::divide}) + "=");
+      toStr(operation, {Op::assign, Op::multiply, Op::plus, Op::minus, Op::divide}) + "=");
   binop->setID(si_->nextUID());
   return binop;
 }
@@ -172,7 +172,7 @@ IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID
   int id = si_->getMetaData().addStmt(true, iirStmt);
   return {id, name, iirStmt};
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, accessType access,
+std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
                                           ast::Offsets const& offset) {
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, offset);
@@ -207,46 +207,46 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   return var.decl;
 }
 
-IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, fieldType ft) {
+IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, asArray(ft));
   return {id, name};
 }
 
-std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, accessType access) {
+std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {
   return at(field, access, ast::Offsets{ast::cartesian});
 }
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
                                                    Array3i const& offset) {
-  return at(field, accessType::r, offset);
+  return at(field, AccessType::r, offset);
 }
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
-                                                   accessType access, Array3i const& offset) {
-  return at(field, accessType::r, ast::Offsets{ast::cartesian, offset});
+                                                   AccessType access, Array3i const& offset) {
+  return at(field, AccessType::r, ast::Offsets{ast::cartesian, offset});
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
                                                 ast::Expr::LocationType location) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
-                                       asArray(fieldType::ijk), location);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
+                                       asArray(FieldType::ijk), location);
   return {id, name};
 }
 
-std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(Field const& field, accessType access) {
+std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(Field const& field, AccessType access) {
   return at(field, access, ast::Offsets{ast::unstructured});
 }
 
 std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
-                                                      hOffsetType hOffset, int vOffset) {
+                                                      HOffsetType hOffset, int vOffset) {
   DAWN_ASSERT(si_);
-  return at(field, accessType::r, hOffset, vOffset);
+  return at(field, AccessType::r, hOffset, vOffset);
 }
 std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
-                                                      accessType access, hOffsetType hOffset,
+                                                      AccessType access, HOffsetType hOffset,
                                                       int vOffset) {
-  return at(field, accessType::r,
-            ast::Offsets{ast::unstructured, hOffset == hOffsetType::withOffset, vOffset});
+  return at(field, AccessType::r,
+            ast::Offsets{ast::unstructured, hOffset == HOffsetType::withOffset, vOffset});
 }
 } // namespace iir
 } // namespace dawn

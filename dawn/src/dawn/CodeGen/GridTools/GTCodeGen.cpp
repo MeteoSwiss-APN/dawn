@@ -68,7 +68,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
       std::optional<iir::Interval> interval;
-      if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill) {
         interval = cache.getEnclosingAccessedInterval();
       } else {
         interval = cache.getInterval();
@@ -79,7 +79,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
       // for the kcaches with fill, the interval could span beyond the axis of the do methods.
       // We need to extent the axis, to make sure that at least on interval will trigger the begin
       // of the kcache interval
-      if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill) {
         DAWN_ASSERT(interval);
         Levels.insert(interval->lowerLevel());
         Levels.insert(interval->upperLevel());
@@ -304,7 +304,7 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+          if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                    fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
@@ -317,7 +317,7 @@ void GTCodeGen::generateStencilWrapperRun(
 
   std::vector<std::string> apiFieldNames;
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     apiFieldNames.push_back(name);
   }
@@ -354,24 +354,23 @@ void GTCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
 
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
   for(const auto& fieldID :
-      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(stencilInstantiation, name) +
                                      "/*unused*/");
   }
 
   // Initialize allocated fields
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -439,7 +438,7 @@ void GTCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember("globals_gp_t", "m_globals_gp");
     // update globals
     stencilWrapperClass.addMemberFunction("void", "update_globals")
-        .addStatement("update_global_parameter(m_globals_gp, m_globals)");
+        .addStatement(c_gt() + "update_global_parameter(m_globals_gp, m_globals)");
   }
 
   // Stencil members
@@ -595,8 +594,9 @@ void GTCodeGen::generateStencilClasses(
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_intent() +
-                           ((fields[m].getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
+              .addTemplate(c_gt_intent() + ((fields[m].getIntend() == iir::Field::IntendKind::Input)
+                                                ? "in"
+                                                : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -660,8 +660,8 @@ void GTCodeGen::generateStencilClasses(
       // Generate `make_multistage`
       ssMS << "gridtools::make_multistage(gridtools::execute::";
       if(!codeGenOptions_.useParallelEP_ &&
-         multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
-        ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
+         multiStage.getLoopOrder() == iir::LoopOrderKind::Parallel)
+        ssMS << iir::LoopOrderKind::Forward << " /*parallel*/ ";
       else
         ssMS << multiStage.getLoopOrder();
       ssMS << "(),";
@@ -671,8 +671,8 @@ void GTCodeGen::generateStencilClasses(
 
         std::vector<iir::Cache> ioCaches;
         for(const auto& cacheP : multiStage.getCaches()) {
-          if((cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
-             (cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush)) {
+          if((cacheP.second.getIOPolicy() == iir::Cache::IOPolicy::bpfill) ||
+             (cacheP.second.getIOPolicy() == iir::Cache::IOPolicy::epflush)) {
             continue;
           }
           ioCaches.push_back(cacheP.second);
@@ -682,12 +682,12 @@ void GTCodeGen::generateStencilClasses(
                               "),")(ioCaches, [&](const iir::Cache& cache) -> std::string {
           std::optional<iir::Interval> cInterval;
 
-          if(cache.getCacheIOPolicy() == iir::Cache::fill) {
+          if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill) {
             cInterval = cache.getEnclosingAccessedInterval();
           } else {
             cInterval = cache.getInterval();
           }
-          DAWN_ASSERT(cInterval || cache.getCacheIOPolicy() == iir::Cache::local);
+          DAWN_ASSERT(cInterval || cache.getIOPolicy() == iir::Cache::IOPolicy::local);
 
           std::string intervalName;
           if(cInterval) {
@@ -696,9 +696,9 @@ void GTCodeGen::generateStencilClasses(
           }
           return (c_gt() + "cache<" +
                   // Type: IJ or K
-                  c_gt() + cache.getCacheTypeAsString() + ", " +
+                  c_gt() + cache.getTypeAsString() + ", " +
                   // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
-                  c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
+                  c_gt() + "cache_io_policy::" + cache.getIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
                   ">(p_" + metadata.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
                   "())")
@@ -758,7 +758,7 @@ void GTCodeGen::generateStencilClasses(
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
               .addTemplate(c_gt_intent() +
-                           ((field.getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
+                           ((field.getIntend() == iir::Field::IntendKind::Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`
@@ -802,7 +802,7 @@ void GTCodeGen::generateStencilClasses(
           DoMethodCodeGen.startBody();
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
-          for(const auto& stmt : doMethod.getChildren()) {
+          for(const auto& stmt : doMethod.getAST().getStatements()) {
             stmt->accept(stencilBodyCGVisitor);
             DoMethodCodeGen << stencilBodyCGVisitor.getCodeAndResetStream();
           }

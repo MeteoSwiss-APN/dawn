@@ -82,11 +82,12 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
           EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
 
           // checking each of the statements
-          ASSERT_EQ(lhsDoMethod->getChildren().size(), rhsDoMethod->getChildren().size());
-          for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
-              ++stmtidx) {
-            const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
-            const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
+          ASSERT_EQ(lhsDoMethod->getAST().getStatements().size(),
+                    rhsDoMethod->getAST().getStatements().size());
+          for(int stmtidx = 0, stmtSize = lhsDoMethod->getAST().getStatements().size();
+              stmtidx < stmtSize; ++stmtidx) {
+            const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
+            const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
             // check the statement (and its data)
             EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
           }
@@ -104,16 +105,16 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
 }
 
 void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Literal>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::Literal>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Field>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::Field>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::APIField>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::APIField>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>());
 
   // we compare the content of the maps since the shared-ptr's are not the same
   ASSERT_EQ(lhs.getFieldNameToBCMap().size(), rhs.getFieldNameToBCMap().size());
@@ -191,7 +192,7 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
 
 std::shared_ptr<iir::StencilInstantiation> readIIRFromFile(OptimizerContext& optimizer,
                                                            const std::string& fname) {
-  auto target = IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::SK_Json);
+  auto target = IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::Format::Json);
 
   // this is whats actually to be tested.
   optimizer.restoreIIR("<restored>", target);
