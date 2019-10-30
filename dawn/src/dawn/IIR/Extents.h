@@ -58,8 +58,6 @@ public:
   void merge(int other) { merge(Extent{other, other}); }
 
   void limit(Extent const& other) {
-    DAWN_ASSERT(minus_ <= 0 && plus_ >= 0);
-    DAWN_ASSERT(other.minus_ <= 0 && other.plus_ >= 0);
     minus_ = std::max(minus_, other.minus_);
     plus_ = std::min(plus_, other.plus_);
   }
