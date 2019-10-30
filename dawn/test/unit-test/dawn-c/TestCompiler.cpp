@@ -69,7 +69,7 @@ void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
 TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
 
-  IIRBuilder b;
+  CartesianIIRBuilder b;
   auto in_f = b.field("in_field", fieldType::ijk);
   auto out_f = b.field("out_field", fieldType::ijk);
 
@@ -87,7 +87,7 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
-  IIRBuilder b{dawn::ast::unstructured};
+  UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);
   auto out_f = b.field("out_field", LocType::Cells);
   auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
@@ -113,7 +113,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
-  IIRBuilder b{dawn::ast::unstructured};
+  UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Cells);
   auto out_f = b.field("out_field", LocType::Cells);
   auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);

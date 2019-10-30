@@ -54,6 +54,7 @@ enum class hOffsetType { withOffset, noOffset };
 // After creating the whole IIR, the stencil instantiation can be creating by calling build. The
 // builder must not be used after calling build.
 class IIRBuilder {
+protected:
   struct Field {
     int id;
     std::string name;
@@ -65,13 +66,8 @@ class IIRBuilder {
   };
 
 public:
-  IIRBuilder(ast::unstructured_)
-      : si_(std::make_shared<iir::StencilInstantiation>()), unstructured_(true) {}
-  IIRBuilder(ast::cartesian_ = ast::cartesian)
-      : si_(std::make_shared<iir::StencilInstantiation>()), unstructured_(false) {}
+  IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}
 
-  Field field(std::string const& name, fieldType ft = fieldType::ijk);
-  Field field(std::string const& name, ast::Expr::LocationType location);
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
@@ -104,19 +100,8 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r);
-  // cartesian only
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, Array3i const& offset);
-  std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);
-  //
-
-  // unstructured only
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, hOffsetType hOffset,
-                                int vOffset);
-  std::shared_ptr<iir::Expr> at(Field const& field, hOffsetType hOffset, int vOffset);
-  //
-
   std::shared_ptr<iir::Expr> at(Field const& field, accessType access, ast::Offsets const& offset);
+
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
   std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
@@ -190,9 +175,29 @@ public:
   dawn::codegen::stencilInstantiationContext build(std::string const& name,
                                                    std::unique_ptr<iir::Stencil> stencil);
 
-private:
+protected:
   std::shared_ptr<iir::StencilInstantiation> si_;
-  bool unstructured_ = false;
+};
+
+class UnstructuredIIRBuilder : public IIRBuilder {
+public:
+  using IIRBuilder::at;
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, hOffsetType hOffset,
+                                int vOffset);
+  std::shared_ptr<iir::Expr> at(Field const& field, hOffsetType hOffset, int vOffset);
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r);
+
+  Field field(std::string const& name, ast::Expr::LocationType location);
+};
+
+class CartesianIIRBuilder : public IIRBuilder {
+public:
+  using IIRBuilder::at;
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, Array3i const& offset);
+  std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r);
+
+  Field field(std::string const& name, fieldType ft = fieldType::ijk);
 };
 } // namespace iir
 } // namespace dawn
