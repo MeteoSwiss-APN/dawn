@@ -24,7 +24,7 @@ stencil_function TestFunctionReturn {
   storage in;
 
   Do {
-    return in(i + 1, j + 1, k + 1); // EXPECTED_ACCESSES: R:in:<1,1,1,1,1,1>
+    return in(i + 1, j + 1, k + 1); // EXPECTED_ACCESSES: R:in:<[(1,1),(1,1),(1,1)]>
   }
 };
 
@@ -32,7 +32,7 @@ stencil_function TestFunctionByRef {
   storage out, in;
 
   Do {
-    out = in(i + 1, j + 1, k + 1); // EXPECTED_ACCESSES:W:out:<<no_horizontal_extent>,0,0> %and% R:in:<1,1,1,1,1,1>
+    out = in(i + 1, j + 1, k + 1); // EXPECTED_ACCESSES:W:out:<[<no_horizontal_extent>,(0,0)]> %and% R:in:<[(1,1),(1,1),(1,1)]>
   }
 };
 
@@ -46,8 +46,8 @@ struct Test : public stencil {
 
   Do {
     vertical_region(k_start, k_end) {
-      field_a = TestFunctionReturn(field_b); // EXPECTED_ACCESSES: W:field_a:<<no_horizontal_extent>,0,0> %and% R:field_b:<1,1,1,1,1,1>
-      TestFunctionByRef(field_a, field_b);   // EXPECTED_ACCESSES: W:field_a:<<no_horizontal_extent>,0,0> %and% R:field_b:<1,1,1,1,1,1>
+      field_a = TestFunctionReturn(field_b); // EXPECTED_ACCESSES: W:field_a:<[<no_horizontal_extent>,(0,0)]> %and% R:field_b:<[(1,1),(1,1),(1,1)]>
+      TestFunctionByRef(field_a, field_b);   // EXPECTED_ACCESSES: W:field_a:<[<no_horizontal_extent>,(0,0)]> %and% R:field_b:<[(1,1),(1,1),(1,1)]>
     }
   }
 };
