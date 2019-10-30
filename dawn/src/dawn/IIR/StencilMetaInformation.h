@@ -199,7 +199,7 @@ public:
 
   int getStencilIDFromStencilCallStmt(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) const;
 
-  Extents getBoundaryConditionExtentsFromBCStmt(
+  Extents const& getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
     DAWN_ASSERT_MSG(boundaryConditionToExtentsMap_.count(stmt),
                     "Boundary Condition does not have a matching Extent");
