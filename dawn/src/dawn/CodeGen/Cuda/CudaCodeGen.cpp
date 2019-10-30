@@ -493,7 +493,7 @@ void CudaCodeGen::generateStencilRunMethod(
     unsigned int nty = blockSize[1];
 
     auto const& hMaxExtents =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     stencilRunMethod.addStatement(
         "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
@@ -585,7 +585,7 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
 
   auto maxExtents = CodeGeneratorHelper::computeTempMaxWriteExtent(stencil);
   auto const& hMaxExtents =
-      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+      iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   stencilClass.addTypeDef("tmp_halo_t")
       .addType("gridtools::halo< " + std::to_string(-hMaxExtents.iMinus()) + "," +
@@ -608,7 +608,7 @@ void CudaCodeGen::addTmpStorageInit(
 
   if(!(tempFields.empty())) {
     auto const& hMaxExtents =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
     ctr.addInit(tmpMetadataName_ + "(" + std::to_string(blockSize[0]) + "+" +
                 std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
                 std::to_string(blockSize[1]) + "+" +

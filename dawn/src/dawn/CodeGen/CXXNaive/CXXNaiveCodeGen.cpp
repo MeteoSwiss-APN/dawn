@@ -377,7 +377,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
-                auto const& extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+                auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
 
                 stencilRunMethod.addBlockStatement(

@@ -33,16 +33,9 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
   auto printMap = [&](const MapType& map, const char* intent) {
     for(auto it = map.begin(), end = map.end(); it != end; ++it) {
       ss << (it != map.begin() ? " " : "") << intent << ":";
-      int AccessID = it->first;
+      auto const& [AccessID, extent] = *it;
       ss << accessIDToStringFunction(AccessID);
-      ss << ":<";
-      const auto& hExtents =
-          dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(it->second.horizontalExtent());
-      const auto& vExtents = it->second.verticalExtent();
-
-      ss << hExtents.iMinus() << "," << hExtents.iPlus() << ",";
-      ss << hExtents.jMinus() << "," << hExtents.jPlus() << ",";
-      ss << vExtents.minus() << "," << vExtents.plus() << ">";
+      ss << ":<" << to_string(extent) << ">";
     }
   };
 

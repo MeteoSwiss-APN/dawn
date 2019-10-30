@@ -21,24 +21,56 @@
 
 namespace dawn::ast {
 
-std::ostream& operator<<(std::ostream& os, Offsets const& offset) { return os << toString(offset); }
+std::string to_string(unstructured_, Offsets const& offset) {
+  auto const& hoffset = offset_cast<UnstructuredOffset const&>(offset.horizontalOffset());
+  auto const& voffset = offset.verticalOffset();
 
-std::string toString(Offsets const& offsets, std::string const& sep) {
-  return toString(offsets, sep,
-                  [](std::string const&, int offset) { return std::to_string(offset); });
+  using namespace std::string_literals;
+  return (hoffset.hasOffset() ? "<has_horizontal_offset>"s : "<no_horizontal_offset>"s) + "," +
+         std::to_string(voffset);
+}
+
+std::string to_string(cartesian_, Offsets const& offsets, std::string const& sep) {
+  return to_string(cartesian, offsets, sep,
+                   [](std::string const&, int offset) { return std::to_string(offset); });
+}
+
+std::string to_string(Offsets const& offset) {
+  using namespace std::string_literals;
+  auto const& hOffset = offset.horizontalOffset();
+  if(hOffset.isZero())
+    return "<no_horizontal_offset>,"s + std::to_string(offset.verticalOffset());
+
+  HorizontalOffsetImpl* ptr = hOffset.impl_.get();
+  if(dynamic_cast<CartesianOffset const*>(ptr)) {
+    return to_string(cartesian, offset);
+  } else if(dynamic_cast<UnstructuredOffset const*>(ptr)) {
+    return to_string(unstructured, offset);
+  } else {
+    dawn_unreachable("unknown offset class");
+  }
 }
 
 bool CartesianOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
-  auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
-  return so_other.horizontalOffset_ == horizontalOffset_;
+  auto const& co_other = dynamic_cast<CartesianOffset const&>(other);
+  return co_other.horizontalOffset_ == horizontalOffset_;
 }
 
 void CartesianOffset::addImpl(HorizontalOffsetImpl const& other) {
-  auto const& so_other = dynamic_cast<CartesianOffset const&>(other);
-  horizontalOffset_[0] += so_other.horizontalOffset_[0];
-  horizontalOffset_[1] += so_other.horizontalOffset_[1];
+  auto const& co_other = dynamic_cast<CartesianOffset const&>(other);
+  horizontalOffset_[0] += co_other.horizontalOffset_[0];
+  horizontalOffset_[1] += co_other.horizontalOffset_[1];
+}
+bool UnstructuredOffset::equalsImpl(HorizontalOffsetImpl const& other) const {
+  auto const& uo_other = dynamic_cast<UnstructuredOffset const&>(other);
+  return uo_other.hasOffset_ == hasOffset_;
+}
+void UnstructuredOffset::addImpl(HorizontalOffsetImpl const& other) {
+  auto const& uo_other = dynamic_cast<UnstructuredOffset const&>(other);
+  hasOffset_ = hasOffset_ || uo_other.hasOffset_;
 }
 
+Offsets operator+(Offsets o1, Offsets const& o2) { return o1 += o2; }
 } // namespace dawn::ast
 
 #endif

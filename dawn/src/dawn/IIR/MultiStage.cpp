@@ -376,8 +376,7 @@ std::map<int, Field> MultiStage::getOrderedFields() const {
 
 void MultiStage::updateFromChildren() {
   for(const auto& stagePtr : children_) {
-    mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
-                std::make_optional(stagePtr->getExtents()));
+    mergeFields(stagePtr->getFields(), derivedInfo_.fields_, stagePtr->getExtents());
   }
 }
 
@@ -449,7 +448,7 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
     for(const auto& doMethod : stage->getChildren()) {
       if(!doMethod->getInterval().overlaps(interval))
         continue;
-      mergeFields(doMethod->getFields(), fields, std::make_optional(stage->getExtents()));
+      mergeFields(doMethod->getFields(), fields, stage->getExtents());
     }
   }
   return fields;
