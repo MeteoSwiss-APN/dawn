@@ -26,8 +26,10 @@ globals { int global = 0; };
 stencil copystencil {
   storage in_field, out_field;
   void Do() {
-    vertical_region(k_start, k_end) { out_field = global * in_field; }
-    global = 1;
-    vertical_region(k_start, k_end) { out_field = global * in_field; }
+    if(global == 0) { // nesting problem, issue #261
+      vertical_region(k_start, k_end) { out_field = global * in_field; }
+      global = 1;
+      vertical_region(k_start, k_end) { out_field = global * in_field; }
+    }
   }
 };

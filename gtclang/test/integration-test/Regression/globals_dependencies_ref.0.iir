@@ -1,55 +1,56 @@
 {
  "metadata": {
   "accessIDToName": {
-   "23": "global",
-   "24": "in_field",
-   "25": "out_field"
+   "29": "global",
+   "30": "in_field",
+   "31": "out_field"
   },
   "accessIDToType": {
-   "23": 0,
-   "24": 6,
-   "25": 6
+   "29": 0,
+   "30": 6,
+   "31": 6
   },
   "literalIDToName": {
-   "-54": "1"
+   "-61": "0",
+   "-69": "1"
   },
   "fieldAccessIDs": [
-   24,
-   25
+   30,
+   31
   ],
   "APIFieldIDs": [
-   24,
-   25
+   30,
+   31
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [
-   23
+   29
   ],
   "versionedFields": {
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
-   "24": {
+   "30": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    },
-   "25": {
+   "31": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    }
   },
   "idToStencilCall": {
-   "26": {
+   "62": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_26",
+      "callee": "__code_gen_62",
       "arguments": []
      },
      "loc": {
@@ -57,17 +58,17 @@
       "Column": -1
      },
      "data": {},
-     "ID": 27
+     "ID": 63
     }
    },
-   "52": {
+   "67": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_52",
+      "callee": "__code_gen_67",
       "arguments": []
      },
      "loc": {
@@ -75,7 +76,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 53
+     "ID": 68
     }
    }
   },
@@ -130,13 +131,13 @@
                    ],
                    "negate_offset": false,
                    "loc": {
-                    "Line": 29,
-                    "Column": 50
+                    "Line": 30,
+                    "Column": 52
                    },
                    "data": {
-                    "accessID": 25
+                    "accessID": 31
                    },
-                   "ID": 65
+                   "ID": 82
                   }
                  },
                  "op": "=",
@@ -147,13 +148,13 @@
                      "name": "global",
                      "is_external": true,
                      "loc": {
-                      "Line": 29,
-                      "Column": 62
+                      "Line": 30,
+                      "Column": 64
                      },
                      "data": {
-                      "accessID": 23
+                      "accessID": 29
                      },
-                     "ID": 63
+                     "ID": 80
                     }
                    },
                    "op": "*",
@@ -177,37 +178,37 @@
                      ],
                      "negate_offset": false,
                      "loc": {
-                      "Line": 29,
-                      "Column": 71
+                      "Line": 30,
+                      "Column": 73
                      },
                      "data": {
-                      "accessID": 24
+                      "accessID": 30
                      },
-                     "ID": 64
+                     "ID": 81
                     }
                    },
                    "loc": {
-                    "Line": 29,
-                    "Column": 62
+                    "Line": 30,
+                    "Column": 64
                    },
-                   "ID": 62
+                   "ID": 79
                   }
                  },
                  "loc": {
-                  "Line": 29,
-                  "Column": 50
+                  "Line": 30,
+                  "Column": 52
                  },
-                 "ID": 66
+                 "ID": 83
                 }
                },
                "loc": {
-                "Line": 29,
-                "Column": 50
+                "Line": 30,
+                "Column": 52
                },
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "25": {
+                  "31": {
                    "extents": [
                     {
                      "minus": 0,
@@ -225,7 +226,7 @@
                   }
                  },
                  "readAccess": {
-                  "23": {
+                  "30": {
                    "extents": [
                     {
                      "minus": 0,
@@ -241,7 +242,7 @@
                     }
                    ]
                   },
-                  "24": {
+                  "29": {
                    "extents": [
                     {
                      "minus": 0,
@@ -260,7 +261,7 @@
                  }
                 }
                },
-               "ID": 61
+               "ID": 78
               }
              }
             ],
@@ -269,7 +270,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 60
+            "ID": 77
            }
           },
           "doMethodID": 0,
@@ -281,15 +282,15 @@
           }
          }
         ],
-        "stageID": 50
+        "stageID": 65
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 58,
+      "multiStageID": 75,
       "Caches": {}
      }
     ],
-    "stencilID": 26,
+    "stencilID": 62,
     "attr": {
      "attributes": []
     }
@@ -328,13 +329,13 @@
                    ],
                    "negate_offset": false,
                    "loc": {
-                    "Line": 31,
-                    "Column": 50
+                    "Line": 32,
+                    "Column": 52
                    },
                    "data": {
-                    "accessID": 25
+                    "accessID": 31
                    },
-                   "ID": 72
+                   "ID": 89
                   }
                  },
                  "op": "=",
@@ -345,13 +346,13 @@
                      "name": "global",
                      "is_external": true,
                      "loc": {
-                      "Line": 31,
-                      "Column": 62
+                      "Line": 32,
+                      "Column": 64
                      },
                      "data": {
-                      "accessID": 23
+                      "accessID": 29
                      },
-                     "ID": 70
+                     "ID": 87
                     }
                    },
                    "op": "*",
@@ -375,37 +376,37 @@
                      ],
                      "negate_offset": false,
                      "loc": {
-                      "Line": 31,
-                      "Column": 71
+                      "Line": 32,
+                      "Column": 73
                      },
                      "data": {
-                      "accessID": 24
+                      "accessID": 30
                      },
-                     "ID": 71
+                     "ID": 88
                     }
                    },
                    "loc": {
-                    "Line": 31,
-                    "Column": 62
+                    "Line": 32,
+                    "Column": 64
                    },
-                   "ID": 69
+                   "ID": 86
                   }
                  },
                  "loc": {
-                  "Line": 31,
-                  "Column": 50
+                  "Line": 32,
+                  "Column": 52
                  },
-                 "ID": 73
+                 "ID": 90
                 }
                },
                "loc": {
-                "Line": 31,
-                "Column": 50
+                "Line": 32,
+                "Column": 52
                },
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "25": {
+                  "31": {
                    "extents": [
                     {
                      "minus": 0,
@@ -423,7 +424,7 @@
                   }
                  },
                  "readAccess": {
-                  "24": {
+                  "30": {
                    "extents": [
                     {
                      "minus": 0,
@@ -439,7 +440,7 @@
                     }
                    ]
                   },
-                  "23": {
+                  "29": {
                    "extents": [
                     {
                      "minus": 0,
@@ -458,7 +459,7 @@
                  }
                 }
                },
-               "ID": 68
+               "ID": 85
               }
              }
             ],
@@ -467,7 +468,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 67
+            "ID": 84
            }
           },
           "doMethodID": 1,
@@ -479,15 +480,15 @@
           }
          }
         ],
-        "stageID": 56
+        "stageID": 71
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 59,
+      "multiStageID": 76,
       "Caches": {}
      }
     ],
-    "stencilID": 52,
+    "stencilID": 67,
     "attr": {
      "attributes": []
     }
@@ -495,93 +496,165 @@
   ],
   "controlFlowStatements": [
    {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_26",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 27
-    }
-   },
-   {
-    "expr_stmt": {
-     "expr": {
-      "assignment_expr": {
-       "left": {
-        "var_access_expr": {
-         "name": "global",
-         "is_external": true,
-         "loc": {
-          "Line": 30,
-          "Column": 5
+    "if_stmt": {
+     "cond_part": {
+      "expr_stmt": {
+       "expr": {
+        "binary_operator": {
+         "left": {
+          "var_access_expr": {
+           "name": "global",
+           "is_external": true,
+           "loc": {
+            "Line": 29,
+            "Column": 8
+           },
+           "data": {
+            "accessID": 29
+           },
+           "ID": 35
+          }
          },
-         "data": {
-          "accessID": 23
-         },
-         "ID": 37
-        }
-       },
-       "op": "=",
-       "right": {
-        "literal_access_expr": {
-         "value": "1",
-         "type": {
-          "type_id": "Integer"
+         "op": "==",
+         "right": {
+          "literal_access_expr": {
+           "value": "0",
+           "type": {
+            "type_id": "Integer"
+           },
+           "loc": {
+            "Line": 29,
+            "Column": 18
+           },
+           "data": {
+            "accessID": -61
+           },
+           "ID": 36
+          }
          },
          "loc": {
-          "Line": 30,
-          "Column": 14
+          "Line": 29,
+          "Column": 8
          },
-         "data": {
-          "accessID": -54
-         },
-         "ID": 36
+         "ID": 34
         }
        },
        "loc": {
-        "Line": 30,
-        "Column": 5
+        "Line": 29,
+        "Column": 8
        },
-       "ID": 38
+       "data": {},
+       "ID": 37
+      }
+     },
+     "then_part": {
+      "block_stmt": {
+       "statements": [
+        {
+         "stencil_call_decl_stmt": {
+          "stencil_call": {
+           "loc": {
+            "Line": -1,
+            "Column": -1
+           },
+           "callee": "__code_gen_62",
+           "arguments": []
+          },
+          "loc": {
+           "Line": -1,
+           "Column": -1
+          },
+          "data": {},
+          "ID": 63
+         }
+        },
+        {
+         "expr_stmt": {
+          "expr": {
+           "assignment_expr": {
+            "left": {
+             "var_access_expr": {
+              "name": "global",
+              "is_external": true,
+              "loc": {
+               "Line": 31,
+               "Column": 7
+              },
+              "data": {
+               "accessID": 29
+              },
+              "ID": 47
+             }
+            },
+            "op": "=",
+            "right": {
+             "literal_access_expr": {
+              "value": "1",
+              "type": {
+               "type_id": "Integer"
+              },
+              "loc": {
+               "Line": 31,
+               "Column": 16
+              },
+              "data": {
+               "accessID": -69
+              },
+              "ID": 46
+             }
+            },
+            "loc": {
+             "Line": 31,
+             "Column": 7
+            },
+            "ID": 48
+           }
+          },
+          "loc": {
+           "Line": 31,
+           "Column": 7
+          },
+          "data": {},
+          "ID": 49
+         }
+        },
+        {
+         "stencil_call_decl_stmt": {
+          "stencil_call": {
+           "loc": {
+            "Line": -1,
+            "Column": -1
+           },
+           "callee": "__code_gen_67",
+           "arguments": []
+          },
+          "loc": {
+           "Line": -1,
+           "Column": -1
+          },
+          "data": {},
+          "ID": 68
+         }
+        }
+       ],
+       "loc": {
+        "Line": 29,
+        "Column": 21
+       },
+       "data": {},
+       "ID": 58
       }
      },
      "loc": {
-      "Line": 30,
+      "Line": 29,
       "Column": 5
      },
      "data": {},
-     "ID": 39
-    }
-   },
-   {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_52",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 53
+     "ID": 59
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": ""
+ "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/Regression/globals_dependencies.cpp"
 }
