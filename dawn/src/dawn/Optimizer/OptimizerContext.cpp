@@ -256,9 +256,9 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
-    if(scope_.top()->ScopeDepth == 1) {
+    if(scope_.top()->ScopeDepth == 1)
       pushBackStatement(stmt);
-    }
+
     // A ExprStmt in the control flow region might change a global variable on which a later
     // vertical region depends, therefore we need to create a new stencil.
     // TODO(havogt): Consider creating one stencil for each VerticalRegionDeclStmt in
