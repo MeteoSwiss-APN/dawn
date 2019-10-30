@@ -24,7 +24,7 @@ stencil_function TestFunction01 {
   storage in;
 
   Do {
-    return in(i + 1, j + 1, k + 1); // EXPECTED_ACCESSES: R:in:<1,1,1,1,1,1>
+    return in(i + 1, j + 1, k + 1); // EXPECTED_ACCESSES: R:in:<[(1,1),(1,1),(1,1)]>
   }
 };
 
@@ -32,7 +32,7 @@ stencil_function TestFunction02 {
   storage in;
 
   Do {
-    return in(i + 1, j + 1); // EXPECTED_ACCESSES: R:in:<1,1,1,1,0,0>
+    return in(i + 1, j + 1); // EXPECTED_ACCESSES: R:in:<[(1,1),(1,1),(0,0)]>
   }
 };
 
@@ -44,11 +44,11 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end) {
-      field_a = TestFunction01(field_b(i + 1, j + 1, k + 1)); // EXPECTED_ACCESSES: R:field_b:<2,2,2,2,2,2> %and% W:field_a:<<no_horizontal_extent>,0,0>
-      field_a = TestFunction01(field_b(i + 1, j + 1, k));     // EXPECTED_ACCESSES: R:field_b:<2,2,2,2,1,1>
+      field_a = TestFunction01(field_b(i + 1, j + 1, k + 1)); // EXPECTED_ACCESSES: R:field_b:<[(2,2),(2,2),(2,2)]> %and% W:field_a:<[<no_horizontal_extent>,(0,0)]>
+      field_a = TestFunction01(field_b(i + 1, j + 1, k));     // EXPECTED_ACCESSES: R:field_b:<[(2,2),(2,2),(1,1)]>
 
-      field_a = TestFunction02(field_b(i + 1, j + 1, k + 1)); // EXPECTED_ACCESSES: R:field_b:<2,2,2,2,1,1>
-      field_a = TestFunction02(field_b(i + 1, j + 1, k));     // EXPECTED_ACCESSES: R:field_b:<2,2,2,2,0,0>
+      field_a = TestFunction02(field_b(i + 1, j + 1, k + 1)); // EXPECTED_ACCESSES: R:field_b:<[(2,2),(2,2),(1,1)]>
+      field_a = TestFunction02(field_b(i + 1, j + 1, k));     // EXPECTED_ACCESSES: R:field_b:<[(2,2),(2,2),(0,0)]>
     }
   }
 };

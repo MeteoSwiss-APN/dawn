@@ -7,13 +7,13 @@
         "field": {
           "accessID": 27,
           "extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
             "write_access": "null"
           },
           "intend": 2,
           "interval": "{ Start : End }",
           "redundant extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
             "write_access": "null"
           }
         }
@@ -24,14 +24,14 @@
         "field": {
           "accessID": 28,
           "extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           },
           "intend": 1,
           "interval": "{ Start : End }",
           "redundant extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           }
         }
       },
@@ -42,13 +42,13 @@
           "accessID": 29,
           "extents": {
             "read_access": "null",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           },
           "intend": 0,
           "interval": "{ Start : End }",
           "redundant extents": {
             "read_access": "null",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           }
         }
       },
@@ -58,13 +58,13 @@
         "field": {
           "accessID": 30,
           "extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
             "write_access": "null"
           },
           "intend": 2,
           "interval": "{ Start : End }",
           "redundant extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
             "write_access": "null"
           }
         }
@@ -75,14 +75,14 @@
         "field": {
           "accessID": 31,
           "extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           },
           "intend": 1,
           "interval": "{ Start : End }",
           "redundant extents": {
-            "read_access": "[<no_horizontal_extent>, (0, 0)]",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           }
         }
       },
@@ -93,13 +93,13 @@
           "accessID": 32,
           "extents": {
             "read_access": "null",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           },
           "intend": 0,
           "interval": "{ Start : End }",
           "redundant extents": {
             "read_access": "null",
-            "write_access": "[<no_horizontal_extent>, (0, 0)]"
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
           }
         }
       }
@@ -112,13 +112,13 @@
           "field": {
             "accessID": 27,
             "extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
               "write_access": "null"
             },
             "intend": 2,
             "interval": "{ Start : End }",
             "redundant extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
               "write_access": "null"
             }
           }
@@ -129,14 +129,14 @@
           "field": {
             "accessID": 28,
             "extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             },
             "intend": 1,
             "interval": "{ Start : End }",
             "redundant extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             }
           }
         },
@@ -147,13 +147,13 @@
             "accessID": 29,
             "extents": {
               "read_access": "null",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             },
             "intend": 0,
             "interval": "{ Start : End }",
             "redundant extents": {
               "read_access": "null",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             }
           }
         },
@@ -163,13 +163,13 @@
           "field": {
             "accessID": 30,
             "extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
               "write_access": "null"
             },
             "intend": 2,
             "interval": "{ Start : End }",
             "redundant extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
               "write_access": "null"
             }
           }
@@ -180,14 +180,14 @@
           "field": {
             "accessID": 31,
             "extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             },
             "intend": 1,
             "interval": "{ Start : End }",
             "redundant extents": {
-              "read_access": "[<no_horizontal_extent>, (0, 0)]",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             }
           }
         },
@@ -198,13 +198,13 @@
             "accessID": 32,
             "extents": {
               "read_access": "null",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             },
             "intend": 0,
             "interval": "{ Start : End }",
             "redundant extents": {
               "read_access": "null",
-              "write_access": "[<no_horizontal_extent>, (0, 0)]"
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
             }
           }
         }
@@ -217,79 +217,79 @@
             "field_a0": {
               "accessID": 27,
               "extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
                 "write_access": "null"
               },
               "intend": 2,
               "interval": "{ Start : End }",
               "redundant extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
                 "write_access": "null"
               }
             },
             "field_a1": {
               "accessID": 28,
               "extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               },
               "intend": 1,
               "interval": "{ Start : End }",
               "redundant extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               }
             },
             "field_a2": {
               "accessID": 29,
               "extents": {
                 "read_access": "null",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               },
               "intend": 0,
               "interval": "{ Start : End }",
               "redundant extents": {
                 "read_access": "null",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               }
             },
             "field_b0": {
               "accessID": 30,
               "extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
                 "write_access": "null"
               },
               "intend": 2,
               "interval": "{ Start : End }",
               "redundant extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
                 "write_access": "null"
               }
             },
             "field_b1": {
               "accessID": 31,
               "extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               },
               "intend": 1,
               "interval": "{ Start : End }",
               "redundant extents": {
-                "read_access": "[<no_horizontal_extent>, (0, 0)]",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               }
             },
             "field_b2": {
               "accessID": 32,
               "extents": {
                 "read_access": "null",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               },
               "intend": 0,
               "interval": "{ Start : End }",
               "redundant extents": {
                 "read_access": "null",
-                "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
               }
             }
           },
@@ -303,13 +303,13 @@
                     "field_a0": {
                       "accessID": 27,
                       "extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       },
                       "intend": 2,
                       "interval": "{ Start : End }",
                       "redundant extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       }
                     },
@@ -317,13 +317,13 @@
                       "accessID": 28,
                       "extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       },
                       "intend": 0,
                       "interval": "{ Start : End }",
                       "redundant extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       }
                     }
                   },
@@ -333,15 +333,15 @@
                       "read_accesses": [
                         {
                           "access_id": 27,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_a0"
                         }
                       ],
-                      "stmt": "field_a1[<no_horizontal_offset>, 0] = field_a0[<no_horizontal_offset>, 0];\n",
+                      "stmt": "field_a1[<no_horizontal_offset>,0] = field_a0[<no_horizontal_offset>,0];\n",
                       "write_accesses": [
                         {
                           "access_id": 28,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_a1"
                         }
                       ]
@@ -350,18 +350,18 @@
                   "interval": "{ Start : End }"
                 }
               ],
-              "Extents": "[<no_horizontal_extent>, (0, 0)]",
+              "Extents": "[<no_horizontal_extent>,(0,0)]",
               "Fields": {
                 "field_a0": {
                   "accessID": 27,
                   "extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   },
                   "intend": 2,
                   "interval": "{ Start : End }",
                   "redundant extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   }
                 },
@@ -369,13 +369,13 @@
                   "accessID": 28,
                   "extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   },
                   "intend": 0,
                   "interval": "{ Start : End }",
                   "redundant extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   }
                 }
               },
@@ -388,13 +388,13 @@
                     "field_a1": {
                       "accessID": 28,
                       "extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       },
                       "intend": 2,
                       "interval": "{ Start : End }",
                       "redundant extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       }
                     },
@@ -402,13 +402,13 @@
                       "accessID": 29,
                       "extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       },
                       "intend": 0,
                       "interval": "{ Start : End }",
                       "redundant extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       }
                     }
                   },
@@ -418,15 +418,15 @@
                       "read_accesses": [
                         {
                           "access_id": 28,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_a1"
                         }
                       ],
-                      "stmt": "field_a2[<no_horizontal_offset>, 0] = field_a1[<no_horizontal_offset>, 0];\n",
+                      "stmt": "field_a2[<no_horizontal_offset>,0] = field_a1[<no_horizontal_offset>,0];\n",
                       "write_accesses": [
                         {
                           "access_id": 29,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_a2"
                         }
                       ]
@@ -435,18 +435,18 @@
                   "interval": "{ Start : End }"
                 }
               ],
-              "Extents": "[<no_horizontal_extent>, (0, 0)]",
+              "Extents": "[<no_horizontal_extent>,(0,0)]",
               "Fields": {
                 "field_a1": {
                   "accessID": 28,
                   "extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   },
                   "intend": 2,
                   "interval": "{ Start : End }",
                   "redundant extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   }
                 },
@@ -454,13 +454,13 @@
                   "accessID": 29,
                   "extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   },
                   "intend": 0,
                   "interval": "{ Start : End }",
                   "redundant extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   }
                 }
               },
@@ -473,13 +473,13 @@
                     "field_b0": {
                       "accessID": 30,
                       "extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       },
                       "intend": 2,
                       "interval": "{ Start : End }",
                       "redundant extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       }
                     },
@@ -487,13 +487,13 @@
                       "accessID": 31,
                       "extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       },
                       "intend": 0,
                       "interval": "{ Start : End }",
                       "redundant extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       }
                     }
                   },
@@ -503,15 +503,15 @@
                       "read_accesses": [
                         {
                           "access_id": 30,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_b0"
                         }
                       ],
-                      "stmt": "field_b1[<no_horizontal_offset>, 0] = field_b0[<no_horizontal_offset>, 0];\n",
+                      "stmt": "field_b1[<no_horizontal_offset>,0] = field_b0[<no_horizontal_offset>,0];\n",
                       "write_accesses": [
                         {
                           "access_id": 31,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_b1"
                         }
                       ]
@@ -520,18 +520,18 @@
                   "interval": "{ Start : End }"
                 }
               ],
-              "Extents": "[<no_horizontal_extent>, (0, 0)]",
+              "Extents": "[<no_horizontal_extent>,(0,0)]",
               "Fields": {
                 "field_b0": {
                   "accessID": 30,
                   "extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   },
                   "intend": 2,
                   "interval": "{ Start : End }",
                   "redundant extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   }
                 },
@@ -539,13 +539,13 @@
                   "accessID": 31,
                   "extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   },
                   "intend": 0,
                   "interval": "{ Start : End }",
                   "redundant extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   }
                 }
               },
@@ -558,13 +558,13 @@
                     "field_b1": {
                       "accessID": 31,
                       "extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       },
                       "intend": 2,
                       "interval": "{ Start : End }",
                       "redundant extents": {
-                        "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
                       }
                     },
@@ -572,13 +572,13 @@
                       "accessID": 32,
                       "extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       },
                       "intend": 0,
                       "interval": "{ Start : End }",
                       "redundant extents": {
                         "read_access": "null",
-                        "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
                       }
                     }
                   },
@@ -588,15 +588,15 @@
                       "read_accesses": [
                         {
                           "access_id": 31,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_b1"
                         }
                       ],
-                      "stmt": "field_b2[<no_horizontal_offset>, 0] = field_b1[<no_horizontal_offset>, 0];\n",
+                      "stmt": "field_b2[<no_horizontal_offset>,0] = field_b1[<no_horizontal_offset>,0];\n",
                       "write_accesses": [
                         {
                           "access_id": 32,
-                          "extents": "[<no_horizontal_extent>, (0, 0)]",
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
                           "name": "field_b2"
                         }
                       ]
@@ -605,18 +605,18 @@
                   "interval": "{ Start : End }"
                 }
               ],
-              "Extents": "[<no_horizontal_extent>, (0, 0)]",
+              "Extents": "[<no_horizontal_extent>,(0,0)]",
               "Fields": {
                 "field_b1": {
                   "accessID": 31,
                   "extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   },
                   "intend": 2,
                   "interval": "{ Start : End }",
                   "redundant extents": {
-                    "read_access": "[<no_horizontal_extent>, (0, 0)]",
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
                   }
                 },
@@ -624,13 +624,13 @@
                   "accessID": 32,
                   "extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   },
                   "intend": 0,
                   "interval": "{ Start : End }",
                   "redundant extents": {
                     "read_access": "null",
-                    "write_access": "[<no_horizontal_extent>, (0, 0)]"
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
                   }
                 }
               },
