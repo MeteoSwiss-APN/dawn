@@ -147,7 +147,7 @@ public:
       appendNewStatement(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
-      metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary, AccessIDOfCaller_,
+      metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary, AccessIDOfCaller_,
                                    returnFieldName);
       std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
           ->getData<iir::IIRAccessExprData>()
@@ -244,8 +244,8 @@ public:
     auto inlineResult = tryInlineStencilFunction(strategy_, func, oldStmt_, newStmts_,
                                                  AccessIDOfCaller, instantiation_);
 
-    // Compute the index of the statement of our current stencil-function call
-    const int stmtIdxOfFunc = oldSize - 1;
+    // Computes the iterator to the statement of our current stencil-function call
+    const auto funCallStmtIt = newStmts_.begin() + (oldSize - 1);
     if(inlineResult.first) {
       if(func->hasReturn()) {
         std::shared_ptr<Inliner>& inliner = inlineResult.second;
@@ -253,20 +253,14 @@ public:
         DAWN_ASSERT(inliner->getNewExpr());
 
         // We need to change the current statement s.t instead of calling the stencil-function it
-        // accesses the precomputed value. In addition the statement needs to be last again (we
-        // push backed all the new statements). Hence, we need to insert an empty statement in the
-        // back -> swap with our statement -> replace the expr in our statement and evict the empty
-        // statement)
-        newStmts_.emplace_back(nullptr); // TODO(SAP)
-        std::iter_swap(newStmts_.begin() + stmtIdxOfFunc, std::prev(newStmts_.end()));
-
-        iir::replaceOldExprWithNewExprInStmt(newStmts_[newStmts_.size() - 1], expr,
-                                             inliner->getNewExpr());
-      }
-
-      // Erase the statement of the original stencil function call. The statment is either empty
-      // (in case it had a return value) or it just contains the function call which we inlined.
-      newStmts_.erase(newStmts_.begin() + stmtIdxOfFunc);
+        // accesses the precomputed value. In addition, this statement needs to be last again (we
+        // push backed all the new statements).
+        iir::replaceOldExprWithNewExprInStmt(*funCallStmtIt, expr, inliner->getNewExpr());
+        // Moves it to the end
+        std::rotate(funCallStmtIt, std::next(funCallStmtIt), newStmts_.end());
+      } else
+        // Erase the statement of the original stencil function call.
+        newStmts_.erase(funCallStmtIt);
 
       // Remove the function
       metadata_.removeStencilFunctionInstantiation(expr, curStencilFunctioninstantiation_);
@@ -309,7 +303,7 @@ public:
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
     int AccessID = iir::getAccessID(expr);
-    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
   }
 };
 
@@ -319,7 +313,7 @@ class DetectInlineCandiates : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
-  std::shared_ptr<iir::Stmt>* oldStmt_;
+  iir::BlockStmt::StmtConstIterator oldStmt_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
   std::unordered_map<std::shared_ptr<iir::Expr>, std::shared_ptr<iir::Expr>>
@@ -350,10 +344,10 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(std::shared_ptr<iir::Stmt>& stmt) {
+  void processStatement(iir::BlockStmt::StmtConstIterator stmt) {
     // Reset the state
     inlineCandiatesFound_ = false;
-    oldStmt_ = &stmt;
+    oldStmt_ = stmt;
     newStmts_.clear();
 
     // Detect the stencil functions suitable for inlining
@@ -369,7 +363,7 @@ public:
   /// Note that the accesses are not computed!
   std::vector<std::shared_ptr<iir::Stmt>>& getNewStatements() {
     if(!replacmentOfOldStmtMap_.empty()) {
-      newStmts_.push_back(std::move(*oldStmt_));
+      newStmts_.push_back(*std::make_move_iterator(oldStmt_));
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(newStmts_[newStmts_.size() - 1], oldNewPair.first,
@@ -483,22 +477,23 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      for(auto stmtIt = doMethod->childrenBegin(); stmtIt != doMethod->childrenEnd(); ++stmtIt) {
-        inliner.processStatment(*stmtIt);
+    for(auto& doMethod : stage.getChildren()) {
+      for(auto stmtIt = doMethod->getAST().getStatements().begin();
+          stmtIt != doMethod->getAST().getStatements().end(); ++stmtIt) {
+        inliner.processStatement(stmtIt);
 
         if(inliner.inlineCandiatesFound()) {
           auto& newStmtList = inliner.getNewStatements();
           // Compute the accesses of the new statements
           computeAccesses(stencilInstantiation.get(), newStmtList);
           // Erase the old stmt ...
-          stmtIt = doMethod->childrenErase(stmtIt);
+          stmtIt = doMethod->getAST().erase(stmtIt);
 
           // ... and insert the new ones
           // newStmtList will be cleared at the next for iteration, so it is safe to move the
           // elements here
-          stmtIt = doMethod->insertChildren(stmtIt, std::make_move_iterator(newStmtList.begin()),
-                                            std::make_move_iterator(newStmtList.end()));
+          stmtIt = doMethod->getAST().insert(stmtIt, std::make_move_iterator(newStmtList.begin()),
+                                             std::make_move_iterator(newStmtList.end()));
 
           std::advance(stmtIt, newStmtList.size() - 1);
         }

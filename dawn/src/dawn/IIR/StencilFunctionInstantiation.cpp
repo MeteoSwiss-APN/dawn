@@ -264,8 +264,8 @@ std::string StencilFunctionInstantiation::getFieldNameFromAccessID(int AccessID)
   // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID) ||
-          metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID))
+  else if(metadata_.isAccessType(FieldAccessType::Field, AccessID) ||
+          metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
     return metadata_.getFieldNameFromAccessID(AccessID);
   else {
     DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
@@ -287,7 +287,7 @@ const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int 
 std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) const {
   if(isLiteral(accessID)) {
     return getNameFromLiteralAccessID(accessID);
-  } else if(metadata_.isAccessType(FieldAccessType::FAT_Field, accessID) ||
+  } else if(metadata_.isAccessType(FieldAccessType::Field, accessID) ||
             isProvidedByStencilFunctionCall(accessID)) {
     return getOriginalNameFromCallerAccessID(accessID);
   } else {
@@ -353,7 +353,7 @@ bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
 }
 
 const std::vector<std::shared_ptr<iir::Stmt>>& StencilFunctionInstantiation::getStatements() const {
-  return doMethod_->getChildren();
+  return doMethod_->getAST().getStatements();
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -380,7 +380,7 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& stmt : doMethod_->getChildren()) {
+  for(const auto& stmt : doMethod_->getAST().getStatements()) {
     const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
@@ -389,7 +389,7 @@ void StencilFunctionInstantiation::update() {
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) &&
-         !metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+         !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -401,7 +401,7 @@ void StencilFunctionInstantiation::update() {
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) &&
-         !metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+         !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -415,7 +415,8 @@ void StencilFunctionInstantiation::update() {
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
       inputFields.emplace(AccessID,
-                          Field(AccessID, Field::IK_Input, Extents{}, Extents{}, interval_));
+                          Field(AccessID, Field::IntendKind::Input, Extents{},
+                                Extents{}, interval_));
       unusedFields_.insert(AccessID);
     }
   }
@@ -455,14 +456,14 @@ void StencilFunctionInstantiation::update() {
         AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
       // Accumulate the extents of each field in this stage
-      for(const auto& stmt : doMethod_->getChildren()) {
+      for(const auto& stmt : doMethod_->getAST().getStatements()) {
         const auto& access = callerAccesses ? stmt->getData<IIRStmtData>().CallerAccesses
                                             : stmt->getData<IIRStmtData>().CalleeAccesses;
 
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !metadata_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
+             !metadata_.isAccessType(FieldAccessType::Field, accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
@@ -470,7 +471,7 @@ void StencilFunctionInstantiation::update() {
 
         for(const auto& accessPair : access->getReadAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !metadata_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
+             !metadata_.isAccessType(FieldAccessType::Field, accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);
@@ -580,7 +581,7 @@ void StencilFunctionInstantiation::dump() const {
       } else {
         int callerAccessID = getCallerAccessIDOfArgField(argIdx);
         std::cout << metadata_.getFieldNameFromAccessID(callerAccessID) << "  "
-                  << getCallerInitialOffsetFromAccessID(callerAccessID);
+                  << to_string(getCallerInitialOffsetFromAccessID(callerAccessID));
       }
 
     } else {
@@ -595,7 +596,8 @@ void StencilFunctionInstantiation::dump() const {
   for(std::size_t i = 0; i < statements.size(); ++i) {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
-    const auto& callerAccesses = doMethod_->getChild(i)->getData<IIRStmtData>().CallerAccesses;
+    const auto& callerAccesses =
+        doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
@@ -654,8 +656,9 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
   }
 
   // check that the list of <statement,access> are set for all statements
-  DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == doMethod_->getChildren().size()),
-                  "AST has different number of statements as the statement accesses pairs");
+  DAWN_ASSERT_MSG(
+      (getAST()->getRoot()->getStatements().size() == doMethod_->getAST().getStatements().size()),
+      "AST has different number of statements with respect to DoMethod's AST");
 }
 
 } // namespace iir

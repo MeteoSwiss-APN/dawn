@@ -27,9 +27,9 @@
 namespace dawn {
 namespace iir {
 
-enum class fieldType { ijk, ij, ik, jk, i, j, k };
+enum class FieldType { ijk, ij, ik, jk, i, j, k };
 
-enum class op {
+enum class Op {
   multiply,
   plus,
   minus,
@@ -45,8 +45,8 @@ enum class op {
   locigalOr,
   logicalNot
 };
-enum class accessType { r, rw };
-enum class hOffsetType { withOffset, noOffset };
+enum class AccessType { r, rw };
+enum class HOffsetType { withOffset, noOffset };
 
 // \brief Short syntax to build an IIR in a consistent state
 //
@@ -54,6 +54,7 @@ enum class hOffsetType { withOffset, noOffset };
 // After creating the whole IIR, the stencil instantiation can be creating by calling build. The
 // builder must not be used after calling build.
 class IIRBuilder {
+protected:
   struct Field {
     int id;
     std::string name;
@@ -65,27 +66,22 @@ class IIRBuilder {
   };
 
 public:
-  IIRBuilder(ast::unstructured_)
-      : si_(std::make_shared<iir::StencilInstantiation>()), unstructured_(true) {}
-  IIRBuilder(ast::cartesian_ = ast::cartesian)
-      : si_(std::make_shared<iir::StencilInstantiation>()), unstructured_(false) {}
+  IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}
 
-  Field field(std::string const& name, fieldType ft = fieldType::ijk);
-  Field field(std::string const& name, ast::Expr::LocationType location);
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
-  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
                                                     ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                        std::shared_ptr<iir::Expr>&& rhs, op operation);
+                                        std::shared_ptr<iir::Expr>&& rhs, Op operation);
 
   std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs,
-                                        op operation = op::assign);
+                                        Op operation = Op::assign);
 
-  std::shared_ptr<iir::Expr> unaryExpr(std::shared_ptr<iir::Expr>&& expr, op operation);
+  std::shared_ptr<iir::Expr> unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation);
 
   std::shared_ptr<iir::Expr> conditionalExpr(std::shared_ptr<iir::Expr>&& cond,
                                              std::shared_ptr<iir::Expr>&& caseThen,
@@ -95,7 +91,7 @@ public:
   std::shared_ptr<iir::Expr> lit(T&& v) {
     DAWN_ASSERT(si_);
     auto v_str = std::to_string(std::forward<T>(v));
-    int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, v_str);
+    int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, v_str);
     auto expr = std::make_shared<iir::LiteralAccessExpr>(
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
@@ -104,19 +100,8 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r);
-  // cartesian only
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, Array3i const& offset);
-  std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);
-  //
+  std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, ast::Offsets const& offset);
 
-  // unstructured only
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, hOffsetType hOffset,
-                                int vOffset);
-  std::shared_ptr<iir::Expr> at(Field const& field, hOffsetType hOffset, int vOffset);
-  //
-
-  std::shared_ptr<iir::Expr> at(Field const& field, accessType access, ast::Offsets const& offset);
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
   std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
@@ -140,8 +125,9 @@ public:
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
-    [[maybe_unused]] int x[] = {(DAWN_ASSERT(stmts), ret->insertChild(std::move(stmts)), 0)...};
-    computeAccesses(si_.get(), ret->getChildren());
+    [[maybe_unused]] int x[] = {
+        (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
+    computeAccesses(si_.get(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
   }
@@ -190,9 +176,29 @@ public:
   dawn::codegen::stencilInstantiationContext build(std::string const& name,
                                                    std::unique_ptr<iir::Stencil> stencil);
 
-private:
+protected:
   std::shared_ptr<iir::StencilInstantiation> si_;
-  bool unstructured_ = false;
+};
+
+class UnstructuredIIRBuilder : public IIRBuilder {
+public:
+  using IIRBuilder::at;
+  std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
+                                int vOffset);
+  std::shared_ptr<iir::Expr> at(Field const& field, HOffsetType hOffset, int vOffset);
+  std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
+
+  Field field(std::string const& name, ast::Expr::LocationType location);
+};
+
+class CartesianIIRBuilder : public IIRBuilder {
+public:
+  using IIRBuilder::at;
+  std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, Array3i const& offset);
+  std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);
+  std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
+
+  Field field(std::string const& name, FieldType ft = FieldType::ijk);
 };
 } // namespace iir
 } // namespace dawn

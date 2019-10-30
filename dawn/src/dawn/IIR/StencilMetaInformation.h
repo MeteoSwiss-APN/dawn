@@ -44,43 +44,43 @@ template <FieldAccessType T>
 struct GetAccessesOfTypeHelper;
 
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_Literal> {
+struct GetAccessesOfTypeHelper<FieldAccessType::Literal> {
   auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.LiteralAccessIDToNameMap_;
   }
 };
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_GlobalVariable> {
+struct GetAccessesOfTypeHelper<FieldAccessType::GlobalVariable> {
   auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.GlobalVariableAccessIDSet_;
   }
 };
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_Field> {
+struct GetAccessesOfTypeHelper<FieldAccessType::Field> {
   auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.FieldAccessIDSet_;
   }
 };
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_LocalVariable> {
+struct GetAccessesOfTypeHelper<FieldAccessType::LocalVariable> {
   void operator()(FieldAccessMetadata const&) {
     dawn_unreachable("getter of local accesses ids not supported");
   }
 };
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_StencilTemporary> {
+struct GetAccessesOfTypeHelper<FieldAccessType::StencilTemporary> {
   auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.TemporaryFieldAccessIDSet_;
   }
 };
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_InterStencilTemporary> {
+struct GetAccessesOfTypeHelper<FieldAccessType::InterStencilTemporary> {
   auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.AllocatedFieldAccessIDSet_;
   }
 };
 template <>
-struct GetAccessesOfTypeHelper<FieldAccessType::FAT_APIField> {
+struct GetAccessesOfTypeHelper<FieldAccessType::APIField> {
   auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.apiFieldIDs_;
   }
@@ -113,7 +113,7 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
   bool isMultiVersionedField(int AccessID) const {
-    return isAccessType(FieldAccessType::FAT_Field, AccessID) &&
+    return isAccessType(FieldAccessType::Field, AccessID) &&
            fieldAccessMetadata_.variableVersions_.variableHasMultipleVersions(AccessID);
   }
 
@@ -199,7 +199,7 @@ public:
 
   int getStencilIDFromStencilCallStmt(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) const;
 
-  Extents getBoundaryConditionExtentsFromBCStmt(
+  Extents const& getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
     DAWN_ASSERT_MSG(boundaryConditionToExtentsMap_.count(stmt),
                     "Boundary Condition does not have a matching Extent");

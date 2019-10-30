@@ -85,7 +85,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int accessID = iir::getAccessID(expr);
 
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, accessID)) {
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, accessID)) {
     ss_ << "globals_." << name;
   } else {
     ss_ << name;
@@ -119,7 +119,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
 
   std::string index;
   if(cacheProperties_.isCommonCache(accessID)) {
-    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ);
+    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheType::IJ);
   } else {
     index = "iblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 0)) +
             " + (jblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 1)) +

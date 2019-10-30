@@ -25,7 +25,7 @@ namespace iir {
 
 void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
 
-  if(!stmt->getChildren().empty()) { // TODO(SAP)
+  if(!stmt->getChildren().empty()) {
     for(const auto& s : stmt->getChildren())
       insertStatement(s);
   } else {
@@ -570,14 +570,14 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
     jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
-    if(metaData_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
+    if(metaData_.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
       jvertex["type"] = "field_temporary";
-    else if(metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::Field, AccessID))
       jvertex["type"] = "field";
-    else if(metaData_.isAccessType(FieldAccessType::FAT_LocalVariable, AccessID) ||
-            metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::LocalVariable, AccessID) ||
+            metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
       jvertex["type"] = "variable";
-    else if(metaData_.isAccessType(iir::FieldAccessType::FAT_Literal, AccessID))
+    else if(metaData_.isAccessType(iir::FieldAccessType::Literal, AccessID))
       jvertex["type"] = "literal";
     else
       dawn_unreachable("invalid vertex type");
@@ -616,17 +616,13 @@ bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundary
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
 
   for(const auto& vertexIDExtentsPair : extentMap) {
-    if(extent_dispatch(vertexIDExtentsPair.second.horizontalExtent(),
-                       [&](iir::CartesianExtent const& hExtent) {
-                         return hExtent.iPlus() > maxHorizontalBoundaryExtent ||
-                                hExtent.iMinus() < -maxHorizontalBoundaryExtent ||
-                                hExtent.jPlus() > maxHorizontalBoundaryExtent ||
-                                hExtent.jMinus() < -maxHorizontalBoundaryExtent;
-                       },
-                       [](iir::UnstructuredExtent const&) { return false; },
-                       []() { return false; })) {
+    auto const& hExtent =
+        extent_cast<iir::CartesianExtent const&>(vertexIDExtentsPair.second.horizontalExtent());
+    if(hExtent.iPlus() > maxHorizontalBoundaryExtent ||
+       hExtent.iMinus() < -maxHorizontalBoundaryExtent ||
+       hExtent.jPlus() > maxHorizontalBoundaryExtent ||
+       hExtent.jMinus() < -maxHorizontalBoundaryExtent)
       return true;
-    }
   }
   return false;
 }

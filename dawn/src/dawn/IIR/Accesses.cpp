@@ -35,25 +35,7 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
       ss << (it != map.begin() ? " " : "") << intent << ":";
       auto const& [AccessID, extent] = *it;
       ss << accessIDToStringFunction(AccessID);
-      ss << ":<";
-
-      auto const& vExtent = extent.verticalExtent();
-      extent_dispatch(extent.horizontalExtent(),
-                      [&](iir::CartesianExtent const& hExtent) {
-                        ss << hExtent.iMinus() << "," << hExtent.iPlus() << ",";
-                        ss << hExtent.jMinus() << "," << hExtent.jPlus() << ",";
-                        ss << vExtent.minus() << "," << vExtent.plus();
-                      },
-                      [&](iir::UnstructuredExtent const& hExtent) {
-                        ss << (hExtent.hasExtent() ? "<has_horizontal_extent>"
-                                                   : "<no_horizontal_extent>")
-                           << "," << vExtent.minus() << "," << vExtent.plus();
-                      },
-                      [&]() {
-                        ss << "<no_horizontal_extent>"
-                           << "," << vExtent.minus() << "," << vExtent.plus();
-                      });
-      ss << ">";
+      ss << ":<" << to_string(extent) << ">";
     }
   };
 

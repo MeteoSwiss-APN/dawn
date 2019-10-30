@@ -46,7 +46,7 @@ protected:
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
     std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
+        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
     // Report diganostics
@@ -87,8 +87,8 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   const auto& doMethod1 = stage1->getChildren().at(0);
 
-  ASSERT_TRUE((doMethod1->getChildren().size() == 1));
-  const auto& stmt = doMethod1->getChildren()[0];
+  ASSERT_TRUE((doMethod1->getAST().getStatements().size() == 1));
+  const auto& stmt = doMethod1->getAST().getStatements()[0];
   ASSERT_TRUE((iir::computeMaximumExtents(*stmt, metadata.getAccessIDFromName("u")) ==
                iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
 

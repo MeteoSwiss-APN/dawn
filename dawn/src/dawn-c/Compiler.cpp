@@ -74,7 +74,7 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
   try {
     std::string sirStr(SIR, size);
     auto inMemorySIR =
-        dawn::SIRSerializer::deserializeFromString(sirStr, dawn::SIRSerializer::SK_Byte);
+        dawn::SIRSerializer::deserializeFromString(sirStr, dawn::SIRSerializer::Format::Byte);
 
     // Prepare options
     std::unique_ptr<dawn::Options> compileOptions = std::make_unique<dawn::Options>();

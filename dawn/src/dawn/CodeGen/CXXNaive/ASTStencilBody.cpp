@@ -105,7 +105,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
     ss_ << "m_globals." << name;
   } else {
     ss_ << name;
@@ -161,7 +161,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
               currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
           ss_ << ", "
               << "pw_" + accessName << ".cloneWithOffset(std::array<int, 3>{"
-              << toString(ast::cartesian, offset) << "})";
+              << to_string(ast::cartesian, offset) << "})";
         }
       }
       ss_ << ")";

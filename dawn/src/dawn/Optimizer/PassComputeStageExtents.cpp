@@ -64,7 +64,7 @@ bool PassComputeStageExtents::run(
           auto it = std::find_if(fields.begin(), fields.end(),
                                  [&](std::pair<int, iir::Field> const& pair) {
                                    const auto& f = pair.second;
-                                   return (f.getIntend() != iir::Field::IntendKind::IK_Input) &&
+                                   return (f.getIntend() != iir::Field::IntendKind::Input) &&
                                           (f.getAccessID() == fromField.getAccessID());
                                  });
           if(it == fields.end())

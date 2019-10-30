@@ -382,11 +382,11 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
 CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
   auto kindToString = [](ArgumentKind kind) -> const char* {
     switch(kind) {
-    case dawn::sir::StencilFunctionArg::AK_Field:
+    case dawn::sir::StencilFunctionArg::ArgumentKind::Field:
       return "Field";
-    case dawn::sir::StencilFunctionArg::AK_Direction:
+    case dawn::sir::StencilFunctionArg::ArgumentKind::Direction:
       return "Direction";
-    case dawn::sir::StencilFunctionArg::AK_Offset:
+    case dawn::sir::StencilFunctionArg::ArgumentKind::Offset:
       return "Offset";
     }
     dawn_unreachable("invalid argument type");
@@ -423,17 +423,18 @@ CompareResult sir::Value::comparison(const sir::Value& rhs) const {
                                       "    %s\n"
                                       "  Expected:\n"
                                       "    %s",
-                                      type, rhs.getType()),
+                                      sir::Value::typeToString(type),
+                                      sir::Value::typeToString(rhs.getType())),
                          false};
 
   switch(type) {
-  case sir::Value::TypeKind::Boolean:
+  case sir::Value::Kind::Boolean:
     return isEqualImpl<bool>(*this, rhs, rhs.toString());
-  case sir::Value::TypeKind::Integer:
+  case sir::Value::Kind::Integer:
     return isEqualImpl<int>(*this, rhs, rhs.toString());
-  case sir::Value::TypeKind::Double:
+  case sir::Value::Kind::Double:
     return isEqualImpl<double>(*this, rhs, rhs.toString());
-  case sir::Value::TypeKind::String:
+  case sir::Value::Kind::String:
     return isEqualImpl<std::string>(*this, rhs, rhs.toString());
   default:
     dawn_unreachable("invalid type");
@@ -448,7 +449,7 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
                            "    %s\n"
                            "  Expected:\n"
                            "    %s",
-                           LoopOrder, rhs.LoopOrder);
+                           static_cast<int>(LoopOrder), static_cast<int>(rhs.LoopOrder));
     return CompareResult{output, false};
   }
 
@@ -602,27 +603,27 @@ SIR::SIR() : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()) {}
 
 void SIR::dump() { std::cout << *this << std::endl; }
 
-const char* sir::Value::typeToString(sir::Value::TypeKind type) {
+const char* sir::Value::typeToString(sir::Value::Kind type) {
   switch(type) {
-  case Boolean:
+  case Kind::Boolean:
     return "bool";
-  case Integer:
+  case Kind::Integer:
     return "int";
-  case Double:
+  case Kind::Double:
     return "double";
-  case String:
+  case Kind::String:
     return "std::string";
   }
   dawn_unreachable("invalid type");
 }
 
-BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
+BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
   switch(type) {
-  case Boolean:
+  case Kind::Boolean:
     return BuiltinTypeID::Boolean;
-  case Integer:
+  case Kind::Integer:
     return BuiltinTypeID::Integer;
-  case Double:
+  case Kind::Double:
     return BuiltinTypeID::Float;
   default:
     dawn_unreachable("invalid type");
@@ -632,13 +633,13 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
 std::string sir::Value::toString() const {
   DAWN_ASSERT(has_value());
   switch(type_) {
-  case Boolean:
+  case Kind::Boolean:
     return std::get<bool>(*value_) ? "true" : "false";
-  case Integer:
+  case Kind::Integer:
     return std::to_string(std::get<int>(*value_));
-  case Double:
+  case Kind::Double:
     return std::to_string(std::get<double>(*value_));
-  case String:
+  case Kind::String:
     return std::get<std::string>(*value_);
   default:
     dawn_unreachable("invalid type");

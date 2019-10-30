@@ -168,11 +168,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     DAWN_LOG(INFO) << "Generating SIR file " << generatedFilename;
 
     if(context_->getOptions().SIRFormat == "json") {
-      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(),
-                                     dawn::SIRSerializer::SerializationKind::SK_Json);
+      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
     } else if(context_->getOptions().SIRFormat == "byte") {
-      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(),
-                                     dawn::SIRSerializer::SerializationKind::SK_Byte);
+      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Byte);
 
     } else {
       dawn_unreachable("Unknown SIRFormat option");
@@ -226,7 +224,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
           context_->getASTContext().getLangOpts(), skipNewLines);
       if(rewriter.ReplaceText(
              clang::SourceRange(stencilDecl->getSourceRange().getBegin(), semiAfterDef),
-             stencilPair.second->Attributes.has(dawn::sir::Attr::AK_NoCodeGen)
+             stencilPair.second->Attributes.has(dawn::sir::Attr::Kind::NoCodeGen)
                  ? ""
                  : DawnTranslationUnit->getStencils().at(
                        DawnTranslationUnit->getStencils().count("<restored>") > 0
