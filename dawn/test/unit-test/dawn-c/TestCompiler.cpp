@@ -69,7 +69,7 @@ void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
 TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
 
-  IIRBuilder b;
+  CartesianIIRBuilder b;
   auto in_f = b.field("in_field", FieldType::ijk);
   auto out_f = b.field("out_field", FieldType::ijk);
 
@@ -87,7 +87,7 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
-  IIRBuilder b;
+  UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);
   auto out_f = b.field("out_field", LocType::Cells);
   auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
@@ -98,10 +98,11 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
           LoopOrderKind::Parallel,
           b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                             b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
-          b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                            b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
-                                                                 Op::plus, b.at(in_f), b.lit(0.),
-                                                                 LocType::Edges))))))));
+          b.stage(b.vregion(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), LocType::Edges))))))));
 
   std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
@@ -112,7 +113,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
-  IIRBuilder b;
+  UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Cells);
   auto out_f = b.field("out_field", LocType::Cells);
   auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
@@ -126,11 +127,13 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
               b.stmt(b.assignExpr(b.at(cnt),
                                   b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
                                                            dawn::ast::Expr::LocationType::Cells))),
-              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
-                                                   Op::plus, b.at(in_f),
-                                                   b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
-                                                                b.at(in_f), Op::multiply),
-                                                   dawn::ast::Expr::LocationType::Cells))),
+              b.stmt(b.assignExpr(
+                  b.at(out_f),
+                  b.reduceOverNeighborExpr(Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                           b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
+                                                        b.at(in_f, HOffsetType::withOffset, 0),
+                                                        Op::multiply),
+                                           dawn::ast::Expr::LocationType::Cells))),
               b.stmt(b.assignExpr(b.at(out_f),
                                   b.binaryExpr(b.at(in_f),
                                                b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),

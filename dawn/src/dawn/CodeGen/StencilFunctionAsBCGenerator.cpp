@@ -27,10 +27,11 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
     DAWN_ASSERT_MSG(pos < function_->Args.size(), "");
     return pos;
   };
-  ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
-                      toString(expr->getOffset(), ", ", [&](std::string const& name, int offset) {
-                        return name + "+" + std::to_string(offset);
-                      }));
+  ss_ << dawn::format(
+      "data_field_%i(%s)", getArgumentIndex(expr->getName()),
+      to_string(ast::cartesian, expr->getOffset(), ", ", [&](std::string const& name, int offset) {
+        return name + "+" + std::to_string(offset);
+      }));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
@@ -47,7 +48,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExp
 }
 
 void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
-  const auto& hExtents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+  const auto& hExtents = iir::extent_cast<iir::CartesianExtent const&>(
       metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).horizontalExtent());
   const auto& vExtents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).verticalExtent();
   int haloIMinus = std::abs(hExtents.iMinus());

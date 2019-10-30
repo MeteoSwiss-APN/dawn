@@ -38,7 +38,7 @@ namespace {
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
 static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
-  iir::Extents fullExtents(ast::cartesian);
+  iir::Extents fullExtents;
   iir::Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
@@ -116,7 +116,9 @@ public:
 };
 
 PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
-    : Pass(context, "PassSetBoundaryCondition") {}
+    : Pass(context, "PassSetBoundaryCondition") {
+  dependencies_.push_back("PassComputeStageExtents");
+}
 
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
@@ -186,7 +188,7 @@ bool PassSetBoundaryCondition::run(
   }
 
   auto calculateHaloExtents = [&](std::string fieldname) {
-    iir::Extents fullExtent(ast::cartesian);
+    iir::Extents fullExtent;
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before
@@ -285,8 +287,7 @@ bool PassSetBoundaryCondition::run(
           for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
             stencilCallWithBC_.emplace_back(oldStencilCall);
             auto newBlockStmt = iir::makeBlockStmt();
-            std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
-                      std::back_inserter(newBlockStmt->getStatements()));
+            newBlockStmt->insert_back(stencilCallWithBC_);
             if(oldStencilCall == controlFlowStmt) {
               // Replace the the statement directly
               DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);

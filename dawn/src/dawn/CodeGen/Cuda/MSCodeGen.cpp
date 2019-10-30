@@ -49,7 +49,7 @@ void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
     const int accessID = cache.getCachedFieldAccessID();
     const auto& maxExtents = cacheProperties_.getCacheExtent(accessID);
     const auto& hMaxExtents =
-        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     kernel.addStatement(
         "__shared__ gridtools::clang::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
@@ -108,7 +108,7 @@ void MSCodeGen::generateTmpIndexInit(MemberFunction& kernel) const {
 
   auto maxExtentTmps = CodeGeneratorHelper::computeTempMaxWriteExtent(*(ms_->getParent()));
   auto const& hMaxExtentTmps =
-      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtentTmps.horizontalExtent());
+      iir::extent_cast<iir::CartesianExtent const&>(maxExtentTmps.horizontalExtent());
   kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-hMaxExtentTmps.iMinus()) +
                       ")*1 + (jblock+" + std::to_string(-hMaxExtentTmps.jMinus()) +
                       ")*jstride_tmp");
@@ -258,8 +258,8 @@ void MSCodeGen::generatePreFillKCaches(
   }
 
   for(const auto& kcachePropPair : kCacheProperty) {
-    const auto& horizontalExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-        kcachePropPair.first.horizontalExtent());
+    const auto& horizontalExtent =
+        iir::extent_cast<iir::CartesianExtent const&>(kcachePropPair.first.horizontalExtent());
     const auto& kcachesProp = kcachePropPair.second;
 
     // we need to also box the fill of kcaches to avoid out-of-bounds
@@ -338,8 +338,8 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
   }
 
   for(const auto& kcachePropPair : kCacheProperty) {
-    const auto& horizontalExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-        kcachePropPair.first.horizontalExtent());
+    const auto& horizontalExtent =
+        iir::extent_cast<iir::CartesianExtent const&>(kcachePropPair.first.horizontalExtent());
     const auto& kcachesProp = kcachePropPair.second;
 
     cudaKernel.addBlockStatement(
@@ -547,8 +547,8 @@ void MSCodeGen::generateFlushKCaches(MemberFunction& cudaKernel, const iir::Inte
   auto kCacheProperty = buildKCacheProperties(interval, policy);
 
   for(const auto& kcachePropPair : kCacheProperty) {
-    const auto& horizontalExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-        kcachePropPair.first.horizontalExtent());
+    const auto& horizontalExtent =
+        iir::extent_cast<iir::CartesianExtent const&>(kcachePropPair.first.horizontalExtent());
     const auto& kcachesProp = kcachePropPair.second;
 
     cudaKernel.addBlockStatement(
@@ -611,8 +611,8 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
   auto kCacheProperty = buildKCacheProperties(interval, policy);
 
   for(const auto& kcachePropPair : kCacheProperty) {
-    const auto& horizontalExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-        kcachePropPair.first.horizontalExtent());
+    const auto& horizontalExtent =
+        iir::extent_cast<iir::CartesianExtent const&>(kcachePropPair.first.horizontalExtent());
     const auto& kcachesProp = kcachePropPair.second;
 
     cudaKernel.addBlockStatement(
@@ -683,7 +683,7 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   auto const& hMaxExtents =
-      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+      iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
   // fields used in the stencil
   const auto fields = support::orderMap(ms_->getFields());
@@ -1005,8 +1005,8 @@ void MSCodeGen::generateCudaKernelCode() {
 
       for(const auto& stagePtr : ms_->getChildren()) {
         const iir::Stage& stage = *stagePtr;
-        const auto& hExtent = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
-            stage.getExtents().horizontalExtent());
+        const auto& hExtent =
+            iir::extent_cast<iir::CartesianExtent const&>(stage.getExtents().horizontalExtent());
         iir::MultiInterval enclosingInterval;
 
         // TODO add the enclosing interval in derived ?
@@ -1032,7 +1032,7 @@ void MSCodeGen::generateCudaKernelCode() {
                 const iir::DoMethod& doMethod = *doMethodPtr;
                 if(!doMethod.getInterval().overlaps(interval))
                   continue;
-                for(const auto& stmt : doMethod.getChildren()) {
+                for(const auto& stmt : doMethod.getAST().getStatements()) {
                   stmt->accept(stencilBodyCXXVisitor);
                   cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
                 }

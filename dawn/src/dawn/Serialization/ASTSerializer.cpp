@@ -109,8 +109,7 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
   auto vExtent = extents.verticalExtent();
-  auto const& hExtent =
-      dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
+  auto const& hExtent = iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
 
   auto protoExtentI = protoExtents.add_extents();
   protoExtentI->set_minus(hExtent.iMinus());

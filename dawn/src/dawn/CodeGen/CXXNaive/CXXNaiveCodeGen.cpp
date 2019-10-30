@@ -377,7 +377,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
-                auto const& extents = dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(
+                auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
 
                 stencilRunMethod.addBlockStatement(
@@ -389,7 +389,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
                               const iir::DoMethod& doMethod = *doMethodPtr;
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
-                              for(const auto& stmt : doMethod.getChildren()) {
+                              for(const auto& stmt : doMethod.getAST().getStatements()) {
                                 stmt->accept(stencilBodyCXXVisitor);
                                 stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }

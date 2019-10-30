@@ -36,15 +36,19 @@ Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
-Extents::Extents(const ast::Offsets& offset)
+Extents::Extents(ast::Offsets const& offset)
     : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
-    : verticalExtent_(extent3minus, extent3plus),
-      horizontalExtent_(ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus) {}
-
+    : Extents(
+          HorizontalExtent{ast::cartesian, extent1minus, extent1plus, extent2minus, extent2plus},
+          Extent{extent3minus, extent3plus}) {}
 Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian) {}
+
+Extents::Extents(ast::unstructured_, bool hasOffset, Extent const& vExtent)
+    : Extents(HorizontalExtent{ast::unstructured, hasOffset}, Extent{vExtent}) {}
+Extents::Extents(ast::unstructured_) : horizontalExtent_(ast::unstructured) {}
 
 void Extents::merge(const Extents& other) {
   horizontalExtent_.merge(other.horizontalExtent_);
@@ -166,12 +170,29 @@ bool Extents::operator==(const Extents& other) const {
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
 std::string to_string(const Extents& extent) {
-  auto const& hExtents = extent_cast<CartesianExtent const&>(extent.horizontalExtent());
-  auto const& vExtents = extent.verticalExtent();
+  using namespace std::string_literals;
+  std::string hExtentString;
+  auto const& hExtent = extent.horizontalExtent();
+  HorizontalExtentImpl* ptr = hExtent.impl_.get();
 
-  return "[(" + std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()) +
-         "), (" + std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()) +
-         "), (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
+  if(hExtent.isPointwise()) {
+    hExtentString = "<no_horizontal_extent>"s;
+
+  } else if(auto cExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
+    hExtentString = "("s + std::to_string(cExtent->iMinus()) + "," +
+                    std::to_string(cExtent->iPlus()) + "),(" + std::to_string(cExtent->jMinus()) +
+                    "," + std::to_string(cExtent->jPlus()) + ")";
+
+  } else if(auto uExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
+    hExtentString = uExtent->hasExtent() ? "<has_horizontal_extent>"s : "<no_horizontal_extent>"s;
+
+  } else {
+    dawn_unreachable("unknown extent class");
+  }
+
+  auto const& vExtents = extent.verticalExtent();
+  return "["s + hExtentString + ",(" + std::to_string(vExtents.minus()) + "," +
+         std::to_string(vExtents.plus()) + ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {

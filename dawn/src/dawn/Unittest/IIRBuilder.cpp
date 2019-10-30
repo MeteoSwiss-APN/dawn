@@ -166,36 +166,20 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::Field IIRBuilder::field(std::string const& name, FieldType ft) {
-  DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, asArray(ft));
-  return {id, name};
-}
-IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
-  DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
-                                       asArray(FieldType::ijk), location);
-  return {id, name};
-}
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
   DAWN_ASSERT(si_);
   auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::vector<std::shared_ptr<Expr>>{});
   int id = si_->getMetaData().addStmt(true, iirStmt);
   return {id, name, iirStmt};
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, AccessType access,
-                                          Array3i offset) {
+std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
+                                          ast::Offsets const& offset) {
   DAWN_ASSERT(si_);
-  auto expr =
-      std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offsets{ast::cartesian, offset});
+  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, offset);
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
-}
-std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, Array3i extent) {
-  DAWN_ASSERT(si_);
-  return at(field, AccessType::r, extent);
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);
@@ -223,5 +207,46 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   return var.decl;
 }
 
+IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, asArray(ft));
+  return {id, name};
+}
+
+std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {
+  return at(field, access, ast::Offsets{ast::cartesian});
+}
+std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
+                                                   Array3i const& offset) {
+  return at(field, AccessType::r, offset);
+}
+std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
+                                                   AccessType access, Array3i const& offset) {
+  return at(field, AccessType::r, ast::Offsets{ast::cartesian, offset});
+}
+
+IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
+                                                ast::Expr::LocationType location) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
+                                       asArray(FieldType::ijk), location);
+  return {id, name};
+}
+
+std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(Field const& field, AccessType access) {
+  return at(field, access, ast::Offsets{ast::unstructured});
+}
+
+std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
+                                                      HOffsetType hOffset, int vOffset) {
+  DAWN_ASSERT(si_);
+  return at(field, AccessType::r, hOffset, vOffset);
+}
+std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
+                                                      AccessType access, HOffsetType hOffset,
+                                                      int vOffset) {
+  return at(field, AccessType::r,
+            ast::Offsets{ast::unstructured, hOffset == HOffsetType::withOffset, vOffset});
+}
 } // namespace iir
 } // namespace dawn

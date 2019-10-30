@@ -243,7 +243,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   MultiInterval readInterval;
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& stmt : doMethod->getChildren()) {
+    for(const auto& stmt : doMethod->getAST().getStatements()) {
       const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
       if(accesses.hasWriteAccess(accessID)) {
         writeIntervalPre.insert(doMethod->getInterval());
@@ -252,7 +252,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   }
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& stmt : doMethod->getChildren()) {
+    for(const auto& stmt : doMethod->getAST().getStatements()) {
       const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
@@ -376,8 +376,7 @@ std::map<int, Field> MultiStage::getOrderedFields() const {
 
 void MultiStage::updateFromChildren() {
   for(const auto& stagePtr : children_) {
-    mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
-                std::make_optional(stagePtr->getExtents()));
+    mergeFields(stagePtr->getFields(), derivedInfo_.fields_, stagePtr->getExtents());
   }
 }
 
@@ -449,7 +448,7 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
     for(const auto& doMethod : stage->getChildren()) {
       if(!doMethod->getInterval().overlaps(interval))
         continue;
-      mergeFields(doMethod->getFields(), fields, std::make_optional(stage->getExtents()));
+      mergeFields(doMethod->getFields(), fields, stage->getExtents());
     }
   }
   return fields;

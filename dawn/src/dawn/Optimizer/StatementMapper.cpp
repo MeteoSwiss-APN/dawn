@@ -39,7 +39,7 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
 void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    scope_.top()->doMethod_.insertChild(std::shared_ptr<iir::Stmt>{stmt});
+    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
   }
 }
 
@@ -307,8 +307,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 
       auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-      iir::replaceOldExprWithNewExprInStmt((*(scope_.top()->doMethod_.childrenRBegin())), expr,
-                                           newExpr);
+      iir::replaceOldExprWithNewExprInStmt(
+          (*(scope_.top()->doMethod_.getAST().getStatements().rbegin())), expr, newExpr);
 
       // if a global is replaced by its value it becomes a de-facto literal negate access id
       int AccessID = -instantiation_->nextUID();

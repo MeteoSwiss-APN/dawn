@@ -197,7 +197,7 @@ private:
         instantiation_->getMetaData(), instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod =
         std::make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
-    domethod->clearChildren();
+    domethod->getAST().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
       int assignmentID = assignmentIDs[i];
@@ -228,11 +228,11 @@ private:
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
     iir::Accesses newAccess;
-    newAccess.addWriteExtent(assignmentID, iir::Extents(ast::cartesian));
-    newAccess.addReadExtent(assigneeID, iir::Extents(ast::cartesian));
+    newAccess.addWriteExtent(assignmentID, iir::Extents{});
+    newAccess.addReadExtent(assigneeID, iir::Extents{});
     expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
-    domethod->insertChild(std::move(expAssignment));
+    domethod->getAST().push_back(std::move(expAssignment));
 
     // Add access ids to the expressions
     fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
