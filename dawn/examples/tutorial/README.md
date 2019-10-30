@@ -51,12 +51,12 @@ This will place an executable called `laplacian_driver` in the tutorial director
 
 ## Use Python to generate SIR 
 
-Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided. As a preliminary step, a config file that was generated during the **dawn** install step needs to be copied and the proper `PYTHONPATH` needs to be set:
+Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided. As a preliminary step, a config file that was generated during the **dawn** install step needs to be copied and the proper `PYTHONPATH` needs to be set. Assuming you built dawn using the bundle this is:
 
 ```
-cd <path/to/dawn>/dawn/docs/tutorial/
-cp ../../bundle/install/examples/python/config.py .
-export PYTHONPATH=../../bundle/install/python/
+cd <path/to/dawn>/dawn/examples/
+cp ../bundle/install/examples/python/config.py .
+export PYTHONPATH+=:../../bundle/install/python/
 ```
 
 The python file provided can now be run:
