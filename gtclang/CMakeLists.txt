@@ -14,6 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+project(gtclang CXX)
+cmake_minimum_required(VERSION 3.3)
+
 # Include the GTClang specific options, definitions and macros
 include(GTClangOptions)
 include(GTClangDefinitions)
@@ -77,13 +80,16 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 # Output summary of the packages
 yoda_report_result("Package summary" ${package_info})
 
+# Include directories
+# ... dawn
+include_directories(${CMAKE_SOURCE_DIR}/dawn/src)
+include_directories(${CMAKE_BINARY_DIR}/dawn/src)
+
+# ... gtclang
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_BINARY_DIR}/src)
+
 # Build gtclang
-include_directories(${DAWN_SOURCE_DIR}/src)
-include_directories(${DAWN_BINARY_DIR}/src)
-
-include_directories(${GTCLANG_SOURCE_DIR}/src)
-include_directories(${GTCLANG_BINARY_DIR}/src)
-
 add_subdirectory(src)
 
 if(GTCLANG_BUILD_EXAMPLES)

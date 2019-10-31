@@ -52,5 +52,5 @@ yoda_add_executable(
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/integrationtest
 )
 
-file(COPY reference_iir DESTINATION ${CMAKE_BINARY_DIR}/bin/integrationtest)
-file(COPY reference_iir DESTINATION ${CMAKE_BINARY_DIR}/test/integration-test)
+file(COPY reference_iir DESTINATION ${PROJECT_BINARY_DIR}/bin/integrationtest)
+file(COPY reference_iir DESTINATION ${PROJECT_BINARY_DIR}/test/integration-test)

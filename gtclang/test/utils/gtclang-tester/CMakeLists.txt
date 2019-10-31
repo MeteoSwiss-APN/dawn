@@ -31,7 +31,7 @@ function(gtclang_add_integrationtest)
   set(multi_value_args DIRECTORIES GRIDTOOLS_FLAGS)
   cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
-  set(script ${CMAKE_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py)
+  set(script ${PROJECT_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py)
   set(command_no_dir ${PYTHON_EXECUTABLE} ${script}
                      --gtclang=${ARG_GTCLANG}
                      --cxx=${CMAKE_CXX_COMPILER})

@@ -128,7 +128,7 @@ macro(dawn_gen_install_config)
   set(DAWN_CONFIGURE_LIB_DIR "")
   set(DAWN_CONFIGURE_CMAKE_DIR "${PROJECT_BINARY_DIR}")
   configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
+    ${PROJECT_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
     ${PROJECT_BINARY_DIR}/dawnConfig.cmake
     INSTALL_DESTINATION ${PROJECT_BINARY_DIR}
     PATH_VARS

@@ -17,7 +17,7 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries." FORCE)
 endif()
 
 cmake_minimum_required(VERSION 3.3)
-project(dawn
+project(dawn-toolchain
     VERSION 0.0.1
     DESCRIPTION "Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models"
     HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
@@ -42,15 +42,9 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   "Path prefix prepended onto install directories." FORCE)
 endif()
 
-set(DAWN_SOURCE_DIR "${CMAKE_SOURCE_DIR}/dawn")
-set(GTCLANG_SOURCE_DIR "${CMAKE_SOURCE_DIR}/gtclang")
-
-set(DAWN_BINARY_DIR "${CMAKE_BINARY_DIR}/dawn")
-set(GTCLANG_BINARY_DIR "${CMAKE_BINARY_DIR}/gtclang")
-
 list(APPEND CMAKE_MODULE_PATH "${YODA_ROOT}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${DAWN_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${GTCLANG_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/dawn/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/gtclang/cmake")
 
 include(yodaMakeStringPair)
 include(yodaReportResult)

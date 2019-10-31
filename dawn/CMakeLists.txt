@@ -15,6 +15,9 @@
 include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
+project(dawn C CXX)
+cmake_minimum_required(VERSION 3.3)
+
 dawn_cmake_init()
 
 # Include the Dawn specific options, definitions and macros
@@ -62,7 +65,7 @@ foreach(package bash Protobuf ccache clang-format ${doc_packages})
 endforeach()
 
 # Enable RPath support
-yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR}")
+yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
 
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
@@ -77,8 +80,8 @@ if(DAWN_PYTHON)
 endif()
 
 # Build dawn
-include_directories(${DAWN_SOURCE_DIR}/src)
-include_directories(${DAWN_BINARY_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_BINARY_DIR}/src)
 
 add_subdirectory(src)
 add_subdirectory(cmake)
@@ -98,7 +101,7 @@ endif()
 
 # Install headers
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/
+  DIRECTORY ${PROJECT_SOURCE_DIR}/src/
   DESTINATION ${DAWN_INSTALL_INCLUDE_DIR}
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )

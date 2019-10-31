@@ -38,7 +38,7 @@ if(NOT EXISTS "${protobuf_init_py}")
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
 
-  set(config_in "${DAWN_SOURCE_DIR}/python/dawn/config.py.in")
+  set(config_in "${PROJECT_SOURCE_DIR}/python/dawn/config.py.in")
   set(config_out "${CMAKE_BINARY_DIR}/python/dawn/config.py")
   configure_file(${config_in} ${config_out})
 
