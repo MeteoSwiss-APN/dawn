@@ -44,8 +44,8 @@ void replaceFieldWithVarAccessInStmts(iir::Stencil* stencil, int AccessID,
 /// @brief Replace all variable accesses with field accesses in the given `stmts`
 ///
 /// This will also modify the underlying AccessID maps of the StencilInstantiation.
-void replaceVarWithFieldAccessInStmts(iir::StencilMetaInformation& metadata, iir::Stencil* stencil,
-                                      int AccessID, const std::string& fieldname,
+void replaceVarWithFieldAccessInStmts(iir::Stencil* stencil, int AccessID,
+                                      const std::string& fieldname,
                                       ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
 
 /// @brief Replace all stencil calls to `oldStencilID` with a series of stencil calls to

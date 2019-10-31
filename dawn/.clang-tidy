@@ -4,8 +4,8 @@ WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
 FormatStyle:     none
-User:            vogtha
-CheckOptions:    
+User:
+CheckOptions:
   - key:             cert-dcl16-c.NewSuffixes
     value:           'L;LL;LU;LLU'
   - key:             cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
@@ -31,4 +31,3 @@ CheckOptions:
   - key:             modernize-use-nullptr.NullMacros
     value:           'NULL'
 ...
-

@@ -80,8 +80,7 @@ void replaceFieldWithVarAccessInStmts(iir::Stencil* stencil, int AccessID,
   }
 }
 
-void replaceVarWithFieldAccessInStmts(iir::StencilMetaInformation& /*unused*/,
-                                      iir::Stencil* stencil, int AccessID,
+void replaceVarWithFieldAccessInStmts(iir::Stencil* stencil, int AccessID,
                                       const std::string& fieldname,
                                       ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
 
