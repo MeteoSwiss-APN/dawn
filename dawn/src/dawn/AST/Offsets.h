@@ -145,7 +145,9 @@ public:
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
   friend std::string to_string(Offsets const& offset);
-  friend class iir::HorizontalExtent;
+  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+  friend auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
@@ -227,6 +229,22 @@ std::string to_string(cartesian_, Offsets const& offset, std::string const& sep 
 std::string to_string(unstructured_, Offsets const& offset);
 
 std::string to_string(Offsets const& offset);
+
+template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
+                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
+  if(hOffset.isZero())
+    return zeroFn();
+
+  HorizontalOffsetImpl* ptr = hOffset.impl_.get();
+  if(auto cartesianOffset = dynamic_cast<CartesianOffset const*>(ptr)) {
+    return cartFn(*cartesianOffset);
+  } else if(auto unstructuredOffset = dynamic_cast<UnstructuredOffset const*>(ptr)) {
+    return unstructuredFn(*unstructuredOffset);
+  } else {
+    dawn_unreachable("unknown offset class");
+  }
+}
 
 } // namespace dawn::ast
 #endif

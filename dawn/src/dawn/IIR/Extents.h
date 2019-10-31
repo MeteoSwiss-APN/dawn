@@ -209,21 +209,16 @@ public:
   HorizontalExtent() = default;
 
   HorizontalExtent(ast::HorizontalOffset const& hOffset) {
-    ast::HorizontalOffsetImpl* ptr = hOffset.impl_.get();
-
-    if(hOffset.isZero()) {
-      *this = HorizontalExtent();
-
-    } else if(auto cOffset = dynamic_cast<ast::CartesianOffset const*>(ptr)) {
-      *this = HorizontalExtent(ast::cartesian, cOffset->offsetI(), cOffset->offsetI(),
-                               cOffset->offsetJ(), cOffset->offsetJ());
-
-    } else if(auto uOffset = dynamic_cast<ast::UnstructuredOffset const*>(ptr)) {
-      *this = HorizontalExtent(ast::unstructured, uOffset->hasOffset());
-
-    } else {
-      dawn_unreachable("unknown offset class");
-    }
+    *this = offset_dispatch(hOffset,
+                            [](ast::CartesianOffset const& cOffset) {
+                              return HorizontalExtent(ast::cartesian, cOffset.offsetI(),
+                                                      cOffset.offsetI(), cOffset.offsetJ(),
+                                                      cOffset.offsetJ());
+                            },
+                            [](ast::UnstructuredOffset const& uOffset) {
+                              return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+                            },
+                            []() { return HorizontalExtent(); });
   }
 
   HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
@@ -251,6 +246,9 @@ public:
   template <typename T>
   friend T extent_cast(HorizontalExtent const&);
   friend std::string to_string(const Extents& extent);
+  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+  friend auto extent_dispatch(HorizontalExtent const& hExtent, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
 
   bool operator==(HorizontalExtent const& other) const {
     if(impl_ && other.impl_)
@@ -410,6 +408,22 @@ Extents limit(Extents lhs, Extents const& rhs);
 
 std::ostream& operator<<(std::ostream& os, const Extents& extent);
 std::string to_string(Extents const& extent);
+
+template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+auto extent_dispatch(HorizontalExtent const& hExtent, CartFn const& cartFn,
+                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
+  if(hExtent.isPointwise())
+    return zeroFn();
+
+  HorizontalExtentImpl* ptr = hExtent.impl_.get();
+  if(auto cartesianExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
+    return cartFn(*cartesianExtent);
+  } else if(auto unstructuredExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
+    return unstructuredFn(*unstructuredExtent);
+  } else {
+    dawn_unreachable("unknown extent class");
+  }
+}
 
 } // namespace iir
 } // namespace dawn
