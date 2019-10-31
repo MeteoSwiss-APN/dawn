@@ -176,9 +176,9 @@ std::string to_string(const Extents& extent) {
   return "["s +
          extent_dispatch(extent.horizontalExtent(),
                          [&](CartesianExtent const& hExtents) {
-                           return "("s + std::to_string(hExtents.iMinus()) + ", " +
-                                  std::to_string(hExtents.iPlus()) + "), (" +
-                                  std::to_string(hExtents.jMinus()) + ", " +
+                           return "("s + std::to_string(hExtents.iMinus()) + "," +
+                                  std::to_string(hExtents.iPlus()) + "),(" +
+                                  std::to_string(hExtents.jMinus()) + "," +
                                   std::to_string(hExtents.jPlus()) + ")";
                          },
                          [&](UnstructuredExtent const& hExtents) {
@@ -186,7 +186,7 @@ std::string to_string(const Extents& extent) {
                                                        : "<no_horizontal_extent>"s;
                          },
                          [&]() { return "<no_horizontal_extent>"s; }) +
-         ", (" + std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()) + ")]";
+         ",(" + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus()) + ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
