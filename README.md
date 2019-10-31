@@ -1,4 +1,4 @@
-<a href="https://app.zenhub.com/workspaces/dawn-5db41ac773e8f70001d9e352/board?repos=104239379"><img src="//dxssrr2j0sq4w.cloudfront.net/3.2.0/img/external/zenhub-badge.png" alt="ZenHub"></a>
+[![](https://dxssrr2j0sq4w.cloudfront.net/3.2.0/img/external/zenhub-badge.png)](https://app.zenhub.com/workspaces/dawn-5db41ac773e8f70001d9e352/board?repos)
 
 GTClang & dawn
 ===========
