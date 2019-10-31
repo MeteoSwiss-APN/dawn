@@ -39,7 +39,7 @@ class SIRPrinter:
     def visit_field_access_expr(self, expr):
         str_ = expr.name + "["
         if expr.WhichOneof("horizontal_offset") == "cartesian_offset":
-            str_ += str(expr.cartesian_offset.i_offset) + ", "
+            str_ += str(expr.cartesian_offset.i_offset) + ","
             str_ += str(expr.cartesian_offset.j_offset)
         elif expr.WhichOneof("horizontal_offset") == "unstructured_offset":
             str_ += "<has_horizontal_offset>" if expr.unstructured_offset.has_offset else "<no_horizontal_offset>"
@@ -47,7 +47,7 @@ class SIRPrinter:
             str_ += "<no_horizontal_offset>"
         else:
             raise ValueError("Unknown offset")
-        str_ += ", " + str(expr.vertical_offset)
+        str_ += "," + str(expr.vertical_offset)
         str_ += "]"
         return str_
 
