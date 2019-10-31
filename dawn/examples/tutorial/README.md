@@ -22,6 +22,8 @@ stencil laplacian_stencil {
 };
 ```
 
+**GTClang** allows a simplification for indices which are not offset. So, `in_field[i+1,j]` can be written simply as `in_field[i+1]`.
+
 This code defines two fields which will serve as the arguments to the stencil. The variable `dx` is the grid spacing and is read-only (during the stencil run), which is modelled as a global in **GTClang**. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example [wikipedia](https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables)), which close to no boiler plate. Save the stencil as `laplacian_stencil.cpp`.
 
 For the purpose of this tutorial we are going to use the `C++-naive` backend. To compile the stencil use:
