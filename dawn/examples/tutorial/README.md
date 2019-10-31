@@ -1,6 +1,6 @@
 # Getting Started using GTClang & dawn
 
-In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. To follow this tutorial, please make sure that you compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag. The readme in the gtclang subdirectory has instructions on how to do that. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++.
+In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++. To follow this tutorial, please make sure that you compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag dawn was built with `DAWN_BUNDLE_PYTHON=ON`. The readme's in the gtclang and dawn subdirectories have instructions on how to do that. 
 
 ## Writing a Stencil in the GTClang SIR and Compiling the Stencil
 
@@ -16,7 +16,7 @@ stencil laplacian_stencil {
   storage_ij in_field;
   Do() {
     vertical_region(k_start, k_end) {
-	    out_field[i,j] = (-4*in_field + in_field[i+1] + in_field[i-1] + in_field[j-1] + in_field[j+1])/(dx*dx);
+	    out_field[i,j] = (-4*in_field + in_field[i+1,j] + in_field[i-1,j] + in_field[i,j-1] + in_field[i,j+1])/(dx*dx);
     }
   }
 };
@@ -45,7 +45,7 @@ the run method could now be called in a time loop, for example to simulate diffu
 mkdir build && cd build && cmake .. && make
 ```
 
-This will place an executable called `laplacian_driver` in the tutorial directory. When run, two `vtk` files will be written. Those can be viewed using (ParaView)[https://www.paraview.org/]. `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
+This will place an executable called `laplacian_driver` in the tutorial directory. When run, two `vtk` files will be written. Those can be viewed using [ParaView](https://www.paraview.org/). `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
 
 <img src="img/in.png" width="425"/> <img src="img/out.png" width="425"/> 
 
@@ -69,7 +69,7 @@ The python file will do three things:
 
 1) Print the SIR generated within to `stdout`
 2) The python exploits the c interface to **dawn** (which is easily callable from python) to compile the SIR to C++ code, using the C++ naive backend again (`laplacian_stencil_from_python.cpp`). 
-3) Write the the SIR to disk in binary form (`laplacian_stencil_from_python.sir`)
+3) Write the SIR to disk in binary form (`laplacian_stencil_from_python.sir`)
 
 You can check that the generated code is in fact equal to the code generated using the **GTClang** DSL from the example above by changing line `6` from
 
@@ -89,18 +89,18 @@ then re-compile and re-run the driver
 make && ./laplacian-driver
 ```
 
-The python file should be quite easy to follow. The the bulk of the AST of the stencil is generated in function `create_vertical_region_stmt`. 
+The python file can roughly be divided into three sections. The bulk of the AST of the stencil is generated in function `create_vertical_region_stmt`, providing the equivalent information as presented in the **gtclang** stencil. To this end, the builder in `dawn/python/dawn/sir.py` is leveraged. The following lines then deal with writing of the SIR to file and setting up the options to launch the dawn compiler. 
 
 ## Generate code from SIR using dawn from C++
 
-As a final exercise, the C interface to dawn is again used to compile the same example. This time, however, the interface is called from a C++ file. This example will use the SIR written to disk by the preceding example, so please make sure that you followed along beforehand. Switch to the cpp example and build the `dawn_standalone` binary:
+As a final exercise, the C interface to dawn is again used to compile the same example. This time, however, the interface is called from a C++ file. It might not be directly clear why one would want to do such a thing. The use case for this option would be to be able to leverage **dawn** coming from a different frontend than **GTClang**. In this situation, the SIR could be produced by means of protobuf (located in `/dawn/src/dawn/SIR/proto/`). However, this example will use the SIR written to disk by the preceding example, so please make sure that you followed along beforehand. Switch to the cpp example and build the `dawn_standalone` binary:
 
 ```
 cd cpp
 mkdir build
 cd build
 cmake .. && make
-./dawn_standalone
+./dawn_standalone ../laplacian_stencil_from_python.sir
 ```
 
 consider opening the file `introDawnStandalone.cpp` to see whats happening: the binary SIR written by the last example is deserialized and the C interface to dawn is called to generate C++-naive code once again. Again, you can make sure that the code is still equivalent to our reference by modfying the driver code, simply replace `#include "laplacian_stencil_cxx_naive.cpp` by `cpp/laplacian_stencil_from_standalone.cpp`.
