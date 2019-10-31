@@ -423,6 +423,8 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     return expr;
   }
   case dawn::proto::statements::Expr::kFieldAccessExpr: {
+    using ProtoFieldAccessExpr = dawn::proto::statements::FieldAccessExpr;
+
     const auto& exprProto = expressionProto.field_access_expr();
     auto name = exprProto.name();
     auto negateOffset = exprProto.negate_offset();
@@ -433,16 +435,23 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     };
 
     ast::Offsets offset;
-    if(exprProto.has_cartesian_offset()) {
-      offset = ast::Offsets{ast::cartesian, exprProto.cartesian_offset().i_offset(),
-                            exprProto.cartesian_offset().j_offset(), exprProto.vertical_offset()};
-    } else if(exprProto.has_unstructured_offset()) {
-      offset = ast::Offsets{ast::unstructured, exprProto.unstructured_offset().has_offset(),
+    switch(exprProto.horizontal_offset_case()) {
+    case ProtoFieldAccessExpr::kCartesianOffset: {
+      auto const& hOffset = exprProto.cartesian_offset();
+      offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
                             exprProto.vertical_offset()};
-    } else if(exprProto.has_zero_offset()) {
+      break;
+    }
+    case ProtoFieldAccessExpr::kUnstructuredOffset: {
+      auto const& hOffset = exprProto.unstructured_offset();
+      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      break;
+    }
+    case ProtoFieldAccessExpr::kZeroOffset:
       offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
-    } else {
-      throw std::runtime_error("missing offset");
+      break;
+    default:
+      dawn_unreachable("unknown offset");
     }
 
     Array3i argumentOffset{{0, 0, 0}};
