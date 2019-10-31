@@ -56,7 +56,7 @@ macro(dawn_set_cxx_flags)
   yoda_check_and_set_cxx_flag("-Wno-unused-parameter" HAVE_GCC_WNO_UNUSDED_PARAMETER)
 
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    yoda_check_and_set_cxx_flag("-fsanitize=address" HAVE_GCC_SANITIZE_ADDRESS)
+    yoda_check_and_set_cxx_flag("-fsanitize=address,undefined" HAVE_GCC_SANITIZE_ADDRESS)
   endif()
 
   if(BUILD_SHARED_LIBS)

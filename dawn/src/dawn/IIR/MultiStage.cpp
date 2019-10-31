@@ -127,7 +127,7 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolic
 }
 
 Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const {
-  Interval::IntervalLevel level;
+  Interval::IntervalLevel level{};
   bool init = false;
   for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
     if(!doMethod->getFields().count(accessID)) {

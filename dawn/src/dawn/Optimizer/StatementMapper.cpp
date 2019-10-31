@@ -93,13 +93,10 @@ void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
 void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
-  int accessID = -1;
-  if(stmt->getData<iir::VarDeclStmtData>().AccessID) {
-    accessID = iir::getAccessID(stmt);
-  } else {
+  if(!stmt->getData<iir::VarDeclStmtData>().AccessID) {
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
-    accessID = instantiation_->nextUID();
+    int accessID = instantiation_->nextUID();
 
     std::string globalName;
     if(context_.getOptions().KeepVarnames)
