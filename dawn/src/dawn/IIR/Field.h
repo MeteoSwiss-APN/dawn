@@ -35,7 +35,7 @@ class StencilInstantiation;
 /// @ingroup optimizer
 class Field {
 public:
-  enum IntendKind { IK_Output = 0, IK_InputOutput = 1, IK_Input = 2 };
+  enum class IntendKind { Output = 0, InputOutput = 1, Input = 2 };
 
 private:
   int accessID_;               ///< Unique AccessID of the field
@@ -47,7 +47,7 @@ private:
   Interval interval_; ///< Enclosing Interval from the iteration space
                       ///  from where the Field has been accessed
 
-  bool unstructured_ = false;
+  bool unstrucutred_;
   ast::Expr::LocationType location_ = ast::Expr::LocationType::Cells;
 
 public:
@@ -58,31 +58,15 @@ public:
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval)
-      : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(readExtents, writeExtents)),
-        extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
+      : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
+        extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(false) {}
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval,
         ast::Expr::LocationType location)
-      : Field(accessID, intend, readExtents, writeExtents, interval) {
-    unstructured_ = true;
-    location_ = location;
-  }
-
-  Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
-        std::optional<Extents>&& writeExtents, Interval&& interval)
-      : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        extentsRB_(extents_), interval_(std::move(interval)) {}
-
-  Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
-        std::optional<Extents>&& writeExtents, Interval&& interval,
-        ast::Expr::LocationType location)
-      : Field(accessID, intend, readExtents, writeExtents, interval) {
-    unstructured_ = true;
-    location_ = location;
-  }
+      : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
+        extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(true),
+        location_(location) {}
 
   /// @name Operators
   /// @{
@@ -107,8 +91,8 @@ public:
 
   json::json jsonDump() const;
 
-  Extents const& getExtents() const { return extents_.getExtents(); }
-  Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }
+  Extents getExtents() const { return extents_.getExtents(); }
+  Extents getExtentsRB() const { return extentsRB_.getExtents(); }
 
   IntendKind getIntend() const { return intend_; }
   int getAccessID() const { return accessID_; }
@@ -153,7 +137,7 @@ public:
 
   ast::Expr::LocationType getLocation() { return location_; }
 
-  bool isUnstructured() { return unstructured_; }
+  bool isUnstructured() { return unstrucutred_; }
 };
 
 /// @brief merges all the fields from sourceFields into destinationFields

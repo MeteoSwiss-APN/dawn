@@ -117,13 +117,13 @@ public:
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
-        case sir::Value::Boolean:
+        case sir::Value::Kind::Boolean:
           scope_.top()->VariableMap[key] = value.getValue<bool>();
           break;
-        case sir::Value::Integer:
+        case sir::Value::Kind::Integer:
           scope_.top()->VariableMap[key] = value.getValue<int>();
           break;
-        case sir::Value::Double:
+        case sir::Value::Kind::Double:
           scope_.top()->VariableMap[key] = value.getValue<double>();
           break;
         default:
@@ -212,7 +212,7 @@ public:
       void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
         for(auto it = stmt->getStatements().begin(); it != stmt->getStatements().end();) {
           if(needsRemoval(*it)) {
-            it = stmt->getStatements().erase(it);
+            it = stmt->erase(it);
           } else {
             (*it)->accept(*this);
             ++it;
@@ -258,6 +258,13 @@ public:
   void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     if(scope_.top()->ScopeDepth == 1)
       pushBackStatement(stmt);
+
+    // A ExprStmt in the control flow region might change a global variable on which a later
+    // vertical region depends, therefore we need to create a new stencil.
+    // TODO(havogt): Consider creating one stencil for each VerticalRegionDeclStmt in
+    // StencilDescStatementMapper and add a pass to fuse them later (in short: don't try to be smart
+    // in SIR->IIR...).
+    makeNewStencil();
     stmt->getExpr()->accept(*this);
   }
 
@@ -275,12 +282,12 @@ public:
         if(result) {
           BlockStmt* thenBody = dyn_cast<iir::BlockStmt>(stmt->getThenStmt().get());
           DAWN_ASSERT_MSG(thenBody, "then-body of if-statment should be a BlockStmt!");
-          for(auto& s : thenBody->getStatements())
+          for(const auto& s : thenBody->getStatements())
             s->accept(*this);
         } else if(stmt->hasElse()) {
           BlockStmt* elseBody = dyn_cast<iir::BlockStmt>(stmt->getElseStmt().get());
           DAWN_ASSERT_MSG(elseBody, "else-body of if-statment should be a BlockStmt!");
-          for(auto& s : elseBody->getStatements())
+          for(const auto& s : elseBody->getStatements())
             s->accept(*this);
         }
       } else {
@@ -307,7 +314,7 @@ public:
           auto voidExpr = std::make_shared<iir::LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = iir::makeExprStmt(voidExpr);
           int AccessID = -instantiation_->nextUID();
-          metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
+          metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, "0");
           voidExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
           iir::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt, voidStmt);
@@ -375,9 +382,9 @@ public:
 
     // Create the new multi-stage
     std::unique_ptr<MultiStage> multiStage = std::make_unique<MultiStage>(
-        metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
-                       ? LoopOrderKind::LK_Forward
-                       : LoopOrderKind::LK_Backward);
+        metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
+                       ? LoopOrderKind::Forward
+                       : LoopOrderKind::Backward);
     std::unique_ptr<Stage> stage =
         std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
 
@@ -393,14 +400,14 @@ public:
                                     doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
-    DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
+    DAWN_LOG(INFO) << "Inserted " << doMethod.getAST().getStatements().size() << " statements";
 
     if(context_.getDiagnostics().hasErrors())
       return;
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_.get(), doMethod.getChildren());
+    computeAccesses(instantiation_.get(), doMethod.getAST().getStatements());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     stage->update(iir::NodeUpdateType::level);
@@ -450,7 +457,7 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = metadata_.addTmpField(iir::FieldAccessType::FAT_StencilTemporary,
+        AccessID = metadata_.addTmpField(iir::FieldAccessType::StencilTemporary,
                                          stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
@@ -553,8 +560,7 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back(), expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, -AccessID,
-                                     newExpr->getValue());
+        metadata_.insertAccessOfType(iir::FieldAccessType::Literal, -AccessID, newExpr->getValue());
         newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
       } else {
@@ -576,7 +582,7 @@ public:
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
-    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
     expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
   }
 
@@ -602,8 +608,8 @@ bool OptimizerContext::fillIIRFromSIR(
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
-    metadata.addField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
-                                          : iir::FieldAccessType::FAT_APIField),
+    metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
+                                          : iir::FieldAccessType::APIField),
                       field->Name, field->fieldDimensions, field->locationType);
   }
 
@@ -682,7 +688,7 @@ void OptimizerContext::fillIIR() {
 
   for(const auto& stencil : SIR_->Stencils) {
     DAWN_ASSERT(stencil);
-    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
+    if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
       stencilInstantiationMap_.insert(
           std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(
                                             *getSIR()->GlobalVariableMap, iirStencilFunctions)));

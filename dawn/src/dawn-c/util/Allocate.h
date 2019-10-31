@@ -30,7 +30,7 @@ T* allocate() noexcept {
   T* data = (T*)std::malloc(sizeof(T));
   if(!data)
     dawnFatalError("out of memory");
-  std::memset(data, 0, sizeof(T));
+  std::memset(data, 0, sizeof(T)); // NOLINT(clang-analyzer-core.NonNullParamChecker)
   return data;
 }
 
@@ -41,7 +41,7 @@ T* allocate(std::size_t n) noexcept {
   T* data = (T*)std::malloc(n * sizeof(T));
   if(!data)
     dawnFatalError("out of memory");
-  std::memset(data, 0, sizeof(T) * n);
+  std::memset(data, 0, sizeof(T) * n); // NOLINT(clang-analyzer-core.NonNullParamChecker)
   return data;
 }
 
@@ -53,6 +53,7 @@ inline char* allocateAndCopyString(StringType&& str) {
   buffer = (char*)std::malloc((str.size() + 1) * sizeof(char));
   if(!buffer)
     dawnFatalError("out of memory");
+  // NOLINTNEXTLINE(clang-analyzer-core.NonNullParamChecker)
   std::memcpy(buffer, str.c_str(), str.size() + 1);
   return buffer;
 }

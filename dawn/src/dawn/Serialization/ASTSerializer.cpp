@@ -28,6 +28,7 @@
 #include <utility>
 
 using namespace dawn;
+using namespace ast;
 
 namespace {
 void fillData(iir::IIRStmtData& data, dawn::proto::statements::StmtData const& dataProto) {
@@ -105,15 +106,21 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 }
 } // namespace
 
-using namespace ast;
-
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  for(auto extent : extents.getExtents()) {
-    auto protoExtent = protoExtents.add_extents();
-    protoExtent->set_minus(extent.Minus);
-    protoExtent->set_plus(extent.Plus);
-  }
+  auto vExtent = extents.verticalExtent();
+  auto const& hExtent = iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
+
+  auto protoExtentI = protoExtents.add_extents();
+  protoExtentI->set_minus(hExtent.iMinus());
+  protoExtentI->set_plus(hExtent.iPlus());
+  auto protoExtentJ = protoExtents.add_extents();
+  protoExtentJ->set_minus(hExtent.jMinus());
+  protoExtentJ->set_plus(hExtent.jPlus());
+  auto protoExtentK = protoExtents.add_extents();
+  protoExtentK->set_minus(vExtent.minus());
+  protoExtentK->set_plus(vExtent.plus());
+
   return protoExtents;
 }
 
@@ -135,7 +142,7 @@ iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
   int dim2plus = protoExtents->extents()[1].plus();
   int dim3minus = protoExtents->extents()[2].minus();
   int dim3plus = protoExtents->extents()[2].plus();
-  return iir::Extents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus);
+  return {ast::cartesian, dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus};
 }
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
@@ -317,7 +324,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
 
   // VerticalRegion.LoopOrder
   verticalRegionProto->set_loop_order(verticalRegion->LoopOrder ==
-                                              dawn::sir::VerticalRegion::LK_Backward
+                                              dawn::sir::VerticalRegion::LoopOrderKind::Backward
                                           ? dawn::proto::statements::VerticalRegion::Backward
                                           : dawn::proto::statements::VerticalRegion::Forward);
 
@@ -885,10 +892,10 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     sir::VerticalRegion::LoopOrderKind looporder;
     switch(stmtProto.vertical_region().loop_order()) {
     case proto::statements::VerticalRegion_LoopOrder_Forward:
-      looporder = sir::VerticalRegion::LK_Forward;
+      looporder = sir::VerticalRegion::LoopOrderKind::Forward;
       break;
     case proto::statements::VerticalRegion_LoopOrder_Backward:
-      looporder = sir::VerticalRegion::LK_Backward;
+      looporder = sir::VerticalRegion::LoopOrderKind::Backward;
       break;
     default:
       dawn_unreachable("no looporder specified");

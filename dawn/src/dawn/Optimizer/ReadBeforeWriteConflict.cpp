@@ -146,7 +146,7 @@ hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
 }
 
 bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph) {
-  return ReadBeforeWriteConflictDetector<false>(graph, iir::LoopOrderKind::LK_Parallel /* unused */)
+  return ReadBeforeWriteConflictDetector<false>(graph, iir::LoopOrderKind::Parallel /* unused */)
       .check()
       .LoopOrderConflict;
 }

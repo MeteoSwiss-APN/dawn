@@ -133,9 +133,9 @@ void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, in
     for(const auto& doMethodPtr : stage.getChildren()) {
       iir::DoMethod& doMethod = *doMethodPtr;
       renameAccessIDInStmts(&(multiStage->getMetadata()), oldAccessID, newAccessID,
-                            doMethod.getChildren());
+                            doMethod.getAST().getStatements());
       renameAccessIDInAccesses(&(multiStage->getMetadata()), oldAccessID, newAccessID,
-                               doMethod.getChildren());
+                               doMethod.getAST().getStatements());
       doMethod.update(iir::NodeUpdateType::level);
     }
     stage.update(iir::NodeUpdateType::levelAndTreeAbove);
@@ -163,11 +163,12 @@ void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* fu
   function->replaceKeyInMap(function->getAccessIDToNameMap(), oldAccessID, newAccessID);
 
   // Update statements
-  renameAccessIDInStmts(function, oldAccessID, newAccessID, function->getDoMethod()->getChildren());
+  renameAccessIDInStmts(function, oldAccessID, newAccessID,
+                        function->getDoMethod()->getAST().getStatements());
 
   // Update accesses
   renameAccessIDInAccesses(function, oldAccessID, newAccessID,
-                           function->getDoMethod()->getChildren());
+                           function->getDoMethod()->getAST().getStatements());
 
   // Recompute the fields
   function->update();

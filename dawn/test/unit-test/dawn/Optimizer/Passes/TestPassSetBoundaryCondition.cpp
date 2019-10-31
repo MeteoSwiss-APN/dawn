@@ -48,7 +48,7 @@ protected:
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
     std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
+        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
     // Set specific compiler options:
     if(splitStencils)
@@ -120,8 +120,8 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("intermediate"));
   auto bc = test->getMetaData().getFieldNameToBCMap().find("intermediate")->second;
   ASSERT_TRUE((test->getMetaData().getBoundaryConditionExtentsFromBCStmt(bc) ==
-               iir::Extents{-1, 1, 0, 0, 0, 0}));
-}
+               iir::Extents(ast::cartesian, -1, 1, 0, 0, 0, 0)));
+} // namespace
 
 TEST_F(StencilSplitAnalyzer, test_two_bc) {
   std::shared_ptr<iir::StencilInstantiation> test =
@@ -130,7 +130,7 @@ TEST_F(StencilSplitAnalyzer, test_two_bc) {
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("intermediate"));
   auto bcfoo = test->getMetaData().getFieldNameToBCMap().find("intermediate")->second;
   ASSERT_TRUE((test->getMetaData().getBoundaryConditionExtentsFromBCStmt(bcfoo) ==
-               iir::Extents{-1, 1, 0, 0, 0, 0}));
+               iir::Extents(ast::cartesian, -1, 1, 0, 0, 0, 0)));
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("out"));
   auto bcbar = test->getMetaData().getFieldNameToBCMap().find("out")->second;
   ASSERT_TRUE((!test->getMetaData().hasBoundaryConditionStmtToExtent(bcbar)));

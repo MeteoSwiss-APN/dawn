@@ -33,12 +33,9 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
   auto printMap = [&](const MapType& map, const char* intent) {
     for(auto it = map.begin(), end = map.end(); it != end; ++it) {
       ss << (it != map.begin() ? " " : "") << intent << ":";
-      int AccessID = it->first;
+      auto const& [AccessID, extent] = *it;
       ss << accessIDToStringFunction(AccessID);
-      ss << ":<";
-      const auto& extents = it->second.getExtents();
-      for(std::size_t i = 0; i < extents.size(); ++i)
-        ss << extents[i].Minus << "," << extents[i].Plus << (i != extents.size() - 1 ? "," : ">");
+      ss << ":<" << to_string(extent) << ">";
     }
   };
 
@@ -92,7 +89,7 @@ void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {
 void Accesses::addReadExtent(int AccessID, const Extents& extent) {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
-    it->second.add(extent);
+    it->second += extent;
   else
     readAccesses_.emplace(AccessID, extent);
 }
@@ -100,7 +97,7 @@ void Accesses::addReadExtent(int AccessID, const Extents& extent) {
 void Accesses::addWriteExtent(int AccessID, const Extents& extent) {
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
-    it->second.add(extent);
+    it->second += extent;
   else
     writeAccesses_.emplace(AccessID, extent);
 }

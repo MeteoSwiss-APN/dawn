@@ -46,7 +46,7 @@ protected:
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
     std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
+        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
     // Report diganostics
@@ -71,8 +71,10 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == iir::Extents{-1, 1, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == iir::Extents{0, 0, 0, 0, 0, 0}));
+  ASSERT_TRUE((stencil->getStage(0)->getExtents() ==
+               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  ASSERT_TRUE(
+      (stencil->getStage(1)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 
@@ -85,13 +87,13 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   const auto& doMethod1 = stage1->getChildren().at(0);
 
-  ASSERT_TRUE((doMethod1->getChildren().size() == 1));
-  const auto& stmt = doMethod1->getChildren()[0];
+  ASSERT_TRUE((doMethod1->getAST().getStatements().size() == 1));
+  const auto& stmt = doMethod1->getAST().getStatements()[0];
   ASSERT_TRUE((iir::computeMaximumExtents(*stmt, metadata.getAccessIDFromName("u")) ==
-               iir::Extents{-1, 1, -1, 1, 0, 0}));
+               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
 
   EXPECT_EQ(iir::computeMaximumExtents(*stmt, metadata.getAccessIDFromName("coeff")),
-            (iir::Extents{0, 0, 0, 0, 1, 1}));
+            (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 1, 1)));
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
@@ -115,7 +117,7 @@ TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
 
   ASSERT_TRUE((doMethod1.computeMaximumExtents(
                    stencilInstantiation->getMetaData().getAccessIDFromName("u")) ==
-               iir::Extents{0, 1, -1, 0, 0, 2}));
+               iir::Extents(dawn::ast::cartesian, 0, 1, -1, 0, 0, 2)));
 }
 
 } // anonymous namespace

@@ -132,7 +132,6 @@ namespace {
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
 class OriginalNameGetter : public iir::ASTVisitorForwarding {
-  const StencilMetaInformation& metadata_;
   const int AccessID_;
   const bool captureLocation_;
 
@@ -140,8 +139,8 @@ class OriginalNameGetter : public iir::ASTVisitorForwarding {
   std::vector<SourceLocation> locations_;
 
 public:
-  OriginalNameGetter(const StencilMetaInformation& metadata, int AccessID, bool captureLocation)
-      : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
+  OriginalNameGetter(int AccessID, bool captureLocation)
+      : AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     if(iir::getAccessID(stmt) == AccessID_) {
@@ -191,13 +190,13 @@ public:
 std::pair<std::string, std::vector<SourceLocation>>
 StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
     int AccessID, const std::shared_ptr<iir::Stmt>& stmt) const {
-  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
+  OriginalNameGetter orignalNameGetter(AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
 }
 
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
-  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
+  OriginalNameGetter orignalNameGetter(AccessID, true);
 
   for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
     stmt->accept(orignalNameGetter);
@@ -256,18 +255,15 @@ void StencilInstantiation::dump() const {
           PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
                                  doMethod->getInterval().toString());
 
-          const auto& stmts = doMethod->getChildren();
+          const auto& stmts = doMethod->getAST().getStatements();
           for(std::size_t m = 0; m < stmts.size(); ++m) {
             std::cout << "\e[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
                       << "\e[0m";
-            std::cout << stmts[m]
-
-                             ->getData<IIRStmtData>()
-                             .CallerAccesses->toString(
-                                 [&](int AccessID) {
-                                   return getMetaData().getNameFromAccessID(AccessID);
-                                 },
-                                 6 * DAWN_PRINT_INDENT)
+            std::cout << stmts[m]->getData<IIRStmtData>().CallerAccesses->toString(
+                             [&](int AccessID) {
+                               return getMetaData().getNameFromAccessID(AccessID);
+                             },
+                             6 * DAWN_PRINT_INDENT)
                       << "\n";
           }
           l += 1;
@@ -291,10 +287,8 @@ void StencilInstantiation::reportAccesses() const {
 
     for(std::size_t i = 0; i < stmts.size(); ++i) {
       std::cout << "\nACCESSES: line " << stmts[i]->getSourceLocation().Line << ": "
-                << stmts[i]
-
-                       ->getData<iir::IIRStmtData>()
-                       .CalleeAccesses->reportAccesses(stencilFun.get())
+                << stmts[i]->getData<iir::IIRStmtData>().CalleeAccesses->reportAccesses(
+                       stencilFun.get())
                 << "\n";
     }
   }

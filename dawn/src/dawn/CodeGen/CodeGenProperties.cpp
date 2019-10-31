@@ -37,7 +37,7 @@ std::string CodeGenProperties::getParamType(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const iir::Stencil::FieldInfo& field) const {
   return (stencilInstantiation->getMetaData().isAccessType(
-              iir::FieldAccessType::FAT_InterStencilTemporary, field.field.getAccessID()) ||
+              iir::FieldAccessType::InterStencilTemporary, field.field.getAccessID()) ||
           field.IsTemporary)
              ? "storage_t"
              : getParamType(stencilInstantiation, field.Name);

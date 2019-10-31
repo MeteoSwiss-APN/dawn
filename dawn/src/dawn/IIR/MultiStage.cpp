@@ -116,7 +116,7 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
   return dependencyGraph;
 }
 
-iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+iir::Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy,
                                  int AccessID, const Interval& interval,
                                  const Interval& enclosingAccessedInterval,
                                  std::optional<iir::Cache::window> w) {
@@ -127,7 +127,7 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::Cac
 }
 
 Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const {
-  Interval::IntervalLevel level;
+  Interval::IntervalLevel level{};
   bool init = false;
   for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
     if(!doMethod->getFields().count(accessID)) {
@@ -135,7 +135,7 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
     }
     const auto& interval = doMethod->getInterval();
 
-    if(loopOrder_ == LoopOrderKind::LK_Backward) {
+    if(loopOrder_ == LoopOrderKind::Backward) {
       if(interval.bound(Interval::Bound::lower) < level.bound() || !init) {
         level = interval.lowerIntervalLevel();
         init = true;
@@ -152,17 +152,16 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
 
 Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   const auto& field = getField(accessID);
-  auto vertExtent = field.getExtents()[2];
+  auto vertExtent = field.getExtents().verticalExtent();
   const auto& cache = getCache(accessID);
   // in the case of epflush, the extent of the cache required is not determined only by the access
   // pattern, but also by the window required to epflush
-  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
+  if(cache.getIOPolicy() == iir::Cache::IOPolicy::epflush) {
     DAWN_ASSERT(cache.getWindow());
     auto window = *(cache.getWindow());
-    return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
-  } else {
-    return vertExtent;
+    vertExtent.merge(iir::Extent{window.m_m, window.m_p});
   }
+  return vertExtent;
 }
 
 std::optional<Extents> MultiStage::computeExtents(const int accessID,
@@ -194,13 +193,12 @@ MultiInterval MultiStage::computePartitionOfIntervals() const {
 
   // compute the partition of the intervals
   auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if(getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+  if(getLoopOrder() == iir::LoopOrderKind::Backward)
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
   return MultiInterval{partitionIntervals};
 }
 
-Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
-                            int AccessID) {
+Cache& MultiStage::setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy, int AccessID) {
   return derivedInfo_.caches_
       .emplace(AccessID, iir::Cache(type, policy, AccessID, std::optional<Interval>(),
                                     std::optional<Interval>(), std::optional<iir::Cache::window>()))
@@ -214,7 +212,7 @@ std::vector<std::unique_ptr<DoMethod>> MultiStage::computeOrderedDoMethods() con
 
   // compute the partition of the intervals
   auto partitionIntervals = Interval::computePartition(intervals_v);
-  if((getLoopOrder() == LoopOrderKind::LK_Backward))
+  if((getLoopOrder() == LoopOrderKind::Backward))
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
   std::vector<std::unique_ptr<DoMethod>> orderedDoMethods;
@@ -245,7 +243,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   MultiInterval readInterval;
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& stmt : doMethod->getChildren()) {
+    for(const auto& stmt : doMethod->getAST().getStatements()) {
       const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
       if(accesses.hasWriteAccess(accessID)) {
         writeIntervalPre.insert(doMethod->getInterval());
@@ -254,7 +252,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   }
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& stmt : doMethod->getChildren()) {
+    for(const auto& stmt : doMethod->getAST().getStatements()) {
       const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
@@ -263,7 +261,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
         Extents const& readAccessExtent = accesses.getReadAccess(accessID);
         std::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
-            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
+            getLoopOrder(), Extents::VerticalLoopOrderDir::InLoopOrder, false);
         Interval computingInterval = doMethod->getInterval();
         if(readAccessInLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
@@ -279,7 +277,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
         std::optional<Extent> readAccessCounterLoopOrder =
             readAccessExtent.getVerticalLoopOrderExtent(
-                getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
+                getLoopOrder(), Extents::VerticalLoopOrderDir::CounterLoopOrder, false);
 
         if(readAccessCounterLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
@@ -343,7 +341,7 @@ std::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() cons
       const Field& field = fieldPair.second;
       int AccessID = fieldPair.first;
 
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
         continue;
 
       if(!interval) {
@@ -378,8 +376,7 @@ std::map<int, Field> MultiStage::getOrderedFields() const {
 
 void MultiStage::updateFromChildren() {
   for(const auto& stagePtr : children_) {
-    mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
-                std::make_optional(stagePtr->getExtents()));
+    mergeFields(stagePtr->getFields(), derivedInfo_.fields_, stagePtr->getExtents());
   }
 }
 
@@ -427,7 +424,7 @@ bool MultiStage::hasMemAccessTemporaries() const {
 }
 
 bool MultiStage::isMemAccessTemporary(const int accessID) const {
-  if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+  if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
     return false;
   if(!derivedInfo_.caches_.count(accessID))
     return true;
@@ -451,7 +448,7 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
     for(const auto& doMethod : stage->getChildren()) {
       if(!doMethod->getInterval().overlaps(interval))
         continue;
-      mergeFields(doMethod->getFields(), fields, std::make_optional(stage->getExtents()));
+      mergeFields(doMethod->getFields(), fields, stage->getExtents());
     }
   }
   return fields;

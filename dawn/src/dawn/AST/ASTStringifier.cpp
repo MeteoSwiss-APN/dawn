@@ -105,8 +105,9 @@ public:
     ss_ << "vertical-region : ";
     ss_ << *stmt->getVerticalRegion()->VerticalInterval.get();
     ss_ << " ["
-        << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LK_Forward ? "forward"
-                                                                                    : "backward")
+        << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
+                ? "forward"
+                : "backward")
         << "]\n";
     ss_ << ASTStringifier::toString(*stmt->getVerticalRegion()->Ast, curIndent_);
   }
@@ -230,13 +231,14 @@ public:
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     auto offset = expr->getOffset();
-    auto const& hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
-    std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(),
-                                      offset.verticalOffset()};
 
     if(!expr->hasArguments()) {
-      ss_ << expr->getName() << "[" << ast::toString(offset, ", ") << "]";
+      ss_ << expr->getName() << "[" << ast::to_string(offset) << "]";
     } else {
+      auto hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
+
+      std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(),
+                                        offset.verticalOffset()};
       ss_ << expr->getName() << "[";
 
       const auto& argMap = expr->getArgumentMap();

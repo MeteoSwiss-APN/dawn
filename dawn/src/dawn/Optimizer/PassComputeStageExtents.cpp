@@ -52,9 +52,7 @@ bool PassComputeStageExtents::run(
         //      Point one [ExtentComputationTODO]
         // ===-----------------------------------------------------------------------------------===
 
-        iir::Extents fieldExtent = fromFieldExtents;
-
-        fieldExtent.expand(stageExtent);
+        iir::Extents fieldExtent = fromFieldExtents + stageExtent;
 
         // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
@@ -66,7 +64,7 @@ bool PassComputeStageExtents::run(
           auto it = std::find_if(fields.begin(), fields.end(),
                                  [&](std::pair<int, iir::Field> const& pair) {
                                    const auto& f = pair.second;
-                                   return (f.getIntend() != iir::Field::IntendKind::IK_Input) &&
+                                   return (f.getIntend() != iir::Field::IntendKind::Input) &&
                                           (f.getAccessID() == fromField.getAccessID());
                                  });
           if(it == fields.end())
@@ -77,7 +75,7 @@ bool PassComputeStageExtents::run(
           ext.merge(fieldExtent);
           // this pass is computing the redundant computation in the horizontal, therefore we
           // nullify the vertical component of the stage
-          ext[2] = iir::Extent{0, 0};
+          ext.resetVerticalExtent();
           toStage.setExtents(ext);
         }
       }

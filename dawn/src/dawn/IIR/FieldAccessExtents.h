@@ -30,23 +30,14 @@ public:
   /// @{
   FieldAccessExtents(std::optional<Extents> const& readExtents,
                      std::optional<Extents> const& writeExtents)
-      : readAccessExtents_(readExtents),
-        writeAccessExtents_(writeExtents), totalExtents_{0, 0, 0, 0, 0, 0} {
-    updateTotalExtents();
-  }
-
-  FieldAccessExtents() = delete;
-  FieldAccessExtents(FieldAccessExtents&&) = default;
-  FieldAccessExtents(FieldAccessExtents const&) = default;
-  FieldAccessExtents& operator=(FieldAccessExtents&&) = default;
-  FieldAccessExtents& operator=(const FieldAccessExtents&) = default;
+      : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents) {}
   /// @}
 
   /// @brief getters
   /// @{
   std::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
   std::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
-  Extents const& getExtents() const { return totalExtents_; }
+  Extents getExtents() const;
   /// @}
   /// @brief merge of extent with another (argument) extent
   /// @{
@@ -64,12 +55,8 @@ public:
   json::json jsonDump() const;
 
 private:
-  /// @brief update the total extent from read/write extents
-  void updateTotalExtents();
-
   std::optional<Extents> readAccessExtents_;
   std::optional<Extents> writeAccessExtents_;
-  Extents totalExtents_;
 };
 
 } // namespace iir

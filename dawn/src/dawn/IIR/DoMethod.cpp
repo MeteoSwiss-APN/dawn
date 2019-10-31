@@ -59,7 +59,7 @@ void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>
 std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
   std::optional<Extents> extents;
 
-  for(auto& stmt : getChildren()) {
+  for(const auto& stmt : getAST().getStatements()) {
     auto extents_ = iir::computeMaximumExtents(*stmt, accessID);
     if(!extents_)
       continue;
@@ -80,8 +80,9 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
   std::optional<Extents>&& extents = computeMaximumExtents(accessID);
 
   if(extents) {
-    if(mergeWithDoInterval)
-      extents->addCenter(2);
+    if(mergeWithDoInterval) {
+      extents->addVerticalCenter();
+    }
     return std::make_optional(getInterval())->extendInterval(*extents);
   }
   return interval;
@@ -116,7 +117,7 @@ json::json print(const StencilMetaInformation& metadata,
     if(accessToNameMapper.hasAccessID(accessID)) {
       accessName = accessToNameMapper.getNameFromAccessID(accessID);
     }
-    if(metadata.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
+    if(metadata.isAccessType(iir::FieldAccessType::Literal, accessID)) {
       continue;
     }
     accessNode["access_id"] = accessID;
@@ -144,7 +145,7 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   node["Fields"] = fieldsJson;
 
   json::json stmtsJson;
-  for(const auto& stmt : getChildren()) {
+  for(const auto& stmt : getAST().getStatements()) {
     json::json stmtNode;
     stmtNode["stmt"] = ASTStringifier::toString(stmt, 0);
 
@@ -180,7 +181,7 @@ void DoMethod::updateLevel() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& stmt : getChildren()) {
+  for(const auto& stmt : getAST().getStatements()) {
     const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
@@ -189,7 +190,7 @@ void DoMethod::updateLevel() {
       Extents const& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
-      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
+      if(!metaData_.isAccessType(FieldAccessType::Field, AccessID)) {
         continue;
       }
 
@@ -208,7 +209,7 @@ void DoMethod::updateLevel() {
       Extents const& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
-      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
+      if(!metaData_.isAccessType(FieldAccessType::Field, AccessID)) {
         continue;
       }
 
@@ -235,19 +236,19 @@ void DoMethod::updateLevel() {
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
-  for(const auto& stmt : getChildren()) {
+  for(const auto& stmt : getAST().getStatements()) {
     const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
-      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
+      if(!metaData_.isAccessType(FieldAccessType::Field, accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
-      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
+      if(!metaData_.isAccessType(FieldAccessType::Field, accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
@@ -275,7 +276,7 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  for(auto const& stmt : getChildren()) {
+  for(auto const& stmt : getAST().getStatements()) {
     const std::shared_ptr<iir::Stmt>& root = stmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);

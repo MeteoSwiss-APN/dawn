@@ -33,10 +33,10 @@ class IIRSerializer {
 public:
   IIRSerializer() = delete;
 
-  /// @brief Type of serialization algorithm to use
-  enum SerializationKind {
-    SK_Json, ///< JSON serialization
-    SK_Byte  ///< Protobuf's internal byte format
+  /// @brief Serialization format to use
+  enum class Format {
+    Json, ///< JSON serialization
+    Byte  ///< Protobuf's internal byte format
   };
 
   /// @brief Deserialize the StencilInstantiaion from `file`
@@ -46,9 +46,8 @@ public:
   /// @param context The OptimizerContext in which we register the Instantiation
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated IIR on success or `NULL`
-  static std::shared_ptr<iir::StencilInstantiation> deserialize(const std::string& file,
-                                                                dawn::OptimizerContext* context,
-                                                                SerializationKind kind = SK_Json);
+  static std::shared_ptr<iir::StencilInstantiation>
+  deserialize(const std::string& file, dawn::OptimizerContext* context, Format kind = Format::Json);
 
   /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
   ///
@@ -56,20 +55,20 @@ public:
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
   /// @param context The OptimizerContext in which we register the Instantiation
   /// @throws std::excetpion    Failed to deserialize
-  /// @returns newly allocated IIRon success or `NULL`
+  /// @returns newly allocated IIR on success or `NULL`
   static std::shared_ptr<iir::StencilInstantiation>
   deserializeFromString(const std::string& str, dawn::OptimizerContext* context,
-                        SerializationKind kind = SK_Json);
+                        Format kind = Format::Json);
 
   /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string to `file`
   ///
   /// @param file          Path the file
   /// @param instantiation StencilInstantiaion to serialize
   /// @param kind          The kind of serialization to use to write to `file` (Json or Byte)
-  /// @throws std::excetpion    Failed to open `file`
+  /// @throws std::exception    Failed to open `file`
   static void serialize(const std::string& file,
                         const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                        dawn::IIRSerializer::SerializationKind kind = SK_Json);
+                        dawn::IIRSerializer::Format kind = Format::Json);
 
   /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string
   ///
@@ -78,7 +77,7 @@ public:
   /// @returns JSON formatted string of `StencilInstantiaion`
   static std::string
   serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                    SerializationKind kind = SK_Json);
+                    Format kind = Format::Json);
 
 private:
   /// @brief The implementation of deserialisation used for string and file. This delegates to the
@@ -87,7 +86,7 @@ private:
   /// @param str    the sting to deserialize
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
   /// @param target The newly creadte StencilInstantiation
-  static void deserializeImpl(const std::string& str, IIRSerializer::SerializationKind kind,
+  static void deserializeImpl(const std::string& str, IIRSerializer::Format kind,
                               std::shared_ptr<iir::StencilInstantiation>& target);
 
   /// @brief deserializeIIR deserializes the IIR tree
@@ -109,7 +108,7 @@ private:
   /// @param kind           The kind of serialization used in the return value (Json or Byte)
   /// @return               The serialized string
   static std::string serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                                   dawn::IIRSerializer::SerializationKind kind);
+                                   dawn::IIRSerializer::Format kind);
   /// @brief serializeIIR serializes the IIR tree
   /// @param target     The protobuf version of the StencilInstantiation to serilaize the IIR into
   /// @param iir        The IIR to serialize

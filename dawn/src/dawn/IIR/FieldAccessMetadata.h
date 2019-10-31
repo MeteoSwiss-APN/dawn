@@ -129,13 +129,13 @@ public:
 };
 
 enum class FieldAccessType {
-  FAT_GlobalVariable, // a global variable (i.e. not field with grid dimensiontality)
-  FAT_Literal,        // a literal that is not stored in memory
-  FAT_LocalVariable,
-  FAT_StencilTemporary,
-  FAT_InterStencilTemporary,
-  FAT_Field,
-  FAT_APIField
+  GlobalVariable, // a global variable (i.e. not field with grid dimensiontality)
+  Literal,        // a literal that is not stored in memory
+  LocalVariable,
+  StencilTemporary,
+  InterStencilTemporary,
+  Field,
+  APIField
 };
 
 std::string toString(FieldAccessType type);
@@ -167,31 +167,31 @@ template <FieldAccessType TFieldAccessType>
 struct TypeOfAccessContainer;
 
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_GlobalVariable> {
+struct TypeOfAccessContainer<FieldAccessType::GlobalVariable> {
   using type = std::set<int>;
 };
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_Literal> {
+struct TypeOfAccessContainer<FieldAccessType::Literal> {
   using type = std::unordered_map<int, std::string>;
 };
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_LocalVariable> {
+struct TypeOfAccessContainer<FieldAccessType::LocalVariable> {
   using type = void;
 };
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_StencilTemporary> {
+struct TypeOfAccessContainer<FieldAccessType::StencilTemporary> {
   using type = std::set<int>;
 };
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_InterStencilTemporary> {
+struct TypeOfAccessContainer<FieldAccessType::InterStencilTemporary> {
   using type = std::set<int>;
 };
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_Field> {
+struct TypeOfAccessContainer<FieldAccessType::Field> {
   using type = std::set<int>;
 };
 template <>
-struct TypeOfAccessContainer<FieldAccessType::FAT_APIField> {
+struct TypeOfAccessContainer<FieldAccessType::APIField> {
   using type = std::vector<int>;
 };
 

@@ -121,7 +121,7 @@ Extent Stage::getMaxVerticalExtent() const {
   Extent verticalExtent;
   std::for_each(derivedInfo_.fields_.begin(), derivedInfo_.fields_.end(),
                 [&](const std::pair<int, Field>& pair) {
-                  verticalExtent.merge(pair.second.getExtents()[2]);
+                  verticalExtent.merge(pair.second.getExtents().verticalExtent());
                 });
   return verticalExtent;
 }
@@ -160,8 +160,8 @@ bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Fie
         if(thisField.getAccessID() != field.getAccessID())
           continue;
 
-        if(thisInterval.extendInterval(thisField.getExtents()[2])
-               .overlaps(interval.extendInterval(field.getExtents()[2])))
+        if(thisInterval.extendInterval(thisField.getExtents().verticalExtent())
+               .overlaps(interval.extendInterval(field.getExtents().verticalExtent())))
           return true;
       }
     }
@@ -210,19 +210,19 @@ void Stage::updateGlobalVariablesInfo() {
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
-    for(const auto& stmt : doMethod.getChildren()) {
+    for(const auto& stmt : doMethod.getAST().getStatements()) {
       const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
         // Does this AccessID correspond to a field access?
-        if(metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+        if(metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
         }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        if(metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
+        if(metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
         }
       }
@@ -274,27 +274,28 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                   "DoMethods have incompatible intervals!");
 
   to->setDependencyGraph(dependencyGraph);
-  to->insertChildren(to->childrenEnd(), std::make_move_iterator(from->childrenBegin()),
-                     std::make_move_iterator(from->childrenEnd()));
+  to->getAST().insert_back(std::make_move_iterator(from->getAST().getStatements().begin()),
+                           std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
 std::vector<std::unique_ptr<Stage>>
 Stage::split(std::deque<int>& splitterIndices,
              const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
-  DoMethod& thisDoMethod = getSingleDoMethod();
+  const DoMethod& thisDoMethod = getSingleDoMethod();
 
-  DAWN_ASSERT(thisDoMethod.getChildren().size() >= 2);
+  DAWN_ASSERT(thisDoMethod.getAST().getStatements().size() >= 2);
   DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
 
   std::vector<std::unique_ptr<Stage>> newStages;
 
-  splitterIndices.push_back(thisDoMethod.getChildren().size() - 1);
-  auto prevSplitterIndex = thisDoMethod.childrenBegin();
+  splitterIndices.push_back(thisDoMethod.getAST().getStatements().size() - 1);
+  auto prevSplitterIndex = thisDoMethod.getAST().getStatements().begin();
 
   // Create new stages
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
-    auto nextSplitterIndex = std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
+    auto nextSplitterIndex =
+        std::next(thisDoMethod.getAST().getStatements().begin(), splitterIndices[i] + 1);
 
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
@@ -305,9 +306,7 @@ Stage::split(std::deque<int>& splitterIndices,
       doMethod.setDependencyGraph((*graphs)[i]);
 
     // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)
-    for(auto it = prevSplitterIndex; it != nextSplitterIndex; ++it) {
-      doMethod.insertChild(std::move(*it));
-    }
+    doMethod.getAST().insert_back(prevSplitterIndex, nextSplitterIndex);
 
     // Update the fields of the new doMethod
     doMethod.update(NodeUpdateType::level);
