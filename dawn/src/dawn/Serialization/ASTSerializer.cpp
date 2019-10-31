@@ -144,24 +144,26 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
 }
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
+  using ProtoExtents = dawn::proto::statements::Extents;
   iir::Extent vExtent{protoExtents->vertical_extent().minus(),
                       protoExtents->vertical_extent().plus()};
 
-  if(protoExtents->has_cartesian_extent()) {
-    return {iir::HorizontalExtent{ast::cartesian,
-                                  protoExtents->cartesian_extent().i_extent().minus(),
-                                  protoExtents->cartesian_extent().i_extent().plus(),
-                                  protoExtents->cartesian_extent().j_extent().minus(),
-                                  protoExtents->cartesian_extent().j_extent().plus()},
+  switch(protoExtents->horizontal_extent_case()) {
+  case ProtoExtents::kCartesianExtent: {
+    auto const& hExtent = protoExtents->cartesian_extent();
+    return {iir::HorizontalExtent{ast::cartesian, hExtent.i_extent().minus(),
+                                  hExtent.i_extent().plus(), hExtent.j_extent().minus(),
+                                  hExtent.j_extent().plus()},
             vExtent};
-  } else if(protoExtents->has_unstructured_extent()) {
-    return {
-        iir::HorizontalExtent{ast::unstructured, protoExtents->unstructured_extent().has_extent()},
-        vExtent};
-  } else if(protoExtents->has_zero_extent()) {
+  }
+  case ProtoExtents::kUnstructuredExtent: {
+    auto const& hExtent = protoExtents->unstructured_extent();
+    return {iir::HorizontalExtent{ast::unstructured, hExtent.has_extent()}, vExtent};
+  }
+  case ProtoExtents::kZeroExtent:
     return iir::Extents{iir::HorizontalExtent{}, vExtent};
-  } else {
-    throw std::runtime_error("missing extent");
+  default:
+    dawn_unreachable("unknown extent");
   }
 }
 
@@ -785,6 +787,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     return expr;
   }
   case proto::statements::Expr::kFieldAccessExpr: {
+
+    using ProtoFieldAccessExpr = dawn::proto::statements::FieldAccessExpr;
     const auto& exprProto = expressionProto.field_access_expr();
     auto name = exprProto.name();
     auto negateOffset = exprProto.negate_offset();
@@ -795,16 +799,23 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     };
 
     ast::Offsets offset;
-    if(exprProto.has_cartesian_offset()) {
-      offset = ast::Offsets{ast::cartesian, exprProto.cartesian_offset().i_offset(),
-                            exprProto.cartesian_offset().j_offset(), exprProto.vertical_offset()};
-    } else if(exprProto.has_unstructured_offset()) {
-      offset = ast::Offsets{ast::unstructured, exprProto.unstructured_offset().has_offset(),
+    switch(exprProto.horizontal_offset_case()) {
+    case ProtoFieldAccessExpr::kCartesianOffset: {
+      auto const& hOffset = exprProto.cartesian_offset();
+      offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
                             exprProto.vertical_offset()};
-    } else if(exprProto.has_zero_offset()) {
+      break;
+    }
+    case ProtoFieldAccessExpr::kUnstructuredOffset: {
+      auto const& hOffset = exprProto.unstructured_offset();
+      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      break;
+    }
+    case ProtoFieldAccessExpr::kZeroOffset:
       offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
-    } else {
-      throw std::runtime_error("missing offset");
+      break;
+    default:
+      dawn_unreachable("unknown offset");
     }
 
     Array3i argumentOffset{{0, 0, 0}};
