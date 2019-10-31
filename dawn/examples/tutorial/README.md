@@ -1,10 +1,10 @@
 # Getting Started using GTClang & dawn
 
-In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++. To follow this tutorial, please make sure that you compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag dawn was built with `DAWN_BUNDLE_PYTHON=ON`. The readme's in the gtclang and dawn subdirectories have instructions on how to do that. 
+In this tutorial the basic usage of **GTClang** will be demonstrated using a simple example. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++. To follow this tutorial, please make sure that you built from the bundle, compiled **GTClang** with the `GTCLANG_ENABLE_GRIDTOOLS=ON` flag, and dawn was built with `DAWN_BUNDLE_PYTHON=ON`. The readmes in the gtclang and dawn subdirectories have instructions on how to do that.
 
 ## Writing a Stencil in the GTClang SIR and Compiling the Stencil
 
-For the purpose of this exercise, we will write a simple Finite Difference Stencil to find the Laplacian of a function. In **GTClang**, this can be achieved using very few lines of code as demonstrated in `laplacian_stencil.cpp`:
+For the purpose of this exercise, we will write a simple finite difference stencil to find the laplacian of a function. In **GTClang** this can be achieved using very few lines of code, demonstrated in `laplacian_stencil.cpp`:
 
 ```
 globals {
@@ -22,7 +22,7 @@ stencil laplacian_stencil {
 };
 ```
 
-**GTClang** allows a simplification for indices which are not offset. So, `in_field[i+1,j]` can be written simply as `in_field[i+1]`.
+**GTClang** allows a simplification for indices which are not offset. So, `in_field[i+1,j]` could be written simply as `in_field[i+1]`.
 
 This code defines two fields which will serve as the arguments to the stencil. The variable `dx` is the grid spacing and is read-only (during the stencil run), which is modelled as a global in **GTClang**. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example [wikipedia](https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables)), which close to no boiler plate. Save the stencil as `laplacian_stencil.cpp`.
 
@@ -47,23 +47,18 @@ the run method could now be called in a time loop, for example to simulate diffu
 mkdir build && cd build && cmake .. && make
 ```
 
-This will place an executable called `laplacian_driver` in the tutorial directory. When run, two `vtk` files will be written. Those can be viewed using [ParaView](https://www.paraview.org/). `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
+This will place an executable called `laplacian_driver` in the tutorial directory. When that executable is run, two `vtk` files will be written. Those can be viewed using [ParaView](https://www.paraview.org/). `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twicefold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
 
 <img src="img/in.png" width="425"/> <img src="img/out.png" width="425"/> 
 
 ## Use Python to generate SIR 
 
-Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided. As a preliminary step, a config file that was generated during the **dawn** install step needs to be copied and the proper `PYTHONPATH` needs to be set. Assuming you built dawn using the bundle this is:
+Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided. To run the python example, we change to the directory containing theAs a preliminary step, a config file that was generated during the **dawn** install step needs to be copied and the proper `PYTHONPATH` needs to be set. Assuming you built dawn using the bundle this is:
 
 ```
-cd <path/to/dawn>/dawn/examples/
-cp ../bundle/install/examples/python/config.py .
-export PYTHONPATH+=:../../bundle/install/python/
-```
-
-The python file provided can now be run:
-
-```
+cd <path/to/dawn>/dawn/examples/tutorial
+cp <path/to/dawn>/dawn/bundle/install/examples/python/config.py .
+export PYTHONPATH=$PYTHONPATH:<path/to/dawn>/dawn/bundle/install/python
 python3 laplacian_stencil.py
 ```
 
@@ -81,8 +76,8 @@ You can check that the generated code is in fact equal to the code generated usi
 
 to 
 
-```
 #include "laplacian_stencil_from_python.cpp"
+```
 ```
 
 then re-compile and re-run the driver
@@ -99,10 +94,9 @@ As a final exercise, the C interface to dawn is again used to compile the same e
 
 ```
 cd cpp
-mkdir build
-cd build
-cmake .. && make
-./dawn_standalone ../laplacian_stencil_from_python.sir
+mkdir build && cd $_
+cmake .. && make && cd ..
+build/dawn_standalone ../laplacian_stencil_from_python.sir
 ```
 
-consider opening the file `introDawnStandalone.cpp` to see whats happening: the binary SIR written by the last example is deserialized and the C interface to dawn is called to generate C++-naive code once again. Again, you can make sure that the code is still equivalent to our reference by modfying the driver code, simply replace `#include "laplacian_stencil_cxx_naive.cpp` by `cpp/laplacian_stencil_from_standalone.cpp`.
+consider opening the file `dawn_standalone.cpp` to see whats happening: the binary SIR written by the last example is deserialized and the C interface to dawn is called to generate C++-naive code once again. Again, you can make sure that the code is still equivalent to our reference by modfying the driver code, simply replace `#include "laplacian_stencil_cxx_naive.cpp` by `cpp/laplacian_stencil_from_standalone.cpp`.

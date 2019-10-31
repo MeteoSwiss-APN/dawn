@@ -26,8 +26,10 @@ int main(int argc, char* argv[]) {
   }
 
   std::ifstream inputFile(argv[1]);
-  if(!inputFile.is_open())
+  if(!inputFile.is_open()) {
+    std::cerr << "Could not open file: " << argv[1] << std::endl;
     return 1;
+  }
 
   std::stringstream ss;
   ss << inputFile.rdbuf();
