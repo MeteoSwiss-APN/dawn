@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
   dawnOptionsSet(options, "SerializeIIR", entry);
 
   auto str = ss.str();
-  auto code = dawnCompile(str.c_str(), str.length(), options);
+  dawnCompile(str.c_str(), str.length(), options);
 
   return 0;
 }
