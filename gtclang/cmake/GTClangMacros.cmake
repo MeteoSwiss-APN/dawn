@@ -1,7 +1,7 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _       _       
+##                         _       _
 ##                        | |     | |
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
@@ -9,7 +9,7 @@
 ##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -32,7 +32,7 @@ macro(gtclang_set_cxx_flags)
 
   # Architecture
   yoda_check_and_set_cxx_flag("-march=native" HAVE_GCC_MARCH_NATIVE)
-  
+
   # Pthread
   yoda_check_and_set_cxx_flag("-pthread" HAVE_GCC_PTHREAD)
 
@@ -56,7 +56,11 @@ macro(gtclang_set_cxx_flags)
   yoda_check_and_set_cxx_flag("-Wno-sign-compare" HAVE_GCC_WNO_SIGN_COMPARE)
   yoda_check_and_set_cxx_flag("-Wno-unused-parameter" HAVE_GCC_WNO_UNUSDED_PARAMETER)
   yoda_check_and_set_cxx_flag("-Wno-shadow" HAVE_GCC_WNO_SHADOW)
-  
+
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    yoda_check_and_set_cxx_flag("-fsanitize=address,undefined" HAVE_GCC_SANITIZE_ADDRESS)
+  endif()
+
   if(BUILD_SHARED_LIBS)
     yoda_check_and_set_cxx_flag("-fPIC" HAVE_GCC_PIC)
   endif()
@@ -65,7 +69,7 @@ macro(gtclang_set_cxx_flags)
     if(YODA_COMPILER_CLANG)
       yoda_check_and_set_cxx_flag("-Qunused-arguments" HAVE_CLANG_UNUSED_ARGUMENTS)
       yoda_check_and_set_cxx_flag("-fcolor-diagnostics" HAVE_CLANG_COLOR_DIAGNOSTICS)
-      yoda_check_and_set_cxx_flag("-Wno-undefined-var-template" 
+      yoda_check_and_set_cxx_flag("-Wno-undefined-var-template"
                                      HAVE_CLANG_WNO_UNDEFINED_VAR_TEMPLATE)
     endif()
 
@@ -91,10 +95,10 @@ macro(gtclang_gen_install_config)
   set(GTCLANG_INSTALL_ROOT "")
 
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/gtclangConfig.cmake.in 
+    ${CMAKE_SOURCE_DIR}/cmake/templates/gtclangConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/gtclangConfig.cmake
     INSTALL_DESTINATION ${GTCLANG_INSTALL_CMAKE_DIR}
-    PATH_VARS 
+    PATH_VARS
       GTCLANG_INSTALL_ROOT
       GTCLANG_INSTALL_INCLUDE_DIR
       GTCLANG_INSTALL_LIB_DIR
@@ -108,5 +112,3 @@ macro(gtclang_gen_install_config)
     DESTINATION ${GTCLANG_INSTALL_CMAKE_DIR}
   )
 endmacro()
-
-

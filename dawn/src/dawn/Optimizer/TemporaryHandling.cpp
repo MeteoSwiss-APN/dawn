@@ -33,8 +33,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   // Replace all variable accesses with field accesses
   stencil->forEachStatement(
       [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmt) -> void {
-        replaceVarWithFieldAccessInStmts(instantiation->getMetaData(), stencil, accessID, fieldname,
-                                         stmt);
+        replaceVarWithFieldAccessInStmts(stencil, accessID, fieldname, stmt);
       },
       lifetime);
 
@@ -107,8 +106,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   // Replace all field accesses with variable accesses
   stencil->forEachStatement(
       [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmts) -> void {
-        replaceFieldWithVarAccessInStmts(instantiation->getMetaData(), stencil, AccessID, varname,
-                                         stmts);
+        replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, stmts);
       },
       lifetime);
 

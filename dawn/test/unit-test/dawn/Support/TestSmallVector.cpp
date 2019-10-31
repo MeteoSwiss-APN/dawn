@@ -705,7 +705,7 @@ TEST(SmallVectorCustomTest, NoAssignTest) {
   int x = 0;
   SmallVector<notassignable, 2> vec;
   vec.push_back(notassignable(x));
-  x = 42;
+  x = 42; // NOLINT(clang-analyzer-deadcode.DeadStores)
   EXPECT_EQ(42, vec.pop_back_val().x_);
 }
 

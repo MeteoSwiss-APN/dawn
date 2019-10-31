@@ -86,8 +86,10 @@ int dawnOptionsHas(const dawnOptions_t* options, const char* name) {
 dawnOptionsEntry_t* dawnOptionsGet(const dawnOptions_t* options, const char* name) {
   const OptionsWrapper* optionsWrapper = toConstOptionsWrapper(options);
   const dawnOptionsEntry_t* entry = optionsWrapper->getOption(name);
-  if(!entry)
+  if(!entry) {
     dawnFatalError(dawn::format("option '%s' does not exist", name).c_str());
+    return nullptr; // silence a clang-tidy warning
+  }
   return OptionsEntryWrapper::copy(entry);
 }
 

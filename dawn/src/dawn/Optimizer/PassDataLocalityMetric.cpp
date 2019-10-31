@@ -31,7 +31,6 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public iir::ASTVisitorForwarding {
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const iir::StencilMetaInformation& metadata_;
   OptimizerContext& context_;
 
@@ -64,8 +63,8 @@ class ReadWriteCounter : public iir::ASTVisitorForwarding {
 public:
   ReadWriteCounter(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                    OptimizerContext& context, const iir::MultiStage& multiStage)
-      : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
-        numReads_(0), numWrites_(0), multiStage_(multiStage), fields_(multiStage_.getFields()) {}
+      : metadata_(instantiation->getMetaData()), context_(context), numReads_(0), numWrites_(0),
+        multiStage_(multiStage), fields_(multiStage_.getFields()) {}
 
   std::size_t getNumReads() const { return numReads_; }
   std::size_t getNumWrites() const { return numWrites_; }
