@@ -72,9 +72,9 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
         }
 
         for(int AccessID : AccessIDsToRename) {
-          tochedAccessIDs.insert(
-              createVersionAndRename(stencilInstantiation.get(), AccessID, &stencil, stageIdx,
-                                     stmtIdx, assignment->getLeft(), RenameDirection::Below));
+          tochedAccessIDs.insert(createVersionAndRename(
+              stencilInstantiation.get(), AccessID, &stencil, stageIdx, stmtIdx,
+              assignment->getLeft(), RenameDirection::Below)); // TODO assignment might be nullptr
         }
 
         DAG->insertStatement(stmt);

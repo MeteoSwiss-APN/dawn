@@ -27,15 +27,13 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetFieldAndVarAccesses : public iir::ASTVisitorForwarding {
-  const iir::StencilMetaInformation& metadata_;
   int AccessID_;
 
   std::vector<std::shared_ptr<iir::FieldAccessExpr>> fieldAccessExprToReplace_;
   std::vector<std::shared_ptr<iir::VarAccessExpr>> varAccessesToReplace_;
 
 public:
-  GetFieldAndVarAccesses(iir::StencilMetaInformation& metadata, int AccessID)
-      : metadata_(metadata), AccessID_(AccessID) {}
+  GetFieldAndVarAccesses(int AccessID) : AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     if(iir::getAccessID(expr) == AccessID_)
@@ -63,11 +61,10 @@ public:
 
 } // anonymous namespace
 
-void replaceFieldWithVarAccessInStmts(iir::StencilMetaInformation& metadata, iir::Stencil* stencil,
-                                      int AccessID, const std::string& varname,
+void replaceFieldWithVarAccessInStmts(iir::Stencil* stencil, int AccessID,
+                                      const std::string& varname,
                                       ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
-
-  GetFieldAndVarAccesses visitor(metadata, AccessID);
+  GetFieldAndVarAccesses visitor(AccessID);
   for(const auto& stmt : stmts) {
     visitor.reset();
 
@@ -83,11 +80,12 @@ void replaceFieldWithVarAccessInStmts(iir::StencilMetaInformation& metadata, iir
   }
 }
 
-void replaceVarWithFieldAccessInStmts(iir::StencilMetaInformation& metadata, iir::Stencil* stencil,
-                                      int AccessID, const std::string& fieldname,
+void replaceVarWithFieldAccessInStmts(iir::StencilMetaInformation& /*unused*/,
+                                      iir::Stencil* stencil, int AccessID,
+                                      const std::string& fieldname,
                                       ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
 
-  GetFieldAndVarAccesses visitor(metadata, AccessID);
+  GetFieldAndVarAccesses visitor(AccessID);
   for(const auto& stmt : stmts) {
     visitor.reset();
 
