@@ -1,3 +1,5 @@
+<a href="https://app.zenhub.com/workspaces/dawn-5db41ac773e8f70001d9e352/board?repos=104239379"><img src="//dxssrr2j0sq4w.cloudfront.net/3.2.0/img/external/zenhub-badge.png" alt="ZenHub"></a>
+
 GTClang & dawn
 ===========
 
@@ -45,6 +47,8 @@ ln -s </absolute/path/to>/dawn/scripts/git_hooks/pre-commit .git/hooks/
 ```
 
 If you want to call the script manually, simply run `/scripts/clang_format_all.sh`.
+
+We use open development on [Zenhub](https://app.zenhub.com/workspaces/dawn-5db41ac773e8f70001d9e352/board?repos=104239379) to manage our work.
 
 ## About
 
