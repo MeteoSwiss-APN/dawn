@@ -63,7 +63,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
 }
 
 const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int AccessID) const {
-  DAWN_ASSERT_MSG(isAccessType(iir::FieldAccessType::FAT_Literal, AccessID), "Invalid literal");
+  DAWN_ASSERT_MSG(isAccessType(iir::FieldAccessType::Literal, AccessID), "Invalid literal");
   return fieldAccessMetadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
 }
 
@@ -87,7 +87,7 @@ int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
 }
 
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::string& name) const {
-  if(fType == FieldAccessType::FAT_Literal) {
+  if(fType == FieldAccessType::Literal) {
     throw std::runtime_error("Literal can not be queried by name");
   }
   if(!hasNameToAccessID(name))
@@ -212,17 +212,17 @@ void StencilMetaInformation::insertExprToStencilFunctionInstantiation(
 }
 
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int accessID) const {
-  if(fType == FieldAccessType::FAT_Field) {
-    return isAccessType(FieldAccessType::FAT_APIField, accessID) ||
-           isAccessType(FieldAccessType::FAT_StencilTemporary, accessID) ||
-           isAccessType(FieldAccessType::FAT_InterStencilTemporary, accessID);
+  if(fType == FieldAccessType::Field) {
+    return isAccessType(FieldAccessType::APIField, accessID) ||
+           isAccessType(FieldAccessType::StencilTemporary, accessID) ||
+           isAccessType(FieldAccessType::InterStencilTemporary, accessID);
   }
-  if(fType == FieldAccessType::FAT_LocalVariable) {
-    return !isAccessType(FieldAccessType::FAT_Field, accessID) &&
-           !isAccessType(FieldAccessType::FAT_Literal, accessID) &&
-           !isAccessType(FieldAccessType::FAT_GlobalVariable, accessID);
+  if(fType == FieldAccessType::LocalVariable) {
+    return !isAccessType(FieldAccessType::Field, accessID) &&
+           !isAccessType(FieldAccessType::Literal, accessID) &&
+           !isAccessType(FieldAccessType::GlobalVariable, accessID);
   }
-  if(fType == FieldAccessType::FAT_Literal) {
+  if(fType == FieldAccessType::Literal) {
     return fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(accessID) > 0;
   }
   // not all the accessIDs are registered
@@ -232,7 +232,7 @@ bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int acces
 
 void StencilMetaInformation::moveRegisteredFieldTo(FieldAccessType type, int accessID) {
   // we can not move it into an API field, since the original order would not be preserved
-  DAWN_ASSERT(type != FieldAccessType::FAT_APIField);
+  DAWN_ASSERT(type != FieldAccessType::APIField);
   DAWN_ASSERT_MSG(isFieldType(type), "non field access type can not be moved");
 
   fieldAccessMetadata_.accessIDType_[accessID] = type;
@@ -244,16 +244,16 @@ void StencilMetaInformation::moveRegisteredFieldTo(FieldAccessType type, int acc
     fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
   }
 
-  if(type == FieldAccessType::FAT_StencilTemporary) {
+  if(type == FieldAccessType::StencilTemporary) {
     fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(accessID);
-  } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
+  } else if(type == FieldAccessType::InterStencilTemporary) {
     fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
   }
 }
 
 int StencilMetaInformation::insertAccessOfType(FieldAccessType type, const std::string& name) {
   int accessID = UIDGenerator::getInstance()->get();
-  if(type == FieldAccessType::FAT_Literal)
+  if(type == FieldAccessType::Literal)
     accessID = -accessID;
   insertAccessOfType(type, accessID, name);
   return accessID;
@@ -261,25 +261,25 @@ int StencilMetaInformation::insertAccessOfType(FieldAccessType type, const std::
 
 void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int AccessID,
                                                 const std::string& name) {
-  if(type != FieldAccessType::FAT_Literal) {
+  if(type != FieldAccessType::Literal) {
     addAccessIDNamePair(AccessID, name);
     fieldAccessMetadata_.accessIDType_[AccessID] = type;
   }
 
   if(isFieldType(type)) {
     fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
-    if(type == FieldAccessType::FAT_StencilTemporary) {
+    if(type == FieldAccessType::StencilTemporary) {
       fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
-    } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
+    } else if(type == FieldAccessType::InterStencilTemporary) {
       fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(AccessID);
-    } else if(type == FieldAccessType::FAT_APIField) {
+    } else if(type == FieldAccessType::APIField) {
       fieldAccessMetadata_.apiFieldIDs_.push_back(AccessID);
     }
-  } else if(type == FieldAccessType::FAT_GlobalVariable) {
+  } else if(type == FieldAccessType::GlobalVariable) {
     fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(AccessID);
-  } else if(type == FieldAccessType::FAT_LocalVariable) {
+  } else if(type == FieldAccessType::LocalVariable) {
     // local variables are not stored
-  } else if(type == FieldAccessType::FAT_Literal) {
+  } else if(type == FieldAccessType::Literal) {
     DAWN_ASSERT(AccessID < 0);
     fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(AccessID, name);
   }
@@ -304,9 +304,9 @@ int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<Var
 }
 
 bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
-  return accessType == FieldAccessType::FAT_Field || accessType == FieldAccessType::FAT_APIField ||
-         accessType == FieldAccessType::FAT_StencilTemporary ||
-         accessType == FieldAccessType::FAT_InterStencilTemporary;
+  return accessType == FieldAccessType::Field || accessType == FieldAccessType::APIField ||
+         accessType == FieldAccessType::StencilTemporary ||
+         accessType == FieldAccessType::InterStencilTemporary;
 }
 
 Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
@@ -317,7 +317,7 @@ Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
 }
 
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
-  if(isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
+  if(isAccessType(iir::FieldAccessType::Literal, accessID)) {
     return getNameFromLiteralAccessID(accessID);
   } else {
     return getFieldNameFromAccessID(accessID);
@@ -338,13 +338,16 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     const Array3i fieldDimensions) {
+                                     const Array3i fieldDimensions,
+                                     ast::Expr::LocationType locationType) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
 
   DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
+
+  addAccessIDLocationPair(accessID, locationType);
 
   return accessID;
 }
@@ -369,15 +372,7 @@ bool StencilMetaInformation::getIsUnstructuredFromAccessID(int AccessID) const {
 }
 
 ast::Expr::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
-  // Since we can't pass the location type to the SIR yet we're defaulting to cell compuatation if
-  // nothing is specified. This happens if we call dawn from SIR but not if we call it from IIR.
-  //
-  // TODO: restrore this assertion once we have location-type passing through SIR (GT-63)
-  // DAWN_ASSERT(getIsUnstructuredFromAccessID(AccessID));
-  //
-  if(!getIsUnstructuredFromAccessID(AccessID)) {
-    return ast::Expr::LocationType::Cells;
-  }
+  DAWN_ASSERT(getIsUnstructuredFromAccessID(AccessID));
   return FieldAccessIDToLocationTypeMap_.at(AccessID);
 }
 
@@ -392,17 +387,17 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
 
   // we can only remove field or local variables (i.e. we can not remove neither globals nor
   // literals
-  DAWN_ASSERT(isAccessType(FieldAccessType::FAT_Field, AccessID) ||
-              isAccessType(FieldAccessType::FAT_LocalVariable, AccessID));
+  DAWN_ASSERT(isAccessType(FieldAccessType::Field, AccessID) ||
+              isAccessType(FieldAccessType::LocalVariable, AccessID));
 
   fieldAccessMetadata_.FieldAccessIDSet_.erase(AccessID);
-  if(isAccessType(FieldAccessType::FAT_InterStencilTemporary, AccessID)) {
+  if(isAccessType(FieldAccessType::InterStencilTemporary, AccessID)) {
     fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(AccessID);
   }
-  if(isAccessType(FieldAccessType::FAT_StencilTemporary, AccessID)) {
+  if(isAccessType(FieldAccessType::StencilTemporary, AccessID)) {
     fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
   }
-  if(isAccessType(FieldAccessType::FAT_APIField, AccessID)) {
+  if(isAccessType(FieldAccessType::APIField, AccessID)) {
     // remote on a vector
     auto begin = fieldAccessMetadata_.apiFieldIDs_.begin();
     auto end = fieldAccessMetadata_.apiFieldIDs_.end();
@@ -427,7 +422,7 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
 
 StencilMetaInformation::StencilMetaInformation(const sir::GlobalVariableMap& globalVariables) {
   for(const auto& global : globalVariables) {
-    insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, global.first);
+    insertAccessOfType(iir::FieldAccessType::GlobalVariable, global.first);
   }
 }
 

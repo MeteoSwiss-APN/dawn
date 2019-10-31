@@ -48,7 +48,7 @@ struct CacheProperties {
   bool isCommonCache(int accessID) const { return accessIDsCommonCache_.count(accessID); }
 
   /// @brief returns the extent of the cache
-  iir::Extents getCacheExtent(int accessID) const;
+  iir::Extents const& getCacheExtent(int accessID) const;
 
   /// @brief returns the name of a cache (for code generation) given its accessID
   std::string getCacheName(int accessID) const;
@@ -67,7 +67,7 @@ struct CacheProperties {
   int getOffsetCommonIJCache(int dim) const;
 
   /// @brief returns the name of the index of a common cache @see isCommonCache
-  std::string getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const;
+  std::string getCommonCacheIndexName(iir::Cache::CacheType cacheType) const;
   /// @brief true if there is at least one common cache (@see isCommonCache)
   bool isThereACommonCache() const;
 
@@ -94,9 +94,6 @@ struct CacheProperties {
 
   /// @brief true if the cache requires a fill
   static bool requiresFill(const iir::Cache& cache);
-
-private:
-  int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;
 };
 
 CacheProperties

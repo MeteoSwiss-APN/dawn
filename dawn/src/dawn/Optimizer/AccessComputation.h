@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_ACCESSCOMPUTATION_H
 #define DAWN_OPTIMIZER_ACCESSCOMPUTATION_H
 
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 #include <vector>
@@ -22,7 +23,6 @@
 namespace dawn {
 
 namespace iir {
-class StatementAccessesPair;
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 } // namespace iir
@@ -32,14 +32,13 @@ class StencilFunctionInstantiation;
 /// @{
 
 /// @fn computeAccesses
-/// @brief Compute the Accesses of `statementAccessesPairs`
+/// @brief Compute the Accesses of `stmts`
 /// @ingroup optimizer
-extern void
-computeAccesses(iir::StencilInstantiation* instantiation,
-                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+extern void computeAccesses(iir::StencilInstantiation* instantiation,
+                            ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
 
 /// @fn computeAccesses
-/// @brief Compute the caller and callee Accesses of `statementCallerAccessesPairs`
+/// @brief Compute the caller and callee Accesses of `stmts`
 ///
 /// The caller Accesses will have the initial offset added (e.g if a stencil function is called with
 /// `avg(u(i+1))` the initial offset of `u` is `[1, 0, 0]`) while the callee will not.
@@ -48,7 +47,7 @@ computeAccesses(iir::StencilInstantiation* instantiation,
 /// @ingroup optimizer
 extern void
 computeAccesses(std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+                ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
 
 /// @}
 

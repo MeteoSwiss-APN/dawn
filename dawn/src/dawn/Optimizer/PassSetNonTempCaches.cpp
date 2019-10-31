@@ -17,7 +17,6 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -33,7 +32,7 @@ namespace dawn {
 struct AcessIDTolocalityMetric {
   int accessID;
   int dataLocalityGain;
-  bool operator<(const AcessIDTolocalityMetric& rhs) {
+  bool operator<(const AcessIDTolocalityMetric& rhs) const {
     return dataLocalityGain < rhs.dataLocalityGain;
   }
 };
@@ -96,7 +95,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID()))
+        if(metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
@@ -133,14 +132,15 @@ private:
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
+      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary,
                                                "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage
       renameAccessIDInMultiStage(multiStagePrt_.get(), oldID, newID);
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
-      iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
+      iir::Cache& cache =
+          multiStagePrt_->setCache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::local, newID);
       originalNameToCache_.emplace_back(
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
                                   accessIDToDataLocality_.find(oldID)->second});
@@ -197,7 +197,7 @@ private:
         instantiation_->getMetaData(), instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod =
         std::make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
-    domethod->clearChildren();
+    domethod->getAST().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
       int assignmentID = assignmentIDs[i];
@@ -219,7 +219,7 @@ private:
   ///@brief Add the assignment operator of two unique id's to a given domethod
   void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
                                int assigneeID) {
-    // Create the StatementAccessPair of the assignment with the new and old variables
+    // Create the statement of the assignment with the new and old variables
     auto fa_assignee =
         std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
@@ -227,13 +227,12 @@ private:
     auto assignmentExpression =
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
-    auto pair = std::make_unique<iir::StatementAccessesPair>(expAssignment);
     iir::Accesses newAccess;
-    newAccess.addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
-    newAccess.addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));
-    pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
+    newAccess.addWriteExtent(assignmentID, iir::Extents{});
+    newAccess.addReadExtent(assigneeID, iir::Extents{});
+    expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
-    domethod->insertChild(std::move(pair));
+    domethod->getAST().push_back(std::move(expAssignment));
 
     // Add access ids to the expressions
     fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
@@ -246,11 +245,9 @@ private:
   /// @return true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int AccessID) {
 
-    for(const auto& stmtAccessesPair :
-        iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
+    for(const auto& stmt : iterateIIROverStmt(*multiStagePrt_)) {
 
-      const auto& callerAccesses =
-          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // Find first if this statement has a read
       auto readAccessIterator = callerAccesses->getReadAccesses().find(AccessID);
@@ -269,11 +266,9 @@ private:
 
   bool checkReadOnlyAccess(int AccessID) {
 
-    for(const auto& stmtAccessesPair :
-        iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
+    for(const auto& stmt : iterateIIROverStmt(*multiStagePrt_)) {
 
-      const auto& callerAccesses =
-          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+      const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // If we find a write-statement we exit
       auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
@@ -315,8 +310,8 @@ bool dawn::PassSetNonTempCaches::run(
       std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
       for(const auto& nametoCache : allCachedFields) {
         std::cout << " Cached: " << nametoCache.name
-                  << " : Type: " << nametoCache.cache.getCacheTypeAsString() << ":"
-                  << nametoCache.cache.getCacheIOPolicyAsString();
+                  << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
+                  << nametoCache.cache.getIOPolicyAsString();
       }
       if(allCachedFields.size() == 0) {
         std::cout << " no fields cached";

@@ -32,9 +32,6 @@ struct Extents;
 struct IIRStmtData : public ast::StmtData {
   static const DataType ThisDataType = DataType::IIR_DATA_TYPE;
 
-  IIRStmtData() = default;
-  IIRStmtData(const IIRStmtData& other);
-
   bool operator==(const IIRStmtData&) const;
   bool operator!=(const IIRStmtData&) const;
 

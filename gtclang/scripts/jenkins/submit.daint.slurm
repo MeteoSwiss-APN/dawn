@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --output=test.log
-#SBATCH --time=00:10:00
+#SBATCH --time=00:20:00
 #SBATCH -C gpu
 #SBATCH --cpus-per-task=1
 #SBATCH --account=g110

@@ -16,7 +16,6 @@
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -129,7 +128,7 @@ void Stencil::updateFromChildren() {
     const Field& field = fieldPair.second;
 
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
-    bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
+    bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
     Array3i specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
 
     derivedInfo_.fields_.emplace(
@@ -202,26 +201,24 @@ int Stencil::getNumStages() const {
                          });
 }
 
-void Stencil::forEachStatementAccessesPair(
-    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, bool updateFields) {
-  forEachStatementAccessesPairImpl(func, 0, getNumStages(), updateFields);
+void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+                               bool updateFields) {
+  forEachStatementImpl(func, 0, getNumStages(), updateFields);
 }
 
-void Stencil::forEachStatementAccessesPair(
-    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
-    const Stencil::Lifetime& lifetime, bool updateFields) {
+void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+                               const Stencil::Lifetime& lifetime, bool updateFields) {
   int startStageIdx = getStageIndexFromPosition(lifetime.Begin.StagePos);
   int endStageIdx = getStageIndexFromPosition(lifetime.End.StagePos);
-  forEachStatementAccessesPairImpl(func, startStageIdx, endStageIdx + 1, updateFields);
+  forEachStatementImpl(func, startStageIdx, endStageIdx + 1, updateFields);
 }
 
-void Stencil::forEachStatementAccessesPairImpl(
-    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, int startStageIdx,
-    int endStageIdx, bool updateFields) {
+void Stencil::forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+                                   int startStageIdx, int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
     for(const auto& doMethodPtr : stage->getChildren()) {
-      func(doMethodPtr->getChildren());
+      func(doMethodPtr->getAST().getStatements());
       if(updateFields) {
         doMethodPtr->update(iir::NodeUpdateType::level);
       }
@@ -258,10 +255,12 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
       auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
         // Adjust the Intend
-        if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
-          it->second.setIntend(Field::IK_InputOutput);
-        else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
-          it->second.setIntend(Field::IK_InputOutput);
+        if(it->second.getIntend() == Field::IntendKind::Input &&
+           field.getIntend() == Field::IntendKind::Output)
+          it->second.setIntend(Field::IntendKind::InputOutput);
+        else if(it->second.getIntend() == Field::IntendKind::Output &&
+                field.getIntend() == Field::IntendKind::Input)
+          it->second.setIntend(Field::IntendKind::InputOutput);
 
         // Merge the Extent
         it->second.mergeReadExtents(field.getReadExtents());
@@ -305,8 +304,8 @@ bool Stencil::compareDerivedInfo() const {
                       "derived info and computed on the fly fields:"
                       " field id " +
                       std::to_string(accessID) + ", on the fly [" +
-                      fieldsOnTheFly.at(accessID).getExtentsRB().toString() +
-                      "], derived info precomputed [" + extentsRB.toString())
+                      to_string(fieldsOnTheFly.at(accessID).getExtentsRB()) +
+                      "], derived info precomputed [" + to_string(extentsRB))
               .c_str());
       return false;
     }
@@ -315,8 +314,8 @@ bool Stencil::compareDerivedInfo() const {
                                    "derived info and computed on the fly fields:"
                                    " field id " +
                                    std::to_string(accessID) + ", on the fly [" +
-                                   fieldsOnTheFly.at(accessID).getExtents().toString() +
-                                   "], derived info precomputed [" + extents.toString())
+                                   to_string(fieldsOnTheFly.at(accessID).getExtents()) +
+                                   "], derived info precomputed [" + to_string(extents))
                            .c_str());
       return false;
     }
@@ -481,9 +480,8 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
         DoMethod& doMethod = *doMethodPtr;
 
         int statementIdx = 0;
-        for(const auto& stmtAccessPair : doMethod.getChildren()) {
-          const Accesses& accesses =
-              *stmtAccessPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
+        for(const auto& stmt : doMethod.getAST().getStatements()) {
+          const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
 
           auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
             if(!accessMap.count(AccessID))
@@ -520,7 +518,7 @@ bool Stencil::isEmpty() const {
   for(const auto& MS : getChildren())
     for(const auto& stage : MS->getChildren())
       for(const auto& doMethod : stage->getChildren())
-        if(!doMethod->childrenEmpty())
+        if(!doMethod->getAST().isEmpty())
           return false;
 
   return true;
@@ -542,8 +540,8 @@ std::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
 }
 
 void Stencil::accept(iir::ASTVisitor& visitor) {
-  for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
-    stmtAccessesPairPtr->getStatement()->accept(visitor);
+  for(const auto& stmt : iterateIIROverStmt(*this)) {
+    stmt->accept(visitor);
   }
 }
 

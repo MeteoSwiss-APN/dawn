@@ -27,15 +27,13 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetFieldAndVarAccesses : public iir::ASTVisitorForwarding {
-  const iir::StencilMetaInformation& metadata_;
   int AccessID_;
 
   std::vector<std::shared_ptr<iir::FieldAccessExpr>> fieldAccessExprToReplace_;
   std::vector<std::shared_ptr<iir::VarAccessExpr>> varAccessesToReplace_;
 
 public:
-  GetFieldAndVarAccesses(iir::StencilMetaInformation& metadata, int AccessID)
-      : metadata_(metadata), AccessID_(AccessID) {}
+  GetFieldAndVarAccesses(int AccessID) : AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     if(iir::getAccessID(expr) == AccessID_)
@@ -63,16 +61,13 @@ public:
 
 } // anonymous namespace
 
-void replaceFieldWithVarAccessInStmts(
-    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
-    const std::string& varname,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
-
-  GetFieldAndVarAccesses visitor(metadata, AccessID);
-  for(const auto& statementAccessesPair : statementAccessesPairs) {
+void replaceFieldWithVarAccessInStmts(iir::Stencil* stencil, int AccessID,
+                                      const std::string& varname,
+                                      ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+  GetFieldAndVarAccesses visitor(AccessID);
+  for(const auto& stmt : stmts) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement();
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getFieldAccessExprToReplace()) {
@@ -85,16 +80,14 @@ void replaceFieldWithVarAccessInStmts(
   }
 }
 
-void replaceVarWithFieldAccessInStmts(
-    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
-    const std::string& fieldname,
-    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+void replaceVarWithFieldAccessInStmts(iir::Stencil* stencil, int AccessID,
+                                      const std::string& fieldname,
+                                      ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
 
-  GetFieldAndVarAccesses visitor(metadata, AccessID);
-  for(const auto& statementAccessesPair : statementAccessesPairs) {
+  GetFieldAndVarAccesses visitor(AccessID);
+  for(const auto& stmt : stmts) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement();
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getVarAccessesToReplace()) {
@@ -154,8 +147,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
 
       // Bundle all the statements in a block statements
       auto newBlockStmt = iir::makeBlockStmt();
-      std::copy(newStencilCalls.begin(), newStencilCalls.end(),
-                std::back_inserter(newBlockStmt->getStatements()));
+      newBlockStmt->insert_back(newStencilCalls);
 
       if(oldStencilCall == stmt) {
         // Replace the the statement directly

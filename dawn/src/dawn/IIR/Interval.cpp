@@ -74,8 +74,8 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
 }
 
 Interval Interval::extendInterval(const Extent& verticalExtent) const {
-  return Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_ + verticalExtent.Minus,
-                  upper_.offset_ + verticalExtent.Plus);
+  return Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_ + verticalExtent.minus(),
+                  upper_.offset_ + verticalExtent.plus());
 }
 
 Interval Interval::crop(Bound bound, std::array<int, 2> window) const {
@@ -373,7 +373,7 @@ IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
 }
 
 IntervalDiff distance(Interval f, Interval s, LoopOrderKind order) {
-  if(order == LoopOrderKind::LK_Backward) {
+  if(order == LoopOrderKind::Backward) {
     return distance(f.upperIntervalLevel(), s.upperIntervalLevel());
   }
   { return distance(f.lowerIntervalLevel(), s.lowerIntervalLevel()); }
@@ -381,7 +381,7 @@ IntervalDiff distance(Interval f, Interval s, LoopOrderKind order) {
 
 Interval::IntervalLevel advance(Interval::IntervalLevel& lev_, LoopOrderKind loopOrder, int step) {
   Interval::IntervalLevel lev = lev_;
-  if(loopOrder == LoopOrderKind::LK_Backward) {
+  if(loopOrder == LoopOrderKind::Backward) {
     lev.offset_ -= step;
   } else {
     lev.offset_ += step;

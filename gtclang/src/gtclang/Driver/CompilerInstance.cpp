@@ -16,6 +16,7 @@
 
 #include "gtclang/Driver/CompilerInstance.h"
 #include "dawn/Support/Compiler.h"
+#include "gtclang/Support/ClangCompat/CompilerInvocation.h"
 #include "gtclang/Support/Config.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Basic/DiagnosticOptions.h"
@@ -101,9 +102,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
 #endif
 
   std::shared_ptr<CompilerInvocation> CI(new CompilerInvocation);
-  CompilerInvocation::CreateFromArgs(*CI, const_cast<const char**>(ccArgs.data()),
-                                     const_cast<const char**>(ccArgs.data()) + ccArgs.size(),
-                                     diagnostics);
+  clang_compat::CompilerInvocation::CreateFromArgs(*CI, ccArgs, diagnostics);
   CI->getFrontendOpts().DisableFree = false;
 
   // Show the invocation, with -v

@@ -104,7 +104,7 @@ iir::Extents CodeGeneratorHelper::computeTempMaxWriteExtent(iir::Stencil const& 
       makeRange(stencil.getFields(), [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
         return p.second.IsTemporary;
       });
-  iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
+  iir::Extents maxExtents{ast::cartesian};
   for(const auto& fieldPair : tempFields) {
     DAWN_ASSERT(fieldPair.second.field.getWriteExtentsRB());
     maxExtents.merge(*(fieldPair.second.field.getWriteExtentsRB()));
@@ -120,10 +120,10 @@ bool CodeGeneratorHelper::hasAccessIDMemAccess(const int accessID,
       continue;
     if(!ms->isCached(accessID))
       return true;
-    if(ms->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::bypass) {
+    if(ms->getCache(accessID).getType() == iir::Cache::CacheType::bypass) {
       return true;
     }
-    if(ms->getCache(accessID).getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) {
+    if(ms->getCache(accessID).getIOPolicy() != iir::Cache::IOPolicy::local) {
       return true;
     }
   }
@@ -138,7 +138,7 @@ bool CodeGeneratorHelper::useTemporaries(const std::unique_ptr<iir::Stencil>& st
       (find_if(fields.begin(), fields.end(),
                [&](const std::pair<int, iir::Stencil::FieldInfo>& field) {
                  const int accessID = field.second.field.getAccessID();
-                 if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+                 if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
                    return false;
                  // we dont need to use temporaries infrastructure for fields that are cached
                  return hasAccessIDMemAccess(accessID, stencil);
@@ -150,9 +150,9 @@ bool CodeGeneratorHelper::useTemporaries(const std::unique_ptr<iir::Stencil>& st
 void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
     const iir::StencilMetaInformation& metadata, const int accessID,
-    const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
+    const std::unordered_map<int, Array3i> fieldIndexMap, ast::Offsets const& offset) {
   std::string accessName = metadata.getFieldNameFromAccessID(accessID);
-  bool isTemporary = metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
+  bool isTemporary = metadata.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
   bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), metadata);
@@ -165,15 +165,20 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
 
   std::string offsetStr =
       RangeToString("+", "", "", true)(CodeGeneratorHelper::ijkfyOffset(offset, useTmpIndex, iter));
-  const bool readOnly = (field.getIntend() == iir::Field::IntendKind::IK_Input);
+  const bool readOnly = (field.getIntend() == iir::Field::IntendKind::Input);
   ss << (readOnly ? "__ldg(&(" : "") << accessName
      << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))
      << (readOnly ? "))" : "");
 }
 
-std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
+std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const ast::Offsets& offset,
                                                             bool useTmpIndex,
                                                             const Array3i iteratorDims) {
+  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
+  auto const& voffset = offset.verticalOffset();
+
+  Array3i offsets = {hoffset.offsetI(), hoffset.offsetJ(), voffset};
+
   int n = -1;
 
   std::array<std::string, 3> res;
@@ -202,14 +207,14 @@ CodeGeneratorHelper::computePartitionOfIntervals(const std::unique_ptr<iir::Mult
 
   // compute the partition of the intervals
   auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+  if(ms->getLoopOrder() == iir::LoopOrderKind::Backward)
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
   return partitionIntervals;
 }
 
 bool CodeGeneratorHelper::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) {
   iir::MultiInterval mInterval{CodeGeneratorHelper::computePartitionOfIntervals(ms)};
-  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel);
+  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::Parallel);
 }
 
 } // namespace cuda

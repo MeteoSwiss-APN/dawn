@@ -19,7 +19,6 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -128,7 +127,7 @@ private:
 
   /// Map of *caller* AccessID to the initial offset of the field (e.g the initial offset of the
   /// field mapping to the first argument in `avg(in(i+1))` would be [1, 0, 0])
-  std::unordered_map<int, Array3i> CallerAccessIDToInitialOffsetMap_;
+  std::unordered_map<int, ast::Offsets> CallerAccessIDToInitialOffsetMap_;
 
   /// Caller AccessID to name
   std::unordered_map<int, std::string> AccessIDToNameMap_;
@@ -225,8 +224,8 @@ public:
 
   /// @brief Evaluate the offset of the field access expression (this performs the lazy evaluation
   /// of the offsets)
-  Array3i evalOffsetOfFieldAccessExpr(const std::shared_ptr<iir::FieldAccessExpr>& expr,
-                                      bool applyInitialOffset = true) const;
+  ast::Offsets evalOffsetOfFieldAccessExpr(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                                           bool applyInitialOffset = true) const;
 
   /// @brief returns true if the argument in the argumentIndex position is bound to an offset
   /// argument
@@ -279,8 +278,8 @@ public:
 
   /// @brief Get/Set the initial offset of the @b caller given the caller AccessID
   /// @{
-  const Array3i& getCallerInitialOffsetFromAccessID(int callerAccessID) const;
-  void setCallerInitialOffsetFromAccessID(int callerAccessID, const Array3i& offset);
+  const ast::Offsets& getCallerInitialOffsetFromAccessID(int callerAccessID) const;
+  void setCallerInitialOffsetFromAccessID(int callerAccessID, const ast::Offsets& offset);
   /// @}
 
   /// @brief Get/Set if a field (given by its AccessID) is provided via a stencil function call
@@ -335,8 +334,8 @@ public:
   std::unordered_map<int, std::string>& getAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
-  std::unordered_map<int, Array3i>& getCallerAccessIDToInitialOffsetMap();
-  const std::unordered_map<int, Array3i>& getCallerAccessIDToInitialOffsetMap() const;
+  std::unordered_map<int, ast::Offsets>& getCallerAccessIDToInitialOffsetMap();
+  const std::unordered_map<int, ast::Offsets>& getCallerAccessIDToInitialOffsetMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
@@ -355,7 +354,7 @@ public:
   static void replaceKeyInMap(MapType& map, KeyType oldKey, KeyType newKey) {
     auto it = map.find(oldKey);
     if(it != map.end()) {
-      std::swap(map[newKey], it->second);
+      map.emplace(newKey, std::move(it->second));
       map.erase(it);
     }
   }
@@ -365,7 +364,7 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  const std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
+  const std::vector<std::shared_ptr<iir::Stmt>>& getStatements() const;
 
   /// @brief Update the fields and global variables
   ///

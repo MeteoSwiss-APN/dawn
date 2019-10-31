@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "36": "__local_fn_36",
    "16": "a",
-   "17": "b",
-   "34": "__local_fn_34"
+   "17": "b"
   },
   "accessIDToType": {
    "16": 6,
@@ -51,6 +51,7 @@
       "Line": -1,
       "Column": -1
      },
+     "data": {},
      "ID": 19
     }
    }
@@ -73,108 +74,25 @@
        {
         "doMethods": [
          {
-          "stmtaccesspairs": [
-           {
-            "ASTStmt": {
-             "var_decl_stmt": {
-              "type": {
-               "builtin_type": {
-                "type_id": "Float"
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "var_decl_stmt": {
+               "type": {
+                "builtin_type": {
+                 "type_id": "Float"
+                },
+                "is_const": true,
+                "is_volatile": false
                },
-               "is_const": true,
-               "is_volatile": false
-              },
-              "name": "__local_fn_34",
-              "dimension": 0,
-              "op": "=",
-              "init_list": [
-               {
-                "field_access_expr": {
-                 "name": "a",
-                 "offset": [
-                  0,
-                  0,
-                  0
-                 ],
-                 "argument_map": [
-                  -1,
-                  -1,
-                  -1
-                 ],
-                 "argument_offset": [
-                  0,
-                  0,
-                  0
-                 ],
-                 "negate_offset": false,
-                 "loc": {
-                  "Line": 26,
-                  "Column": 25
-                 },
-                 "data": {
-                  "accessID": 16
-                 },
-                 "ID": 32
-                }
-               }
-              ],
-              "loc": {
-               "Line": -1,
-               "Column": -1
-              },
-              "data": {
-               "accessID": 34
-              },
-              "ID": 36
-             }
-            },
-            "accesses": {
-             "writeAccess": {
-              "34": {
-               "extents": [
+               "name": "__local_fn_36",
+               "dimension": 0,
+               "op": "=",
+               "init_list": [
                 {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                }
-               ]
-              }
-             },
-             "readAccess": {
-              "16": {
-               "extents": [
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                }
-               ]
-              }
-             }
-            }
-           },
-           {
-            "ASTStmt": {
-             "expr_stmt": {
-              "expr": {
-               "assignment_expr": {
-                "left": {
                  "field_access_expr": {
-                  "name": "b",
+                  "name": "a",
                   "offset": [
                    0,
                    0,
@@ -192,84 +110,177 @@
                   ],
                   "negate_offset": false,
                   "loc": {
-                   "Line": 32,
-                   "Column": 59
+                   "Line": 26,
+                   "Column": 25
                   },
                   "data": {
-                   "accessID": 17
+                   "accessID": 16
                   },
-                  "ID": 22
+                  "ID": 41
                  }
-                },
-                "op": "=",
-                "right": {
-                 "var_access_expr": {
-                  "name": "__local_fn_34",
-                  "is_external": false,
-                  "loc": {
-                   "Line": -1,
-                   "Column": -1
-                  },
-                  "data": {
-                   "accessID": 34
-                  },
-                  "ID": 35
-                 }
-                },
-                "loc": {
-                 "Line": 32,
-                 "Column": 59
-                },
-                "ID": 23
-               }
-              },
-              "loc": {
-               "Line": 32,
-               "Column": 59
-              },
-              "ID": 24
-             }
-            },
-            "accesses": {
-             "writeAccess": {
-              "17": {
-               "extents": [
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
                 }
-               ]
+               ],
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "36": {
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
+                  }
+                 },
+                 "readAccess": {
+                  "16": {
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
+                  }
+                 }
+                }
+               },
+               "var_decl_stmt_data": {
+                "accessID": 36
+               },
+               "ID": 40
               }
              },
-             "readAccess": {
-              "34": {
-               "extents": [
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
-                },
-                {
-                 "minus": 0,
-                 "plus": 0
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "b",
+                   "offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 32,
+                    "Column": 59
+                   },
+                   "data": {
+                    "accessID": 17
+                   },
+                   "ID": 44
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "var_access_expr": {
+                   "name": "__local_fn_36",
+                   "is_external": false,
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
+                   },
+                   "data": {
+                    "accessID": 36
+                   },
+                   "ID": 43
+                  }
+                 },
+                 "loc": {
+                  "Line": 32,
+                  "Column": 59
+                 },
+                 "ID": 45
                 }
-               ]
+               },
+               "loc": {
+                "Line": 32,
+                "Column": 59
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "17": {
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
+                  }
+                 },
+                 "readAccess": {
+                  "36": {
+                   "extents": [
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    },
+                    {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   ]
+                  }
+                 }
+                }
+               },
+               "ID": 42
               }
              }
-            }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 39
            }
-          ],
+          },
           "doMethodID": 0,
           "interval": {
            "lower_offset": 0,
@@ -283,7 +294,7 @@
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 33,
+      "multiStageID": 35,
       "Caches": {}
      }
     ],
@@ -308,11 +319,12 @@
       "Line": -1,
       "Column": -1
      },
+     "data": {},
      "ID": 19
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "/code/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }

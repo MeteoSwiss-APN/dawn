@@ -48,23 +48,23 @@ public:
   Attr() : attrBits_(0) {}
 
   /// @brief Attribute bit-mask
-  enum AttrKind : unsigned {
-    AK_NoCodeGen = 1 << 0,        ///< Don't generate code for this stencil
-    AK_MergeStages = 1 << 1,      ///< Merge the Stages of this stencil
-    AK_MergeDoMethods = 1 << 2,   ///< Merge the Do-Methods of this stencil
-    AK_MergeTemporaries = 1 << 3, ///< Merge the temporaries of this stencil
-    AK_UseKCaches = 1 << 4        ///< Use K-Caches
+  enum class Kind : unsigned {
+    NoCodeGen = 1 << 0,        ///< Don't generate code for this stencil
+    MergeStages = 1 << 1,      ///< Merge the Stages of this stencil
+    MergeDoMethods = 1 << 2,   ///< Merge the Do-Methods of this stencil
+    MergeTemporaries = 1 << 3, ///< Merge the temporaries of this stencil
+    UseKCaches = 1 << 4        ///< Use K-Caches
   };
 
   /// @brief Check if `attr` bit is set
-  bool has(AttrKind attr) const { return (attrBits_ >> attr) & 1; }
+  bool has(Kind attr) const { return (attrBits_ >> static_cast<unsigned>(attr)) & 1; }
 
   /// @brief Check if any of the `attrs` bits is set
   /// @{
-  bool hasOneOf(AttrKind attr1, AttrKind attr2) const { return has(attr1) || has(attr2); }
+  bool hasOneOf(Kind attr1, Kind attr2) const { return has(attr1) || has(attr2); }
 
   template <typename... AttrTypes>
-  bool hasOneOf(AttrKind attr1, AttrKind attr2, AttrTypes... attrs) const {
+  bool hasOneOf(Kind attr1, Kind attr2, AttrTypes... attrs) const {
     return has(attr1) || hasOneOf(attr2, attrs...);
   }
   /// @}
@@ -72,10 +72,10 @@ public:
   ///@brief getting the Bits
   unsigned getBits() const { return attrBits_; }
   /// @brief Set `attr`bit
-  void set(AttrKind attr) { attrBits_ |= 1 << attr; }
+  void set(Kind attr) { attrBits_ |= 1 << static_cast<unsigned>(attr); }
 
   /// @brief Unset `attr` bit
-  void unset(AttrKind attr) { attrBits_ &= ~(1 << attr); }
+  void unset(Kind attr) { attrBits_ &= ~(1 << static_cast<unsigned>(attr)); }
 
   /// @brief Clear all attributes
   void clear() { attrBits_ = 0; }
@@ -137,9 +137,9 @@ struct Interval {
 /// @brief Base class of objects which can be used as arguments in StencilFunctions
 /// @ingroup sir
 struct StencilFunctionArg {
-  enum ArgumentKind { AK_Field, AK_Direction, AK_Offset };
+  enum class ArgumentKind { Field, Direction, Offset };
 
-  static constexpr const int AK_NumArgTypes = 3;
+  static constexpr int NumArgTypes = 3;
 
   std::string Name;   ///< Name of the argument
   ArgumentKind Kind;  ///< Type of argument
@@ -153,12 +153,14 @@ struct StencilFunctionArg {
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
   Field(const std::string& name, SourceLocation loc = SourceLocation())
-      : StencilFunctionArg{name, AK_Field, loc}, IsTemporary(false), fieldDimensions({{0, 0, 0}}) {}
+      : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
+        fieldDimensions({{0, 0, 0}}) {}
 
   bool IsTemporary;
   Array3i fieldDimensions;
+  ast::Expr::LocationType locationType = ast::Expr::LocationType::Cells;
 
-  static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
+  static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }
 
   CompareResult comparison(const Field& rhs) const;
@@ -168,18 +170,20 @@ struct Field : public StencilFunctionArg {
 /// @ingroup sir
 struct Direction : public StencilFunctionArg {
   Direction(const std::string& name, SourceLocation loc = SourceLocation())
-      : StencilFunctionArg{name, AK_Direction, loc} {}
+      : StencilFunctionArg{name, ArgumentKind::Direction, loc} {}
 
-  static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Direction; }
+  static bool classof(const StencilFunctionArg* arg) {
+    return arg->Kind == ArgumentKind::Direction;
+  }
 };
 
 /// @brief Representation of an Offset (e.g `i + 1`)
 /// @ingroup sir
 struct Offset : public StencilFunctionArg {
   Offset(const std::string& name, SourceLocation loc = SourceLocation())
-      : StencilFunctionArg{name, AK_Offset, loc} {}
+      : StencilFunctionArg{name, ArgumentKind::Offset, loc} {}
 
-  static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Offset; }
+  static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Offset; }
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -225,7 +229,7 @@ struct StencilFunction {
 /// specific vertical interval in a given loop order
 /// @ingroup sir
 struct VerticalRegion {
-  enum LoopOrderKind { LK_Forward = 0, LK_Backward };
+  enum class LoopOrderKind { Forward, Backward };
 
   SourceLocation Loc;                         ///< Source location of the vertical region
   std::shared_ptr<sir::AST> Ast;              ///< AST of the region
@@ -281,7 +285,7 @@ struct Stencil : public dawn::NonCopyable {
 
 class Value : NonCopyable {
 public:
-  enum TypeKind { Boolean = 0, Integer, Double, String };
+  enum class Kind { Boolean = 0, Integer, Double, String };
   template <typename T>
   struct TypeInfo;
 
@@ -295,16 +299,16 @@ public:
       : value_{std::forward<T>(value)},
         is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
-  explicit Value(TypeKind type) : value_{}, is_constexpr_{false}, type_{type} {}
+  explicit Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
 
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return is_constexpr_; }
 
-  /// @brief `TypeKind` to string
-  static const char* typeToString(TypeKind type);
+  /// @brief `Type` to string
+  static const char* typeToString(Kind type);
 
-  /// @brief `TypeKind` to `BuiltinTypeID`
-  static BuiltinTypeID typeToBuiltinTypeID(TypeKind type);
+  /// @brief `Type` to `BuiltinTypeID`
+  static BuiltinTypeID typeToBuiltinTypeID(Kind type);
 
   /// Convert the value to string
   std::string toString() const;
@@ -313,7 +317,7 @@ public:
   bool has_value() const { return value_.has_value(); }
 
   /// @brief Get/Set the underlying type
-  TypeKind getType() const { return type_; }
+  Kind getType() const { return type_; }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
@@ -338,27 +342,27 @@ public:
 private:
   std::optional<std::variant<bool, int, double, std::string>> value_;
   bool is_constexpr_;
-  TypeKind type_;
+  Kind type_;
 };
 
 template <>
 struct Value::TypeInfo<bool> {
-  static constexpr TypeKind Type = Boolean;
+  static constexpr Kind Type = Kind::Boolean;
 };
 
 template <>
 struct Value::TypeInfo<int> {
-  static constexpr TypeKind Type = Integer;
+  static constexpr Kind Type = Kind::Integer;
 };
 
 template <>
 struct Value::TypeInfo<double> {
-  static constexpr TypeKind Type = Double;
+  static constexpr Kind Type = Kind::Double;
 };
 
 template <>
 struct Value::TypeInfo<std::string> {
-  static constexpr TypeKind Type = String;
+  static constexpr Kind Type = Kind::String;
 };
 
 using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>>;

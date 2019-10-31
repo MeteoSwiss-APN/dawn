@@ -31,7 +31,6 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public iir::ASTVisitorForwarding {
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const iir::StencilMetaInformation& metadata_;
   OptimizerContext& context_;
 
@@ -64,8 +63,8 @@ class ReadWriteCounter : public iir::ASTVisitorForwarding {
 public:
   ReadWriteCounter(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                    OptimizerContext& context, const iir::MultiStage& multiStage)
-      : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
-        numReads_(0), numWrites_(0), multiStage_(multiStage), fields_(multiStage_.getFields()) {}
+      : metadata_(instantiation->getMetaData()), context_(context), numReads_(0), numWrites_(0),
+        multiStage_(multiStage), fields_(multiStage_.getFields()) {}
 
   std::size_t getNumReads() const { return numReads_; }
   std::size_t getNumWrites() const { return numWrites_; }
@@ -106,7 +105,7 @@ public:
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 
-  Array3i getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  ast::Offsets getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     return stencilFunCalls_.empty()
                ? field->getOffset()
                : stencilFunCalls_.top()->evalOffsetOfFieldAccessExpr(field, true);
@@ -122,14 +121,14 @@ public:
     DAWN_ASSERT(it != multiStage_.getCaches().end());
     const iir::Cache& cache = it->second;
 
-    if(cache.getCacheType() == iir::Cache::K) {
-      if(cache.getCacheIOPolicy() == iir::Cache::fill ||
-         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+    if(cache.getType() == iir::Cache::CacheType::K) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
+         cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numReads_++;
         individualReadWrites_[AccessID].numReads++;
       }
-      if(cache.getCacheIOPolicy() == iir::Cache::flush ||
-         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+      if(cache.getIOPolicy() == iir::Cache::IOPolicy::flush ||
+         cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
         numWrites_++;
         individualReadWrites_[AccessID].numWrites++;
       }
@@ -155,17 +154,17 @@ public:
 
   void processReadAccess(const std::shared_ptr<iir::FieldAccessExpr>& fieldExpr) {
     int AccessID = iir::getAccessID(fieldExpr);
-    int kOffset = fieldExpr->getOffset()[2];
+    int kOffset = fieldExpr->getOffset().verticalOffset();
 
     auto it = fields_.find(AccessID);
     DAWN_ASSERT(it != fields_.end());
     iir::Field& field = it->second;
 
-    if(field.getIntend() == iir::Field::IK_Input) {
+    if(field.getIntend() == iir::Field::IntendKind::Input) {
       if(!register_.count(AccessID)) {
 
         // Cache the center access
-        if(getOffset(fieldExpr) == Array3i{{0, 0, 0}})
+        if(getOffset(fieldExpr).isZero())
           register_.insert(AccessID);
 
         // Check if the field is either cached or stored in the texture cache
@@ -180,7 +179,7 @@ public:
       if(!multiStage_.isCached(AccessID)) {
 
         // Check if the center is stored in a register
-        if(!(register_.count(AccessID) && getOffset(fieldExpr) == Array3i{{0, 0, 0}})) {
+        if(!register_.count(AccessID) || !getOffset(fieldExpr).isZero()) {
           numReads_++;
           individualReadWrites_[AccessID].numReads++;
         }
@@ -190,7 +189,7 @@ public:
       }
     }
 
-    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IK_Input)
+    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IntendKind::Input)
       updateTextureCache(AccessID, kOffset);
   }
 
@@ -244,27 +243,27 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
     if(multiStage.isCached(AccessID)) {
       const iir::Cache& cache = multiStage.getCaches().find(AccessID)->second;
 
-      if(cache.getCacheType() == iir::Cache::K) {
-        if(cache.getCacheIOPolicy() == iir::Cache::fill ||
-           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+      if(cache.getType() == iir::Cache::CacheType::K) {
+        if(cache.getIOPolicy() == iir::Cache::IOPolicy::fill ||
+           cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numReads += 1;
         }
-        if(cache.getCacheIOPolicy() == iir::Cache::flush ||
-           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
+        if(cache.getIOPolicy() == iir::Cache::IOPolicy::flush ||
+           cache.getIOPolicy() == iir::Cache::IOPolicy::fill_and_flush) {
           numWrites += 1;
         }
       }
 
     } else {
       switch(field.getIntend()) {
-      case iir::Field::IK_Output:
+      case iir::Field::IntendKind::Output:
         numWrites += 1;
         break;
-      case iir::Field::IK_InputOutput:
+      case iir::Field::IntendKind::InputOutput:
         numReads += 1;
         numWrites += 1;
         break;
-      case iir::Field::IK_Input:
+      case iir::Field::IntendKind::Input:
         numReads += 1;
         break;
       }
@@ -282,8 +281,8 @@ std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerA
     const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, context, multiStage);
 
-  for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
-    statementAccessesPair->getStatement()->accept(readWriteCounter);
+  for(const auto& stmt : iterateIIROverStmt(multiStage)) {
+    stmt->accept(readWriteCounter);
   }
 
   return readWriteCounter.getIndividualReadWrites();
@@ -295,8 +294,8 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
                                OptimizerContext& context, const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, context, multiStage);
 
-  for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
-    statementAccessesPair->getStatement()->accept(readWriteCounter);
+  for(const auto& stmt : iterateIIROverStmt(multiStage)) {
+    stmt->accept(readWriteCounter);
   }
 
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());

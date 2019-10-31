@@ -116,7 +116,7 @@ public:
       if(skip) {
         return false;
       }
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
         return false;
 
       if(field.getExtents().isHorizontalPointwise())
@@ -130,22 +130,20 @@ public:
   }
 };
 
-static std::string offsetToString(int a) {
-  return ((a < 0) ? "minus" : "") + std::to_string(std::abs(a));
+/// @brief create the name of a newly created stencil function associated to a tmp computations
+std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                                              const iir::Interval& interval) {
+  return expr->getName() + "_OnTheFly_" + interval.toStringGen();
 }
 
 /// @brief create the name of a newly created stencil function associated to a tmp computations
 std::string makeOnTheFlyFunctionName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
                                      const iir::Interval& interval) {
-  return expr->getName() + "_OnTheFly_" + interval.toStringGen() + "_i" +
-         offsetToString(expr->getOffset()[0]) + "_j" + offsetToString(expr->getOffset()[1]) + "_k" +
-         offsetToString(expr->getOffset()[2]);
-}
-
-/// @brief create the name of a newly created stencil function associated to a tmp computations
-std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
-                                              const iir::Interval& interval) {
-  return expr->getName() + "_OnTheFly_" + interval.toStringGen();
+  // TODO: Does not support unstructured grids right now
+  return makeOnTheFlyFunctionCandidateName(expr, interval) + "_" +
+         to_string(ast::cartesian, expr->getOffset(), "_", [](std::string const& name, int offset) {
+           return name + "_" + ((offset < 0) ? "minus" : "") + std::to_string(std::abs(offset));
+         });
 }
 
 std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,
@@ -205,7 +203,7 @@ public:
     if(!tmpFunction_->hasArg(expr->getName()) && expr != tmpFieldAccessExpr_) {
 
       int genLineKey = static_cast<std::underlying_type<SourceLocation::ReservedSL>::type>(
-          SourceLocation::ReservedSL::SL_Generated);
+          SourceLocation::ReservedSL::Generated);
       tmpFunction_->Args.push_back(
           std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
 
@@ -217,7 +215,7 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
-    if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, iir::getAccessID(expr))) {
+    if(!metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, iir::getAccessID(expr))) {
       // record the var access as an argument to the stencil funcion
       dawn_unreachable_internal("All the var access should have been promoted to temporaries");
     }
@@ -260,7 +258,7 @@ public:
     if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       DAWN_ASSERT(tmpFieldAccessExpr_);
       const int accessID = iir::getAccessID(tmpFieldAccessExpr_);
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID))
         return expr;
 
       DAWN_ASSERT(tmpFunction_);
@@ -366,7 +364,7 @@ public:
   }
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
-  /// recompute its <statement,accesses> pairs
+  /// recompute its accesses
   virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
     // we would like to identify fields that are lhs of an assignment expr, so that we skip them and
     // dont replace them
@@ -387,7 +385,7 @@ public:
   }
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
-  /// recompute its <statement,accesses> pairs
+  /// recompute its accesses
   virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
     int accessID = iir::getAccessID(expr);
 
@@ -520,8 +518,8 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
   for(const auto& multiStage : stencilPtr->getChildren()) {
     iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
-      for(const auto& stmt : doMethod->getChildren()) {
-        graph.insertStatementAccessesPair(stmt);
+      for(const auto& stmt : doMethod->getAST().getStatements()) {
+        graph.insertStatement(stmt);
       }
     }
     // TODO this is crashing for the divergene helper
@@ -533,14 +531,14 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
       const auto& field = fieldPair.second;
 
       // we dont consider non temporary fields
-      if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID())) {
+      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, field.getAccessID())) {
         skipIDs.appendAccessIDsToMS(multiStage->getID(), field.getAccessID());
         continue;
       }
       // The scope of the temporary has to be a MS.
       // TODO Note the algorithm is not mathematically
       // complete here. We need to make sure that first access is always a write
-      if(field.getIntend() != iir::Field::IK_InputOutput) {
+      if(field.getIntend() != iir::Field::IntendKind::InputOutput) {
         skipIDs.appendAccessIDsToMS(multiStage->getID(), field.getAccessID());
         continue;
       }
@@ -586,10 +584,10 @@ bool PassTemporaryToStencilFunction::run(
 
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
-          for(auto stmtAccessPairIt = (*doMethodIt)->childrenRBegin();
-              stmtAccessPairIt != (*doMethodIt)->childrenREnd(); stmtAccessPairIt++) {
+          for(auto stmtIt = (*doMethodIt)->getAST().getStatements().rbegin();
+              stmtIt != (*doMethodIt)->getAST().getStatements().rend(); stmtIt++) {
 
-            (*stmtAccessPairIt)->getStatement()->acceptAndReplace(localVariablePromotion);
+            (*stmtIt)->acceptAndReplace(localVariablePromotion);
           }
         }
       }
@@ -597,12 +595,12 @@ bool PassTemporaryToStencilFunction::run(
 
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
-      if(metadata.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varID))
+      if(metadata.isAccessType(iir::FieldAccessType::GlobalVariable, varID))
         continue;
 
       promoteLocalVariableToTemporaryField(stencilInstantiation.get(), stencilPtr.get(), varID,
                                            stencilPtr->getLifetime(varID),
-                                           iir::TemporaryScope::TS_StencilTemporary);
+                                           iir::TemporaryScope::StencilTemporary);
     }
 
     skipIDs = computeSkipAccessIDs(stencilPtr, stencilInstantiation);
@@ -623,17 +621,16 @@ bool PassTemporaryToStencilFunction::run(
               continue;
             }
 
-            for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
-              const std::shared_ptr<iir::Stmt> stmt = stmtAccessPair->getStatement();
+            for(const auto& stmt : doMethodPtr->getAST().getStatements()) {
 
-              DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_VerticalRegionDeclStmt) &&
-                          (stmt->getKind() != iir::Stmt::SK_BoundaryConditionDeclStmt));
+              DAWN_ASSERT((stmt->getKind() != iir::Stmt::Kind::ReturnStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::StencilCallDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::VerticalRegionDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::Kind::BoundaryConditionDeclStmt));
 
               // We exclude blocks or If/Else stmt
-              if((stmt->getKind() != iir::Stmt::SK_ExprStmt) &&
-                 (stmt->getKind() != iir::Stmt::SK_VarDeclStmt)) {
+              if((stmt->getKind() != iir::Stmt::Kind::ExprStmt) &&
+                 (stmt->getKind() != iir::Stmt::Kind::VarDeclStmt)) {
                 continue;
               }
 
@@ -666,13 +663,13 @@ bool PassTemporaryToStencilFunction::run(
                       iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{stmt});
                   blockStmt->accept(statementMapper);
 
-                  DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
+                  DAWN_ASSERT(tmpStmtDoMethod.getAST().getStatements().size() == 1);
 
-                  std::unique_ptr<iir::StatementAccessesPair>& stmtPair =
-                      *(tmpStmtDoMethod.childrenBegin());
-                  computeAccesses(stencilInstantiation.get(), stmtPair);
+                  const std::shared_ptr<iir::Stmt>& replacementStmt =
+                      *(tmpStmtDoMethod.getAST().getStatements().begin());
+                  computeAccesses(stencilInstantiation.get(), replacementStmt);
 
-                  doMethodPtr->replace(stmtAccessPair, stmtPair);
+                  doMethodPtr->getAST().replaceChildren(stmt, replacementStmt);
                   doMethodPtr->update(iir::NodeUpdateType::level);
                 }
 

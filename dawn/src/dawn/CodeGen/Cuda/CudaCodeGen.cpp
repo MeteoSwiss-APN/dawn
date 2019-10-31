@@ -274,7 +274,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(int fieldId : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+  for(int fieldId : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     StencilWrapperConstructor.addArg(getStorageType(metadata.getFieldDimensionsMask(fieldId)) +
                                      "& " + metadata.getFieldNameFromAccessID(fieldId));
   }
@@ -303,7 +303,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                               fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
@@ -312,10 +312,9 @@ void CudaCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -342,7 +341,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
   }
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
 
   stencilWrapperClass.addComment("Members");
 
@@ -352,11 +351,10 @@ void CudaCodeGen::generateStencilWrapperMembers(
   stencilWrapperClass.addComment("Stencil-Data");
 
   // Define allocated memebers if necessary
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>())
+    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(
           c_gtc() + "storage_t",
           "m_" + stencilInstantiation->getMetaData().getFieldNameFromAccessID(AccessID));
@@ -376,7 +374,7 @@ void CudaCodeGen::generateStencilWrapperRun(
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
   std::vector<std::string> apiFieldNames;
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     apiFieldNames.push_back(name);
   }
@@ -418,8 +416,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
   auto nonTempFields =
       makeRange(stencilFields, [&](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-        return !p.second.IsTemporary &&
-               metadata.isAccessType(iir::FieldAccessType::FAT_Field, p.first);
+        return !p.second.IsTemporary && metadata.isAccessType(iir::FieldAccessType::Field, p.first);
       });
 
   for(const auto& field : nonTempFields) {
@@ -441,20 +438,18 @@ void CudaCodeGen::generateStencilRunMethod(
     const auto fields = multiStage.getOrderedFields();
 
     auto msNonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-      return !metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                    p.second.getAccessID());
+      return !metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
     });
 
     auto tempStencilFieldsNonLocalCached =
         makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
           const int accessID = p.first;
-          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                    p.second.getAccessID()))
+          if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
             return false;
           for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
             if(!ms->isCached(accessID))
               continue;
-            if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+            if(ms->getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
               return false;
           }
 
@@ -480,7 +475,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
     DAWN_ASSERT(msNonTempFields.size() > 0);
 
-    iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
+    iir::Extents maxExtents{ast::cartesian};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
       maxExtents.merge(stage->getExtents());
     }
@@ -497,10 +492,13 @@ void CudaCodeGen::generateStencilRunMethod(
     unsigned int ntx = blockSize[0];
     unsigned int nty = blockSize[1];
 
+    auto const& hMaxExtents =
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+
     stencilRunMethod.addStatement(
         "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
-        std::to_string(maxExtents[1].Plus - maxExtents[1].Minus +
-                       (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)) +
+        std::to_string(hMaxExtents.jPlus() - hMaxExtents.jMinus() +
+                       (hMaxExtents.iMinus() < 0 ? 1 : 0) + (hMaxExtents.iPlus() > 0 ? 1 : 0)) +
         ",1)");
 
     // number of blocks required
@@ -526,11 +524,11 @@ void CudaCodeGen::generateStencilRunMethod(
 
     auto tempMSFieldsNonLocalCached = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
       const int accessID = p.first;
-      if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, p.second.getAccessID()))
+      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
         return false;
       if(!multiStage.isCached(accessID))
         return true;
-      if(multiStage.getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+      if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
         return false;
 
       return true;
@@ -586,9 +584,12 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
                                         iir::Stencil const& stencil) const {
 
   auto maxExtents = CodeGeneratorHelper::computeTempMaxWriteExtent(stencil);
+  auto const& hMaxExtents =
+      iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+
   stencilClass.addTypeDef("tmp_halo_t")
-      .addType("gridtools::halo< " + std::to_string(-maxExtents[0].Minus) + "," +
-               std::to_string(-maxExtents[1].Minus) + ", 0, 0, " +
+      .addType("gridtools::halo< " + std::to_string(-hMaxExtents.iMinus()) + "," +
+               std::to_string(-hMaxExtents.jMinus()) + ", 0, 0, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
 
   stencilClass.addTypeDef(tmpMetadataTypename_)
@@ -606,10 +607,12 @@ void CudaCodeGen::addTmpStorageInit(
   const auto blockSize = stencil.getParent()->getBlockSize();
 
   if(!(tempFields.empty())) {
+    auto const& hMaxExtents =
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
     ctr.addInit(tmpMetadataName_ + "(" + std::to_string(blockSize[0]) + "+" +
-                std::to_string(-maxExtents[0].Minus + maxExtents[0].Plus) + ", " +
+                std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
                 std::to_string(blockSize[1]) + "+" +
-                std::to_string(-maxExtents[1].Minus + maxExtents[1].Plus) + ", (dom_.isize()+ " +
+                std::to_string(-hMaxExtents.jMinus() + hMaxExtents.jPlus()) + ", (dom_.isize()+ " +
                 std::to_string(blockSize[0]) + " - 1) / " + std::to_string(blockSize[0]) +
                 ", (dom_.jsize()+ " + std::to_string(blockSize[1]) + " - 1) / " +
                 std::to_string(blockSize[1]) + ", dom_.ksize() + 2 * " +

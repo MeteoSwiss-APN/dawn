@@ -56,6 +56,9 @@ unsigned computeEditDistance(ArrayRef<T> fromArray, ArrayRef<T> toArray,
   typename ArrayRef<T>::size_type m = fromArray.size();
   typename ArrayRef<T>::size_type n = toArray.size();
 
+  if(n == 0)
+    return m;
+
   const unsigned SmallBufferSize = 64;
   unsigned SmallBuffer[SmallBufferSize];
   std::unique_ptr<unsigned[]> Allocated;

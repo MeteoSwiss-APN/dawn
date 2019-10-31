@@ -44,9 +44,9 @@ public:
 
   /// @brief Kind of race condition encountered
   enum class RCKind {
-    RK_Nothing = 0, ///< No race-condition was encountered
-    RK_Fixed,       ///< Encounterd race-condition and fixed it by double buffering
-    RK_Unresolvable ///< Race condition cannot be fixed
+    Nothing = 0, ///< No race-condition was encountered
+    Fixed,       ///< Encounterd race-condition and fixed it by double buffering
+    Unresolvable ///< Race condition cannot be fixed
   };
 
   /// @brief Fix race conditions by introducing double buffering of the offending fields

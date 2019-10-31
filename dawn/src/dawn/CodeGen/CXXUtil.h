@@ -68,15 +68,10 @@ inline std::string twineToStr(const Twine& twine) {
 
 } // namespace internal
 
-template <typename T>
-inline Twine makeTwine(T&& arg) {
-  return Twine(arg);
-}
-
 /// @brief Convert variadic pack to Twine
 template <typename T, typename... Args>
 inline Twine makeTwine(T&& arg, Args&&... args) {
-  return Twine(arg) + makeTwine(args...);
+  return (Twine(arg) + ... + Twine(args));
 }
 
 /// @brief Clear the string stream and return it again
@@ -443,7 +438,7 @@ struct MemberFunction : public NewLine {
 /// @brief Structure: Declaration of a struct or class
 /// @ingroup codegen
 struct Structure : public Statement {
-  enum ConstructorDefaultKind { Custom, Default, Deleted };
+  enum class ConstructorDefaultKind { Custom, Default, Deleted };
 
   int IndentLevel = 0;
   std::string StructureName;
@@ -487,7 +482,8 @@ struct Structure : public Statement {
   /// @code
   ///   Structure(const Structure&) {...}
   /// @endcode
-  MemberFunction addCopyConstructor(ConstructorDefaultKind constructorKind = Custom) {
+  MemberFunction
+  addCopyConstructor(ConstructorDefaultKind constructorKind = ConstructorDefaultKind::Custom) {
     return addBuiltinConstructor(Twine("const ") + StructureName + "&", constructorKind);
   }
 
@@ -497,7 +493,8 @@ struct Structure : public Statement {
   /// @code
   ///   Structure(Structure&&) {...}
   /// @endcode
-  MemberFunction addMoveConstructor(ConstructorDefaultKind constructorKind = Custom) {
+  MemberFunction
+  addMoveConstructor(ConstructorDefaultKind constructorKind = ConstructorDefaultKind::Custom) {
     return addBuiltinConstructor(Twine(StructureName) + "&&", constructorKind);
   }
 
@@ -635,17 +632,18 @@ struct Structure : public Statement {
   DAWN_DECL_COMMIT(Structure, Statement)
 
 protected:
-  MemberFunction addBuiltinConstructor(const Twine& arg,
-                                       ConstructorDefaultKind constructorKind = Custom) {
+  MemberFunction
+  addBuiltinConstructor(const Twine& arg,
+                        ConstructorDefaultKind constructorKind = ConstructorDefaultKind::Custom) {
     newlineImpl();
     MemberFunction ctor(Twine::createNull(), StructureName, ss(), IndentLevel + 1);
     ctor.addArg(arg);
     switch(constructorKind) {
-    case Default:
+    case ConstructorDefaultKind::Default:
       ctor.CanHaveBody = false;
       ctor << ") = default;";
       return ctor;
-    case Deleted:
+    case ConstructorDefaultKind::Deleted:
       ctor.CanHaveBody = false;
       ctor << ") = delete;";
       return ctor;

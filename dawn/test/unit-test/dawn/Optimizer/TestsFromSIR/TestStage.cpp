@@ -46,7 +46,7 @@ protected:
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
     std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
+        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
     // Report diganostics
@@ -72,8 +72,10 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == iir::Extents{-1, 1, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == iir::Extents{0, 0, 0, 0, 0, 0}));
+  ASSERT_TRUE((stencil->getStage(0)->getExtents() ==
+               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  ASSERT_TRUE(
+      (stencil->getStage(1)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 

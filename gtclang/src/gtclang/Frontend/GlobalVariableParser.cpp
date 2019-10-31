@@ -108,15 +108,15 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
     auto type = arg->getType();
     DAWN_ASSERT(!type.isNull());
 
-    dawn::sir::Value::TypeKind typeKind;
+    dawn::sir::Value::Kind typeKind;
     if(type->isBooleanType()) // bool
-      typeKind = dawn::sir::Value::Boolean;
+      typeKind = dawn::sir::Value::Kind::Boolean;
     else if(type->isIntegerType()) // int
-      typeKind = dawn::sir::Value::Integer;
+      typeKind = dawn::sir::Value::Kind::Integer;
     else if(type->isArithmeticType()) // int, float, double... we treat this as 'double'
-      typeKind = dawn::sir::Value::Double;
+      typeKind = dawn::sir::Value::Kind::Double;
     else if(type.getAsString() == "std::string") {
-      typeKind = dawn::sir::Value::String;
+      typeKind = dawn::sir::Value::Kind::String;
     } else {
       context_->getDiagnostics().report(arg->getLocation(), Diagnostics::err_globals_invalid_type)
           << type.getAsString() << name;
@@ -138,7 +138,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       };
 
       // demotion to integer (`double ->12<-' would dyncast to int)
-      if(dyn_cast<IntegerLiteral>(init) != nullptr && typeKind == dawn::sir::Value::Integer) {
+      if(dyn_cast<IntegerLiteral>(init) != nullptr && typeKind == dawn::sir::Value::Kind::Integer) {
         IntegerLiteral* il = dyn_cast<IntegerLiteral>(init);
         std::string valueStr = il->getValue().toString(10, true);
         value = std::make_shared<dawn::sir::Value>((int)std::atoi(valueStr.c_str()));
@@ -148,7 +148,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
         // expressions without trailing do (e.g. `12.' would cast, `12' wouldn't.)
       } else if((dyn_cast<FloatingLiteral>(init) != nullptr ||
                  dyn_cast<IntegerLiteral>(init) != nullptr) &&
-                typeKind == dawn::sir::Value::Double) {
+                typeKind == dawn::sir::Value::Kind::Double) {
         IntegerLiteral* il = dyn_cast<IntegerLiteral>(init);
         FloatingLiteral* fl = dyn_cast<FloatingLiteral>(init);
         std::string valueStr;
@@ -167,7 +167,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
         value = std::make_shared<dawn::sir::Value>((bool)bl->getValue());
         DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << bl->getValue() << "'";
 
-      } else if(typeKind == dawn::sir::Value::String) {
+      } else if(typeKind == dawn::sir::Value::Kind::String) {
         StringInitArgResolver resolver;
         resolver.resolve(init);
         std::string valueStr = resolver.getStr();
@@ -239,16 +239,16 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
 
       try {
         switch(value.getType()) {
-        case dawn::sir::Value::Boolean:
+        case dawn::sir::Value::Kind::Boolean:
           parsed_value = std::make_shared<dawn::sir::Value>(bool(*it), isConstExpr);
           break;
-        case dawn::sir::Value::Integer:
+        case dawn::sir::Value::Kind::Integer:
           parsed_value = std::make_shared<dawn::sir::Value>(int(*it), isConstExpr);
           break;
-        case dawn::sir::Value::Double:
+        case dawn::sir::Value::Kind::Double:
           parsed_value = std::make_shared<dawn::sir::Value>(double(*it), isConstExpr);
           break;
-        case dawn::sir::Value::String: {
+        case dawn::sir::Value::Kind::String: {
           std::string v = *it;
           parsed_value = std::make_shared<dawn::sir::Value>(v, isConstExpr);
         } break;

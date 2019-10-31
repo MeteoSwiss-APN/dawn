@@ -19,7 +19,6 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -133,7 +132,6 @@ namespace {
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
 class OriginalNameGetter : public iir::ASTVisitorForwarding {
-  const StencilMetaInformation& metadata_;
   const int AccessID_;
   const bool captureLocation_;
 
@@ -141,8 +139,8 @@ class OriginalNameGetter : public iir::ASTVisitorForwarding {
   std::vector<SourceLocation> locations_;
 
 public:
-  OriginalNameGetter(const StencilMetaInformation& metadata, int AccessID, bool captureLocation)
-      : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
+  OriginalNameGetter(int AccessID, bool captureLocation)
+      : AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     if(iir::getAccessID(stmt) == AccessID_) {
@@ -192,16 +190,16 @@ public:
 std::pair<std::string, std::vector<SourceLocation>>
 StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
     int AccessID, const std::shared_ptr<iir::Stmt>& stmt) const {
-  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
+  OriginalNameGetter orignalNameGetter(AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
 }
 
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
-  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
+  OriginalNameGetter orignalNameGetter(AccessID, true);
 
-  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
-    stmtAccessesPair->getStatement()->accept(orignalNameGetter);
+  for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
+    stmt->accept(orignalNameGetter);
     if(orignalNameGetter.hasName())
       return orignalNameGetter.getName();
   }
@@ -257,20 +255,15 @@ void StencilInstantiation::dump() const {
           PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
                                  doMethod->getInterval().toString());
 
-          const auto& statementAccessesPairs = doMethod->getChildren();
-          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
-            std::cout << "\e[1m"
-                      << ast::ASTStringifier::toString(statementAccessesPairs[m]->getStatement(),
-                                                       5 * DAWN_PRINT_INDENT)
+          const auto& stmts = doMethod->getAST().getStatements();
+          for(std::size_t m = 0; m < stmts.size(); ++m) {
+            std::cout << "\e[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
                       << "\e[0m";
-            std::cout << statementAccessesPairs[m]
-                             ->getStatement()
-                             ->getData<IIRStmtData>()
-                             .CallerAccesses->toString(
-                                 [&](int AccessID) {
-                                   return getMetaData().getNameFromAccessID(AccessID);
-                                 },
-                                 6 * DAWN_PRINT_INDENT)
+            std::cout << stmts[m]->getData<IIRStmtData>().CallerAccesses->toString(
+                             [&](int AccessID) {
+                               return getMetaData().getNameFromAccessID(AccessID);
+                             },
+                             6 * DAWN_PRINT_INDENT)
                       << "\n";
           }
           l += 1;
@@ -290,27 +283,21 @@ void StencilInstantiation::dump() const {
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions
   for(const auto& stencilFun : metadata_.getStencilFunctionInstantiations()) {
-    const auto& statementAccessesPairs = stencilFun->getStatementAccessesPairs();
+    const auto& stmts = stencilFun->getStatements();
 
-    for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {
-      std::cout << "\nACCESSES: line "
-                << statementAccessesPairs[i]->getStatement()->getSourceLocation().Line << ": "
-                << statementAccessesPairs[i]
-                       ->getStatement()
-                       ->getData<iir::IIRStmtData>()
-                       .CalleeAccesses->reportAccesses(stencilFun.get())
+    for(std::size_t i = 0; i < stmts.size(); ++i) {
+      std::cout << "\nACCESSES: line " << stmts[i]->getSourceLocation().Line << ": "
+                << stmts[i]->getData<iir::IIRStmtData>().CalleeAccesses->reportAccesses(
+                       stencilFun.get())
                 << "\n";
     }
   }
 
   // Stages
 
-  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
-    std::cout << "\nACCESSES: line " << stmtAccessesPair->getStatement()->getSourceLocation().Line
-              << ": "
-              << stmtAccessesPair->getStatement()
-                     ->getData<iir::IIRStmtData>()
-                     .CallerAccesses->reportAccesses(metadata_)
+  for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
+    std::cout << "\nACCESSES: line " << stmt->getSourceLocation().Line << ": "
+              << stmt->getData<iir::IIRStmtData>().CallerAccesses->reportAccesses(metadata_)
               << "\n";
   }
 }

@@ -25,24 +25,18 @@
 #include "llvm/Support/VirtualFileSystem.h"
 #endif
 
-namespace gtclang {
-namespace clang_compat {
+namespace gtclang::clang_compat {
 #if CLANG_VERSION_MAJOR < 8
 
-namespace llvm {
-namespace vfs {
+namespace llvm::vfs {
 using InMemoryFileSystem = ::clang::vfs::InMemoryFileSystem;
 }
-} // namespace llvm
 #else
-namespace llvm {
-namespace vfs {
+namespace llvm::vfs {
 using InMemoryFileSystem = ::llvm::vfs::InMemoryFileSystem;
-}
-} // namespace llvm
+} // namespace llvm::vfs
 #endif
 
-} // namespace clang_compat
-} // namespace gtclang
+} // namespace gtclang::clang_compat
 
 #endif // GTCLANG_SUPPORT_CLANGCOMPAT_VIRTUALFILESYSTEM_H

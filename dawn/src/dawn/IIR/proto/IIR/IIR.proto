@@ -22,31 +22,6 @@ package dawn.proto.iir;
 import "SIR/statements.proto";
 
 /* ===-----------------------------------------------------------------------------------------===*/
-//      Accesses
-/* ===-----------------------------------------------------------------------------------------===*/
-// @brief Extent attached to a FieldAccess
-//
-// Each filed-access has extents in each dimension that define how far the accesses are in the
-//respective dimension
-message Extent {
-    int32 minus = 1;
-    int32 plus = 2;
-}
-
-message Extents {
-    // the three dimensions of an access-extent [Extent<i>, Extent<j>, Extent<k>]
-    repeated Extent extents = 1;
-}
-
-message Accesses {
-    // Map of all the write accesses [their accessID] to the Extents of the access
-    map<int32, Extents> writeAccess = 1;
-
-    // Map of all the read accesses [their accessID] to the Extents of the access
-    map<int32, Extents> readAccess = 2;
-}
-
-/* ===-----------------------------------------------------------------------------------------===*/
 //      Caches
 /* ===-----------------------------------------------------------------------------------------===*/
 message Window {
@@ -85,22 +60,11 @@ message Cache {
 //      IIR-Tree
 /* ===-----------------------------------------------------------------------------------------===*/
 
-// @brief StatementAccessPair that is stored as the Leafs of the IIR
-message StatementAccessPair {
-    // the statement of the pair. To note that this can be a BlockStmt (or simiar) and therefore
-    // hold more than one stmt
-    dawn.proto.statements.Stmt ASTStmt = 1;
-
-    // All the accesses of the statement
-    Accesses accesses  = 2;
-}
-
 // @brief The Protobuf description of all the required members to describe a DoMethod of the IIR
 //
-// A Do-method is a collection of Statements with corresponding Accesses of a specific vertical
-// region
+// A Do-method contains an AST (BlockStmt) of a specific vertical region
 message DoMethod {
-    repeated StatementAccessPair stmtaccesspairs = 1;
+    dawn.proto.statements.Stmt ast = 1; // ast is of type BlockStmt
     int32 doMethodID = 2;
     dawn.proto.statements.Interval interval = 3;
 }
@@ -255,7 +219,7 @@ message StencilMetaInfo {
     map<int32, dawn.proto.statements.Stmt> idToStencilCall = 11;
 
     // Map of the BoundaryConditionCall to its extent
-    map<int32, Extents> boundaryCallToExtent = 12;
+    map<int32, dawn.proto.statements.Extents> boundaryCallToExtent = 12;
 
     // AccessIDs of allocated fields
     repeated int32 allocatedFieldIDs = 13;

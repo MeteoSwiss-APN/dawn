@@ -36,34 +36,11 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
                                                 : nullptr);
 }
 
-void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
-
+void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
+  stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    // The top-level block statement is collapsed thus we only insert at 1. Note that this works
-    // because all AST have a block statement as root node.
-    stmt->getData<iir::IIRStmtData>().StackTrace = std::make_optional(stackTrace_);
-    scope_.top()->doMethod_.insertChild(std::make_unique<iir::StatementAccessesPair>(stmt));
-    scope_.top()->CurentStmtAccessesPair.push(&(*(scope_.top()->doMethod_.childrenRBegin())));
-
-  } else if(scope_.top()->ScopeDepth > 1) {
-    // We are inside a nested block statement, we add the stmt as a child of the parent statement
-    stmt->getData<iir::IIRStmtData>().StackTrace = std::make_optional(stackTrace_);
-    (*scope_.top()->CurentStmtAccessesPair.top())
-        ->insertBlockStatement(std::make_unique<iir::StatementAccessesPair>(stmt));
-
-    const std::unique_ptr<iir::StatementAccessesPair>& lp =
-        ((*scope_.top()->CurentStmtAccessesPair.top())->getBlockStatements().back());
-
-    scope_.top()->CurentStmtAccessesPair.push(&lp);
+    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
   }
-}
-
-void StatementMapper::removeLastChildStatementAccessesPair() {
-  // The top-level pair is never removed
-  if(scope_.top()->CurentStmtAccessesPair.size() <= 1)
-    return;
-
-  scope_.top()->CurentStmtAccessesPair.pop();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
@@ -79,9 +56,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
 
 void StatementMapper::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
-  appendNewStatementAccessesPair(stmt);
+  appendNewStatement(stmt);
   stmt->getExpr()->accept(*this);
-  removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
@@ -99,34 +75,28 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   }
   scope_.top()->FunctionInstantiation->setReturn(true);
 
-  appendNewStatementAccessesPair(stmt);
+  appendNewStatement(stmt);
   stmt->getExpr()->accept(*this);
-  removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
-  appendNewStatementAccessesPair(stmt);
+  appendNewStatement(stmt);
   stmt->getCondExpr()->accept(*this);
 
   stmt->getThenStmt()->accept(*this);
   if(stmt->hasElse())
     stmt->getElseStmt()->accept(*this);
-
-  removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
-  int accessID = -1;
-  if(stmt->getData<iir::VarDeclStmtData>().AccessID) {
-    accessID = iir::getAccessID(stmt);
-  } else {
+  if(!stmt->getData<iir::VarDeclStmtData>().AccessID) {
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
-    accessID = instantiation_->nextUID();
+    int accessID = instantiation_->nextUID();
 
     std::string globalName;
     if(context_.getOptions().KeepVarnames)
@@ -147,13 +117,11 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), accessID);
 
     // Push back the statement and move on
-    appendNewStatementAccessesPair(stmt);
+    appendNewStatement(stmt);
 
     // Resolve the RHS
     for(const auto& expr : stmt->getInitList())
       expr->accept(*this);
-
-    removeLastChildStatementAccessesPair();
   }
 }
 
@@ -337,19 +305,18 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
       iir::replaceOldExprWithNewExprInStmt(
-          (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement(), expr, newExpr);
+          (*(scope_.top()->doMethod_.getAST().getStatements().rbegin())), expr, newExpr);
 
       // if a global is replaced by its value it becomes a de-facto literal negate access id
       int AccessID = -instantiation_->nextUID();
 
-      metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
-                                   newExpr->getValue());
+      metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, newExpr->getValue());
       newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
     } else {
       int AccessID = 0;
-      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
-        AccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, varname);
+      if(!metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, varname)) {
+        AccessID = metadata_.insertAccessOfType(iir::FieldAccessType::GlobalVariable, varname);
       } else {
         AccessID = metadata_.getAccessIDFromName(varname);
       }
@@ -381,7 +348,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr)
   if(function)
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
   else
-    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 }

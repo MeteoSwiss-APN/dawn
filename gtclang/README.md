@@ -5,7 +5,7 @@ GTClang <br/> <a target="_blank" href="http://semver.org">![Version][Version.Bad
 
 **GTClang** is part of a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. **GTClang** is the front end part of the toolchain that processes a high level DSL and turns it into an intermediary representation (SIR), to be processed by dawn. See the top level `README` for a detailed description. Consider the following code snippet for an example stencil that performs two Laplacian operators in succesion using finite differences:
 
-[![GTClang](https://raw.githubusercontent.com/MeteoSwiss-APN/GTClang/master/docs/images/hd.png)](https://github.com/MeteoSwiss-APN/GTClang/releases)
+[![GTClang](https://raw.githubusercontent.com/MeteoSwiss-APN/dawn/master/gtclang/docs/images/hd.png)](https://github.com/MeteoSwiss-APN/dawn/releases)
 
 ## Building
 

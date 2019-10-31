@@ -85,7 +85,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int accessID = iir::getAccessID(expr);
 
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, accessID)) {
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, accessID)) {
     ss_ << "globals_." << name;
   } else {
     ss_ << name;
@@ -119,20 +119,21 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
 
   std::string index;
   if(cacheProperties_.isCommonCache(accessID)) {
-    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ);
+    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheType::IJ);
   } else {
     index = "iblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 0)) +
             " + (jblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 1)) +
             ")*" + std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   }
-  DAWN_ASSERT(expr->getOffset()[2] == 0);
-
   auto offset = expr->getOffset();
+  DAWN_ASSERT(offset.verticalOffset() == 0);
+  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
+
   std::string offsetStr;
-  if(offset[0] != 0)
-    offsetStr += std::to_string(offset[0]);
-  if(offset[1] != 0)
-    offsetStr += ((offsetStr != "") ? "+" : "") + std::to_string(offset[1]) + "*" +
+  if(hoffset.offsetI() != 0)
+    offsetStr += std::to_string(hoffset.offsetI());
+  if(hoffset.offsetJ() != 0)
+    offsetStr += ((offsetStr != "") ? "+" : "") + std::to_string(hoffset.offsetJ()) + "*" +
                  std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
@@ -145,15 +146,17 @@ void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& ex
 
   const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
 
-  DAWN_ASSERT((expr->getOffset()[0] == 0) && (expr->getOffset()[1] == 0));
-  DAWN_ASSERT((expr->getOffset()[2] <= vertExtent.Plus) &&
-              (expr->getOffset()[2] >= vertExtent.Minus));
+  auto offset = expr->getOffset();
+  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
+
+  DAWN_ASSERT(hoffset.offsetI() == 0 && hoffset.offsetJ() == 0);
+  DAWN_ASSERT((offset.verticalOffset() <= vertExtent.plus()) &&
+              (offset.verticalOffset() >= vertExtent.minus()));
 
   int index = kcacheCenterOffset;
 
-  auto offset = expr->getOffset();
-  if(offset[2] != 0)
-    index += offset[2];
+  if(offset.verticalOffset() != 0)
+    index += offset.verticalOffset();
   ss_ << accessName << "[" + std::to_string(index) + "]";
 }
 

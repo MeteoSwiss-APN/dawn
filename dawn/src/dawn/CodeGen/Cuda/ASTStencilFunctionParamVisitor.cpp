@@ -59,9 +59,11 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAcces
       currentFunction_ ? currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr))
                        : getName(expr);
 
+  auto offset = expr->getOffset();
+
   ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
-      << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())
-      << "}+" + fieldName + "_offsets)";
+      << "std::array<int, 3>{" << to_string(ast::cartesian, expr->getOffset()) << "}+" << fieldName
+      << "_offsets)";
 }
 
 std::string ASTStencilFunctionParamVisitor::getCodeAndResetStream() {

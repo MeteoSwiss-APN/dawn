@@ -52,7 +52,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
@@ -67,7 +67,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRDoMethod = IIRStage->getChild(0);
   IIRDoMethod->setID(target->nextUID());
 
-  // create the StmtAccessPair
+  // create the statement
   auto sirInField = std::make_shared<sir::Field>("in_field");
   sirInField->IsTemporary = false;
   sirInField->fieldDimensions = Array3i{1, 1, 1};
@@ -80,9 +80,9 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
   rhs->setID(target->nextUID());
 
-  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirInField->Name, sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
+  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
+                                                  sirInField->fieldDimensions);
+  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField,
                                                    sirOutField->Name, sirOutField->fieldDimensions);
 
   lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
@@ -92,15 +92,14 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   expr->setID(target->nextUID());
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(target->nextUID());
-  auto insertee = std::make_unique<iir::StatementAccessesPair>(stmt);
 
   // Add the accesses:
   iir::Accesses callerAccesses;
-  callerAccesses.addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses.addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  callerAccesses.addWriteExtent(out_fieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
+  callerAccesses.addReadExtent(in_fieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
-  // And add the StmtAccesspair to it
-  IIRDoMethod->insertChild(std::move(insertee));
+  // And add the statement to it
+  IIRDoMethod->getAST().push_back(std::move(stmt));
   IIRDoMethod->updateLevel();
 
   // Add the control flow descriptor to the IIR
@@ -150,14 +149,14 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
   auto IIRStage1 = std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
   auto IIRStage2 = std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
 
-  IIRStage1->setExtents(iir::Extents(-1, +1, -1, +1, 0, 0));
+  IIRStage1->setExtents(iir::Extents(ast::cartesian, -1, +1, -1, +1, 0, 0));
 
   // Create one doMethod inside the Stage that spans the full domain
   IIRStage1->insertChild(std::make_unique<iir::DoMethod>(
@@ -176,7 +175,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   IIRMSS->insertChild(std::move(IIRStage1));
   IIRMSS->insertChild(std::move(IIRStage2));
 
-  // create the StmtAccessPair
+  // create the statement
   auto sirInField = std::make_shared<sir::Field>("in");
   sirInField->IsTemporary = false;
   sirInField->fieldDimensions = Array3i{1, 1, 1};
@@ -190,10 +189,14 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto lhsTmp = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name);
   lhsTmp->setID(target->nextUID());
 
-  auto rhsInT1 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{0, -2, 0});
-  auto rhsInT2 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{0, +2, 0});
-  auto rhsInT3 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{-2, 0, 0});
-  auto rhsInT4 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{+2, 0, 0});
+  auto rhsInT1 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::cartesian, 0, -2, 0});
+  auto rhsInT2 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::cartesian, 0, +2, 0});
+  auto rhsInT3 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::cartesian, -2, 0, 0});
+  auto rhsInT4 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::cartesian, +2, 0, 0});
 
   rhsInT1->setID(target->nextUID());
   rhsInT2->setID(target->nextUID());
@@ -203,22 +206,26 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto lhsOut = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
   lhsOut->setID(target->nextUID());
 
-  auto rhsTmpT1 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{0, -1, 0});
-  auto rhsTmpT2 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{0, +1, 0});
-  auto rhsTmpT3 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{-1, 0, 0});
-  auto rhsTmpT4 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{+1, 0, 0});
+  auto rhsTmpT1 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::cartesian, 0, -1, 0});
+  auto rhsTmpT2 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::cartesian, 0, +1, 0});
+  auto rhsTmpT3 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::cartesian, -1, 0, 0});
+  auto rhsTmpT4 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::cartesian, +1, 0, 0});
 
   rhsTmpT1->setID(target->nextUID());
   rhsTmpT2->setID(target->nextUID());
   rhsTmpT3->setID(target->nextUID());
   rhsTmpT4->setID(target->nextUID());
 
-  int inFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                 sirInField->Name, sirInField->fieldDimensions);
-  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_StencilTemporary,
+  int inFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
+                                                 sirInField->fieldDimensions);
+  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::StencilTemporary,
                                                   sirTmpField->Name, sirTmpField->fieldDimensions);
-  int outFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirOutField->Name, sirOutField->fieldDimensions);
+  int outFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirOutField->Name,
+                                                  sirOutField->fieldDimensions);
 
   lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
   rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
@@ -245,17 +252,16 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto stmt1 = iir::makeExprStmt(assignmentTmpIn);
   stmt1->setID(target->nextUID());
-  auto insertee1 = std::make_unique<iir::StatementAccessesPair>(stmt1);
 
   // Add the accesses:
   iir::Accesses callerAccesses1;
-  callerAccesses1.addWriteExtent(tmpFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses1.addReadExtent(inFieldID, iir::Extents{-2, 2, -2, 2, 0, 0});
+  callerAccesses1.addWriteExtent(tmpFieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
+  callerAccesses1.addReadExtent(inFieldID, iir::Extents(ast::cartesian, -2, 2, -2, 2, 0, 0));
   stmt1->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses1));
 
-  // And add the StmtAccesspair to it
-  IIRDoMethod1->insertChild(std::move(insertee1));
+  // And add the statement to it
+  IIRDoMethod1->getAST().push_back(std::move(stmt1));
   IIRDoMethod1->updateLevel();
 
   auto plusTmp1 = std::make_shared<ast::BinaryOperator>(rhsTmpT1, std::string("+"), rhsTmpT2);
@@ -271,16 +277,15 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto stmt2 = iir::makeExprStmt(assignmentOutTmp);
   stmt2->setID(target->nextUID());
-  auto insertee2 = std::make_unique<iir::StatementAccessesPair>(stmt2);
 
-  // Add the accesses to the Pair:
+  // Add the accesses to the statement:
   iir::Accesses callerAccesses2;
-  callerAccesses2.addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses2.addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});
+  callerAccesses2.addWriteExtent(outFieldID, iir::Extents(ast::cartesian, 0, 0, 0, 0, 0, 0));
+  callerAccesses2.addReadExtent(tmpFieldID, iir::Extents(ast::cartesian, -1, 1, -1, 1, 0, 0));
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
       std::make_optional(std::move(callerAccesses2));
-  // And add the StmtAccesspair to it
-  IIRDoMethod2->insertChild(std::move(insertee2));
+  // And add the statement to it
+  IIRDoMethod2->getAST().push_back(std::move(stmt2));
   IIRDoMethod2->updateLevel();
 
   // Add the control flow descriptor to the IIR

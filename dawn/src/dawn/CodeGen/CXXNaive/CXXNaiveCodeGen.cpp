@@ -29,38 +29,36 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
-                                const std::string& lower, const std::string& upper,
-                                const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
-               " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
-               increment + dim + ")")
-      .str();
+namespace {
+std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
+                         const std::string& upper, const std::string& comparison,
+                         const std::string& increment) {
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
+         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
 }
 
-static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
-                              const std::string& dim) {
-  return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
+std::string makeIJLoop(int iExtent, int jExtent, const std::string dom, const std::string& dim) {
+  return makeLoopImpl(iExtent, jExtent, dim, dom + "." + dim + "minus()",
                       dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
 }
 
-static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
-                                     iir::Interval::Bound bound) {
+std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
+                              iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound)
              ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
                    ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
              : std::to_string(interval.bound(bound));
 }
 
-static std::string makeKLoop(const std::string dom, bool isBackward,
-                             iir::Interval const& interval) {
+std::string makeKLoop(const std::string dom, bool isBackward, iir::Interval const& interval) {
 
   const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
+  return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
 }
+} // namespace
 
 CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                                  int maxHaloPoint)
@@ -114,7 +112,7 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   // Generate the run method by generate code for the stencil description AST
   MemberFunction runMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     runMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, name) + " " + name);
   }
@@ -142,7 +140,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
+  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
@@ -175,7 +173,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                               fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
@@ -184,10 +182,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -217,18 +214,17 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   }
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
   //
   // Members
   //
   // Define allocated memebers if necessary
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addComment("Members");
 
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>())
+    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
@@ -368,31 +364,33 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
       // compute the partition of the intervals
       auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-      if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+      if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       for(auto interval : partitionIntervals) {
 
         // for each interval, we generate naive nested loops
         stencilRunMethod.addBlockStatement(
-            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward),
+            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::Backward),
                       interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
+                auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
+                    stage.getExtents().horizontalExtent());
+
                 stencilRunMethod.addBlockStatement(
-                    makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
+                    makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
                       stencilRunMethod.addBlockStatement(
-                          makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
+                          makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&]() {
                             // Generate Do-Method
                             for(const auto& doMethodPtr : stage.getChildren()) {
                               const iir::DoMethod& doMethod = *doMethodPtr;
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
-                              for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                                statementAccessesPair->getStatement()->accept(
-                                    stencilBodyCXXVisitor);
+                              for(const auto& stmt : doMethod.getAST().getStatements()) {
+                                stmt->accept(stencilBodyCXXVisitor);
                                 stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }
                             }
@@ -466,7 +464,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
-        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field)
+        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::Field)
           continue;
         const std::string argName = exprArg->Name;
 
@@ -500,8 +498,8 @@ void CXXNaiveCodeGen::generateStencilFunctions(
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
-      for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+      for(const auto& stmt : stencilFun->getStatements()) {
+        stmt->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }

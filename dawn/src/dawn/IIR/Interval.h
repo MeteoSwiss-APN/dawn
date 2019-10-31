@@ -60,6 +60,7 @@ public:
       : lower_{interval.LowerLevel, interval.LowerOffset}, upper_{interval.UpperLevel,
                                                                   interval.UpperOffset} {}
 
+  Interval() = delete;
   Interval(const Interval&) = default;
   Interval(Interval&&) = default;
   Interval& operator=(const Interval&) = default;
@@ -153,7 +154,7 @@ public:
   Interval extendInterval(const Extent& verticalExtent) const;
 
   inline Interval extendInterval(const Extents& extents) const {
-    return extendInterval(extents[2]);
+    return extendInterval(extents.verticalExtent());
   }
 
   /// @brief Convert to SIR Interval

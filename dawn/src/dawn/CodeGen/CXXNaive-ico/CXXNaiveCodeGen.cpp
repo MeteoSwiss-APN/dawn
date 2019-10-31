@@ -98,7 +98,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // we might need to think about how to get Mesh and Field for a certain tag
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename libtag_t");
+  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
   StencilWrapperClass.changeAccessibility("private");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
@@ -154,20 +154,20 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
+  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const Mesh &mesh");
+  StencilWrapperConstructor.addArg("const gtclang::mesh_t<LibTag> &mesh");
 
   std::string ctrArgs("(dom");
   auto getLocationTypeString = [](ast::Expr::LocationType type) {
     switch(type) {
     case ast::Expr::LocationType::Cells:
-      return "Cell";
+      return "cell_";
     case ast::Expr::LocationType::Vertices:
-      return "Node";
+      return "vertex_";
     case ast::Expr::LocationType::Edges:
-      return "Edge";
+      return "edge_";
     default:
       dawn_unreachable("unexpected type");
       return "";
@@ -177,7 +177,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     std::string typeString =
         getLocationTypeString(metadata.getLocationTypeFromAccessID(APIfieldID));
 
-    StencilWrapperConstructor.addArg(typeString + "Field<double>& " +
+    StencilWrapperConstructor.addArg("gtclang::" + typeString + "field_t<LibTag, double>& " +
                                      metadata.getNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
@@ -203,7 +203,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                               fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
@@ -212,10 +212,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -245,18 +244,17 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   }
 
   stencilWrapperClass.changeAccessibility("public");
-  stencilWrapperClass.addCopyConstructor(Class::Deleted);
+  stencilWrapperClass.addCopyConstructor(Class::ConstructorDefaultKind::Deleted);
 
   stencilWrapperClass.addComment("Members");
   //
   // Members
   //
   // Define allocated memebers if necessary
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID :
-        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>())
+    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
@@ -307,18 +305,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
       switch(info.field.getLocation()) {
       case ast::Expr::LocationType::Cells:
-        return std::string("CellField<double>");
+        return std::string("gtclang::cell_field_t<LibTag, double>");
       case ast::Expr::LocationType::Vertices:
-        return std::string("NodeField<double>");
+        return std::string("gtclang::vertex_field_t<LibTag, double>");
       case ast::Expr::LocationType::Edges:
-        return std::string("EdgeField<double>");
+        return std::string("gtclang::edge_field_t<LibTag, double>");
       default:
         dawn_unreachable("invalid location");
         return std::string("");
       }
     };
 
-    StencilClass.addMember("Mesh const&", "m_mesh");
+    StencilClass.addMember("gtclang::mesh_t<LibTag> const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
@@ -330,7 +328,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("Mesh const &mesh");
+    stencilClassCtr.addArg("gtclang::mesh_t<LibTag> const &mesh");
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
@@ -392,17 +390,17 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
       // compute the partition of the intervals
       auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-      if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+      if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       auto getLoop = [](ast::Expr::LocationType type) {
         switch(type) {
         case ast::Expr::LocationType::Cells:
-          return "for(auto const& t : getCells(libtag_t(), m_mesh))";
+          return "for(auto const& t : getCells(LibTag{}, m_mesh))";
         case ast::Expr::LocationType::Vertices:
-          return "for(auto const& t : getVertices(libtag_t(), m_mesh))";
+          return "for(auto const& t : getVertices(LibTag{}, m_mesh))";
         case ast::Expr::LocationType::Edges:
-          return "for(auto const& t : getEdges(libtag_t(), m_mesh))";
+          return "for(auto const& t : getEdges(LibTag{}, m_mesh))";
         default:
           dawn_unreachable("invalid type");
           return "";
@@ -421,8 +419,8 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               const iir::DoMethod& doMethod = *doMethodPtr;
               if(!doMethod.getInterval().overlaps(interval))
                 continue;
-              for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+              for(const auto& stmt : doMethod.getAST().getStatements()) {
+                stmt->accept(stencilBodyCXXVisitor);
                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
             }
@@ -485,7 +483,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
-        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field)
+        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::Field)
           continue;
         const std::string argName = exprArg->Name;
 
@@ -519,8 +517,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
-      for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+      for(const auto& stmt : stencilFun->getStatements()) {
+        stmt->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }

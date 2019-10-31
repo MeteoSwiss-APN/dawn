@@ -16,7 +16,6 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Replacing.h"
@@ -32,21 +31,20 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
       iir::InstantiationHelper::extractLocalVariablename(varname), accessID);
 
   // Replace all variable accesses with field accesses
-  stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPair) -> void {
-        replaceVarWithFieldAccessInStmts(instantiation->getMetaData(), stencil, accessID, fieldname,
-                                         statementAccessesPair);
+  stencil->forEachStatement(
+      [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmt) -> void {
+        replaceVarWithFieldAccessInStmts(stencil, accessID, fieldname, stmt);
       },
       lifetime);
 
   // Replace the the variable declaration with an assignment to the temporary field
-  const std::vector<std::unique_ptr<iir::StatementAccessesPair>>& statementAccessesPairs =
-      stencil->getStage(lifetime.Begin.StagePos)
-          ->getChildren()
-          .at(lifetime.Begin.DoMethodIndex)
-          ->getChildren();
-  std::shared_ptr<iir::Stmt> oldStatement =
-      statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
+  iir::BlockStmt& blockStmt = stencil->getStage(lifetime.Begin.StagePos)
+                                  ->getChildren()
+                                  .at(lifetime.Begin.DoMethodIndex)
+                                  ->getAST();
+
+  const std::shared_ptr<iir::Stmt> oldStatement =
+      blockStmt.getStatements()[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be a `VarDeclStmt`. For example
   //
@@ -78,24 +76,24 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
 
     // Replace the statement
     exprStmt->getData<iir::IIRStmtData>() = std::move(oldStatement->getData<iir::IIRStmtData>());
-    statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(exprStmt);
+    blockStmt.replaceChildren(oldStatement, exprStmt);
 
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
   }
   // Register the field
-  instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                  accessID, fieldname);
+  instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary, accessID,
+                                                  fieldname);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
 }
 
 void promoteTemporaryFieldToAllocatedField(iir::StencilInstantiation* instantiation, int AccessID) {
-  DAWN_ASSERT(instantiation->getMetaData().isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                        AccessID));
-  instantiation->getMetaData().moveRegisteredFieldTo(
-      iir::FieldAccessType::FAT_InterStencilTemporary, AccessID);
+  DAWN_ASSERT(
+      instantiation->getMetaData().isAccessType(iir::FieldAccessType::StencilTemporary, AccessID));
+  instantiation->getMetaData().moveRegisteredFieldTo(iir::FieldAccessType::InterStencilTemporary,
+                                                     AccessID);
 }
 
 void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiation,
@@ -106,21 +104,19 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
       iir::InstantiationHelper::extractTemporaryFieldname(fieldname), AccessID);
 
   // Replace all field accesses with variable accesses
-  stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) -> void {
-        replaceFieldWithVarAccessInStmts(instantiation->getMetaData(), stencil, AccessID, varname,
-                                         statementAccessesPairs);
+  stencil->forEachStatement(
+      [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmts) -> void {
+        replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, stmts);
       },
       lifetime);
 
   // Replace the first access to the field with a VarDeclStmt
-  const std::vector<std::unique_ptr<iir::StatementAccessesPair>>& statementAccessesPairs =
-      stencil->getStage(lifetime.Begin.StagePos)
-          ->getChildren()
-          .at(lifetime.Begin.DoMethodIndex)
-          ->getChildren();
-  std::shared_ptr<iir::Stmt> oldStatement =
-      statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
+  iir::BlockStmt& blockStmt = stencil->getStage(lifetime.Begin.StagePos)
+                                  ->getChildren()
+                                  .at(lifetime.Begin.DoMethodIndex)
+                                  ->getAST();
+  const std::shared_ptr<iir::Stmt> oldStatement =
+      blockStmt.getStatements()[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example
   //
@@ -148,7 +144,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
       oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
   varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
       oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
-  statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(varDeclStmt);
+  blockStmt.replaceChildren(oldStatement, varDeclStmt);
 
   // Remove the field
   instantiation->getMetaData().removeAccessID(AccessID);

@@ -34,7 +34,7 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end) {
-      field_a = foo(i + 1, field_b(i - 1)); // EXPECTED_ACCESSES: R:field_b:<-1,0,0,0,0,0>
+      field_a = foo(i + 1, field_b(i - 1)); // EXPECTED_ACCESSES: R:field_b:<[(-1,0),(0,0),(0,0)]>
     }
   }
 };

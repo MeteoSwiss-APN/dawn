@@ -15,8 +15,10 @@
 #ifndef DAWN_IIR_DOMETHOD_H
 #define DAWN_IIR_DOMETHOD_H
 
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Interval.h"
 #include <memory>
 #include <optional>
@@ -27,14 +29,13 @@ namespace iir {
 
 class Stage;
 class DependencyGraphAccesses;
-class StatementAccessesPair;
 class StencilMetaInformation;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
+class DoMethod : public IIRNode<Stage, DoMethod, void> {
   Interval interval_;
   long unsigned int id_;
 
@@ -56,11 +57,10 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
 
   const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
+  iir::BlockStmt ast_;
 
 public:
   static constexpr const char* name = "DoMethod";
-
-  using StatementAccessesIterator = ChildIterator;
 
   /// @name Constructors and Assignment
   /// @{
@@ -130,9 +130,23 @@ public:
   /// @brief update the derived info from the children (currently no information are propagated,
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
+
+  void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
+  iir::BlockStmt const& getAST() const { return ast_; }
+  iir::BlockStmt& getAST() { return ast_; }
 };
 
 } // namespace iir
+
+template <typename RootNode>
+auto iterateIIROverStmt(const RootNode& root) {
+  std::vector<std::shared_ptr<iir::Stmt>> allStmts;
+  for(auto& doMethod : iterateIIROver<iir::DoMethod>(root)) {
+    std::copy(doMethod->getAST().getStatements().begin(), doMethod->getAST().getStatements().end(),
+              std::back_inserter(allStmts));
+  }
+  return allStmts;
+}
 } // namespace dawn
 
 #endif

@@ -19,6 +19,7 @@
 #include "dawn/Support/Unreachable.h"
 #include <iterator>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 namespace dawn {
@@ -40,8 +41,6 @@ class IIRNodeIterator {
   bool isTop_ = false;
 
 public:
-  using leafIterator_t = typename LeafNode::ChildIterator;
-
   /// @brief IIRNodeIterator constructor
   /// @param root IIRNodeIterator will model iterators for children of this node
   /// @param isTop true if this is the top node of the multi-iterator call

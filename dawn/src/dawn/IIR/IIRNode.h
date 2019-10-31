@@ -85,44 +85,71 @@ public:
 
   /// @brief clone the children of another node and store them as children of this object
   /// @param other node from where the children are cloned
-  inline void cloneChildrenFrom(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
+  inline void cloneChildrenFrom(const IIRNode& other) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    cloneChildrenImpl<Child>(other);
+  }
   /// @brief clone the children of another node and store them as children of this object
   /// @param other node from where the children are cloned
   /// @param thisNode smart ptr of this object (specialization for nodes that have no parent)
   inline void cloneChildrenFrom(const IIRNode& other, const SmartPtr<NodeType>& thisNode) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     DAWN_ASSERT(thisNode.get() == this);
     cloneChildrenImpl<Child>(other, thisNode);
   }
 
   /// @brief getters and iterator getters
   /// @{
-  inline const Container<SmartPtr<Child>>& getChildren() const { return children_; }
-  inline Container<SmartPtr<Child>>& getChildren() { return children_; }
+  inline const Container<SmartPtr<Child>>& getChildren() const {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_;
+  }
+  inline Container<SmartPtr<Child>>& getChildren() {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_;
+  }
 
-  inline ChildIterator childrenBegin() { return children_.begin(); }
-  inline ChildIterator childrenEnd() { return children_.end(); }
+  inline ChildIterator childrenBegin() {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_.begin();
+  }
+  inline ChildIterator childrenEnd() {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_.end();
+  }
 
   /// @brief reverse iterator begin
   inline typename Container<SmartPtr<Child>>::reverse_iterator childrenRBegin() {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return children_.rbegin();
   }
   /// @brief reverse iterator end
   inline typename Container<SmartPtr<Child>>::reverse_iterator childrenREnd() {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return children_.rend();
   }
 
   /// @brief iterator begin
-  inline ChildConstIterator childrenBegin() const { return children_.begin(); }
+  inline ChildConstIterator childrenBegin() const {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_.begin();
+  }
   /// @brief iterator end
-  inline ChildConstIterator childrenEnd() const { return children_.end(); }
+  inline ChildConstIterator childrenEnd() const {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_.end();
+  }
 
   inline typename Container<SmartPtr<Child>>::const_reverse_iterator childrenRBegin() const {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return children_.rbegin();
   }
   inline typename Container<SmartPtr<Child>>::const_reverse_iterator childrenREnd() const {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return children_.rend();
   }
   inline const ChildSmartPtrType& getChild(unsigned long pos) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return getChildImpl<typename std::iterator_traits<ChildIterator>::iterator_category>(pos);
   }
   /// @brief get unique_ptr to parent
@@ -139,6 +166,7 @@ public:
   /// @param childIt iterator pointing to the element being erased
   /// @return iterator to next element
   inline ChildIterator childrenErase(ChildIterator childIt) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     auto it_ = children_.erase(childIt);
 
     fixAfterErase();
@@ -152,6 +180,7 @@ public:
   /// @return true if element is found and deleted
   template <typename UnaryPredicate>
   inline bool childrenEraseIf(UnaryPredicate pred) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     bool res = RemoveIf(children_, pred);
 
     if(!res)
@@ -266,12 +295,16 @@ public:
 
   /// @brief insert a child node (specialization for nodes with a parent node)
   /// @param child node being inserted as a child
-  void insertChild(ChildSmartPtrType&& child) { insertChildImpl<Parent>(std::move(child)); }
+  void insertChild(ChildSmartPtrType&& child) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    insertChildImpl<Parent>(std::move(child));
+  }
 
   /// @brief insert a child node (specialization for nodes without a parent node)
   /// @param child node being inserted as a child
   /// @param thisNode smart ptr to this
   void insertChild(ChildSmartPtrType&& child, const std::unique_ptr<NodeType>& thisNode) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     insertChildImpl<Parent, ChildSmartPtrType, std::unique_ptr<NodeType>>(std::move(child),
                                                                           thisNode);
   }
@@ -280,6 +313,7 @@ public:
   /// @param pos iterator with the position where the child will be inserted
   /// @param child node being inserted as a child
   ChildIterator insertChild(ChildIterator pos, ChildSmartPtrType&& child) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return insertChildImpl<Parent>(pos, std::move(child));
   }
 
@@ -289,6 +323,7 @@ public:
   /// @param last iterator to end of the children being inserted
   template <typename Iterator>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return insertChildrenImpl<Iterator, Parent>(pos, first, last);
   }
 
@@ -300,6 +335,7 @@ public:
   template <typename Iterator, typename TChildParent>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
                                const std::unique_ptr<TChildParent>& p) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     return insertChildrenImpl<Parent, Iterator, TChildParent>(pos, first, last, p);
   }
 
@@ -310,6 +346,7 @@ public:
   /// @param inputChild child node that will be looked up and replaced
   /// @param withNewChild new child node that will be inserted in the place of the old node
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     replaceImpl<Parent>(inputChild, withNewChild);
   }
 
@@ -319,18 +356,25 @@ public:
   /// @param thisNode smart ptr to this node
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
                const std::unique_ptr<NodeType>& thisNode) {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     replaceImpl<Parent>(inputChild, withNewChild, thisNode);
   }
 
   /// @brief true if there are no children
-  bool childrenEmpty() const { return children_.empty(); }
+  bool childrenEmpty() const {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    return children_.empty();
+  }
 
   /// @brief clear the container of chilren
-  void clearChildren() { children_.clear(); }
+  void clearChildren() {
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
+    children_.clear();
+  }
 
   /// @brief get the smart pointer of a raw pointer child node
   inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
-
+    static_assert(!std::is_void<Child>::value, "Child type must not be void");
     for(const auto& c : children_) {
       if(c.get() == child) {
         return c;
@@ -345,7 +389,6 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-
     updateFromChildren();
   }
 
@@ -353,7 +396,6 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-
     updateFromChildren();
 
     auto parentPtr = getParentPtr();

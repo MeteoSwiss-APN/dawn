@@ -16,7 +16,6 @@
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
@@ -43,7 +42,7 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
     // if the intend of the field is output, we wont require sync from this stage
     // if the intend were IO, it might still not be needed if the output happens before a read,
     // however to simplify the algorithm we will be conservative and apply a sync here
-    if(field.second.getIntend() == iir::Field::IntendKind::IK_Output) {
+    if(field.second.getIntend() == iir::Field::IntendKind::Output) {
       continue;
     }
 
@@ -62,7 +61,7 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
       // we only process those fields where the stage compute
       const auto& preFields = stageIt->getFields();
       if(!preFields.count(accessID) ||
-         (preFields.at(accessID).getIntend() == iir::Field::IntendKind::IK_Input))
+         (preFields.at(accessID).getIntend() == iir::Field::IntendKind::Input))
         continue;
 
       if(preFields.at(accessID).computeAccessedInterval().overlaps(*fieldInterval))

@@ -15,7 +15,9 @@
 #ifndef DAWN_IIR_EXTENTS_H
 #define DAWN_IIR_EXTENTS_H
 
-#include "dawn/IIR/LoopOrder.h"
+#include "LoopOrder.h"
+
+#include "dawn/AST/Offsets.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
@@ -30,98 +32,302 @@
 namespace dawn {
 namespace iir {
 
+class Extents;
+
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
-struct Extent {
-  int Minus;
-  int Plus;
+class Extent {
 
+public:
   /// @name Constructors and Assignment
   /// @{
-  Extent() : Minus(0), Plus(0) {}
-  Extent(int minus, int plus) : Minus(minus), Plus(plus) {}
-  Extent(const Extent&) = default;
-  Extent(Extent&&) = default;
-  Extent& operator=(const Extent&) = default;
-  Extent& operator=(Extent&&) = default;
+  Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(minus <= plus); }
+  explicit Extent(int offset) : Extent(offset, offset) {}
+  Extent() : Extent(0, 0) {}
   /// @}
+
+  int minus() const { return minus_; }
+  int plus() const { return plus_; }
 
   /// @name Operators
   /// @{
-  Extent& merge(const Extent& other) {
-    Minus = std::min(Minus, other.Minus);
-    Plus = std::max(Plus, other.Plus);
+  void merge(const Extent& other) {
+    minus_ = std::min(minus_, other.minus_);
+    plus_ = std::max(plus_, other.plus_);
+  }
+  void merge(int other) { merge(Extent{other, other}); }
+
+  void limit(Extent const& other) {
+    minus_ = std::max(minus_, other.minus_);
+    plus_ = std::min(plus_, other.plus_);
+  }
+
+  Extent& operator+=(const Extent& other) {
+    minus_ += other.minus_;
+    plus_ += other.plus_;
     return *this;
   }
 
-  Extent& expand(const Extent& other) {
-    Minus = Minus + other.Minus;
-    Plus = Plus + other.Plus;
-    return *this;
+  bool operator==(const Extent& other) const {
+    return minus_ == other.minus_ && plus_ == other.plus_;
   }
-
-  Extent& merge(int other) {
-    Minus = std::min(Minus, other < 0 ? other : 0);
-    Plus = std::max(Plus, other > 0 ? other : 0);
-    return *this;
-  }
-
-  Extent& add(const Extent& other) {
-    Minus += other.Minus;
-    Plus += other.Plus;
-    return *this;
-  }
-
-  Extent& add(int other) {
-    Minus += other;
-    Plus += other;
-    Minus = std::min(0, Minus);
-    Plus = std::max(0, Plus);
-    return *this;
-  }
-
-  static Extent add(const Extent& lhs, const Extent& rhs) {
-    Extent sum;
-    sum.Minus = lhs.Minus + rhs.Minus;
-    sum.Plus = lhs.Plus + rhs.Plus;
-    return sum;
-  }
-
-  bool operator==(const Extent& other) const { return Minus == other.Minus && Plus == other.Plus; }
   bool operator!=(const Extent& other) const { return !(*this == other); }
+
+  bool isPointwise() const { return plus_ == 0 && minus_ == 0; }
   /// @}
+  //
+private:
+  int minus_;
+  int plus_;
 };
+Extent operator+(Extent lhs, Extent const& rhs);
+Extent merge(Extent lhs, Extent const& rhs);
+Extent limit(Extent lhs, Extent const& rhs);
+
+class HorizontalExtentImpl {
+public:
+  HorizontalExtentImpl() = default;
+  virtual ~HorizontalExtentImpl() = default;
+
+  HorizontalExtentImpl& operator+=(HorizontalExtentImpl const& other) {
+    addImpl(other);
+    return *this;
+  }
+  std::unique_ptr<HorizontalExtentImpl> clone() const { return cloneImpl(); }
+
+  void merge(HorizontalExtentImpl const& other) { mergeImpl(other); }
+  void addCenter() { addCenterImpl(); }
+  bool operator==(HorizontalExtentImpl const& other) const { return equalsImpl(other); }
+  bool isPointwise() const { return isPointwiseImpl(); }
+  void limit(HorizontalExtentImpl const& other) { limitImpl(other); }
+
+protected:
+  virtual void addImpl(HorizontalExtentImpl const& other) = 0;
+  virtual void mergeImpl(HorizontalExtentImpl const& other) = 0;
+  virtual void addCenterImpl() = 0;
+  virtual bool equalsImpl(HorizontalExtentImpl const& other) const = 0;
+  virtual std::unique_ptr<HorizontalExtentImpl> cloneImpl() const = 0;
+  virtual bool isPointwiseImpl() const = 0;
+  virtual void limitImpl(HorizontalExtentImpl const& other) = 0;
+};
+
+class CartesianExtent : public HorizontalExtentImpl {
+public:
+  CartesianExtent(Extent const& iExtent, Extent const& jExtent) : extents_{iExtent, jExtent} {}
+  CartesianExtent(int iMinus, int iPlus, int jMinus, int jPlus)
+      : CartesianExtent(Extent(iMinus, iPlus), Extent(jMinus, jPlus)) {}
+
+  CartesianExtent() : CartesianExtent(0, 0, 0, 0) {}
+
+  int iMinus() const { return extents_[0].minus(); }
+  int iPlus() const { return extents_[0].plus(); }
+  int jMinus() const { return extents_[1].minus(); }
+  int jPlus() const { return extents_[1].plus(); }
+
+protected:
+  void addImpl(HorizontalExtentImpl const& other) override {
+    auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
+    extents_[0] += otherCartesian.extents_[0];
+    extents_[1] += otherCartesian.extents_[1];
+  }
+
+  void mergeImpl(HorizontalExtentImpl const& other) override {
+    auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
+    extents_[0].merge(otherCartesian.extents_[0]);
+    extents_[1].merge(otherCartesian.extents_[1]);
+  }
+
+  void addCenterImpl() override { mergeImpl(CartesianExtent()); }
+
+  bool equalsImpl(HorizontalExtentImpl const& other) const override {
+    auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
+    return extents_[0] == otherCartesian.extents_[0] && extents_[1] == otherCartesian.extents_[1];
+  }
+
+  std::unique_ptr<HorizontalExtentImpl> cloneImpl() const override {
+    return std::make_unique<CartesianExtent>(extents_[0].minus(), extents_[0].plus(),
+                                             extents_[1].minus(), extents_[1].plus());
+  }
+
+  bool isPointwiseImpl() const override {
+    return extents_[0].isPointwise() && extents_[1].isPointwise();
+  }
+
+  void limitImpl(HorizontalExtentImpl const& other) override {
+    auto const& otherCartesian = dynamic_cast<CartesianExtent const&>(other);
+    extents_[0].limit(otherCartesian.extents_[0]);
+    extents_[1].limit(otherCartesian.extents_[1]);
+  }
+
+private:
+  std::array<Extent, 2> extents_;
+};
+class UnstructuredExtent : public HorizontalExtentImpl {
+public:
+  UnstructuredExtent(bool hasExtent) : hasExtent_{hasExtent} {}
+  UnstructuredExtent() : UnstructuredExtent(false) {}
+
+  bool hasExtent() const { return hasExtent_; }
+
+protected:
+  void addImpl(HorizontalExtentImpl const& other) override {
+    auto const& otherUnstructured = dynamic_cast<UnstructuredExtent const&>(other);
+    hasExtent_ = hasExtent_ || otherUnstructured.hasExtent_;
+  }
+
+  void mergeImpl(HorizontalExtentImpl const& other) override {
+    auto const& otherUnstructured = dynamic_cast<UnstructuredExtent const&>(other);
+    hasExtent_ = hasExtent_ || otherUnstructured.hasExtent_;
+  }
+
+  void addCenterImpl() override { mergeImpl(UnstructuredExtent()); }
+
+  bool equalsImpl(HorizontalExtentImpl const& other) const override {
+    auto const& otherUnstructured = dynamic_cast<dawn::iir::UnstructuredExtent const&>(other);
+    return hasExtent_ == otherUnstructured.hasExtent_;
+  }
+
+  std::unique_ptr<HorizontalExtentImpl> cloneImpl() const override {
+    return std::make_unique<UnstructuredExtent>(hasExtent_);
+  }
+
+  bool isPointwiseImpl() const override { return !hasExtent_; }
+
+  void limitImpl(HorizontalExtentImpl const& other) override {
+    auto const& otherUnstructured = dynamic_cast<dawn::iir::UnstructuredExtent const&>(other);
+    hasExtent_ = hasExtent_ && otherUnstructured.hasExtent_;
+  }
+
+private:
+  bool hasExtent_;
+};
+
+class HorizontalExtent {
+public:
+  // the default constructed horizontal extents creates a null-extent that can be compared to all
+  // kind of grids
+  HorizontalExtent() = default;
+
+  HorizontalExtent(ast::HorizontalOffset const& hOffset) {
+    ast::HorizontalOffsetImpl* ptr = hOffset.impl_.get();
+
+    if(hOffset.isZero()) {
+      *this = HorizontalExtent();
+
+    } else if(auto cOffset = dynamic_cast<ast::CartesianOffset const*>(ptr)) {
+      *this = HorizontalExtent(ast::cartesian, cOffset->offsetI(), cOffset->offsetI(),
+                               cOffset->offsetJ(), cOffset->offsetJ());
+
+    } else if(auto uOffset = dynamic_cast<ast::UnstructuredOffset const*>(ptr)) {
+      *this = HorizontalExtent(ast::unstructured, uOffset->hasOffset());
+
+    } else {
+      dawn_unreachable("unknown offset class");
+    }
+  }
+
+  HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
+  HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
+      : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
+
+  HorizontalExtent(ast::unstructured_) : impl_(std::make_unique<UnstructuredExtent>()) {}
+  HorizontalExtent(ast::unstructured_, bool hasExtent)
+      : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {}
+
+  HorizontalExtent(HorizontalExtent const& other)
+      : impl_(other.impl_ ? other.impl_->clone() : nullptr) {}
+  HorizontalExtent(HorizontalExtent&& other) = default;
+  HorizontalExtent& operator=(HorizontalExtent const& other) {
+    if(other.impl_)
+      impl_ = other.impl_->clone();
+    else
+      impl_ = nullptr;
+    return *this;
+  }
+  HorizontalExtent& operator=(HorizontalExtent&& other) = default;
+
+  HorizontalExtent(std::unique_ptr<HorizontalExtentImpl> impl) : impl_(std::move(impl)) {}
+
+  template <typename T>
+  friend T extent_cast(HorizontalExtent const&);
+  friend std::string to_string(const Extents& extent);
+
+  bool operator==(HorizontalExtent const& other) const {
+    if(impl_ && other.impl_)
+      return *impl_ == *other.impl_;
+    else if(impl_)
+      return isPointwise();
+    else if(other.impl_)
+      return other.isPointwise();
+    else
+      return true;
+  }
+  bool operator!=(HorizontalExtent const& other) const { return !(*this == other); }
+  HorizontalExtent& operator+=(HorizontalExtent const& other) {
+    if(impl_ && other.impl_)
+      *impl_ += *other.impl_;
+    else if(other.impl_)
+      *this = other;
+
+    return *this;
+  }
+  void merge(HorizontalExtent const& other) {
+    if(impl_ && other.impl_)
+      impl_->merge(*other.impl_);
+    else if(impl_)
+      impl_->addCenter();
+    else if(other.impl_) {
+      *this = other;
+      impl_->addCenter();
+    }
+  }
+  void merge(ast::HorizontalOffset const& other) { merge(HorizontalExtent{other}); }
+  bool isPointwise() const { return !impl_ || impl_->isPointwise(); }
+  void limit(HorizontalExtent const& other) {
+    if(impl_ && other.impl_)
+      impl_->limit(*other.impl_);
+    else if(!other.impl_)
+      *this = other;
+  }
+
+private:
+  std::unique_ptr<HorizontalExtentImpl> impl_;
+};
+
+template <typename T>
+T extent_cast(HorizontalExtent const& extent) {
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<HorizontalExtentImpl, PlainT>,
+                "Can only be casted to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  static PlainT nullExtent{};
+  return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
+}
 
 /// @brief Three dimensional access extents of a field
 /// @ingroup optimizer
 class Extents {
 public:
-  enum class VerticalLoopOrderDir { VL_CounterLoopOrder, VL_InLoopOrder };
+  enum class VerticalLoopOrderDir { CounterLoopOrder, InLoopOrder };
 
   /// @name Constructors and Assignment
   /// @{
-  explicit Extents(const Array3i& offset);
-  Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
-          int extent3plus);
-  Extents() = delete;
-  Extents(const Extents&) = default;
-  Extents(Extents&&) = default;
-  Extents& operator=(const Extents&) = default;
-  Extents& operator=(Extents&&) = default;
+  Extents();
+  explicit Extents(ast::Offsets const& offset);
+  Extents(HorizontalExtent const& hExtent, Extent const& vExtent);
+
+  Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus, int extent2plus,
+          int extent3minus, int extent3plus);
+  explicit Extents(ast::cartesian_);
+
+  Extents(ast::unstructured_, bool hasOffset, Extent const& vExtent);
+  explicit Extents(ast::unstructured_);
   /// @}
 
-  /// @brief Get the i-th extend or NullExtent if i-th extent does not exists
-  Extent& operator[](int i) { return extents_[i]; }
-  const Extent& operator[](int i) const { return extents_[i]; }
+  bool hasVerticalCenter() const;
 
-  /// @brief Get the extents
-  const std::array<Extent, 3>& getExtents() const { return extents_; }
-  std::array<Extent, 3>& getExtents() { return extents_; }
-
-  /// @brief Get size of extents (i.e number of dimensions)
-  std::array<Extent, 3>::size_type getSize() const { return extents_.size(); }
-
-  bool hasVerticalCenter() const { return extents_[2].Minus <= 0 && extents_[2].Plus >= 0; }
+  /// @brief Limits the same extents, but limited to the extent given by other
+  void limit(Extents const& other);
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
@@ -129,42 +335,32 @@ public:
   ///   If `this` is `{-1, 1, 0, 0, 0, 0}` and `other` is `{-2, 0, 0, 0, 1}` the result will be
   ///   `{-2, 1, 0, 0, 0, 1}`.
   void merge(const Extents& other);
-  void merge(const Array3i& offset);
+  void merge(const ast::Offsets& offset);
 
-  void expand(const Extents& other);
+  /// @brief resets vertical extants to {0, 0}
+  void resetVerticalExtent();
 
-  /// @brief Add `this` and `other` and compute the direction sum of the two
-  ///
-  /// @b Example:
-  ///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
-  ///   `{-1, 2, -1, 1, 0, 0}`.
-  void add(const Array3i& offset);
-  void add(const Extents& other);
-  static Extents add(const Extents& lhs, const Extents& rhs);
-
-  /// @brief Check if Extent is empty
-  bool empty();
-
-  /// @brief add the center of the stencil to the extent
-  void addCenter(const unsigned int dim);
-
-  /// @brief Check if extent in is pointwise (i.e equal to `{0, 0, 0, 0, 0, 0}`)
-  bool isPointwise() const;
-
-  /// @brief Check if extent in `dim` is pointwise (i.e equal to `{0, 0}`)
-  bool isPointwiseInDim(int dim) const;
-
-  /// @brief Check if this is a pointwise extent in the horizontal (i.e first two Extents are equal
-  /// to {0, 0})
+  /// @brief Check if extent is pointwise in the horizontal direction, i.e. zero extent
   bool isHorizontalPointwise() const;
 
-  /// @brief Check if this is a pointwise extent in the vertical (i.e the third Extent is `{0, 0}`)
+  /// @brief Check if extent is pointwise in the horizontal direction, i.e. zero extent
   bool isVerticalPointwise() const;
+
+  /// @brief Check if extent is pointwise all directions, i.e. zero extent (which corresponds to the
+  /// default initialized
+  // extent)
+  bool isPointwise() const;
+
+  /// @brief add the center of the stencil to the vertical extent
+  ///   i.e. make sure that (0,0) is included in the vertical extent
+  void addVerticalCenter();
 
   struct VerticalLoopOrderAccess {
     bool CounterLoopOrder; ///< Access in the counter loop order
     bool LoopOrder;        ///< Access in the loop order
   };
+
+  VerticalLoopOrderAccess getVerticalLoopOrderAccess() const;
 
   /// @brief Check if there is a stencil extent (i.e non-pointwise) in the counter-loop- and loop
   /// order
@@ -186,20 +382,34 @@ public:
                                                    VerticalLoopOrderDir loopOrderPolicy,
                                                    bool includeCenter) const;
 
-  /// @brief format extents in string
-  std::string toString() const;
-
-  /// @brief Convert to stream
-  friend std::ostream& operator<<(std::ostream& os, const Extents& extent);
-
   /// @brief Comparison operators
   /// @{
   bool operator==(const Extents& other) const;
   bool operator!=(const Extents& other) const;
   /// @}
+
+  Extent const& verticalExtent() const { return verticalExtent_; }
+  HorizontalExtent const& horizontalExtent() const { return horizontalExtent_; }
+
+  Extents& operator+=(const Extents& other);
+
 private:
-  std::array<Extent, 3> extents_;
+  // void add(const Extents& other);
+  Extent verticalExtent_;
+  HorizontalExtent horizontalExtent_;
 };
+
+/// @brief Add `this` and `other` and compute the direction sum of the two
+///
+/// @b Example:
+///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
+///   `{-1, 2, -1, 1, 0, 0}`.
+Extents operator+(Extents lhs, const Extents& rhs);
+Extents merge(Extents lhs, Extents const& rhs);
+Extents limit(Extents lhs, Extents const& rhs);
+
+std::ostream& operator<<(std::ostream& os, const Extents& extent);
+std::string to_string(Extents const& extent);
 
 } // namespace iir
 } // namespace dawn
@@ -209,9 +419,15 @@ namespace std {
 template <>
 struct hash<dawn::iir::Extents> {
   size_t operator()(const dawn::iir::Extents& extent) const {
+    // TODO: Note this is only used from cartesian CodeGen right now. This will throw a bad_cast for
+    // unstructured extents right now.
+    auto const& hextent =
+        dawn::iir::extent_cast<dawn::iir::CartesianExtent const&>(extent.horizontalExtent());
+    auto const& vextent = extent.verticalExtent();
+
     size_t seed = 0;
-    dawn::hash_combine(seed, extent[0].Minus, extent[0].Plus, extent[1].Minus, extent[1].Plus,
-                       extent[2].Minus, extent[2].Plus);
+    dawn::hash_combine(seed, hextent.iMinus(), hextent.iPlus(), hextent.jMinus(), hextent.jPlus(),
+                       vextent.minus(), vextent.plus());
     return seed;
   }
 };
