@@ -78,6 +78,8 @@ public:
 
 /// @brief Construct an ArrayRef from a std::initializer_list
 #pragma GCC diagnostic push
+// Probably not an issue, see discussion
+// http://lists.llvm.org/pipermail/llvm-dev/2018-September/126078.html
 #pragma GCC diagnostic ignored "-Winit-list-lifetime"
   ArrayRef(const std::initializer_list<T>& Vec)
       : data_(Vec.begin() == Vec.end() ? nullptr : Vec.begin()), length_(Vec.size()) {}
