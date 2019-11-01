@@ -126,7 +126,7 @@ for stencil in hir.stencils:
 hirstr = hir.SerializeToString()
 fhir = open("./laplacian_stencil_from_python.sir", "wb");
 fhir.write(hirstr)
-fhir.close;
+fhir.close
 
 # create the options to control the compiler
 dawn.dawnOptionsCreate.restype = c_void_p

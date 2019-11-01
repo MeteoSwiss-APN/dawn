@@ -9,9 +9,9 @@ globals {
 
 stencil laplacian_stencil {
   // output fields
-  storage_ij out_field;
+  storage out_field;
   // input fields
-  storage_ij in_field;
+  storage in_field;
 
   Do() {
     vertical_region(k_start, k_end) {

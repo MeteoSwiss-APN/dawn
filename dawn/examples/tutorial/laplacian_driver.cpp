@@ -63,8 +63,8 @@ int main() {
   domain dom(N, N, 1);
 
   // in and output field
-  meta_data_ijk_t meta_data(dom.isize(), dom.jsize(), 1);
-  storage_ijk_t in(meta_data, "in"), out(meta_data, "out");
+  meta_data_t meta_data(dom.isize(), dom.jsize(), 1);
+  storage_t in(meta_data, "in"), out(meta_data, "out");
 
   // domain size
   double L = 10;
