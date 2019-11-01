@@ -73,6 +73,14 @@ auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cell
 auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
 auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
 
+std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
+  std::vector<int> neighs;
+  for(int n = 0; n < conn.cols(idx); ++n) {
+    neighs.emplace_back(conn(idx, n));
+  }
+  return neighs;
+}
+
 std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
@@ -98,11 +106,7 @@ std::vector<int> const& edgeNeighboursOfCell(atlas::Mesh const& m, int const& id
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.cells().edge_connectivity();
-    neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
-    }
+    neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -111,11 +115,7 @@ std::vector<int> const& nodeNeighboursOfCell(atlas::Mesh const& m, int const& id
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.cells().node_connectivity();
-    neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
-    }
+    neighs[idx] = getNeighs(m.cells().node_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -124,11 +124,7 @@ std::vector<int> cellNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.edges().cell_connectivity();
-    neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
-    }
+    neighs[idx] = getNeighs(m.cells().cell_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -137,11 +133,7 @@ std::vector<int> nodeNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.edges().node_connectivity();
-    neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
-    }
+    neighs[idx] = getNeighs(m.cells().node_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -150,11 +142,7 @@ std::vector<int> cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.nodes().cell_connectivity();
-    neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
-    }
+    neighs[idx] = getNeighs(m.cells().cell_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -163,11 +151,7 @@ std::vector<int> edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.nodes().edge_connectivity();
-    neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
-    }
+    neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
   }
   return neighs[idx];
 }
