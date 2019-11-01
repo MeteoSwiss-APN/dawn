@@ -158,8 +158,8 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const gtclang::mesh_t<LibTag> &mesh");
+  StencilWrapperConstructor.addArg("int k_size");
 
-  std::string ctrArgs("(dom");
   auto getLocationTypeString = [](ast::Expr::LocationType type) {
     switch(type) {
     case ast::Expr::LocationType::Cells:
@@ -179,7 +179,6 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
 
     StencilWrapperConstructor.addArg("gtclang::" + typeString + "field_t<LibTag, double>& " +
                                      metadata.getNameFromAccessID(APIfieldID));
-    ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
   // add the ctr initialization of each stencil
@@ -195,7 +194,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
 
     std::string initCtr = "m_" + stencilName;
 
-    initCtr += "(mesh";
+    initCtr += "(mesh, k_size";
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
@@ -259,6 +258,29 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }
+
+std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
+                         const std::string& upper, const std::string& comparison,
+                         const std::string& increment) {
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
+         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
+}
+
+std::string makeIntervalBound(iir::Interval const& interval, iir::Interval::Bound bound) {
+  return interval.levelIsEnd(bound)
+             ? "( m_k_size == 0 ? 0 : (m_k_size - 1)) + " + std::to_string(interval.offset(bound))
+             : std::to_string(interval.bound(bound));
+}
+
+std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
+
+  const std::string lower = makeIntervalBound(interval, iir::Interval::Bound::lower);
+  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper);
+
+  return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
+}
+
 void CXXNaiveIcoCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
@@ -317,6 +339,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     };
 
     StencilClass.addMember("gtclang::mesh_t<LibTag> const&", "m_mesh");
+    StencilClass.addMember("int", "m_k_size");
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
@@ -329,6 +352,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     auto stencilClassCtr = StencilClass.addConstructor();
 
     stencilClassCtr.addArg("gtclang::mesh_t<LibTag> const &mesh");
+    stencilClassCtr.addArg("int k_size");
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
@@ -339,6 +363,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     // }
 
     stencilClassCtr.addInit("m_mesh(mesh)");
+    stencilClassCtr.addInit("m_k_size(k_size)");
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addInit("m_" + fieldIt.second.Name + "(" + fieldIt.second.Name + ")");
     }
@@ -408,24 +433,28 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       };
       for(auto interval : partitionIntervals) {
 
-        // for each interval, we generate naive nested loops
-        for(const auto& stagePtr : multiStage.getChildren()) {
-          const iir::Stage& stage = *stagePtr;
+        StencilRunMethod.addBlockStatement(
+            makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval),
+            [&]() {
+              // for each interval, we generate naive nested loops
+              for(const auto& stagePtr : multiStage.getChildren()) {
+                const iir::Stage& stage = *stagePtr;
 
-          std::string loopCode = getLoop(stage.getLocationType());
-          StencilRunMethod.addBlockStatement(loopCode, [&]() {
-            // Generate Do-Method
-            for(const auto& doMethodPtr : stage.getChildren()) {
-              const iir::DoMethod& doMethod = *doMethodPtr;
-              if(!doMethod.getInterval().overlaps(interval))
-                continue;
-              for(const auto& stmt : doMethod.getAST().getStatements()) {
-                stmt->accept(stencilBodyCXXVisitor);
-                StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                std::string loopCode = getLoop(stage.getLocationType());
+                StencilRunMethod.addBlockStatement(loopCode, [&]() {
+                  // Generate Do-Method
+                  for(const auto& doMethodPtr : stage.getChildren()) {
+                    const iir::DoMethod& doMethod = *doMethodPtr;
+                    if(!doMethod.getInterval().overlaps(interval))
+                      continue;
+                    for(const auto& stmt : doMethod.getAST().getStatements()) {
+                      stmt->accept(stencilBodyCXXVisitor);
+                      StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                    }
+                  }
+                });
               }
-            }
-          });
-        }
+            });
       }
       StencilRunMethod.ss() << "}";
     }

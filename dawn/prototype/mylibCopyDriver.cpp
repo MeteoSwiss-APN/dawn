@@ -4,7 +4,10 @@
 
 #include "generated_copyEdgeToCell.hpp"
 
-int main() {
+using namespace mylibInterface
+
+    int
+    main() {
   int w = 20;
   Mesh m{w, w, true};
   mylib::FaceData<double> out(m);
@@ -15,6 +18,6 @@ int main() {
     toVtk(m, of);
     toVtk("temperature", out, m, of);
 
-    dawn_generated::cxxnaiveico::generated<mylibInterface::mylibTag>(m, in, out).run();
+    dawn_generated::cxxnaiveico::generated<mylibInterface::mylibTag>(m, 0, in, out).run();
   }
 }

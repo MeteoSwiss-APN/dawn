@@ -210,7 +210,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
-    ss_ << "m_" << getName(expr) << "(" << argName_ << ")";
+    ss_ << "m_" << getName(expr) << "(" << argName_ << ","
+        << "k + " << expr->getOffset().verticalOffset() << ")";
   }
 }
 
