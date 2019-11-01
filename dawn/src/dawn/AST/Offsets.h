@@ -18,7 +18,6 @@
 #include "dawn/Support/Unreachable.h"
 
 #include <memory>
-#include <vector>
 
 namespace dawn::ast {
 
@@ -33,16 +32,10 @@ static constexpr unstructured_ unstructured;
 class HorizontalOffsetImpl {
 public:
   virtual ~HorizontalOffsetImpl() = default;
-  std::unique_ptr<HorizontalOffsetImpl> clone() const { return cloneImpl(); }
-
-  bool operator==(HorizontalOffsetImpl const& other) const { return equalsImpl(other); }
-
-  HorizontalOffsetImpl& operator+=(HorizontalOffsetImpl const& other) {
-    addImpl(other);
-    return *this;
-  }
-
-  bool isZero() const { return isZeroImpl(); }
+  std::unique_ptr<HorizontalOffsetImpl> clone() const;
+  bool operator==(HorizontalOffsetImpl const& other) const;
+  HorizontalOffsetImpl& operator+=(HorizontalOffsetImpl const& other);
+  bool isZero() const;
 
 protected:
   virtual std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const = 0;
@@ -53,22 +46,18 @@ protected:
 
 class CartesianOffset : public HorizontalOffsetImpl {
 public:
-  CartesianOffset(int iOffset, int jOffset) : horizontalOffset_{iOffset, jOffset} {}
-  explicit CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {}
   CartesianOffset() = default;
+  CartesianOffset(int iOffset, int jOffset);
+  explicit CartesianOffset(std::array<int, 2> const& offsets);
 
-  int offsetI() const { return horizontalOffset_[0]; }
-  int offsetJ() const { return horizontalOffset_[1]; }
+  int offsetI() const;
+  int offsetJ() const;
 
 protected:
-  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override {
-    return std::make_unique<CartesianOffset>(horizontalOffset_);
-  }
+  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override;
   bool equalsImpl(HorizontalOffsetImpl const& other) const override;
   void addImpl(HorizontalOffsetImpl const& other) override;
-  bool isZeroImpl() const override {
-    return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
-  }
+  bool isZeroImpl() const override;
 
 private:
   std::array<int, 2> horizontalOffset_;
@@ -77,17 +66,15 @@ private:
 class UnstructuredOffset : public HorizontalOffsetImpl {
 public:
   UnstructuredOffset() = default;
-  UnstructuredOffset(bool hasOffset) : hasOffset_(hasOffset) {}
+  UnstructuredOffset(bool hasOffset);
 
-  bool hasOffset() const { return hasOffset_; }
+  bool hasOffset() const;
 
 protected:
-  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override {
-    return std::make_unique<UnstructuredOffset>(hasOffset_);
-  }
+  std::unique_ptr<HorizontalOffsetImpl> cloneImpl() const override;
   bool equalsImpl(HorizontalOffsetImpl const& other) const override;
   void addImpl(HorizontalOffsetImpl const& other) override;
-  bool isZeroImpl() const override { return !hasOffset_; }
+  bool isZeroImpl() const override;
 
 private:
   bool hasOffset_ = false;
@@ -99,45 +86,22 @@ public:
   // kind of grids
   HorizontalOffset() = default;
 
-  explicit HorizontalOffset(cartesian_) : impl_(std::make_unique<CartesianOffset>()) {}
-  HorizontalOffset(cartesian_, int iOffset, int jOffset)
-      : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
+  explicit HorizontalOffset(cartesian_);
+  HorizontalOffset(cartesian_, int iOffset, int jOffset);
 
-  HorizontalOffset(unstructured_) : impl_(std::make_unique<UnstructuredOffset>()) {}
-  HorizontalOffset(unstructured_, bool hasOffset)
-      : impl_(std::make_unique<UnstructuredOffset>(hasOffset)) {}
+  HorizontalOffset(unstructured_);
+  HorizontalOffset(unstructured_, bool hasOffset);
 
-  HorizontalOffset(HorizontalOffset const& other) { *this = other; }
-  HorizontalOffset& operator=(HorizontalOffset const& other) {
-    if(other.impl_)
-      impl_ = other.impl_->clone();
-    else
-      impl_ = nullptr;
-    return *this;
-  }
+  HorizontalOffset(HorizontalOffset const& other);
   HorizontalOffset(HorizontalOffset&& other) = default;
+  HorizontalOffset& operator=(HorizontalOffset const& other);
   HorizontalOffset& operator=(HorizontalOffset&& other) = default;
 
-  bool operator==(HorizontalOffset const& other) const {
-    if(impl_ && other.impl_)
-      return *impl_ == *other.impl_;
-    else if(impl_)
-      return isZero();
-    else if(other.impl_)
-      return other.isZero();
-    else
-      return true;
-  }
-  bool operator!=(HorizontalOffset const& other) const { return !(*this == other); }
+  bool operator==(HorizontalOffset const& other) const;
+  bool operator!=(HorizontalOffset const& other) const;
 
-  HorizontalOffset& operator+=(HorizontalOffset const& other) {
-    if(impl_ && other.impl_)
-      *impl_ += *other.impl_;
-    else if(other.impl_)
-      *this = other;
-    return *this;
-  }
-  bool isZero() const { return !impl_ || impl_->isZero(); }
+  HorizontalOffset& operator+=(HorizontalOffset const& other);
+  bool isZero() const;
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
@@ -195,39 +159,28 @@ auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
 class Offsets {
 public:
   Offsets() = default;
-  Offsets(HorizontalOffset const& hOffset, int vOffset)
-      : horizontalOffset_(hOffset), verticalOffset_(vOffset) {}
+  Offsets(HorizontalOffset const& hOffset, int vOffset);
 
-  Offsets(cartesian_, int i, int j, int k)
-      : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
-  Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
-      : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
-  explicit Offsets(cartesian_) : horizontalOffset_(cartesian) {}
+  Offsets(cartesian_, int i, int j, int k);
+  Offsets(cartesian_, std::array<int, 3> const& structuredOffsets);
+  explicit Offsets(cartesian_);
 
-  Offsets(unstructured_, bool hasOffset, int k)
-      : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k) {}
-  explicit Offsets(unstructured_) : horizontalOffset_(unstructured) {}
-  int verticalOffset() const { return verticalOffset_; }
-  HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
+  Offsets(unstructured_, bool hasOffset, int k);
+  explicit Offsets(unstructured_);
 
-  bool operator==(Offsets const& other) const {
-    return horizontalOffset_ == other.horizontalOffset_ && verticalOffset_ == other.verticalOffset_;
-  }
-  bool operator!=(Offsets const& other) const { return !(*this == other); }
+  int verticalOffset() const;
+  HorizontalOffset const& horizontalOffset() const;
 
-  Offsets& operator+=(Offsets const& other) {
-    horizontalOffset_ += other.horizontalOffset_;
-    verticalOffset_ += other.verticalOffset_;
-    return *this;
-  }
+  bool operator==(Offsets const& other) const;
+  bool operator!=(Offsets const& other) const;
+  Offsets& operator+=(Offsets const& other);
 
-  // corresponds to the default initialized offset
-  bool isZero() const { return verticalOffset_ == 0 && horizontalOffset_.isZero(); }
+  bool isZero() const;
 
 private:
   HorizontalOffset horizontalOffset_;
   int verticalOffset_ = 0;
-};
+}; // namespace dawn::ast
 Offsets operator+(Offsets o1, Offsets const& o2);
 
 /**
