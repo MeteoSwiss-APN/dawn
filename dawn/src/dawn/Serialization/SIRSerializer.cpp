@@ -423,6 +423,8 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     return expr;
   }
   case dawn::proto::statements::Expr::kFieldAccessExpr: {
+    using ProtoFieldAccessExpr = dawn::proto::statements::FieldAccessExpr;
+
     const auto& exprProto = expressionProto.field_access_expr();
     auto name = exprProto.name();
     auto negateOffset = exprProto.negate_offset();
@@ -432,12 +434,24 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
                                       makeLocation(exprProto)));
     };
 
-    Array3i offset{{0, 0, 0}};
-    if(!exprProto.offset().empty()) {
-      if(exprProto.offset().size() > 3)
-        throwException("offset");
-
-      std::copy(exprProto.offset().begin(), exprProto.offset().end(), offset.begin());
+    ast::Offsets offset;
+    switch(exprProto.horizontal_offset_case()) {
+    case ProtoFieldAccessExpr::kCartesianOffset: {
+      auto const& hOffset = exprProto.cartesian_offset();
+      offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
+                            exprProto.vertical_offset()};
+      break;
+    }
+    case ProtoFieldAccessExpr::kUnstructuredOffset: {
+      auto const& hOffset = exprProto.unstructured_offset();
+      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      break;
+    }
+    case ProtoFieldAccessExpr::kZeroOffset:
+      offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
+      break;
+    default:
+      dawn_unreachable("unknown offset");
     }
 
     Array3i argumentOffset{{0, 0, 0}};
@@ -458,9 +472,8 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
                 argumentMap.begin());
     }
 
-    return std::make_shared<sir::FieldAccessExpr>(name, ast::Offsets{ast::cartesian, offset},
-                                                  argumentMap, argumentOffset, negateOffset,
-                                                  makeLocation(exprProto));
+    return std::make_shared<sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
+                                                  negateOffset, makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kLiteralAccessExpr: {
     const auto& exprProto = expressionProto.literal_access_expr();

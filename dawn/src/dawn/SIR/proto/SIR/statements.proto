@@ -187,10 +187,21 @@ message Extent {
   int32 minus = 1;
   int32 plus = 2;
 }
+message CartesianExtent {
+  Extent i_extent = 1;
+  Extent j_extent = 2;
+}
+message UnstructuredExtent { bool has_extent = 1; }
+message ZeroExtent {}
 
 message Extents {
   // the three dimensions of an access-extent [Extent<i>, Extent<j>, Extent<k>]
-  repeated Extent extents = 1;
+  oneof horizontal_extent {
+    CartesianExtent cartesian_extent = 1;
+    UnstructuredExtent unstructured_extent = 2;
+    ZeroExtent zero_extent = 3;
+  }
+  Extent vertical_extent = 4;
 }
 
 message Accesses {
@@ -531,6 +542,13 @@ message VarAccessExpr {
   int32 ID = 6;            // ID of the Expr
 }
 
+message CartesianOffset {
+  int32 i_offset = 1;
+  int32 j_offset = 2;
+}
+message UnstructuredOffset { bool has_offset = 1; }
+message ZeroOffset {}
+
 // @brief Access to a field
 //
 // @ingroup sir_proto
@@ -545,7 +563,12 @@ message FieldAccessExpr {
   // if we have directional or offset arguments, we have to perform a lazy evaluation to compute
   // the real offset once we know the mapping of the directions (and offsets) to the actual
   // arguments of the stencil function.
-  repeated int32 offset = 2;
+  int32 vertical_offset = 2;
+  oneof horizontal_offset {
+    CartesianOffset cartesian_offset = 3;
+    UnstructuredOffset unstructured_offset = 4;
+    ZeroOffset zero_offset = 5;
+  }
 
   // Mapping of the directional and offset arguments of the stencil function.
   //
@@ -570,22 +593,22 @@ message FieldAccessExpr {
   //  - argumentMap    : {1, -1, -1}   // `dir` maps to the 1st argument of `avg` (0 based)
   //  - argumentOffset : {2, 0, 0}     // `dir+2` has an offset `+2`
   // @endcode
-  repeated int32 argument_map = 3;
+  repeated int32 argument_map = 6;
 
   // @see argument_map
-  repeated int32 argument_offset = 4;
+  repeated int32 argument_offset = 7;
 
   // Negate the offset (this allows writing `in(-off)`)
-  bool negate_offset = 5;
+  bool negate_offset = 8;
 
   // Source location
-  SourceLocation loc = 6;
+  SourceLocation loc = 9;
 
   // Access data
-  AccessExprData data = 7;
+  AccessExprData data = 10;
 
   // ID of the Expr
-  int32 ID = 8;
+  int32 ID = 11;
 }
 
 // @brief Access of a literal

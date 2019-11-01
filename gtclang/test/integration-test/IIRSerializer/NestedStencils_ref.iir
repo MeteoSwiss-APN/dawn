@@ -83,11 +83,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_a",
-                   "offset": [
-                    0,
-                    0,
-                    0
-                   ],
+                   "vertical_offset": 0,
+                   "zero_offset": {},
                    "argument_map": [
                     -1,
                     -1,
@@ -113,11 +110,8 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_b",
-                   "offset": [
-                    0,
-                    0,
-                    0
-                   ],
+                   "vertical_offset": 0,
+                   "zero_offset": {},
                    "argument_map": [
                     -1,
                     -1,
@@ -154,38 +148,20 @@
                 "accesses": {
                  "writeAccess": {
                   "16": {
-                   "extents": [
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    }
-                   ]
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
                   }
                  },
                  "readAccess": {
                   "17": {
-                   "extents": [
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    }
-                   ]
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
                   }
                  }
                 }
@@ -247,5 +223,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }

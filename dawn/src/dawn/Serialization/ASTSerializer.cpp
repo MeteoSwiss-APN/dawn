@@ -108,18 +108,26 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  auto vExtent = extents.verticalExtent();
-  auto const& hExtent = iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
+  extent_dispatch(extents.horizontalExtent(),
+                  [&](iir::CartesianExtent const& hExtent) {
+                    auto cartesianExtent = protoExtents.mutable_cartesian_extent();
+                    auto protoIExtent = cartesianExtent->mutable_i_extent();
+                    protoIExtent->set_minus(hExtent.iMinus());
+                    protoIExtent->set_plus(hExtent.iPlus());
+                    auto protoJExtent = cartesianExtent->mutable_j_extent();
+                    protoJExtent->set_minus(hExtent.jMinus());
+                    protoJExtent->set_plus(hExtent.jPlus());
+                  },
+                  [&](iir::UnstructuredExtent const& hExtent) {
+                    auto protoHExtent = protoExtents.mutable_unstructured_extent();
+                    protoHExtent->set_has_extent(hExtent.hasExtent());
+                  },
+                  [&] { protoExtents.mutable_zero_extent(); });
 
-  auto protoExtentI = protoExtents.add_extents();
-  protoExtentI->set_minus(hExtent.iMinus());
-  protoExtentI->set_plus(hExtent.iPlus());
-  auto protoExtentJ = protoExtents.add_extents();
-  protoExtentJ->set_minus(hExtent.jMinus());
-  protoExtentJ->set_plus(hExtent.jPlus());
-  auto protoExtentK = protoExtents.add_extents();
-  protoExtentK->set_minus(vExtent.minus());
-  protoExtentK->set_plus(vExtent.plus());
+  auto const& vExtent = extents.verticalExtent();
+  auto protoVExtent = protoExtents.mutable_vertical_extent();
+  protoVExtent->set_minus(vExtent.minus());
+  protoVExtent->set_plus(vExtent.plus());
 
   return protoExtents;
 }
@@ -136,13 +144,27 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
 }
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
-  int dim1minus = protoExtents->extents()[0].minus();
-  int dim1plus = protoExtents->extents()[0].plus();
-  int dim2minus = protoExtents->extents()[1].minus();
-  int dim2plus = protoExtents->extents()[1].plus();
-  int dim3minus = protoExtents->extents()[2].minus();
-  int dim3plus = protoExtents->extents()[2].plus();
-  return {ast::cartesian, dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus};
+  using ProtoExtents = dawn::proto::statements::Extents;
+  iir::Extent vExtent{protoExtents->vertical_extent().minus(),
+                      protoExtents->vertical_extent().plus()};
+
+  switch(protoExtents->horizontal_extent_case()) {
+  case ProtoExtents::kCartesianExtent: {
+    auto const& hExtent = protoExtents->cartesian_extent();
+    return {iir::HorizontalExtent{ast::cartesian, hExtent.i_extent().minus(),
+                                  hExtent.i_extent().plus(), hExtent.j_extent().minus(),
+                                  hExtent.j_extent().plus()},
+            vExtent};
+  }
+  case ProtoExtents::kUnstructuredExtent: {
+    auto const& hExtent = protoExtents->unstructured_extent();
+    return {iir::HorizontalExtent{ast::unstructured, hExtent.has_extent()}, vExtent};
+  }
+  case ProtoExtents::kZeroExtent:
+    return iir::Extents{iir::HorizontalExtent{}, vExtent};
+  default:
+    dawn_unreachable("unknown extent");
+  }
 }
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
@@ -527,12 +549,18 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   protoExpr->set_name(expr->getName());
 
-  auto const& hoffset =
-      ast::offset_cast<CartesianOffset const&>(expr->getOffset().horizontalOffset());
-  auto const& voffset = expr->getOffset().verticalOffset();
-  protoExpr->add_offset(hoffset.offsetI());
-  protoExpr->add_offset(hoffset.offsetJ());
-  protoExpr->add_offset(voffset);
+  auto const& offset = expr->getOffset();
+  ast::offset_dispatch(offset.horizontalOffset(),
+                       [&](ast::CartesianOffset const& hOffset) {
+                         protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
+                         protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
+                       },
+                       [&](ast::UnstructuredOffset const& hOffset) {
+                         protoExpr->mutable_unstructured_offset()->set_has_offset(
+                             hOffset.hasOffset());
+                       },
+                       [&] { protoExpr->mutable_zero_offset(); });
+  protoExpr->set_vertical_offset(offset.verticalOffset());
 
   for(int argOffset : expr->getArgumentOffset())
     protoExpr->add_argument_offset(argOffset);
@@ -759,6 +787,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     return expr;
   }
   case proto::statements::Expr::kFieldAccessExpr: {
+
+    using ProtoFieldAccessExpr = dawn::proto::statements::FieldAccessExpr;
     const auto& exprProto = expressionProto.field_access_expr();
     auto name = exprProto.name();
     auto negateOffset = exprProto.negate_offset();
@@ -768,12 +798,24 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
                                       makeLocation(exprProto)));
     };
 
-    Array3i offset{{0, 0, 0}};
-    if(!exprProto.offset().empty()) {
-      if(exprProto.offset().size() > 3)
-        throwException("offset");
-
-      std::copy(exprProto.offset().begin(), exprProto.offset().end(), offset.begin());
+    ast::Offsets offset;
+    switch(exprProto.horizontal_offset_case()) {
+    case ProtoFieldAccessExpr::kCartesianOffset: {
+      auto const& hOffset = exprProto.cartesian_offset();
+      offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
+                            exprProto.vertical_offset()};
+      break;
+    }
+    case ProtoFieldAccessExpr::kUnstructuredOffset: {
+      auto const& hOffset = exprProto.unstructured_offset();
+      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      break;
+    }
+    case ProtoFieldAccessExpr::kZeroOffset:
+      offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
+      break;
+    default:
+      dawn_unreachable("unknown offset");
     }
 
     Array3i argumentOffset{{0, 0, 0}};
@@ -794,9 +836,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
                 argumentMap.begin());
     }
 
-    auto expr =
-        std::make_shared<FieldAccessExpr>(name, ast::Offsets{ast::cartesian, offset}, argumentMap,
-                                          argumentOffset, negateOffset, makeLocation(exprProto));
+    auto expr = std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
+                                                  negateOffset, makeLocation(exprProto));
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());

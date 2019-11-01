@@ -23,6 +23,7 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
@@ -36,7 +37,7 @@ namespace codegen {
 namespace cuda {
 
 CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                         int maxHaloPoints, int nsms, int maxBlocksPerSM, std::string domainSize)
+                         int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
     : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
 
 CudaCodeGen::~CudaCodeGen() {}

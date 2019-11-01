@@ -44,6 +44,7 @@
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/Array.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
@@ -204,7 +205,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassSetCaches>();
     optimizer->checkAndPushBack<PassComputeStageExtents>();
     optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-    optimizer->checkAndPushBack<PassSetBlockSize>();
+    if(getOptions().Backend == "cuda") {
+      optimizer->checkAndPushBack<PassSetBlockSize>();
+    }
     optimizer->checkAndPushBack<PassDataLocalityMetric>();
     optimizer->checkAndPushBack<PassSetSyncStage>();
     // Since both cuda code generation as well as serialization do not support stencil-functions, we
@@ -289,9 +292,11 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
     CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
         optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
   } else if(options_->Backend == "cuda") {
+    const Array3i domain_size{options_->domain_size_i, options_->domain_size_j,
+                              options_->domain_size_k};
     CG = std::make_unique<codegen::cuda::CudaCodeGen>(
         optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
-        options_->nsms, options_->maxBlocksPerSM, options_->domain_size);
+        options_->nsms, options_->maxBlocksPerSM, domain_size);
   } else if(options_->Backend == "c++-opt") {
     dawn_unreachable("GTClangOptCXX not supported yet");
   } else {
