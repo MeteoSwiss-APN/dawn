@@ -180,7 +180,7 @@ public:
 private:
   HorizontalOffset horizontalOffset_;
   int verticalOffset_ = 0;
-}; // namespace dawn::ast
+};
 Offsets operator+(Offsets o1, Offsets const& o2);
 
 /**

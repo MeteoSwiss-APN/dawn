@@ -62,7 +62,7 @@ public:
 private:
   int minus_;
   int plus_;
-}; // namespace iir
+};
 Extent operator+(Extent lhs, Extent const& rhs);
 Extent merge(Extent lhs, Extent const& rhs);
 Extent limit(Extent lhs, Extent const& rhs);
