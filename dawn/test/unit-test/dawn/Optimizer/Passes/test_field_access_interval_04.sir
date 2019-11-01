@@ -1,5 +1,5 @@
 {
- "filename": "/code/dawn/test/unit-test/dawn/Optimizer/Passes/samples/test_field_access_interval_04.cpp",
+ "filename": "test_field_access_interval_04.cpp",
  "stencils": [
   {
    "name": "compute_extent_test_stencil",
@@ -29,11 +29,8 @@
                   "left": {
                    "field_access_expr": {
                     "name": "u",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -46,20 +43,19 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 27,
-                     "Column": 7
-                    }
+                     "Line": 26,
+                     "Column": 54
+                    },
+                    "data": {},
+                    "ID": 4
                    }
                   },
                   "op": "=",
                   "right": {
                    "field_access_expr": {
                     "name": "in",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -72,28 +68,35 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 27,
-                     "Column": 11
-                    }
+                     "Line": 26,
+                     "Column": 58
+                    },
+                    "data": {},
+                    "ID": 5
                    }
                   },
                   "loc": {
-                   "Line": 27,
-                   "Column": 7
-                  }
+                   "Line": 26,
+                   "Column": 54
+                  },
+                  "ID": 6
                  }
                 },
                 "loc": {
-                 "Line": 27,
-                 "Column": 7
-                }
+                 "Line": 26,
+                 "Column": 54
+                },
+                "data": {},
+                "ID": 7
                }
               }
              ],
              "loc": {
               "Line": 26,
               "Column": 5
-             }
+             },
+             "data": {},
+             "ID": 3
             }
            }
           },
@@ -108,7 +111,148 @@
          "loc": {
           "Line": 26,
           "Column": 5
-         }
+         },
+         "data": {},
+         "ID": 8
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 27,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out1",
+                    "vertical_offset": 0,
+                    "zero_offset": {},
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 55
+                    },
+                    "data": {},
+                    "ID": 10
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "vertical_offset": 2,
+                      "zero_offset": {},
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 27,
+                       "Column": 62
+                      },
+                      "data": {},
+                      "ID": 11
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "vertical_offset": 1,
+                      "zero_offset": {},
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 27,
+                       "Column": 73
+                      },
+                      "data": {},
+                      "ID": 12
+                     }
+                    },
+                    "loc": {
+                     "Line": 27,
+                     "Column": 62
+                    },
+                    "ID": 13
+                   }
+                  },
+                  "loc": {
+                   "Line": 27,
+                   "Column": 55
+                  },
+                  "ID": 14
+                 }
+                },
+                "loc": {
+                 "Line": 27,
+                 "Column": 55
+                },
+                "data": {},
+                "ID": 15
+               }
+              }
+             ],
+             "loc": {
+              "Line": 27,
+              "Column": 5
+             },
+             "data": {},
+             "ID": 9
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 2,
+           "upper_offset": 10,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 27,
+          "Column": 5
+         },
+         "data": {},
+         "ID": 16
         }
        },
        {
@@ -128,146 +272,9 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "out1",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 29,
-                     "Column": 7
-                    }
-                   }
-                  },
-                  "op": "=",
-                  "right": {
-                   "binary_operator": {
-                    "left": {
-                     "field_access_expr": {
-                      "name": "u",
-                      "offset": [
-                       0,
-                       0,
-                       2
-                      ],
-                      "argument_map": [
-                       -1,
-                       -1,
-                       -1
-                      ],
-                      "argument_offset": [
-                       0,
-                       0,
-                       0
-                      ],
-                      "negate_offset": false,
-                      "loc": {
-                       "Line": 29,
-                       "Column": 14
-                      }
-                     }
-                    },
-                    "op": "+",
-                    "right": {
-                     "field_access_expr": {
-                      "name": "u",
-                      "offset": [
-                       0,
-                       0,
-                       1
-                      ],
-                      "argument_map": [
-                       -1,
-                       -1,
-                       -1
-                      ],
-                      "argument_offset": [
-                       0,
-                       0,
-                       0
-                      ],
-                      "negate_offset": false,
-                      "loc": {
-                       "Line": 29,
-                       "Column": 23
-                      }
-                     }
-                    },
-                    "loc": {
-                     "Line": 29,
-                     "Column": 14
-                    }
-                   }
-                  },
-                  "loc": {
-                   "Line": 29,
-                   "Column": 7
-                  }
-                 }
-                },
-                "loc": {
-                 "Line": 29,
-                 "Column": 7
-                }
-               }
-              }
-             ],
-             "loc": {
-              "Line": 28,
-              "Column": 5
-             }
-            }
-           }
-          },
-          "interval": {
-           "lower_offset": 2,
-           "upper_offset": 10,
-           "special_lower_level": "Start",
-           "special_upper_level": "Start"
-          },
-          "loop_order": "Forward"
-         },
-         "loc": {
-          "Line": 28,
-          "Column": 5
-         }
-        }
-       },
-       {
-        "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 30,
-           "Column": 5
-          },
-          "ast": {
-           "root": {
-            "block_stmt": {
-             "statements": [
-              {
-               "expr_stmt": {
-                "expr": {
-                 "assignment_expr": {
-                  "left": {
-                   "field_access_expr": {
                     "name": "out2",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -280,20 +287,19 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 31,
-                     "Column": 7
-                    }
+                     "Line": 28,
+                     "Column": 52
+                    },
+                    "data": {},
+                    "ID": 18
                    }
                   },
                   "op": "=",
                   "right": {
                    "field_access_expr": {
                     "name": "u",
-                    "offset": [
-                     0,
-                     0,
-                     6
-                    ],
+                    "vertical_offset": 6,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -306,28 +312,35 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 31,
-                     "Column": 14
-                    }
+                     "Line": 28,
+                     "Column": 59
+                    },
+                    "data": {},
+                    "ID": 19
                    }
                   },
                   "loc": {
-                   "Line": 31,
-                   "Column": 7
-                  }
+                   "Line": 28,
+                   "Column": 52
+                  },
+                  "ID": 20
                  }
                 },
                 "loc": {
-                 "Line": 31,
-                 "Column": 7
-                }
+                 "Line": 28,
+                 "Column": 52
+                },
+                "data": {},
+                "ID": 21
                }
               }
              ],
              "loc": {
-              "Line": 30,
+              "Line": 28,
               "Column": 5
-             }
+             },
+             "data": {},
+             "ID": 17
             }
            }
           },
@@ -340,16 +353,20 @@
           "loop_order": "Forward"
          },
          "loc": {
-          "Line": 30,
+          "Line": 28,
           "Column": 5
-         }
+         },
+         "data": {},
+         "ID": 22
         }
        }
       ],
       "loc": {
        "Line": -1,
        "Column": -1
-      }
+      },
+      "data": {},
+      "ID": 2
      }
     }
    },
@@ -360,7 +377,13 @@
       "Line": 22,
       "Column": 11
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ],
+     "location_type": "Cell"
     },
     {
      "name": "out1",
@@ -368,7 +391,13 @@
       "Line": 22,
       "Column": 15
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ],
+     "location_type": "Cell"
     },
     {
      "name": "out2",
@@ -376,7 +405,13 @@
       "Line": 22,
       "Column": 21
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ],
+     "location_type": "Cell"
     },
     {
      "name": "u",
@@ -384,7 +419,13 @@
       "Line": 24,
       "Column": 7
      },
-     "is_temporary": true
+     "is_temporary": true,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ],
+     "location_type": "Cell"
     }
    ]
   }

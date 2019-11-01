@@ -29,11 +29,8 @@
                   "left": {
                    "field_access_expr": {
                     "name": "field_a",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -57,11 +54,8 @@
                   "right": {
                    "field_access_expr": {
                     "name": "field_b",
-                    "offset": [
-                     0,
-                     0,
-                     0
-                    ],
+                    "vertical_offset": 0,
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,

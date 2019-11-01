@@ -24,12 +24,12 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
-   "20": {
+   "19": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    },
-   "19": {
+   "20": {
     "int1": 1,
     "int2": 1,
     "int3": 1
@@ -83,11 +83,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "offset": [
-                    0,
-                    0,
-                    0
-                   ],
+                   "vertical_offset": 0,
+                   "zero_offset": {},
                    "argument_map": [
                     -1,
                     -1,
@@ -123,11 +120,11 @@
                            "left": {
                             "field_access_expr": {
                              "name": "a",
-                             "offset": [
-                              1,
-                              0,
-                              0
-                             ],
+                             "vertical_offset": 0,
+                             "cartesian_offset": {
+                              "i_offset": 1,
+                              "j_offset": 0
+                             },
                              "argument_map": [
                               -1,
                               -1,
@@ -153,11 +150,11 @@
                            "right": {
                             "field_access_expr": {
                              "name": "a",
-                             "offset": [
-                              -1,
-                              0,
-                              0
-                             ],
+                             "vertical_offset": 0,
+                             "cartesian_offset": {
+                              "i_offset": -1,
+                              "j_offset": 0
+                             },
                              "argument_map": [
                               -1,
                               -1,
@@ -190,11 +187,11 @@
                          "right": {
                           "field_access_expr": {
                            "name": "a",
-                           "offset": [
-                            0,
-                            1,
-                            0
-                           ],
+                           "vertical_offset": 0,
+                           "cartesian_offset": {
+                            "i_offset": 0,
+                            "j_offset": 1
+                           },
                            "argument_map": [
                             -1,
                             -1,
@@ -227,11 +224,11 @@
                        "right": {
                         "field_access_expr": {
                          "name": "a",
-                         "offset": [
-                          0,
-                          -1,
-                          0
-                         ],
+                         "vertical_offset": 0,
+                         "cartesian_offset": {
+                          "i_offset": 0,
+                          "j_offset": -1
+                         },
                          "argument_map": [
                           -1,
                           -1,
@@ -264,11 +261,8 @@
                      "right": {
                       "field_access_expr": {
                        "name": "a",
-                       "offset": [
-                        0,
-                        0,
-                        -1
-                       ],
+                       "vertical_offset": -1,
+                       "zero_offset": {},
                        "argument_map": [
                         -1,
                         -1,
@@ -301,11 +295,11 @@
                    "right": {
                     "field_access_expr": {
                      "name": "a",
-                     "offset": [
-                      0,
-                      1,
-                      1
-                     ],
+                     "vertical_offset": 1,
+                     "cartesian_offset": {
+                      "i_offset": 0,
+                      "j_offset": 1
+                     },
                      "argument_map": [
                       -1,
                       -1,
@@ -349,38 +343,29 @@
                 "accesses": {
                  "writeAccess": {
                   "20": {
-                   "extents": [
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    },
-                    {
-                     "minus": 0,
-                     "plus": 0
-                    }
-                   ]
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
                   }
                  },
                  "readAccess": {
                   "19": {
-                   "extents": [
-                    {
+                   "cartesian_extent": {
+                    "i_extent": {
                      "minus": -1,
                      "plus": 1
                     },
-                    {
-                     "minus": -1,
-                     "plus": 1
-                    },
-                    {
+                    "j_extent": {
                      "minus": -1,
                      "plus": 1
                     }
-                   ]
+                   },
+                   "vertical_extent": {
+                    "minus": -1,
+                    "plus": 1
+                   }
                   }
                  }
                 }
@@ -442,5 +427,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/vogtha/projects/toolchain/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
+ "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
 }

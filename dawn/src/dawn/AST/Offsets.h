@@ -20,9 +20,6 @@
 #include <memory>
 #include <vector>
 
-namespace dawn::iir {
-class HorizontalExtent;
-}
 namespace dawn::ast {
 
 class Offsets;
@@ -144,13 +141,18 @@ public:
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
-  friend std::string to_string(Offsets const& offset);
-  friend class iir::HorizontalExtent;
+  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+  friend auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
 };
 
+/**
+ * \brief casts offset to a given horizontal offset type. If the offset is a zero offset, an
+ * appropriate zero offset of the given kind will be created.
+ */
 template <typename T>
 T offset_cast(HorizontalOffset const& offset) {
   using PlainT = std::remove_reference_t<T>;
@@ -160,10 +162,41 @@ T offset_cast(HorizontalOffset const& offset) {
   static PlainT nullOffset{};
   return offset.impl_ ? dynamic_cast<T>(*offset.impl_) : nullOffset;
 }
+/**
+ * \brief depending on the kind of horizontal offset, the appropriate function will be called
+ *
+ * Note, that you should only use this function if you cannot use `offset_cast` or the public
+ * interface of HorizontalOffset.
+ *
+ * \param hOffset Horizontal offset on which we want to dispatch
+ * \param cartFn Function to be called if hOffset is a cartesian offset. cartFn will be called with
+ * hOffset casted to CartesianOffset
+ * \param unstructuredFn Function to be called if hOffset is an
+ * unstructured offset. unstructuredFn will be called with hOffset casted to UnstructuredOffset
+ * \param zeroFn Function to be called if hOffset is a zero offset. zeroFn will be called with no
+ * arguments
+ */
+template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
+                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
+  if(hOffset.isZero())
+    return zeroFn();
+
+  HorizontalOffsetImpl* ptr = hOffset.impl_.get();
+  if(auto cartesianOffset = dynamic_cast<CartesianOffset const*>(ptr)) {
+    return cartFn(*cartesianOffset);
+  } else if(auto unstructuredOffset = dynamic_cast<UnstructuredOffset const*>(ptr)) {
+    return unstructuredFn(*unstructuredOffset);
+  } else {
+    dawn_unreachable("unknown offset class");
+  }
+}
 
 class Offsets {
 public:
   Offsets() = default;
+  Offsets(HorizontalOffset const& hOffset, int vOffset)
+      : horizontalOffset_(hOffset), verticalOffset_(vOffset) {}
 
   Offsets(cartesian_, int i, int j, int k)
       : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}

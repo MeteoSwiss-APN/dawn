@@ -535,7 +535,7 @@ def make_stencil_fun_arg_expr(direction: Dimension.Direction, offset: int = 0,
     return expr
 
 
-def make_field_access_expr(name: str, offset: List[int] = [0, 0, 0],
+def make_field_access_expr(name: str, offset = None,
                            argument_map: List[int] = [-1, -1, -1],
                            argument_offset: List[int] = [0, 0, 0],
                            negate_offset: bool = False) -> FieldAccessExpr:
@@ -547,9 +547,33 @@ def make_field_access_expr(name: str, offset: List[int] = [0, 0, 0],
     :param argument_offset: Offset to the directional and offset arguments.
     :param negate_offset:   Negate the offset in the end.
     """
+    assert offset is None or isinstance(offset, list)
+
     expr = FieldAccessExpr()
     expr.name = name
-    expr.offset.extend(offset)
+    if offset is None:
+        expr.zero_offset.SetInParent()
+
+    elif len(offset) == 3:
+        assert all(isinstance(x, int) for x in offset)
+
+        expr.cartesian_offset.i_offset = offset[0]
+        expr.cartesian_offset.j_offset = offset[1]
+
+        expr.vertical_offset = offset[2]
+
+    elif len(offset) == 2:
+        assert isinstance(offset[0], bool)
+        assert isinstance(offset[1], int)
+        assert argument_map == [-1, -1, -1]
+        assert argument_offset == [0, 0, 0]
+        assert negate_offset == False
+
+        expr.unstructured_offset.has_offset = offset[0]
+        expr.vertical_offset = offset[1]
+
+    else:
+        assert(False)
     expr.argument_map.extend(argument_map)
     expr.argument_offset.extend(argument_offset)
     expr.negate_offset = negate_offset

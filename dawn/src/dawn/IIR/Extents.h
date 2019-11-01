@@ -209,21 +209,16 @@ public:
   HorizontalExtent() = default;
 
   HorizontalExtent(ast::HorizontalOffset const& hOffset) {
-    ast::HorizontalOffsetImpl* ptr = hOffset.impl_.get();
-
-    if(hOffset.isZero()) {
-      *this = HorizontalExtent();
-
-    } else if(auto cOffset = dynamic_cast<ast::CartesianOffset const*>(ptr)) {
-      *this = HorizontalExtent(ast::cartesian, cOffset->offsetI(), cOffset->offsetI(),
-                               cOffset->offsetJ(), cOffset->offsetJ());
-
-    } else if(auto uOffset = dynamic_cast<ast::UnstructuredOffset const*>(ptr)) {
-      *this = HorizontalExtent(ast::unstructured, uOffset->hasOffset());
-
-    } else {
-      dawn_unreachable("unknown offset class");
-    }
+    *this = offset_dispatch(hOffset,
+                            [](ast::CartesianOffset const& cOffset) {
+                              return HorizontalExtent(ast::cartesian, cOffset.offsetI(),
+                                                      cOffset.offsetI(), cOffset.offsetJ(),
+                                                      cOffset.offsetJ());
+                            },
+                            [](ast::UnstructuredOffset const& uOffset) {
+                              return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+                            },
+                            []() { return HorizontalExtent(); });
   }
 
   HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
@@ -250,7 +245,9 @@ public:
 
   template <typename T>
   friend T extent_cast(HorizontalExtent const&);
-  friend std::string to_string(const Extents& extent);
+  template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+  friend auto extent_dispatch(HorizontalExtent const& hExtent, CartFn const& cartFn,
+                              UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
 
   bool operator==(HorizontalExtent const& other) const {
     if(impl_ && other.impl_)
@@ -294,6 +291,10 @@ private:
   std::unique_ptr<HorizontalExtentImpl> impl_;
 };
 
+/**
+ * \brief casts extent to a given horizontal extent type. If the extent is a zero extent, an
+ * appropriate zero extent of the given kind will be created.
+ */
 template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
   using PlainT = std::remove_reference_t<T>;
@@ -302,6 +303,36 @@ T extent_cast(HorizontalExtent const& extent) {
   static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
   static PlainT nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
+}
+
+/**
+ * \brief depending on the kind of horizontal extent, the appropriate function will be called
+ *
+ * Note, that you should only use this function if you cannot use `extent_cast` or the public
+ * interface of HorizontalExtent.
+ *
+ * \param hExtent Horizontal extent on which we want to dispatch
+ * \param cartFn Function to be called if hExtent is a cartesian extent. cartFn will be called with
+ * hExtent casted to CartesianExtent
+ * \param unstructuredFn Function to be called if hExtent is an
+ * unstructured extent. unstructuredFn will be called with hExtent casted to UnstructuredExtent
+ * \param zeroFn Function to be called if hExtent is a zero extent. zeroFn will be called with no
+ * arguments
+ */
+template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
+auto extent_dispatch(HorizontalExtent const& hExtent, CartFn const& cartFn,
+                     UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn) {
+  if(hExtent.isPointwise())
+    return zeroFn();
+
+  HorizontalExtentImpl* ptr = hExtent.impl_.get();
+  if(auto cartesianExtent = dynamic_cast<CartesianExtent const*>(ptr)) {
+    return cartFn(*cartesianExtent);
+  } else if(auto unstructuredExtent = dynamic_cast<UnstructuredExtent const*>(ptr)) {
+    return unstructuredFn(*unstructuredExtent);
+  } else {
+    dawn_unreachable("unknown extent class");
+  }
 }
 
 /// @brief Three dimensional access extents of a field
@@ -320,7 +351,7 @@ public:
           int extent3minus, int extent3plus);
   explicit Extents(ast::cartesian_);
 
-  Extents(ast::unstructured_, bool hasOffset, Extent const& vExtent);
+  Extents(ast::unstructured_, bool hasExtent, Extent const& vExtent);
   explicit Extents(ast::unstructured_);
   /// @}
 
