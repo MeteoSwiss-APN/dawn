@@ -33,7 +33,7 @@ Even though **GTClang** and **dawn** share a common repository, they are built i
 
 optional dependencies are:
 
-* clang format (=6.0) 
+* clang format (=6.0)
 * LaTeX, Sphinx and Doxygen (for documentation)
 
 ## Developer Instructions
