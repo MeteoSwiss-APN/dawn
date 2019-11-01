@@ -8,7 +8,8 @@ For the purpose of this exercise, we will write a simple finite difference stenc
 
 ```
 globals {
-  double dx;  //grid spacing
+  //grid spacing
+  double dx;
 };
 
 stencil laplacian_stencil {
@@ -16,13 +17,13 @@ stencil laplacian_stencil {
   storage_ij in_field;
   Do() {
     vertical_region(k_start, k_end) {
-	    out_field[i,j] = (-4*in_field + in_field[i+1,j] + in_field[i-1,j] + in_field[i,j-1] + in_field[i,j+1])/(dx*dx);
+	    out_field[i,j] = (-4*in_field[i,j] + in_field[i+1,j] + in_field[i-1,j] + in_field[i,j-1] + in_field[i,j+1])/(dx*dx);
     }
   }
 };
 ```
 
-**GTClang** allows a simplification for indices which are not offset. So, `in_field[i+1,j]` could be written simply as `in_field[i+1]`.
+**GTClang** allows a simplification for indices which are not offset. So, `in_field[i+1,j]` could be written simply as `in_field[i+1]`. Center accesses can be dropped alltogether. `in_field[i,j]` can be `in_field`.
 
 This code defines two fields which will serve as the arguments to the stencil. The variable `dx` is the grid spacing and is read-only (during the stencil run), which is modelled as a global in **GTClang**. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example [wikipedia](https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables)), which close to no boiler plate. Save the stencil as `laplacian_stencil.cpp`.
 
@@ -76,8 +77,8 @@ You can check that the generated code is in fact equal to the code generated usi
 
 to 
 
-#include "laplacian_stencil_from_python.cpp"
 ```
+#include "laplacian_stencil_from_python.cpp"
 ```
 
 then re-compile and re-run the driver
