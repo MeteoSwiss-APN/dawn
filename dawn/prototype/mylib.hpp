@@ -298,12 +298,7 @@ template <typename O, typename T>
 class Data {
 public:
   explicit Data(size_t horizontal_size, size_t num_k_levels)
-  /*: data_(num_k_levels, std::vector<T>(horizontal_size))*/ {
-    data_ = std::vector<std::vector<T>>(num_k_levels);
-    for(int k = 0; k < num_k_levels; k++) {
-      data_[k] = std::vector<T>(horizontal_size);
-    }
-  }
+      : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
   T& operator()(O const& f, size_t k_level) {
     if(f.id() != -1) {
       return data_[k_level][f.id()];
