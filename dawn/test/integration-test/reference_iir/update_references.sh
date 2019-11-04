@@ -34,8 +34,8 @@ if [[ "$dawn_path" == "" ]]; then
         exit 1
     fi
 else
-    if [[ -f "dawn_path/bin/integrationtest/DawnUpdateIIRReferences" ]]; then
-        update_path="dawn_path/bin/integrationtest/DawnUpdateIIRReferences"
+    if [[ -f "$dawn_path/bin/integrationtest/DawnUpdateIIRReferences" ]]; then
+        update_path="$dawn_path/bin/integrationtest/DawnUpdateIIRReferences"
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1
