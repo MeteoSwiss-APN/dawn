@@ -140,11 +140,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
-
 
   // add the ctr initialization of each stencil
   for(const auto& stencilPtr : stencils) {
@@ -278,15 +276,12 @@ void CXXNaiveCodeGen::generateStencilClasses(
       stencilClassCtr.addArg("m_globals(globals_)");
     }
 
-
     addTmpStorageInit(stencilClassCtr, stencil, tempFields);
     stencilClassCtr.commit();
 
     // virtual dtor
 
     // synchronize storages method
-
-
 
     //
     // Run-Method
@@ -298,7 +293,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
 
     stencilRunMethod.startBody();
-
 
     for(const auto& fieldPair : nonTempFields) {
       stencilRunMethod.addStatement(fieldPair.second.Name + "_" + ".sync()");
