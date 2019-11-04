@@ -1,5 +1,7 @@
 #include "mylib.hpp"
 
+#include "mylib_interface.hpp"
+
 namespace mylib {
 
 Edge const& Vertex::edge(size_t i) const { return *edges_[i]; }
@@ -30,54 +32,98 @@ std::vector<const Face*> Face::faces() const {
 Vertex const& Edge::vertex(size_t i) const { return *vertices_[i]; }
 Face const& Edge::face(size_t i) const { return *faces_[i]; }
 
-std::ostream& toVtk(Grid const& grid, std::ostream& os) {
+int count_inner_faces(Grid const& grid) {
+  int fcnt = 0;
+  for(auto& f : grid.faces()) {
+    if(inner_face(f)) {
+      ++fcnt;
+    }
+  }
+  return fcnt;
+}
+
+std::ostream& toVtk(Grid const& grid, int k_size, std::ostream& os) {
   os << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
         "UNSTRUCTURED_GRID\n";
-  os << "POINTS " << grid.vertices().size() << " float\n";
-  for(auto v : grid.vertices())
-    os << v.x() << " " << v.y() << " 0\n";
 
-  int fcnt = 0;
-  for(auto& f : grid.faces())
-    if(inner_face(f))
-      ++fcnt;
+  os << "POINTS " << grid.vertices().size() * k_size << " float\n";
+  for(int k_level = 0; k_level < k_size; k_level++) {
+    for(auto v : grid.vertices())
+      os << v.x() << " " << v.y() << " " << k_level << "\n";
+  }
 
-  os << "CELLS " << fcnt << " " << fcnt * 4 << "\n";
-  for(auto& f : grid.faces())
-    if(inner_face(f))
-      os << "3 " << f.vertex(0).id() << " " << f.vertex(1).id() << " " << f.vertex(2).id() << '\n';
+  int fcnt = count_inner_faces(grid);
 
-  os << "CELL_TYPES " << fcnt << '\n';
-  for(auto f : grid.faces())
-    if(inner_face(f))
-      os << "5\n";
-  os << "CELL_DATA " << fcnt << '\n';
-  return os;
+  os << "CELLS " << fcnt * k_size << " " << 4 * fcnt * k_size << "\n";
+  for(int k_level = 0; k_level < k_size; k_level++) {
+    for(auto& f : grid.faces())
+      if(inner_face(f)) {
+        const int k_offset = k_level * grid.nx() * grid.ny();
+        os << "3 " << f.vertex(0).id() + k_offset << " " << f.vertex(1).id() + k_offset << " "
+           << f.vertex(2).id() + k_offset << '\n';
+      }
+  }
 
+  os << "CELL_TYPES " << fcnt * k_size << '\n';
+  for(int k_level = 0; k_level < k_size; k_level++) {
+    for(auto f : grid.faces()) {
+      if(inner_face(f)) {
+        os << "5\n";
+      }
+    }
+  }
+
+  os << "CELL_DATA " << fcnt * k_size << '\n';
   return os;
 } // namespace lib_lukas
+
 std::ostream& toVtk(std::string const& name, FaceData<double> const& f_data, Grid const& grid,
                     std::ostream& os) {
   os << "SCALARS " << name << "  float 1\nLOOKUP_TABLE default\n";
-  for(auto& f : grid.faces())
-    if(inner_face(f))
-      os << f_data(f) << '\n';
+  for(int k_level = 0; k_level < f_data.k_size(); k_level++) {
+    for(auto& f : grid.faces())
+      if(inner_face(f))
+        os << f_data(f, k_level) << '\n';
+  }
+
+  int fcnt = count_inner_faces(grid);
+
   os << "SCALARS id int 1\nLOOKUP_TABLE default\n";
-  for(auto& f : grid.faces())
-    if(inner_face(f))
-      os << f.id() << '\n';
+  for(int k_level = 0; k_level < f_data.k_size(); k_level++) {
+    for(auto& f : grid.faces()) {
+      if(inner_face(f)) {
+        os << f.id() << '\n';
+      }
+    }
+  }
   return os;
 }
 std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Grid const& grid,
                     std::ostream& os) {
-  FaceData<double> f_data{grid};
-  faces::reduce_on_edges(e_data, grid, wstd::identity{}, std::plus<double>{}, f_data);
+  FaceData<double> f_data{grid, e_data.k_size()};
+
+  for(int k_level = 0; k_level < f_data.k_size(); ++k_level) {
+    for(auto& cell : grid.faces()) {
+      f_data(cell, k_level) = mylibInterface::reduceEdgeToCell(
+          mylibInterface::mylibTag{}, grid, cell, 0,
+          [&](auto& lhs, const auto& rhs) { lhs += f_data(cell, k_level); });
+    }
+  }
+
   return toVtk(name, f_data, grid, os);
 }
 std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, Grid const& grid,
                     std::ostream& os) {
-  FaceData<double> f_data{grid};
-  faces::reduce_on_vertices(v_data, grid, wstd::identity{}, std::plus<double>{}, f_data);
+  FaceData<double> f_data{grid, v_data.k_size()};
+
+  for(int k_level = 0; k_level < f_data.k_size(); ++k_level) {
+    for(auto& cell : grid.faces()) {
+      f_data(cell, k_level) = mylibInterface::reduceVertexToCell(
+          mylibInterface::mylibTag{}, grid, cell, 0,
+          [&](auto& lhs, const auto& rhs) { lhs += f_data(cell, k_level); });
+    }
+  }
+
   return toVtk(name, f_data, grid, os);
 }
 void Vertex::add_edge(Edge& e) { edges_.push_back(&e); }

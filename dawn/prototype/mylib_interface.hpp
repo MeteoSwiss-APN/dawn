@@ -17,9 +17,9 @@ mylib::VertexData<T> vertexFieldType(mylibTag);
 
 using Mesh = mylib::Grid;
 
-decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
-decltype(auto) getEdges(mylibTag, mylib::Grid const& m) { return m.edges(); }
-decltype(auto) getVertices(mylibTag, mylib::Grid const& m) { return m.vertices(); }
+inline decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
+inline decltype(auto) getEdges(mylibTag, mylib::Grid const& m) { return m.edges(); }
+inline decltype(auto) getVertices(mylibTag, mylib::Grid const& m) { return m.vertices(); }
 
 template <typename Objs, typename Init, typename Op>
 auto reduce(Objs&& objs, Init init, Op&& op) {

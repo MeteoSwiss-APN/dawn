@@ -53,6 +53,7 @@ namespace cxxnaiveico {
 //   where Op must be callable as
 //     Op(Init, ValueType);
 
+namespace {
 std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
                          const std::string& upper, const std::string& comparison,
                          const std::string& increment) {
@@ -74,6 +75,7 @@ std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
   return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
                     : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
 }
+} // namespace
 
 CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                                        int maxHaloPoint)

@@ -20,7 +20,7 @@ int main() {
   auto mesh = generator.generate(structuredGrid);
 
   int nb_levels = 5;
-  atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels + 2));
+  atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
   atlas::Field out{fs.createField<double>(atlas::option::name("out"))};
 
   atlas::functionspace::CellColumns fs_edges(mesh, atlas::option::levels(nb_levels));
