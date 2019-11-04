@@ -31,9 +31,9 @@ int main() {
   atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
-  for(int jLevel = 0; jLevel < nb_levels; ++jLevel) {
-    for(int jCell = 0; jCell < mesh.cells().size(); ++jCell) {
-      in_v(jCell, jLevel) = 10;
+  for(int level = 0; level < nb_levels; ++level) {
+    for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+      in_v(cell, level) = 10;
     }
   }
 

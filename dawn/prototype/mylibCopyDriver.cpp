@@ -4,10 +4,9 @@
 
 #include "generated_copyEdgeToCell.hpp"
 
-using namespace mylibInterface
+using namespace mylibInterface;
 
-    int
-    main() {
+int main() {
   int w = 20;
   Mesh m{w, w, true};
   mylib::FaceData<double> out(m);

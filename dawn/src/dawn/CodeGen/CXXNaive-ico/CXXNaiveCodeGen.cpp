@@ -53,32 +53,27 @@ namespace cxxnaiveico {
 //   where Op must be callable as
 //     Op(Init, ValueType);
 
-// static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
-// const std::string& lower, const std::string& upper,
-// const std::string& comparison, const std::string& increment) {
-// return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
-// " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
-// increment + dim + ")")
-// .str();
-// }
+std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
+                         const std::string& upper, const std::string& comparison,
+                         const std::string& increment) {
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
+         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
+}
 
-// static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
-// iir::Interval::Bound bound) {
-// return interval.levelIsEnd(bound)
-// ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
-// ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
-// : std::to_string(interval.bound(bound));
-// }
+std::string makeIntervalBound(iir::Interval const& interval, iir::Interval::Bound bound) {
+  return interval.levelIsEnd(bound)
+             ? "( m_k_size == 0 ? 0 : (m_k_size - 1)) + " + std::to_string(interval.offset(bound))
+             : std::to_string(interval.bound(bound));
+}
 
-// static std::string makeKLoop(const std::string dom, bool isBackward,
-// iir::Interval const& interval) {
+std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 
-// const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
-// const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
+  const std::string lower = makeIntervalBound(interval, iir::Interval::Bound::lower);
+  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper);
 
-// return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-// : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
-// }
+  return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
+}
 
 CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                                        int maxHaloPoint)
@@ -259,28 +254,6 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   }
 }
 
-std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
-                         const std::string& upper, const std::string& comparison,
-                         const std::string& increment) {
-  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
-         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
-}
-
-std::string makeIntervalBound(iir::Interval const& interval, iir::Interval::Bound bound) {
-  return interval.levelIsEnd(bound)
-             ? "( m_k_size == 0 ? 0 : (m_k_size - 1)) + " + std::to_string(interval.offset(bound))
-             : std::to_string(interval.bound(bound));
-}
-
-std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
-
-  const std::string lower = makeIntervalBound(interval, iir::Interval::Bound::lower);
-  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper);
-
-  return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
-}
-
 void CXXNaiveIcoCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
@@ -434,14 +407,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       for(auto interval : partitionIntervals) {
 
         StencilRunMethod.addBlockStatement(
-            makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval),
-            [&]() {
+            makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval), [&] {
               // for each interval, we generate naive nested loops
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
                 std::string loopCode = getLoop(stage.getLocationType());
-                StencilRunMethod.addBlockStatement(loopCode, [&]() {
+                StencilRunMethod.addBlockStatement(loopCode, [&] {
                   // Generate Do-Method
                   for(const auto& doMethodPtr : stage.getChildren()) {
                     const iir::DoMethod& doMethod = *doMethodPtr;

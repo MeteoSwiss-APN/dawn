@@ -123,11 +123,10 @@ TEST(CompilerTest, DISABLED_SumVertical) {
           LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
                   b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
-                            b.stmt(b.assignExpr(
-                                b.at(out_f),
-                                b.binaryExpr(b.at(in_f, dawn::iir::HOffsetType::noOffset, +1),
-                                             b.at(in_f, dawn::iir::HOffsetType::noOffset, -1),
-                                             Op::plus))))))));
+                            b.stmt(b.assignExpr(b.at(out_f),
+                                                b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
+                                                             b.at(in_f, HOffsetType::noOffset, -1),
+                                                             Op::plus))))))));
 
   std::ofstream of("prototype/generated_verticalSum.hpp");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
