@@ -36,6 +36,7 @@ if [[ "$gtclang_path" == "" ]]; then
 else
     if [[ ! -f "$gtclang_path" ]]; then
         echo "Cannot find gtclang"
+        exit 1
     fi
 fi
 
