@@ -85,9 +85,6 @@ std::string CudaCodeGen::generateStencilInstantiation(
   gettime.addStatement("return total_time()");
   gettime.commit();
 
-  MemberFunction sbaseVdtor = sbase.addMemberFunction("virtual", "~sbase");
-  sbaseVdtor.startBody();
-  sbaseVdtor.commit();
   sbase.commit();
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
@@ -240,17 +237,12 @@ void CudaCodeGen::generateStencilClassCtr(
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
-  auto& paramNameToType = stencilProperties->paramNameToType_;
 
   stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
 
-  for(const auto& fieldPair : nonTempFields) {
-    std::string fieldName = fieldPair.second.Name;
-    stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
-  }
 
   stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
   stencilClassCtr.addInit("m_dom(dom_)");
@@ -275,10 +267,6 @@ void CudaCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(int fieldId : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
-    StencilWrapperConstructor.addArg(getStorageType(metadata.getFieldDimensionsMask(fieldId)) +
-                                     "& " + metadata.getFieldNameFromAccessID(fieldId));
-  }
 
   const auto& stencils = stencilInstantiation->getStencils();
 
@@ -293,7 +281,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
-    std::string initCtr = "m_" + stencilName + "(new " + stencilName;
+    std::string initCtr = "m_" + stencilName;
 
     initCtr += "(dom";
     if(!globalsMap.empty()) {
@@ -302,14 +290,12 @@ void CudaCodeGen::generateStencilWrapperCtr(
 
     for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
-      if(fieldInfo.IsTemporary)
-        continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
-                                              fieldInfo.field.getAccessID())
-                            ? ("m_" + fieldInfo.Name)
-                            : (fieldInfo.Name));
+      if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
+                               fieldInfo.field.getAccessID())) {
+        initCtr += ",m_" + fieldInfo.Name;
+      }
     }
-    initCtr += ") )";
+    initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
 
@@ -337,7 +323,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
 
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
-    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_ + "*",
+    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_,
                                   "m_" + stencilPropertiesPair.second->name_);
   }
 
