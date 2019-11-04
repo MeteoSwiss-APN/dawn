@@ -19,5 +19,6 @@ yoda_add_library(
           IIRBuilder.cpp
           IIRBuilder.h
   ARCHIVE
+  OBJECT #TODO: we don't want it but it is needed for some gtclang tests
   DEPENDS DawnIIRStatic DawnOptimizerStatic
 )
