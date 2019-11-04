@@ -34,7 +34,7 @@ if [[ "$gtclang_build" == "" ]]; then
     fi
 else
     if [[ -f "$gtclang_build/gtclang-tester-no-codegen.sh" ]]; then
-        update_path="$gtclang_build/gtclang-tester-no-codegen.sh"
+        script_path="$gtclang_build/gtclang-tester-no-codegen.sh"
     else
         echo "Cannot find gtclang-tester-no-codegen.sh"
         exit 1
