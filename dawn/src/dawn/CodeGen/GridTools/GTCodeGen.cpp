@@ -421,7 +421,7 @@ void GTCodeGen::generateStencilWrapperMembers(
   }
 
   // Stencil members
-  stencilWrapperClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+  stencilWrapperClass.addMember("const " + c_gtc() + "domain", "m_dom");
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));

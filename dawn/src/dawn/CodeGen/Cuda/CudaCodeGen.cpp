@@ -222,7 +222,7 @@ void CudaCodeGen::generateStencilClassMembers(
     stencilClass.addMember("globals&", "m_globals");
   }
 
-  stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+  stencilClass.addMember("const " + c_gtc() + "domain", "m_dom");
 
   if(!tempFields.empty()) {
     stencilClass.addComment("temporary storage declarations");

@@ -252,7 +252,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
-    stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+    stencilClass.addMember("const " + c_gtc() + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("const globals&", "m_globals");
