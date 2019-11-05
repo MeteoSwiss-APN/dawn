@@ -18,11 +18,11 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/AccessComputation.h"
 
 namespace dawn {
 namespace iir {
