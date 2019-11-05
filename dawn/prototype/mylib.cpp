@@ -86,8 +86,6 @@ std::ostream& toVtk(std::string const& name, FaceData<double> const& f_data, Gri
         os << f_data(f, k_level) << '\n';
   }
 
-  int fcnt = count_inner_faces(grid);
-
   os << "SCALARS id int 1\nLOOKUP_TABLE default\n";
   for(int k_level = 0; k_level < f_data.k_size(); k_level++) {
     for(auto& f : grid.faces()) {

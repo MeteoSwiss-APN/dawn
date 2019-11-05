@@ -105,6 +105,7 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
                                                    b.lit(0.), LocType::Edges))))))));
 
   std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
   of.close();
 }
@@ -129,6 +130,7 @@ TEST(CompilerTest, DISABLED_SumVertical) {
                                                              Op::plus))))))));
 
   std::ofstream of("prototype/generated_verticalSum.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
   of.close();
 }
@@ -164,6 +166,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
                                                Op::plus))))))));
 
   std::ofstream of("prototype/generated_Diffusion.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
   of.close();
 }

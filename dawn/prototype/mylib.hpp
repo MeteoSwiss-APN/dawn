@@ -98,7 +98,7 @@ private:
 
 class Grid {
 public:
-  explicit Grid(int nx, int ny, bool periodic = false)
+  Grid(int nx, int ny, bool periodic = false)
       : faces_(2 * nx * ny), vertices_(periodic ? nx * ny : (nx + 1) * (ny + 1)),
         edges_(periodic ? 3 * nx * ny : 3 * (nx + 1) * (ny + 1)), nx_(nx), ny_(ny) {
     auto edge_at = [&](int i, int j, int c) -> Edge& {
@@ -280,7 +280,7 @@ public:
 
   std::vector<Face> const& faces() const { return faces_; }
   std::vector<Vertex> const& vertices() const { return vertices_; }
-  std::vector<Edge> edges() const { return edges_; }
+  std::vector<Edge> const& edges() const { return edges_; }
 
   auto nx() const { return nx_; }
   auto ny() const { return ny_; }
