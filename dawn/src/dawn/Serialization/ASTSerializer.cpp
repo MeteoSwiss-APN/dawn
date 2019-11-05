@@ -213,9 +213,14 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field) {
   fieldProto->set_name(field->Name);
   fieldProto->set_is_temporary(field->IsTemporary);
-  for(const auto& initializedDimension : field->fieldDimensions) {
-    fieldProto->add_field_dimensions(initializedDimension);
-  }
+
+  auto const dimensions = field->fieldDimensions;
+  auto const& structuredDimensions =
+      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(dimensions);
+  fieldProto->add_field_dimensions(structuredDimensions.I());
+  fieldProto->add_field_dimensions(structuredDimensions.J());
+  fieldProto->add_field_dimensions(structuredDimensions.K());
+
   setLocation(fieldProto->mutable_loc(), field->Loc);
   proto::statements::Field_LocationType protoLocationType;
   switch(field->locationType) {
@@ -628,8 +633,10 @@ std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto
     if(fieldProto.field_dimensions().size() > 3)
       throwException("field_dimensions");
 
-    std::copy(fieldProto.field_dimensions().begin(), fieldProto.field_dimensions().end(),
-              field->fieldDimensions.begin());
+    field->fieldDimensions = sir::FieldDimension(
+        dawn::ast::cartesian, std::array<int, 3>({fieldProto.field_dimensions().at(0),
+                                                  fieldProto.field_dimensions().at(1),
+                                                  fieldProto.field_dimensions().at(2)}));
   }
   switch(fieldProto.location_type()) {
   case proto::statements::Field_LocationType_Cell:

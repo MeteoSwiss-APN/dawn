@@ -338,7 +338,26 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     const Array3i fieldDimensions,
+                                     const sir::FieldDimension& fieldDimensions,
+                                     ast::Expr::LocationType locationType) {
+  int accessID = UIDGenerator::getInstance()->get();
+  DAWN_ASSERT(isFieldType(type));
+  insertAccessOfType(type, accessID, name);
+
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
+  auto const& structuredDimensions =
+      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(fieldDimensions);
+  auto dimensionArray = Array3i({(int)structuredDimensions.I(), (int)structuredDimensions.J(),
+                                 (int)structuredDimensions.K()});
+  fieldIDToInitializedDimensionsMap_.emplace(accessID, dimensionArray);
+
+  addAccessIDLocationPair(accessID, locationType);
+
+  return accessID;
+}
+
+int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
+                                     const Array3i& fieldDimensions,
                                      ast::Expr::LocationType locationType) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));

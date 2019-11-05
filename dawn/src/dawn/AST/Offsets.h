@@ -24,6 +24,7 @@ namespace dawn::ast {
 
 class Offsets;
 
+// TODO: move those?
 struct cartesian_ {};
 static constexpr cartesian_ cartesian;
 

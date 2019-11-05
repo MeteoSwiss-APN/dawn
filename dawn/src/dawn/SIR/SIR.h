@@ -15,6 +15,7 @@
 #ifndef DAWN_SIR_SIR_H
 #define DAWN_SIR_SIR_H
 
+#include "dawn/AST/Offsets.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
@@ -149,15 +150,97 @@ struct StencilFunctionArg {
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
+class FieldDimensionImpl {
+public:
+  std::unique_ptr<FieldDimensionImpl> clone() const { return cloneImpl(); }
+  virtual ~FieldDimensionImpl() = default;
+
+private:
+  virtual std::unique_ptr<FieldDimensionImpl> cloneImpl() const = 0;
+};
+
+class CartesianFieldDimension : public FieldDimensionImpl {
+  bool dimi_, dimj_, dimk_;
+  std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
+    return std::make_unique<CartesianFieldDimension>(
+        std::array<int, 3>({(int)dimi_, (int)dimj_, (int)dimk_}));
+  }
+
+public:
+  bool I() const { return dimi_; }
+  bool J() const { return dimj_; }
+  bool K() const { return dimk_; }
+  CartesianFieldDimension() = default;
+  ~CartesianFieldDimension() = default;
+  CartesianFieldDimension(std::array<int, 3> mask) {
+    dimi_ = (mask[0] != 0);
+    dimj_ = (mask[1] != 0);
+    dimk_ = (mask[2] != 0);
+  }
+  CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
+      : dimi_(dimi), dimj_(dimj), dimk_(dimk) {}
+};
+
+class FieldDimension {
+  std::unique_ptr<FieldDimensionImpl> impl_;
+
+public:
+  FieldDimension() = default;
+  ~FieldDimension() = default;
+  FieldDimension(dawn::ast::cartesian_, std::array<int, 3> mask)
+      : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
+  FieldDimension(dawn::ast::cartesian_, bool dimi, bool dimj, bool dimk)
+      : impl_(std::make_unique<CartesianFieldDimension>(dimi, dimj, dimk)) {}
+
+  FieldDimension& operator=(const FieldDimension& other) {
+    if(other.impl_) {
+      impl_ = other.impl_->clone();
+    } else {
+      impl_ = nullptr;
+    }
+    return *this;
+  }
+  const FieldDimension& operator=(const FieldDimension&& other) {
+    if(other.impl_) {
+      impl_ = other.impl_->clone();
+    } else {
+      impl_ = nullptr;
+    }
+    return *this;
+  }
+  FieldDimension(const FieldDimension& other) {
+    if(other.impl_) {
+      impl_ = other.impl_->clone();
+    }
+  }
+  FieldDimension(const FieldDimension&& other) {
+    if(other.impl_) {
+      impl_ = other.impl_->clone();
+    }
+  }
+
+  template <typename T>
+  friend T dimension_cast(FieldDimension const& dimension);
+};
+
+template <typename T>
+T dimension_cast(FieldDimension const& dimension) {
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  return dynamic_cast<T>(*dimension.impl_);
+}
+
 /// @brief Representation of a field
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
   Field(const std::string& name, SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
-        fieldDimensions({{0, 0, 0}}) {}
+        fieldDimensions(dawn::ast::cartesian, {{0, 0, 0}}) {}
 
   bool IsTemporary;
-  Array3i fieldDimensions;
+  FieldDimension fieldDimensions;
   ast::Expr::LocationType locationType = ast::Expr::LocationType::Cells;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
