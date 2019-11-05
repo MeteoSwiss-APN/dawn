@@ -160,64 +160,41 @@ private:
 };
 
 class CartesianFieldDimension : public FieldDimensionImpl {
-  bool dimi_, dimj_, dimk_;
+  bool maskI_, maskJ_, maskK_;
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<CartesianFieldDimension>(
-        std::array<int, 3>({(int)dimi_, (int)dimj_, (int)dimk_}));
+    return std::make_unique<CartesianFieldDimension>(maskI_, maskJ_, maskK_);
   }
 
 public:
-  bool I() const { return dimi_; }
-  bool J() const { return dimj_; }
-  bool K() const { return dimk_; }
-  CartesianFieldDimension() = default;
+  bool I() const { return maskI_; }
+  bool J() const { return maskJ_; }
+  bool K() const { return maskK_; }
   ~CartesianFieldDimension() = default;
-  CartesianFieldDimension(std::array<int, 3> mask) {
-    dimi_ = (mask[0] != 0);
-    dimj_ = (mask[1] != 0);
-    dimk_ = (mask[2] != 0);
-  }
+  CartesianFieldDimension(std::array<bool, 3> mask)
+      : maskI_(mask[0]), maskJ_(mask[1]), maskK_(mask[2]) {}
   CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
-      : dimi_(dimi), dimj_(dimj), dimk_(dimk) {}
+      : maskI_(dimi), maskJ_(dimj), maskK_(dimk) {}
 };
 
 class FieldDimension {
   std::unique_ptr<FieldDimensionImpl> impl_;
 
 public:
-  FieldDimension() = default;
+  FieldDimension() = delete;
   ~FieldDimension() = default;
-  FieldDimension(dawn::ast::cartesian_, std::array<int, 3> mask)
+  FieldDimension(dawn::ast::cartesian_, std::array<bool, 3> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
-  FieldDimension(dawn::ast::cartesian_, bool dimi, bool dimj, bool dimk)
-      : impl_(std::make_unique<CartesianFieldDimension>(dimi, dimj, dimk)) {}
+  FieldDimension(dawn::ast::cartesian_, bool maskI, bool maskJ, bool maskK)
+      : impl_(std::make_unique<CartesianFieldDimension>(maskI, maskJ, maskK)) {}
 
   FieldDimension& operator=(const FieldDimension& other) {
-    if(other.impl_) {
-      impl_ = other.impl_->clone();
-    } else {
-      impl_ = nullptr;
-    }
+    impl_ = other.impl_->clone();
     return *this;
   }
-  const FieldDimension& operator=(const FieldDimension&& other) {
-    if(other.impl_) {
-      impl_ = other.impl_->clone();
-    } else {
-      impl_ = nullptr;
-    }
-    return *this;
-  }
-  FieldDimension(const FieldDimension& other) {
-    if(other.impl_) {
-      impl_ = other.impl_->clone();
-    }
-  }
-  FieldDimension(const FieldDimension&& other) {
-    if(other.impl_) {
-      impl_ = other.impl_->clone();
-    }
-  }
+  FieldDimension& operator=(FieldDimension&& other) = default;
+
+  FieldDimension(const FieldDimension& other) { *this = other; }
+  FieldDimension(FieldDimension&& other) = default;
 
   template <typename T>
   friend T dimension_cast(FieldDimension const& dimension);
