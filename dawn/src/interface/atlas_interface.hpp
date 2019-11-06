@@ -1,5 +1,5 @@
 #pragma once
-#include <atlas/mesh.h>
+#include "atlas/mesh.h"
 #include <cassert>
 
 namespace utility {
