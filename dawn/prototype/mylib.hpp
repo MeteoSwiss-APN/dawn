@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <vector>
 
@@ -138,7 +139,7 @@ public:
         //   .
         //   |\
         //  0| \ 1
-        //   |  \ 
+        //   |  \
         //   ----'
         //     2
         f_uw.add_edge(edge_at(i, j, edge_color::vertical));
@@ -147,9 +148,9 @@ public:
 
         //   0
         //   .
-        //   |\ 
-        //   | \ 
-        //   |  \ 
+        //   |\
+        //   | \
+        //   |  \
         //   ----' 1
         //  2
         f_uw.add_vertex(vertex_at(i, j));
@@ -198,8 +199,8 @@ public:
       for(int i = 0; i < nx; ++i) {
         // 0
         //  \  0
-        //   \ 
-        // 1  \ 
+        //   \
+        // 1  \
         //     1
         auto& e = edge_at(i, j, edge_color::diagonal);
         e = Edge(&e - edges_.data(), edge_color::diagonal);
@@ -212,10 +213,10 @@ public:
     for(int j = 0; j < ny; ++j)
       for(int i = 0; i < (periodic ? nx : nx + 1); ++i) {
         //     0
-        // \^^^|\ 
-        //  \1 | \ 
-        //   \ | 0\ 
-        //    \|___\ 
+        // \^^^|\
+        //  \1 | \
+        //   \ | 0\
+        //    \|___\
         //     1
         auto& e = edge_at(i, j, edge_color::vertical);
         e = Edge(&e - edges_.data(), edge_color::vertical);
@@ -236,9 +237,9 @@ public:
         //    \ |
         //     \|
         // 0---------- 3
-        //      |\ 
-        //      | \ 
-        //      |  \ 
+        //      |\
+        //      | \
+        //      |  \
         //      5   4
         if(i > 0 || periodic) //
           v.add_edge(edge_at(i - 1, j, edge_color::horizontal));
@@ -258,9 +259,9 @@ public:
         // 0  \ |  2
         //     \|
         //  ----------
-        //      |\ 
+        //      |\
         //   5  | \ 3
-        //      |  \ 
+        //      |  \
         //        4
         if(i > 0 && j > 0 || periodic) {
           v.add_face(face_at(i - 1, j - 1, face_color::upward));
@@ -276,11 +277,18 @@ public:
           v.add_face(face_at(i - 1, j, face_color::downward));
         }
       }
+
+    for(auto& e : edges_) {
+      if(e.id() != -1)
+        valid_edges_.push_back(e);
+    }
   }
 
   std::vector<Face> const& faces() const { return faces_; }
   std::vector<Vertex> const& vertices() const { return vertices_; }
-  std::vector<Edge> const& edges() const { return edges_; }
+  // edges_ contains edges outside of the domain, these are removed in valid_edges_.
+  std::vector<std::reference_wrapper<Edge>> const& edges() const { return valid_edges_; }
+  std::vector<Edge> const& all_edges() const { return edges_; }
 
   auto nx() const { return nx_; }
   auto ny() const { return ny_; }
@@ -289,6 +297,7 @@ private:
   std::vector<Face> faces_;
   std::vector<Vertex> vertices_;
   std::vector<Edge> edges_;
+  std::vector<std::reference_wrapper<Edge>> valid_edges_;
 
   int nx_;
   int ny_;
@@ -299,26 +308,8 @@ class Data {
 public:
   explicit Data(size_t horizontal_size, size_t num_k_levels)
       : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
-  T& operator()(O const& f, size_t k_level) {
-    if(f.id() != -1) {
-      return data_[k_level][f.id()];
-    } else {
-      // this hack is needed because f.id() may be negative (uninitialized) for edges
-      // outside of the domain. In this case we simply return this dummy variable
-      static T m_t;
-      return m_t;
-    }
-  }
-  T const& operator()(O const& f, size_t k_level) const {
-    if(f.id() != -1) {
-      return data_[k_level][f.id()];
-    } else {
-      // this hack is needed because f.id() may be negative (uninitialized) for edges
-      // outside of the domain. In this case we simply return this dummy variable
-      static T m_t;
-      return m_t;
-    }
-  }
+  T& operator()(O const& f, size_t k_level) { return data_[k_level][f.id()]; }
+  T const& operator()(O const& f, size_t k_level) const { return data_[k_level][f.id()]; }
   auto begin() { return data_.begin(); }
   auto end() { return data_.end(); }
 
@@ -341,7 +332,8 @@ public:
 template <typename T>
 class EdgeData : public Data<Edge, T> {
 public:
-  explicit EdgeData(Grid const& grid, int k_size) : Data<Edge, T>(grid.edges().size(), k_size) {}
+  explicit EdgeData(Grid const& grid, int k_size)
+      : Data<Edge, T>(grid.all_edges().size(), k_size) {}
 };
 
 std::ostream& toVtk(Grid const& grid, int k_size, std::ostream& os = std::cout);
