@@ -57,8 +57,8 @@ TEST(AtlasIntegrationTestGen, CopyGen) {
 
     dawn_generated::cxxnaiveico::generated<atlasInterface::atlasTag>(mesh, in_v, out_v).run();
   }
-}
-TEST(AtlasIntegrationTestGen, CopyGenRef) {
-  // TODO
+
+  // TODO generate ref
+  // TODO compare with ref
 }
 } // namespace

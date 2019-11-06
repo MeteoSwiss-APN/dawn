@@ -24,7 +24,7 @@ if(eckit_DIR AND atlas_DIR)
             message(FATAL_ERROR "Could not find atlas")
     endif()
 
-    # Need to specify here the names of the generated stencil codes that are going to be generated
+    # Need to specify here the names of the stencil codes that are going to be generated
     set(generated_stencil_codes generated_copyEdgeToCell.hpp)
 
     # Compile the executable that will programatically construct an IIR and code-generate it to file
@@ -40,19 +40,17 @@ if(eckit_DIR AND atlas_DIR)
       COMMAND AtlasIntegrationTestCodeGenerate
       COMMENT "Generating unstructured stencils to be tested"
     )
-    # Generate meshes out of the generated stencils + driver codes. Also generate the reference meshes.
+    # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
     yoda_add_unittest(
-        NAME AtlasIntegrationTestGenMeshes
-        SOURCES  TestGenMeshesMain.cpp AtlasIntegrationTestGenMeshes.cpp ${generated_stencil_codes}
-        DEPENDS eckit atlas gtest GTClangStatic GTClangUnittestStatic
+        NAME AtlasIntegrationTestCompareOutput
+        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp ${generated_stencil_codes}
+        DEPENDS eckit atlas gtest GTClangUnittestStatic
         OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-genmeshes
-        GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestGenMeshes.xml
+        GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml
       )
-    target_include_directories(AtlasIntegrationTestGenMeshes PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-    target_include_directories(AtlasIntegrationTestGenMeshes PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-    # Compare meshes against references meshes
-    # TODO
 
 else()
 	message(STATUS "eckit_DIR and/or atlas_DIR not set, disabling atlas integration tests")

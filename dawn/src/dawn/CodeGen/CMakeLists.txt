@@ -65,3 +65,6 @@ yoda_add_library(
           TranslationUnit.h
   OBJECT
 )
+
+add_library(DawnAtlasInterface INTERFACE)
+target_sources(DawnAtlasInterface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Atlas/atlas_interface.hpp)
