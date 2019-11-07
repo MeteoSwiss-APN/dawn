@@ -209,16 +209,16 @@ public:
   HorizontalExtent() = default;
 
   HorizontalExtent(ast::HorizontalOffset const& hOffset) {
-    *this = offset_dispatch(hOffset,
-                            [](ast::CartesianOffset const& cOffset) {
-                              return HorizontalExtent(ast::cartesian, cOffset.offsetI(),
-                                                      cOffset.offsetI(), cOffset.offsetJ(),
-                                                      cOffset.offsetJ());
-                            },
-                            [](ast::UnstructuredOffset const& uOffset) {
-                              return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
-                            },
-                            []() { return HorizontalExtent(); });
+    *this = offset_dispatch(
+        hOffset,
+        [](ast::CartesianOffset const& cOffset) {
+          return HorizontalExtent(ast::cartesian, cOffset.offsetI(), cOffset.offsetI(),
+                                  cOffset.offsetJ(), cOffset.offsetJ());
+        },
+        [](ast::UnstructuredOffset const& uOffset) {
+          return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+        },
+        []() { return HorizontalExtent(); });
   }
 
   HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}

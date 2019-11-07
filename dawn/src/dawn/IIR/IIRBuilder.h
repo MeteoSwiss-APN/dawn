@@ -132,6 +132,20 @@ public:
     return ret;
   }
 
+  template <typename... Stmts>
+  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                         int offsetLow, int offsetHigh, Stmts&&... stmts) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e, offsetLow, offsetHigh),
+                                               si_->getMetaData());
+    ret->setID(si_->nextUID());
+    [[maybe_unused]] int x[] = {
+        (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
+    computeAccesses(si_.get(), ret->getAST().getStatements());
+    ret->updateLevel();
+    return ret;
+  }
+
   // specialized builder for the stage that accepts a location type
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
