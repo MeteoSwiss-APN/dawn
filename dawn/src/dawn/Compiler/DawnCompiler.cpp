@@ -22,6 +22,7 @@
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
@@ -193,6 +194,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassSetStageGraph>();
     optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
     optimizer->checkAndPushBack<PassStageMerger>();
+    optimizer->checkAndPushBack<PassFixVersionedInputFields>();
     optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
     optimizer->checkAndPushBack<PassTemporaryType>();
     optimizer->checkAndPushBack<PassTemporaryMerger>();

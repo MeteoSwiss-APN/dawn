@@ -38,6 +38,7 @@ bool PassManager::runAllPassesOnStecilInstantiation(
       return false;
 
     passesRan.emplace_back(pass->getName());
+    instantiation->jsonDump(pass->getName() + std::string(".json"));
   }
   return true;
 }

@@ -178,7 +178,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   auto SCCs = std::make_unique<std::vector<std::set<int>>>();
   graph->findStronglyConnectedComponents(*SCCs);
 
-  // ... and add those which have atleast one stencil access
+  // ... and add those which have at least one stencil access
   for(std::set<int>& scc : *SCCs) {
     bool isStencilSCC = false;
 
