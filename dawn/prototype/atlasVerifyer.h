@@ -22,8 +22,7 @@ private:
   }
 
   template <typename value_type>
-  bool compare_below_threashold(value_type expected, value_type actual,
-                                value_type precision) const {
+  bool compare_below_threshold(value_type expected, value_type actual, value_type precision) const {
     if(precision == 0) {
       return expected == actual;
     }
@@ -70,8 +69,8 @@ public:
     for(int i = 0; i < lhs.shape(0); i++) {
       for(int k = 0; k < lhs.shape(1); k++) {
         Value valueLhs = lhs(i, k);
-        Value valueRhs = lhs(i, k);
-        if(!compare_below_threashold(valueLhs, valueRhs, Value(precision_))) {
+        Value valueRhs = rhs(i, k);
+        if(!compare_below_threshold(valueLhs, valueRhs, Value(precision_))) {
           if(--max_erros >= 0) {
             std::cerr << "( " << i << " " << k << " ) : "
                       << "  error: " << std::fabs((valueRhs - valueLhs) / (valueRhs)) << std::endl;
