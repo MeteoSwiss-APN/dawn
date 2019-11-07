@@ -58,7 +58,7 @@ TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
 namespace {
 // TODO: this is currently broken, because cannot construct with IIRBuilder a stage with location
 // type different from cells
-TEST(AtlasIntegrationTestCompareOutput, DISABLED_CopyEdge) {
+TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);

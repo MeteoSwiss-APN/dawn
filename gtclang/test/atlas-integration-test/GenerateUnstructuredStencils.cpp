@@ -53,7 +53,7 @@ int main() {
                         b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                           b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
-    std::ofstream of("generated_copyCell.hpp");
+    std::ofstream of("generated/generated_copyCell.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
     of.close();
   }
@@ -67,12 +67,13 @@ int main() {
     auto out_f = b.field("out_field", LocType::Edges);
 
     auto stencil_instantiation = b.build(
-        "copyEdge", b.stencil(b.multistage(
-                        LoopOrderKind::Parallel,
-                        b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                          b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+        "copyEdge",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                              b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
-    std::ofstream of("generated_copyEdge.hpp");
+    std::ofstream of("generated/generated_copyEdge.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
     of.close();
   }
@@ -95,7 +96,7 @@ int main() {
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                    b.lit(0.), LocType::Edges))))))));
 
-    std::ofstream of("generated_accumulateEdgeToCell.hpp");
+    std::ofstream of("generated/generated_accumulateEdgeToCell.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
     of.close();
   }
@@ -130,7 +131,7 @@ int main() {
                     b.binaryExpr(b.at(in_f), b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
                                  Op::plus))))))));
 
-    std::ofstream of("generated_diffusion.hpp");
+    std::ofstream of("generated/generated_diffusion.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
     of.close();
   }
