@@ -22,20 +22,32 @@ private:
   }
 
   template <typename value_type>
-  bool compare_below_threshold(value_type expected, value_type actual, value_type precision) const {
+  struct ComparisonResult {
+    bool outcome;
+    value_type error;
+    operator bool() { return outcome; }
+  };
+
+  template <typename value_type>
+  ComparisonResult<value_type> compare_below_threshold(value_type expected, value_type actual,
+                                                       value_type precision) const {
+    ComparisonResult<value_type> result;
+    result.outcome = false;
     if(precision == 0) {
-      return expected == actual;
-    }
-    if(std::fabs(expected) < 1e-3 && std::fabs(actual) < 1e-3) {
+      result.outcome = expected == actual;
+      result.error = 0;
+    } else if(std::fabs(expected) < 1e-3 && std::fabs(actual) < 1e-3) {
       if(std::fabs(expected - actual) < precision) {
-        return true;
+        result.outcome = true;
       }
+      result.error = std::fabs(expected - actual);
     } else {
       if(std::fabs((expected - actual) / (precision * expected)) < 1.0) {
-        return true;
+        result.outcome = true;
       }
+      result.error = std::fabs((expected - actual) / expected);
     }
-    return false;
+    return result;
   }
 
 public:
@@ -70,10 +82,12 @@ public:
       for(int k = 0; k < lhs.shape(1); k++) {
         Value valueLhs = lhs(i, k);
         Value valueRhs = rhs(i, k);
-        if(!compare_below_threshold(valueLhs, valueRhs, Value(precision_))) {
+        ComparisonResult<Value> comparisonResult =
+            compare_below_threshold(valueLhs, valueRhs, Value(precision_));
+        if(!comparisonResult) {
           if(--max_erros >= 0) {
             std::cerr << "( " << i << " " << k << " ) : "
-                      << "  error: " << std::fabs((valueRhs - valueLhs) / (valueRhs)) << std::endl;
+                      << "  error: " << comparisonResult.error << std::endl;
           }
           verified = false;
         }
