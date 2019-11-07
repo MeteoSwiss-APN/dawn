@@ -4,12 +4,10 @@
 
 #include "generated_verticalSum.hpp"
 
-using namespace mylibInterface;
-
 int main() {
   int w = 32;
   int k_size = 5;
-  Mesh m{w, w, true};
+  mylibInterface::Mesh m{w, w, true};
   mylib::FaceData<double> out(m, k_size);
   mylib::FaceData<double> in(m, k_size);
 
