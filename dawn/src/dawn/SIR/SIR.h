@@ -176,10 +176,9 @@ public:
   bool I() const { return maskI_; }
   bool J() const { return maskJ_; }
   bool K() const { return maskK_; }
-  ~CartesianFieldDimension() = default;
-  CartesianFieldDimension(std::array<bool, 3> mask)
+  explicit CartesianFieldDimension(std::array<bool, 3> mask)
       : maskI_(mask[0]), maskJ_(mask[1]), maskK_(mask[2]) {}
-  CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
+  explicit CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
       : maskI_(dimi), maskJ_(dimj), maskK_(dimk) {}
 };
 
@@ -187,8 +186,6 @@ class FieldDimension {
   std::unique_ptr<FieldDimensionImpl> impl_;
 
 public:
-  FieldDimension() = delete;
-  ~FieldDimension() = default;
   FieldDimension(dawn::ast::cartesian_, std::array<bool, 3> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
   FieldDimension(dawn::ast::cartesian_, bool maskI, bool maskJ, bool maskK)
