@@ -259,9 +259,9 @@ static std::shared_ptr<sir::Field> makeField(const dawn::proto::statements::Fiel
       throwException("field_dimensions");
 
     field->fieldDimensions = sir::FieldDimension(
-        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions().at(0),
-                                                   (bool)fieldProto.field_dimensions().at(1),
-                                                   (bool)fieldProto.field_dimensions().at(2)}));
+        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
+                                                   (bool)fieldProto.field_dimensions()[1],
+                                                   (bool)fieldProto.field_dimensions()[2]}));
   }
   return field;
 }
