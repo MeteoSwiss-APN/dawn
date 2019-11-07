@@ -4,7 +4,7 @@
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>
-class generated {
+class reference_diffusion {
 private:
   struct stencil_127 {
     gtclang::mesh_t<LibTag> const& m_mesh;
@@ -41,17 +41,17 @@ private:
       sync_storages();
     }
   };
-  static constexpr const char* s_name = "generated";
+  static constexpr const char* s_name = "reference_diffusion";
   stencil_127 m_stencil_127;
 
 public:
-  generated(const generated&) = delete;
+  reference_diffusion(const reference_diffusion&) = delete;
 
   // Members
 
-  generated(const gtclang::mesh_t<LibTag>& mesh, int k_size,
-            gtclang::cell_field_t<LibTag, double>& in_field,
-            gtclang::cell_field_t<LibTag, double>& out_field)
+  reference_diffusion(const gtclang::mesh_t<LibTag>& mesh, int k_size,
+                      gtclang::cell_field_t<LibTag, double>& in_field,
+                      gtclang::cell_field_t<LibTag, double>& out_field)
       : m_stencil_127(mesh, k_size, in_field, out_field) {}
 
   void run() {
