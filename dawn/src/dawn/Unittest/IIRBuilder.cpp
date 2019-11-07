@@ -209,7 +209,10 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
 
 IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, asArray(ft));
+  auto fieldMaskArray = asArray(ft);
+  sir::FieldDimension dimensions(ast::cartesian, fieldMaskArray[0] == 1, fieldMaskArray[1] == 1,
+                                 fieldMaskArray[2] == 1);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, dimensions);
   return {id, name};
 }
 
@@ -228,8 +231,9 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
                                                 ast::Expr::LocationType location) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
-                                       asArray(FieldType::ijk), location);
+  int id =
+      si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
+                                  sir::FieldDimension(ast::cartesian, true, true, true), location);
   return {id, name};
 }
 

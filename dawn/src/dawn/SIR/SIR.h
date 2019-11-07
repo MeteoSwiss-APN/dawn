@@ -15,11 +15,12 @@
 #ifndef DAWN_SIR_SIR_H
 #define DAWN_SIR_SIR_H
 
-#include "dawn/AST/Offsets.h"
+#include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/HashCombine.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
@@ -154,15 +155,21 @@ class FieldDimensionImpl {
 public:
   std::unique_ptr<FieldDimensionImpl> clone() const { return cloneImpl(); }
   virtual ~FieldDimensionImpl() = default;
+  bool operator==(const FieldDimensionImpl& other) { return equalityImpl(other); }
 
 private:
   virtual std::unique_ptr<FieldDimensionImpl> cloneImpl() const = 0;
+  virtual bool equalityImpl(const FieldDimensionImpl& other) const = 0;
 };
 
 class CartesianFieldDimension : public FieldDimensionImpl {
   bool maskI_, maskJ_, maskK_;
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
     return std::make_unique<CartesianFieldDimension>(maskI_, maskJ_, maskK_);
+  }
+  virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
+    auto const& otherCartesian = dynamic_cast<CartesianFieldDimension const&>(other);
+    return otherCartesian.I() == I() && otherCartesian.J() == J() && otherCartesian.K() == K();
   }
 
 public:
@@ -191,6 +198,7 @@ public:
     impl_ = other.impl_->clone();
     return *this;
   }
+  bool operator==(const FieldDimension& other) const { return *impl_ == *other.impl_; }
   FieldDimension& operator=(FieldDimension&& other) = default;
 
   FieldDimension(const FieldDimension& other) { *this = other; }

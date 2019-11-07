@@ -214,10 +214,13 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 10;
   auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtolegaldimensions();
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
+    auto const& cartDimensions =
+        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+            IDToLegalDimension.second);
     proto::iir::Array3i array;
-    array.set_int1(IDToLegalDimension.second[0]);
-    array.set_int2(IDToLegalDimension.second[1]);
-    array.set_int3(IDToLegalDimension.second[2]);
+    array.set_int1(cartDimensions.I());
+    array.set_int2(cartDimensions.J());
+    array.set_int3(cartDimensions.K());
     protoInitializedDimensionsMap.insert({IDToLegalDimension.first, array});
   }
 
@@ -536,9 +539,11 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   }
 
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
-    Array3i dims{fieldIDInitializedDims.second.int1(), fieldIDInitializedDims.second.int2(),
-                 fieldIDInitializedDims.second.int3()};
-    metadata.fieldIDToInitializedDimensionsMap_[fieldIDInitializedDims.first] = dims;
+    metadata.fieldIDToInitializedDimensionsMap_.emplace(
+        fieldIDInitializedDims.first,
+        sir::FieldDimension(ast::cartesian, fieldIDInitializedDims.second.int1() == 1,
+                            fieldIDInitializedDims.second.int2() == 1,
+                            fieldIDInitializedDims.second.int3() == 1));
   }
 
   for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())

@@ -279,15 +279,6 @@ std::string CodeGen::getStorageType(const sir::FieldDimension& dimensions) {
   return storageType;
 }
 
-std::string CodeGen::getStorageType(const Array3i& dimensions) {
-  std::string storageType = "storage_";
-  storageType += dimensions[0] ? "i" : "";
-  storageType += dimensions[1] ? "j" : "";
-  storageType += dimensions[2] ? "k" : "";
-  storageType += "_t";
-  return storageType;
-}
-
 std::string CodeGen::getStorageType(const sir::Field& field) {
   return getStorageType(field.fieldDimensions);
 }

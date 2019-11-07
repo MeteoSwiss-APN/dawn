@@ -136,7 +136,7 @@ public:
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int fieldID) const;
+  sir::FieldDimension getFieldDimensionsMask(int fieldID) const;
 
   template <FieldAccessType TFieldAccessType>
   bool hasAccessesOfType() const {
@@ -158,10 +158,8 @@ public:
                const sir::FieldDimension& fieldDimensions,
                ast::Expr::LocationType = ast::Expr::LocationType::Cells);
 
-  int addField(FieldAccessType type, const std::string& name, const Array3i& fieldDimensions,
-               ast::Expr::LocationType = ast::Expr::LocationType::Cells);
-
-  int addTmpField(FieldAccessType type, const std::string& basename, const Array3i fieldDimensions);
+  int addTmpField(FieldAccessType type, const std::string& basename,
+                  const sir::FieldDimension& fieldDimensions);
 
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
@@ -347,7 +345,7 @@ public:
     stencilFunInstantiationCandidate_.emplace(stencilFun, candidate);
   }
 
-  const std::unordered_map<int, Array3i>& getFieldIDToDimsMap() const {
+  const std::unordered_map<int, sir::FieldDimension>& getFieldIDToDimsMap() const {
     return fieldIDToInitializedDimensionsMap_;
   }
 
@@ -392,7 +390,7 @@ private:
       fieldnameToBoundaryConditionMap_;
 
   /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
-  std::unordered_map<int, Array3i> fieldIDToInitializedDimensionsMap_;
+  std::unordered_map<int, dawn::sir::FieldDimension> fieldIDToInitializedDimensionsMap_;
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;

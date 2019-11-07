@@ -83,7 +83,10 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 
 json::json Stencil::FieldInfo::jsonDump() const {
   json::json node;
-  node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
+
+  auto const& cartDimensions =
+      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(Dimensions);
+  node["dim"] = format("[%i,%i,%i]", cartDimensions.I(), cartDimensions.J(), cartDimensions.K());
   node["field"] = field.jsonDump();
   node["IsTemporary"] = IsTemporary;
   return node;
@@ -129,10 +132,16 @@ void Stencil::updateFromChildren() {
 
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
     bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
-    Array3i specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
+    auto specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
+    auto const& specifiedCartDimension =
+        sir::dimension_cast<const sir::CartesianFieldDimension&>(specifiedDimension);
 
-    derivedInfo_.fields_.emplace(
-        std::make_pair(accessID, FieldInfo{isTemporary, fieldName, specifiedDimension, field}));
+    derivedInfo_.fields_.emplace(std::make_pair(
+        accessID,
+        FieldInfo{isTemporary, fieldName,
+                  dawn::sir::FieldDimension(dawn::ast::cartesian, specifiedCartDimension.I(),
+                                            specifiedCartDimension.J(), specifiedCartDimension.K()),
+                  field}));
   }
 }
 

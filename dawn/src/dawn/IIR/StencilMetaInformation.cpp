@@ -309,9 +309,11 @@ bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
          accessType == FieldAccessType::InterStencilTemporary;
 }
 
-Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
+sir::FieldDimension StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
   if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
-    return Array3i{{1, 1, 1}};
+    return sir::FieldDimension(
+        ast::cartesian, true, true,
+        true); // NOTE: return default unstructured in case of unstructured compilation here!
   }
   return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
 }
@@ -345,25 +347,6 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
   insertAccessOfType(type, accessID, name);
 
   DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
-  auto const& structuredDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(fieldDimensions);
-  auto dimensionArray = Array3i({(int)structuredDimensions.I(), (int)structuredDimensions.J(),
-                                 (int)structuredDimensions.K()});
-  fieldIDToInitializedDimensionsMap_.emplace(accessID, dimensionArray);
-
-  addAccessIDLocationPair(accessID, locationType);
-
-  return accessID;
-}
-
-int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     const Array3i& fieldDimensions,
-                                     ast::Expr::LocationType locationType) {
-  int accessID = UIDGenerator::getInstance()->get();
-  DAWN_ASSERT(isFieldType(type));
-  insertAccessOfType(type, accessID, name);
-
-  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 
   addAccessIDLocationPair(accessID, locationType);
@@ -372,7 +355,7 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                        const Array3i fieldDimensions) {
+                                        const sir::FieldDimension& fieldDimensions) {
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, accessID);
@@ -470,7 +453,9 @@ json::json StencilMetaInformation::jsonDump() const {
   json::json fieldsMapJson;
   for(const auto& pair : fieldIDToInitializedDimensionsMap_) {
     auto dims = pair.second;
-    fieldsMapJson[std::to_string(pair.first)] = format("[%i,%i,%i]", dims[0], dims[1], dims[2]);
+    auto const& dimsCart = sir::dimension_cast<const sir::CartesianFieldDimension&>(dims);
+    fieldsMapJson[std::to_string(pair.first)] =
+        format("[%i,%i,%i]", (int)dimsCart.I(), (int)dimsCart.J(), (int)dimsCart.K());
   }
   metaDataJson["FieldDims"] = fieldsMapJson;
 
