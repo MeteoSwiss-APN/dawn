@@ -34,7 +34,7 @@ Face const& Edge::face(size_t i) const { return *faces_[i]; }
 
 int count_inner_faces(Grid const& grid) {
   int fcnt = 0;
-  for(auto& f : grid.faces()) {
+  for(const auto& f : grid.faces()) {
     if(inner_face(f)) {
       ++fcnt;
     }
@@ -81,14 +81,14 @@ std::ostream& toVtk(std::string const& name, FaceData<double> const& f_data, Gri
                     std::ostream& os) {
   os << "SCALARS " << name << "  float 1\nLOOKUP_TABLE default\n";
   for(int k_level = 0; k_level < f_data.k_size(); k_level++) {
-    for(auto& f : grid.faces())
+    for(const auto& f : grid.faces())
       if(inner_face(f))
         os << f_data(f, k_level) << '\n';
   }
 
   os << "SCALARS id int 1\nLOOKUP_TABLE default\n";
   for(int k_level = 0; k_level < f_data.k_size(); k_level++) {
-    for(auto& f : grid.faces()) {
+    for(const auto& f : grid.faces()) {
       if(inner_face(f)) {
         os << f.id() << '\n';
       }
@@ -101,7 +101,7 @@ std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Gri
   FaceData<double> f_data{grid, e_data.k_size()};
 
   for(int k_level = 0; k_level < f_data.k_size(); ++k_level) {
-    for(auto& cell : grid.faces()) {
+    for(const auto& cell : grid.faces()) {
       f_data(cell, k_level) = mylibInterface::reduceEdgeToCell(
           mylibInterface::mylibTag{}, grid, cell, 0,
           [&](auto& lhs, const auto& rhs) { lhs += f_data(cell, k_level); });

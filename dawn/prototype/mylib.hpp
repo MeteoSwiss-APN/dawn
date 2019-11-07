@@ -306,7 +306,7 @@ private:
 template <typename O, typename T>
 class Data {
 public:
-  explicit Data(size_t horizontal_size, size_t num_k_levels)
+  Data(size_t horizontal_size, size_t num_k_levels)
       : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
   T& operator()(O const& f, size_t k_level) { return data_[k_level][f.id()]; }
   T const& operator()(O const& f, size_t k_level) const { return data_[k_level][f.id()]; }
@@ -321,19 +321,17 @@ private:
 template <typename T>
 class FaceData : public Data<Face, T> {
 public:
-  explicit FaceData(Grid const& grid, int k_size) : Data<Face, T>(grid.faces().size(), k_size) {}
+  FaceData(Grid const& grid, int k_size) : Data<Face, T>(grid.faces().size(), k_size) {}
 };
 template <typename T>
 class VertexData : public Data<Vertex, T> {
 public:
-  explicit VertexData(Grid const& grid, int k_size)
-      : Data<Vertex, T>(grid.vertices().size(), k_size) {}
+  VertexData(Grid const& grid, int k_size) : Data<Vertex, T>(grid.vertices().size(), k_size) {}
 };
 template <typename T>
 class EdgeData : public Data<Edge, T> {
 public:
-  explicit EdgeData(Grid const& grid, int k_size)
-      : Data<Edge, T>(grid.all_edges().size(), k_size) {}
+  EdgeData(Grid const& grid, int k_size) : Data<Edge, T>(grid.all_edges().size(), k_size) {}
 };
 
 std::ostream& toVtk(Grid const& grid, int k_size, std::ostream& os = std::cout);
