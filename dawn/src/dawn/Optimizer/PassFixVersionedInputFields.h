@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSFIXFIELDVERSIONEDFIELDS_H
-#define DAWN_OPTIMIZER_PASSFIXFIELDVERSIONEDFIELDS_H
+#ifndef DAWN_OPTIMIZER_PASSFIXVERSIONEDINPUTFIELDS_H
+#define DAWN_OPTIMIZER_PASSFIXVERSIONEDINPUTFIELDS_H
 
 #include "dawn/Optimizer/Pass.h"
 

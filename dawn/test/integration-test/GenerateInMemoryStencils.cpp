@@ -115,7 +115,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
 
   ///////////////// Generation of the Metadata
 
-  target->getMetaData().setStencilname("generated");
+  target->getMetaData().setStencilName("generated");
 
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
     MS->update(iir::NodeUpdateType::levelAndTreeAbove);
@@ -302,7 +302,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   ///////////////// Generation of the Metadata
 
-  target->getMetaData().setStencilname("generated");
+  target->getMetaData().setStencilName("generated");
 
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
     MS->update(iir::NodeUpdateType::levelAndTreeAbove);

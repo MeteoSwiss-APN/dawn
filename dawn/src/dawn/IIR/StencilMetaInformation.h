@@ -264,7 +264,7 @@ public:
   }
 
   bool isFieldType(FieldAccessType accessType) const;
-  void setStencilname(const std::string& name) { stencilName_ = name; }
+  void setStencilName(const std::string& name) { stencilName_ = name; }
   void setFileName(const std::string& name) { fileName_ = name; }
   void setStencilLocation(const SourceLocation& location) { stencilLocation_ = location; }
 
