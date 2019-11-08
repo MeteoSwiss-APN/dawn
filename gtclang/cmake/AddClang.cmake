@@ -48,7 +48,7 @@ foreach(flag ${llvm_cxx_falgs})
   endif()
 
   # Filter -f* options (we want exceptions tough!)
-  if(${flag} MATCHES "^-f.*$" AND NOT(${flag} STREQUAL "-fno-exceptions"))
+  if(${flag} MATCHES "^-f.*$" AND NOT(${flag} STREQUAL "-fno-exceptions") AND NOT(${flag} STREQUAL "-fno-rtti"))  #FILTER fno-rtti here!
     string(REGEX REPLACE "-f" "" check_name ${flag})
     string(REGEX REPLACE "-" "_" check_name ${check_name})
     string(TOUPPER ${check_name} check_name)
