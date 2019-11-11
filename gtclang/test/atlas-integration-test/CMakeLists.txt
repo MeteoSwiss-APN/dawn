@@ -62,7 +62,7 @@ if(eckit_DIR AND atlas_DIR)
     # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
     yoda_add_unittest(
         NAME AtlasIntegrationTestCompareOutput
-        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp ${generated_stencil_codes_str} ${reference_stencil_codes_str}
+        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifyer.h ${generated_stencil_codes_str} ${reference_stencil_codes_str}
         DEPENDS eckit atlas gtest
         OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-compareoutput
         GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml

@@ -1,9 +1,27 @@
-#pragma once
-#include "atlas_interface.hpp"
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
+#ifndef GTCLANG_ATLAS_VERIFYER_H
+#define GTCLANG_ATLAS_VERIFYER_H
+
+#include "interface/atlas_interface.hpp"
 #include <type_traits>
 
-// quick verifiyer class, very close in behaviour to gridtools::clang::verifyer
-class atlasVerifyer {
+// Verifiyer class for atlas' ArrayViews, very close in behaviour to gridtools::clang::verifyer
+class AtlasVerifyer {
 private:
   bool use_default_precision_ = false;
   double precision_;
@@ -51,8 +69,8 @@ private:
   }
 
 public:
-  atlasVerifyer() : use_default_precision_(true) {}
-  atlasVerifyer(double precision) : use_default_precision_(false), precision_(precision) {}
+  AtlasVerifyer() : use_default_precision_(true) {}
+  AtlasVerifyer(double precision) : use_default_precision_(false), precision_(precision) {}
 
   template <typename Value, int RANK, atlas::array::Intent AccessMode>
   bool compareArrayView(const atlas::array::ArrayView<Value, RANK, AccessMode>& lhs,
@@ -86,7 +104,7 @@ public:
             compare_below_threshold(valueLhs, valueRhs, Value(precision_));
         if(!comparisonResult) {
           if(--max_erros >= 0) {
-            std::cerr << "( " << i << " " << k << " ) : "
+            std::cerr << "( idx: " << i << " lvl: " << k << " ) : "
                       << "  error: " << comparisonResult.error << std::endl;
           }
           verified = false;
@@ -97,3 +115,5 @@ public:
     return verified;
   }
 };
+
+#endif

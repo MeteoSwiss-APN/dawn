@@ -6,56 +6,52 @@ namespace cxxnaiveico {
 template <typename LibTag>
 class reference_diffusion {
 private:
-  struct stencil_127 {
+  struct stencil_109 {
     gtclang::mesh_t<LibTag> const& m_mesh;
-    int m_k_size;
     gtclang::cell_field_t<LibTag, double>& m_in_field;
     gtclang::cell_field_t<LibTag, double>& m_out_field;
 
   public:
-    stencil_127(gtclang::mesh_t<LibTag> const& mesh, int k_size,
+    stencil_109(gtclang::mesh_t<LibTag> const& mesh,
                 gtclang::cell_field_t<LibTag, double>& in_field,
                 gtclang::cell_field_t<LibTag, double>& out_field)
-        : m_mesh(mesh), m_k_size(k_size), m_in_field(in_field), m_out_field(out_field) {}
+        : m_mesh(mesh), m_in_field(in_field), m_out_field(out_field) {}
 
-    ~stencil_127() {}
+    ~stencil_109() {}
 
     void sync_storages() {}
 
     void run() {
       {
-        for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size - 1)) + 0 + 0; ++k) {
-          for(auto const& t : getCells(LibTag{}, m_mesh)) {
-            int cnt;
-            cnt = reduceCellToCell(LibTag{}, m_mesh, t, (int)0,
-                                   [&](auto& lhs, auto const& t) { return lhs += (int)1; });
-            m_out_field(t, k + 0) = reduceCellToCell(
-                LibTag{}, m_mesh, t, ((-cnt) * m_in_field(t, k + 0)),
-                [&](auto& lhs, auto const& t) { return lhs += m_in_field(t, k + 0); });
-            m_out_field(t, k + 0) =
-                (m_in_field(t, k + 0) +
-                 ((gridtools::clang::float_type)0.100000 * m_out_field(t, k + 0)));
-          }
+        for(auto const& t : getCells(LibTag{}, m_mesh)) {
+          int cnt;
+          cnt = reduceCellToCell(LibTag{}, m_mesh, t, (int)0,
+                                 [&](auto& lhs, auto const& t) { return lhs += (int)1; });
+          m_out_field(t) =
+              reduceCellToCell(LibTag{}, m_mesh, t, ((-cnt) * m_in_field(t)),
+                               [&](auto& lhs, auto const& t) { return lhs += m_in_field(t); });
+          m_out_field(t) =
+              (m_in_field(t) + ((gridtools::clang::float_type)0.100000 * m_out_field(t)));
         }
       }
       sync_storages();
     }
   };
   static constexpr const char* s_name = "reference_diffusion";
-  stencil_127 m_stencil_127;
+  stencil_109 m_stencil_109;
 
 public:
   reference_diffusion(const reference_diffusion&) = delete;
 
   // Members
 
-  reference_diffusion(const gtclang::mesh_t<LibTag>& mesh, int k_size,
+  reference_diffusion(const gtclang::mesh_t<LibTag>& mesh,
                       gtclang::cell_field_t<LibTag, double>& in_field,
                       gtclang::cell_field_t<LibTag, double>& out_field)
-      : m_stencil_127(mesh, k_size, in_field, out_field) {}
+      : m_stencil_109(mesh, in_field, out_field) {}
 
   void run() {
-    m_stencil_127.run();
+    m_stencil_109.run();
     ;
   }
 };

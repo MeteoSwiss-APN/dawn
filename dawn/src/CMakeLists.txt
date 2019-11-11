@@ -12,5 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(yodaAddCustomDummyTarget)
+
 add_subdirectory(dawn)
 add_subdirectory(dawn-c)
+
+# Add a dummy target with the interface headers for correct IDE parsing
+yoda_add_custom_dummy_target(NAME DawnParseInterfaceHeaders
+                             DIRECTORIES "interface")

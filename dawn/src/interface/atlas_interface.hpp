@@ -1,4 +1,20 @@
-#pragma once
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
+#ifndef DAWN_INTERFACE_MYLIB_INTERFACE_H_
+#define DAWN_INTERFACE_MYLIB_INTERFACE_H_
+
 #include "atlas/mesh.h"
 #include <cassert>
 
@@ -228,3 +244,4 @@ auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op
 }
 
 } // namespace atlasInterface
+#endif
