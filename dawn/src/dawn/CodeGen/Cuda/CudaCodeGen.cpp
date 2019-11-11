@@ -284,14 +284,6 @@ void CudaCodeGen::generateStencilWrapperCtr(
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
-
-    // for(const auto& fieldInfoPair : stencilFields) {
-    //   const auto& fieldInfo = fieldInfoPair.second;
-    //   if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
-    //                            fieldInfo.field.getAccessID())) {
-    //     initCtr += ",m_" + fieldInfo.Name;
-    //   }
-    // }
     initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
