@@ -133,7 +133,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
   MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
   std::string s = RangeToString("\n", "", "")(
-      stencilMembers, [](const std::string& member) { return member + "->reset();"; });
+      stencilMembers, [](const std::string& member) { return member + ".reset();"; });
   clearMeters << s;
   clearMeters.commit();
 
@@ -141,7 +141,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
   totalTime.startBody();
   totalTime.addStatement("double res = 0");
   std::string s1 = RangeToString(";\n", "", "")(
-      stencilMembers, [](const std::string& member) { return "res +=" + member + "->get_time()"; });
+      stencilMembers, [](const std::string& member) { return "res +=" + member + ".get_time()"; });
   totalTime.addStatement(s1);
   totalTime.addStatement("return res");
   totalTime.commit();
