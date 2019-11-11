@@ -237,12 +237,10 @@ void CudaCodeGen::generateStencilClassCtr(
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
-
   stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
-
 
   stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
   stencilClassCtr.addInit("m_dom(dom_)");
@@ -267,7 +265,6 @@ void CudaCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-
   const auto& stencils = stencilInstantiation->getStencils();
 
   // add the ctr initialization of each stencil
@@ -288,13 +285,13 @@ void CudaCodeGen::generateStencilWrapperCtr(
       initCtr += ",m_globals";
     }
 
-    for(const auto& fieldInfoPair : stencilFields) {
-      const auto& fieldInfo = fieldInfoPair.second;
-      if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
-                               fieldInfo.field.getAccessID())) {
-        initCtr += ",m_" + fieldInfo.Name;
-      }
-    }
+    // for(const auto& fieldInfoPair : stencilFields) {
+    //   const auto& fieldInfo = fieldInfoPair.second;
+    //   if(metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
+    //                            fieldInfo.field.getAccessID())) {
+    //     initCtr += ",m_" + fieldInfo.Name;
+    //   }
+    // }
     initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
