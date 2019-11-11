@@ -232,7 +232,7 @@ public:
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
-  void removeAccessID(int AccesssID);
+  void removeAccessID(int AccessID);
 
   void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
   void eraseStencilID(const int stencilID);

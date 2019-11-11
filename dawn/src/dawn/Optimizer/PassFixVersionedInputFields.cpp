@@ -16,6 +16,7 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
@@ -109,37 +110,56 @@ createAssignmentMultiStage(int assignmentID, std::shared_ptr<iir::StencilInstant
   return ms;
 }
 
-PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {}
+/// @brief Register all referenced AccessIDs
+struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
+  const iir::StencilMetaInformation& metadata_;
+  std::set<int> versionedAccessIDs;
 
+  CollectVersionedIDs(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
+
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+    const int id = iir::getAccessID(expr);
+    if(metadata_.isAccessIDAVersion(id)) {
+      versionedAccessIDs.insert(id);
+    }
+  }
+};
+
+PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
+    : Pass(context, "PassFixVersionedInputFields", true) {
+  dependencies_.push_back("PassFieldVersioning");
+}
+
+// TODO: Figure out how to catch the case with a non-zero vertical extent.
 bool PassFixVersionedInputFields::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
   for(const auto& stencil : stencilInstantiation->getStencils()) {
     // Inserting multistages below, so can't use IterateIIROver here
     for(auto msiter = stencil->childrenBegin(); msiter != stencil->childrenEnd(); ++msiter) {
-      for(auto& [id, field] : stencil->getFields()) {
-        if(stencilInstantiation->getMetaData().isMultiVersionedField(id)) {
-          // For every multistage, get the read access interval
-          auto multiInterval = (*msiter)->computeReadAccessInterval(id);
-          if(multiInterval.empty())
-            continue;
+      CollectVersionedIDs getter{stencilInstantiation->getMetaData()};
+      for(auto& stmt : iterateIIROverStmt(**msiter))
+        stmt->accept(getter);
+      for(int id : getter.versionedAccessIDs) {
+        const auto multiInterval = (*msiter)->computeReadAccessInterval(id);
 
-          // If it has at least one, we need to generate a multistage that fills
-          // all read intervals from the original field during the execution of
-          // the multistage. Currently, we create one for each interval, but
-          // these could later be merged into a single multistage.
-          for(auto interval : multiInterval.getIntervals()) {
-            auto insertedMultistage =
-                createAssignmentMultiStage(id, stencilInstantiation, interval);
-            msiter = std::next(stencil->insertChild(msiter, std::move(insertedMultistage)));
+        // If it has at least one, we need to generate a multistage that fills
+        // all read intervals from the original field during the execution of
+        // the multistage. Currently, we create one for each interval, but
+        // these could later be merged into a single multistage.
+        for(auto interval : multiInterval.getIntervals()) {
+          auto insertedMultistage = createAssignmentMultiStage(id, stencilInstantiation, interval);
+          msiter = stencil->insertChild(msiter, std::move(insertedMultistage));
+          // update the mss: #TODO: this is still a workaround since we don't have level-and below:
+          for(const auto& domethods : iterateIIROver<iir::DoMethod>(**msiter)) {
+            domethods->update(iir::NodeUpdateType::levelAndTreeAbove);
           }
+          ++msiter;
         }
       }
     }
   }
-  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilInstantiation->getIIR())) {
-    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
+
   return true;
 }
+
 } // namespace dawn
