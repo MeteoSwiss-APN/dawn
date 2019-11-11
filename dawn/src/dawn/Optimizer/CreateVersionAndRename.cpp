@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/CreateVersionAndRename.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/Renaming.h"
 
 namespace dawn {

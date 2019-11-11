@@ -16,6 +16,7 @@
 #define DAWN_SUPPORT_ARRAYREF_H
 
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Compiler.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/SmallVector.h"
 #include <array>
@@ -77,13 +78,17 @@ public:
   constexpr ArrayRef(const T (&Arr)[N]) : data_(Arr), length_(N) {}
 
 /// @brief Construct an ArrayRef from a std::initializer_list
+#if DAWN_GNUC_PREREQ(9, 0, 0)
 #pragma GCC diagnostic push
 // Probably not an issue, see discussion
 // http://lists.llvm.org/pipermail/llvm-dev/2018-September/126078.html
 #pragma GCC diagnostic ignored "-Winit-list-lifetime"
+#endif
   ArrayRef(const std::initializer_list<T>& Vec)
       : data_(Vec.begin() == Vec.end() ? nullptr : Vec.begin()), length_(Vec.size()) {}
+#if DAWN_GNUC_PREREQ(9, 0, 0)
 #pragma GCC diagnostic pop
+#endif
 
   /// @brief Construct an ArrayRef from a SmallVector.
   ///
