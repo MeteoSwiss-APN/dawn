@@ -34,4 +34,9 @@ using vertex_field_t = decltype(vertexFieldType<T>(Tag{}));
 template <typename Tag>
 using mesh_t = decltype(meshType(Tag{}));
 
+// generic deref, specialize if needed
+template <typename Tag, typename LocationType>
+auto const& deref(Tag, LocationType const& l) {
+  return l;
+}
 } // namespace gtclang

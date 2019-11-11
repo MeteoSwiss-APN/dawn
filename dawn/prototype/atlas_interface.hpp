@@ -73,12 +73,6 @@ auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cell
 auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
 auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
 
-// TODO Should be moved to a place common to all interfaces
-template <typename Tag, typename LocationType>
-auto const& deref(Tag, LocationType const& l) {
-  return l;
-}
-
 std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {

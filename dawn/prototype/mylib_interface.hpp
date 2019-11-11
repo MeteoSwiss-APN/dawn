@@ -22,11 +22,6 @@ inline decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(
 inline decltype(auto) getEdges(mylibTag, mylib::Grid const& m) { return m.edges(); }
 inline decltype(auto) getVertices(mylibTag, mylib::Grid const& m) { return m.vertices(); }
 
-// TODO Should be moved to a place common to all interfaces
-template <typename Tag, typename LocationType>
-auto const& deref(Tag, LocationType const& l) {
-  return l;
-}
 // Specialized to deref the reference_wrapper
 inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<mylib::Edge> const& e) {
   return e; // implicit conversion

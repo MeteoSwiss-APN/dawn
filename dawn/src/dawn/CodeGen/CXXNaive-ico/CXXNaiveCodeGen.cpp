@@ -374,6 +374,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     MemberFunction StencilRunMethod = StencilClass.addMemberFunction("void", "run", "");
     StencilRunMethod.startBody();
 
+    // TODO the generic deref should be moved to a different namespace
+    StencilRunMethod.addStatement("using gtclang::deref;");
+
     // StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil->getChildren()) {
 
