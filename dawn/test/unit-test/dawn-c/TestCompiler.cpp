@@ -17,11 +17,11 @@
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
-#include "dawn/Unittest/IIRBuilder.h"
 
 #include <gtest/gtest.h>
 
@@ -105,6 +105,32 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
                                                    b.lit(0.), LocType::Edges))))))));
 
   std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
+
+TEST(CompilerTest, DISABLED_SumVertical) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Cells);
+  auto out_f = b.field("out_field", LocType::Cells);
+
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells,
+                  b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
+                            b.stmt(b.assignExpr(b.at(out_f),
+                                                b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
+                                                             b.at(in_f, HOffsetType::noOffset, -1),
+                                                             Op::plus))))))));
+
+  std::ofstream of("prototype/generated_verticalSum.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
   of.close();
 }
@@ -140,6 +166,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
                                                Op::plus))))))));
 
   std::ofstream of("prototype/generated_Diffusion.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
   of.close();
 }

@@ -16,8 +16,6 @@ yoda_add_library(
   NAME DawnUnittest
   SOURCES UnittestLogger.cpp
           UnittestLogger.h
-          IIRBuilder.cpp
-          IIRBuilder.h
   ARCHIVE
   DEPENDS DawnIIRStatic DawnOptimizerStatic
 )

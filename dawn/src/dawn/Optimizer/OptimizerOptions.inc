@@ -33,9 +33,10 @@
 //
 
 OPT(int, MaxHaloPoints, 3, "max-halo", "", 
-    "Set the maximum number of allowed halo points", "<N>", true, false) 
-OPT(std::string, block_size, "", "block-size", "",
-        "block size for tiled computations", "", true, false)
+    "Set the maximum number of allowed halo points", "<N>", true, false)
+OPT(int, block_size_i, 0, "block-size-i", "", "i block size for tiled computations", "", true, false)
+OPT(int, block_size_j, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
+OPT(int, block_size_k, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
 OPT(bool, SSA, false, "ssa", "",

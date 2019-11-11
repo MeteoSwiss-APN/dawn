@@ -43,8 +43,9 @@ OPT(int, nsms, 0, "nsms", "",
     "Number of (CUDA) SMs", "<nsms>", true, false)
 OPT(int, maxBlocksPerSM, 0, "max-blocks-sm", "",
     "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
-OPT(std::string, domain_size, "", "domain-size", "",
-    "domain size for compiler optimization", "", true, false)
+OPT(int, domain_size_i, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
+OPT(int, domain_size_j, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
+OPT(int, domain_size_k, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, false)
 OPT(std::string, DeserializeIIR, "", "read-iir", "",

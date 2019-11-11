@@ -18,12 +18,9 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
-#include "dawn/IIR/Interval.h"
+#include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
-#include <set>
 #include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
 namespace dawn {
 namespace iir {
@@ -42,14 +39,14 @@ class CudaCodeGen : public CodeGen {
 public:
   ///@brief constructor
   CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints,
-              int nsms, int maxBlocksPerSM, std::string domainSize);
+              int nsms, int maxBlocksPerSM, const Array3i& domainSize);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
   struct CudaCodeGenOptions {
     int nsms;
     int maxBlocksPerSM;
-    std::string domainSize;
+    Array3i domainSize;
   };
 
 private:

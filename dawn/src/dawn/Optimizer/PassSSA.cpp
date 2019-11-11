@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSSA.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/CreateVersionAndRename.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include <unordered_set>

@@ -51,8 +51,8 @@ struct atlasTag {};
 template <typename T>
 class Field {
 public:
-  T const& operator()(int f) const { return atlas_field_(f, 0); }
-  T& operator()(int f) { return atlas_field_(f, 0); }
+  T const& operator()(int f, int k) const { return atlas_field_(f, k); }
+  T& operator()(int f, int k) { return atlas_field_(f, k); }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
@@ -72,6 +72,14 @@ atlas::Mesh meshType(atlasTag);
 auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
 auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
 auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
+
+std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
+  std::vector<int> neighs;
+  for(int n = 0; n < conn.cols(idx); ++n) {
+    neighs.emplace_back(conn(idx, n));
+  }
+  return neighs;
+}
 
 std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
@@ -98,10 +106,71 @@ std::vector<int> const& edgeNeighboursOfCell(atlas::Mesh const& m, int const& id
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    const auto& conn = m.cells().edge_connectivity();
+    neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
+  }
+  return neighs[idx];
+}
+
+std::vector<int> const& nodeNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    neighs[idx] = getNeighs(m.cells().node_connectivity(), idx);
+  }
+  return neighs[idx];
+}
+
+std::vector<int> cellNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    neighs[idx] = getNeighs(m.cells().cell_connectivity(), idx);
+  }
+  return neighs[idx];
+}
+
+std::vector<int> nodeNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    neighs[idx] = getNeighs(m.cells().node_connectivity(), idx);
+  }
+  return neighs[idx];
+}
+
+std::vector<int> cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    neighs[idx] = getNeighs(m.cells().cell_connectivity(), idx);
+  }
+  return neighs[idx];
+}
+
+std::vector<int> edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
+  }
+  return neighs[idx];
+}
+
+std::vector<int> nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
+  // note this is only a workaround and does only work as long as we have only one mesh
+  static std::map<int, std::vector<int>> neighs;
+  if(neighs.count(idx) == 0) {
+    const auto& conn_nodes_to_edge = m.nodes().edge_connectivity();
     neighs[idx] = std::vector<int>{};
-    for(int n = 0; n < conn.cols(idx); ++n) {
-      neighs[idx].emplace_back(conn(idx, n));
+    for(int ne = 0; ne < conn_nodes_to_edge.cols(idx); ++ne) {
+      int nbh_edge_idx = conn_nodes_to_edge(idx, ne);
+      const auto& conn_edge_to_nodes = m.edges().node_connectivity();
+      for(int nn = 0; nn < conn_edge_to_nodes.cols(nbh_edge_idx); ++nn) {
+        int nbhNode = conn_edge_to_nodes(idx, nn);
+        if(nbhNode != idx) {
+          neighs[idx].emplace_back();
+        }
+      }
     }
   }
   return neighs[idx];
@@ -121,35 +190,41 @@ auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& o
 }
 template <typename Init, typename Op>
 auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  assert(false && "function not implemented in the atlas back end");
-  return 1;
+  for(auto&& obj : nodeNeighboursOfCell(m, idx))
+    op(init, obj);
+  return init;
 }
 
 template <typename Init, typename Op>
 auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  assert(false && "function not implemented in the atlas back end");
-  return 1;
+  for(auto&& obj : cellNeighboursOfEdge(m, idx))
+    op(init, obj);
+  return init;
 }
 template <typename Init, typename Op>
 auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  assert(false && "function not implemented in the atlas back end");
-  return 1;
+  for(auto&& obj : nodeNeighboursOfEdge(m, idx))
+    op(init, obj);
+  return init;
 }
 
 template <typename Init, typename Op>
 auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  assert(false && "function not implemented in the atlas back end");
-  return 1;
+  for(auto&& obj : cellNeighboursOfNode(m, idx))
+    op(init, obj);
+  return init;
 }
 template <typename Init, typename Op>
 auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  assert(false && "function not implemented in the atlas back end");
-  return 1;
+  for(auto&& obj : edgeNeighboursOfNode(m, idx))
+    op(init, obj);
+  return init;
 }
 template <typename Init, typename Op>
 auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  assert(false && "function not implemented in the atlas back end");
-  return 1;
+  for(auto&& obj : nodeNeighboursOfNode(m, idx))
+    op(init, obj);
+  return init;
 }
 
 } // namespace atlasInterface

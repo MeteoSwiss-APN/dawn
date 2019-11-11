@@ -204,7 +204,7 @@ class SIRPrinter:
 
         self.indent_ += 2
         self.T_.initial_indent = ' ' * self.indent_
-        for name, value in global_variables.map.iteritems():
+        for name, value in global_variables.map.items():
             str_ = ""
         if value.WhichOneof("Value") == "integer_value":
             str_ += "integer " + name
