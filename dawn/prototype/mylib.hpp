@@ -278,7 +278,7 @@ public:
         }
       }
 
-    for(auto& e : edges_) {
+    for(auto const& e : edges_) {
       if(e.id() != -1)
         valid_edges_.push_back(e);
     }
@@ -287,7 +287,7 @@ public:
   std::vector<Face> const& faces() const { return faces_; }
   std::vector<Vertex> const& vertices() const { return vertices_; }
   // edges_ contains edges outside of the domain, these are removed in valid_edges_.
-  std::vector<std::reference_wrapper<Edge>> const& edges() const { return valid_edges_; }
+  std::vector<std::reference_wrapper<Edge const>> const& edges() const { return valid_edges_; }
   std::vector<Edge> const& all_edges() const { return edges_; }
 
   auto nx() const { return nx_; }
@@ -297,7 +297,7 @@ private:
   std::vector<Face> faces_;
   std::vector<Vertex> vertices_;
   std::vector<Edge> edges_;
-  std::vector<std::reference_wrapper<Edge>> valid_edges_;
+  std::vector<std::reference_wrapper<Edge const>> valid_edges_;
 
   int nx_;
   int ny_;
