@@ -38,7 +38,7 @@ class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
   RangeToString offsetPrinter_;
-  std::string argName_ = "t";
+  std::string argName_ = "loc";
 
   /// The stencil function we are currently generating or NULL
   std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;

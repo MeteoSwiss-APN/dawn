@@ -35,20 +35,27 @@ namespace cxxnaiveico {
 //
 // - The following functions should be declarared:
 //
-//   template<typename ValueType> FieldType fieldType(Tag);
+//   template<typename ValueType> <Location>FieldType <location>FieldType(Tag);
 //   MeshType meshType(Tag);
 //
-// - FieldType should be callable with CellType and return `ValueType&` or `ValueType const&`.
+// - <Location> is one of Cell, Edge, Vertex; <Locations> one of Cells, Edges, Vertices.
 //
-// - getCells(Tag, MeshType const&) should return an object that can be used in a range-based
+// - <Location>FieldType should be callable with <Location>Type
+//   and return `ValueType&` or `ValueType const&`.
+//
+// - get<Locations>(Tag, MeshType const&) should return an object that can be used in a range-based
 //   for-loop as follows:
 //
-//     for (auto&& x : getCells(...)) needs to be well-defined such that x is of type CellType
+//     for (auto&& x : get<Locations>(...)) needs to be well-defined such that deref(x) returns
+//     an object of <Location>Type
 //
-// - The following function should be defined:
+// - A function `<Location>Type const& deref(X const& x)` should be defined,
+//   where X is decltype(*get<Locations>(...).begin())
+//
+// - The following combinatorial of functions should be defined:
 //
 //   template<typename Init, typename Op>
-//   Init reduceCellToCell(Tag, MeshType, CellType, Init, Op)
+//   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op)
 //
 //   where Op must be callable as
 //     Op(Init, ValueType);
@@ -358,6 +365,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     MemberFunction StencilRunMethod = StencilClass.addMemberFunction("void", "run", "");
     StencilRunMethod.startBody();
 
+    // TODO the generic deref should be moved to a different namespace
+    StencilRunMethod.addStatement("using gtclang::deref;");
+
     // StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil->getChildren()) {
 
@@ -387,11 +397,11 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       auto getLoop = [](ast::Expr::LocationType type) {
         switch(type) {
         case ast::Expr::LocationType::Cells:
-          return "for(auto const& t : getCells(LibTag{}, m_mesh))";
+          return "for(auto const& loc : getCells(LibTag{}, m_mesh))";
         case ast::Expr::LocationType::Vertices:
-          return "for(auto const& t : getVertices(LibTag{}, m_mesh))";
+          return "for(auto const& loc : getVertices(LibTag{}, m_mesh))";
         case ast::Expr::LocationType::Edges:
-          return "for(auto const& t : getEdges(LibTag{}, m_mesh))";
+          return "for(auto const& loc : getEdges(LibTag{}, m_mesh))";
         default:
           dawn_unreachable("invalid type");
           return "";
