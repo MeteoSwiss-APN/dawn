@@ -68,7 +68,6 @@ createDoMethod(int assignmentID, int assigneeID,
   domethod->setID(si->nextUID());
 
   domethod->getAST().push_back(std::move(assignmentStmt));
-
   domethod->update(iir::NodeUpdateType::level);
 
   return domethod;
