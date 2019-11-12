@@ -31,6 +31,7 @@ yoda_combine_libraries(
           DawnCompilerObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
+          DawnUnittestObjects #TODO: we don't want it here but it is needed for some gtclang tests
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
   VERSION ${DAWN_VERSION}
   DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSerializerStatic
