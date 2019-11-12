@@ -39,7 +39,8 @@ no_dependency "SIR" "Compiler"
 no_dependency "SIR" "Serialization"
 no_dependency "SIR" "CodeGen"
 
-no_dependency "IIR" "Optimizer"
+#TODO re-enable this no-dependency check once IIRBuilder is moved back to unit tests
+#no_dependency "IIR" "Optimizer"
 no_dependency "IIR" "Compiler"
 no_dependency "IIR" "Serialization"
 no_dependency "IIR" "CodeGen"

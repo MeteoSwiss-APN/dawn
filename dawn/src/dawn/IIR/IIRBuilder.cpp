@@ -75,7 +75,7 @@ std::string toStr(Op operation, std::vector<Op> const& valid_ops) {
 }
 } // namespace
 
-dawn::codegen::stencilInstantiationContext
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil) {
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
@@ -114,7 +114,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
-  dawn::codegen::stencilInstantiationContext map;
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> map;
   map[new_si->getName()] = std::move(new_si);
 
   return map;

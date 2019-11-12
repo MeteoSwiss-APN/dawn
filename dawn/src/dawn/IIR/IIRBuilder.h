@@ -15,7 +15,6 @@
 #ifndef DAWN_IIR_IIRBUILDER_H
 #define DAWN_IIR_IIRBUILDER_H
 
-#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
@@ -187,8 +186,8 @@ public:
   }
 
   // generates the final instantiation context
-  dawn::codegen::stencilInstantiationContext build(std::string const& name,
-                                                   std::unique_ptr<iir::Stencil> stencil);
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+  build(std::string const& name, std::unique_ptr<iir::Stencil> stencil);
 
 protected:
   std::shared_ptr<iir::StencilInstantiation> si_;
