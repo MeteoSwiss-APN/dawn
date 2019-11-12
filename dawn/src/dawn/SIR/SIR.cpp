@@ -552,11 +552,6 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
-template <>
-CartesianFieldDimension const& dimension_cast(FieldDimension const& dimension) {
-  return dynamic_cast<CartesianFieldDimension const&>(*dimension.impl_);
-}
-
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {

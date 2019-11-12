@@ -206,10 +206,13 @@ public:
 };
 
 template <typename T>
-T dimension_cast(FieldDimension const& dimension);
-
-template <>
-CartesianFieldDimension const& dimension_cast(FieldDimension const& dimension);
+T dimension_cast(FieldDimension const& dimension) {
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  return dynamic_cast<T>(*dimension.impl_);
+}
 
 /// @brief Representation of a field
 /// @ingroup sir
