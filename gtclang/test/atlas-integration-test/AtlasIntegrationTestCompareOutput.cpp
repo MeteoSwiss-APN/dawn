@@ -46,12 +46,14 @@ TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
   for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
-    in_v(cell_idx) = 1.0;
+    in_v(cell_idx, 0) = 1.0;
 
-  dawn_generated::cxxnaiveico::copyCell<atlasInterface::atlasTag>(mesh, in_v, out_v).run();
+  dawn_generated::cxxnaiveico::copyCell<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
+                                                                  in_v, out_v)
+      .run();
 
   for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
-    ASSERT_EQ(out_v(cell_idx), 1.0);
+    ASSERT_EQ(out_v(cell_idx, 0), 1.0);
 }
 } // namespace
 
@@ -76,12 +78,14 @@ TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
   for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
-    in_v(edge_idx) = 1.0;
+    in_v(edge_idx, 0) = 1.0;
 
-  dawn_generated::cxxnaiveico::copyEdge<atlasInterface::atlasTag>(mesh, in_v, out_v).run();
+  dawn_generated::cxxnaiveico::copyEdge<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
+                                                                  in_v, out_v)
+      .run();
 
   for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
-    ASSERT_EQ(out_v(edge_idx), 1.0);
+    ASSERT_EQ(out_v(edge_idx, 0), 1.0);
 }
 } // namespace
 
@@ -107,13 +111,14 @@ TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
   for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
-    in_v(edge_idx) = 1.0;
+    in_v(edge_idx, 0) = 1.0;
 
-  dawn_generated::cxxnaiveico::accumulateEdgeToCell<atlasInterface::atlasTag>(mesh, in_v, out_v)
+  dawn_generated::cxxnaiveico::accumulateEdgeToCell<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v, out_v)
       .run();
 
   for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
-    ASSERT_EQ(out_v(cell_idx), 4.0);
+    ASSERT_EQ(out_v(cell_idx, 0), 4.0);
 }
 } // namespace
 
@@ -171,10 +176,11 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
     atlasInterface::Field<double> out_v_ref = atlas::array::make_view<double, 2>(out_ref);
     atlasInterface::Field<double> out_v_gen = atlas::array::make_view<double, 2>(out_gen);
 
-    dawn_generated::cxxnaiveico::reference_diffusion<atlasInterface::atlasTag>(mesh, in_v_ref,
-                                                                               out_v_ref)
+    dawn_generated::cxxnaiveico::reference_diffusion<atlasInterface::atlasTag>(
+        mesh, static_cast<int>(nb_levels), in_v_ref, out_v_ref)
         .run();
-    dawn_generated::cxxnaiveico::diffusion<atlasInterface::atlasTag>(mesh, in_v_gen, out_v_gen)
+    dawn_generated::cxxnaiveico::diffusion<atlasInterface::atlasTag>(
+        mesh, static_cast<int>(nb_levels), in_v_gen, out_v_gen)
         .run();
 
     using std::swap;

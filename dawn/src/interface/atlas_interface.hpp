@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_INTERFACE_MYLIB_INTERFACE_H_
-#define DAWN_INTERFACE_MYLIB_INTERFACE_H_
+#ifndef DAWN_INTERFACE_ATLAS_INTERFACE_H_
+#define DAWN_INTERFACE_ATLAS_INTERFACE_H_
 
 #include "atlas/mesh.h"
 #include <cassert>
@@ -67,8 +67,8 @@ struct atlasTag {};
 template <typename T>
 class Field {
 public:
-  T const& operator()(int f) const { return atlas_field_(f, 0); }
-  T& operator()(int f) { return atlas_field_(f, 0); }
+  T const& operator()(int f, int k) const { return atlas_field_(f, k); }
+  T& operator()(int f, int k) { return atlas_field_(f, k); }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 

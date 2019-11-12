@@ -37,7 +37,6 @@ void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
 }
 
 int main() {
-  // TODO: find a way to template this
 
   {
     using namespace dawn::iir;
