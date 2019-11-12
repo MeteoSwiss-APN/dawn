@@ -29,6 +29,7 @@
 
 namespace dawn {
 
+/// @brief Creates the assignment statement
 static std::shared_ptr<ast::Stmt>
 createAssignmentStatement(int assignmentID, int assigneeID,
                           iir::StencilMetaInformation const& metadata) {
@@ -47,6 +48,7 @@ createAssignmentStatement(int assignmentID, int assigneeID,
   return assignmentStmt;
 }
 
+/// @brief Creates the do-method
 static std::unique_ptr<iir::DoMethod>
 createDoMethod(int assignmentID, int assigneeID,
                std::shared_ptr<iir::StencilInstantiation> const& si,
@@ -112,7 +114,7 @@ createAssignmentMultiStage(int assignmentID, std::shared_ptr<iir::StencilInstant
   return ms;
 }
 
-/// @brief Register all referenced AccessIDs
+/// @brief Collects AccessIDs from versioned fields in the IIR.
 struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   std::set<int> versionedAccessIDs;
@@ -132,7 +134,6 @@ PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& conte
   dependencies_.push_back("PassFieldVersioning");
 }
 
-// TODO: Figure out how to catch the case with a non-zero vertical extent.
 bool PassFixVersionedInputFields::run(
     std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
   for(const auto& stencil : stencilInstantiation->getStencils()) {
