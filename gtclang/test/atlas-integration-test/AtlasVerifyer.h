@@ -40,32 +40,25 @@ private:
   }
 
   template <typename value_type>
-  struct ComparisonResult {
-    bool outcome;
-    value_type error;
-    operator bool() { return outcome; }
-  };
-
-  template <typename value_type>
-  ComparisonResult<value_type> compare_below_threshold(value_type expected, value_type actual,
+  std::tuple<bool, value_type> compare_below_threshold(value_type expected, value_type actual,
                                                        value_type precision) const {
-    ComparisonResult<value_type> result;
-    result.outcome = false;
+    bool outcome = false;
+    value_type error = 0;
     if(precision == 0) {
-      result.outcome = expected == actual;
-      result.error = 0;
+      outcome = expected == actual;
+      error = 0;
     } else if(std::fabs(expected) < 1e-3 && std::fabs(actual) < 1e-3) {
       if(std::fabs(expected - actual) < precision) {
-        result.outcome = true;
+        outcome = true;
       }
-      result.error = std::fabs(expected - actual);
+      error = std::fabs(expected - actual);
     } else {
       if(std::fabs((expected - actual) / (precision * expected)) < 1.0) {
-        result.outcome = true;
+        outcome = true;
       }
-      result.error = std::fabs((expected - actual) / expected);
+      error = std::fabs((expected - actual) / expected);
     }
-    return result;
+    return {outcome, error};
   }
 
 public:
@@ -100,12 +93,11 @@ public:
       for(int k = 0; k < lhs.shape(1); k++) {
         Value valueLhs = lhs(i, k);
         Value valueRhs = rhs(i, k);
-        ComparisonResult<Value> comparisonResult =
-            compare_below_threshold(valueLhs, valueRhs, Value(precision_));
-        if(!comparisonResult) {
+        auto [result, error] = compare_below_threshold(valueLhs, valueRhs, Value(precision_));
+        if(!result) {
           if(--max_erros >= 0) {
             std::cerr << "( idx: " << i << " lvl: " << k << " ) : "
-                      << "  error: " << comparisonResult.error << std::endl;
+                      << "  error: " << error << std::endl;
           }
           verified = false;
         }
