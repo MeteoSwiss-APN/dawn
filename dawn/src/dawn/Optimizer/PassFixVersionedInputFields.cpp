@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
+#include "dawn-c/ErrorHandling.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -22,6 +23,7 @@
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/Logging.h"
 
 #include <memory>
 
@@ -137,15 +139,20 @@ bool PassFixVersionedInputFields::run(
     // Inserting multistages below, so can't use IterateIIROver here
     for(auto msiter = stencil->childrenBegin(); msiter != stencil->childrenEnd(); ++msiter) {
       CollectVersionedIDs getter{stencilInstantiation->getMetaData()};
-      for(auto& stmt : iterateIIROverStmt(**msiter))
+      for(auto& stmt : iterateIIROverStmt(**msiter)) {
         stmt->accept(getter);
+      }
       for(int id : getter.versionedAccessIDs) {
-        const auto multiInterval = (*msiter)->computeReadAccessInterval(id);
+        if(!(*msiter)->getField(id).getExtents().isVerticalPointwise()) {
+          DAWN_LOG(WARNING) << "Cannot resolve race conditions with vertical dependencies. This "
+                               "will generate potentially dangerous code.";
+        }
 
-        // If it has at least one, we need to generate a multistage that fills
-        // all read intervals from the original field during the execution of
-        // the multistage. Currently, we create one for each interval, but
+        // If it has a non-zero extent, we need to generate a multistage that
+        // fills all read intervals from the original field during the execution
+        // of the multistage. Currently, we create one for each interval, but
         // these could later be merged into a single multistage.
+        const auto multiInterval = (*msiter)->computeReadAccessInterval(id);
         for(auto interval : multiInterval.getIntervals()) {
           auto insertedMultistage = createAssignmentMultiStage(id, stencilInstantiation, interval);
           msiter = stencil->insertChild(msiter, std::move(insertedMultistage));
