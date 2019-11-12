@@ -36,7 +36,7 @@ using mesh_t = decltype(meshType(Tag{}));
 
 // generic deref, specialize if needed
 template <typename Tag, typename LocationType>
-auto const& deref(Tag, LocationType const& l) {
+auto deref(Tag, LocationType const& l) -> LocationType const& {
   return l;
 }
 } // namespace gtclang
