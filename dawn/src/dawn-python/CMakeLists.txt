@@ -26,8 +26,7 @@ if(NOT pybind11_fetch_POPULATED)
     add_subdirectory(${pybind11_fetch_SOURCE_DIR} ${pybind11_fetch_BINARY_DIR})
 endif()
 
-add_library(dawn_python SHARED DawnPython.cpp)
-
+pybind11_add_module(dawn_python MODULE DawnPython.cpp)
 target_link_libraries(dawn_python
   pybind11::pybind11
   DawnASTObjects
@@ -40,4 +39,3 @@ target_link_libraries(dawn_python
   DawnCodeGenObjects
   ${DAWN_EXTERNAL_LIBRARIES}
 )
-set_target_properties(dawn_python PROPERTIES PREFIX "")
