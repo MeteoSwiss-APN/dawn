@@ -14,7 +14,9 @@
 
 yoda_add_library(
   NAME DawnUnittest
-  SOURCES UnittestLogger.cpp
+  SOURCES IIRBuilder.h
+          IIRBuilder.cpp
+          UnittestLogger.cpp
           UnittestLogger.h
   ARCHIVE
   OBJECT #TODO: we don't want it but it is needed for some gtclang tests
