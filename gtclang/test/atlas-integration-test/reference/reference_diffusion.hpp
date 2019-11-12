@@ -4,21 +4,21 @@
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>
-class generated {
+class reference_diffusion {
 private:
-  struct stencil_127 {
+  struct stencil_109 {
     gtclang::mesh_t<LibTag> const& m_mesh;
     int m_k_size;
     gtclang::cell_field_t<LibTag, double>& m_in_field;
     gtclang::cell_field_t<LibTag, double>& m_out_field;
 
   public:
-    stencil_127(gtclang::mesh_t<LibTag> const& mesh, int k_size,
+    stencil_109(gtclang::mesh_t<LibTag> const& mesh, int k_size,
                 gtclang::cell_field_t<LibTag, double>& in_field,
                 gtclang::cell_field_t<LibTag, double>& out_field)
         : m_mesh(mesh), m_k_size(k_size), m_in_field(in_field), m_out_field(out_field) {}
 
-    ~stencil_127() {}
+    ~stencil_109() {}
 
     void sync_storages() {}
 
@@ -41,21 +41,21 @@ private:
       sync_storages();
     }
   };
-  static constexpr const char* s_name = "generated";
-  stencil_127 m_stencil_127;
+  static constexpr const char* s_name = "reference_diffusion";
+  stencil_109 m_stencil_109;
 
 public:
-  generated(const generated&) = delete;
+  reference_diffusion(const reference_diffusion&) = delete;
 
   // Members
 
-  generated(const gtclang::mesh_t<LibTag>& mesh, int k_size,
-            gtclang::cell_field_t<LibTag, double>& in_field,
-            gtclang::cell_field_t<LibTag, double>& out_field)
-      : m_stencil_127(mesh, k_size, in_field, out_field) {}
+  reference_diffusion(const gtclang::mesh_t<LibTag>& mesh, int k_size,
+                      gtclang::cell_field_t<LibTag, double>& in_field,
+                      gtclang::cell_field_t<LibTag, double>& out_field)
+      : m_stencil_109(mesh, k_size, in_field, out_field) {}
 
   void run() {
-    m_stencil_127.run();
+    m_stencil_109.run();
     ;
   }
 };

@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/FieldAccessExtents.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Json.h"
 #include <sstream>
 

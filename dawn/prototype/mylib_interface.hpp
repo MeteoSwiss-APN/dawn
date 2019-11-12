@@ -2,6 +2,7 @@
 #define DAWN_PROTOTYPE_MYLIB_INTERFACE_H_
 
 #include "mylib.hpp"
+#include <functional>
 
 namespace mylibInterface {
 
@@ -17,9 +18,14 @@ mylib::VertexData<T> vertexFieldType(mylibTag);
 
 using Mesh = mylib::Grid;
 
-decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
-decltype(auto) getEdges(mylibTag, mylib::Grid const& m) { return m.edges(); }
-decltype(auto) getVertices(mylibTag, mylib::Grid const& m) { return m.vertices(); }
+inline decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
+inline decltype(auto) getEdges(mylibTag, mylib::Grid const& m) { return m.edges(); }
+inline decltype(auto) getVertices(mylibTag, mylib::Grid const& m) { return m.vertices(); }
+
+// Specialized to deref the reference_wrapper
+inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<mylib::Edge> const& e) {
+  return e; // implicit conversion
+}
 
 template <typename Objs, typename Init, typename Op>
 auto reduce(Objs&& objs, Init init, Op&& op) {

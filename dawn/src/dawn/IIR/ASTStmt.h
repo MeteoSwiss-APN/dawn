@@ -24,7 +24,7 @@
 namespace dawn {
 namespace iir {
 
-struct Extents;
+class Extents;
 
 /// @brief Data container for IIR stmt's data. All data should be optional and initially
 /// uninitialized, meaning that such information hasn't yet been computed. The code that fills such

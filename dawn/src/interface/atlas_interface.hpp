@@ -1,4 +1,20 @@
-#pragma once
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
+#ifndef DAWN_INTERFACE_ATLAS_INTERFACE_H_
+#define DAWN_INTERFACE_ATLAS_INTERFACE_H_
+
 #include "atlas/mesh.h"
 #include <cassert>
 
@@ -51,8 +67,8 @@ struct atlasTag {};
 template <typename T>
 class Field {
 public:
-  T const& operator()(int f) const { return atlas_field_(f, 0); }
-  T& operator()(int f) { return atlas_field_(f, 0); }
+  T const& operator()(int f, int k) const { return atlas_field_(f, k); }
+  T& operator()(int f, int k) { return atlas_field_(f, k); }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
@@ -228,3 +244,4 @@ auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op
 }
 
 } // namespace atlasInterface
+#endif

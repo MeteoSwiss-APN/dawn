@@ -2,7 +2,7 @@
 
 module rm CMake
 module load /users/jenkins/easybuild/daint/haswell/modules/all/CMake/3.12.4
-module load cray-python/3.6.5.3
+module load cray-python/3.6.5.7
 
 module swap PrgEnv-cray PrgEnv-gnu
 module swap gcc/7.3.0

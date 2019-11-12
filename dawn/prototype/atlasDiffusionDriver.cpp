@@ -61,7 +61,8 @@ int main() {
     atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
     atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
-    dawn_generated::cxxnaiveico::generated<atlasInterface::atlasTag>(mesh, in_v, out_v).run();
+    dawn_generated::cxxnaiveico::generated<atlasInterface::atlasTag>(mesh, nb_levels, in_v, out_v)
+        .run();
 
     using std::swap;
     swap(in, out);

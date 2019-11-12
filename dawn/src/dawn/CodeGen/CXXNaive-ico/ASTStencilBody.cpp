@@ -73,11 +73,11 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
   };
   std::string typeString = getLocationTypeString(expr->getRhsLocation());
-  ss_ << std::string(indent_, ' ') << "reduce" + typeString + "ToCell(LibTag{}, m_mesh, t, ";
+  ss_ << std::string(indent_, ' ') << "reduce" + typeString + "ToCell(LibTag{}, m_mesh, loc, ";
   expr->getInit()->accept(*this);
-  ss_ << ", [&](auto& lhs, auto const& t) { return lhs " << expr->getOp() << "= ";
+  ss_ << ", [&](auto& lhs, auto const& red_loc) { return lhs " << expr->getOp() << "= ";
   auto argName = argName_;
-  argName_ = "t";
+  argName_ = "red_loc";
   expr->getRhs()->accept(*this);
   argName_ = argName;
   ss_ << ";})";
@@ -210,7 +210,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
-    ss_ << "m_" << getName(expr) << "(" << argName_ << ")";
+    ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << argName_ << "),"
+        << "k+" << expr->getOffset().verticalOffset() << ")";
   }
 }
 

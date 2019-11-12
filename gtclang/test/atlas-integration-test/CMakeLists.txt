@@ -24,34 +24,55 @@ if(eckit_DIR AND atlas_DIR)
             message(FATAL_ERROR "Could not find atlas")
     endif()
 
-    # Need to specify here the names of the stencil codes that are going to be generated
-    set(generated_stencil_codes generated_copyEdgeToCell.hpp)
+    # Need to specify here the names of the stencil codes that are going to be generated.
+    set(generated_stencil_codes generated_copyCell.hpp generated_copyEdge.hpp generated_accumulateEdgeToCell.hpp generated_diffusion.hpp)
+    set(reference_stencil_codes reference_diffusion.hpp)
+
+    list(TRANSFORM generated_stencil_codes PREPEND generated/)
+    list(TRANSFORM reference_stencil_codes PREPEND reference/)
+    # NOTE: need to add the quotes here, otherwise CMAKE won't enforce the dependency on every file when setting OUTPUT of add_custom_command
+    list(JOIN generated_stencil_codes " " generated_stencil_codes_str)
+    list(JOIN reference_stencil_codes " " reference_stencil_codes_str)
+
 
     # Compile the executable that will programatically construct an IIR and code-generate it to file
     yoda_add_executable(
       NAME AtlasIntegrationTestCodeGenerate
       SOURCES GenerateUnstructuredStencils.cpp
-      DEPENDS ${GTCLANG_EXTERNAL_LIBRARIES} Dawn::DawnShared
+      DEPENDS Dawn::DawnShared
       OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-codegenerate
     )
+
     # And run such executable. Outputs are the generated (stencil) codes: generated_*.hpp
+    add_custom_target(AtlasIntegrationTestMkdirGenerated ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory generated)
     add_custom_command(
-      OUTPUT ${generated_stencil_codes}
+      OUTPUT ${generated_stencil_codes_str}
       COMMAND AtlasIntegrationTestCodeGenerate
+      DEPENDS AtlasIntegrationTestMkdirGenerated
       COMMENT "Generating unstructured stencils to be tested"
     )
+
+    # Copy references
+    foreach(reference ${reference_stencil_codes})
+        configure_file(${reference} ${reference} COPYONLY)
+    endforeach()
+
+
     # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
     yoda_add_unittest(
         NAME AtlasIntegrationTestCompareOutput
-        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp ${generated_stencil_codes}
-        DEPENDS eckit atlas gtest GTClangUnittestStatic
-        OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-genmeshes
+        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifyer.h ${generated_stencil_codes_str} ${reference_stencil_codes_str}
+        DEPENDS eckit atlas gtest
+        OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-compareoutput
         GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml
-      )
-    target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    )
+
+    target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+    target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
     target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 
 else()
-	message(STATUS "eckit_DIR and/or atlas_DIR not set, disabling atlas integration tests")
+    message(STATUS "eckit_DIR and/or atlas_DIR not set, disabling atlas integration tests")
 endif()
