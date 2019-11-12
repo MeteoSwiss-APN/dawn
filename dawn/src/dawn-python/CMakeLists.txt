@@ -28,30 +28,17 @@ if(NOT pybind11_fetch_POPULATED)
 endif()
 
 add_library(dawn_python SHARED DawnPython.cpp)
-yoda_combine_libraries(
-  NAME dawn_python
-  OBJECTS DawnCObjects
-          DawnSupportObjects
-          DawnCompilerObjects
-          DawnIIRObjects
-          DawnOptimizerObjects
-          DawnCodeGenObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSIRStatic DawnSerializerStatic
-  EXPORT_GROUP DawnTargets
-)
 
 target_link_libraries(dawn_python
-    pybind11::pybind11
-  # DawnCObjects
+  pybind11::pybind11
   DawnASTObjects
   DawnSIRObjects
   DawnSupportObjects
   DawnCompilerObjects
+  DawnSerializerObjects
   DawnIIRObjects
   DawnOptimizerObjects
   DawnCodeGenObjects
-
-  protobuf
+  ${DAWN_EXTERNAL_LIBRARIES}
 )
+set_target_properties(dawn_python PROPERTIES PREFIX "")

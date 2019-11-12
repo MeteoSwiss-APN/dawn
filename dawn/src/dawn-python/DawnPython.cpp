@@ -1,13 +1,13 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Serialization/SIRSerializer.h"
 
-// #include <pybind11/pybind11.h>
-// #include <pybind11/stl.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <sstream>
 #include <string>
 
-// namespace py = ::pybind11;
+namespace py = ::pybind11;
 
 namespace dawn {
 namespace {
@@ -31,12 +31,12 @@ std::string dawnCompile(std::string const& sir, Backend backend) {
 } // namespace
 } // namespace dawn
 
-// PYBIND11_MODULE(libdawn_python, m) {
-// py::enum_<dawn::Backend>(m, "Backend")
-// .value("GridTools", dawn::Backend::gridtools)
-// .value("Cuda", dawn::Backend::cuda)
-// .value("Naive", dawn::Backend::naive)
-// .export_values();
-// m.def("compile", &dawn::dawnCompile, "Compiles", py::arg("SIR"), py::arg("backend"));
-// }
+PYBIND11_MODULE(dawn_python, m) {
+  py::enum_<dawn::Backend>(m, "Backend")
+      .value("GridTools", dawn::Backend::gridtools)
+      .value("Cuda", dawn::Backend::cuda)
+      .value("Naive", dawn::Backend::naive)
+      .export_values();
+  m.def("compile", &dawn::dawnCompile, "Compiles", py::arg("SIR"), py::arg("backend"));
+}
 
