@@ -14,7 +14,6 @@
 
 include(FetchContent)
 
-
 FetchContent_Declare(
     pybind11_fetch
     GIT_REPOSITORY https://github.com/pybind/pybind11

@@ -16,7 +16,7 @@ enum class Backend { gridtools, cuda, naive };
 std::string dawnCompile(std::string const& sir, Backend backend) {
 
   auto inMemorySIR =
-      dawn::SIRSerializer::deserializeFromString(sir, dawn::SIRSerializer::Format::Byte);
+      dawn::SIRSerializer::deserializeFromString(sir, dawn::SIRSerializer::Format::Json);
   auto translationUnit = DawnCompiler{}.compile(inMemorySIR);
   std::ostringstream ss;
   for(auto const& macroDefine : translationUnit->getPPDefines())
