@@ -68,9 +68,6 @@ public:
     double get_time() {
       return total_time();
     }
-
-    virtual ~sbase() {
-    }
   };
 
   struct stencil_11 : public sbase {
@@ -81,10 +78,10 @@ public:
     using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
-    const gridtools::clang::domain& m_dom;
+    const gridtools::clang::domain m_dom;
   public:
 
-    stencil_11(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_) : sbase("stencil_11"), m_dom(dom_){}
+    stencil_11(const gridtools::clang::domain& dom_) : sbase("stencil_11"), m_dom(dom_){}
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
 
@@ -109,7 +106,7 @@ public:
     }
   };
   static constexpr const char* s_name = "copy_stencil";
-  stencil_11* m_stencil_11;
+  stencil_11 m_stencil_11;
 public:
 
   copy_stencil(const copy_stencil&) = delete;
@@ -118,7 +115,7 @@ public:
 
   // Stencil-Data
 
-  copy_stencil(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out) : m_stencil_11(new stencil_11(dom,in,out) ){}
+  copy_stencil(const gridtools::clang::domain& dom) : m_stencil_11(dom){}
 
   template<typename S>
   void sync_storages(S field) {
@@ -133,7 +130,7 @@ public:
 
   void run(storage_ijk_t in, storage_ijk_t out) {
     sync_storages(in,out);
-    m_stencil_11->run(in,out);
+    m_stencil_11.run(in,out);
 ;
     sync_storages(in,out);
   }
@@ -143,11 +140,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_11->reset();  }
+m_stencil_11.reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_11->get_time();
+    res +=m_stencil_11.get_time();
     return res;
   }
 };
