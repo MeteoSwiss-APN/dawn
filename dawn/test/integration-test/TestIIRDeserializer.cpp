@@ -89,7 +89,9 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
             const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
             const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
             // check the statement (and its data)
-            EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
+            EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()))
+                << "LHS: " << ast::ASTStringifier::toString(lhsStmt)
+                << "RHS: " << ast::ASTStringifier::toString(rhsStmt);
           }
         }
       }
@@ -244,6 +246,21 @@ TEST(IIRDeserializerTest, LapStencil) {
   auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
 
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);
+}
+
+TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
+  Options compileOptions;
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  DawnCompiler compiler(&compileOptions);
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>());
+
+  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
+
+  UIDGenerator::getInstance()->reset();
+  auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory(optimizer);
+
+  compareIIRs(from_file, in_memory);
 }
 
 } // anonymous namespace

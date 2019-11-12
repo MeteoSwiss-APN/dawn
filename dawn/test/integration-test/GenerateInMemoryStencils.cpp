@@ -21,6 +21,7 @@
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -320,4 +321,28 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   }
 
   return target;
+}
+
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
+  auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
+
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                            b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
+          b.stage(b.vregion(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), LocType::Edges))))))));
+  return (*stencil_instantiation.begin()).second;
 }

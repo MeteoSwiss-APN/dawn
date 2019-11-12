@@ -104,25 +104,52 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
     }
   }
 }
+
+ast::Expr::LocationType convertLocationType(proto::statements::LocationType protoLocation) {
+  switch(protoLocation) {
+  case proto::statements::Cell:
+    return ast::Expr::LocationType::Cells;
+  case proto::statements::Edge:
+    return ast::Expr::LocationType::Edges;
+  case proto::statements::Vertex:
+    return ast::Expr::LocationType::Vertices;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+}
+
+proto::statements::LocationType convertLocationType(ast::Expr::LocationType location) {
+  switch(location) {
+  case ast::Expr::LocationType::Cells:
+    return proto::statements::Cell;
+  case ast::Expr::LocationType::Edges:
+    return proto::statements::Edge;
+  case ast::Expr::LocationType::Vertices:
+    return proto::statements::Vertex;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+}
 } // namespace
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  extent_dispatch(extents.horizontalExtent(),
-                  [&](iir::CartesianExtent const& hExtent) {
-                    auto cartesianExtent = protoExtents.mutable_cartesian_extent();
-                    auto protoIExtent = cartesianExtent->mutable_i_extent();
-                    protoIExtent->set_minus(hExtent.iMinus());
-                    protoIExtent->set_plus(hExtent.iPlus());
-                    auto protoJExtent = cartesianExtent->mutable_j_extent();
-                    protoJExtent->set_minus(hExtent.jMinus());
-                    protoJExtent->set_plus(hExtent.jPlus());
-                  },
-                  [&](iir::UnstructuredExtent const& hExtent) {
-                    auto protoHExtent = protoExtents.mutable_unstructured_extent();
-                    protoHExtent->set_has_extent(hExtent.hasExtent());
-                  },
-                  [&] { protoExtents.mutable_zero_extent(); });
+  extent_dispatch(
+      extents.horizontalExtent(),
+      [&](iir::CartesianExtent const& hExtent) {
+        auto cartesianExtent = protoExtents.mutable_cartesian_extent();
+        auto protoIExtent = cartesianExtent->mutable_i_extent();
+        protoIExtent->set_minus(hExtent.iMinus());
+        protoIExtent->set_plus(hExtent.iPlus());
+        auto protoJExtent = cartesianExtent->mutable_j_extent();
+        protoJExtent->set_minus(hExtent.jMinus());
+        protoJExtent->set_plus(hExtent.jPlus());
+      },
+      [&](iir::UnstructuredExtent const& hExtent) {
+        auto protoHExtent = protoExtents.mutable_unstructured_extent();
+        protoHExtent->set_has_extent(hExtent.hasExtent());
+      },
+      [&] { protoExtents.mutable_zero_extent(); });
 
   auto const& vExtent = extents.verticalExtent();
   auto protoVExtent = protoExtents.mutable_vertical_extent();
@@ -217,20 +244,7 @@ void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* fiel
     fieldProto->add_field_dimensions(initializedDimension);
   }
   setLocation(fieldProto->mutable_loc(), field->Loc);
-  proto::statements::Field_LocationType protoLocationType;
-  switch(field->locationType) {
-  case dawn::ast::Expr::LocationType::Cells:
-    protoLocationType = proto::statements::Field_LocationType_Cell;
-    break;
-  case dawn::ast::Expr::LocationType::Edges:
-    protoLocationType = proto::statements::Field_LocationType_Edge;
-    break;
-  case dawn::ast::Expr::LocationType::Vertices:
-    protoLocationType = proto::statements::Field_LocationType_Vertex;
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
+  proto::statements::LocationType protoLocationType = convertLocationType(field->locationType);
   fieldProto->set_location_type(protoLocationType);
 }
 
@@ -550,16 +564,16 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   protoExpr->set_name(expr->getName());
 
   auto const& offset = expr->getOffset();
-  ast::offset_dispatch(offset.horizontalOffset(),
-                       [&](ast::CartesianOffset const& hOffset) {
-                         protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
-                         protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
-                       },
-                       [&](ast::UnstructuredOffset const& hOffset) {
-                         protoExpr->mutable_unstructured_offset()->set_has_offset(
-                             hOffset.hasOffset());
-                       },
-                       [&] { protoExpr->mutable_zero_offset(); });
+  ast::offset_dispatch(
+      offset.horizontalOffset(),
+      [&](ast::CartesianOffset const& hOffset) {
+        protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
+        protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
+      },
+      [&](ast::UnstructuredOffset const& hOffset) {
+        protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
+      },
+      [&] { protoExpr->mutable_zero_offset(); });
   protoExpr->set_vertical_offset(offset.verticalOffset());
 
   for(int argOffset : expr->getArgumentOffset())
@@ -597,6 +611,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
+  protoExpr->set_location_type(convertLocationType(expr->getRhsLocation()));
+
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
   currentExprProto_.pop();
@@ -631,19 +647,7 @@ std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto
     std::copy(fieldProto.field_dimensions().begin(), fieldProto.field_dimensions().end(),
               field->fieldDimensions.begin());
   }
-  switch(fieldProto.location_type()) {
-  case proto::statements::Field_LocationType_Cell:
-    field->locationType = ast::Expr::LocationType::Cells;
-    break;
-  case proto::statements::Field_LocationType_Edge:
-    field->locationType = ast::Expr::LocationType::Edges;
-    break;
-  case proto::statements::Field_LocationType_Vertex:
-    field->locationType = ast::Expr::LocationType::Vertices;
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
+  field->locationType = convertLocationType(fieldProto.location_type());
   return field;
 }
 
@@ -850,6 +854,14 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());
+    return expr;
+  }
+
+  case proto::statements::Expr::kReductionOverNeighborExpr: {
+    const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
+    auto expr = std::make_shared<ReductionOverNeighborExpr>(
+        exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
+        convertLocationType(exprProto.location_type()), makeLocation(exprProto));
     return expr;
   }
   case proto::statements::Expr::EXPR_NOT_SET:

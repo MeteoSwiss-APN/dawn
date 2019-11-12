@@ -30,6 +30,12 @@ message SourceLocation {
   int32 Column = 2; // Column in the `Line`
 }
 
+enum LocationType {
+  Edge = 0;
+  Vertex = 1;
+  Cell = 2;
+}
+
 // @brief Description of a field argument of a Stencil or StencilFunction
 // @ingroup sir_proto
 message Field {
@@ -37,14 +43,7 @@ message Field {
   SourceLocation loc = 2;              // Source location
   bool is_temporary = 3;               // Is the field a temporary?
   repeated int32 field_dimensions = 4; // Legal dimension of the field initialized by the user
-
-  enum LocationType {
-    Edge = 0;
-    Vertex = 1;
-    Cell = 2;
-  }
-  // Location where the field is defined on
-  LocationType location_type = 5;
+  LocationType location_type = 5;      // Location where the field is defined on
 }
 
 // @brief Directional argument of a StencilFunction
@@ -629,6 +628,8 @@ message ReductionOverNeighborExpr {
   string op = 1; // Reduction operation
   Expr rhs = 2;  // Operation to be applied for each neighbor
   Expr init = 3; // Initial value of reduction
+  LocationType location_type = 4;
+  SourceLocation loc = 5;
 }
 
 // @brief Abstract syntax tree of the SIR

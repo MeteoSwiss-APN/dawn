@@ -6,9 +6,9 @@
    "32": "out"
   },
   "accessIDToType": {
-   "31": 3,
    "32": 6,
-   "30": 6
+   "30": 6,
+   "31": 3
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -29,6 +29,11 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
+   "32": {
+    "int1": 1,
+    "int2": 1,
+    "int3": 1
+   },
    "30": {
     "int1": 1,
     "int2": 1,
@@ -38,11 +43,6 @@
     "int1": 0,
     "int2": 0,
     "int3": 0
-   },
-   "32": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
    }
   },
   "idToStencilCall": {

@@ -458,10 +458,11 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr c
       rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
                                                       expr.getInit()->clone()} {}
 
-ReductionOverNeighborExpr& ReductionOverNeighborExpr::
-operator=(ReductionOverNeighborExpr const& expr) {
+ReductionOverNeighborExpr&
+ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
   assign(expr);
   op_ = expr.op_;
+  rhs_location_ = expr.rhs_location_;
   operands_[Rhs] = expr.getRhs();
   operands_[Init] = expr.getInit();
   return *this;
@@ -475,8 +476,8 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
 
 bool ReductionOverNeighborExpr::equals(const Expr* other) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
-  return otherPtr && otherPtr->getInit() == getInit() && otherPtr->getOp() == getOp() &&
-         otherPtr->getRhs() == getRhs();
+  return otherPtr && otherPtr->getInit()->equals(getInit()) && otherPtr->getOp() == getOp() &&
+         otherPtr->getRhs()->equals(getRhs()) && otherPtr->getRhsLocation() == getRhsLocation();
 }
 } // namespace ast
 } // namespace dawn
