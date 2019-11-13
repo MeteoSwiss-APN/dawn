@@ -15,6 +15,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
@@ -32,10 +33,10 @@ namespace dawn {
 namespace iir {
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID)
-    : metaData_(metaData), StageID_(StageID) {}
+    : metaData_(metaData), StageID_(StageID), iterationSpace_({}) {}
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval)
-    : metaData_(metaData), StageID_(StageID) {
+    : metaData_(metaData), StageID_(StageID), iterationSpace_({}) {
   insertChild(std::make_unique<DoMethod>(interval, metaData));
 }
 
@@ -338,6 +339,15 @@ bool Stage::isEmptyOrNullStmt() const {
 void Stage::setLocationType(ast::Expr::LocationType type) { type_ = type; }
 
 ast::Expr::LocationType Stage::getLocationType() const { return type_; }
+
+void Stage::setIterationSpace(iir::Extent iterationSpace, int direction) {
+  DAWN_ASSERT_MSG(direction < iterationSpace_.size(), "bad direction");
+  iterationSpace_[direction] = iterationSpace;
+};
+
+const std::array<std::optional<iir::Extent>, 2>& Stage::getIterationSpace() const {
+  return iterationSpace_;
+}
 
 } // namespace iir
 } // namespace dawn

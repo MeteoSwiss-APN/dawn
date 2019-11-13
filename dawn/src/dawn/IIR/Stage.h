@@ -16,6 +16,7 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
@@ -48,8 +49,13 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
-  // Location type of the stage (which loop it represents)
+  /// Location type of the stage (which loop it represents)
   ast::Expr::LocationType type_ = ast::Expr::LocationType::Cells;
+
+  /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
+  /// is assumed. This is built on top of the DerivdeInfo::extents class and for a full compute
+  /// domain, those have to be added together.
+  std::array<std::optional<Extent>, 2> iterationSpace_;
 
   struct DerivedInfo {
 
@@ -223,6 +229,12 @@ public:
 
   /// @brief returns the location type of a stage
   ast::Expr::LocationType getLocationType() const;
+
+  /// @brief setter for the horizontal iteration space
+  void setIterationSpace(iir::Extent extent, int direction);
+
+  /// @brief returns the horizontal iteration space
+  const std::array<std::optional<iir::Extent>, 2>& getIterationSpace() const;
 };
 
 } // namespace iir

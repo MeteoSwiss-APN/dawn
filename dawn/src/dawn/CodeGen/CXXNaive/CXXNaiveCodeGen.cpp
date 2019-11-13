@@ -13,16 +13,21 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/IIR/Extents.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
+#include <string>
 #include <vector>
 
 namespace dawn {
@@ -143,6 +148,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("int rank");
+  StencilWrapperConstructor.addArg("int xcols");
+  StencilWrapperConstructor.addArg("int ycols");
 
   // add the ctr initialization of each stencil
   for(const auto& stencilPtr : stencils) {
@@ -157,8 +165,11 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
 
     std::string initCtr = "m_" + stencilName + "(dom";
     if(!globalsMap.empty()) {
-      initCtr += ",m_globals";
+      initCtr += ", m_globals";
     }
+    initCtr += ", rank";
+    initCtr += ", xcols";
+    initCtr += ", ycols";
     initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
@@ -249,6 +260,48 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     stencilClass.addComment("Members");
+
+    bool iterationSpaceSet = false;
+    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+      if(stage->getIterationSpace()[0].has_value()) {
+        stencilClass.addMember(
+            "std::array<int, 2>",
+            "stage_" + std::to_string(stage->getStageID()) + "_global_i_indices{" +
+                std::to_string(stage->getIterationSpace()[0].value().minus()) + " , " +
+                std::to_string(stage->getIterationSpace()[0].value().plus()) + "}");
+        iterationSpaceSet = true;
+      }
+      if(stage->getIterationSpace()[1].has_value()) {
+        stencilClass.addMember(
+            "std::array<int, 2>",
+            "stage_" + std::to_string(stage->getStageID()) + "_global_j_indices{" +
+                std::to_string(stage->getIterationSpace()[1].value().minus()) + " , " +
+                std::to_string(stage->getIterationSpace()[1].value().plus()) + "}");
+        iterationSpaceSet = true;
+      }
+    }
+    if(iterationSpaceSet) {
+      stencilClass.addMember("std::array<int, 2>", "global_offsets");
+      auto globalOffsetFunc =
+          stencilClass.addMemberFunction("std::array<int, 2>", "compute_global_offsets");
+      globalOffsetFunc.addArg("int MPIRank, int xCols, int yCols, const " + c_gtc() +
+                              "domain& dom");
+      globalOffsetFunc.startBody();
+      globalOffsetFunc.addStatement("int rankOnDefaultFace = MPIRank % (xCols * yCols)");
+      globalOffsetFunc.addStatement("int row = rankOnDefaultFace / xCols");
+      globalOffsetFunc.addStatement("int col = rankOnDefaultFace % yCols");
+      globalOffsetFunc.addStatement(
+          "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
+
+      globalOffsetFunc.commit();
+
+      auto checkOffsetFunc = stencilClass.addMemberFunction("bool", "checkOffset");
+      checkOffsetFunc.addArg("int min, int max, int val");
+      checkOffsetFunc.startBody();
+      checkOffsetFunc.addStatement("return (min <= val && val < max)");
+      checkOffsetFunc.commit();
+    }
+
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
@@ -270,6 +323,10 @@ void CXXNaiveCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("const globals& globals_");
     }
+
+    stencilClassCtr.addArg("int rank");
+    stencilClassCtr.addArg("int xcol");
+    stencilClassCtr.addArg("int ycol");
 
     stencilClassCtr.addInit("m_dom(dom_)");
     if(!globalsMap.empty()) {
@@ -335,27 +392,76 @@ void CXXNaiveCodeGen::generateStencilClasses(
                       interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getChildren()) {
-                const iir::Stage& stage = *stagePtr;
+                iir::Stage& stage = *stagePtr;
+                /////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////
+                /////////// TODO: this is temporary, remove it afterwards
+                // stage.setIterationSpace(iir::Extent(0, 1), 1);
+                // stage.setIterationSpace(iir::Extent(0, 1), 0);
+                /////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////
 
                 auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
+                auto doMethodGenerator = [&]() {
+                  // Check if we need to execute this statement:
+
+                  // Generate Do-Method
+                  for(const auto& doMethodPtr : stage.getChildren()) {
+                    const iir::DoMethod& doMethod = *doMethodPtr;
+                    if(!doMethod.getInterval().overlaps(interval))
+                      continue;
+                    for(const auto& stmt : doMethod.getAST().getStatements()) {
+                      stmt->accept(stencilBodyCXXVisitor);
+                      stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                    }
+                  }
+                };
 
                 stencilRunMethod.addBlockStatement(
                     makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
                       stencilRunMethod.addBlockStatement(
-                          makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&]() {
-                            // Generate Do-Method
-                            for(const auto& doMethodPtr : stage.getChildren()) {
-                              const iir::DoMethod& doMethod = *doMethodPtr;
-                              if(!doMethod.getInterval().overlaps(interval))
-                                continue;
-                              for(const auto& stmt : doMethod.getAST().getStatements()) {
-                                stmt->accept(stencilBodyCXXVisitor);
-                                stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                          makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&] {
+                            if(std::any_of(stage.getIterationSpace().cbegin(),
+                                           stage.getIterationSpace().cend(),
+                                           [](const auto& p) -> bool { return p.has_value(); })) {
+                              std::string conditional = "if(";
+                              if(stage.getIterationSpace()[0]) {
+                                conditional += "checkOffset(stage_" +
+                                               std::to_string(stage.getStageID()) +
+                                               "_global_i_index[0] , stage_" +
+                                               std::to_string(stage.getStageID()) +
+                                               "_global_i_index[1], global_offsets[0] + i)";
                               }
+                              if(stage.getIterationSpace()[1]) {
+                                if(stage.getIterationSpace()[0]) {
+                                  conditional += " && ";
+                                }
+                                conditional += "checkOffset(stage_" +
+                                               std::to_string(stage.getStageID()) +
+                                               "_global_j_index[0] , stage_" +
+                                               std::to_string(stage.getStageID()) +
+                                               "_global_j_index[1], global_offsets[1] + j)";
+                              }
+                              conditional += ")";
+                              stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
+                            } else {
+                              doMethodGenerator();
                             }
                           });
                     });
+                // } else {
+                //   stencilRunMethod.addBlockStatement(
+                //       makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
+                //         stencilRunMethod.addBlockStatement(
+                //             makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"),
+                //             doMethodGenerator);
+                //       });
+                // }
               }
             });
       }
@@ -366,7 +472,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
     stencilRunMethod.commit();
   }
-}
+} // namespace cxxnaive
 
 void CXXNaiveCodeGen::generateStencilFunctions(
     Class& stencilWrapperClass,

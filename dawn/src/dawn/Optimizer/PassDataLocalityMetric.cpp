@@ -349,6 +349,17 @@ bool PassDataLocalityMetric::run(
     std::cout << std::string(51, '-') << std::endl;
   }
 
+  /////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////
+  /////////// TODO: this is temporary, remove it afterwards
+  for(auto& stage : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
+    if(stage->getStageID() == 36) {
+      stage->setIterationSpace(iir::Extent(0, 1), 1);
+    }
+  }
+
   return true;
 }
 
