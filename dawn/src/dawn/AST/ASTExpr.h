@@ -500,6 +500,14 @@ class FieldAccessExpr : public Expr {
   //  - argumentMap_      : {1, -1, -1}       // `dir` maps to the 1st argument of `avg` (0 based)
   //  - argumentOffset_   : {1, 0, 0}         // `dir+1` has an offset `+1`
   //
+  // Notice that dawn (or SIR) does not impose any limitation other than it can at the moment accept
+  // only 3 arguments, since they are stored as Array3i. However, if there would be 3 different 
+  // dimension arguments passed to a function, more than one can point to the same actual dimension.
+  // For example, in[dir1+2, dir2+3, dir3-3] where dir1 and dir3 are instantiated as 'i' and dir2 as 'k'
+  // would result into an access to in[i-1,k+3]
+  // Additionally the other limitation is that offsets and direction/dimensions can not be combined in 
+  // the same FieldAccess, but this limitation is only coming from gtclang (that does not provide the 
+  // corresponding overload operators) but not from dawn/SIR
   Array3i argumentMap_;
   Array3i argumentOffset_;
 
