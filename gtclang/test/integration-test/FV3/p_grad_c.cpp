@@ -21,7 +21,6 @@ stencil p_grad_c {
 
       // //    do j=js,je
       // //       do i=is,ie+1
-      // fills ghost in i-dir
       uc += dt2 * rdxc / (wk[i - 1] + wk) *
             ((gz[i - 1, k + 1] - gz) *
                  (pkc[k + 1] - pkc[i - 1]) +
@@ -30,7 +29,6 @@ stencil p_grad_c {
 
       // //    do j=js,je+1
       // //       do i=is,ie
-      // fills ghost in j-dir
       vc += dt2 * rdyc / (wk[j - 1] + wk) *
             ((gz[j - 1, k + 1] - gz) *
                  (pkc[k + 1] - pkc[j - 1]) +
