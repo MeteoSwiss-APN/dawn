@@ -208,6 +208,9 @@ if(GTCLANG_HAS_GRIDTOOLS)
   set(cuda_codegen_examples intervals01 intervals02 intervals03 local_kcache kcache_fill kcache_fill_kparallel
       kcache_fill_backward kcache_flush kcache_epflush)
 
+  # examples from FV3
+  set(fv3_examples p_grad_c)
+
   set(codegen_example_benchmarks)
 
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-max-fields=2")
@@ -231,17 +234,26 @@ if(GTCLANG_HAS_GRIDTOOLS)
       code_generate_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples}
         BACKEND gt
         DIRECTORY CodeGen)
+      code_generate_examples(EXAMPLES ${fv3_examples}
+        BACKEND gt
+        DIRECTORY FV3)
     endif()
     if(GTCLANG_BUILD_GT_CPU_EXAMPLES)
       compile_generated_examples(EXAMPLES ${codegen_examples}
         DUMMY ${cuda_codegen_examples}
         BACKEND gt
         DIRECTORY CodeGen)
+      compile_generated_examples(EXAMPLES ${fv3_examples}
+        BACKEND gt
+        DIRECTORY FV3)
     endif()
     if(GTCLANG_BUILD_GT_GPU_EXAMPLES)
       cuda_compile_generated_examples(EXAMPLES ${codegen_examples}
         BACKEND gt
         DIRECTORY CodeGen)
+      cuda_compile_generated_examples(EXAMPLES ${fv3_examples}
+        BACKEND gt
+        DIRECTORY FV3)
     endif()
     if(GTCLANG_BUILD_CUDA_EXAMPLES)
       code_generate_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples}
@@ -253,12 +265,3 @@ if(GTCLANG_HAS_GRIDTOOLS)
     endif(GTCLANG_BUILD_CUDA_EXAMPLES)
   endif()
 endif()
-
-set(fv3_examples p_grad_c)
-
-code_generate_examples(EXAMPLES ${fv3_examples}
-  BACKEND gt
-  DIRECTORY FV3)
-compile_generated_examples(EXAMPLES ${fv3_examples}
-  BACKEND gt
-  DIRECTORY FV3)
