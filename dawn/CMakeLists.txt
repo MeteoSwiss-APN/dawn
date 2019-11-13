@@ -124,6 +124,11 @@ yoda_report_result("Package summary" ${package_info})
 # Add clang-format target
 yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test EXTENSION ".h;.cpp")
 
+# needs to be before any subdirectory which uses add_test()
+if(DAWN_TESTING)
+  enable_testing()
+endif()
+
 if(DAWN_PYTHON)
   if(NOT DEFINED PYTHON_EXECUTABLE)
     find_package(PythonInterp 3 REQUIRED)
@@ -145,7 +150,6 @@ if(DAWN_EXAMPLES)
 endif()
 
 if(DAWN_TESTING)
-  enable_testing()
   add_subdirectory(test)
 endif()
 

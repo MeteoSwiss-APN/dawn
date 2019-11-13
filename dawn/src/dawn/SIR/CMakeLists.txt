@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -60,7 +60,7 @@ target_include_directories(DawnSIRShared PUBLIC $<BUILD_INTERFACE:${sir_proto_in
 
 add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
 
-if(DAWN_PYTHON) 
+if(DAWN_PYTHON)
   # Genreate python proto files
   dawn_protobuf_generate(
     OUT_FILES sir_proto_python_files
@@ -71,7 +71,7 @@ if(DAWN_PYTHON)
   )
 
   add_custom_target(DawnSIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/SIR
     DEPENDS ${sir_proto_python_files}
   )
   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
@@ -83,7 +83,7 @@ if(DAWN_JAVA)
   dawn_protobuf_generate(
     OUT_FILES sir_proto_java_files
     OUT_DIRS sir_proto_java_dirs
-    PROTOS SIR/SIR.proto SIR/statements.proto 
+    PROTOS SIR/SIR.proto SIR/statements.proto
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE java
