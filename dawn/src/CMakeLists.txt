@@ -16,7 +16,7 @@ include(yodaAddCustomDummyTarget)
 
 add_subdirectory(dawn)
 add_subdirectory(dawn-c)
-add_subdirectory(dawn-python)
+add_subdirectory(dawn4py)
 
 # Add a dummy target with the interface headers for correct IDE parsing
 yoda_add_custom_dummy_target(NAME DawnParseInterfaceHeaders
