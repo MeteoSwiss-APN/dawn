@@ -4,7 +4,6 @@ module rm CMake
 module load /users/jenkins/easybuild/daint/haswell/modules/all/CMake/3.12.4
 
 module swap PrgEnv-cray PrgEnv-gnu
-module swap gcc/7.3.0
 module load cudatoolkit/10.1.105_3.27-7.0.1.1_4.1__ga311ce7
 
 export BOOST_DIR=/project/c14/install/daint/boost/boost_1_67_0/
