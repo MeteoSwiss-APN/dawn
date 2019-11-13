@@ -33,17 +33,15 @@ namespace dawn {
 static std::shared_ptr<ast::Stmt>
 createAssignmentStatement(int assignmentID, int assigneeID,
                           iir::StencilMetaInformation const& metadata) {
-  auto fa_assignee =
-      std::make_shared<ast::FieldAccessExpr>(metadata.getNameFromAccessID(assigneeID));
-  auto fa_assignment =
+  auto assignee = std::make_shared<ast::FieldAccessExpr>(metadata.getNameFromAccessID(assigneeID));
+  auto assignment =
       std::make_shared<ast::FieldAccessExpr>(metadata.getNameFromAccessID(assignmentID));
-  auto assignmentExpression =
-      std::make_shared<ast::AssignmentExpr>(fa_assignment, fa_assignee, "=");
+  auto assignmentExpression = std::make_shared<ast::AssignmentExpr>(assignment, assignee, "=");
   auto assignmentStmt = iir::makeExprStmt(assignmentExpression);
 
   // Add access IDs for the new access expressions
-  fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
-  fa_assignee->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assigneeID);
+  assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
+  assignee->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assigneeID);
 
   return assignmentStmt;
 }
@@ -63,14 +61,12 @@ createDoMethod(int assignmentID, int assigneeID,
   accesses.addReadExtent(assigneeID, iir::Extents{});
   assignmentStmt->getData<iir::IIRStmtData>().CallerAccesses = std::move(accesses);
 
-  auto domethod = std::make_unique<iir::DoMethod>(interval, metadata);
-  // TODO: This may not be needed...
-  domethod->setID(si->nextUID());
+  auto doMethod = std::make_unique<iir::DoMethod>(interval, metadata);
 
-  domethod->getAST().push_back(std::move(assignmentStmt));
-  domethod->update(iir::NodeUpdateType::level);
+  doMethod->getAST().push_back(std::move(assignmentStmt));
+  doMethod->update(iir::NodeUpdateType::level);
 
-  return domethod;
+  return doMethod;
 }
 
 /// @brief Creates the stage in which assignment happens (where the temporary gets filled)
@@ -78,17 +74,15 @@ static std::unique_ptr<iir::Stage>
 createAssignmentStage(int assignmentID, int assigneeID,
                       std::shared_ptr<iir::StencilInstantiation> const& si,
                       const iir::Interval& interval) {
-  // TODO: Use the IIRBuilder instead of doing this manually...
-
   // Create the do-method for the stage
-  auto domethod = createDoMethod(assignmentID, assigneeID, si, interval);
+  auto doMethod = createDoMethod(assignmentID, assigneeID, si, interval);
 
   // Create the stage and add the do method
   iir::StencilMetaInformation& metadata = si->getMetaData();
   auto assignmentStage = std::make_unique<iir::Stage>(metadata, si->nextUID());
   assignmentStage->setExtents(iir::Extents{});
 
-  assignmentStage->addDoMethod(std::move(domethod));
+  assignmentStage->addDoMethod(std::move(doMethod));
   assignmentStage->update(iir::NodeUpdateType::level);
 
   return assignmentStage;
@@ -153,12 +147,12 @@ bool PassFixVersionedInputFields::run(
         // of the multistage. Currently, we create one for each interval, but
         // these could later be merged into a single multistage.
         const auto multiInterval = (*msiter)->computeReadAccessInterval(id);
-        for(auto interval : multiInterval.getIntervals()) {
+        for(const auto& interval : multiInterval.getIntervals()) {
           auto insertedMultistage = createAssignmentMultiStage(id, stencilInstantiation, interval);
           msiter = stencil->insertChild(msiter, std::move(insertedMultistage));
           // update the mss: #TODO: this is still a workaround since we don't have level-and below:
-          for(const auto& domethods : iterateIIROver<iir::DoMethod>(**msiter)) {
-            domethods->update(iir::NodeUpdateType::levelAndTreeAbove);
+          for(const auto& doMethods : iterateIIROver<iir::DoMethod>(**msiter)) {
+            doMethods->update(iir::NodeUpdateType::levelAndTreeAbove);
           }
           ++msiter;
         }
