@@ -56,17 +56,16 @@ TEST(p_grad_c, test) {
   storage_t rdxc(meta_data, "rdxc");
   storage_t rdyc(meta_data, "rdyc");
 
-  double dt2 = 0.001;
-
   dawn_generated::OPTBACKEND::p_grad_c p_grad_c_gt(dom);
   dawn_generated::cxxnaive::p_grad_c p_grad_c_cxxnaive(dom);
-
-  p_grad_c_gt.set_dt2(dt2);
-  p_grad_c_cxxnaive.set_dt2(dt2);
 
   verif.fill(-1.0, delpc);
   verif.fillMath(5.0, 1.2, 1.3, 1.7, 2.2, 3.5, pkc);
   verif.fillMath(5.0, 1.2, 1.3, 1.7, 2.2, 3.5, gz, rdxc, rdyc);
+
+  double dt2 = 0.001;
+  p_grad_c_gt.set_dt2(dt2);
+  p_grad_c_cxxnaive.set_dt2(dt2);
 
   // Test with hydrostatic = true
   // {
