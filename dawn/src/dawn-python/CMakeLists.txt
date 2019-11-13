@@ -27,7 +27,7 @@ if(NOT pybind11_fetch_POPULATED)
 endif()
 
 yoda_combine_libraries(
-  NAME dawn_python
+  NAME pydawn
   OBJECTS DawnSupportObjects
           DawnCompilerObjects
           DawnIIRObjects
@@ -38,6 +38,6 @@ yoda_combine_libraries(
   DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSIRStatic DawnSerializerStatic pybind11::pybind11
   EXPORT_GROUP DawnTargets
 )
-set_target_properties(dawn_pythonStatic PROPERTIES PREFIX "")
-set_target_properties(dawn_pythonShared PROPERTIES PREFIX "")
+set_target_properties(pydawnStatic PROPERTIES PREFIX "")
+set_target_properties(pydawnShared PROPERTIES PREFIX "")
 install(TARGETS pybind11 DESTINATION ${DAWN_INSTALL_LIB_DIR} EXPORT DawnTargets)
