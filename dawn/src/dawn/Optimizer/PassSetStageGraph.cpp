@@ -40,8 +40,10 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
 
       switch(fromFieldIntend) {
       case iir::Field::IntendKind::Output:
-        if(!intervalsMatch || toFieldIntend == iir::Field::IntendKind::Input ||
-           toFieldIntend == iir::Field::IntendKind::InputOutput)
+        // This used to check if IntendKind was Input or InputOutput, but this
+        // reorders stages when there is a WAW dependency. Instead, we should
+        // catch all output dependencies
+        if(!intervalsMatch)
           return true;
         break;
       case iir::Field::IntendKind::InputOutput:
