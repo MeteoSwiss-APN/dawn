@@ -126,7 +126,7 @@ function(cuda_compile_generated_examples)
 
       target_include_directories(${example}_benchmarks_${backend}_cuda PUBLIC ${include_dirs})
       if(${backend} STREQUAL cuda)
-        add_dependencies(${example}_benchmarks_${backend}_cuda gtclang ${example}_c++-naive_${ARG_DIRECTORY} ${example}_${backend}_codegen)
+        add_dependencies(${example}_benchmarks_${backend}_cuda gtclang ${example}_c++-naive_codegen ${example}_${backend}_codegen)
       else()
         add_dependencies(${example}_benchmarks_${backend}_cuda gtclang ${example}_c++-naive_codegen ${example}_${backend}_codegen)
       endif()
