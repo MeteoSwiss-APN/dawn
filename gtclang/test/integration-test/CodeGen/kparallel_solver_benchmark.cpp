@@ -57,8 +57,8 @@ TEST(kparallel_solver, test) {
   verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_gt);
   verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_naive);
 
-  dawn_generated::OPTBACKEND::kparallel_solver kparallel_solver_gt(dom, d_gt, a, b, c_gt);
-  dawn_generated::cxxnaive::kparallel_solver kparallel_solver_naive(dom, d_naive, a, b, c_naive);
+  dawn_generated::OPTBACKEND::kparallel_solver kparallel_solver_gt(dom);
+  dawn_generated::cxxnaive::kparallel_solver kparallel_solver_naive(dom);
 
   kparallel_solver_gt.run(d_gt, a, b, c_gt);
   kparallel_solver_naive.run(d_naive, a, b, c_naive);
