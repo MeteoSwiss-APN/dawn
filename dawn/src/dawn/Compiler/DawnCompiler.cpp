@@ -197,7 +197,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
     optimizer->checkAndPushBack<PassTemporaryType>();
     optimizer->checkAndPushBack<PassTemporaryMerger>();
-    optimizer->checkAndPushBack<PassFixVersionedInputFields>();
     optimizer->checkAndPushBack<PassInlining>(
         (getOptions().InlineSF || getOptions().PassTmpToFunction),
         PassInlining::InlineStrategy::ComputationsOnTheFly);
@@ -206,6 +205,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassSetNonTempCaches>();
     optimizer->checkAndPushBack<PassSetCaches>();
     optimizer->checkAndPushBack<PassComputeStageExtents>();
+    optimizer->checkAndPushBack<PassFixVersionedInputFields>();
     optimizer->checkAndPushBack<PassSetBoundaryCondition>();
     if(getOptions().Backend == "cuda") {
       optimizer->checkAndPushBack<PassSetBlockSize>();
