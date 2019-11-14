@@ -130,7 +130,7 @@ if(DAWN_PYTHON)
   )
 
   add_custom_target(DawnIIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/IIR
     DEPENDS ${iir_proto_python_files}
   )
   install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)

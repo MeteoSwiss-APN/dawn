@@ -31,13 +31,12 @@ if(NOT EXISTS "${protobuf_init_py}")
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
 
-  set(config_in "${CMAKE_SOURCE_DIR}/python/dawn/config.py.in")
-  set(config_out "${CMAKE_BINARY_DIR}/python/dawn/config.py")
+  set(config_in "${PROJECT_SOURCE_DIR}/python/dawn/config.py.in")
+  set(config_out "${PROJECT_BINARY_DIR}/python/dawn/config.py")
   configure_file(${config_in} ${config_out})
 
   # Copy to build directory
-  file(COPY ${CMAKE_SOURCE_DIR}/python/ DESTINATION ${CMAKE_BINARY_DIR}/python
-       FILES_MATCHING PATTERN "*.py")
+  file(COPY . DESTINATION ${CMAKE_CURRENT_BINARY_DIR} PATTERN "*.py")
 
   # Copy to install
   install(FILES ${config_out}
@@ -47,4 +46,12 @@ else()
           FILES_MATCHING PATTERN "*.py"
 
   )
+endif()
+
+if(DAWN_TESTING)
+  if(NOT DEFINED PYTHON_EXECUTABLE)
+    find_package(PythonInterp 3 REQUIRED)
+  endif()
+
+  add_test(NAME python-test_sir.py COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
 endif()
