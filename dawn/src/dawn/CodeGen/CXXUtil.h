@@ -523,7 +523,7 @@ struct Structure : public Statement {
                              (isVirtual ? Twine("virtual ~") : Twine("~")) + StructureName);
   }
 
-  /// @brief Add a member function (mehtod)
+  /// @brief Add a member function (method)
   ///
   /// @b Signature:
   /// @code

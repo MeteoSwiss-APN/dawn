@@ -82,24 +82,24 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
-  StencilWrapperClass.changeAccessibility("private");
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  stencilWrapperClass.changeAccessibility("private");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
-  generateStencilFunctions(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilFunctions(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
+  generateStencilClasses(stencilInstantiation, stencilWrapperClass, codeGenProperties);
 
-  generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
+  generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
 
-  generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  StencilWrapperClass.commit();
+  stencilWrapperClass.commit();
 
   cxxnaiveNamespace.commit();
   dawnNamespace.commit();
@@ -266,7 +266,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       if(stage->getIterationSpace()[0].has_value()) {
         stencilClass.addMember(
             "std::array<int, 2>",
-            "stage_" + std::to_string(stage->getStageID()) + "_global_i_indices{" +
+            "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices{" +
                 std::to_string(stage->getIterationSpace()[0].value().minus()) + " , " +
                 std::to_string(stage->getIterationSpace()[0].value().plus()) + "}");
         iterationSpaceSet = true;
@@ -274,28 +274,27 @@ void CXXNaiveCodeGen::generateStencilClasses(
       if(stage->getIterationSpace()[1].has_value()) {
         stencilClass.addMember(
             "std::array<int, 2>",
-            "stage_" + std::to_string(stage->getStageID()) + "_global_j_indices{" +
+            "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices{" +
                 std::to_string(stage->getIterationSpace()[1].value().minus()) + " , " +
                 std::to_string(stage->getIterationSpace()[1].value().plus()) + "}");
         iterationSpaceSet = true;
       }
     }
     if(iterationSpaceSet) {
-      stencilClass.addMember("std::array<int, 2>", "global_offsets");
+      stencilClass.addMember("std::array<int, 2>", "globalOffsets");
       auto globalOffsetFunc =
-          stencilClass.addMemberFunction("std::array<int, 2>", "compute_global_offsets");
-      globalOffsetFunc.addArg("int MPIRank, int xCols, int yCols, const " + c_gtc() +
-                              "domain& dom");
+          stencilClass.addMemberFunction("static std::array<int, 2>", "computeGlobalOffsets");
+      globalOffsetFunc.addArg("int rank, const " + c_gtc() + "domain& dom, int xcols, int ycol");
       globalOffsetFunc.startBody();
-      globalOffsetFunc.addStatement("int rankOnDefaultFace = MPIRank % (xCols * yCols)");
-      globalOffsetFunc.addStatement("int row = rankOnDefaultFace / xCols");
-      globalOffsetFunc.addStatement("int col = rankOnDefaultFace % yCols");
+      globalOffsetFunc.addStatement("int rankOnDefaultFace = rank % (xcols * ycols)");
+      globalOffsetFunc.addStatement("int row = rankOnDefaultFace / xcols");
+      globalOffsetFunc.addStatement("int col = rankOnDefaultFace % ycols");
       globalOffsetFunc.addStatement(
           "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
 
       globalOffsetFunc.commit();
 
-      auto checkOffsetFunc = stencilClass.addMemberFunction("bool", "checkOffset");
+      auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
       checkOffsetFunc.addArg("int min, int max, int val");
       checkOffsetFunc.startBody();
       checkOffsetFunc.addStatement("return (min <= val && val < max)");
@@ -332,6 +331,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("m_globals(globals_)");
     }
+    stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, xcol, ycol, m_dom))");
 
     addTmpStorageInit(stencilClassCtr, stencil, tempFields);
     stencilClassCtr.commit();
@@ -393,17 +393,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
             [&]() {
               for(const auto& stagePtr : multiStage.getChildren()) {
                 iir::Stage& stage = *stagePtr;
-                /////////////////////////////////////////////////////////////
-                /////////////////////////////////////////////////////////////
-                /////////////////////////////////////////////////////////////
-                /////////////////////////////////////////////////////////////
-                /////////// TODO: this is temporary, remove it afterwards
-                // stage.setIterationSpace(iir::Extent(0, 1), 1);
-                // stage.setIterationSpace(iir::Extent(0, 1), 0);
-                /////////////////////////////////////////////////////////////
-                /////////////////////////////////////////////////////////////
-                /////////////////////////////////////////////////////////////
-                /////////////////////////////////////////////////////////////
 
                 auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
@@ -431,21 +420,19 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                            [](const auto& p) -> bool { return p.has_value(); })) {
                               std::string conditional = "if(";
                               if(stage.getIterationSpace()[0]) {
-                                conditional += "checkOffset(stage_" +
-                                               std::to_string(stage.getStageID()) +
-                                               "_global_i_index[0] , stage_" +
-                                               std::to_string(stage.getStageID()) +
-                                               "_global_i_index[1], global_offsets[0] + i)";
+                                conditional +=
+                                    "checkOffset(stage" + std::to_string(stage.getStageID()) +
+                                    "GlobalIIndex[0], stage" + std::to_string(stage.getStageID()) +
+                                    "GlobalIIndex[1], GlobalOffsets[0] + i)";
                               }
                               if(stage.getIterationSpace()[1]) {
                                 if(stage.getIterationSpace()[0]) {
                                   conditional += " && ";
                                 }
-                                conditional += "checkOffset(stage_" +
-                                               std::to_string(stage.getStageID()) +
-                                               "_global_j_index[0] , stage_" +
-                                               std::to_string(stage.getStageID()) +
-                                               "_global_j_index[1], global_offsets[1] + j)";
+                                conditional +=
+                                    "checkOffset(stage" + std::to_string(stage.getStageID()) +
+                                    "GlobalJIndex[0], stage" + std::to_string(stage.getStageID()) +
+                                    "GlobalJIndex[1], globalOffsets[1] + j)";
                               }
                               conditional += ")";
                               stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
@@ -454,14 +441,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
                             }
                           });
                     });
-                // } else {
-                //   stencilRunMethod.addBlockStatement(
-                //       makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
-                //         stencilRunMethod.addBlockStatement(
-                //             makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"),
-                //             doMethodGenerator);
-                //       });
-                // }
               }
             });
       }
