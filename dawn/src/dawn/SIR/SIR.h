@@ -188,8 +188,6 @@ class FieldDimension {
 public:
   FieldDimension(dawn::ast::cartesian_, std::array<bool, 3> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
-  FieldDimension(dawn::ast::cartesian_, bool maskI, bool maskJ, bool maskK)
-      : impl_(std::make_unique<CartesianFieldDimension>(maskI, maskJ, maskK)) {}
 
   FieldDimension& operator=(const FieldDimension& other) {
     impl_ = other.impl_->clone();

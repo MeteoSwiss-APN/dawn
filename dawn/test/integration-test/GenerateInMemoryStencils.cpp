@@ -70,10 +70,10 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   // create the statement
   auto sirInField = std::make_shared<sir::Field>("in_field");
   sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, true, true, true);
+  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
   auto sirOutField = std::make_shared<sir::Field>("out_field");
   sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, true, true, true);
+  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
 
   auto lhs = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
   lhs->setID(target->nextUID());
@@ -178,13 +178,13 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   // create the statement
   auto sirInField = std::make_shared<sir::Field>("in");
   sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, true, true, true);
+  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
   auto sirOutField = std::make_shared<sir::Field>("out");
   sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, true, true, true);
+  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
   auto sirTmpField = std::make_shared<sir::Field>("tmp");
   sirOutField->IsTemporary = true;
-  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, true, true, true);
+  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
 
   auto lhsTmp = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name);
   lhsTmp->setID(target->nextUID());

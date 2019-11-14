@@ -139,8 +139,9 @@ void Stencil::updateFromChildren() {
     derivedInfo_.fields_.emplace(std::make_pair(
         accessID,
         FieldInfo{isTemporary, fieldName,
-                  dawn::sir::FieldDimension(dawn::ast::cartesian, specifiedCartDimension.I(),
-                                            specifiedCartDimension.J(), specifiedCartDimension.K()),
+                  dawn::sir::FieldDimension(dawn::ast::cartesian,
+                                            {specifiedCartDimension.I(), specifiedCartDimension.J(),
+                                             specifiedCartDimension.K()}),
                   field}));
   }
 }

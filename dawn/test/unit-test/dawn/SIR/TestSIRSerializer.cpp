@@ -69,7 +69,7 @@ TEST_P(StencilTest, FieldsWithAttributes) {
   sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
   sirRef->Stencils[0]->Fields[0]->IsTemporary = true;
   sirRef->Stencils[0]->Fields[0]->fieldDimensions =
-      sir::FieldDimension(dawn::ast::cartesian, true, true, false);
+      sir::FieldDimension(dawn::ast::cartesian, {true, true, false});
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 

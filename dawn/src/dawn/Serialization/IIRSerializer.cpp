@@ -541,9 +541,9 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
     metadata.fieldIDToInitializedDimensionsMap_.emplace(
         fieldIDInitializedDims.first,
-        sir::FieldDimension(ast::cartesian, fieldIDInitializedDims.second.int1() == 1,
-                            fieldIDInitializedDims.second.int2() == 1,
-                            fieldIDInitializedDims.second.int3() == 1));
+        sir::FieldDimension(ast::cartesian, {fieldIDInitializedDims.second.int1() == 1,
+                                             fieldIDInitializedDims.second.int2() == 1,
+                                             fieldIDInitializedDims.second.int3() == 1}));
   }
 
   for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())

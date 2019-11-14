@@ -312,8 +312,9 @@ bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
 sir::FieldDimension StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
   if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
     return sir::FieldDimension(
-        ast::cartesian, true, true,
-        true); // NOTE: return default unstructured in case of unstructured compilation here!
+        ast::cartesian,
+        {true, true,
+         true}); // NOTE: return default unstructured in case of unstructured compilation here!
   }
   return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
 }

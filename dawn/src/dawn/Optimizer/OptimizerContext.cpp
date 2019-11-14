@@ -459,7 +459,7 @@ public:
         // We add a new temporary field for each temporary field argument
         AccessID = metadata_.addTmpField(iir::FieldAccessType::StencilTemporary,
                                          stencil.Fields[stencilArgIdx]->Name,
-                                         sir::FieldDimension(ast::cartesian, true, true, true));
+                                         sir::FieldDimension(ast::cartesian, {true, true, true}));
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
