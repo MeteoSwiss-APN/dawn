@@ -36,6 +36,8 @@ namespace dawn {
 ///
 /// This pass should run after all the spltting is done: It depends on `PassStencilSplitter`
 ///
+/// This pass is disabled until boundary conditions are redesigned.
+///
 /// @ingroup optimizer
 ///
 /// This pass is not necessary to create legal code and is hence not in the debug-group
