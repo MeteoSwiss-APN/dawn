@@ -96,7 +96,7 @@ int main() {
   to_VTK("in.vtk", positions, in, N);
 
   // perform laplacian using gtclang generated code
-  dawn_generated::cxxnaive::laplacian_stencil laplacian_naive(dom, out, in);
+  dawn_generated::cxxnaive::laplacian_stencil laplacian_naive(dom);
   laplacian_naive.set_dx(dx);
   laplacian_naive.run(out, in);
 

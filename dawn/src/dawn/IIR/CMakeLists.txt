@@ -28,7 +28,9 @@ dawn_protobuf_generate(
 
 yoda_add_library(
   NAME DawnIIR
-  SOURCES AST.h
+  SOURCES AccessComputation.h
+          AccessComputation.cpp
+          AST.h
           ASTConverter.cpp
           ASTConverter.h
           ASTExpr.cpp
@@ -109,7 +111,7 @@ yoda_combine_libraries(
   NAME DawnIIR
   OBJECTS DawnIIRObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSIRStatic
+  DEPENDS DawnSupportStatic DawnSIRStatic
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )

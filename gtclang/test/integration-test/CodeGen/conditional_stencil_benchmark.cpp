@@ -52,8 +52,8 @@ TEST(conditional_stencil, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::conditional_stencil conditional_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::conditional_stencil conditional_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::conditional_stencil conditional_gt(dom);
+  dawn_generated::cxxnaive::conditional_stencil conditional_naive(dom);
 
   conditional_naive.set_var2(true);
   conditional_gt.set_var2(true);

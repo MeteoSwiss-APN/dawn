@@ -57,8 +57,8 @@ TEST(tridiagonal_solve, test) {
   verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_gt);
   verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_naive);
 
-  dawn_generated::OPTBACKEND::tridiagonal_solve tridiagonal_solve_gt(dom, d_gt, a, b, c_gt);
-  dawn_generated::cxxnaive::tridiagonal_solve tridiagonal_solve_naive(dom, d_naive, a, b, c_naive);
+  dawn_generated::OPTBACKEND::tridiagonal_solve tridiagonal_solve_gt(dom);
+  dawn_generated::cxxnaive::tridiagonal_solve tridiagonal_solve_naive(dom);
 
   tridiagonal_solve_gt.run(d_gt, a, b, c_gt);
   tridiagonal_solve_naive.run(d_naive, a, b, c_naive);
