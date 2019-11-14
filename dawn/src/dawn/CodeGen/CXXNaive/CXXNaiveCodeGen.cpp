@@ -281,21 +281,23 @@ void CXXNaiveCodeGen::generateStencilClasses(
       }
     }
     if(iterationSpaceSet) {
-      stencilClass.addMember("std::array<int, 2>", "globalOffsets");
-      auto globalOffsetFunc =
-          stencilClass.addMemberFunction("static std::array<int, 2>", "computeGlobalOffsets");
-      globalOffsetFunc.addArg("int rank, const " + c_gtc() + "domain& dom, int xcols, int ycol");
+      stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
+      auto globalOffsetFunc = stencilClass.addMemberFunction("static std::array<unsigned int, 2>",
+                                                             "computeGlobalOffsets");
+      globalOffsetFunc.addArg("int rank, const " + c_gtc() + "domain& dom, int xcols, int ycols");
       globalOffsetFunc.startBody();
-      globalOffsetFunc.addStatement("int rankOnDefaultFace = rank % (xcols * ycols)");
-      globalOffsetFunc.addStatement("int row = rankOnDefaultFace / xcols");
-      globalOffsetFunc.addStatement("int col = rankOnDefaultFace % ycols");
+      globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
+      globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
+      globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
       globalOffsetFunc.addStatement(
           "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
 
       globalOffsetFunc.commit();
 
       auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
-      checkOffsetFunc.addArg("int min, int max, int val");
+      checkOffsetFunc.addArg("unsigned int min");
+      checkOffsetFunc.addArg("unsigned int max");
+      checkOffsetFunc.addArg("unsigned int val");
       checkOffsetFunc.startBody();
       checkOffsetFunc.addStatement("return (min <= val && val < max)");
       checkOffsetFunc.commit();
@@ -324,14 +326,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
 
     stencilClassCtr.addArg("int rank");
-    stencilClassCtr.addArg("int xcol");
-    stencilClassCtr.addArg("int ycol");
+    stencilClassCtr.addArg("int xcols");
+    stencilClassCtr.addArg("int ycols");
 
     stencilClassCtr.addInit("m_dom(dom_)");
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("m_globals(globals_)");
     }
-    stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, xcol, ycol, m_dom))");
+    stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, m_dom, xcols, ycols))");
 
     addTmpStorageInit(stencilClassCtr, stencil, tempFields);
     stencilClassCtr.commit();
@@ -420,19 +422,21 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                            [](const auto& p) -> bool { return p.has_value(); })) {
                               std::string conditional = "if(";
                               if(stage.getIterationSpace()[0]) {
-                                conditional +=
-                                    "checkOffset(stage" + std::to_string(stage.getStageID()) +
-                                    "GlobalIIndex[0], stage" + std::to_string(stage.getStageID()) +
-                                    "GlobalIIndex[1], GlobalOffsets[0] + i)";
+                                conditional += "checkOffset(stage" +
+                                               std::to_string(stage.getStageID()) +
+                                               "GlobalIIndices[0], stage" +
+                                               std::to_string(stage.getStageID()) +
+                                               "GlobalIIndices[1], GlobalOffsets[0] + i)";
                               }
                               if(stage.getIterationSpace()[1]) {
                                 if(stage.getIterationSpace()[0]) {
                                   conditional += " && ";
                                 }
-                                conditional +=
-                                    "checkOffset(stage" + std::to_string(stage.getStageID()) +
-                                    "GlobalJIndex[0], stage" + std::to_string(stage.getStageID()) +
-                                    "GlobalJIndex[1], globalOffsets[1] + j)";
+                                conditional += "checkOffset(stage" +
+                                               std::to_string(stage.getStageID()) +
+                                               "GlobalJIndices[0], stage" +
+                                               std::to_string(stage.getStageID()) +
+                                               "GlobalJIndices[1], globalOffsets[1] + j)";
                               }
                               conditional += ")";
                               stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
