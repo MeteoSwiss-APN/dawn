@@ -172,7 +172,7 @@ set(directories
   ${cwd}/PassTemporaryType
   ${cwd}/PassPreprocessor
   ${cwd}/PassSetNonTempCaches
-  ${cwd}/PassSetBoundaryCondition
+#  ${cwd}/PassSetBoundaryCondition
   ${cwd}/SIR
   ${cwd}/IIRSerializer
   ${cwd}/Regression

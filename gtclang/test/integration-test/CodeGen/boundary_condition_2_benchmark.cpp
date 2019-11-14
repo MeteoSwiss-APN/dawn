@@ -39,7 +39,7 @@
 // clang-format on
 
 using namespace dawn;
-TEST(split_stencil, test) {
+TEST(split_stencil, DISABLED_test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
              Options::getInstance().m_size[2]);
   dom.set_halos(GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND,

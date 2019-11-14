@@ -204,9 +204,10 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
     optimizer->checkAndPushBack<PassSetNonTempCaches>();
     optimizer->checkAndPushBack<PassSetCaches>();
-    optimizer->checkAndPushBack<PassComputeStageExtents>();
     optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-    optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+    optimizer->checkAndPushBack<PassComputeStageExtents>();
+    // This pass is disabled because the boundary conditions need to be fixed.
+    // optimizer->checkAndPushBack<PassSetBoundaryCondition>();
     if(getOptions().Backend == "cuda") {
       optimizer->checkAndPushBack<PassSetBlockSize>();
     }
