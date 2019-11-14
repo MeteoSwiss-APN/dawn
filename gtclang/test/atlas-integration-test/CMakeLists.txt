@@ -40,7 +40,7 @@ if(eckit_DIR AND atlas_DIR)
       NAME AtlasIntegrationTestCodeGenerate
       SOURCES GenerateUnstructuredStencils.cpp
       DEPENDS Dawn::DawnShared
-      OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-codegenerate
+      OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest
     )
 
     # And run such executable. Outputs are the generated (stencil) codes: generated_*.hpp
@@ -64,7 +64,7 @@ if(eckit_DIR AND atlas_DIR)
         NAME AtlasIntegrationTestCompareOutput
         SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifyer.h ${generated_stencil_codes_str} ${reference_stencil_codes_str}
         DEPENDS eckit atlas gtest
-        OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest-compareoutput
+        OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest
         GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml
     )
 
