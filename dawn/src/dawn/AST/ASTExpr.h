@@ -499,6 +499,7 @@ class FieldAccessExpr : public Expr {
   //  - offset_           : {0, 0, 0}         // We don't have any i,j or k accesses
   //  - argumentMap_      : {1, -1, -1}       // `dir` maps to the 1st argument of `avg` (0 based)
   //  - argumentOffset_   : {1, 0, 0}         // `dir+1` has an offset `+1`
+  // Convention for a non set value is -1 for argumentMap and 0 for an argumentOffset.
   //
   // Notice that dawn (or SIR) does not impose any limitation other than it can at the moment accept
   // only 3 arguments, since they are stored as Array3i. However, if there would be 3 different 
