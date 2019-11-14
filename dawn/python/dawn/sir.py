@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -58,12 +58,6 @@ StmtType = TypeVar('Stmt',
                    BoundaryConditionDeclStmt,
                    IfStmt
                    )
-
-class LocationType(Enum):
-    Cell = 0
-    Edge = 1
-    Vertex = 2
-
 
 def to_json(msg):
     """ Converts protobuf message to JSON format.
@@ -139,12 +133,7 @@ def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1
     field.name = name
     field.is_temporary = is_temporary
     field.field_dimensions.extend(dimensions)
-    if location_type == LocationType.Cell:
-        field.location_type = Field.Cell
-    elif location_type == LocationType.Edge:
-        field.location_type = Field.Edge
-    elif location_type == LocationType.Vertex:
-        field.location_type = Field.Vertex
+    field.location_type = location_type
     return field
 
 
@@ -401,7 +390,7 @@ def make_vertical_region_decl_stmt(ast: AST, interval: Interval,
     stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order))
     return stmt
 
- 
+
 def make_boundary_condition_decl_stmt(functor: str,
                                       fields: List[str]) -> BoundaryConditionDeclStmt:
     """ Create a BoundaryConditionDeclStmt
@@ -610,17 +599,19 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     expr.type.CopyFrom(builtin_type)
     return expr
 
-def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) -> ReductionOverNeighborExpr:
+def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType, location_type: LocationType = LocationType.Cell) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
-    :param op:          Reduction operation performed for each neighbor
-    :param rhs:         Operation to be performed for each neighbor before reducing
-    :param init:        Initial value for reduction operation
+    :param op:            Reduction operation performed for each neighbor
+    :param rhs:           Operation to be performed for each neighbor before reducing
+    :param init:          Initial value for reduction operation
+    :param location_type: LocationType of the neighbours
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
+    expr.location_type = location_type
     return expr
 
 
