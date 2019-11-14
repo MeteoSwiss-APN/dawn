@@ -21,7 +21,6 @@
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -36,6 +35,7 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
+#include "dawn/Unittest/IIRBuilder.h"
 
 using namespace dawn;
 
