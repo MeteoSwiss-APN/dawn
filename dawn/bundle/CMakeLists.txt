@@ -37,7 +37,7 @@ endif()
 include(ExternalProject)
 
 # Dependency: Protobuf
-# C++ protobuf
+# C++ Protobuf
 set(protobuf_version "3.4.0")
 set(protobuf_version_short "3.4")
 
@@ -56,7 +56,7 @@ ExternalProject_Add(protobuf
   STEP_TARGETS "${protobuf_step_targets}"
 )
 
-
+# Python Protobuf
 ExternalProject_Add_Step(
   protobuf python-build
   COMMAND PROTOC=<INSTALL_DIR>/bin/protoc ${Python3_EXECUTABLE} setup.py build
