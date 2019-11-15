@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12.4)
-if(NOT DEFINED Python3_EXECUTABLE)
-    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+if(NOT DEFINED PYTHON_EXECUTABLE)
+    find_package(PythonInterp 3 REQUIRED)
 endif()
 
 if(NOT DEFINED DAWN_PYTHON_MODULES_DIR)
@@ -15,7 +15,7 @@ endif()
 
 set(ENV{PYTHONPATH} "$ENV{PYTHONPATH}:${DAWN_PYTHON_MODULES_DIR}")
 
-execute_process(COMMAND ${Python3_EXECUTABLE} ${DAWN_PYTHON_EXAMPLES_DIR}/${EXAMPLE}.py RESULT_VARIABLE res)
+execute_process(COMMAND ${PYTHON_EXECUTABLE} ${DAWN_PYTHON_EXAMPLES_DIR}/${EXAMPLE}.py RESULT_VARIABLE res)
 if(NOT ${res} EQUAL 0)
     message(FATAL_ERROR "SIR Python example ${EXAMPLE} did not run. TEST failed")
 endif()

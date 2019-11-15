@@ -57,7 +57,7 @@ else()
     foreach(example ${examples})
       add_test(NAME "python-test-${example}.py"
         COMMAND
-          cmake
+          ${CMAKE_COMMAND}
           -DEXAMPLE=${example}
           -DDAWN_PYTHON_MODULES_DIR=${DAWN_INSTALL_MODULE}
           -DDAWN_PYTHON_EXAMPLES_DIR=${examples_build_dir}
