@@ -53,23 +53,12 @@ else()
     configure_file(${config_in} ${config_out})
     file(COPY . DESTINATION ${examples_build_dir})
 
-    if(NOT DEFINED PYTHON_EXECUTABLE)
-      find_package(PythonInterp 3 REQUIRED)
-    endif()
-
     set(examples copy_stencil hori_diff tridiagonal_solve unstructured_stencil)
-    set(verified_examples copy_stencil hori_diff tridiagonal_solve)
     foreach(example ${examples})
-      if(${example} IN_LIST verified_examples)
-        set(verify ON)
-      else()
-        set(verify OFF)
-      endif()
       add_test(NAME "python-test-${example}.py"
         COMMAND
           cmake
           -DEXAMPLE=${example}
-          -DVERIFY=${verify}
           -DDAWN_PYTHON_MODULES_DIR=${DAWN_INSTALL_MODULE}
           -DDAWN_PYTHON_EXAMPLES_DIR=${examples_build_dir}
           -P ${CMAKE_CURRENT_SOURCE_DIR}/test_python.cmake)
