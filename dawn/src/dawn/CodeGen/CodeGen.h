@@ -74,7 +74,7 @@ public:
 
   static std::string getStorageType(const sir::Field& field);
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
-  static std::string getStorageType(Array3i dimensions);
+  static std::string getStorageType(const sir::FieldDimension& dimensions);
 
   void generateBoundaryConditionFunctions(
       Class& stencilWrapperClass,

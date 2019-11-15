@@ -15,10 +15,12 @@
 #ifndef DAWN_SIR_SIR_H
 #define DAWN_SIR_SIR_H
 
+#include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/HashCombine.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
@@ -149,15 +151,76 @@ struct StencilFunctionArg {
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
+class FieldDimensionImpl {
+public:
+  std::unique_ptr<FieldDimensionImpl> clone() const { return cloneImpl(); }
+  virtual ~FieldDimensionImpl() = default;
+  bool operator==(const FieldDimensionImpl& other) { return equalityImpl(other); }
+
+private:
+  virtual std::unique_ptr<FieldDimensionImpl> cloneImpl() const = 0;
+  virtual bool equalityImpl(const FieldDimensionImpl& other) const = 0;
+};
+
+class CartesianFieldDimension : public FieldDimensionImpl {
+  bool maskI_, maskJ_, maskK_;
+  std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
+    return std::make_unique<CartesianFieldDimension>(maskI_, maskJ_, maskK_);
+  }
+  virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
+    auto const& otherCartesian = dynamic_cast<CartesianFieldDimension const&>(other);
+    return otherCartesian.I() == I() && otherCartesian.J() == J() && otherCartesian.K() == K();
+  }
+
+public:
+  bool I() const { return maskI_; }
+  bool J() const { return maskJ_; }
+  bool K() const { return maskK_; }
+  explicit CartesianFieldDimension(std::array<bool, 3> mask)
+      : maskI_(mask[0]), maskJ_(mask[1]), maskK_(mask[2]) {}
+  explicit CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
+      : maskI_(dimi), maskJ_(dimj), maskK_(dimk) {}
+};
+
+class FieldDimension {
+  std::unique_ptr<FieldDimensionImpl> impl_;
+
+public:
+  FieldDimension(dawn::ast::cartesian_, std::array<bool, 3> mask)
+      : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
+
+  FieldDimension& operator=(const FieldDimension& other) {
+    impl_ = other.impl_->clone();
+    return *this;
+  }
+  bool operator==(const FieldDimension& other) const { return *impl_ == *other.impl_; }
+  FieldDimension& operator=(FieldDimension&& other) = default;
+
+  FieldDimension(const FieldDimension& other) { *this = other; }
+  FieldDimension(FieldDimension&& other) = default;
+
+  template <typename T>
+  friend T dimension_cast(FieldDimension const& dimension);
+};
+
+template <typename T>
+T dimension_cast(FieldDimension const& dimension) {
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid field dimension implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  return dynamic_cast<T>(*dimension.impl_);
+}
+
 /// @brief Representation of a field
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
   Field(const std::string& name, SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
-        fieldDimensions({{0, 0, 0}}) {}
+        fieldDimensions(dawn::ast::cartesian, {{0, 0, 0}}) {}
 
   bool IsTemporary;
-  Array3i fieldDimensions;
+  FieldDimension fieldDimensions;
   ast::Expr::LocationType locationType = ast::Expr::LocationType::Cells;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
