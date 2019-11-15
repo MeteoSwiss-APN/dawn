@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12.4)
 if(NOT DEFINED Python3_EXECUTABLE)
-    find_package(Python3 COMPONENTS Interpreter)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
 endif()
 
 if(NOT DEFINED DAWN_PYTHON_MODULES_DIR)

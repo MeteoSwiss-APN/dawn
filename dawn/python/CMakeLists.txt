@@ -49,7 +49,7 @@ endif()
 
 if(DAWN_TESTING)
   if(NOT DEFINED Python3_EXECUTABLE)
-    find_package(Python3 COMPONENTS Interpreter)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
   endif()
 
   add_test(NAME python-test_sir.py COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
