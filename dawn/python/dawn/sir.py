@@ -122,7 +122,7 @@ def make_ast(root: List[StmtType]) -> AST:
     return ast
 
 
-def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1, 1, 1], location_type: LocationType = LocationType.Cell) -> Field:
+def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1, 1, 1], location_type: LocationType = LocationType.Value('Cell')) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
@@ -599,7 +599,7 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     expr.type.CopyFrom(builtin_type)
     return expr
 
-def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType, location_type: LocationType = LocationType.Cell) -> ReductionOverNeighborExpr:
+def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType, location_type: LocationType = LocationType.Value('Cell')) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
     :param op:            Reduction operation performed for each neighbor
