@@ -1,5 +1,6 @@
 #!/bin/bash
 
+module load daint-gpu
 module CMake
 module load cray-python/3.6.5.7
 
