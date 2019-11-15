@@ -1,6 +1,6 @@
 #!/bin/bash
 
-module CMake
+module load CMake
 module load cray-python/3.6.5.7
 
 module swap PrgEnv-cray PrgEnv-gnu
