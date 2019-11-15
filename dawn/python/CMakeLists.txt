@@ -44,14 +44,13 @@ else()
   install(DIRECTORY dawn/
           DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn
           FILES_MATCHING PATTERN "*.py"
-
-  )
+          )
 endif()
 
 if(DAWN_TESTING)
-  if(NOT DEFINED PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3 REQUIRED)
+  if(NOT DEFINED Python3_EXECUTABLE)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
   endif()
 
-  add_test(NAME python-test_sir.py COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
+  add_test(NAME python-test_sir.py COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
 endif()
