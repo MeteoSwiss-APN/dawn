@@ -20,10 +20,11 @@ private:
     }
 
     void run() {
+      using gtclang::deref;;
 {
     for(int k = 0+0; k <= ( m_k_size == 0 ? 0 : (m_k_size - 1)) + 0+0; ++k) {
-      for(auto const& t : getCells(LibTag{}, m_mesh)) {
-m_out(t,k+0) = reduceCellToCell(LibTag{}, m_mesh, t, m_in(t,k+0), [&](auto& lhs, auto const& t) { return lhs += (gridtools::clang::float_type) 1.0;});
+      for(auto const& loc : getCells(LibTag{}, m_mesh)) {
+m_out(deref(LibTag{}, loc),k+0) = reduceCellToCell(LibTag{}, m_mesh, loc, m_in(deref(LibTag{}, loc),k+0), [&](auto& lhs, auto const& red_loc) { return lhs += (gridtools::clang::float_type) 1.0;});
       }    }}      sync_storages();
     }
   };
