@@ -205,9 +205,6 @@ public:
     double get_time() {
       return total_time();
     }
-
-    virtual ~sbase() {
-    }
   };
 
   struct stencil_49 : public sbase {
@@ -218,10 +215,10 @@ public:
     using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
-    const gridtools::clang::domain& m_dom;
+    const gridtools::clang::domain m_dom;
   public:
 
-    stencil_49(const gridtools::clang::domain& dom_, storage_ijk_t& a_, storage_ijk_t& b_, storage_ijk_t& c_, storage_ijk_t& d_) : sbase("stencil_49"), m_dom(dom_){}
+    stencil_49(const gridtools::clang::domain& dom_) : sbase("stencil_49"), m_dom(dom_){}
 
     void run(storage_ijk_t a_ds, storage_ijk_t b_ds, storage_ijk_t c_ds, storage_ijk_t d_ds) {
 
@@ -261,7 +258,7 @@ public:
     }
   };
   static constexpr const char* s_name = "tridiagonal_solve";
-  stencil_49* m_stencil_49;
+  stencil_49 m_stencil_49;
 public:
 
   tridiagonal_solve(const tridiagonal_solve&) = delete;
@@ -270,7 +267,7 @@ public:
 
   // Stencil-Data
 
-  tridiagonal_solve(const gridtools::clang::domain& dom, storage_ijk_t& a, storage_ijk_t& b, storage_ijk_t& c, storage_ijk_t& d) : m_stencil_49(new stencil_49(dom,a,b,c,d) ){}
+  tridiagonal_solve(const gridtools::clang::domain& dom) : m_stencil_49(dom){}
 
   template<typename S>
   void sync_storages(S field) {
@@ -285,7 +282,7 @@ public:
 
   void run(storage_ijk_t a, storage_ijk_t b, storage_ijk_t c, storage_ijk_t d) {
     sync_storages(a,b,c,d);
-    m_stencil_49->run(a,b,c,d);
+    m_stencil_49.run(a,b,c,d);
 ;
     sync_storages(a,b,c,d);
   }
@@ -295,11 +292,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_49->reset();  }
+m_stencil_49.reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_49->get_time();
+    res +=m_stencil_49.get_time();
     return res;
   }
 };

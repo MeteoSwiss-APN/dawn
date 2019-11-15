@@ -55,8 +55,8 @@ TEST(split_stencil, DISABLED_test) {
   verif.fill_boundaries(15, in_naive);
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::split_stencil swapconst_gt(dom, in_gt, out_gt, bc_field);
-  dawn_generated::cxxnaive::split_stencil swapconst_naive(dom, in_naive, out_naive, bc_field);
+  dawn_generated::OPTBACKEND::split_stencil swapconst_gt(dom);
+  dawn_generated::cxxnaive::split_stencil swapconst_naive(dom);
 
   swapconst_gt.run(in_gt, out_gt, bc_field);
   swapconst_naive.run(in_naive, out_naive, bc_field);

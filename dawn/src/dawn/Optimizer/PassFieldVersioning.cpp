@@ -16,12 +16,12 @@
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include <iostream>

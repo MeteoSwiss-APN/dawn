@@ -18,13 +18,13 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -70,10 +70,10 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   // create the statement
   auto sirInField = std::make_shared<sir::Field>("in_field");
   sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = Array3i{1, 1, 1};
+  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
   auto sirOutField = std::make_shared<sir::Field>("out_field");
   sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
+  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
 
   auto lhs = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
   lhs->setID(target->nextUID());
@@ -178,13 +178,13 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   // create the statement
   auto sirInField = std::make_shared<sir::Field>("in");
   sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = Array3i{1, 1, 1};
+  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
   auto sirOutField = std::make_shared<sir::Field>("out");
   sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
+  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
   auto sirTmpField = std::make_shared<sir::Field>("tmp");
   sirOutField->IsTemporary = true;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
+  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
 
   auto lhsTmp = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name);
   lhsTmp->setID(target->nextUID());

@@ -17,10 +17,10 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
@@ -458,7 +458,8 @@ public:
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
         AccessID = metadata_.addTmpField(iir::FieldAccessType::StencilTemporary,
-                                         stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
+                                         stencil.Fields[stencilArgIdx]->Name,
+                                         sir::FieldDimension(ast::cartesian, {true, true, true}));
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;

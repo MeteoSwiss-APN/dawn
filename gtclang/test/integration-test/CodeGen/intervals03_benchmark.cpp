@@ -52,8 +52,8 @@ TEST(intervals03, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::intervals03 intervals03_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::intervals03 intervals03_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::intervals03 intervals03_gt(dom);
+  dawn_generated::cxxnaive::intervals03 intervals03_naive(dom);
 
   intervals03_gt.run(in, out_gt);
   intervals03_naive.run(in, out_naive);

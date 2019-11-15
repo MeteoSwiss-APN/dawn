@@ -1,17 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <vector>
-
-namespace wstd {
-struct identity {
-  template <class T>
-  constexpr T&& operator()(T&& t) const noexcept {
-    return std::forward<T>(t);
-  }
-};
-} // namespace wstd
 
 namespace mylib {
 class Vertex;
@@ -146,7 +139,7 @@ public:
         //   .
         //   |\
         //  0| \ 1
-        //   |  \ 
+        //   |  \
         //   ----'
         //     2
         f_uw.add_edge(edge_at(i, j, edge_color::vertical));
@@ -155,9 +148,9 @@ public:
 
         //   0
         //   .
-        //   |\ 
-        //   | \ 
-        //   |  \ 
+        //   |\
+        //   | \
+        //   |  \
         //   ----' 1
         //  2
         f_uw.add_vertex(vertex_at(i, j));
@@ -206,8 +199,8 @@ public:
       for(int i = 0; i < nx; ++i) {
         // 0
         //  \  0
-        //   \ 
-        // 1  \ 
+        //   \
+        // 1  \
         //     1
         auto& e = edge_at(i, j, edge_color::diagonal);
         e = Edge(&e - edges_.data(), edge_color::diagonal);
@@ -220,10 +213,10 @@ public:
     for(int j = 0; j < ny; ++j)
       for(int i = 0; i < (periodic ? nx : nx + 1); ++i) {
         //     0
-        // \^^^|\ 
-        //  \1 | \ 
-        //   \ | 0\ 
-        //    \|___\ 
+        // \^^^|\
+        //  \1 | \
+        //   \ | 0\
+        //    \|___\
         //     1
         auto& e = edge_at(i, j, edge_color::vertical);
         e = Edge(&e - edges_.data(), edge_color::vertical);
@@ -244,9 +237,9 @@ public:
         //    \ |
         //     \|
         // 0---------- 3
-        //      |\ 
-        //      | \ 
-        //      |  \ 
+        //      |\
+        //      | \
+        //      |  \
         //      5   4
         if(i > 0 || periodic) //
           v.add_edge(edge_at(i - 1, j, edge_color::horizontal));
@@ -266,27 +259,36 @@ public:
         // 0  \ |  2
         //     \|
         //  ----------
-        //      |\ 
+        //      |\
         //   5  | \ 3
-        //      |  \ 
+        //      |  \
         //        4
         if(i > 0 && j > 0 || periodic) {
           v.add_face(face_at(i - 1, j - 1, face_color::upward));
           v.add_face(face_at(i - 1, j - 1, face_color::downward));
         }
-        if(j > 0 || periodic) //
+        if(i < nx && j > 0 || periodic) //
           v.add_face(face_at(i, j - 1, face_color::upward));
         if(i < nx && j < ny || periodic) {
           v.add_face(face_at(i, j, face_color::downward));
           v.add_face(face_at(i, j, face_color::upward));
         }
-        v.add_face(face_at(i - 1, j, face_color::downward));
+        if(i > 0 && j < ny || periodic) {
+          v.add_face(face_at(i - 1, j, face_color::downward));
+        }
       }
+
+    for(auto const& e : edges_) {
+      if(e.id() != -1)
+        valid_edges_.push_back(e);
+    }
   }
 
   std::vector<Face> const& faces() const { return faces_; }
   std::vector<Vertex> const& vertices() const { return vertices_; }
-  std::vector<Edge> const& edges() const { return edges_; }
+  // edges_ contains edges outside of the domain, these are removed in valid_edges_.
+  std::vector<std::reference_wrapper<Edge const>> const& edges() const { return valid_edges_; }
+  std::vector<Edge> const& all_edges() const { return edges_; }
 
   auto nx() const { return nx_; }
   auto ny() const { return ny_; }
@@ -295,6 +297,7 @@ private:
   std::vector<Face> faces_;
   std::vector<Vertex> vertices_;
   std::vector<Edge> edges_;
+  std::vector<std::reference_wrapper<Edge const>> valid_edges_;
 
   int nx_;
   int ny_;
@@ -303,118 +306,35 @@ private:
 template <typename O, typename T>
 class Data {
 public:
-  explicit Data(size_t size) : data_(size) {}
-  T& operator()(O const& f) { return data_[f.id()]; }
-  T const& operator()(O const& f) const { return data_[f.id()]; }
+  Data(size_t horizontal_size, size_t num_k_levels)
+      : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
+  T& operator()(O const& f, size_t k_level) { return data_[k_level][f.id()]; }
+  T const& operator()(O const& f, size_t k_level) const { return data_[k_level][f.id()]; }
   auto begin() { return data_.begin(); }
   auto end() { return data_.end(); }
 
+  int k_size() const { return data_.size(); }
+
 private:
-  std::vector<T> data_;
+  std::vector<std::vector<T>> data_;
 };
 template <typename T>
 class FaceData : public Data<Face, T> {
 public:
-  explicit FaceData(Grid const& grid) : Data<Face, T>(grid.faces().size()) {}
+  FaceData(Grid const& grid, int k_size) : Data<Face, T>(grid.faces().size(), k_size) {}
 };
 template <typename T>
 class VertexData : public Data<Vertex, T> {
 public:
-  explicit VertexData(Grid const& grid) : Data<Vertex, T>(grid.vertices().size()) {}
+  VertexData(Grid const& grid, int k_size) : Data<Vertex, T>(grid.vertices().size(), k_size) {}
 };
 template <typename T>
 class EdgeData : public Data<Edge, T> {
 public:
-  explicit EdgeData(Grid const& grid) : Data<Edge, T>(grid.edges().size()) {}
+  EdgeData(Grid const& grid, int k_size) : Data<Edge, T>(grid.all_edges().size(), k_size) {}
 };
-namespace faces {
-template <class T, class Map, class Reduce>
-auto reduce_on_vertices(VertexData<T> const& v_data, Grid const& grid, Map const& map,
-                        Reduce const& reduce, FaceData<T> ret) {
-  for(auto f : grid.faces()) {
-    for(auto v : f.vertices())
-      ret(f) = reduce(ret(f), map(v_data(*v)));
-    ret(f) /= f.vertices().size();
-  }
-  return ret;
-}
-inline int edge_sign(Edge const& curr, Edge const& prev) {
-  auto p0 = prev.vertex(0).id();
-  auto p1 = prev.vertex(1).id();
 
-  auto c0 = curr.vertex(0).id();
-  auto c1 = curr.vertex(1).id();
-
-  auto start = c0 == p0 || c0 == p1 ? c0 : c1;
-  auto end = c0 == p0 || c0 == p1 ? c1 : c0;
-  return start < end ? 1 : -1;
-}
-template <class T, class Map, class Reduce>
-std::enable_if_t<(sizeof(std::declval<Map>()(std::declval<T>(), 1)) > 0), FaceData<float>>
-reduce_on_edges(EdgeData<T> const& e_data, Grid const& grid, Map const& map, Reduce const& reduce,
-                FaceData<float> ret) {
-  for(auto f : grid.faces()) {
-    // inward, if edge from negative to positive
-    //   .
-    //   |\ 
-    //  0| \ 1   0: outwards
-    //   |  \    1: inwards
-    //   ----'   2: outwards
-    //     2
-    //
-    //     1
-    //   ----
-    //   \  |
-    //  0 \ |2   0: outwards
-    //     \|    1: inwards
-    //      ^    2: inwards
-    auto edges = f.edges();
-    for(auto prev = edges.end() - 1, curr = edges.begin(); curr != edges.end(); prev = curr, ++curr)
-      ret(f) = reduce(ret(f), map(e_data(**curr), edge_sign(**curr, **prev)));
-    ret(f) /= f.edges().size();
-  }
-  return ret;
-}
-template <class T, class Map, class Reduce>
-std::enable_if_t<(sizeof(std::declval<Map>()(std::declval<T>())) > 0), FaceData<T>>
-reduce_on_edges(EdgeData<T> const& e_data, Grid const& grid, Map const& map, Reduce const& reduce,
-                FaceData<T> ret) {
-  for(auto f : grid.faces()) {
-    for(auto e : f.edges())
-      ret(f) = reduce(ret(f), map(e_data(*e)));
-    ret(f) /= f.edges().size();
-  }
-  return ret;
-}
-
-template <class T, class Map, class Reduce>
-auto reduce_on_faces(FaceData<T> const& f_data, Grid const& grid, Map const& map,
-                     Reduce const& reduce, FaceData<T> ret) {
-  for(auto f : grid.faces()) {
-    for(auto next_f : f.faces())
-      ret(f) = reduce(ret(f), map(f_data(*next_f)));
-    ret(f) /= f.faces().size();
-  }
-  return ret;
-}
-
-} // namespace faces
-
-namespace edges {
-template <class T, class Map, class Reduce>
-auto reduce_on_faces(FaceData<T> const& f_data, Grid const& grid, Map const& map,
-                     Reduce const& reduce, EdgeData<T> ret) {
-  for(auto e : grid.edges()) {
-    if(e.faces().size() == 2) {
-      ret(e) = reduce(ret(e), map(f_data(e.face(0)), 1));
-      ret(e) = reduce(ret(e), map(f_data(e.face(1)), -1));
-    } else
-      ret(e) = 0;
-  }
-  return ret;
-}
-} // namespace edges
-std::ostream& toVtk(Grid const& grid, std::ostream& os = std::cout);
+std::ostream& toVtk(Grid const& grid, int k_size, std::ostream& os = std::cout);
 std::ostream& toVtk(std::string const& name, FaceData<double> const& f_data, Grid const& grid,
                     std::ostream& os = std::cout);
 std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Grid const& grid,

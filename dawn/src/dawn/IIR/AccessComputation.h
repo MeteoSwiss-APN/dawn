@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_ACCESSCOMPUTATION_H
-#define DAWN_OPTIMIZER_ACCESSCOMPUTATION_H
+#ifndef DAWN_IIR_ACCESSCOMPUTATION_H
+#define DAWN_IIR_ACCESSCOMPUTATION_H
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
