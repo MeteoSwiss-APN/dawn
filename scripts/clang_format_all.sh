@@ -4,7 +4,7 @@ SCRIPTPATH=`dirname $SCRIPT`
 
 source ${SCRIPTPATH}/ignore_list.sh
 arg_list=("")
-for i in "${ignore[@]}"; do
+for i in "${ignore_regex_list[@]}"; do
     arg_list+=("-e")
     arg_list+=("$i")
 done
