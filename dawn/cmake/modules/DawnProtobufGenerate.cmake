@@ -99,6 +99,7 @@ function(dawn_protobuf_generate)
 
   set(protobuf_script ${CMAKE_CURRENT_BINARY_DIR}/run_protobuf.sh)
   file(WRITE "${protobuf_script}" "#!/usr/bin/env bash\n")
+  # These lines are required if Protobuf is dynamically linked to dawn.
   # if(APPLE)
   #   file(APPEND "${protobuf_script}" "export DYLD_LIBRARY_PATH=\"${libprotoc_dir}\":$DYLD_LIBRARY_PATH\n")
   # else()
