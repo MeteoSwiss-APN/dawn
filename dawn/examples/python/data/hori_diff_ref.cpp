@@ -80,9 +80,6 @@ public:
     double get_time() {
       return total_time();
     }
-
-    virtual ~sbase() {
-    }
   };
 
   struct stencil_41 : public sbase {
@@ -93,14 +90,14 @@ public:
     using tmp_halo_t = gridtools::halo< 1,1, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
-    const gridtools::clang::domain& m_dom;
+    const gridtools::clang::domain m_dom;
 
     // temporary storage declarations
     tmp_meta_data_t m_tmp_meta_data;
     tmp_storage_t m_lap;
   public:
 
-    stencil_41(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
+    stencil_41(const gridtools::clang::domain& dom_) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
 
@@ -126,7 +123,7 @@ public:
     }
   };
   static constexpr const char* s_name = "hori_diff";
-  stencil_41* m_stencil_41;
+  stencil_41 m_stencil_41;
 public:
 
   hori_diff(const hori_diff&) = delete;
@@ -135,7 +132,7 @@ public:
 
   // Stencil-Data
 
-  hori_diff(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out, storage_ijk_t& coeff) : m_stencil_41(new stencil_41(dom,in,out,coeff) ){}
+  hori_diff(const gridtools::clang::domain& dom) : m_stencil_41(dom){}
 
   template<typename S>
   void sync_storages(S field) {
@@ -150,7 +147,7 @@ public:
 
   void run(storage_ijk_t in, storage_ijk_t out, storage_ijk_t coeff) {
     sync_storages(in,out,coeff);
-    m_stencil_41->run(in,out,coeff);
+    m_stencil_41.run(in,out,coeff);
 ;
     sync_storages(in,out,coeff);
   }
@@ -160,11 +157,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_41->reset();  }
+m_stencil_41.reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_41->get_time();
+    res +=m_stencil_41.get_time();
     return res;
   }
 };

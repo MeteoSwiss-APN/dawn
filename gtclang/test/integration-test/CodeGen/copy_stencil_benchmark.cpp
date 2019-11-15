@@ -52,8 +52,8 @@ TEST(copy_stencil, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::copy_stencil copy_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::copy_stencil copy_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::copy_stencil copy_gt(dom);
+  dawn_generated::cxxnaive::copy_stencil copy_naive(dom);
 
   copy_gt.run(in, out_gt);
   copy_naive.run(in, out_naive);

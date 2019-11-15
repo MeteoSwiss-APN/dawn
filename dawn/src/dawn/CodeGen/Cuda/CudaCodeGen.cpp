@@ -85,9 +85,6 @@ std::string CudaCodeGen::generateStencilInstantiation(
   gettime.addStatement("return total_time()");
   gettime.commit();
 
-  MemberFunction sbaseVdtor = sbase.addMemberFunction("virtual", "~sbase");
-  sbaseVdtor.startBody();
-  sbaseVdtor.commit();
   sbase.commit();
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
@@ -136,7 +133,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
   MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
   std::string s = RangeToString("\n", "", "")(
-      stencilMembers, [](const std::string& member) { return member + "->reset();"; });
+      stencilMembers, [](const std::string& member) { return member + ".reset();"; });
   clearMeters << s;
   clearMeters.commit();
 
@@ -144,7 +141,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
   totalTime.startBody();
   totalTime.addStatement("double res = 0");
   std::string s1 = RangeToString(";\n", "", "")(
-      stencilMembers, [](const std::string& member) { return "res +=" + member + "->get_time()"; });
+      stencilMembers, [](const std::string& member) { return "res +=" + member + ".get_time()"; });
   totalTime.addStatement(s1);
   totalTime.addStatement("return res");
   totalTime.commit();
@@ -225,7 +222,7 @@ void CudaCodeGen::generateStencilClassMembers(
     stencilClass.addMember("globals&", "m_globals");
   }
 
-  stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+  stencilClass.addMember("const " + c_gtc() + "domain", "m_dom");
 
   if(!tempFields.empty()) {
     stencilClass.addComment("temporary storage declarations");
@@ -240,16 +237,9 @@ void CudaCodeGen::generateStencilClassCtr(
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
-  auto& paramNameToType = stencilProperties->paramNameToType_;
-
   stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
-  }
-
-  for(const auto& fieldPair : nonTempFields) {
-    std::string fieldName = fieldPair.second.Name;
-    stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
   }
 
   stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
@@ -275,11 +265,6 @@ void CudaCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(int fieldId : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
-    StencilWrapperConstructor.addArg(getStorageType(metadata.getFieldDimensionsMask(fieldId)) +
-                                     "& " + metadata.getFieldNameFromAccessID(fieldId));
-  }
-
   const auto& stencils = stencilInstantiation->getStencils();
 
   // add the ctr initialization of each stencil
@@ -293,23 +278,13 @@ void CudaCodeGen::generateStencilWrapperCtr(
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
-    std::string initCtr = "m_" + stencilName + "(new " + stencilName;
+    std::string initCtr = "m_" + stencilName;
 
     initCtr += "(dom";
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
-
-    for(const auto& fieldInfoPair : stencilFields) {
-      const auto& fieldInfo = fieldInfoPair.second;
-      if(fieldInfo.IsTemporary)
-        continue;
-      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
-                                              fieldInfo.field.getAccessID())
-                            ? ("m_" + fieldInfo.Name)
-                            : (fieldInfo.Name));
-    }
-    initCtr += ") )";
+    initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
 
@@ -337,7 +312,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
 
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
-    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_ + "*",
+    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_,
                                   "m_" + stencilPropertiesPair.second->name_);
   }
 

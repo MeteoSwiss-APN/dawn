@@ -20,6 +20,7 @@
 #include "dawn/IIR/FieldAccessExtents.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/Json.h"
+#include <memory>
 #include <optional>
 #include <utility>
 
