@@ -12,16 +12,16 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(eckit_DIR AND atlas_DIR)
+if(GTCLANG_ATLAS_INTEGRATION_TESTS)
 
     find_package(eckit)
     if(NOT eckit_FOUND)
-            message(FATAL_ERROR "Could not find eckit")
+            message(FATAL_ERROR "Couldn't find eckit. If you don't need atlas set GTCLANG_ATLAS_INTEGRATION_TESTS to OFF.")
     endif()
 
     find_package(atlas)
     if(NOT atlas_FOUND)
-            message(FATAL_ERROR "Could not find atlas")
+            message(FATAL_ERROR "Couldn't find atlas. If you don't need atlas set GTCLANG_ATLAS_INTEGRATION_TESTS to OFF.")
     endif()
 
     # Need to specify here the names of the stencil codes that are going to be generated.
@@ -74,5 +74,5 @@ if(eckit_DIR AND atlas_DIR)
 
 
 else()
-    message(STATUS "eckit_DIR and/or atlas_DIR not set, disabling atlas integration tests")
+    message(STATUS "Atlas integration tests are disabled.")
 endif()

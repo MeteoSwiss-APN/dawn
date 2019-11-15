@@ -13,7 +13,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include <fstream>
 #include <gridtools/clang_dsl.hpp>
 
 #include "AtlasVerifyer.h"
@@ -32,26 +31,35 @@
 #include <generated_copyCell.hpp>
 namespace {
 TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
+  // Setup a 32 by 32 grid of quads and generate a mesh out of it
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
 
+  // We only need one vertical level
   size_t nb_levels = 1;
 
+  // Create input (on cells) and output (on cells) fields
   atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
   atlas::Field in{fs_cells.createField<double>(atlas::option::name("in"))};
   atlas::Field out{fs_cells.createField<double>(atlas::option::name("out"))};
 
+  // Make views on the fields (needed to access the field like an array)
   atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
-  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
+  // Initialize fields with data
+  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
     in_v(cell_idx, 0) = 1.0;
+    out_v(cell_idx, 0) = -1.0;
+  }
 
+  // Run the stencil
   dawn_generated::cxxnaiveico::copyCell<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
                                                                   in_v, out_v)
       .run();
 
+  // Check correctness of the output
   for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
     ASSERT_EQ(out_v(cell_idx, 0), 1.0);
 }
@@ -60,28 +68,38 @@ TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
 #include <generated_copyEdge.hpp>
 namespace {
 TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
+  // Setup a 32 by 32 grid of quads and generate a mesh out of it
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
 
+  // We only need one vertical level
   size_t nb_levels = 1;
 
+  // Create input (on edges) and output (on edges) fields
   atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
   atlas::Field in{fs_edges.createField<double>(atlas::option::name("in"))};
   atlas::Field out{fs_edges.createField<double>(atlas::option::name("out"))};
 
+  // Add edges to mesh.edges()
   atlas::mesh::actions::build_edges(mesh);
 
+  // Make views on the fields (needed to access the field like an array)
   atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
-  for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
+  // Initialize fields with data
+  for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx) {
     in_v(edge_idx, 0) = 1.0;
+    out_v(edge_idx, 0) = -1.0;
+  }
 
+  // Run the stencil
   dawn_generated::cxxnaiveico::copyEdge<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
                                                                   in_v, out_v)
       .run();
 
+  // Check correctness of the output
   for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
     ASSERT_EQ(out_v(edge_idx, 0), 1.0);
 }
@@ -90,31 +108,43 @@ TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
 #include <generated_accumulateEdgeToCell.hpp>
 namespace {
 TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
+  // Setup a 32 by 32 grid of quads and generate a mesh out of it
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
 
+  // We only need one vertical level
   size_t nb_levels = 1;
 
+  // Create input (on edges) and output (on cells) fields
   atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
   atlas::Field in{fs_edges.createField<double>(atlas::option::name("in"))};
 
-  atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
-  atlas::Field out{fs.createField<double>(atlas::option::name("out"))};
+  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
+  atlas::Field out{fs_cells.createField<double>(atlas::option::name("out"))};
 
+  // Add edges to mesh.edges()
   atlas::mesh::actions::build_edges(mesh);
+  // Build connectivity matrix for cells-edges
   atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
 
+  // Make views on the fields (needed to access the field like an array)
   atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
   atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
 
+  // Initialize fields with data
   for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
     in_v(edge_idx, 0) = 1.0;
 
+  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
+    out_v(cell_idx, 0) = -1.0;
+
+  // Run the stencil
   dawn_generated::cxxnaiveico::accumulateEdgeToCell<atlasInterface::atlasTag>(
       mesh, static_cast<int>(nb_levels), in_v, out_v)
       .run();
 
+  // Check correctness of the output
   for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
     ASSERT_EQ(out_v(cell_idx, 0), 4.0);
 }
@@ -124,12 +154,15 @@ TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
 #include <reference_diffusion.hpp>
 namespace {
 TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
+  // Setup a 32 by 32 grid of quads and generate a mesh out of it
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
 
+  // We only need one vertical level
   size_t nb_levels = 1;
 
+  // Create input (on cells) and output (on cells) fields for generated and reference stencils
   atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
   atlas::Field out_ref{fs.createField<double>(atlas::option::name("out"))};
   atlas::Field out_gen{fs.createField<double>(atlas::option::name("out"))};
@@ -137,10 +170,14 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
   atlas::Field in_ref{fs.createField<double>(atlas::option::name("in"))};
   atlas::Field in_gen{fs.createField<double>(atlas::option::name("in"))};
 
+  // Add edges to mesh.edges()
   atlas::mesh::actions::build_edges(mesh);
+  // Build connectivity matrix for cells-edges
   atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
 
+  // Initialize fields with data
   {
+    // Make views on the fields (needed to access the field like an array)
     auto in_v_ref = atlas::array::make_view<double, 2>(in_ref);
     auto in_v_gen = atlas::array::make_view<double, 2>(in_gen);
     auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
@@ -162,18 +199,20 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
           (lonlat(node_connectivity(jCell, 0), 1) - lat0 + (lat0 - lat1) / 2.f) * deg2rad;
       in_v_ref(jCell, 0) = std::abs(center_x) < .5 && std::abs(center_y) < .5 ? 1 : 0;
       in_v_gen(jCell, 0) = std::abs(center_x) < .5 && std::abs(center_y) < .5 ? 1 : 0;
-      out_v_ref(jCell, 0) = 0.0;
-      out_v_gen(jCell, 0) = 0.0;
+      out_v_ref(jCell, 0) = -1.0;
+      out_v_gen(jCell, 0) = -1.0;
     }
   }
 
   for(int i = 0; i < 500; ++i) {
 
+    // Make views on the fields (needed to access the field like an array)
     atlasInterface::Field<double> in_v_ref = atlas::array::make_view<double, 2>(in_ref);
     atlasInterface::Field<double> in_v_gen = atlas::array::make_view<double, 2>(in_gen);
     atlasInterface::Field<double> out_v_ref = atlas::array::make_view<double, 2>(out_ref);
     atlasInterface::Field<double> out_v_gen = atlas::array::make_view<double, 2>(out_gen);
 
+    // Run the stencils
     dawn_generated::cxxnaiveico::reference_diffusion<atlasInterface::atlasTag>(
         mesh, static_cast<int>(nb_levels), in_v_ref, out_v_ref)
         .run();
@@ -181,11 +220,13 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
         mesh, static_cast<int>(nb_levels), in_v_gen, out_v_gen)
         .run();
 
+    // Swap in and out
     using std::swap;
     swap(in_ref, out_ref);
     swap(in_gen, out_gen);
   }
 
+  // Check correctness of the output
   {
     auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
     auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
