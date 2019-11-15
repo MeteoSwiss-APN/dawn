@@ -207,7 +207,7 @@ template <typename T>
 T dimension_cast(FieldDimension const& dimension) {
   using PlainT = std::remove_reference_t<T>;
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
-                "Can only be casted to a valid horizontal extent implementation");
+                "Can only be casted to a valid field dimension implementation");
   static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
   return dynamic_cast<T>(*dimension.impl_);
 }

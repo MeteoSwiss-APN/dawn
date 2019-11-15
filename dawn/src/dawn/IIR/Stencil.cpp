@@ -133,16 +133,9 @@ void Stencil::updateFromChildren() {
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
     bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
     auto specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
-    auto const& specifiedCartDimension =
-        sir::dimension_cast<const sir::CartesianFieldDimension&>(specifiedDimension);
 
-    derivedInfo_.fields_.emplace(std::make_pair(
-        accessID,
-        FieldInfo{isTemporary, fieldName,
-                  dawn::sir::FieldDimension(dawn::ast::cartesian,
-                                            {specifiedCartDimension.I(), specifiedCartDimension.J(),
-                                             specifiedCartDimension.K()}),
-                  field}));
+    derivedInfo_.fields_.emplace(
+        std::make_pair(accessID, FieldInfo{isTemporary, fieldName, specifiedDimension, field}));
   }
 }
 
