@@ -15,28 +15,33 @@
 add_subdirectory(Support)
 add_subdirectory(AST)
 add_subdirectory(SIR)
-add_subdirectory(Compiler)
-add_subdirectory(Optimizer)
 add_subdirectory(IIR)
-add_subdirectory(CodeGen)
-add_subdirectory(Unittest)
+add_subdirectory(Optimizer)
 add_subdirectory(Serialization)
+add_subdirectory(CodeGen)
+add_subdirectory(Compiler)
+add_subdirectory(Unittest)
 
-include(yodaCombineLibraries)
-# Combine the relevant object libraries into libDawn.so/libDawn.a
-yoda_combine_libraries(
-  NAME Dawn
-  OBJECTS DawnSupportObjects
-          DawnASTObjects
-          DawnCompilerObjects
-          DawnOptimizerObjects
-          DawnCodeGenObjects
-          DawnUnittestObjects #TODO: we don't want it here but it is needed for some gtclang tests
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSerializerStatic
+set(DAWN_OBJECT_LIBS
+    DawnSupport
+    DawnAST
+    DawnSIR
+    DawnSIRProto
+    DawnIIR
+    DawnIIRProto
+    DawnOptimizer
+    DawnSerialization
+    DawnCodeGen
+    DawnCompiler
+    DawnUnittest #TODO: we don't want it here but it is needed for some gtclang tests
 )
+set(DAWN_OBJECT_LIBS ${DAWN_OBJECT_LIBS} PARENT_SCOPE)
 
-# Export the targets
-install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
-export(EXPORT DawnTargets NAMESPACE Dawn:: FILE ${PROJECT_BINARY_DIR}/DawnTargets.cmake)
+foreach(_target ${DAWN_OBJECT_LIBS})
+    list(APPEND dawn_objs $<TARGET_OBJECTS:${_target}>)
+endforeach()
+
+add_library(${PROJECT_NAME} ${dawn_objs})
+add_library(Dawn::Dawn ALIAS ${PROJECT_NAME})
+target_link_options(${PROJECT_NAME} PRIVATE ${DAWN_LINKER_FLAGS})
+target_link_libraries(${PROJECT_NAME} ${DAWN_OBJECT_LIBS})

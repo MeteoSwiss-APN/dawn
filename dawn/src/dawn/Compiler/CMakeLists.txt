@@ -12,15 +12,20 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-yoda_add_library(
-  NAME DawnCompiler
-  SOURCES DawnCompiler.h
-          DawnCompiler.cpp
-          Options.h
-          Options.inc
-  OBJECT
+add_library(DawnCompiler OBJECT
+  DawnCompiler.h
+  DawnCompiler.cpp
+  Options.h
+  Options.inc
 )
 
-add_dependencies(DawnCompilerObjects IIR_Proto_Generated)
-
-target_include_directories(DawnCompilerObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
+target_include_directories(DawnCompiler
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+  PRIVATE
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+)
+target_compile_features(DawnCompiler PUBLIC cxx_std_17)
+target_compile_options(DawnCompiler PRIVATE ${DAWN_CXX_FLAGS})
+set_target_properties(DawnCompiler PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnCodeGen DawnSerialization)

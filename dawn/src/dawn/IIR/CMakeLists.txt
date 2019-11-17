@@ -12,145 +12,129 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-
-include(DawnProtobufGenerate)
-
-# Genreate C++ proto files
-dawn_protobuf_generate(
-  OUT_FILES iir_proto_cpp_files
-  OUT_INCLUDE_DIRS iir_proto_include_dirs
-  PROTOS IIR/IIR.proto
-  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PACKG IIR
-  LANGUAGE cpp
+set(proto_files
+  proto/IIR/IIR.proto
 )
 
-yoda_add_library(
-  NAME DawnIIR
-  SOURCES AccessComputation.h
-          AccessComputation.cpp
-          AST.h
-          ASTConverter.cpp
-          ASTConverter.h
-          ASTExpr.cpp
-          ASTExpr.h
-          ASTFwd.h
-          ASTStmt.h
-          ASTStmt.cpp
-          ASTStringifier.h
-          ASTUtil.h
-          ASTUtil.cpp
-          ASTVisitor.h
-          Accesses.cpp
-          Accesses.h
-          AccessUtils.cpp
-          AccessUtils.h
-          AccessToNameMapper.cpp
-          AccessToNameMapper.h
-          Cache.cpp
-          Cache.h
-          ControlFlowDescriptor.cpp
-          ControlFlowDescriptor.h
-          DependencyGraph.h
-          DependencyGraphAccesses.cpp
-          DependencyGraphAccesses.h
-          DependencyGraphStage.cpp
-          DependencyGraphStage.h
-          DoMethod.cpp
-          DoMethod.h
-          Extents.cpp
-          Extents.h
-          Field.h
-          Field.cpp
-          FieldAccessExtents.cpp
-          FieldAccessExtents.h
-          FieldAccessMetadata.cpp
-          FieldAccessMetadata.h
-          InstantiationHelper.cpp
-          InstantiationHelper.h
-          Interval.cpp
-          Interval.h
-          IntervalAlgorithms.cpp
-          IntervalAlgorithms.h
-          IIR.cpp
-          IIR.h
-          proto/IIR/IIR.proto
-          IIRNode.h
-          IIRNodeIterator.h
-          LoopOrder.cpp
-          LoopOrder.h
-          MultiInterval.cpp
-          MultiInterval.h
-          MultiStage.cpp
-          MultiStage.h
-          NodeUpdateType.cpp
-          NodeUpdateType.h
-          Stage.cpp
-          Stage.h
-          Stencil.cpp
-          Stencil.h
-          StencilFunctionInstantiation.cpp
-          StencilFunctionInstantiation.h
-          StencilInstantiation.cpp
-          StencilInstantiation.h
-          StencilMetaInformation.cpp
-          StencilMetaInformation.h
-          ${iir_proto_cpp_files}
-  OBJECT
-)
-target_include_directories(DawnIIRObjects PUBLIC ${iir_proto_include_dirs}/../)
+list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.cc" OUTPUT_VARIABLE proto_cc)
+list(TRANSFORM proto_cc REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
 
-target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
-target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${iir_proto_include_dirs})
+list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.h" OUTPUT_VARIABLE proto_h)
+list(TRANSFORM proto_h REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
 
-add_custom_target(IIR_Proto_Generated ALL DEPENDS ${iir_proto_cpp_files})
-add_dependencies(IIR_Proto_Generated SIR_Proto_Generated)
-
-yoda_combine_libraries(
-  NAME DawnIIR
-  OBJECTS DawnIIRObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSupportStatic DawnSIRStatic
-  VERSION ${DAWN_VERSION}
-  EXPORT_GROUP DawnTargets
+add_custom_command(
+  COMMAND protobuf::protoc --cpp_out=${CMAKE_CURRENT_BINARY_DIR} -I ../SIR/proto --proto_path=proto ${proto_files}
+  OUTPUT  ${proto_cc} ${proto_h}
+  DEPENDS ${proto_files}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Generating IIR protobuf cpp files"
 )
 
-if(DAWN_PYTHON)
-  # Genreate python proto files
-  dawn_protobuf_generate(
-    OUT_FILES iir_proto_python_files
-    PROTOS IIR/IIR.proto
-    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG IIR
-    LANGUAGE python
+add_library(DawnIIRProto OBJECT ${proto_cc} ${proto_h})
+
+# Generated files need to be compiled with the protobuf headers and SIR headers
+target_include_directories(DawnIIRProto
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  ${Protobuf_INCLUDE_DIRS}
+)
+
+target_link_libraries(DawnIIRProto PUBLIC DawnSIRProto protobuf::libprotobuf)
+
+add_library(DawnIIR OBJECT
+  AccessComputation.h
+  AccessComputation.cpp
+  AST.h
+  ASTConverter.cpp
+  ASTConverter.h
+  ASTExpr.cpp
+  ASTExpr.h
+  ASTFwd.h
+  ASTStmt.h
+  ASTStmt.cpp
+  ASTStringifier.h
+  ASTUtil.h
+  ASTUtil.cpp
+  ASTVisitor.h
+  Accesses.cpp
+  Accesses.h
+  AccessUtils.cpp
+  AccessUtils.h
+  AccessToNameMapper.cpp
+  AccessToNameMapper.h
+  Cache.cpp
+  Cache.h
+  ControlFlowDescriptor.cpp
+  ControlFlowDescriptor.h
+  DependencyGraph.h
+  DependencyGraphAccesses.cpp
+  DependencyGraphAccesses.h
+  DependencyGraphStage.cpp
+  DependencyGraphStage.h
+  DoMethod.cpp
+  DoMethod.h
+  Extents.cpp
+  Extents.h
+  Field.h
+  Field.cpp
+  FieldAccessExtents.cpp
+  FieldAccessExtents.h
+  FieldAccessMetadata.cpp
+  FieldAccessMetadata.h
+  InstantiationHelper.cpp
+  InstantiationHelper.h
+  Interval.cpp
+  Interval.h
+  IntervalAlgorithms.cpp
+  IntervalAlgorithms.h
+  IIR.cpp
+  IIR.h
+  IIRNode.h
+  IIRNodeIterator.h
+  LoopOrder.cpp
+  LoopOrder.h
+  MultiInterval.cpp
+  MultiInterval.h
+  MultiStage.cpp
+  MultiStage.h
+  NodeUpdateType.cpp
+  NodeUpdateType.h
+  Stage.cpp
+  Stage.h
+  Stencil.cpp
+  Stencil.h
+  StencilFunctionInstantiation.cpp
+  StencilFunctionInstantiation.h
+  StencilInstantiation.cpp
+  StencilInstantiation.h
+  StencilMetaInformation.cpp
+  StencilMetaInformation.h
+)
+
+target_include_directories(DawnIIR
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+  PRIVATE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+)
+target_compile_features(DawnIIR PUBLIC cxx_std_17)
+target_compile_options(DawnIIR PRIVATE ${DAWN_CXX_FLAGS})
+set_target_properties(DawnIIR PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnIIR PUBLIC DawnSupport DawnIIRProto)
+
+if(ENABLE_PYTHON)
+  list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
+  list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
+
+  add_custom_command(
+    COMMAND protobuf::protoc --python_out=${PROJECT_BINARY_DIR}/python/dawn -I ../SIR/proto --proto_path=proto ${proto_files}
+    OUTPUT  ${proto_py}
+    DEPENDS ${proto_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating IIR protobuf python files"
   )
 
-  add_custom_target(DawnIIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
-    DEPENDS ${iir_proto_python_files}
-  )
-  install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
-  install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
-endif(DAWN_PYTHON)
+#   install(FILES ${iir_proto_python_files} DESTINATION {DAWN_INSTALL_PYTHON_DIR}/IIR)
+#   install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
 
-if(DAWN_JAVA)
-  # Genreate python proto files
-  dawn_protobuf_generate(
-    OUT_FILES iir_proto_java_files
-    OUT_DIRS iir_proto_java_dirs
-    PROTOS IIR/IIR.proto
-    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG IIR
-    LANGUAGE java
-  )
-
-  add_custom_target(DawnIIRJavaProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
-    DEPENDS ${iir_proto_java_files}
-  )
-
-  install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
-endif(DAWN_JAVA)
+endif()

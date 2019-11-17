@@ -38,13 +38,13 @@ public:
   template <class T, typename... Args>
   void pushBackPass(Args&&... args) {
     return passes_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-  };
+  }
 
   /// @brief Create a new pass at the start of the pass list
   template <class T, typename... Args>
   void pushFrontPass(Args&&... args) {
     return passes_.emplace_front(std::make_unique<T>(std::forward<Args>(args)...));
-  };
+  }
 
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise

@@ -19,6 +19,7 @@
 #include "dawn/Support/Unreachable.h"
 
 #include <memory>
+#include <string>
 
 namespace dawn::ast {
 

@@ -1,98 +1,84 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnProtobufGenerate)
-
-# Genreate C++ proto files
-dawn_protobuf_generate(
-  OUT_FILES sir_proto_cpp_files
-  OUT_INCLUDE_DIRS sir_proto_include_dirs
-  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS SIR/SIR.proto SIR/statements.proto
-  PACKG SIR
-  LANGUAGE cpp
+set(proto_files
+  proto/SIR/SIR.proto
+  proto/SIR/statements.proto
 )
 
-yoda_add_library(
-  NAME DawnSIR
-  SOURCES AST.h
-          ASTExpr.h
-          ASTFwd.h
-          ASTStmt.h
-          ASTStmt.cpp
-          ASTStringifier.h
-          ASTUtil.h
-          ASTUtil.cpp
-          ASTVisitor.h
-          SIR.cpp
-          SIR.h
-          proto/SIR/SIR.proto
-          ${sir_proto_cpp_files}
-  OBJECT
+list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.cc" OUTPUT_VARIABLE proto_cc)
+list(TRANSFORM proto_cc REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
+
+list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.h" OUTPUT_VARIABLE proto_h)
+list(TRANSFORM proto_h REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
+
+add_custom_command(
+  COMMAND protobuf::protoc --cpp_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path=proto/ ${proto_files}
+  OUTPUT  ${proto_cc} ${proto_h}
+  DEPENDS ${proto_files}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Generating SIR protobuf cpp files"
 )
 
-yoda_combine_libraries(
-  NAME DawnSIR
-  OBJECTS DawnSIRObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSupportStatic DawnASTStatic protobuf::libprotobuf
-  VERSION ${DAWN_VERSION}
-  EXPORT_GROUP DawnTargets
+add_library(DawnSIRProto OBJECT ${proto_cc} ${proto_h})
+
+# Generated files need to be compiled with the protobuf headers
+target_include_directories(DawnSIRProto
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  ${Protobuf_INCLUDE_DIRS}
 )
 
-# only include proto since protobuf uses relative path "statements.proto" -> export to dependent
-target_include_directories(DawnSIRObjects PUBLIC ${sir_proto_include_dirs}/../)
+target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
 
-target_include_directories(DawnSIRStatic PUBLIC $<BUILD_INTERFACE:${sir_proto_include_dirs}/../> $<INSTALL_INTERFACE:include/>)
-target_include_directories(DawnSIRShared PUBLIC $<BUILD_INTERFACE:${sir_proto_include_dirs}/../> $<INSTALL_INTERFACE:include/>)
+add_library(DawnSIR OBJECT
+  AST.h
+  ASTExpr.h
+  ASTFwd.h
+  ASTStmt.h
+  ASTStmt.cpp
+  ASTStringifier.h
+  ASTUtil.h
+  ASTUtil.cpp
+  ASTVisitor.h
+  SIR.cpp
+  SIR.h
+)
 
+target_include_directories(DawnSIR
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+  PRIVATE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+)
+target_compile_features(DawnSIR PUBLIC cxx_std_17)
+target_compile_options(DawnSIR PRIVATE ${DAWN_CXX_FLAGS})
+set_target_properties(DawnSIR PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnSIR PUBLIC DawnSupport DawnSIRProto)
 
-add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
+if(ENABLE_PYTHON)
+  list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
+  list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
 
-if(DAWN_PYTHON) 
-  # Genreate python proto files
-  dawn_protobuf_generate(
-    OUT_FILES sir_proto_python_files
-    PROTOS SIR/SIR.proto SIR/statements.proto
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG SIR
-    LANGUAGE python
+  add_custom_command(
+    COMMAND protobuf::protoc --python_out=${PROJECT_BINARY_DIR}/python/dawn --proto_path=proto/ ${proto_files}
+    OUTPUT  ${proto_py}
+    DEPENDS ${proto_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating SIR protobuf python files"
   )
 
-  add_custom_target(DawnSIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
-    DEPENDS ${sir_proto_python_files}
-  )
-  install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-  install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-endif(DAWN_PYTHON)
-
-if(DAWN_JAVA)
-  # Genreate python proto files
-  dawn_protobuf_generate(
-    OUT_FILES sir_proto_java_files
-    OUT_DIRS sir_proto_java_dirs
-    PROTOS SIR/SIR.proto SIR/statements.proto 
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG SIR
-    LANGUAGE java
-  )
-
-  add_custom_target(DawnSIRJavaProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
-    DEPENDS ${sir_proto_java_files}
-  )
-
-  install(DIRECTORY ${sir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
-endif(DAWN_JAVA)
+#   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
+#   install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
+endif()

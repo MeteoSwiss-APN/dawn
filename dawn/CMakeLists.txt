@@ -12,153 +12,128 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-      "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
+
+cmake_minimum_required(VERSION 3.13)
+
+# project version
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 0)
+set(VERSION_PATCH 1)
+
+set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+
+project(Dawn
+  VERSION ${VERSION}
+  HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
+  LANGUAGES CXX C)
+
+# Useful standard options:
+# - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use DAWN_BUILD_TESTING to override).
+# - BUILD_SHARED_LIBS<Bool>: Build dawn as shared libraries instead of static. If true, requires dependencies to be built as position independent code
+# - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
+
+# Other options
+option(BUILD_EXAMPLES "Build examples" ON)
+option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+
+### Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-if(NOT BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries." FORCE)
-endif()
+# Path for Find*.cmake files
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(NOT CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE STRING
-      "Install path prefix, prepended onto install directories." FORCE)
-endif()
-
-project(dawn C CXX)
-cmake_minimum_required(VERSION 3.3)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-set(YODA_ROOT CACHE PATH "path to yoda package")
-
-if("${YODA_ROOT}" STREQUAL "")
-  message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
-endif()
-list(APPEND CMAKE_MODULE_PATH "${YODA_ROOT}/cmake")
-include(yodaInit)
-yoda_init()
-
-include(DawnCMakeInit)
-set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
-
-dawn_cmake_init()
-
-include(yodaAddLibrary)
-include(yodaAddTargetClangFormat)
-include(yodaAddTargetCleanAll)
-include(yodaCombineLibraries)
-include(yodaConfigureFile)
-include(yodaCreatePackageString)
-include(yodaExportPackage)
-include(yodaGetGitHeadRevision)
-include(yodaMakeStringPair)
-include(yodaReportResult)
-include(yodaSetCXXStandard)
-include(yodaEnableFullRPATH)
-
-# Include the Dawn specific options, definitions and macros
-include(DawnOptions)
-include(DawnDefinitions)
-include(DawnMacros)
-
-# Set C++ standard
-yoda_set_cxx_standard(c++17)
-
-# Set C++ flags
-dawn_set_cxx_flags()
-
-# Add custom targets
-yoda_add_target_clean_all(
-  ${CMAKE_BINARY_DIR}/docs
-  ${CMAKE_BINARY_DIR}/sphinx
-  ${CMAKE_BINARY_DIR}/src
-  ${CMAKE_BINARY_DIR}/test
-  ${CMAKE_BINARY_DIR}/bin
-  ${CMAKE_BINARY_DIR}/python
-  ${CMAKE_BINARY_DIR}/dawn-cmake
-)
-
-# Output summary of the configuration
-macro(make_config_string FIRST SECOND)
-  yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
-  list(APPEND config_info ${out})
-endmacro()
-make_config_string("Dawn version" ${DAWN_FULL_VERSION_STR})
-make_config_string("Platform" ${YODA_PLATFORM_STRING})
-make_config_string("Architecture" ${YODA_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${YODA_COMPILER_STRING})
-make_config_string("Build type" ${CMAKE_BUILD_TYPE})
-make_config_string("Asserts" ${DAWN_ASSERTS})
-make_config_string("Build shared " ${BUILD_SHARED_LIBS})
-make_config_string("Install prefix" ${CMAKE_INSTALL_PREFIX})
-yoda_report_result("Configuration summary" ${config_info})
-
-# Include the packages
-if(DAWN_DOCUMENTATION)
-  set(doc_packages Python3 Sphinx LaTeX Doxygen)
-endif()
-
-foreach(package bash Protobuf ccache clang-format ${doc_packages})
-  include("Add${package}")
-  yoda_create_package_string(${package} info)
-  list(APPEND package_info ${info})
-
-  string(TOUPPER ${package} PACKAGE)
-
-  list(APPEND DAWN_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
-  list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
-  list(APPEND DAWN_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
-
-endforeach()
-
-# Enable RPath support
-yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
-
-
-include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
-add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
-
-yoda_report_result("Package summary" ${package_info})
-
-# Add clang-format target
-yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test EXTENSION ".h;.cpp")
-
-if(DAWN_PYTHON)
-  if(NOT DEFINED PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3 REQUIRED)
+# CXX flags
+include(CheckCXXCompilerFlag)
+function(add_cxx_compiler_flag_if_supported flag var)
+  string(FIND "${var}" "${flag}" flag_already_set)
+  if(flag_already_set EQUAL -1)
+    check_cxx_compiler_flag("${flag}" flag_supported)
+    if(flag_supported)
+      list(APPEND ${var} "${flag}")
+      set(${var} "${${var}}" PARENT_SCOPE)
+    endif()
   endif()
-  add_subdirectory(python)
+endfunction()
+add_cxx_compiler_flag_if_supported("-Wall" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # TODO: Remove this!
+
+add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
+
+if(BUILD_SHARED_LIBS)
+add_cxx_compiler_flag_if_supported("-fPIC" DAWN_CXX_FLAGS)
 endif()
 
-# Build dawn
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_BINARY_DIR}/src)
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/src/dawn/Support/External)
+# Target properties
+set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
+
+if (BUILD_SHARED_LIBS)
+  list(APPEND DAWN_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
+include(GNUInstallDirs)
+
+# Project dependencies
+find_package(Protobuf 3.4.0 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter)
 
 add_subdirectory(src)
-add_subdirectory(cmake)
 
-if(DAWN_EXAMPLES)
+if(BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-if(DAWN_TESTING)
+if (Python3_FOUND)
+  set(ENABLE_PYTHON ON)
+  add_subdirectory(python)
+else()
+  message(STATUS "Python3 not found, not installing python bindings")
+endif()
+
+# Docs only available if this is the main app
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  find_package(Doxygen)
+  find_package(Sphinx)
+  if(Doxygen_FOUND AND SPHINX_FOUND)
+	  add_subdirectory(docs)
+  else()
+	  message(STATUS "Doxygen and Sphinx not found, not building docs")
+  endif()
+endif()
+
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
   enable_testing()
   add_subdirectory(test)
 endif()
 
-if(DAWN_DOCUMENTATION)
-  add_subdirectory(docs)
-endif()
-
-# Install headers
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/
-  DESTINATION ${DAWN_INSTALL_INCLUDE_DIR}
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${PROJECT_NAME}ConfigVersion.cmake"
+  COMPATIBILITY SameMajorVersion
 )
 
-# Install CMake package configuration
-dawn_gen_install_config()
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION
+  ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+)
+
+install(
+  EXPORT ${PROJECT_NAME}Targets
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+)
+
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+)

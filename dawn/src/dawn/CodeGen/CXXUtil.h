@@ -226,7 +226,7 @@ struct Type : public Streamable {
   /// @}
 
   void commitImpl() { ss() << (hasTemplate ? ">" : ""); }
-  DAWN_DECL_COMMIT(Type, Streamable);
+  DAWN_DECL_COMMIT(Type, Streamable)
 };
 
 //===------------------------------------------------------------------------------------------===//

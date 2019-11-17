@@ -1,52 +1,33 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-# Protobuf_DIR is <protobuf_root>/lib/cmake/protobuf
-get_filename_component(camke_dir  "${Protobuf_DIR}" DIRECTORY)
-get_filename_component(lib_dir "${camke_dir}" DIRECTORY)
-get_filename_component(protobuf_root "${lib_dir}" DIRECTORY)
+set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/config.py.in")
+set(config_out "${CMAKE_CURRENT_BINARY_DIR}/config.py")
 
-#
-# Check the python libraries were installed in <protobuf_root>/python/
-set(protobuf_python "${protobuf_root}/python")
-set(protobuf_init_py "${protobuf_python}/google/protobuf/__init__.py")
+set(DAWN_INSTALL_MODULE ${CMAKE_INSTALL_PREFIX}/python)
+set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_FULL_LIBDIR}/$<TARGET_FILE_NAME:DawnC>)
 
-if(NOT EXISTS "${protobuf_init_py}")
-  message(WARNING 
-    "Python module of protobuf is not installed correctly! Expected protobuf's __init__.py at:\n"
-    "    ${protobuf_init_py}\n"
-    "Disabling python module of Dawn."
-  )
-else()
-  set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
+# This two-step hack is necessary because there are both variables and generator
+# expressions necessary to generate config.py
+configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
+file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
 
-  set(config_in "${CMAKE_SOURCE_DIR}/examples/python/config.py.in")
-  set(config_out "${CMAKE_BINARY_DIR}/examples/python/config.py")
+# Copy to build directory
+file(COPY ${CMAKE_SOURCE_DIR}/python/
+  DESTINATION ${CMAKE_BINARY_DIR}/python
+  FILES_MATCHING PATTERN "*.py")
 
-  set(DAWN_INSTALL_MODULE ${CMAKE_BINARY_DIR}/python/)
-  set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_PREFIX}/lib/libDawnC.so)
-
-  configure_file(${config_in} ${config_out})
-
-  # Copy to build directory
-  file(COPY ${CMAKE_SOURCE_DIR}/python/ DESTINATION ${CMAKE_BINARY_DIR}/python
-       FILES_MATCHING PATTERN "*.py")
-
-  # Copy to install
-  install(FILES ${config_out} 
-	  DESTINATION ${DAWN_INSTALL_EXAMPLES_DIR}/python)
-  install(DIRECTORY . 
-	  DESTINATION ${DAWN_INSTALL_EXAMPLES_DIR}/python/
-  )
-endif()
+# Copy to install
+install(FILES ${config_out} DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
+install(DIRECTORY . DESTINATION ${CMAKE_INSTALL_PREFIX}/python)

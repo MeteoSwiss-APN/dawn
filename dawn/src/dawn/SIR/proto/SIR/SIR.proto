@@ -13,7 +13,7 @@
 \*===------------------------------------------------------------------------------------------===*/
 
 // @defgroup sir_proto SIR protobuf
-// @brief This is a SIR description for Google's protocol buffers library
+// @brief This is a SIR description using Google's protocol buffers library
 // <a href="https://developers.google.com/protocol-buffers/">Protobuf</a>.
 
 syntax = "proto3";

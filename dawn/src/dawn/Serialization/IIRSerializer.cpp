@@ -15,7 +15,6 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
-#include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"

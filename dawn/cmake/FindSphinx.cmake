@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -45,8 +45,8 @@
 include(FindPackageHandleStandardArgs)
 
 if(NOT DEFINED SPHINX_EXECUTABLE)
-  find_program(SPHINX_EXECUTABLE 
-    NAMES sphinx-build sphinx-build2 
+  find_program(SPHINX_EXECUTABLE
+    NAMES sphinx-build sphinx-build2
     DOC "Path to sphinx-build executable"
   )
 endif()
@@ -60,16 +60,16 @@ if(SPHINX_EXECUTABLE AND NOT DEFINED SPHINX_VERSION)
 
   set(SPHINX_VERSION "unknown")
   if("${res}" STREQUAL "0")
-    # The output should be "Sphinx (sphinx-build) X.Y.Z" 
-    string(SUBSTRING "${out}" 21 -1 version)
+    # The output should be "Sphinx-build X.Y.Z"
+    string(SUBSTRING "${out}" 13 -1 version)
     string(STRIP "${version}" version)
     set(SPHINX_VERSION "${version}")
   endif()
 endif()
 
-find_package_handle_standard_args(sphinx 
-  FOUND_VAR 
-    SPHINX_FOUND 
+find_package_handle_standard_args(sphinx
+  FOUND_VAR
+    SPHINX_FOUND
   REQUIRED_VARS
     SPHINX_EXECUTABLE
   VERSION_VAR
