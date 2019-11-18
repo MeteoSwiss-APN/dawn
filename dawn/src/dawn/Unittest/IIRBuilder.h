@@ -19,6 +19,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
@@ -152,6 +153,17 @@ public:
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     ret->setLocationType(type);
+    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
+    return ret;
+  }
+
+  // specialized builder for the stage that accepts a global index
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(int direction, Extent extent, DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    ret->setIterationSpace(extent, direction);
     int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
