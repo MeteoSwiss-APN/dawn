@@ -20,8 +20,10 @@ add_executable(DawnIntegrationTest
 )
 target_link_libraries(DawnIntegrationTest Dawn gtest)
 target_compile_options(DawnIntegrationTest PRIVATE ${DAWN_CXX_FLAGS})
+set_target_properties(DawnIntegrationTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_test(NAME DawnIntegrationTest
-  COMMAND DawnIntegrationTest
+  COMMAND ${CMAKE_BINARY_DIR}/bin/DawnIntegrationTest
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_executable(DawnUpdateIIRReferences
