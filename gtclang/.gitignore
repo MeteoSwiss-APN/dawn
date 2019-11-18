@@ -12,6 +12,7 @@
 build*/
 install*/
 test/integration-test/CodeGen/generated*/
+test/integration-test/FV3/generated*/
 
 # Meta project information
 bundle/yoda/*
@@ -31,4 +32,3 @@ gh-pages*
 .vscode/
 **/compile_commands.json
 .clangd/
-

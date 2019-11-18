@@ -11,10 +11,11 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-//
+
 #ifndef DAWN_AST_OFFSET_H
 #define DAWN_AST_OFFSET_H
 
+#include "dawn/AST/Tags.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <memory>
@@ -23,10 +24,7 @@ namespace dawn::ast {
 
 class Offsets;
 
-struct cartesian_ {};
 static constexpr cartesian_ cartesian;
-
-struct unstructured_ {};
 static constexpr unstructured_ unstructured;
 
 class HorizontalOffsetImpl {
