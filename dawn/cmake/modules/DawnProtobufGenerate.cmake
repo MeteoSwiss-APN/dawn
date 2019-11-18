@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -21,25 +21,25 @@ include(CMakeParseArguments)
 # dawn_protobuf_generate
 # ----------------------
 #
-# Run the protobuf compiler to generate sources from the proto files. This function excepts the 
+# Run the protobuf compiler to generate sources from the proto files. This function excepts the
 # Protobuf compiler to be imported as a target (``protobuf::protoc``).
 #
 # .. code-block:: cmake
 #
 #   dawn_protobuf_generate(OUT_FILES PROTOS LANGUAGE)
-# 
+#
 # ``OUT_FILES``
-#   On output this variable contains a List of output files which contain the location of the header and 
+#   On output this variable contains a List of output files which contain the location of the header and
 #   source files.
 # ``OUT_DIRS``
 #   On output this variable contains a List of paths
 # ``OUT_INCLUDE_DIRS``
-#   On output this variable contains a list of include directories which need to be added to compile 
+#   On output this variable contains a list of include directories which need to be added to compile
 #   the generated sources (C++ only).
 # ``PROTOS``
 #   List of proto files to compile.
 # ``LANGUAGE``
-#   Language to compile to [default: cpp]. 
+#   Language to compile to [default: cpp].
 #
 function(dawn_protobuf_generate)
 	set(one_value_args OUT_FILES OUT_DIRS OUT_INCLUDE_DIRS WDIR PACKG INC_DIR LANGUAGE)
@@ -65,7 +65,7 @@ function(dawn_protobuf_generate)
   endif()
 
   if(NOT ARG_OUT_FILES)
-    message(FATAL_ERROR 
+    message(FATAL_ERROR
             "dawn_protobuf_generate: called without specifying the output variable (OUT_FILES)")
     return()
   endif()
@@ -91,7 +91,7 @@ function(dawn_protobuf_generate)
     set(include_path ${include_path} -I${ARG_INC_DIR})
   endif()
 
-  # Generate a script to invoke protoc (this is needed to set the LD_LIBRARY_PATH as google 
+  # Generate a script to invoke protoc (this is needed to set the LD_LIBRARY_PATH as google
   # doesn't know about RPATH support in CMake ...)
   get_property(libprotoc_loc TARGET protobuf::libprotoc PROPERTY LOCATION)
   get_filename_component(libprotoc_dir ${libprotoc_loc} PATH)
@@ -99,11 +99,6 @@ function(dawn_protobuf_generate)
 
   set(protobuf_script ${CMAKE_CURRENT_BINARY_DIR}/run_protobuf.sh)
   file(WRITE "${protobuf_script}" "#!/usr/bin/env bash\n")
-  if(APPLE)
-    file(APPEND "${protobuf_script}" "export DYLD_LIBRARY_PATH=\"${libprotoc_dir}\":$DYLD_LIBRARY_PATH\n")
-  else()
-    file(APPEND "${protobuf_script}" "export LD_LIBRARY_PATH=\"${libprotoc_dir}\":$LD_LIBRARY_PATH\n")
-  endif()
   file(APPEND "${protobuf_script}" "cd ${ARG_WDIR}\n")
   file(APPEND "${protobuf_script}" "${protoc_path} $*\n")
   set(command "${BASH_EXECUTABLE}")
@@ -126,12 +121,12 @@ function(dawn_protobuf_generate)
 
     add_custom_command(
       OUTPUT ${generated_srcs}
-      COMMAND ${command} 
-      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}" 
+      COMMAND ${command}
+      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}"
            ${include_path} "${proto}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
       DEPENDS ${abs_file}
-      VERBATIM 
+      VERBATIM
     )
 
     list(APPEND output_files ${generated_srcs})
@@ -146,7 +141,7 @@ function(dawn_protobuf_generate)
     endforeach()
   endforeach()
 
-  if(ARG_OUT_DIRS) 
+  if(ARG_OUT_DIRS)
     if(${ARG_LANGUAGE} STREQUAL "java" )
       set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}/dawn/" PARENT_SCOPE)
     else()

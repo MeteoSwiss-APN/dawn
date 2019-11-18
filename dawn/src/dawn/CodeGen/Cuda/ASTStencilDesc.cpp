@@ -66,7 +66,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
-  ss_ << "m_" << stencilName + "->run";
+  ss_ << "m_" << stencilName + ".run";
 
   RangeToString fieldArgs(",", "(", ");");
 

@@ -52,8 +52,8 @@ TEST(hori_diff_stencil_02, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, u);
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
-  dawn_generated::cxxnaive::hori_diff_stencil hori_diff_naive(dom, u, out_naive);
+  dawn_generated::OPTBACKEND::hori_diff_stencil hori_diff_gt(dom);
+  dawn_generated::cxxnaive::hori_diff_stencil hori_diff_naive(dom);
 
   hori_diff_gt.run(u, out_gt);
   hori_diff_naive.run(u, out_naive);

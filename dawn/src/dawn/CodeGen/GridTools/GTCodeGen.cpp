@@ -360,13 +360,6 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(const auto& fieldID :
-      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::APIField>()) {
-    std::string name = metadata.getFieldNameFromAccessID(fieldID);
-    StencilWrapperConstructor.addArg(codeGenProperties.getParamType(stencilInstantiation, name) +
-                                     "/*unused*/");
-  }
-
   // Initialize allocated fields
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
@@ -427,7 +420,7 @@ void GTCodeGen::generateStencilWrapperMembers(
   }
 
   // Stencil members
-  stencilWrapperClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+  stencilWrapperClass.addMember("const " + c_gtc() + "domain", "m_dom");
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));

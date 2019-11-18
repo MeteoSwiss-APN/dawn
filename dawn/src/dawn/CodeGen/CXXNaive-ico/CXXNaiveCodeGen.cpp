@@ -297,15 +297,6 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                          StencilContext::SC_Stencil);
 
-    // StencilClass.addComment("Temporary storages");
-    // addTempStorageTypedef(StencilClass, *stencil);
-
-    // StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
-
-    // if(!globalsMap.empty()) {
-    //   StencilClass.addMember("const globals&", "m_globals");
-    // }
-
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
       switch(info.field.getLocation()) {
       case ast::Expr::LocationType::Cells:

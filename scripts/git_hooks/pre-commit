@@ -130,7 +130,7 @@ git diff-index --cached --diff-filter=ACMR --name-only $against -- | while read 
 do
     # ignore file if we do check for file extensions and the file
     # does not match any of the extensions specified in $FILE_EXTS
-    if $PARSE_EXTS && ! matches_extension "$file" "${list_files_to_skip[@]}"; then
+    if $PARSE_EXTS && ! matches_extension "$file" "${ignore_regex_list[@]}"; then
         continue;
     fi
 

@@ -129,8 +129,8 @@ TEST(stencil_functions, test_01) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  dawn_generated::OPTBACKEND::test_01_stencil test_01_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::test_01_stencil test_01_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::test_01_stencil test_01_gt(dom);
+  dawn_generated::cxxnaive::test_01_stencil test_01_naive(dom);
   sftest::test_01_stencil_reference(dom, in, out_ref);
 
   test_01_gt.run(in, out_gt);
@@ -156,8 +156,8 @@ TEST(stencil_functions, test_02) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  dawn_generated::OPTBACKEND::test_02_stencil test_02_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::test_02_stencil test_02_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::test_02_stencil test_02_gt(dom);
+  dawn_generated::cxxnaive::test_02_stencil test_02_naive(dom);
   sftest::test_02_stencil_reference(dom, in, out_ref);
 
   test_02_gt.run(in, out_gt);
@@ -183,8 +183,8 @@ TEST(stencil_functions, test_03) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  dawn_generated::OPTBACKEND::test_03_stencil test_03_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::test_03_stencil test_03_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::test_03_stencil test_03_gt(dom);
+  dawn_generated::cxxnaive::test_03_stencil test_03_naive(dom);
   sftest::test_03_stencil_reference(dom, in, out_ref);
 
   test_03_gt.run(in, out_gt);
@@ -210,8 +210,8 @@ TEST(stencil_functions, test_06) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  dawn_generated::OPTBACKEND::test_06_stencil test_06_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::test_06_stencil test_06_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::test_06_stencil test_06_gt(dom);
+  dawn_generated::cxxnaive::test_06_stencil test_06_naive(dom);
   sftest::test_06_stencil_reference(dom, in, out_ref);
 
   test_06_gt.run(in, out_gt);
@@ -237,8 +237,8 @@ TEST(stencil_functions, test_07) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  dawn_generated::OPTBACKEND::test_07_stencil test_07_gt(dom, in, out_gt);
-  dawn_generated::cxxnaive::test_07_stencil test_07_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::test_07_stencil test_07_gt(dom);
+  dawn_generated::cxxnaive::test_07_stencil test_07_naive(dom);
   sftest::test_07_stencil_reference(dom, in, out_ref);
 
   test_07_gt.run(in, out_gt);
