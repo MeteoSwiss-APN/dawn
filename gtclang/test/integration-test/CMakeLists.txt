@@ -32,18 +32,17 @@ macro(GET_COMPILER_FLAGS _KEY _RETVAL)
 endmacro(GET_COMPILER_FLAGS)
 
 function(code_generate_examples)
-  set(oneValueArgs BACKEND)
+  set(oneValueArgs BACKEND DIRECTORY)
   set(multiValueArgs EXAMPLES)
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-  set(codegen_examples_ ${ARG_EXAMPLES})
   set(backend ${ARG_BACKEND})
 
-  foreach(example ${codegen_examples_})
+  foreach(example ${ARG_EXAMPLES})
       # Add json inputfiles if they exist
       set(config_str "")
-      if(EXISTS "${cwd}/CodeGen/${example}.json")
-        set(config_str "--config=${cwd}/CodeGen/${example}.json")
+      if(EXISTS "${cwd}/${ARG_DIRECTORY}/${example}.json")
+        set(config_str "--config=${cwd}/${ARG_DIRECTORY}/${example}.json")
       endif()
 
       if(CMAKE_BUILD_TYPE MATCHES DEBUG)
@@ -55,34 +54,33 @@ function(code_generate_examples)
       GET_COMPILER_FLAGS(${example} flags)
       set(config_str "${config_str}" "${flags}")
 
-      file(MAKE_DIRECTORY "${cwd}/CodeGen/generated/")
+      file(MAKE_DIRECTORY "${cwd}/${ARG_DIRECTORY}/generated/")
 
       # Add make target
-      add_custom_command( OUTPUT ${cwd}/CodeGen/generated/${example}_${backend}.cpp
-        COMMAND $<TARGET_FILE:gtclang> "-backend=${backend}" ${config_str} "-o" "${cwd}/CodeGen/generated/${example}_${backend}.cpp"  "${cwd}/CodeGen/${example}.cpp"
-        DEPENDS ${cwd}/CodeGen/${example}.cpp gtclang
+      add_custom_command( OUTPUT ${cwd}/${ARG_DIRECTORY}/generated/${example}_${backend}.cpp
+        COMMAND $<TARGET_FILE:gtclang> "-backend=${backend}" ${config_str} "-o" "${cwd}/${ARG_DIRECTORY}/generated/${example}_${backend}.cpp"  "${cwd}/${ARG_DIRECTORY}/${example}.cpp"
+        DEPENDS ${cwd}/${ARG_DIRECTORY}/${example}.cpp gtclang
       )
 
-      add_custom_target(${example}_${backend}_codegen ALL DEPENDS ${cwd}/CodeGen/generated/${example}_${backend}.cpp)
-      set_source_files_properties(${cwd}/CodeGen/generated/${example}_${backend}.cpp PROPERTIES GENERATED TRUE)
+      add_custom_target(${example}_${backend}_codegen ALL DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_${backend}.cpp)
+      set_source_files_properties(${cwd}/${ARG_DIRECTORY}/generated/${example}_${backend}.cpp PROPERTIES GENERATED TRUE)
 
-      add_custom_command(OUTPUT ${cwd}/CodeGen/generated/${example}_c++-naive.cpp
-        COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" ${config_str} "-o" "${cwd}/CodeGen/generated/${example}_c++-naive.cpp"  "${cwd}/CodeGen/${example}.cpp"
-        DEPENDS ${cwd}/CodeGen/${example}.cpp gtclang
+      add_custom_command(OUTPUT ${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp
+        COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" ${config_str} "-o" "${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp"  "${cwd}/${ARG_DIRECTORY}/${example}.cpp"
+        DEPENDS ${cwd}/${ARG_DIRECTORY}/${example}.cpp gtclang
       )
 
-      add_custom_target(${example}_c++-naive_codegen ALL DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
-      set_source_files_properties(${cwd}/CodeGen/generated/${example}_c++-naive.cpp PROPERTIES GENERATED TRUE)
+      add_custom_target(${example}_c++-naive_codegen ALL DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp)
+      set_source_files_properties(${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp PROPERTIES GENERATED TRUE)
 
   endforeach()
 endfunction(code_generate_examples)
 
 function(compile_generated_examples)
-  set(oneValueArgs BACKEND)
+  set(oneValueArgs BACKEND DIRECTORY)
   set(multiValueArgs EXAMPLES DUMMY)
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-  set(codegen_examples_ ${ARG_EXAMPLES})
   set(backend ${ARG_BACKEND})
 
   if(NOT ${backend} STREQUAL "gt")
@@ -90,14 +88,14 @@ function(compile_generated_examples)
   endif()
 
   foreach(example ${ARG_DUMMY})
-      add_executable(${example}_benchmarks_${backend} ${cwd}/CodeGen/dummy.cpp)
-      set_property(SOURCE ${cwd}/CodeGen/dummy.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
+      add_executable(${example}_benchmarks_${backend} ${cwd}/${ARG_DIRECTORY}/dummy.cpp)
+      set_property(SOURCE ${cwd}/${ARG_DIRECTORY}/dummy.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp)
       if(GTCLANG_BUILD_CUDA_EXAMPLES)
-        set_property(SOURCE ${cwd}/CodeGen/dummy.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_cuda.cpp)
+        set_property(SOURCE ${cwd}/${ARG_DIRECTORY}/dummy.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_cuda.cpp)
       endif(GTCLANG_BUILD_CUDA_EXAMPLES)
   endforeach()
-  foreach(example ${codegen_examples_})
-      add_executable(${example}_benchmarks_${backend} "${cwd}/CodeGen/${example}_benchmark.cpp" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
+  foreach(example ${ARG_EXAMPLES})
+      add_executable(${example}_benchmarks_${backend} "${cwd}/${ARG_DIRECTORY}/${example}_benchmark.cpp" "${cwd}/${ARG_DIRECTORY}/TestMain.cpp" "${cwd}/${ARG_DIRECTORY}/Options.cpp")
       target_include_directories(${example}_benchmarks_${backend} PUBLIC ${include_dirs})
       target_compile_definitions(${example}_benchmarks_${backend} PRIVATE -DOPTBACKEND=${backend})
       target_compile_features(${example}_benchmarks_${backend} PRIVATE cxx_std_11)
@@ -108,8 +106,8 @@ function(compile_generated_examples)
       add_dependencies(${example}_benchmarks_${backend} gtclang ${example}_c++-naive_codegen ${example}_${backend}_codegen)
       target_link_libraries(${example}_benchmarks_${backend} ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest)
 
-#      set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_${backend}.cpp)
-#      set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
+#      set_property(SOURCE ${cwd}/${ARG_DIRECTORY}/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_${backend}.cpp)
+#      set_property(SOURCE ${cwd}/${ARG_DIRECTORY}/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp)
 
       add_test(NAME CTest-${example}_benchmarks_${backend} COMMAND $<TARGET_FILE:${example}_benchmarks_${backend}> 12 12 10 --gtest_output=xml:${example}_unittest.xml)
 
@@ -117,15 +115,14 @@ function(compile_generated_examples)
 endfunction(compile_generated_examples)
 
 function(cuda_compile_generated_examples)
-  set(oneValueArgs BACKEND)
+  set(oneValueArgs BACKEND DIRECTORY)
   set(multiValueArgs EXAMPLES)
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-  set(codegen_examples_ ${ARG_EXAMPLES})
   set(backend ${ARG_BACKEND})
 
-  foreach(example ${codegen_examples_})
-      cuda_add_executable(${example}_benchmarks_${backend}_cuda "${cwd}/CodeGen/${example}_benchmark.cu" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
+  foreach(example ${ARG_EXAMPLES})
+      cuda_add_executable(${example}_benchmarks_${backend}_cuda "${cwd}/${ARG_DIRECTORY}/${example}_benchmark.cu" "${cwd}/${ARG_DIRECTORY}/TestMain.cpp" "${cwd}/${ARG_DIRECTORY}/Options.cpp")
 
       target_include_directories(${example}_benchmarks_${backend}_cuda PUBLIC ${include_dirs})
       if(${backend} STREQUAL cuda)
@@ -144,7 +141,7 @@ function(cuda_compile_generated_examples)
 
       add_custom_target(
         dummy_${example}_${backend}
-        DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp
+        DEPENDS ${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp
       )
 
       if(CTEST_CUDA_SUBMIT)
@@ -198,6 +195,8 @@ yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectIntegrationTest
 # Add a dummy target with all the source files so that they are included in a qt creator project
 yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
                          DIRECTORIES ${cwd}/CodeGen)
+yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectFV3Test
+                         DIRECTORIES ${cwd}/FV3)
 
 # Codegen tests require GridTools
 if(GTCLANG_HAS_GRIDTOOLS)
@@ -208,6 +207,9 @@ if(GTCLANG_HAS_GRIDTOOLS)
   # specific examples for cuda backend
   set(cuda_codegen_examples intervals01 intervals02 intervals03 local_kcache kcache_fill kcache_fill_kparallel
       kcache_fill_backward kcache_flush kcache_epflush)
+
+  # examples from FV3
+  set(fv3_examples p_grad_c)
 
   set(codegen_example_benchmarks)
 
@@ -229,17 +231,37 @@ if(GTCLANG_HAS_GRIDTOOLS)
   if(GTCLANG_HAS_GRIDTOOLS)
     list(APPEND include_dirs "${GridTools_INCLUDE_PATH}")
     if(GTCLANG_BUILD_GT_CPU_EXAMPLES OR GTCLANG_BUILD_GT_GPU_EXAMPLES)
-      code_generate_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples} BACKEND gt)
+      code_generate_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples}
+        BACKEND gt
+        DIRECTORY CodeGen)
+      code_generate_examples(EXAMPLES ${fv3_examples}
+        BACKEND gt
+        DIRECTORY FV3)
     endif()
     if(GTCLANG_BUILD_GT_CPU_EXAMPLES)
-      compile_generated_examples(EXAMPLES ${codegen_examples} DUMMY ${cuda_codegen_examples} BACKEND gt)
+      compile_generated_examples(EXAMPLES ${codegen_examples}
+        DUMMY ${cuda_codegen_examples}
+        BACKEND gt
+        DIRECTORY CodeGen)
+      compile_generated_examples(EXAMPLES ${fv3_examples}
+        BACKEND gt
+        DIRECTORY FV3)
     endif()
     if(GTCLANG_BUILD_GT_GPU_EXAMPLES)
-      cuda_compile_generated_examples(EXAMPLES ${codegen_examples} BACKEND gt)
+      cuda_compile_generated_examples(EXAMPLES ${codegen_examples}
+        BACKEND gt
+        DIRECTORY CodeGen)
+      cuda_compile_generated_examples(EXAMPLES ${fv3_examples}
+        BACKEND gt
+        DIRECTORY FV3)
     endif()
     if(GTCLANG_BUILD_CUDA_EXAMPLES)
-      code_generate_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples} BACKEND cuda)
-      cuda_compile_generated_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples} BACKEND cuda)
+      code_generate_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples}
+        BACKEND cuda
+        DIRECTORY CodeGen)
+      cuda_compile_generated_examples(EXAMPLES ${codegen_examples} ${cuda_codegen_examples}
+        BACKEND cuda
+        DIRECTORY CodeGen)
     endif(GTCLANG_BUILD_CUDA_EXAMPLES)
   endif()
 endif()
