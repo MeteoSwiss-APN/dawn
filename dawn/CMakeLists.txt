@@ -65,13 +65,10 @@ add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # TODO: R
 
 add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
 
-if(BUILD_SHARED_LIBS)
-add_cxx_compiler_flag_if_supported("-fPIC" DAWN_CXX_FLAGS)
-endif()
-
 # Target properties
 set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
 
+# Needed because we use object libraries
 if (BUILD_SHARED_LIBS)
   list(APPEND DAWN_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
