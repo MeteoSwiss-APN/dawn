@@ -5,7 +5,7 @@
 //                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
-//
+// extents
 //
 //  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
@@ -73,15 +73,14 @@ createDoMethod(int assignmentID, int assigneeID,
 static std::unique_ptr<iir::Stage>
 createAssignmentStage(int assignmentID, int assigneeID,
                       std::shared_ptr<iir::StencilInstantiation> const& si,
-                      const iir::Interval& interval) {
+                      const iir::Interval& interval, const iir::Extents& extents) {
   // Create the do-method for the stage
   auto doMethod = createDoMethod(assignmentID, assigneeID, si, interval);
 
   // Create the stage and add the do method
   iir::StencilMetaInformation& metadata = si->getMetaData();
   auto assignmentStage = std::make_unique<iir::Stage>(metadata, si->nextUID());
-  assignmentStage->setExtents(iir::Extents{});
-
+  assignmentStage->setExtents(extents);
   assignmentStage->addDoMethod(std::move(doMethod));
   assignmentStage->update(iir::NodeUpdateType::level);
 
@@ -91,11 +90,11 @@ createAssignmentStage(int assignmentID, int assigneeID,
 /// @brief Creates a multistage in which assignment happens (where the versioned field gets filled)
 static std::unique_ptr<iir::MultiStage>
 createAssignmentMultiStage(int assignmentID, std::shared_ptr<iir::StencilInstantiation> const& si,
-                           const iir::Interval& interval) {
+                           const iir::Interval& interval, const iir::Extents& extents) {
   iir::StencilMetaInformation& metadata = si->getMetaData();
   int assigneeID = metadata.getOriginalVersionOfAccessID(assignmentID);
 
-  auto assignmentStage = createAssignmentStage(assignmentID, assigneeID, si, interval);
+  auto assignmentStage = createAssignmentStage(assignmentID, assigneeID, si, interval, extents);
 
   // Create the multistage and add the assignment stage
   auto ms = std::make_unique<iir::MultiStage>(metadata, iir::LoopOrderKind::Parallel);
@@ -132,12 +131,15 @@ bool PassFixVersionedInputFields::run(
   for(const auto& stencil : stencilInstantiation->getStencils()) {
     // Inserting multistages below, so can't use IterateIIROver here
     for(auto msiter = stencil->childrenBegin(); msiter != stencil->childrenEnd(); ++msiter) {
+      auto& ms = *msiter;
       CollectVersionedIDs getter{stencilInstantiation->getMetaData()};
-      for(auto& stmt : iterateIIROverStmt(**msiter)) {
+      for(auto& stmt : iterateIIROverStmt(*ms)) {
         stmt->accept(getter);
       }
       for(int id : getter.versionedAccessIDs) {
-        if(!(*msiter)->getField(id).getExtents().isVerticalPointwise()) {
+        auto extents = ms->getField(id).getExtents();
+
+        if(!extents.isVerticalPointwise()) {
           DAWN_LOG(WARNING) << "Cannot resolve race conditions with vertical dependencies. This "
                                "will generate potentially dangerous code.";
         }
@@ -146,9 +148,10 @@ bool PassFixVersionedInputFields::run(
         // fills all read intervals from the original field during the execution
         // of the multistage. Currently, we create one for each interval, but
         // these could later be merged into a single multistage.
-        const auto multiInterval = (*msiter)->computeReadAccessInterval(id);
+        const auto multiInterval = ms->computeReadAccessInterval(id);
         for(const auto& interval : multiInterval.getIntervals()) {
-          auto insertedMultistage = createAssignmentMultiStage(id, stencilInstantiation, interval);
+          auto insertedMultistage =
+              createAssignmentMultiStage(id, stencilInstantiation, interval, extents);
           msiter = stencil->insertChild(msiter, std::move(insertedMultistage));
           // update the mss: #TODO: this is still a workaround since we don't have level-and below:
           for(const auto& doMethods : iterateIIROver<iir::DoMethod>(**msiter)) {
