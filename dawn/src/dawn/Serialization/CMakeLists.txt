@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnSerialization OBJECT
+add_library(DawnSerialization
   ASTSerializer.h
   ASTSerializer.cpp
   IIRSerializer.h
@@ -21,13 +21,5 @@ add_library(DawnSerialization OBJECT
   SIRSerializer.cpp
 )
 
-target_include_directories(DawnSerialization
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-)
-target_compile_features(DawnSerialization PUBLIC cxx_std_17)
-target_compile_options(DawnSerialization PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnSerialization PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnSerialization)
 target_link_libraries(DawnSerialization PUBLIC DawnSupport DawnAST DawnSIR DawnIIR DawnOptimizer)

@@ -35,6 +35,7 @@ project(Dawn
 # Other options
 option(BUILD_EXAMPLES "Build examples" ON)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -57,12 +58,12 @@ function(add_cxx_compiler_flag_if_supported flag var)
     endif()
   endif()
 endfunction()
+
 add_cxx_compiler_flag_if_supported("-Wall" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" DAWN_CXX_FLAGS)
-add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # TODO: Remove this!
-
+add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # Would like to remove
 add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
 
 # Target properties
@@ -73,6 +74,17 @@ if (BUILD_SHARED_LIBS)
   list(APPEND DAWN_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
+# Add cxx standard, include directories, and properties
+function(target_add_dawn_standard_props target)
+  target_include_directories(${target}
+    PUBLIC  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+  )
+  target_compile_features(${target} PUBLIC cxx_std_17)
+  target_compile_options(${target} PRIVATE ${DAWN_CXX_FLAGS})
+  set_target_properties(${target} PROPERTIES ${DAWN_TARGET_PROPERTIES})
+endfunction()
+
 include(GNUInstallDirs)
 
 # Project dependencies
@@ -81,15 +93,22 @@ find_package(Python3 COMPONENTS Interpreter)
 
 add_subdirectory(src)
 
-if(BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
-
 if (Python3_FOUND)
-  set(ENABLE_PYTHON ON)
+  # Look for protobuf python module
+  find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
+    PATHS ${Protobuf_INCLUDE_DIR}/../python ${PROTOBUF_PYTHON_MODULE_DIR}
+    DOC "Path to protobuf python module")
+  mark_as_advanced(PROTOBUF_PYTHON_DIR)
+  if (PROTOBUF_PYTHON_DIR)
+    set(ENABLE_PYTHON ON)
+  endif()
   add_subdirectory(python)
 else()
   message(STATUS "Python3 not found, not installing python bindings")
+endif()
+
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 # Docs only available if this is the main app
@@ -122,15 +141,15 @@ configure_package_config_file(
 )
 
 install(
-  EXPORT ${PROJECT_NAME}Targets
-  FILE ${PROJECT_NAME}Targets.cmake
-  NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+  EXPORT Dawn-targets
+  FILE Dawn-targets.cmake
+  NAMESPACE Dawn::
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/cmake
 )
 
 install(
   FILES
-  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+  "${PROJECT_BINARY_DIR}/DawnConfig.cmake"
+  "${PROJECT_BINARY_DIR}/DawnConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/cmake
 )

@@ -12,20 +12,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnUnittest OBJECT
+add_library(DawnUnittest
   IIRBuilder.h
   IIRBuilder.cpp
   UnittestLogger.cpp
   UnittestLogger.h
 )
 
-target_include_directories(DawnUnittest
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-)
-target_compile_features(DawnUnittest PUBLIC cxx_std_17)
-target_compile_options(DawnUnittest PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnUnittest PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnUnittest)
 target_link_libraries(DawnUnittest PUBLIC DawnSupport DawnIIR DawnOptimizer DawnCodeGen)

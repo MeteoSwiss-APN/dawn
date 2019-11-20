@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnOptimizer OBJECT
+add_library(DawnOptimizer
   CreateVersionAndRename.cpp
   CreateVersionAndRename.h
   OptimizerContext.cpp
@@ -83,13 +83,5 @@ add_library(DawnOptimizer OBJECT
   TemporaryHandling.h
 )
 
-target_include_directories(DawnOptimizer
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-)
-target_compile_features(DawnOptimizer PUBLIC cxx_std_17)
-target_compile_options(DawnOptimizer PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnOptimizer PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnOptimizer)
 target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR)

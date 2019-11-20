@@ -12,20 +12,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnCompiler OBJECT
+add_library(DawnCompiler
   DawnCompiler.h
   DawnCompiler.cpp
   Options.h
   Options.inc
 )
 
-target_include_directories(DawnCompiler
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-)
-target_compile_features(DawnCompiler PUBLIC cxx_std_17)
-target_compile_options(DawnCompiler PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnCompiler PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnCompiler)
 target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnCodeGen DawnSerialization)

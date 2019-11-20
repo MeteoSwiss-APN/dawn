@@ -32,6 +32,8 @@ add_custom_command(
 )
 
 add_library(DawnSIRProto OBJECT ${proto_cc} ${proto_h})
+target_compile_features(DawnSIRProto PUBLIC cxx_std_98)
+set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
 # Generated files need to be compiled with the protobuf headers
 target_include_directories(DawnSIRProto
@@ -42,7 +44,7 @@ target_include_directories(DawnSIRProto
 
 target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
 
-add_library(DawnSIR OBJECT
+add_library(DawnSIR
   AST.h
   ASTExpr.h
   ASTFwd.h
@@ -54,18 +56,12 @@ add_library(DawnSIR OBJECT
   ASTVisitor.h
   SIR.cpp
   SIR.h
+  $<TARGET_OBJECTS:DawnSIRProto>
+  $<TARGET_OBJECTS:DawnAST>
 )
 
-target_include_directories(DawnSIR
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-)
-target_compile_features(DawnSIR PUBLIC cxx_std_17)
-target_compile_options(DawnSIR PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnSIR PROPERTIES ${DAWN_TARGET_PROPERTIES})
-target_link_libraries(DawnSIR PUBLIC DawnSupport DawnSIRProto)
+target_add_dawn_standard_props(DawnSIR)
+target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
 
 if(ENABLE_PYTHON)
   list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)

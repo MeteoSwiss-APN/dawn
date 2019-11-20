@@ -13,4 +13,4 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_executable(sir-to-iir SIRToIIR.cpp)
-target_link_libraries(sir-to-iir Dawn::DawnC)
+target_link_libraries(sir-to-iir DawnC)

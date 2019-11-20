@@ -12,5 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(python)
+if(ENABLE_PYTHON)
+  add_subdirectory(python)
+endif()
+
 add_subdirectory(cpp)

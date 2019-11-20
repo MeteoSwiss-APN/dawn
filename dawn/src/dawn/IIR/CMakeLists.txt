@@ -31,6 +31,8 @@ add_custom_command(
 )
 
 add_library(DawnIIRProto OBJECT ${proto_cc} ${proto_h})
+target_compile_features(DawnIIRProto PUBLIC cxx_std_98)
+set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
 # Generated files need to be compiled with the protobuf headers and SIR headers
 target_include_directories(DawnIIRProto
@@ -41,7 +43,7 @@ target_include_directories(DawnIIRProto
 
 target_link_libraries(DawnIIRProto PUBLIC DawnSIRProto protobuf::libprotobuf)
 
-add_library(DawnIIR OBJECT
+add_library(DawnIIR
   AccessComputation.h
   AccessComputation.cpp
   AST.h
@@ -109,18 +111,11 @@ add_library(DawnIIR OBJECT
   StencilInstantiation.h
   StencilMetaInformation.cpp
   StencilMetaInformation.h
+  $<TARGET_OBJECTS:DawnIIRProto>
 )
 
-target_include_directories(DawnIIR
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-)
-target_compile_features(DawnIIR PUBLIC cxx_std_17)
-target_compile_options(DawnIIR PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnIIR PROPERTIES ${DAWN_TARGET_PROPERTIES})
-target_link_libraries(DawnIIR PUBLIC DawnSupport DawnIIRProto)
+target_add_dawn_standard_props(DawnIIR)
+target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
 
 if(ENABLE_PYTHON)
   list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)

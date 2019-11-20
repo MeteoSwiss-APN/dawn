@@ -19,9 +19,8 @@ add_executable(DawnUnittestSIR
   TestSIR.cpp
   TestSIRSerializer.cpp
 )
-target_link_libraries(DawnUnittestSIR Dawn gtest)
-target_compile_options(DawnUnittestSIR PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnUnittestSIR PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnUnittestSIR PRIVATE DawnSIR DawnSerialization DawnUnittest gtest)
+target_add_dawn_standard_props(DawnUnittestSIR)
 add_test(NAME DawnUnittestSIR
   COMMAND DawnUnittestSIR
 )

@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(${PROJECT_NAME}C
+add_library(DawnC
   Dawn.h
   Compiler.cpp
   Compiler.h
@@ -29,13 +29,6 @@ add_library(${PROJECT_NAME}C
   util/OptionsWrapper.h
   util/TranslationUnitWrapper.h
 )
-add_library(Dawn::DawnC ALIAS ${PROJECT_NAME}C)
 
-target_include_directories(${PROJECT_NAME}C
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-)
-target_compile_features(${PROJECT_NAME}C PUBLIC cxx_std_17)
-target_compile_options(${PROJECT_NAME}C PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(${PROJECT_NAME}C PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnC)
 target_link_libraries(${PROJECT_NAME}C PUBLIC Dawn)

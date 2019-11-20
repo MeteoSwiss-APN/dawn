@@ -23,9 +23,8 @@ add_executable(DawnUnittestSupport
   TestRangeToString.cpp
   TestType.cpp
 )
-target_link_libraries(DawnUnittestSupport Dawn gtest)
-target_compile_options(DawnUnittestSupport PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnUnittestSupport PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnUnittestSupport DawnSupport DawnUnittest gtest)
+target_add_dawn_standard_props(DawnUnittestSupport)
 add_test(NAME DawnUnittestSupport
   COMMAND DawnUnittestSupport
 )

@@ -15,4 +15,4 @@
 add_subdirectory(utils)
 
 add_subdirectory(unit-test)
-add_subdirectory(integration-test)
+# add_subdirectory(integration-test)

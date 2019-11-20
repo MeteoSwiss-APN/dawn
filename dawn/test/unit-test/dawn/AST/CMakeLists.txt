@@ -13,9 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_executable(DawnUnittestAST TestMain.cpp TestOffset.cpp)
-target_link_libraries(DawnUnittestAST Dawn gtest)
-target_compile_options(DawnUnittestAST PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnUnittestAST PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnUnittestAST PRIVATE DawnSIR DawnUnittest gtest)
+target_add_dawn_standard_props(DawnUnittestAST)
 add_test(NAME DawnUnittestAST
   COMMAND DawnUnittestAST
 )

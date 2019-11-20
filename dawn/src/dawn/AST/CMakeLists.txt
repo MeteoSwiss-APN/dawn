@@ -31,13 +31,5 @@ add_library(DawnAST OBJECT
   Offsets.cpp
 )
 
-target_include_directories(DawnAST
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  PRIVATE
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-)
-target_compile_features(DawnAST PUBLIC cxx_std_17)
-target_compile_options(DawnAST PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnAST PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnAST)
 target_link_libraries(DawnAST PUBLIC DawnSupport)

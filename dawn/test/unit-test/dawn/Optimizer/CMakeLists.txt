@@ -21,10 +21,8 @@ add_executable(DawnUnittestOptimizer
   TestMain.cpp
   TestSCCAlgorithm.cpp
 )
-target_link_libraries(DawnUnittestOptimizer Dawn gtest)
-target_compile_options(DawnUnittestOptimizer PRIVATE ${DAWN_CXX_FLAGS})
-target_include_directories(DawnUnittestOptimizer PRIVATE ${PROJECT_SOURCE_DIR})
-set_target_properties(DawnUnittestOptimizer PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnUnittestOptimizer PRIVATE DawnOptimizer DawnUnittest gtest)
+target_add_dawn_standard_props(DawnUnittestOptimizer)
 add_test(NAME DawnUnittestOptimizer
   COMMAND DawnUnittestOptimizer
 )

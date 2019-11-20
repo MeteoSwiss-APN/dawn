@@ -18,7 +18,7 @@ add_executable(DawnIntegrationTest
   TestIIRDeserializer.cpp
   GenerateInMemoryStencils.cpp
 )
-target_link_libraries(DawnIntegrationTest Dawn gtest)
+target_link_libraries(DawnIntegrationTest Dawn DawnUnittest gtest)
 target_compile_options(DawnIntegrationTest PRIVATE ${DAWN_CXX_FLAGS})
 set_target_properties(DawnIntegrationTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_test(NAME DawnIntegrationTest

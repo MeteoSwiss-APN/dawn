@@ -13,35 +13,35 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(Support)
+list(APPEND DAWN_LIBS DawnSupport)
+
+# AST and SIR have a circular dependency, only building one library -- DawnSIR
+# {
 add_subdirectory(AST)
+list(APPEND DAWN_LIBS DawnAST)
+
 add_subdirectory(SIR)
+list(APPEND DAWN_LIBS DawnSIR DawnSIRProto)
+# }
 add_subdirectory(IIR)
+list(APPEND DAWN_LIBS DawnIIR DawnIIRProto)
+
 add_subdirectory(Optimizer)
+list(APPEND DAWN_LIBS DawnOptimizer)
+
 add_subdirectory(Serialization)
+list(APPEND DAWN_LIBS DawnSerialization)
+
 add_subdirectory(CodeGen)
+list(APPEND DAWN_LIBS DawnCodeGen)
+
 add_subdirectory(Compiler)
+list(APPEND DAWN_LIBS DawnCompiler)
+
 add_subdirectory(Unittest)
+# We do not add DawnUnittest to DAWN_LIBS
 
-set(DAWN_OBJECT_LIBS
-    DawnSupport
-    DawnAST
-    DawnSIR
-    DawnSIRProto
-    DawnIIR
-    DawnIIRProto
-    DawnOptimizer
-    DawnSerialization
-    DawnCodeGen
-    DawnCompiler
-    DawnUnittest #TODO: we don't want it here but it is needed for some gtclang tests
-)
-set(DAWN_OBJECT_LIBS ${DAWN_OBJECT_LIBS} PARENT_SCOPE)
+set(DAWN_LIBS ${DAWN_LIBS} PARENT_SCOPE)
 
-foreach(_target ${DAWN_OBJECT_LIBS})
-    list(APPEND dawn_objs $<TARGET_OBJECTS:${_target}>)
-endforeach()
-
-add_library(${PROJECT_NAME} ${dawn_objs})
-add_library(Dawn::Dawn ALIAS ${PROJECT_NAME})
-target_link_options(${PROJECT_NAME} PRIVATE ${DAWN_LINKER_FLAGS})
-target_link_libraries(${PROJECT_NAME} ${DAWN_OBJECT_LIBS})
+add_library(Dawn INTERFACE)
+target_link_libraries(Dawn INTERFACE ${DAWN_LIBS})

@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnCodeGen OBJECT
+add_library(DawnCodeGen
   ASTCodeGenCXX.cpp
   ASTCodeGenCXX.h
   CodeGen.h
@@ -64,14 +64,5 @@ add_library(DawnCodeGen OBJECT
   TranslationUnit.h
 )
 
-target_include_directories(DawnCodeGen
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/External>
-)
-target_compile_features(DawnCodeGen PUBLIC cxx_std_17)
-target_compile_options(DawnCodeGen PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnCodeGen PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_add_dawn_standard_props(DawnCodeGen)
 target_link_libraries(DawnCodeGen PUBLIC DawnSupport DawnIIR)

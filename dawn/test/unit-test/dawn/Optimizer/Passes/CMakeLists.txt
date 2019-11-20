@@ -21,10 +21,11 @@ add_executable(DawnUnittestOptimizerPasses
   TestFieldAccessIntervals.cpp
   TestTemporaryToFunction.cpp
 )
-target_link_libraries(DawnUnittestOptimizerPasses Dawn gtest)
-target_compile_options(DawnUnittestOptimizerPasses PRIVATE ${DAWN_CXX_FLAGS})
-target_include_directories(DawnUnittestOptimizerPasses PRIVATE ${PROJECT_SOURCE_DIR})
-set_target_properties(DawnUnittestOptimizerPasses PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnUnittestOptimizerPasses PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
+target_add_dawn_standard_props(DawnUnittestOptimizerPasses)
+target_include_directories(DawnUnittestOptimizerPasses
+  PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+)
 add_test(NAME DawnUnittestOptimizerPasses
   COMMAND DawnUnittestOptimizerPasses "${CMAKE_CURRENT_LIST_DIR}"
 )

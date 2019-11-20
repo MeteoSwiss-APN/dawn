@@ -24,9 +24,8 @@ add_executable(DawnUnittestIIR
   TestStencil.cpp
   TestIIRSerializer.cpp
 )
-target_link_libraries(DawnUnittestIIR Dawn gtest)
-target_compile_options(DawnUnittestIIR PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnUnittestIIR PROPERTIES ${DAWN_TARGET_PROPERTIES})
+target_link_libraries(DawnUnittestIIR PRIVATE DawnIIR DawnSerialization DawnUnittest gtest)
+target_add_dawn_standard_props(DawnUnittestIIR)
 add_test(NAME DawnUnittestIIR
   COMMAND DawnUnittestIIR
 )

@@ -14,7 +14,7 @@
 
 configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/Config.h)
 
-add_library(DawnSupport OBJECT
+add_library(DawnSupport
   ${CMAKE_CURRENT_BINARY_DIR}/Config.h
   ${PROJECT_SOURCE_DIR}/src/dawn/Dawn.h
   AlignOf.h
@@ -70,13 +70,8 @@ add_library(DawnSupport OBJECT
   Unreachable.h
 )
 
-target_include_directories(DawnSupport
+target_add_dawn_standard_props(DawnSupport)
+target_include_directories(DawnSupport SYSTEM
   PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/External>
 )
-target_compile_features(DawnSupport PUBLIC cxx_std_17)
-target_compile_options(DawnSupport PRIVATE ${DAWN_CXX_FLAGS})
-set_target_properties(DawnSupport PROPERTIES ${DAWN_TARGET_PROPERTIES})

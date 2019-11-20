@@ -23,11 +23,12 @@ set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_FULL_LIBDIR}/$<TARGET_FILE_NAME:DawnC>
 configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
 file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
 
-# Copy to build directory
-file(COPY ${CMAKE_SOURCE_DIR}/python/
-  DESTINATION ${CMAKE_BINARY_DIR}/python
-  FILES_MATCHING PATTERN "*.py")
-
 # Copy to install
-install(FILES ${config_out} DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
-install(DIRECTORY . DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
+install(
+  FILES ${config_out}
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/examples/python
+)
+install(
+  DIRECTORY .
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/examples/python
+)
