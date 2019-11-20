@@ -294,6 +294,11 @@ struct StencilFunction {
 struct VerticalRegion {
   enum class LoopOrderKind { Forward, Backward };
 
+  /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
+  /// is assumed.
+  std::array<std::optional<std::pair<int, int>>, 2> iterationSpace_;
+  /////////////////////////////////// WITTODO: Fill here///////////////////////////////////
+
   SourceLocation Loc;                         ///< Source location of the vertical region
   std::shared_ptr<sir::AST> Ast;              ///< AST of the region
   std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
