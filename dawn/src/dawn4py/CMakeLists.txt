@@ -14,7 +14,7 @@
 
 
 include(FetchContent)
-set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 FetchContent_Declare(
     pybind11_fetch
     GIT_REPOSITORY https://github.com/pybind/pybind11

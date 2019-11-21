@@ -28,6 +28,8 @@ BUNDLE_PREFIX = "bundle"
 BUNDLE_DIR = os.path.join(DAWN_DIR, BUNDLE_PREFIX)
 BUNDLE_ABS_DIR = os.path.abspath(BUNDLE_DIR)
 
+BUILD_JOBS = 4
+
 
 # Select protobuf version
 with open(os.path.join(DAWN_DIR, "cmake", "thirdparty", "DawnAddProtobuf.cmake"), "r") as f:
@@ -69,8 +71,6 @@ class CMakeBuild(build_ext):
 
         cfg = "Debug" if self.debug else "Release"
         cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
-        build_args = ["--config", cfg]
-        build_args += ["--", "-j4"]  # Assuming Makefiles
 
         env = os.environ.copy()
         env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
@@ -98,6 +98,7 @@ class CMakeBuild(build_ext):
         print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp, env=env)
         print("-" * 10, "Building extensions", "-" * 40)
+        build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]  #"--target", "python",
         cmake_cmd = ["cmake", "--build", "."] + build_args
         print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp)
