@@ -14,7 +14,7 @@
 
 
 include(FetchContent)
-
+set(FETCHCONTENT_FULLY_DISCONNECTED ON)
 FetchContent_Declare(
     pybind11_fetch
     GIT_REPOSITORY https://github.com/pybind/pybind11
@@ -42,30 +42,4 @@ target_link_libraries(_dawn4py PUBLIC
 )
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)
 
-# Generate python proto files
-# set(dawn_iir_proto "${CMAKE_SOURCE_DIR}/src/dawn/IIR/proto")
-# dawn_protobuf_generate(
-#   OUT_FILES iir_proto_python_files
-#   PROTOS IIR/IIR.proto
-#   WDIR ${dawn_iir_proto}
-#   PACKG SIR
-#   LANGUAGE python
-# )
-# add_custom_target(Dawn4PyIIRProto ALL
-#   COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_CURRENT_SOURCE_DIR}/serialization/IIR
-#   DEPENDS ${iir_proto_python_files}
-# )
-
-# set(dawn_sir_proto "${CMAKE_SOURCE_DIR}/src/dawn/SIR/proto")
-# dawn_protobuf_generate(
-#   OUT_FILES sir_proto_python_files
-#   PROTOS SIR/SIR.proto SIR/statements.proto
-#   WDIR ${dawn_sir_proto}
-#   PACKG SIR
-#   LANGUAGE python
-# )
-# add_custom_target(Dawn4PySIRProto ALL
-#   COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_CURRENT_SOURCE_DIR}/serialization/IIR
-#   DEPENDS ${iir_proto_python_files}
-# )
-
+add_custom_target(python DEPENDS DawnSIRPythonProto DawnIIRPythonProto _dawn4py)

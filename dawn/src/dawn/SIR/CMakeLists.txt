@@ -61,7 +61,7 @@ target_include_directories(DawnSIRShared PUBLIC $<BUILD_INTERFACE:${sir_proto_in
 add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
 
 if(DAWN_PYTHON) 
-  # Genreate python proto files
+  # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES sir_proto_python_files
     PROTOS SIR/SIR.proto SIR/statements.proto
@@ -72,6 +72,7 @@ if(DAWN_PYTHON)
 
   add_custom_target(DawnSIRPythonProto ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_SOURCE_DIR}/src/dawn4py/serialization/SIR
     DEPENDS ${sir_proto_python_files}
   )
   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
@@ -79,7 +80,7 @@ if(DAWN_PYTHON)
 endif(DAWN_PYTHON)
 
 if(DAWN_JAVA)
-  # Genreate python proto files
+  # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES sir_proto_java_files
     OUT_DIRS sir_proto_java_dirs
