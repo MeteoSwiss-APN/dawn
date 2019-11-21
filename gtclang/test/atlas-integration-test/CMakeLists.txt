@@ -25,7 +25,11 @@ if(GTCLANG_ATLAS_INTEGRATION_TESTS)
     endif()
 
     # Need to specify here the names of the stencil codes that are going to be generated.
-    set(generated_stencil_codes generated_copyCell.hpp generated_copyEdge.hpp generated_accumulateEdgeToCell.hpp generated_diffusion.hpp)
+    set(generated_stencil_codes generated_copyCell.hpp
+                                generated_copyEdge.hpp
+                                generated_accumulateEdgeToCell.hpp
+                                generated_verticalSum.hpp
+                                generated_diffusion.hpp)
     set(reference_stencil_codes reference_diffusion.hpp)
 
     list(TRANSFORM generated_stencil_codes PREPEND generated/)
