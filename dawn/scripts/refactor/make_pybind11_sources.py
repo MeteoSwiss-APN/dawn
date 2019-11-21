@@ -22,6 +22,7 @@ import re
 _CPP_TO_PYTHON_TYPE_MAPPING = {"std::string": str}
 
 
+# Ref: https://stackoverflow.com/a/29920015
 def _camel_case_split(name: str) -> list:
     matches = re.finditer(".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", name)
     result = [m.group(0) for m in matches]

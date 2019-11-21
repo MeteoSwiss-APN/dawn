@@ -239,15 +239,30 @@ PYBIND11_MODULE(_dawn4py, m) {
           return "Options(\n    " + ss.str() + "\n)";
         });
 
-
     py::class_<dawn::codegen::TranslationUnit>(m, "TranslationUnit")
-        .def(py::init<std::string, std::vector<std::string>&&, std::map<std::string, std::string>&&, std::string&&>(),
+        .def(py::init<std::string, std::vector<std::string>&&, std::map<std::string, std::string>&&,
+                      std::string&&>(),
              py::arg("filename"), py::arg("pp_defines"), py::arg("stencils"), py::arg("globals"))
         .def_property_readonly("filename", &dawn::codegen::TranslationUnit::getFilename)
         .def_property_readonly("pp_defines", &dawn::codegen::TranslationUnit::getPPDefines)
         .def_property_readonly("stencils", &dawn::codegen::TranslationUnit::getStencils)
-        .def_property_readonly("globals", &dawn::codegen::TranslationUnit::getGlobals);
-
+        .def_property_readonly("globals", &dawn::codegen::TranslationUnit::getGlobals)
+        .def("__repr__", [](const dawn::codegen::TranslationUnit& self) {
+          std::ostringstream ss;
+          ss << "\tfilename=\"" << self.getFilename() << "\",\n";
+          ss << "\tpp_defines=[\n";
+          for(auto& pp : self.getPPDefines()) {
+            ss << "\"\"\"\n" << pp << "\n\"\"\",\n";
+          }
+          ss << "],\n";
+          ss << "\tstencils={\n";
+          for(const auto& kv : self.getStencils()) {
+            ss << "\t\t\"" << kv.first << "\": \"\"\"\n" << kv.second << "\n\"\"\",\n";
+          }
+          ss << "},\n";
+          ss << "\tglobals=\"\"\"" << self.getGlobals() << "\"\"\"";
+          return "TranslationUnit(\n" + ss.str() + "\n)";
+        });
 
     py::class_<dawn::DawnCompiler>(m, "Compiler")
         .def(py::init([](dawn::Options* options) {

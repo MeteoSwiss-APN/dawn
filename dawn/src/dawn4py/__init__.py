@@ -19,13 +19,32 @@ from ._version import *
 from . import serialization
 
 
+def compile(sir):
+    return Compiler().compile(sir)
+
+
+def compile_to_source(sir):
+    return Compiler().compile_to_source(sir)
+
+
 class Compiler(_dawn4py.Compiler):
-    def generate(self,  sir):
-        sformat = SerializerFormat.Byte
+    def _serialize_sir(self, sir):
+        serializer_format = SerializerFormat.Byte
         if isinstance(sir, serialization.SIR.SIR):
             sir = sir.SerializeToString()
-        elif isinstance(sir, str) and sir.startswith("{"):
-            sformat = SerializerFormat.Json
+        elif isinstance(sir, str) and sir.lstrip().startswith("{") and sir.rstrip().endswith("}"):
+            serializer_format = SerializerFormat.Json
+        elif not isinstance(sir, bytes):
+            raise ValueError(f"Unrecognized SIR data format ({sir})")
 
-        result = self.compile_to_source(sir, sformat)
+        return sir, serializer_format
+
+    def compile(self, sir):
+        sir, serializer_format = self._serialize_sir(sir)
+        result = super().compile(sir, serializer_format)
+        return result
+
+    def compile_to_source(self, sir):
+        sir, serializer_format = self._serialize_sir(sir)
+        result = super().compile_to_source(sir, serializer_format)
         return result

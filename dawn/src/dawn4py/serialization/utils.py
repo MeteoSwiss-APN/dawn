@@ -58,6 +58,8 @@ __all__ = [
     "make_field_access_expr",
     "make_literal_access_expr",
     "make_reduction_over_neighbor_expr",
+    "to_bytes",
+    "from_bytes",
     "to_json",
     "from_json",
     "SIRPrinter",
@@ -98,6 +100,30 @@ class LocationType(Enum):
     Cell = 0
     Edge = 1
     Vertex = 2
+
+
+def to_bytes(msg):
+    """ Converts protobuf message to JSON format.
+
+    :param msg: The protocol buffers message instance to serialize.
+    :returns: A byte string containing the serialized protocol buffer message.
+    """
+    return msg.SerializeToString()
+
+
+def from_bytes(byte_string: bytes, message_type):
+    """ Parses a serialized representation of a protocol message and returns the parsed message.
+
+    :param text: Text JSON representation of the message.
+    :param message_type: The *type* of message to parse.
+    :returns: The parsed message.
+    :raises ParseError: Failed to parse message
+    """
+    try:
+        msg = message_type.FromString(byte_string)
+    except Exception as e:
+        raise ParseError(str(e))
+    return msg
 
 
 def to_json(msg):

@@ -26,6 +26,10 @@ NOTHING = object()
 
 
 def camel_case_split(name: str) -> list:
+    """Split a CamelCase name in its components.
+
+    From: https://stackoverflow.com/a/29920015
+    """
     matches = re.finditer(".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", name)
     result = [m.group(0) for m in matches]
     return result

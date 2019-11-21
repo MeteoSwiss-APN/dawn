@@ -67,6 +67,7 @@ class CMakeBuild(build_ext):
             "-DUSE_SYSTEM_DAWN=False",
             "-DUSE_SYSTEM_PROTOBUF=False",
             "-DDAWN_BUNDLE_PYTHON=True",
+            "-DBUILD_TESTING=False",
         ]
 
         cfg = "Debug" if self.debug else "Release"
@@ -98,7 +99,7 @@ class CMakeBuild(build_ext):
         print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp, env=env)
         print("-" * 10, "Building extensions", "-" * 40)
-        build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]  #"--target", "python",
+        build_args = ["--config", cfg, "-j", str(BUILD_JOBS), "--target", "dawn"]
         cmake_cmd = ["cmake", "--build", "."] + build_args
         print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp)
