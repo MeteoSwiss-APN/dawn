@@ -76,7 +76,7 @@ endif()
 
 include("thirdparty/DawnAddProtobuf")
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA} -DDAWN_TESTING=${BUILD_TESTING})
 
 yoda_find_package(
   PACKAGE dawn
