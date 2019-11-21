@@ -93,38 +93,10 @@ public:
   }
 };
 
-struct command_line {
-  static std::array<unsigned int, 3> parse_dimensions(int argc, char* argv[]) {
-    auto error = [&]() {
-      std::cerr << "usage " << argv[0] << " dim_x dim_y dim_z" << std::endl;
-      std::exit(1);
-    };
-
-    decltype(parse_dimensions(argc, argv)) dims;
-    int parsed_dims = 0;
-    for(int i = 1; i < argc; ++i) {
-      if(argv[i][0] != '-')
-        dims[parsed_dims++] = std::atoi(argv[i]);
-      if(parsed_dims == 3)
-        break;
-    }
-    if(parsed_dims != 3)
-      error();
-
-    return dims;
-  }
-};
-
 #else
 struct benchmarker {
   template <class StencilWrapperType>
   static void run(StencilWrapperType&&, std::size_t) {}
-};
-
-struct command_line {
-  static std::array<unsigned int, 3> parse_dimensions(int argc, char* argv[]) {
-    return decltype(parse_dimensions(argc, argv)){};
-  }
 };
 
 #endif
