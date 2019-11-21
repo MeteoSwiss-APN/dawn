@@ -24,7 +24,7 @@ install(
 
 install(
   TARGETS ${DAWN_LIBS} DawnUnittest Dawn DawnC
-  EXPORT Dawn-targets
+  EXPORT DawnTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

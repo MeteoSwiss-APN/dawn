@@ -25,10 +25,10 @@ file(
 # Copy to install
 install(
   FILES ${config_out}
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/python/dawn
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/dawn
 )
 install(
   DIRECTORY dawn
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/python/dawn
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/dawn
   FILES_MATCHING PATTERN "*.py"
 )

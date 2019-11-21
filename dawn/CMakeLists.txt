@@ -141,8 +141,8 @@ configure_package_config_file(
 )
 
 install(
-  EXPORT Dawn-targets
-  FILE Dawn-targets.cmake
+  EXPORT DawnTargets
+  FILE DawnTargets.cmake
   NAMESPACE Dawn::
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/cmake
 )
