@@ -148,9 +148,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
-  StencilWrapperConstructor.addArg("int rank");
-  StencilWrapperConstructor.addArg("int xcols");
-  StencilWrapperConstructor.addArg("int ycols");
+  StencilWrapperConstructor.addArg("int rank = 1");
+  StencilWrapperConstructor.addArg("int xcols = 1");
+  StencilWrapperConstructor.addArg("int ycols = 1");
 
   // add the ctr initialization of each stencil
   for(const auto& stencilPtr : stencils) {
@@ -333,7 +333,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("m_globals(globals_)");
     }
-    stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, m_dom, xcols, ycols))");
+    if(iterationSpaceSet) {
+      stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, m_dom, xcols, ycols))");
+    }
 
     addTmpStorageInit(stencilClassCtr, stencil, tempFields);
     stencilClassCtr.commit();
