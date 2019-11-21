@@ -105,6 +105,48 @@ TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
 }
 } // namespace
 
+#include <generated_verticalSum.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
+  // Setup a 32 by 32 grid of quads and generate a mesh out of it
+  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+
+  // We use 5 levels, but any number >= 3 is fine
+  size_t nb_levels = 1;
+
+  // We construct an in and out Field on cells
+  atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
+  atlas::Field out{fs.createField<double>(atlas::option::name("out"))};
+  atlas::Field in{fs.createField<double>(atlas::option::name("in"))};
+
+  // Make views on the fields (needed to access the field like an array)
+  atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
+  atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
+
+  // Initialize input
+  double init_value = 10;
+  for(int level = 0; level < nb_levels; ++level) {
+    for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+      in_v(cell, level) = init_value;
+    }
+  }
+
+  // Run verticalSum, which just copies the values in the cells above and below into the current
+  // level and adds them up
+  dawn_generated::cxxnaiveico::verticalSum<atlasInterface::atlasTag>(mesh, nb_levels, in_v, out_v)
+      .run();
+
+  // Thats why we expct all the levels except the top and bottom one to hold twice the initial value
+  for(int level = 1; level < nb_levels - 1; ++level) {
+    for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+      ASSERT_EQ(out_v(cell, level), 2 * init_value);
+    }
+  }
+}
+} // namespace
+
 #include <generated_accumulateEdgeToCell.hpp>
 namespace {
 TEST(AtlasIntegrationTestCompareOutput, Accumulate) {

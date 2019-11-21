@@ -107,6 +107,30 @@ int main() {
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
     auto out_f = b.field("out_field", LocType::Cells);
+
+    auto stencil_instantiation = b.build(
+        "verticalSum",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Cells,
+                    b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
+                              b.stmt(b.assignExpr(
+                                  b.at(out_f), b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
+                                                            b.at(in_f, HOffsetType::noOffset, -1),
+                                                            Op::plus))))))));
+
+    std::ofstream of("generated/generated_verticalSum.hpp");
+    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    of.close();
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::Expr::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto in_f = b.field("in_field", LocType::Cells);
+    auto out_f = b.field("out_field", LocType::Cells);
     auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
 
     auto stencil_instantiation = b.build(
