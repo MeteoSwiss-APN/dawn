@@ -63,9 +63,7 @@ using storage_traits_t = gridtools::storage_traits<backend_t>;
  * @brief Meta-data types
  * @{
  */
-using meta_data_ijk_t = gridtools::storage_traits<backend_t>::custom_layout_storage_info_t<
-    0, typename gridtools::get_layout<3, false>::type, halo_ij_t>;
-// using meta_data_ijk_t = storage_traits_t::storage_info_t<0, 3, halo_ij_t>;
+using meta_data_ijk_t = storage_traits_t::storage_info_t<0, 3, halo_ij_t>;
 using meta_data_ij_t =
     storage_traits_t::special_storage_info_t<1, gridtools::selector<1, 1, 0>, halo_ij_t>;
 using meta_data_i_t =
@@ -83,7 +81,6 @@ using meta_data_t = meta_data_ijk_t;
  * @{
  */
 using storage_ijk_t = storage_traits_t::data_store_t<float_type, meta_data_ijk_t>;
-// using storage_ijk_t = storage_traits_t::data_store_t<float_type, meta_data_ijk_t>;
 using storage_ij_t = storage_traits_t::data_store_t<float_type, meta_data_ij_t>;
 using storage_i_t = storage_traits_t::data_store_t<float_type, meta_data_i_t>;
 using storage_j_t = storage_traits_t::data_store_t<float_type, meta_data_j_t>;
