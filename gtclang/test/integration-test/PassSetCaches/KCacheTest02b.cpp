@@ -19,7 +19,7 @@
 // EXPECTED: PASS: PassSetCaches: Test: MS1: b:cache_type::k:fill
 // EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:cache_type::k:bpfill:[0,0]
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 

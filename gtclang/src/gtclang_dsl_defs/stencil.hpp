@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "gridtools/clang/dimension.hpp"
+#include "gtclang_dsl_defs/dimension.hpp"
 
 namespace gridtools {
 

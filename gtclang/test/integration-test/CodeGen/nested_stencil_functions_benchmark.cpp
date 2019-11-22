@@ -36,8 +36,8 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
-#include "gridtools/clang/verify.hpp"
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/verify.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include <gtest/gtest.h>
 //#include "test/integration-test/CodeGen/generated/nested_stencil_functions_gridtools.cpp"

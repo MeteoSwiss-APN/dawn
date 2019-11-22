@@ -17,7 +17,7 @@
 #pragma once
 
 #ifdef GRIDTOOLS_CLANG_GENERATED
-#include "gridtools/clang/storage.hpp"
+#include "gtclang_dsl_defs/storage.hpp"
 #include <memory>
 #include <stdexcept>
 #endif

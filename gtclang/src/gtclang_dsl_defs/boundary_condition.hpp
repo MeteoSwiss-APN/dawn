@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "gridtools/clang/stencil_function.hpp"
+#include "gtclang_dsl_defs/stencil_function.hpp"
 
 namespace gridtools {
 

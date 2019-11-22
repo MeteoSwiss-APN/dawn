@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "gridtools/clang/halo.hpp"
+#include "gtclang_dsl_defs/halo.hpp"
 #include <array>
 #include <type_traits>
 

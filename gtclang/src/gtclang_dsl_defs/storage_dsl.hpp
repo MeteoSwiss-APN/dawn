@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "gridtools/clang/dimension.hpp"
-#include "gridtools/clang/direction.hpp"
-#include "gridtools/clang/interval.hpp"
-#include "gridtools/clang/offset.hpp"
+#include "gtclang_dsl_defs/dimension.hpp"
+#include "gtclang_dsl_defs/direction.hpp"
+#include "gtclang_dsl_defs/interval.hpp"
+#include "gtclang_dsl_defs/offset.hpp"
 #include <type_traits>
 
 #define STORAGE_CLASS_DEFN(Type)                                                                   \

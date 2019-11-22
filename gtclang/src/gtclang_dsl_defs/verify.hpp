@@ -17,7 +17,7 @@
 #ifndef GRIDTOOLS_CLANG_VERIFY_HPP
 #define GRIDTOOLS_CLANG_VERIFY_HPP
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 #include <array>
 #include <cmath>
 #include <cstdlib>

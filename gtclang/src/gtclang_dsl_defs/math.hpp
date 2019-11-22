@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 #include <algorithm>
 #include <cmath>
 

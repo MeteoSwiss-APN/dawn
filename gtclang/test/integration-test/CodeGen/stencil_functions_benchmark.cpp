@@ -25,7 +25,7 @@
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
 #include <gtest/gtest.h>
-#include "gridtools/clang/verify.hpp"
+#include "gtclang_dsl_defs/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/stencil_functions_c++-naive.cpp"

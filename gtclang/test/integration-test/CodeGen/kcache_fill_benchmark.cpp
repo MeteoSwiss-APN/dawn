@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include "test/integration-test/CodeGen/Macros.hpp"
-#include "gridtools/clang/verify.hpp"
+#include "gtclang_dsl_defs/verify.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/kcache_fill_c++-naive.cpp"
 

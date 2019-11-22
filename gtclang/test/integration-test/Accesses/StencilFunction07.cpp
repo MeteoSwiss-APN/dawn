@@ -16,7 +16,7 @@
 
 // RUN: %gtclang% %file% -fno-codegen -freport-accesses -inline=none
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 
