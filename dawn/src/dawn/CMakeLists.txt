@@ -15,15 +15,12 @@
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-function(add_dawn_library libs)
-  foreach(_l ${libs})
+function(add_dawn_library)
+  foreach(_l IN LISTS ARGN)
     install(
       TARGETS ${_l}
       EXPORT ${PROJECT_NAME}Targets
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
-    target_link_libraries(Dawn
-      INTERFACE ${PROJECT_NAME}${_l}
     )
   endforeach()
 endfunction()
@@ -41,7 +38,7 @@ add_dawn_library(DawnSIRProto DawnSIR)
 # }
 
 add_subdirectory(IIR)
-add_dawn_library(DawnIIR DawnIIRProto)
+add_dawn_library(DawnIIRProto DawnIIR)
 
 add_subdirectory(Optimizer)
 add_dawn_library(DawnOptimizer)
@@ -56,9 +53,3 @@ add_subdirectory(Compiler)
 add_dawn_library(DawnCompiler)
 
 add_subdirectory(Unittest)
-
-install(
-  TARGETS protobuf::libprotobuf
-  EXPORT ${PROJECT_NAME}Targets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
