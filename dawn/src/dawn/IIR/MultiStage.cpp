@@ -254,7 +254,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   for(const auto& doMethod : orderedDoMethods) {
     for(const auto& stmt : doMethod->getAST().getStatements()) {
       const Accesses& accesses = *stmt->getData<IIRStmtData>().CallerAccesses;
-      // indepdently of whether the statement has also a write access, if there is a read
+      // independently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
       if(accesses.hasReadAccess(accessID)) {
         MultiInterval interv;

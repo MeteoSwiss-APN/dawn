@@ -229,7 +229,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
 
   referenceInstantiaton->getMetaData().setFileName("fileName");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-  referenceInstantiaton->getMetaData().setStencilname("stencilName");
+  referenceInstantiaton->getMetaData().setStencilName("stencilName");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
   referenceInstantiaton->getMetaData().setStencilLocation(SourceLocation{1, 2});
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);

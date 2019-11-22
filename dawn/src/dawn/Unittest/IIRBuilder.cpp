@@ -80,7 +80,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
   auto stencil_id = stencil->getStencilID();
-  si_->getMetaData().setStencilname(name);
+  si_->getMetaData().setStencilName(name);
   si_->getIIR()->insertChild(std::move(stencil), si_->getIIR());
 
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
@@ -103,8 +103,8 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
     }
     stage.update(iir::NodeUpdateType::level);
   }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
-    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
+    stagePtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
   // create stencil instantiation context

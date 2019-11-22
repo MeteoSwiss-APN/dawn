@@ -88,7 +88,7 @@ private:
   int BCsFound_;
 };
 
-TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
+TEST_F(StencilSplitAnalyzer, DISABLED_test_no_bc_inserted) {
   std::shared_ptr<iir::StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_01.sir", false);
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 1));
@@ -99,8 +99,11 @@ TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
   ASSERT_TRUE((myvisitor.reportBCsFound() == 0));
 }
 
+// The boundary condition tests disabled until boundary conditions are fixed and
+// added to the c++-naive codegen backend.
+
 // An unused BC has no extents to it
-TEST_F(StencilSplitAnalyzer, test_unused_bc) {
+TEST_F(StencilSplitAnalyzer, DISABLED_test_unused_bc) {
   std::shared_ptr<iir::StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_02.sir", false);
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("out"));
@@ -108,7 +111,7 @@ TEST_F(StencilSplitAnalyzer, test_unused_bc) {
   ASSERT_TRUE((!test->getMetaData().hasBoundaryConditionStmtToExtent(bc)));
 }
 
-TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
+TEST_F(StencilSplitAnalyzer, DISABLED_test_bc_extent_calc) {
   std::shared_ptr<iir::StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_01.sir", true, 2);
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 1));
@@ -123,7 +126,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
                iir::Extents(ast::cartesian, -1, 1, 0, 0, 0, 0)));
 } // namespace
 
-TEST_F(StencilSplitAnalyzer, test_two_bc) {
+TEST_F(StencilSplitAnalyzer, DISABLED_test_two_bc) {
   std::shared_ptr<iir::StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_03.sir", true, 2);
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 2));

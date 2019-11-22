@@ -27,8 +27,8 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
       // Field is already multi-versioned, append a new version
       const auto versions = instantiation->getMetaData().getVersionsOf(AccessID);
 
-      // Set the second to last field to be a temporary (only the first and the last field will be
-      // real storages, all other versions will be temporaries)
+      // Set the last field to be a temporary (only the first and the last field
+      // will be real storages, all other versions will be temporaries)
       int lastAccessID = versions->back();
       instantiation->getMetaData().moveRegisteredFieldTo(iir::FieldAccessType::StencilTemporary,
                                                          lastAccessID);
