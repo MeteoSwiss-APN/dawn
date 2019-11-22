@@ -24,5 +24,5 @@ install(
 
 install(
   TARGETS ${DAWN_LIBS} DawnUnittest Dawn DawnC
-  EXPORT DawnTargets
+  EXPORT ${PROJECT_NAME}Targets
 )
