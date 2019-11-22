@@ -94,6 +94,11 @@ cd $build_dir
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR} -DGTCLANG_ENABLE_GRIDTOOLS=ON \
         -DProtobuf_DIR=${PROTOBUFDIR}  -DLLVM_ROOT=${LLVM_DIR}" 
 
+if [ ${myhost} == "daint" ]; then
+  # Point to atlas and eckit installation
+  CMAKE_ARGS="${CMAKE_ARGS} -DGTCLANG_ATLAS_INTEGRATION_TESTS=ON -Datlas_DIR=${ATLAS_DIR}/release/cpu/lib/cmake/atlas -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit"
+fi
+
 if [ -n ${INSTALL_DIR} ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 fi
