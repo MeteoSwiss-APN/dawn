@@ -15,4 +15,4 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(gtclang)
-add_subdirectory(gridtools)
+# add_subdirectory(gridtools)

@@ -14,20 +14,38 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(yodaConfigureFile)
-include(yodaAddLibrary)
-
-yoda_configure_file(Config.h.cmake)
-
-yoda_add_library(
-  NAME GTClangSupport
-  SOURCES FileUtil.cpp
-          FileUtil.h
-          Logger.cpp
-          Logger.h
-          StringUtil.cpp
-          StringUtil.h
-          ASTUtils.cpp
-          ASTUtils.h
-  OBJECT
+add_library(GTClangSupport
+  FileUtil.cpp
+  FileUtil.h
+  Logger.cpp
+  Logger.h
+  StringUtil.cpp
+  StringUtil.h
+  ASTUtils.cpp
+  ASTUtils.h
 )
+
+target_include_directories(GTClangSupport
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+)
+
+target_link_libraries(GTClangSupport PUBLIC Dawn::Dawn Clang)
+
+# include(yodaConfigureFile)
+# include(yodaAddLibrary)
+
+# yoda_configure_file(Config.h.cmake)
+
+# yoda_add_library(
+#   NAME GTClangSupport
+#   SOURCES FileUtil.cpp
+#           FileUtil.h
+#           Logger.cpp
+#           Logger.h
+#           StringUtil.cpp
+#           StringUtil.h
+#           ASTUtils.cpp
+#           ASTUtils.h
+#   OBJECT
+# )
