@@ -89,8 +89,42 @@ function(target_add_dawn_standard_props target)
 endfunction()
 
 # Project dependencies
-find_package(Protobuf 3.4.0 REQUIRED)
+set(protobuf_version "3.4.0")
+set(protobuf_version_short "3.4")
+find_package(Protobuf ${protobuf_version})
+
 find_package(Python3 COMPONENTS Interpreter)
+
+if(NOT Protobuf_FOUND)
+  include(FetchContent)
+  set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+  set(Protobuf_BUILD_EXAMPLES OFF)
+  set(Protobuf_BUILD_SHARED_LIBS OFF)
+  set(Protobuf_BUILD_TESTS OFF)
+  set(Protobuf_INSTALL_EXAMPLES OFF)
+
+  FetchContent_Declare(protobuf
+    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+    GIT_TAG v3.4.0
+    # URL  https://github.com/google/protobuf/archive/v${protobuf_version}.tar.gz
+    # URL_HASH MD5=1d077a7d4db3d75681f5c333f2de9b1a
+    )
+  # Use this with 3.14
+  # FetchContent_MakeAvailable(Protobuf)
+  FetchContent_GetProperties(protobuf)
+  if(NOT protobuf_POPULATED)
+    FetchContent_Populate(protobuf)
+    add_subdirectory(${protobuf_SOURCE_DIR} ${protobuf_BINARY_DIR})
+  endif()
+
+  if(Python3_FOUND)
+    add_custom_command(
+      COMMAND PROTOC=<INSTALL_DIR>/bin/protoc ${Python3_EXECUTABLE} setup.py build
+      WORKING_DIRECTORY "${Protobuf_SOURCE_DIR}/python"
+    )
+  endif()
+endif()
+
 
 add_subdirectory(src)
 
