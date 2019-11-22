@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "defs.hpp"
+
 namespace gtclang {
 
 template <typename T>
