@@ -12,37 +12,53 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+
+function(add_dawn_library libs)
+  foreach(_l ${libs})
+    install(
+      TARGETS ${_l}
+      EXPORT ${PROJECT_NAME}Targets
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    target_link_libraries(Dawn
+      INTERFACE ${PROJECT_NAME}${_l}
+    )
+  endforeach()
+endfunction()
+
 add_subdirectory(Support)
-list(APPEND DAWN_LIBS DawnSupport)
+add_dawn_library(DawnSupport)
 
 # AST and SIR have a circular dependency, only building one library -- DawnSIR
 # {
 add_subdirectory(AST)
-list(APPEND DAWN_LIBS DawnAST)
+add_dawn_library(DawnAST)
 
 add_subdirectory(SIR)
-list(APPEND DAWN_LIBS DawnSIR DawnSIRProto)
+add_dawn_library(DawnSIRProto DawnSIR)
 # }
 
 add_subdirectory(IIR)
-list(APPEND DAWN_LIBS DawnIIR DawnIIRProto)
+add_dawn_library(DawnIIR DawnIIRProto)
 
 add_subdirectory(Optimizer)
-list(APPEND DAWN_LIBS DawnOptimizer)
+add_dawn_library(DawnOptimizer)
 
 add_subdirectory(Serialization)
-list(APPEND DAWN_LIBS DawnSerialization)
+add_dawn_library(DawnSerialization)
 
 add_subdirectory(CodeGen)
-list(APPEND DAWN_LIBS DawnCodeGen)
+add_dawn_library(DawnCodeGen)
 
 add_subdirectory(Compiler)
-list(APPEND DAWN_LIBS DawnCompiler)
+add_dawn_library(DawnCompiler)
 
 add_subdirectory(Unittest)
-# We do not add DawnUnittest to DAWN_LIBS
 
-set(DAWN_LIBS ${DAWN_LIBS} PARENT_SCOPE)
-
-add_library(Dawn INTERFACE)
-target_link_libraries(Dawn INTERFACE ${DAWN_LIBS})
+install(
+  TARGETS protobuf::libprotobuf
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

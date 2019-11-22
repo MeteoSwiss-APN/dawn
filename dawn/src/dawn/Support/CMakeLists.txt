@@ -19,7 +19,7 @@ install(
   )
 
 add_library(DawnSupport
-  ${CMAKE_CURRENT_BINARY_DIR}/Config.h
+  ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/Config.h
   ${PROJECT_SOURCE_DIR}/src/dawn/Dawn.h
   AlignOf.h
   Array.cpp

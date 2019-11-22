@@ -21,8 +21,3 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING REGEX ".h$"
   )
-
-install(
-  TARGETS ${DAWN_LIBS} DawnUnittest Dawn DawnC
-  EXPORT ${PROJECT_NAME}Targets
-)
