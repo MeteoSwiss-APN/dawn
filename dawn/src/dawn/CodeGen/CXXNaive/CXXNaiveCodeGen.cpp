@@ -493,7 +493,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
-  ppDefines.push_back("#include <driver-includes/gridtools_backend_headers.hpp>");
+  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
   // ==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
   // these variables also in the naive code-generation in order to not break it. Once the move to
