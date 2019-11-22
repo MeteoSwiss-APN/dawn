@@ -12,7 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/Config.h)
+configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/Config.h)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/Config.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/Support
+  )
 
 add_library(DawnSupport
   ${CMAKE_CURRENT_BINARY_DIR}/Config.h
@@ -74,4 +78,5 @@ target_add_dawn_standard_props(DawnSupport)
 target_include_directories(DawnSupport SYSTEM
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/External>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/dawn/Support/External>
 )

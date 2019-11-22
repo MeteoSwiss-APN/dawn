@@ -17,7 +17,7 @@ add_subdirectory(dawn-c)
 
 # TODO: Switch from globbing to target-specific headers
 install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING REGEX ".h$"
   )
