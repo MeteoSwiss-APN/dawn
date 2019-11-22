@@ -23,6 +23,7 @@ list(APPEND DAWN_LIBS DawnAST)
 add_subdirectory(SIR)
 list(APPEND DAWN_LIBS DawnSIR DawnSIRProto)
 # }
+
 add_subdirectory(IIR)
 list(APPEND DAWN_LIBS DawnIIR DawnIIRProto)
 

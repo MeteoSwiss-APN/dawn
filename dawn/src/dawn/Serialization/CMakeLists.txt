@@ -22,4 +22,7 @@ add_library(DawnSerialization
 )
 
 target_add_dawn_standard_props(DawnSerialization)
-target_link_libraries(DawnSerialization PUBLIC DawnSupport DawnAST DawnSIR DawnIIR DawnOptimizer)
+target_link_libraries(DawnSerialization
+  PUBLIC DawnSupport DawnAST DawnSIR DawnIIR DawnOptimizer
+  PRIVATE protobuf::libprotobuf
+)

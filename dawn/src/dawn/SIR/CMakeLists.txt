@@ -39,11 +39,11 @@ set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 target_include_directories(DawnSIRProto
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  ${Protobuf_INCLUDE_DIRS}
 )
 
 target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
 
+# Builds one library for both SIR and AST
 add_library(DawnSIR
   AST.h
   ASTExpr.h
@@ -56,12 +56,17 @@ add_library(DawnSIR
   ASTVisitor.h
   SIR.cpp
   SIR.h
-  $<TARGET_OBJECTS:DawnSIRProto>
   $<TARGET_OBJECTS:DawnAST>
 )
 
 target_add_dawn_standard_props(DawnSIR)
-target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
+target_include_directories(DawnSIR
+  PUBLIC $<TARGET_PROPERTY:DawnSIRProto,INCLUDE_DIRECTORIES>
+)
+target_link_libraries(DawnSIR
+  PUBLIC DawnSupport DawnAST
+  PRIVATE DawnSIRProto
+)
 
 if(ENABLE_PYTHON)
   list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
