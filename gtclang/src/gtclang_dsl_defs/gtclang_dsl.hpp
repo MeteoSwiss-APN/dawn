@@ -43,16 +43,9 @@ namespace clang {}
 
 #define BOOST_PP_VARIADICS 1
 
-#include "gtclang_dsl_defs/arrayAddons.hpp"
 #include "gtclang_dsl_defs/boundary_condition.hpp"
-#include "gtclang_dsl_defs/cxx11_warning.hpp"
-#include "gtclang_dsl_defs/defs.hpp"
-#include "gtclang_dsl_defs/domain.hpp"
 #include "gtclang_dsl_defs/globals_impl.hpp"
-#include "gtclang_dsl_defs/halo.hpp"
-#include "gtclang_dsl_defs/interface.hpp"
 #include "gtclang_dsl_defs/interval.hpp"
-#include "gtclang_dsl_defs/param_wrapper.hpp"
 #include "gtclang_dsl_defs/stencil.hpp"
 #include "gtclang_dsl_defs/stencil_function.hpp"
-#include "gtclang_dsl_defs/storage.hpp"
+#include "gtclang_dsl_defs/storage_dsl.hpp"

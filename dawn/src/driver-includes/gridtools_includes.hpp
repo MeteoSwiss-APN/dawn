@@ -18,7 +18,6 @@
 #include "cxx11_warning.hpp"
 #include "defs.hpp"
 #include "domain.hpp"
-#include "globals_impl.hpp"
 #include "halo.hpp"
 #include "param_wrapper.hpp"
 #include "storage.hpp"
