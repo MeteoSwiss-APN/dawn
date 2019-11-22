@@ -60,13 +60,7 @@ add_library(DawnSIR
 )
 
 target_add_dawn_standard_props(DawnSIR)
-target_include_directories(DawnSIR
-  PUBLIC $<TARGET_PROPERTY:DawnSIRProto,INCLUDE_DIRECTORIES>
-)
-target_link_libraries(DawnSIR
-  PUBLIC DawnSupport DawnAST
-  PRIVATE DawnSIRProto
-)
+target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
 
 if(ENABLE_PYTHON)
   list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)

@@ -36,7 +36,8 @@ set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
 # Generated files need to be compiled with the protobuf headers and SIR headers
 target_include_directories(DawnIIRProto
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
 target_link_libraries(DawnIIRProto PUBLIC DawnSIRProto protobuf::libprotobuf)
@@ -112,13 +113,7 @@ add_library(DawnIIR
   )
 
 target_add_dawn_standard_props(DawnIIR)
-target_include_directories(DawnIIR
-  PUBLIC $<TARGET_PROPERTY:DawnIIRProto,INCLUDE_DIRECTORIES>
-)
-target_link_libraries(DawnIIR
-  PUBLIC DawnSupport DawnSIR
-  PRIVATE DawnIIRProto
-)
+target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
 
 if(ENABLE_PYTHON)
   list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
