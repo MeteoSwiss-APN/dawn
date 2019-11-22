@@ -13,7 +13,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 #include "AtlasVerifyer.h"
 #include "atlas/functionspace/CellColumns.h"

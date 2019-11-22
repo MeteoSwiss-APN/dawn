@@ -1,12 +1,10 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _
-//                        | |     | |
-//                    __ _| |_ ___| | __ _ _ __   __ _
-//                   / _` | __/ __| |/ _` | '_ \ / _` |
-//                  | (_| | || (__| | (_| | | | | (_| |
-//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
-//                    __/ |                       __/ |
-//                   |___/                       |___/
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -17,7 +15,7 @@
 #pragma once
 
 #ifdef GRIDTOOLS_CLANG_GENERATED
-#include "gtclang_dsl_defs/storage.hpp"
+#include "driver-includes/storage.hpp"
 #include <memory>
 #include <stdexcept>
 #endif
