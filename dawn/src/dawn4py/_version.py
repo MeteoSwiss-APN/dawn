@@ -14,4 +14,4 @@
 ##===------------------------------------------------------------------------------------------===##
 
 __versioninfo__ = (0, 0, 1)  # TODO: set automatically
-__version__ = '.'.join(str(v) for v in __versioninfo__)
+__version__ = ".".join(str(v) for v in __versioninfo__)

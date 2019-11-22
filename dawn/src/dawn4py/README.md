@@ -5,15 +5,28 @@ Dawn4Py
 
 **Dawn4Py** is the Python binding of the Dawn toolchain. See the top level `README` for a detailed description.
 
-## Installing *dawn4py* in a virtualenv
+## Installing *dawn4py*
+
+We thoroughly recommend to create first a Python *virtualenv* for your project:
+
+```bash
+python -m venv .project_venv
+source .project_venv/bin/activate
+pip install wheel
+```
+Then you can install *dawn4py* directly from the GitHub repository:
+
+```bash
+pip install dawn4py@git+https://github.com/MeteoSwiss-APN/dawn.git#subdirectory=dawn  # Add -v to see the compilation output  
+```
+
+Alternatively, you can checkout locally the Dawn repository and install the Python bindings from there:
 
 ```bash
 git clone git@github.com:MeteoSwiss-APN/dawn.git
-python -m venv .dawn_venv
-source .dawn_venv/bin/activate
-pip install wheel
-pip install -e ./dawn/dawn  # Add -v to see the compilation output  
+pip install -e ./dawn/dawn  # Add -v at the end to see the compilation output  
 ```
+
 
 ## Examples
 

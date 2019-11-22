@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _
@@ -13,10 +14,13 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+import jinja2
+
 from collections import namedtuple
 import numbers
 import os
 import re
+import subprocess
 
 
 _CPP_TO_PYTHON_TYPE_MAPPING = {"std::string": str}
@@ -189,15 +193,43 @@ def make_struct_binding(
         ss_line += ";"
         lines.append(ss_line)
 
-        lines.append(f'{indent + indent + indent}return "{python_name}(\\n{indent}" + ss.str() + "\\n)";')
+        lines.append(
+            f'{indent + indent + indent}return "{python_name}(\\n{indent}" + ss.str() + "\\n)";'
+        )
         lines.append(f"{indent + indent}}})")
         source += "\n".join(lines)
     source += ";"
-    print(source)
 
     return source
 
 
+TEMPLATE_NAME = "_dawn4py.cpp.in"
+OUTPUT_NAME = TEMPLATE_NAME.replace(".in", "")
+
 if __name__ == "__main__":
+    print("-> Generating pybind11 bindings for Dawn...\n")
     options_infos = extract_dawn_compiler_options()
-    make_struct_binding("Options", "dawn::Options", options_infos)
+    options_class_def = make_struct_binding("Options", "dawn::Options", options_infos)
+
+    TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), TEMPLATE_NAME)
+    OUTPUT_FILE = os.path.join(os.path.dirname(__file__), OUTPUT_NAME)
+    with open(TEMPLATE_FILE, "r") as f:
+        template = jinja2.Template(f.read())
+    source = template.render(options_class_def=options_class_def)
+    with open(OUTPUT_FILE, "w") as f:
+        f.write(source)
+
+    try:
+        cmd = f"clang-format -style=file -i {os.path.abspath(OUTPUT_FILE)}"
+        print(f"-> Applying clang-format...  [{cmd}]\n")
+        subprocess.check_call(list(cmd.split()), cwd=os.path.abspath(os.path.dirname(__file__)))
+    except subprocess.CalledProcessError as e:
+        print("Error found when trying to apply 'clang-format' to the generated file!")
+
+    print("-> Done\n")
+    print("pybind11 bindings for Dawn have been generated!")
+    print(
+        f"Check the output file at '{OUTPUT_FILE}' and if "
+        "everything is fine, copy the file to its final destination at "
+        "'${DAWN_ROOT}/dawn/src/dawn4py'"
+    )

@@ -13,22 +13,63 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+
+"""
+Python bindings for the C++ Dawn compiler project.
+"""
+
+
+from typing import Any, Dict, Optional, Union
+
+from ._version import __version__, __versioninfo__
 from . import _dawn4py
-from ._dawn4py import Options, SerializerFormat, TranslationUnit
-from ._version import *
+from ._dawn4py import Options, SerializerFormat
 from . import serialization
 
 
-def compile(sir):
-    return Compiler().compile(sir)
+def compile(
+    sir: Union[serialization.SIR.SIR, str, bytes],
+    *,
+    unit_info: Optional[Dict[str, Any]] = None,
+    **kwargs,
+):
+    """Compile SIR to source code.
 
+    This is a convenience function which instantiates a temporary :class:`Compiler`
+    object and calls its compile method with the provided arguments.
 
-def compile_to_source(sir):
-    return Compiler().compile_to_source(sir)
+    Parameters
+    ----------
+    sir :
+        SIR of the stencil (in any valid serialized or non serialized form).
+    unit_info :
+        Optional dictionary to store the string components of the generate translation unit.
+    **kwargs
+        Optional keyword arguments with specific options for the compiler (see :class:`Options`).
+
+    Returns
+    -------
+    code : `str`
+        A text string with the generated code.
+    """
+
+    options = Options(**kwargs)
+    return Compiler(options).compile(sir, unit_info=unit_info)
 
 
 class Compiler(_dawn4py.Compiler):
-    def _serialize_sir(self, sir):
+    """SIR Compiler instance.
+
+    This is a Python wrapper around the actual bindings of the Dawn compiler
+    (inside `_dawnpy` module) which provides a slightly more convenient interface.
+
+    Parameters
+    ----------
+    options : :class:`Options`
+        Compiler options (can not be modified after instantiation).
+    """
+
+    def _serialize_sir(self, sir: Union[serialization.SIR.SIR, str, bytes]):
         serializer_format = SerializerFormat.Byte
         if isinstance(sir, serialization.SIR.SIR):
             sir = sir.SerializeToString()
@@ -39,12 +80,25 @@ class Compiler(_dawn4py.Compiler):
 
         return sir, serializer_format
 
-    def compile(self, sir):
-        sir, serializer_format = self._serialize_sir(sir)
-        result = super().compile(sir, serializer_format)
-        return result
+    def compile(
+        self, sir: Union[serialization.SIR.SIR, str, bytes], *, unit_info: Dict[str, Any] = None
+    ):
+        """Compile SIR to source code.
 
-    def compile_to_source(self, sir):
+        Parameters
+        ----------
+        sir :
+            SIR of the stencil (in any valid serialized or non serialized form).
+        unit_info :
+            Optional dictionary to store the string components of the generate translation unit.
+        **kwargs
+            Optional keyword arguments with specific options for the compiler (see :class:`Options`).
+
+        Returns
+        -------
+        code : `str`
+            A text string with the generated code.
+        """
         sir, serializer_format = self._serialize_sir(sir)
-        result = super().compile_to_source(sir, serializer_format)
+        result = super().compile(sir, serializer_format, unit_info)
         return result

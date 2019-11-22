@@ -14,6 +14,11 @@
 ##===------------------------------------------------------------------------------------------===##
 
 
+"""
+Convenience functions to serialize/deserialize and print SIR and IIR objects.
+"""
+
+
 import textwrap
 
 from enum import Enum

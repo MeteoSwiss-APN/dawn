@@ -32,6 +32,7 @@ BUILD_JOBS = 4
 
 
 # Select protobuf version
+# TODO: avoid parsing python files and adapt to new CMake
 with open(os.path.join(DAWN_DIR, "cmake", "thirdparty", "DawnAddProtobuf.cmake"), "r") as f:
     text = f.read()
     m = re.search(r"set\(protobuf_version\s+\"([0-9\.]+)\s*\"\)", text)
@@ -50,6 +51,7 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
+        # Build extension
         try:
             out = subprocess.check_output(["cmake", "--version"])
         except OSError:
@@ -106,9 +108,12 @@ class CMakeBuild(build_ext):
 
         # Move from build temp to final position
         for ext in self.extensions:
-            self.install_ext(ext)
+            self._install_ext(ext)
 
-    def install_ext(self, ext):
+        # Install included headers
+        self.run_command("install_dawn_includes")
+
+    def _install_ext(self, ext):
         filename = self.get_ext_filename(ext.name)
         source_path = os.path.abspath(
             os.path.join(
@@ -119,6 +124,33 @@ class CMakeBuild(build_ext):
         self.copy_file(source_path, dest_build_path)
 
 
+class InstallDawnIncludesCommand(Command):
+    """A custom command to install in the Python package the Dawn C++ headers for generated code."""
+
+    TARGET_SRC_PATH = os.path.join(DAWN_DIR, "src", "dawn4py", "_external_src")
+
+    description = "Install Dawn C++ headers for generated code"
+    user_options = []  # (long option, short option, description)
+
+    def initialize_options(self):
+        """Set default values for user options."""
+        pass
+
+    def finalize_options(self):
+        """Post-process options."""
+        pass
+
+    def run(self):
+        """Run command."""
+        # Always copy dawn include folder to dawn4py/_external_src to install newest sources
+        target_path = os.path.join(self.TARGET_SRC_PATH, "driver-includes")
+        if os.path.exists(target_path):
+            shutil.rmtree(target_path, ignore_errors=True)
+        shutil.copytree(
+            os.path.join(DAWN_DIR, "src", "driver-includes"), target_path,
+        )
+
+
 setup(
     name="dawn4py",
     version="0.0.1",  # TODO: automatic update of version tag
@@ -126,10 +158,12 @@ setup(
     author_email="gridtools@cscs.com",
     description="High-level DSLs toolchain for geophysical fluid dynamics models",
     long_description="",
+    include_package_data=True,
     packages=find_packages("src"),
     package_dir={"": "src"},
     ext_modules=[CMakeExtension("dawn4py._dawn4py")],
-    cmdclass={"build_ext": CMakeBuild},
+    cmdclass={"build_ext": CMakeBuild, "install_dawn_includes": InstallDawnIncludesCommand},
     install_requires=install_requires,
+    extras_require={"dev": ["Jinja2"]},
     zip_safe=False,
 )
