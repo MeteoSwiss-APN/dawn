@@ -12,14 +12,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/Config.h)
+configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/Config.h)
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/Config.h
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/Config.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/Support
-  )
+)
 
 add_library(DawnSupport
-  ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/Config.h
+  ${CMAKE_CURRENT_BINARY_DIR}/Config.h
   ${PROJECT_SOURCE_DIR}/src/dawn/Dawn.h
   AlignOf.h
   Array.cpp

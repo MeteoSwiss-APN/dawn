@@ -59,6 +59,7 @@ function(add_cxx_compiler_flag_if_supported flag var)
   endif()
 endfunction()
 
+# Build up DAWN_CXX_FLAGS -- used to compile dawn sources later
 add_cxx_compiler_flag_if_supported("-Wall" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
@@ -75,6 +76,10 @@ if (BUILD_SHARED_LIBS)
 endif()
 
 include(GNUInstallDirs)
+include(FetchContent)
+
+# Do not attempt to update packages -- speeds up configure process
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
@@ -88,59 +93,53 @@ function(target_add_dawn_standard_props target)
   set_target_properties(${target} PROPERTIES ${DAWN_TARGET_PROPERTIES})
 endfunction()
 
-# Project dependencies
+# Protobuf
 set(protobuf_version "3.4.0")
 set(protobuf_version_short "3.4")
-find_package(Protobuf ${protobuf_version})
-
-find_package(Python3 COMPONENTS Interpreter)
-
+if(NOT USE_BUNDLED_PROTOBUF)
+  find_package(Protobuf ${protobuf_version})
+endif()
 if(NOT Protobuf_FOUND)
-  message(STATUS "Downloading and building protobuf...")
-  include(FetchContent)
-
-  # Do not attempt to update packages -- speeds up configure process
-  set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-
   # Configuration options for Protobuf
   option(protobuf_BUILD_EXAMPLES OFF)
-  option(protobuf_BUILD_SHARED_LIBS OFF)
   option(protobuf_BUILD_TESTS OFF)
   option(protobuf_INSTALL_EXAMPLES OFF)
-  mark_as_advanced(
-    protobuf_BUILD_EXAMPLES
-    protobuf_BUILD_SHARED_LIBS
-    protobuf_BUILD_TESTS
-    protobuf_INSTALL_EXAMPLES
-  )
+  option(protobuf_BUILD_PROTOC_BINARIES ON)
 
   FetchContent_Declare(protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
     GIT_TAG v3.10.1
   )
+
   # Use this with 3.14
-  # FetchContent_MakeAvailable(Protobuf)
+  # FetchContent_MakeAvailable(protobuf)
   FetchContent_GetProperties(protobuf)
   if(NOT protobuf_POPULATED)
     FetchContent_Populate(protobuf)
     add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
   endif()
 
+  # Protobuf in build dir does not add standard headers
+  set(PROTOBUF_ADD_ARGS -I${protobuf_SOURCE_DIR}/src)
+
+  set(USE_BUNDLED_PROTOBUF ON CACHE BOOL "Use the bundled protobuf")
+  mark_as_advanced(USE_BUNDLED_PROTOBUF)
+
   if(Python3_FOUND)
     add_custom_target(build-protobuf-python
       COMMAND PROTOC=protobuf::libprotoc ${Python3_EXECUTABLE} setup.py build
-      WORKING_DIRECTORY "${protobuf_SOURCE_DIR}/python"
+      WORKING_DIRECTORY ${protobuf_SOURCE_DIR}/python
     )
     add_custom_target(protobuf-python
-      COMMAND ${CMAKE_COMMAND} -E copy_directory "${protobuf_SOURCE_DIR}/python" "${protobuf_BINARY_DIR}/python"
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_SOURCE_DIR}/python ${protobuf_BINARY_DIR}/python
       DEPENDS build-protobuf-python
     )
   endif()
 endif()
 
-
 add_subdirectory(src)
 
+find_package(Python3 COMPONENTS Interpreter)
 if (Python3_FOUND)
   # Look for protobuf python module
   find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
@@ -170,7 +169,22 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   endif()
 endif()
 
+# Only build if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
+  # Google Test
+  option(INSTALL_GTEST OFF)
+  mark_as_advanced(INSTALL_GTEST)
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        release-1.10.0
+    )
+  FetchContent_GetProperties(googletest)
+  if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+  endif()
+
   enable_testing()
   add_subdirectory(test)
 endif()

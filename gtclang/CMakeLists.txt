@@ -32,7 +32,7 @@ include(CheckLanguage)
 check_language(CUDA)
 
 # Useful standard options:
-# - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use DAWN_BUILD_TESTING to override).
+# - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use GTCLANG_BUILD_TESTING to override).
 # - BUILD_SHARED_LIBS<Bool>: Build dawn as shared libraries instead of static. If true, requires dependencies to be built as position independent code
 # - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
 
@@ -62,19 +62,19 @@ function(add_cxx_compiler_flag_if_supported flag var)
   endif()
 endfunction()
 
-add_cxx_compiler_flag_if_supported("-Wall" DAWN_CXX_FLAGS)
-add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
-add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
-add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" DAWN_CXX_FLAGS)
-add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # Would like to remove
-add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wall" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wextra" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-pedantic" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-sign-compare" GTCLANG_CXX_FLAGS) # Would like to remove
+add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" GTCLANG_LINKER_FLAGS)
 
 # Target properties
-set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
+set(GTCLANG_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
 
 # Needed because we use object libraries
 if (BUILD_SHARED_LIBS)
-  list(APPEND DAWN_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  list(APPEND GTCLANG_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # Add cxx standard, include directories, and properties
@@ -84,23 +84,46 @@ function(target_add_gtclang_standard_props target)
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
   )
   target_compile_features(${target} PUBLIC cxx_std_17)
-  target_compile_options(${target} PRIVATE ${DAWN_CXX_FLAGS})
-  set_target_properties(${target} PROPERTIES ${DAWN_TARGET_PROPERTIES})
+  target_compile_options(${target} PRIVATE ${GTCLANG_CXX_FLAGS})
+  set_target_properties(${target} PROPERTIES ${GTCLANG_TARGET_PROPERTIES})
 endfunction()
 
 include(GNUInstallDirs)
 
 # Project dependencies
 # find_package(Python3 COMPONENTS Interpreter)
-if(NOT DAWN_GTCLANG_MULTIPROJECT)
-  find_package(Dawn REQUIRED)
-endif()
 find_package(LLVM REQUIRED)
 find_package(Clang REQUIRED)
-find_package(GridTools)
-if(NOT GridTools)
-  message(STATUS "GridTools not found. Disabling backend")
+
+include(FetchContent)
+
+# Do not attempt to update packages -- speeds up configure process
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+
+# TODO: Could GridTools be an optional dependency?
+if(NOT USE_BUNDLED_GRIDTOOLS)
+  find_package(GridTools)
+endif()
+if(NOT GridTools_FOUND)
+  set(build_testing ${BUILD_TESTING})
   set(BUILD_TESTING OFF)
+  FetchContent_Declare(GridTools
+    GIT_REPOSITORY https://github.com/jdahm/gridtools.git
+    GIT_TAG v1.0.3/fix-cmake-project
+  )
+
+  FetchContent_GetProperties(GridTools)
+  if(NOT GridTools_POPULATED)
+    FetchContent_Populate(GridTools)
+    add_subdirectory(${gridtools_SOURCE_DIR} ${gridtools_BINARY_DIR})
+  endif()
+  set(USE_BUNDLED_GRIDTOOLS ON CACHE BOOL "Use the bundled gridtools")
+  mark_as_advanced(USE_BUNDLED_GRIDTOOLS)
+  set(BUILD_TESTING ${build_testing})
+endif()
+
+if(NOT DAWN_GTCLANG_MULTIPROJECT)
+  find_package(Dawn REQUIRED)
 endif()
 
 add_subdirectory(src)

@@ -14,13 +14,21 @@
 
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+install(
+  TARGETS Dawn
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
 function(add_dawn_library)
   foreach(_l IN LISTS ARGN)
+    target_link_libraries(${PROJECT_NAME} INTERFACE ${_l})
     install(
       TARGETS ${_l}
       EXPORT ${PROJECT_NAME}Targets
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
   endforeach()
 endfunction()

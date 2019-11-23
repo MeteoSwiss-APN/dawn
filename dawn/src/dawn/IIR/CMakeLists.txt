@@ -23,15 +23,15 @@ list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.h" OUTPUT_VARIABLE proto_h)
 list(TRANSFORM proto_h REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
 
 add_custom_command(
-  COMMAND protobuf::protoc --cpp_out=${CMAKE_CURRENT_BINARY_DIR} -I ../SIR/proto --proto_path=proto ${proto_files}
+  COMMAND protobuf::protoc --cpp_out=${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_ADD_ARGS} -I ../SIR/proto --proto_path=proto ${proto_files}
   OUTPUT  ${proto_cc} ${proto_h}
-  DEPENDS ${proto_files}
+  DEPENDS protobuf::protoc ${proto_files}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating IIR protobuf cpp files"
 )
 
 add_library(DawnIIRProto OBJECT ${proto_cc} ${proto_h})
-target_compile_features(DawnIIRProto PUBLIC cxx_std_98)
+target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
 # Generated files need to be compiled with the protobuf headers and SIR headers
@@ -120,7 +120,7 @@ if(ENABLE_PYTHON)
   list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
 
   add_custom_command(
-    COMMAND protobuf::protoc --python_out=${PROJECT_BINARY_DIR}/python/dawn -I ../SIR/proto --proto_path=proto ${proto_files}
+    COMMAND protobuf::protoc --python_out=${PROJECT_BINARY_DIR}/python/dawn ${PROTOBUF_ADD_ARGS} -I ../SIR/proto --proto_path=proto ${proto_files}
     OUTPUT  ${proto_py}
     DEPENDS ${proto_files}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

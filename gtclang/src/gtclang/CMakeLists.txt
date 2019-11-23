@@ -15,12 +15,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(Support)
-# include(yodaAddExecutable)
-# include(yodaCombineLibraries)
-
-# add_subdirectory(Support)
-# add_subdirectory(Frontend)
-# add_subdirectory(Driver)
+add_subdirectory(Frontend)
+add_subdirectory(Driver)
 
 # if(GTCLANG_TESTING)
 #   add_subdirectory(Unittest)

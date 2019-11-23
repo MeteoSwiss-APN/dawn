@@ -14,6 +14,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/Config.h)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/Config.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/Support
+)
+
 add_library(GTClangSupport
   FileUtil.cpp
   FileUtil.h
@@ -30,22 +36,5 @@ target_include_directories(GTClangSupport
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
 )
 
-target_link_libraries(GTClangSupport PUBLIC Dawn::Dawn Clang)
-
-# include(yodaConfigureFile)
-# include(yodaAddLibrary)
-
-# yoda_configure_file(Config.h.cmake)
-
-# yoda_add_library(
-#   NAME GTClangSupport
-#   SOURCES FileUtil.cpp
-#           FileUtil.h
-#           Logger.cpp
-#           Logger.h
-#           StringUtil.cpp
-#           StringUtil.h
-#           ASTUtils.cpp
-#           ASTUtils.h
-#   OBJECT
-# )
+target_add_gtclang_standard_props(GTClangSupport)
+target_link_libraries(GTClangSupport PUBLIC Dawn::DawnSupport clangAST)

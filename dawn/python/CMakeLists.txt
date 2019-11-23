@@ -29,6 +29,6 @@ install(
 )
 install(
   DIRECTORY dawn
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/dawn
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python
   FILES_MATCHING PATTERN "*.py"
 )

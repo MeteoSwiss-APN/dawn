@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnC
+add_library(${PROJECT_NAME}C
   Dawn.h
   Compiler.cpp
   Compiler.h
@@ -30,5 +30,5 @@ add_library(DawnC
   util/TranslationUnitWrapper.h
 )
 
-target_add_dawn_standard_props(DawnC)
-target_link_libraries(${PROJECT_NAME}C PUBLIC Dawn)
+target_add_dawn_standard_props(${PROJECT_NAME}C)
+target_link_libraries(${PROJECT_NAME}C PUBLIC ${PROJECT_NAME})
