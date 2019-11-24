@@ -12,11 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/config.py.in")
+set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/config.py.cmake")
 set(config_out "${CMAKE_CURRENT_BINARY_DIR}/config.py")
-
-set(DAWN_INSTALL_MODULE ${CMAKE_INSTALL_PREFIX}/python)
-set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_FULL_LIBDIR}/$<TARGET_FILE_NAME:DawnC>)
 
 # This two-step hack is necessary because there are both variables and generator
 # expressions necessary to generate config.py

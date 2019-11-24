@@ -14,30 +14,44 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+function(add_gtclang_library)
+  foreach(_l IN LISTS ARGN)
+    target_link_libraries(${PROJECT_NAME} INTERFACE ${_l})
+    install(
+      TARGETS ${_l}
+      EXPORT ${PROJECT_NAME}Targets
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+  endforeach()
+endfunction()
+
 add_subdirectory(Support)
+add_gtclang_library(GTClangSupport)
+
 add_subdirectory(Frontend)
+add_gtclang_library(GTClangFrontend)
+
 add_subdirectory(Driver)
+add_gtclang_library(GTClangDriver)
 
-# if(GTCLANG_TESTING)
-#   add_subdirectory(Unittest)
-# endif()
+if(${PROJECT_NAME}_TESTING)
+  add_subdirectory(Unittest)
+endif()
 
-# # Combine the relevant object libraries into libGTClang.a
-# yoda_combine_libraries(
-#   NAME GTClang
-#   OBJECTS GTClangDriverObjects
-#           GTClangFrontendObjects
-#           GTClangSupportObjects
-#   INSTALL_DESTINATION ${GTCLANG_INSTALL_LIB_DIR}
-#   VERSION ${GTCLANG_FULL_VERSION}
-# )
-
-# # Link the driver
-# yoda_add_executable(
-#   NAME gtclang
-#   SOURCES Driver/gtclang.cpp
-#   DEPENDS GTClangStatic
-#           ${GTCLANG_EXTERNAL_LIBRARIES}
-#   OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin
-#   INSTALL_DESTINATION ${GTCLANG_INSTALL_BIN_DIR}
-# )
+add_executable(gtclang Driver/gtclang.cpp)
+target_link_libraries(gtclang GTClang)
+install(
+  TARGETS gtclang
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

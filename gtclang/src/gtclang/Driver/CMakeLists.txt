@@ -26,4 +26,6 @@ add_library(GTClangDriver
 )
 
 target_add_gtclang_standard_props(GTClangDriver)
-target_link_libraries(GTClangDriver PUBLIC Dawn::Dawn LLVM Clang)
+target_link_libraries(GTClangDriver
+  PUBLIC GTClangFrontend GTClangSupport Dawn::Dawn Clang::Clang LLVM::LLVM
+)

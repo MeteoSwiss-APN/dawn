@@ -14,8 +14,19 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(yodaAddCustomDummyTarget)
-# Add a dummy target with all the source files so that they are included in a qt creator project
-yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectClang
-                             DIRECTORIES "clang")
+set(test_name ${PROJECT_NAME}UnittestUnittest)
+add_executable(${test_name}
+  TestUnittestEnvironment.cpp
+  TestMain.cpp
+)
 
+target_add_gtclang_standard_props(${test_name})
+target_link_libraries(${test_name} ${PROJECT_NAME} ${PROJECT_NAME}Unittest gtest)
+
+set_target_properties(${test_name} PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
+)
+
+add_test(NAME ${test_name}
+  COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
+)

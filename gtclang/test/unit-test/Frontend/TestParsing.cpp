@@ -33,7 +33,7 @@ namespace {
 #define DAWN_EXPECT_NE(parsing, operation)                                                         \
   do {                                                                                             \
     auto output = ParsingComparison::getSingleton().compare(parsing, operation);                   \
-    EXPECT_FALSE(bool(output)) << "SIRs Match but should not";                                     \
+    EXPECT_FALSE(static_cast<bool>(output)) << "SIRs Match but should not"; \
   } while(0)
 
 TEST(ParsingTest, Setup) {

@@ -14,13 +14,16 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-configure_file(Config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/Config.h)
-install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/Config.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/Support
-)
+set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/Config.h.cmake")
+set(config_out "${CMAKE_CURRENT_BINARY_DIR}/Config.h")
+
+# This two-step hack is necessary because there are both variables and generator
+# expressions necessary to generate config.py
+configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
+file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
 
 add_library(GTClangSupport
+  ${CMAKE_CURRENT_BINARY_DIR}/Config.h
   FileUtil.cpp
   FileUtil.h
   Logger.cpp
@@ -31,10 +34,5 @@ add_library(GTClangSupport
   ASTUtils.h
 )
 
-target_include_directories(GTClangSupport
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-)
-
 target_add_gtclang_standard_props(GTClangSupport)
-target_link_libraries(GTClangSupport PUBLIC Dawn::DawnSupport clangAST)
+target_link_libraries(GTClangSupport PUBLIC Dawn::DawnSupport Clang::Clang LLVM::LLVM)

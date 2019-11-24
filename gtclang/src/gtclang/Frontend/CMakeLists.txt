@@ -41,4 +41,6 @@ add_library(GTClangFrontend
 )
 
 target_add_gtclang_standard_props(GTClangFrontend)
-target_link_libraries(GTClangFrontend PUBLIC Dawn::Dawn LLVM Clang)
+target_link_libraries(GTClangFrontend
+  PUBLIC GTClangSupport Dawn::Dawn Clang::Clang LLVM::LLVM
+)

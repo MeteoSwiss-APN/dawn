@@ -24,9 +24,9 @@ list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.h" OUTPUT_VARIABLE proto_h)
 list(TRANSFORM proto_h REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
 
 add_custom_command(
-  COMMAND protobuf::protoc --cpp_out=${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
+  COMMAND $<TARGET_FILE:protobuf::protoc> --cpp_out=${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
   OUTPUT  ${proto_cc} ${proto_h}
-  DEPENDS protobuf::protoc ${proto_files}
+  DEPENDS $<TARGET_FILE:protobuf::protoc> ${proto_files}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating SIR protobuf cpp files"
 )
@@ -67,7 +67,7 @@ if(ENABLE_PYTHON)
   list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
 
   add_custom_command(
-    COMMAND protobuf::protoc --python_out=${PROJECT_BINARY_DIR}/python/dawn ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
+    COMMAND $<TARGET_FILE:protobuf::protoc> --python_out=${PROJECT_BINARY_DIR}/python/dawn ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
     OUTPUT  ${proto_py}
     DEPENDS ${proto_files}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

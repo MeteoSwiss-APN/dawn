@@ -14,64 +14,105 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_path(Clang_INCLUDE_DIR NAMES clang/AST/AST.h
-    HINTS ${CLANG_INCLUDE_DIRS} ${LLVM_ROOT}
-    PATH_SUFFIXES include clang
-)
-
-if(NOT Clang_INCLUDE_DIR)
-  message(FATAL_ERROR "Could not find Clang headers: Try setting CLANG_INCLUDE_DIRS or LLVM_ROOT")
+if(NOT TARGET LLVM::LLVM)
+  if(${Clang_FIND_REQUIRED})
+    find_package(LLVM ${Clang_FIND_VERSION} REQUIRED)
+  else()
+    find_package(LLVM ${Clang_FIND_VERSION})
+  endif()
 endif()
 
-# Generated for Clang 3.8.0 but should still work
-set(clang_libs
-  clang
-  clangARCMigrate
-  clangAST
-  clangASTMatchers
-  clangAnalysis
-  clangBasic
-  clangCheckers
-  clangCodeGen
-  clangCore
-  clangDriver
-  clangDynamic
-  clangEdit
-  clangFormat
-  clangFrontend
-  clangFrontendTool
-  clangIndex
-  clangLex
-  clangParse
-  clangRewrite
-  clangSema
-  clangSerialization
-  clangTooling
-)
+set(CLANG_FOUND FALSE)
 
-add_library(Clang INTERFACE)
-foreach(_lib ${clang_libs})
-  find_library(library ${_lib}
-    HINTS ${CLANG_LIB_DIRS} ${LLVM_ROOT}
-    PATH_SUFFIXES lib
+if(LLVM_FOUND)
+  set(CLANG_INCLUDE_DIRS ${LLVM_INCLUDE_DIRS})
+  set(CLANG_LIBRARY_DIRS ${LLVM_LIBRARY_DIRS})
+  set(CLANG_VERSION ${LLVM_VERSION})
+
+  execute_process(
+    COMMAND ${LLVM_CONFIG_EXECUTABLE} --prefix
+    OUTPUT_VARIABLE llvm_install_prefix
+    OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  if(library)
-    add_library(${_lib} MODULE IMPORTED)
-    target_compile_features(${_lib} INTERFACE cxx_std_11)
-    target_include_directories(${_lib}
-      INTERFACE ${Clang_INCLUDE_DIR}
+  set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSION}/include")
+
+  # potentially add include dir from binary dir for non-installed LLVM
+  execute_process(
+    COMMAND ${LLVM_CONFIG_EXECUTABLE} --src-root
+    OUTPUT_VARIABLE llvm_source_root
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  string(FIND "${LLVM_INCLUDE_DIRS}" "${llvm_source_root}" str_found)
+  list(LENGTH LLVM_INCLUDE_DIRS num_include_dirs)
+  if((num_include_dirs EQUAL 1 AND (llvm_source_root STREQUAL LLVM_INCLUDE_DIRS)) OR
+      (num_include_dirs GREATER 1 AND str_found GREATER_EQUAL 0))
+    message(STATUS
+      "Detected that llvm-config comes from a build-tree, adding more include directories for Clang")
+    list(APPEND CLANG_INCLUDE_DIRS
+         "${llvm_install_prefix}/tools/clang/include" # build dir
+         "${llvm_source_root}/tools/clang/include"     # source dir
     )
-    target_link_libraries(${_lib} INTERFACE ${library})
-    target_link_libraries(Clang INTERFACE ${_lib})
-  else()
-    message(FATAL_ERROR "Could not find ${_lib} library: Try setting CLANG_LIB_DIRS or LLVM_ROOT")
   endif()
-endforeach()
 
-mark_as_advanced(Clang_INCLUDE_DIR)
+  set(clang_libnames
+    clangARCMigrate
+    clangAST
+    clangASTMatchers
+    clangAnalysis
+    clangBasic
+    clangCodeGen
+    clangCrossTU
+    clangDependencyScanning
+    clangDirectoryWatcher
+    clangDriver
+    clangDynamicASTMatchers
+    clangEdit
+    clangFormat
+    clangFrontend
+    clangFrontendTool
+    clangIndex
+    clangLex
+    clangParse
+    clangRewrite
+    clangRewriteFrontend
+    clangSema
+    clangSerialization
+    clangStaticAnalyzerCheckers
+    clangStaticAnalyzerCore
+    clangStaticAnalyzerFrontend
+    clangTooling
+    clangToolingASTDiff
+    clangToolingCore
+    clangToolingInclusions
+    clangToolingRefactoring
+    clangToolingSyntax
+  )
 
-# include(FindPackageHandleStandardArgs)
-# find_package_handle_standard_args(RapidJSON
-#     REQUIRED_VARS RapidJSON_INCLUDE_DIR
-#     VERSION_VAR RapidJSON_VERSION
-# )
+  add_library(Clang INTERFACE IMPORTED GLOBAL)
+  add_library(Clang::Clang ALIAS Clang)
+  target_include_directories(Clang INTERFACE ${CLANG_INCLUDE_DIRS})
+  target_compile_features(Clang INTERFACE cxx_std_11)
+  foreach(_lib ${clang_libnames})
+    find_library(${_lib}_LIBRARY ${_lib}
+      HINTS ${CLANG_LIBRARY_DIRS} ${LLVM_ROOT}
+      PATH_SUFFIXES lib
+      )
+    mark_as_advanced(${_lib}_LIBRARY)
+    list(APPEND CLANG_LIBS ${${_lib}_LIBRARY})
+    if(${_lib}_LIBRARY)
+      target_link_libraries(Clang INTERFACE ${${_lib}_LIBRARY})
+    else()
+      message(FATAL_ERROR "Could not find ${_lib} library: Try setting CLANG_LIBRARY_DIRS or LLVM_ROOT")
+    endif()
+  endforeach()
+
+  message(STATUS "Clang version: ${CLANG_VERSION}")
+else()
+  message(FATAL_ERROR "Could NOT find Clang")
+endif()
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Clang
+  REQUIRED_VARS CLANG_INCLUDE_DIRS CLANG_LIBRARY_DIRS CLANG_LIBS
+  VERSION_VAR LLVM_VERSION
+)

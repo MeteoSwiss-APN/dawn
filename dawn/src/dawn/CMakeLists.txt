@@ -15,7 +15,7 @@
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 install(
-  TARGETS Dawn
+  TARGETS ${PROJECT_NAME}
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -60,4 +60,6 @@ add_dawn_library(DawnCodeGen)
 add_subdirectory(Compiler)
 add_dawn_library(DawnCompiler)
 
-add_subdirectory(Unittest)
+if(${PROJECT_NAME}_TESTING)
+  add_subdirectory(Unittest)
+endif()

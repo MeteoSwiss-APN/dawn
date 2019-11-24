@@ -28,26 +28,60 @@ project(GTClang
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
   LANGUAGES CXX C)
 
+# Optionally enable CUDA for integration tests
 include(CheckLanguage)
 check_language(CUDA)
+if(CMAKE_CUDA_COMPILER)
+  enable_language(CUDA)
+else()
+  message(STATUS "Could NOT find CUDA compiler. Disabling GPU integration tests.")
+endif()
 
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use GTCLANG_BUILD_TESTING to override).
-# - BUILD_SHARED_LIBS<Bool>: Build dawn as shared libraries instead of static. If true, requires dependencies to be built as position independent code
+# - BUILD_SHARED_LIBS<Bool>: Build gtclang shared libraries instead of static. If true, requires dependencies to be built as position independent code
 # - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
 
 # Other options
+include(CMakeDependentOption)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_BUNDLE "Use FetchContent to download and build Gridtools. NOTE: LLVM and Clang libs are NOT built and must be located independently." OFF)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+option(GTCLANG_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
 
+cmake_dependent_option(BUILD_CPU_TESTS "Build CPU integration tests" ON "BUILD_TESTING" OFF)
+cmake_dependent_option(BUILD_GPU_TESTS "Build GPU integration tests" ON "BUILD_TESTING;CMAKE_CUDA_COMPILER" OFF)
+
+option(BUILD_CPU_TESTS "Build CPU examples" ON)
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
 if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
+include(GNUInstallDirs)
+
 # Path for Find*.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# use, i.e. don't skip the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+endif()
 
 # CXX flags
 include(CheckCXXCompilerFlag)
@@ -88,25 +122,56 @@ function(target_add_gtclang_standard_props target)
   set_target_properties(${target} PROPERTIES ${GTCLANG_TARGET_PROPERTIES})
 endfunction()
 
-include(GNUInstallDirs)
-
 # Project dependencies
 # find_package(Python3 COMPONENTS Interpreter)
 find_package(LLVM REQUIRED)
 find_package(Clang REQUIRED)
+find_package(Boost REQUIRED)
 
 include(FetchContent)
 
 # Do not attempt to update packages -- speeds up configure process
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
-# TODO: Could GridTools be an optional dependency?
-if(NOT USE_BUNDLED_GRIDTOOLS)
-  find_package(GridTools)
+# Only test if BUILD_TESTING and main project, or GTCLANG_BUILD_TESTING is on
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR GTCLANG_BUILD_TESTING) AND BUILD_TESTING)
+  set(${PROJECT_NAME}_TESTING ON)
+else()
+  set(${PROJECT_NAME}_TESTING OFF)
 endif()
-if(NOT GridTools_FOUND)
+mark_as_advanced(${PROJECT_NAME}_TESTING)
+
+if(${PROJECT_NAME}_TESTING)
+  # Google Test
+  set(INSTALL_GTEST OFF)
+  set(BUILD_GMOCK OFF)
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        release-1.10.0
+    )
+  FetchContent_GetProperties(googletest)
+  if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+  endif()
+
+  enable_testing()
+endif()
+
+if(NOT DAWN_GTCLANG_MULTIPROJECT)
+  find_package(Dawn REQUIRED)
+endif()
+
+if(NOT BUILD_BUNDLE)
+  find_package(GridTools REQUIRED)
+else()
+  # GridTools uses BUILD_TESTING, cache it and reset after
   set(build_testing ${BUILD_TESTING})
   set(BUILD_TESTING OFF)
+  set(INSTALL_TOOLS OFF)
+
+  # NOTE: Need CMake fixes to v1.0.3
   FetchContent_Declare(GridTools
     GIT_REPOSITORY https://github.com/jdahm/gridtools.git
     GIT_TAG v1.0.3/fix-cmake-project
@@ -117,25 +182,18 @@ if(NOT GridTools_FOUND)
     FetchContent_Populate(GridTools)
     add_subdirectory(${gridtools_SOURCE_DIR} ${gridtools_BINARY_DIR})
   endif()
-  set(USE_BUNDLED_GRIDTOOLS ON CACHE BOOL "Use the bundled gridtools")
-  mark_as_advanced(USE_BUNDLED_GRIDTOOLS)
-  set(BUILD_TESTING ${build_testing})
-endif()
 
-if(NOT DAWN_GTCLANG_MULTIPROJECT)
-  find_package(Dawn REQUIRED)
+  # Reset here
+  set(BUILD_TESTING ${build_testing})
 endif()
 
 add_subdirectory(src)
 
-# if(GTCLANG_BUILD_EXAMPLES)
-#   add_subdirectory(examples)
-# endif()
+# TODO: Make examples!
 
-# if(GTCLANG_TESTING)
-#   enable_testing()
-#   add_subdirectory(test)
-# endif()
+if(${PROJECT_NAME}_TESTING)
+  add_subdirectory(test)
+endif()
 
 # if(GTCLANG_DOCUMENTATION)
 #   add_subdirectory(docs)

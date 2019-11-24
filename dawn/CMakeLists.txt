@@ -34,8 +34,11 @@ project(Dawn
 
 # Other options
 option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_BUNDLE "Use FetchContent to download dependencies [Protobuf]." OFF)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
 set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
+mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -43,8 +46,29 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
+include(GNUInstallDirs)
+
 # Path for Find*.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# use, i.e. don't skip the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+endif("${isSystemDir}" STREQUAL "-1")
 
 # CXX flags
 include(CheckCXXCompilerFlag)
@@ -75,12 +99,6 @@ if (BUILD_SHARED_LIBS)
   list(APPEND DAWN_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-include(GNUInstallDirs)
-include(FetchContent)
-
-# Do not attempt to update packages -- speeds up configure process
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
   target_include_directories(${target}
@@ -93,26 +111,27 @@ function(target_add_dawn_standard_props target)
   set_target_properties(${target} PROPERTIES ${DAWN_TARGET_PROPERTIES})
 endfunction()
 
+include(FetchContent)
+
+# Do not attempt to update packages -- speeds up configure process
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+
 # Protobuf
-set(protobuf_version "3.4.0")
-set(protobuf_version_short "3.4")
-if(NOT USE_BUNDLED_PROTOBUF)
-  find_package(Protobuf ${protobuf_version})
-endif()
-if(NOT Protobuf_FOUND)
+if(NOT BUILD_BUNDLE)
+  find_package(Protobuf 3.4.0 REQUIRED)
+else()
   # Configuration options for Protobuf
-  option(protobuf_BUILD_EXAMPLES OFF)
-  option(protobuf_BUILD_TESTS OFF)
-  option(protobuf_INSTALL_EXAMPLES OFF)
-  option(protobuf_BUILD_PROTOC_BINARIES ON)
+  set(protobuf_BUILD_EXAMPLES OFF)
+  set(protobuf_BUILD_TESTS OFF)
+  set(protobuf_INSTALL_EXAMPLES OFF)
+  # If not using bundle, we at least need protoc binary
+  set(protobuf_BUILD_PROTOC_BINARIES ON)
 
   FetchContent_Declare(protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
     GIT_TAG v3.10.1
   )
 
-  # Use this with 3.14
-  # FetchContent_MakeAvailable(protobuf)
   FetchContent_GetProperties(protobuf)
   if(NOT protobuf_POPULATED)
     FetchContent_Populate(protobuf)
@@ -122,12 +141,9 @@ if(NOT Protobuf_FOUND)
   # Protobuf in build dir does not add standard headers
   set(PROTOBUF_ADD_ARGS -I${protobuf_SOURCE_DIR}/src)
 
-  set(USE_BUNDLED_PROTOBUF ON CACHE BOOL "Use the bundled protobuf")
-  mark_as_advanced(USE_BUNDLED_PROTOBUF)
-
   if(Python3_FOUND)
     add_custom_target(build-protobuf-python
-      COMMAND PROTOC=protobuf::libprotoc ${Python3_EXECUTABLE} setup.py build
+      COMMAND PROTOC=$<TARGET_FILE:protobuf::libprotoc> ${Python3_EXECUTABLE} setup.py build
       WORKING_DIRECTORY ${protobuf_SOURCE_DIR}/python
     )
     add_custom_target(protobuf-python
@@ -135,6 +151,31 @@ if(NOT Protobuf_FOUND)
       DEPENDS build-protobuf-python
     )
   endif()
+endif()
+
+# Only test if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
+  set(${PROJECT_NAME}_TESTING ON)
+else()
+  set(${PROJECT_NAME}_TESTING OFF)
+endif()
+mark_as_advanced(${PROJECT_NAME}_TESTING)
+if(${PROJECT_NAME}_TESTING)
+  # Google Test
+  set(INSTALL_GTEST OFF)
+  set(BUILD_GMOCK OFF)
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        release-1.10.0
+    )
+  FetchContent_GetProperties(googletest)
+  if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+  endif()
+
+  enable_testing()
 endif()
 
 add_subdirectory(src)
@@ -154,7 +195,15 @@ else()
   message(STATUS "Python3 not found, not installing python bindings")
 endif()
 
-if(BUILD_EXAMPLES)
+# Only build examples if BUILD_EXAMPLES and main project, or DAWN_BUILD_EXAMPLES is on
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_EXAMPLES) AND BUILD_EXAMPLES)
+  set(${PROJECT_NAME}_EXAMPLES ON)
+else()
+  set(${PROJECT_NAME}_EXAMPLES OFF)
+endif()
+mark_as_advanced(${PROJECT_NAME}_EXAMPLES)
+
+if(${PROJECT_NAME}_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
@@ -169,49 +218,32 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   endif()
 endif()
 
-# Only build if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
-  # Google Test
-  option(INSTALL_GTEST OFF)
-  mark_as_advanced(INSTALL_GTEST)
-  FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        release-1.10.0
-    )
-  FetchContent_GetProperties(googletest)
-  if(NOT googletest_POPULATED)
-    FetchContent_Populate(googletest)
-    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-  endif()
-
-  enable_testing()
+if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
 
 include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/${PROJECT_NAME}Config.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
   COMPATIBILITY SameMajorVersion
-)
-
-configure_package_config_file(
-  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION
-  ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
 )
 
 install(
   EXPORT ${PROJECT_NAME}Targets
   FILE ${PROJECT_NAME}Targets.cmake
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
 install(
   FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
