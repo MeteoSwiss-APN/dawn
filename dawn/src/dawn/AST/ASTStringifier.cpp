@@ -117,7 +117,7 @@ public:
       ss_ << stmt->getVerticalRegion()->iterationSpace_[1]->second;
       ss_ << "] ";
     }
-    ss_ << "K-Range : ";
+    ss_ << " K-Range : ";
     ss_ << *stmt->getVerticalRegion()->VerticalInterval.get();
     ss_ << " ["
         << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward

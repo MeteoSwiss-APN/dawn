@@ -340,7 +340,7 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
 
   if(verticalRegionProto.has_i_range()) {
     auto range = verticalRegionProto.i_range();
-    verticalRegion->iterationSpace_[1].emplace(range.lower_offset() + range.lower_level(),
+    verticalRegion->iterationSpace_[0].emplace(range.lower_offset() + range.lower_level(),
                                                range.upper_offset() + range.upper_level());
   }
   if(verticalRegionProto.has_j_range()) {

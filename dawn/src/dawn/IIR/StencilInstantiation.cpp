@@ -256,7 +256,7 @@ void StencilInstantiation::dump() const {
                      std::to_string(iterSpace[0]->plus()) + "] ";
         }
         if(iterSpace[1]) {
-          globidx += "J [" + std::to_string(iterSpace[1]->minus()) + " , " +
+          globidx += "J: [" + std::to_string(iterSpace[1]->minus()) + " , " +
                      std::to_string(iterSpace[1]->plus()) + "] ";
         }
 
