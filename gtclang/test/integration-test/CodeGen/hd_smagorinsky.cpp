@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang_dsl_defs/math.hpp"
+#include "driver-includes/math.hpp"
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
