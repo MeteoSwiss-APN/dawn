@@ -59,7 +59,7 @@ static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadat
 }
 
 /// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
-/// counter loop acesses in the vertical)
+/// counter loop access in the vertical)
 static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& extent,
                                                         iir::LoopOrderKind loopOrder) {
   return !extent.isHorizontalPointwise() ||
@@ -178,7 +178,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   auto SCCs = std::make_unique<std::vector<std::set<int>>>();
   graph->findStronglyConnectedComponents(*SCCs);
 
-  // ... and add those which have atleast one stencil access
+  // ... and add those which have at least one stencil access
   for(std::set<int>& scc : *SCCs) {
     bool isStencilSCC = false;
 
@@ -223,9 +223,10 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   //
   // needs to be renamed to
   //
-  //  field_a = field_b_1;
+  //  field_a = field_b_0;
   //  field_b = field_a;
   //
+  // ... and then field_b_0 must be initialized from field_b.
   if(stencilSCCs->empty() && !SCCs->empty() && !graph->isDAG()) {
     stencilSCCs->emplace_back(std::move(SCCs->front()));
   }

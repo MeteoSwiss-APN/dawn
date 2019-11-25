@@ -61,8 +61,10 @@ public:
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     int& fieldAccessID = *expr->getData<iir::IIRAccessExprData>().AccessID;
-    if(fieldAccessID == oldAccessID_)
+    if(fieldAccessID == oldAccessID_) {
       fieldAccessID = newAccessID_;
+      expr->setName(instantiation_->getNameFromAccessID(fieldAccessID));
+    }
   }
 };
 
