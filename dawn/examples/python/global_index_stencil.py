@@ -50,22 +50,56 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     """
 
     interval = make_interval(Interval.Start, Interval.End, 0, 0)
-    global_j_interval = make_interval(0, 2, 0, 0)
 
     # create the out = in[i+1] statement
     body_ast = make_ast(
-        [make_assignment_stmt(make_field_access_expr("out", [0, 0, 0]), make_field_access_expr("in", [1, 0, 0]), "=")]
+        [make_assignment_stmt(make_field_access_expr("out", [0, 0, 0]), make_field_access_expr("in", [0, 0, 0]), "=")]
     )
 
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
+    return vertical_region_stmt
+
+
+def create_boundary_correction_region(i_min=0, i_max=0, j_min=0, j_max=0) -> VerticalRegionDeclStmt:
+    interval = make_interval(Interval.Start, Interval.End, 0, 0)
+    if i_min == 0 and i_max == 0:
+        global_i_interval = None
+    else:
+        global_i_interval = make_interval(i_min, i_max, 0, 0)
+
+    if j_min == 0 and j_max == 0:
+        global_j_interval = None
+    else:
+        global_j_interval = make_interval(j_min, j_max, 0, 0)
+
+    boundary_body = make_ast(
+        [
+            make_assignment_stmt(
+                make_field_access_expr("out", [0, 0, 0]), make_literal_access_expr("0.0", BuiltinType.Float), "="
+            )
+        ]
+    )
     vertical_region_stmt = make_vertical_region_decl_stmt(
-        body_ast, interval, VerticalRegion.Forward, JRange=global_j_interval
+        boundary_body, interval, VerticalRegion.Forward, IRange=global_i_interval, JRange=global_j_interval
     )
     return vertical_region_stmt
 
 
 hir = make_sir(
     "global_indexing.cpp",
-    [make_stencil("global_indexing", make_ast([create_vertical_region_stmt()]), [make_field("in"), make_field("out")])],
+    [
+        make_stencil(
+            "global_indexing",
+            make_ast(
+                [
+                    create_boundary_correction_region(i_max=3),
+                    create_boundary_correction_region(j_max=2),
+                    create_vertical_region_stmt(),
+                ]
+            ),
+            [make_field("in"), make_field("out")],
+        )
+    ],
 )
 
 parser = OptionParser()
@@ -95,6 +129,15 @@ backend = dawn.dawnOptionsEntryCreateString("c++-naive".encode("utf-8"))
 
 dawn.dawnOptionsSet.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
 dawn.dawnOptionsSet(options, "Backend".encode("utf-8"), backend)
+
+dawn.dawnOptionsSet.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
+dawn.dawnOptionsSet(options, "Backend".encode("utf-8"), backend)
+
+one = dawn.dawnOptionsEntryCreateInteger(1)
+dawn.dawnOptionsSet(options, "DumpStencilInstantiation".encode("utf-8"), one)
+
+# dawn.dawnOptionsSet(options, "WriteSIR".encode("utf-8"), one)
+# dawn.dawnOptionsSet(options, "SIRFormat".encode("utf-8"), backend)
 
 # call the compiler that generates a translation unit
 
