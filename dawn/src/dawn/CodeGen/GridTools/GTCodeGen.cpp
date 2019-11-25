@@ -969,9 +969,10 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
-  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
 
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);
+
+  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
 
   generateBCHeaders(ppDefines);
 

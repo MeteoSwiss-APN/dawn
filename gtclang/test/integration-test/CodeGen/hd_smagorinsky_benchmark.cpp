@@ -25,11 +25,11 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
-#include <gtest/gtest.h>
 #include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/hd_smagorinsky_c++-naive.cpp"
+#include <gtest/gtest.h>
 
 #ifndef OPTBACKEND
 #define OPTBACKEND gt
@@ -54,6 +54,7 @@ TEST(hd_smagorinsky, test) {
 
   // Output fields
   storage_t u_out_gt(meta_data, "v_out");
+  verif.printStorage(u_out_gt);
   storage_t v_out_gt(meta_data, "u_out");
   storage_t u_out_naive(meta_data, "v_out");
   storage_t v_out_naive(meta_data, "u_out");
@@ -89,10 +90,10 @@ TEST(hd_smagorinsky, test) {
   dawn_generated::OPTBACKEND::hd_smagorinsky_stencil hd_smagorinsky_gt(dom);
   dawn_generated::cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(dom);
 
-  hd_smagorinsky_gt.run(u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
-                        eddlon, eddlat, tau_smag, weight_smag);
-  hd_smagorinsky_naive.run(u_out_naive, v_out_naive, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
-                           eddlon, eddlat, tau_smag, weight_smag);
+  hd_smagorinsky_gt.run(u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu,
+                        acrlat0, eddlon, eddlat, tau_smag, weight_smag);
+  hd_smagorinsky_naive.run(u_out_naive, v_out_naive, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato,
+                           crlatu, acrlat0, eddlon, eddlat, tau_smag, weight_smag);
 
   ASSERT_TRUE(verif.verify(u_out_gt, u_out_naive));
   ASSERT_TRUE(verif.verify(v_out_gt, v_out_naive));

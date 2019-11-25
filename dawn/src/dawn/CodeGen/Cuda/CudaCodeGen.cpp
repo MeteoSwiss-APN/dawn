@@ -625,7 +625,6 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CUDA");
-  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
   //==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
   // these
@@ -634,6 +633,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
+  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
 
   generateBCHeaders(ppDefines);
 
