@@ -54,7 +54,6 @@ TEST(hd_smagorinsky, test) {
 
   // Output fields
   storage_t u_out_gt(meta_data, "v_out");
-  verif.printStorage(u_out_gt);
   storage_t v_out_gt(meta_data, "u_out");
   storage_t u_out_naive(meta_data, "v_out");
   storage_t v_out_naive(meta_data, "u_out");
