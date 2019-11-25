@@ -25,7 +25,7 @@
 
 #include "test/integration-test/CodeGen/generated/intervals_stencil_c++-naive.cpp"
 
-#include "gtclang_dsl_defs/verify.hpp"
+#include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include <gtest/gtest.h>

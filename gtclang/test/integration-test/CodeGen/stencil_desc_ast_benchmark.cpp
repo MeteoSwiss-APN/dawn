@@ -25,7 +25,7 @@
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
 #include <gtest/gtest.h>
-#include "gtclang_dsl_defs/verify.hpp"
+#include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/stencil_desc_ast_c++-naive.cpp"
