@@ -3,10 +3,12 @@ set(@PROJECT_NAME@_VERSION @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@)
 @PACKAGE_INIT@
 
 if(@BUILD_BUNDLE@)
-  include(@CMAKE_INSTALL_PREFIX@/lib/cmake/protobuf/protobuf-config.cmake)
-  include(@CMAKE_INSTALL_PREFIX@/lib/cmake/protobuf/protobuf-module.cmake)
-  include(@CMAKE_INSTALL_PREFIX@/lib/cmake/protobuf/protobuf-options.cmake)
-  include(@CMAKE_INSTALL_PREFIX@/lib/cmake/protobuf/protobuf-targets.cmake)
+  # The FindProtobuf.cmake is terrible at finding protobuf, so help it out
+  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-config.cmake)
+  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-module.cmake)
+  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-options.cmake)
+  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-targets.cmake)
+  set(Protobuf_INCLUDE_DIR @CMAKE_INSTALL_FULL_INCLUDEDIR@)
 endif()
 
 include(CMakeFindDependencyMacro)

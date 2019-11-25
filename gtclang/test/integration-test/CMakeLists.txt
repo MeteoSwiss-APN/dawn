@@ -80,7 +80,8 @@ function(compile_target)
   endif()
 
   add_executable(${executable} ${sources})
-  add_dependencies(${executable} ${directory}_${test}_${backend}_codegen)
+  add_dependencies(${executable}
+    ${directory}_${test}_${backend}_codegen ${directory}_${test}_c++-naive_codegen)
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
 
   if(${backend} STREQUAL gt)
@@ -89,7 +90,7 @@ function(compile_target)
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
   target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GTClang GridTools::gridtools gtest)
+  target_link_libraries(${executable} GTClang GTClangUnittest GridTools::gridtools gtest)
 
   add_test(NAME ${executable}
     COMMAND $<TARGET_FILE:${executable}> 12 12 10 --gtest_output=xml:${executable}_unittest.xml
