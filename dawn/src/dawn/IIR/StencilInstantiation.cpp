@@ -17,6 +17,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/SIR/AST.h"
@@ -37,6 +38,7 @@
 #include <functional>
 #include <iostream>
 #include <stack>
+#include <string>
 
 namespace dawn {
 namespace iir {
@@ -247,7 +249,18 @@ void StencilInstantiation::dump() const {
       int k = 0;
       const auto& stages = multiStage->getChildren();
       for(const auto& stage : stages) {
-        PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
+        auto iterSpace = stage->getIterationSpace();
+        std::string globidx;
+        if(iterSpace[0]) {
+          globidx += "I: [" + std::to_string(iterSpace[0]->minus()) + " , " +
+                     std::to_string(iterSpace[0]->plus()) + "] ";
+        }
+        if(iterSpace[1]) {
+          globidx += "J [" + std::to_string(iterSpace[1]->minus()) + " , " +
+                     std::to_string(iterSpace[1]->plus()) + "] ";
+        }
+
+        PrintDescLine<3> kline(Twine("Stage_") + Twine(k) + Twine(" ") + Twine(globidx));
 
         int l = 0;
         const auto& doMethods = stage->getChildren();

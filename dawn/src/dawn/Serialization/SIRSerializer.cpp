@@ -336,7 +336,20 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
           ? sir::VerticalRegion::LoopOrderKind::Backward
           : sir::VerticalRegion::LoopOrderKind::Forward;
 
-  return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
+  auto verticalRegion = std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
+
+  if(verticalRegionProto.has_i_range()) {
+    auto range = verticalRegionProto.i_range();
+    verticalRegion->iterationSpace_[1].emplace(range.lower_offset() + range.lower_level(),
+                                               range.upper_offset() + range.upper_level());
+  }
+  if(verticalRegionProto.has_j_range()) {
+    auto range = verticalRegionProto.j_range();
+    verticalRegion->iterationSpace_[1].emplace(range.lower_offset() + range.lower_level(),
+                                               range.upper_offset() + range.upper_level());
+  }
+
+  return verticalRegion;
 }
 
 static std::shared_ptr<ast::StencilCall>

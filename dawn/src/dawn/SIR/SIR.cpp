@@ -647,7 +647,10 @@ std::string sir::Value::toString() const {
 }
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  auto retval =
+      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  retval->iterationSpace_ = iterationSpace_;
+  return retval;
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }

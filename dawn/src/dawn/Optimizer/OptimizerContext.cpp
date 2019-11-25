@@ -390,7 +390,9 @@ public:
     // set the iteration space
     for(int i = 0, size = stmt->getVerticalRegion()->iterationSpace_.size(); i < size; ++i) {
       if(stmt->getVerticalRegion()->iterationSpace_[i]) {
-        //////////// TODO: Continue here
+        stage->setIterationSpace({stmt->getVerticalRegion()->iterationSpace_[i]->first,
+                                  stmt->getVerticalRegion()->iterationSpace_[i]->second},
+                                 i);
       }
     }
 

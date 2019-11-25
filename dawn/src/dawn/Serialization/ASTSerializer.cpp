@@ -18,6 +18,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/SIR/ASTStmt.h"
+#include "dawn/SIR/SIR.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <iterator>
@@ -360,6 +361,18 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
   setStmtData(protoStmt->mutable_data(), *stmt);
 
   protoStmt->set_id(stmt->getID());
+
+  // VerticalRegion.VerticalInterval
+  if(verticalRegion->iterationSpace_[0]) {
+    auto interval = sir::Interval(verticalRegion->iterationSpace_[0]->first,
+                                  verticalRegion->iterationSpace_[0]->second);
+    setInterval(verticalRegionProto->mutable_i_range(), &interval);
+  }
+  if(verticalRegion->iterationSpace_[1]) {
+    auto interval = sir::Interval(verticalRegion->iterationSpace_[1]->first,
+                                  verticalRegion->iterationSpace_[1]->second);
+    setInterval(verticalRegionProto->mutable_j_range(), &interval);
+  }
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
@@ -954,6 +967,16 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType, stmtProto.data()),
                                                          verticalRegion, loc);
     stmt->setID(stmtProto.id());
+    if(stmtProto.vertical_region().has_i_range()) {
+      auto range = stmtProto.vertical_region().i_range();
+      verticalRegion->iterationSpace_[0]->first = range.lower_offset() + range.lower_level();
+      verticalRegion->iterationSpace_[0]->second = range.upper_offset() + range.upper_level();
+    }
+    if(stmtProto.vertical_region().has_j_range()) {
+      auto range = stmtProto.vertical_region().j_range();
+      verticalRegion->iterationSpace_[1]->first = range.lower_offset() + range.lower_level();
+      verticalRegion->iterationSpace_[1]->second = range.upper_offset() + range.upper_level();
+    }
     return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {

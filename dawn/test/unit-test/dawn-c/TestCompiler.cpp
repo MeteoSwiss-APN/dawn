@@ -99,7 +99,7 @@ TEST(CompilerTest, CompileGlobalIndexStencil) {
                        b.stage(1, {0, 2},
                                b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                          b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
-  std::ofstream of("outfile.cpp");
+  std::ofstream of("global_indexing.cpp");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
