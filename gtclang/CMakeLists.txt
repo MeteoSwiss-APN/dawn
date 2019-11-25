@@ -45,7 +45,6 @@ endif()
 # Other options
 include(CMakeDependentOption)
 option(BUILD_EXAMPLES "Build examples" ON)
-option(BUILD_BUNDLE "Use FetchContent to download and build Gridtools. NOTE: LLVM and Clang libs are NOT built and must be located independently." OFF)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(GTCLANG_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
 
@@ -123,10 +122,9 @@ function(target_add_gtclang_standard_props target)
 endfunction()
 
 # Project dependencies
-# find_package(Python3 COMPONENTS Interpreter)
-find_package(LLVM REQUIRED)
-find_package(Clang REQUIRED)
-find_package(Boost REQUIRED)
+find_package(LLVM REQUIRED) #TODO add minium version 6
+find_package(Clang REQUIRED) #TODO add version
+find_package(Boost REQUIRED) #TODO only needed for compiling generated tests, i.e. move to tests
 
 include(FetchContent)
 
@@ -145,9 +143,8 @@ if(NOT DAWN_GTCLANG_MULTIPROJECT)
   find_package(Dawn REQUIRED)
 endif()
 
-if(NOT BUILD_BUNDLE)
-  find_package(GridTools REQUIRED)
-else()
+find_package(GridTools 1.0.3)
+if(NOT GridTools_FOUND)
   # GridTools uses BUILD_TESTING, cache it and reset after
   set(build_testing ${BUILD_TESTING})
   set(BUILD_TESTING OFF)

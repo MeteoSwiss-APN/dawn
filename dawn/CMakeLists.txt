@@ -34,7 +34,6 @@ project(Dawn
 
 # Other options
 option(BUILD_EXAMPLES "Build examples" ON)
-option(BUILD_BUNDLE "Use FetchContent to download dependencies [Protobuf]." OFF)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
 set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
@@ -117,9 +116,9 @@ include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 # Protobuf
-if(NOT BUILD_BUNDLE)
-  find_package(Protobuf 3.4.0 REQUIRED)
-else()
+find_package(Protobuf 3.4.0)
+if(NOT Protobuf_FOUND)
+  message(STATUS " Fetching Protobuf...")
   # Configuration options for Protobuf
   set(protobuf_BUILD_EXAMPLES OFF)
   set(protobuf_BUILD_TESTS OFF)

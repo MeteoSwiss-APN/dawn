@@ -2,17 +2,13 @@ set(@PROJECT_NAME@_VERSION @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@)
 
 @PACKAGE_INIT@
 
-if(@BUILD_BUNDLE@)
-  # The FindProtobuf.cmake is terrible at finding protobuf, so help it out
-  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-config.cmake)
-  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-module.cmake)
-  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-options.cmake)
-  include(@CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf/protobuf-targets.cmake)
-  set(Protobuf_INCLUDE_DIR @CMAKE_INSTALL_FULL_INCLUDEDIR@)
-endif()
+message(STATUS "Found Dawn ${@PROJECT_NAME@_VERSION} at ${CMAKE_CURRENT_LIST_FILE}" )
 
 include(CMakeFindDependencyMacro)
-find_dependency(Protobuf 3.4.0 REQUIRED)
+find_dependency(Protobuf 3.4.0
+  REQUIRED
+  HINTS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was build with dawn
+  )
 
 if(NOT TARGET Dawn::Dawn)
   include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
