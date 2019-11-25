@@ -58,9 +58,9 @@ public:
   ///   u = tmp;
   /// @endcode
   ///
-  /// Due to our parllel model, we would have a race condition in `u`. Splitting the the two
-  /// statements into two different stages is not sufficient as there is no buffering of the
-  /// boundary  extents. The solution is thus to introduce a @b new field i.e double buffer the
+  /// Due to our parallel model, we would have a race condition in `u`. Splitting the the two
+  /// statements into different stages is insufficient, as there is no buffering of the
+  /// boundary extents. The solution is to introduce a @b new field i.e double buffer the
   /// field `u`.
   ///
   /// @code
@@ -70,7 +70,7 @@ public:
   ///
   /// This detects such patterns and, if applicable, fixes them. Note that not all race conditions
   /// can be resolved e.g race conditions inside stencil functions of block statements are currently
-  /// not resolved and will procude a diagnostic message.
+  /// not resolved and will produce a diagnostic message.
   ///
   /// @param graph      Dependency graph to analyze
   /// @param stencil    Current stencil
