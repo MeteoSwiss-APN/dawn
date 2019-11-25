@@ -82,15 +82,10 @@ endmacro()
 
 if (LLVM_FOUND)
   get_llvm_variable_as_list(--includedir LLVM_INCLUDE_DIRS)
-
   get_llvm_variable_as_list(--libdir LLVM_LIBRARY_DIRS)
-
-  get_llvm_variable_as_list(--cppflags LLVM_CPPFLAGS)
-
+  get_llvm_variable_as_list(--cxxflags LLVM_CXXFLAGS)
   get_llvm_variable_as_list(--libfiles LLVM_LIBS)
-
   get_llvm_variable_as_list(--system-libs LLVM_SYSTEM_LIBS)
-
   get_llvm_variable_as_list(--src-root llvm_source_root)
 endif()
 
@@ -100,15 +95,31 @@ elseif(_LLVM_ERROR_MESSAGE)
   message(STATUS "Could not find LLVM: ${_LLVM_ERROR_MESSAGE}")
 endif()
 
-if (LLVM_FOUND)
-  message(STATUS "LLVM version: ${LLVM_VERSION} (using ${LLVM_CONFIG_EXECUTABLE})")
-endif()
+set(FILTERED_LLVM_CXXFLAGS)
+foreach(flag ${LLVM_CXXFLAGS})
+  # Filter definitions
+  if(${flag} MATCHES "^-D.*$" AND NOT(${flag} STREQUAL "-DNDEBUG"))
+    list(APPEND FILTERED_LLVM_CXXFLAGS ${flag})
+    continue()
+  endif()
+
+  # Filter includes
+  if(${flag} MATCHES "^-I.*$")
+    list(APPEND FILTERED_LLVM_CXXFLAGS ${flag})
+    continue()
+  endif()
+
+  # Filter -f* options (we want exceptions tough!)
+  if(${flag} MATCHES "^-f.*$" AND NOT(${flag} STREQUAL "-fno-exceptions"))
+    list(APPEND FILTERED_LLVM_CXXFLAGS ${flag})
+  endif()
+endforeach()
 
 add_library(LLVM INTERFACE IMPORTED GLOBAL)
 add_library(LLVM::LLVM ALIAS LLVM)
 target_include_directories(LLVM INTERFACE ${LLVM_INCLUDE_DIRS})
 target_link_libraries(LLVM INTERFACE ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS})
-target_compile_options(LLVM INTERFACE ${LLVM_CPPFLAGS})
+target_compile_options(LLVM INTERFACE ${FILTERED_LLVM_CXXFLAGS})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LLVM

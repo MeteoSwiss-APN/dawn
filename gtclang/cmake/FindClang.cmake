@@ -54,39 +54,40 @@ if(LLVM_FOUND)
     )
   endif()
 
+  # TODO test this set with all supported LLVM versions
+  # 6: done
+  # 7: done
+  # 8: done
+  # 9
+  # 10 (master):
   set(clang_libnames
+    clangFrontend
     clangARCMigrate
-    clangAST
     clangASTMatchers
     clangAnalysis
-    clangBasic
     clangCodeGen
-    clangCrossTU
-    clangDependencyScanning
-    clangDirectoryWatcher
     clangDriver
-    clangDynamicASTMatchers
     clangEdit
     clangFormat
-    clangFrontend
     clangFrontendTool
     clangIndex
-    clangLex
     clangParse
     clangRewrite
     clangRewriteFrontend
     clangSema
+    clangAnalysis
     clangSerialization
     clangStaticAnalyzerCheckers
     clangStaticAnalyzerCore
-    clangStaticAnalyzerFrontend
     clangTooling
-    clangToolingASTDiff
     clangToolingCore
-    clangToolingInclusions
-    clangToolingRefactoring
-    clangToolingSyntax
+    clangAST
+    clangLex
+    clangBasic
   )
+  if(${LLVM_VERSION} VERSION_GREATER_EQUAL 7.0.0)
+    list(APPEND clang_libnames clangToolingInclusions)
+  endif()
 
   add_library(Clang INTERFACE IMPORTED GLOBAL)
   add_library(Clang::Clang ALIAS Clang)
@@ -105,8 +106,6 @@ if(LLVM_FOUND)
       message(FATAL_ERROR "Could not find ${_lib} library: Try setting CLANG_LIBRARY_DIRS or LLVM_ROOT")
     endif()
   endforeach()
-
-  message(STATUS "Clang version: ${CLANG_VERSION}")
 else()
   message(FATAL_ERROR "Could NOT find Clang")
 endif()

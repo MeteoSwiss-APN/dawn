@@ -122,8 +122,7 @@ function(target_add_gtclang_standard_props target)
 endfunction()
 
 # Project dependencies
-find_package(LLVM REQUIRED) #TODO add minium version 6
-find_package(Clang REQUIRED) #TODO add version
+find_package(Clang 6.0.0 REQUIRED)
 find_package(Boost REQUIRED) #TODO only needed for compiling generated tests, i.e. move to tests
 
 include(FetchContent)
