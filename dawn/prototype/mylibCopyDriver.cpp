@@ -1,6 +1,5 @@
 #include "mylib_interface.hpp"
 #include <fstream>
-#include <gridtools/clang_dsl.hpp>
 
 #include "generated_copyEdgeToCell.hpp"
 

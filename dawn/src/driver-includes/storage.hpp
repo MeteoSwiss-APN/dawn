@@ -78,10 +78,10 @@
 #include <gridtools/storage/storage_facility.hpp>
 #endif
 
-#include "gridtools/clang/storage_runtime.hpp"
+#include "storage_runtime.hpp"
 
 #ifdef GRIDTOOLS_CLANG_CUDA
-#include "gridtools/clang/timer_cuda.hpp"
+#include "timer_cuda.hpp"
 #endif
 
 #endif
