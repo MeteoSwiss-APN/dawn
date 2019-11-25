@@ -24,6 +24,8 @@
 #include <memory>
 using namespace dawn::util;
 
+#include "dawn/SIR/SIR.h"
+
 static DawnDiagnosticsKind getDawnDiagnosticsKind(dawn::DiagnosticsKind diag) {
   switch(diag) {
   case dawn::DiagnosticsKind::Note:
