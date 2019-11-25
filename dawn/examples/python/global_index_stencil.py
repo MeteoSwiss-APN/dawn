@@ -130,11 +130,8 @@ backend = dawn.dawnOptionsEntryCreateString("c++-naive".encode("utf-8"))
 dawn.dawnOptionsSet.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
 dawn.dawnOptionsSet(options, "Backend".encode("utf-8"), backend)
 
-dawn.dawnOptionsSet.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
-dawn.dawnOptionsSet(options, "Backend".encode("utf-8"), backend)
-
-one = dawn.dawnOptionsEntryCreateInteger(1)
-dawn.dawnOptionsSet(options, "DumpStencilInstantiation".encode("utf-8"), one)
+none = dawn.dawnOptionsEntryCreateString("none".encode("utf-8"))
+dawn.dawnOptionsSet(options, "ReorderStrategy".encode("utf-8"), none)
 
 # dawn.dawnOptionsSet(options, "WriteSIR".encode("utf-8"), one)
 # dawn.dawnOptionsSet(options, "SIRFormat".encode("utf-8"), backend)
