@@ -48,6 +48,18 @@ endif()
 include(CTest)
 include(GNUInstallDirs)
 
+# TODO move back to a find_package
+if(NOT DEFINED CCACHE_EXECUTABLE)
+  find_program(CCACHE_EXECUTABLE
+    NAMES ccache
+    DOC "Path to ccache executable"
+  )
+  mark_as_advanced(CCACHE_EXECUTABLE)
+endif()
+if(CCACHE_EXECUTABLE)
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+endif()
+
 # Path for Find*.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -94,9 +106,9 @@ add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LI
 # Target properties
 set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
 
-# Needed because we use object libraries
 if (BUILD_SHARED_LIBS)
-  list(APPEND DAWN_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  # Needed because we use object libraries, set globally to propagate to dependencies (e.g. Protobuf)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # Add cxx standard, include directories, and properties
@@ -121,6 +133,7 @@ if(NOT USE_BUNDLED_PROTOBUF)
   find_package(Protobuf 3.4.0)
 endif()
 if(NOT Protobuf_FOUND)
+  # TODO move to separate file
   message(STATUS " Fetching Protobuf...")
   # Configuration options for Protobuf
   set(protobuf_BUILD_EXAMPLES OFF)

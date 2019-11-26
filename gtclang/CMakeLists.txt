@@ -48,6 +48,18 @@ endif()
 include(CTest)
 include(GNUInstallDirs)
 
+# TODO probably move back to a find_package
+if(NOT DEFINED CCACHE_EXECUTABLE)
+  find_program(CCACHE_EXECUTABLE
+    NAMES ccache
+    DOC "Path to ccache executable"
+  )
+  mark_as_advanced(CCACHE_EXECUTABLE)
+endif()
+if(CCACHE_EXECUTABLE)
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+endif()
+
 # Path for Find*.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -70,6 +82,7 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
 endif()
 
+# TODO move to file
 # CXX flags
 include(CheckCXXCompilerFlag)
 function(add_cxx_compiler_flag_if_supported flag var)
@@ -93,9 +106,9 @@ add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" GTCLANG
 # Target properties
 set(GTCLANG_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
 
-# Needed because we use object libraries
 if (BUILD_SHARED_LIBS)
-  list(APPEND GTCLANG_TARGET_PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  # Needed because we use object libraries
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # Add cxx standard, include directories, and properties
@@ -167,70 +180,3 @@ if(${PROJECT_NAME}_TESTING)
 
   add_subdirectory(test)
 endif()
-
-# if(GTCLANG_DOCUMENTATION)
-#   add_subdirectory(docs)
-# endif()
-# find_package(clang)
-
-# # Include the packages (and set the correct, libraries, includes etc.)
-# foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads)
-#   include("Add${package}")
-#   yoda_create_package_string(${package} info)
-#   list(APPEND package_info ${info})
-
-#   string(TOUPPER ${package} PACKAGE)
-#   if(${PACKAGE}_FOUND)
-#     list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
-#     list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
-#     list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
-#   endif()
-# endforeach()
-
-# if(GTCLANG_BUILD_GT_CPU_EXAMPLES OR GTCLANG_BUILD_GT_GPU_EXAMPLES OR GTCLANG_BUILD_CUDA_EXAMPLES)
-#   include("AddGridTools")
-#   if(GridTools_FOUND)
-#     yoda_create_package_string(GridTools info)
-#     list(APPEND package_info ${info})
-
-#     string(TOUPPER GridTools PACKAGE)
-#     list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
-#     list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
-#     list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
-#   endif()
-# endif()
-
-# include_directories(SYSTEM ${GTCLANG_EXTERNAL_INCLUDE_DIRS})
-# add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
-
-# # Output summary of the packages
-# yoda_report_result("Package summary" ${package_info})
-
-# # Support of RPATH-exports of dawn
-# if(NOT(DEFINED DAWN_RPATH_DIR))
-#    message(FATAL_ERROR "DAWN_RPATH_DIR is not exported by DAWN")
-# endif()
-# yoda_enable_full_rpath("${DAWN_RPATH_DIR}")
-
-# # Add clang-format target
-# set(format_directories
-#   "${CMAKE_SOURCE_DIR}/src"
-#   "${CMAKE_SOURCE_DIR}/test/unit-test"
-# )
-
-# yoda_add_target_clang_format(DIRECTORIES ${format_directories} EXTENSION ".h;.cpp")
-
-# # Build gtclang
-# include_directories(${CMAKE_SOURCE_DIR}/src)
-# include_directories(${CMAKE_BINARY_DIR}/src)
-# include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
-
-
-# gtclang_gen_install_config()
-
-# # Install headers
-# install(
-#   DIRECTORY src/
-#   DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR}
-#   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
-# )
