@@ -973,7 +973,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);
 
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
-  ppDefines.push_back("using namespace dawn::gridtools;");
+  ppDefines.push_back("using namespace gridtools::dawn;");
 
   generateBCHeaders(ppDefines);
 

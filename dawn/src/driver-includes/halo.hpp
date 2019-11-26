@@ -14,9 +14,8 @@
 
 #pragma once
 
-namespace dawn {
-
 namespace gridtools {
+namespace dawn {
 
 /**
  * @brief Halo extend (passed to gtclang by "-max-halo")
@@ -29,5 +28,5 @@ struct halo {
   static constexpr int value = 3;
 #endif
 };
-} // namespace gridtools
 } // namespace dawn
+} // namespace gridtools

@@ -19,8 +19,8 @@
 
 #include "timer.hpp"
 
-namespace dawn {
 namespace gridtools {
+namespace dawn {
 
 /**
  * @class timer_cuda
@@ -72,5 +72,5 @@ public:
     return result * 0.001; // convert ms to s
   }
 };
-} // namespace gridtools
 } // namespace dawn
+} // namespace gridtools

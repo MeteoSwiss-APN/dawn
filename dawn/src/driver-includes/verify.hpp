@@ -20,9 +20,8 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace dawn {
-
 namespace gridtools {
+namespace dawn {
 
 class verifier {
 public:
@@ -331,5 +330,5 @@ private:
   domain m_domain;
   double m_precision;
 };
-} // namespace gridtools
 } // namespace dawn
+} // namespace gridtools

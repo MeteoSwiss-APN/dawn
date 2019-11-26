@@ -20,9 +20,8 @@
 #include <iostream>
 #endif
 
-namespace dawn {
-
 namespace gridtools {
+namespace dawn {
 
 #ifdef GRIDTOOLS_CLANG_GENERATED
 struct cache_flusher {
@@ -97,5 +96,5 @@ struct benchmarker {
 };
 
 #endif
-} // namespace gridtools
 } // namespace dawn
+} // namespace gridtools
