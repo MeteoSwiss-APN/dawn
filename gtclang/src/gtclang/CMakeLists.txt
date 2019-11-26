@@ -52,8 +52,5 @@ add_executable(gtclang Driver/gtclang.cpp)
 set_target_properties(gtclang PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 target_link_libraries(gtclang GTClang)
-install(
-  TARGETS gtclang
-  EXPORT ${PROJECT_NAME}Targets
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+
+#TODO install the executable and the headers needed for compiling generated code

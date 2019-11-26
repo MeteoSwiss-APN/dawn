@@ -60,6 +60,29 @@ if(CCACHE_EXECUTABLE)
   set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
 endif()
 
+# TODO move to file
+# Git version string
+if(NOT DEFINED GIT_EXECUTABLE)
+  find_program(GIT_EXECUTABLE
+    NAMES git
+    DOC "Path to git executable"
+  )
+  mark_as_advanced(GIT_EXECUTABLE)
+endif()
+if(GIT_EXECUTABLE)
+  execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE git_hash_short OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_short}")
+  set(DAWN_GIT_HASH ${git_hash_short} CACHE INTERNAL "git hash (short) of current head")
+endif()
+
+set(compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+set(DAWN_FULL_VERSION
+    "${Dawn_VERSION}-${DAWN_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${compiler}"
+    CACHE STRING "Full version string of dawn" FORCE)
+#endTODO move to FILE
+
 # Path for Find*.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

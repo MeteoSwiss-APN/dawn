@@ -1,15 +1,15 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _       _                   
-##                        | |     | |                  
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                         _       _
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -17,10 +17,7 @@
 set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/Config.h.cmake")
 set(config_out "${CMAKE_CURRENT_BINARY_DIR}/Config.h")
 
-# This two-step hack is necessary because there are both variables and generator
-# expressions necessary to generate config.py
-configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
-file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
+configure_file(${config_in} ${config_out})
 
 add_library(GTClangSupport
   ${CMAKE_CURRENT_BINARY_DIR}/Config.h

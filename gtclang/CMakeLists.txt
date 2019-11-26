@@ -48,7 +48,7 @@ endif()
 include(CTest)
 include(GNUInstallDirs)
 
-# TODO probably move back to a find_package
+# TODO move back to a find_package
 if(NOT DEFINED CCACHE_EXECUTABLE)
   find_program(CCACHE_EXECUTABLE
     NAMES ccache
@@ -57,8 +57,31 @@ if(NOT DEFINED CCACHE_EXECUTABLE)
   mark_as_advanced(CCACHE_EXECUTABLE)
 endif()
 if(CCACHE_EXECUTABLE)
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
 endif()
+
+# TODO move to file
+# Git version string
+if(NOT DEFINED GIT_EXECUTABLE)
+  find_program(GIT_EXECUTABLE
+    NAMES git
+    DOC "Path to git executable"
+  )
+  mark_as_advanced(GIT_EXECUTABLE)
+endif()
+if(GIT_EXECUTABLE)
+  execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE git_hash_short OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+if(NOT DEFINED GTCLANG_GIT_HASH OR NOT "${GTCLANG_GIT_HASH}" STREQUAL "${git_hash_short}")
+  set(GTCLANG_GIT_HASH ${git_hash_short} CACHE INTERNAL "git hash (short) of current head")
+endif()
+
+set(compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+set(GTCLANG_FULL_VERSION
+    "${GTClang_VERSION}-${GTCLANG_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${compiler}"
+    CACHE STRING "Full version string of gtclang" FORCE)
+#endTODO move to FILE
 
 # Path for Find*.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
