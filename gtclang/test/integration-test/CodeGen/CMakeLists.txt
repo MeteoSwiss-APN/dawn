@@ -86,9 +86,13 @@ function(compile_target_cuda)
   add_dependencies(${executable}
     CodeGen_${test}_${backend}_codegen CodeGen_${test}_c++-naive_codegen)
 
+  target_compile_options(${executable} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-arch=${CUDA_ARCH}>)
   if(${backend} STREQUAL gt)
     target_compile_definitions(${executable} PRIVATE -DBACKEND_CUDA)
     target_compile_definitions(${executable} PRIVATE -DGT_ENABLE_METERS)
+  endif()
+  if(${backend} STREQUAL cuda)
+    target_compile_definitions(${executable} PRIVATE -DGRIDTOOLS_CLANG_CUDA)
   endif()
 
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
@@ -130,13 +134,14 @@ function(add_codegen_test)
     compile_target(TEST ${ARG_TEST} BACKEND gt)
   endif()
 
-  if(GTCLANG_BUILD_TESTING_GT_CUDA)
-    compile_target_cuda(TEST ${ARG_TEST} BACKEND gt)
-  endif()
-
-  # if(GTCLANG_BUILD_TESTING_PLAIN_CUDA)
-  #   compile_target_cuda(TEST ${ARG_TEST} BACKEND cuda)
+  # TODO enable GT backend
+  # if(GTCLANG_BUILD_TESTING_GT_CUDA)
+  #   compile_target_cuda(TEST ${ARG_TEST} BACKEND gt)
   # endif()
+
+  if(GTCLANG_BUILD_TESTING_PLAIN_CUDA)
+    compile_target_cuda(TEST ${ARG_TEST} BACKEND cuda)
+  endif()
 endfunction()
 
 set(CMAKE_CUDA_STANDARD 14)
