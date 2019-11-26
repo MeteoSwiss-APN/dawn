@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -35,30 +36,47 @@ namespace codegen {
 namespace cxxnaive {
 
 namespace {
-std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const std::string& lower,
-                         const std::string& upper, const std::string& comparison,
-                         const std::string& increment) {
-  return "for(int " + dim + " = " + lower + "+" + std::to_string(iExtent) + "; " + dim + " " +
-         comparison + " " + upper + "+" + std::to_string(jExtent) + "; " + increment + dim + ")";
+std::string makeLoopImpl(int lowerExtent, int upperExtent, const std::string& dim,
+                         const std::string& lower, const std::string& upper,
+                         const std::string& comparison, const std::string& increment) {
+  return "for(int " + dim + " = " + lower + "+" + std::to_string(lowerExtent) + "; " + dim + " " +
+         comparison + " " + upper + "+" + std::to_string(upperExtent) + "; " + increment + dim +
+         ")";
 }
 
-std::string makeIJLoop(int iExtent, int jExtent, const std::string dom, const std::string& dim) {
-  return makeLoopImpl(iExtent, jExtent, dim, dom + "." + dim + "minus()",
-                      dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
+std::string makeIJLoop(int lowerExtent, int upperExtent, const std::string dom,
+                       const std::string& dim) {
+  return makeLoopImpl(lowerExtent, upperExtent, dim, dim + "Min", dim + "Max", " <= ", "++");
 }
 
-std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
+std::string makeIntervalBound(std::string dim, iir::Interval const& interval,
                               iir::Interval::Bound bound) {
-  return interval.levelIsEnd(bound)
-             ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
-                   ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
-             : std::to_string(interval.bound(bound));
+  if(interval.levelIsEnd(bound)) {
+    return dim + "Max + " + std::to_string(interval.offset(bound));
+  }
+  auto notEnd = interval.level(bound);
+  if(notEnd == 0) {
+    return dim + "Min + " + std::to_string(interval.offset(bound));
+  }
+  return dim + "Min + " + std::to_string(notEnd + interval.offset(bound));
+}
+std::string makeIntervalBoundExplicit(std::string dim, iir::Interval const& interval,
+                                      iir::Interval::Bound bound, std::string dom) {
+  if(interval.levelIsEnd(bound)) {
+    return dom + "." + "size() - " + dom + "." + dim + "plus() -1 + " +
+           std::to_string(interval.offset(bound));
+  }
+  auto notEnd = interval.level(bound);
+  if(notEnd == 0) {
+    return dom + "." + dim + "minus() + " + std::to_string(interval.offset(bound));
+  }
+  return dom + "." + dim + "minus() + " + std::to_string(notEnd + interval.offset(bound));
 }
 
 std::string makeKLoop(const std::string dom, bool isBackward, iir::Interval const& interval) {
 
-  const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
-  const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
+  const std::string lower = makeIntervalBound("k", interval, iir::Interval::Bound::lower);
+  const std::string upper = makeIntervalBound("k", interval, iir::Interval::Bound::upper);
 
   return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
                     : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
@@ -130,7 +148,10 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->accept(stencilDescCGVisitor);
-    runMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
+    auto str = stencilDescCGVisitor.getCodeAndResetStream();
+    if(str.back() == ';')
+      str.pop_back();
+    runMethod.addStatement(str);
   }
 
   runMethod.commit();
@@ -181,6 +202,12 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
+  StencilWrapperConstructor.startBody();
+  StencilWrapperConstructor.addStatement("assert(dom.isize() >= dom.iminus() + dom.iplus())");
+  StencilWrapperConstructor.addStatement("assert(dom.jsize() >= dom.jminus() + dom.jplus())");
+  StencilWrapperConstructor.addStatement("assert(dom.ksize() >= dom.kminus() + dom.kplus())");
+  StencilWrapperConstructor.addStatement("assert(dom.ksize() >= 1)");
+  StencilWrapperConstructor.commit();
 
   StencilWrapperConstructor.commit();
 }
@@ -264,19 +291,13 @@ void CXXNaiveCodeGen::generateStencilClasses(
     bool iterationSpaceSet = false;
     for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
       if(stage->getIterationSpace()[0].has_value()) {
-        stencilClass.addMember(
-            "std::array<int, 2>",
-            "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices{" +
-                std::to_string(stage->getIterationSpace()[0].value().minus()) + " , " +
-                std::to_string(stage->getIterationSpace()[0].value().plus()) + "}");
+        stencilClass.addMember("std::array<int, 2>",
+                               "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
         iterationSpaceSet = true;
       }
       if(stage->getIterationSpace()[1].has_value()) {
-        stencilClass.addMember(
-            "std::array<int, 2>",
-            "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices{" +
-                std::to_string(stage->getIterationSpace()[1].value().minus()) + " , " +
-                std::to_string(stage->getIterationSpace()[1].value().plus()) + "}");
+        stencilClass.addMember("std::array<int, 2>",
+                               "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
         iterationSpaceSet = true;
       }
     }
@@ -333,11 +354,35 @@ void CXXNaiveCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("m_globals(globals_)");
     }
+    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+      if(stage->getIterationSpace()[0].has_value()) {
+        stencilClassCtr.addInit(
+            "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices({" +
+            makeIntervalBoundExplicit("i", stage->getIterationSpace()[0].value(),
+                                      iir::Interval::Bound::lower, "dom_") +
+            " , " +
+            makeIntervalBoundExplicit("i", stage->getIterationSpace()[0].value(),
+                                      iir::Interval::Bound::upper, "dom_") +
+            "})");
+      }
+      if(stage->getIterationSpace()[1].has_value()) {
+        stencilClassCtr.addInit(
+            "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices({" +
+            makeIntervalBoundExplicit("j", stage->getIterationSpace()[1].value(),
+                                      iir::Interval::Bound::lower, "dom_") +
+            " , " +
+            makeIntervalBoundExplicit("j", stage->getIterationSpace()[1].value(),
+                                      iir::Interval::Bound::upper, "dom_") +
+            "})");
+      }
+    }
+
     if(iterationSpaceSet) {
       stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, m_dom, xcols, ycols))");
     }
 
     addTmpStorageInit(stencilClassCtr, stencil, tempFields);
+
     stencilClassCtr.commit();
 
     // virtual dtor
@@ -354,6 +399,13 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
 
     stencilRunMethod.startBody();
+    // Compute the loop bounds for readability
+    stencilRunMethod.addStatement("int iMin = m_dom.iminus()");
+    stencilRunMethod.addStatement("int iMax = m_dom.isize() - m_dom.iplus() - 1");
+    stencilRunMethod.addStatement("int jMin = m_dom.jminus()");
+    stencilRunMethod.addStatement("int jMax = m_dom.jsize() - m_dom.jplus() - 1");
+    stencilRunMethod.addStatement("int kMin = m_dom.kminus()");
+    stencilRunMethod.addStatement("int kMax = m_dom.ksize() - m_dom.kplus() - 1");
 
     for(const auto& fieldPair : nonTempFields) {
       stencilRunMethod.addStatement(fieldPair.second.Name + "_" + ".sync()");
@@ -428,7 +480,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                                std::to_string(stage.getStageID()) +
                                                "GlobalIIndices[0], stage" +
                                                std::to_string(stage.getStageID()) +
-                                               "GlobalIIndices[1], GlobalOffsets[0] + i)";
+                                               "GlobalIIndices[1], globalOffsets[0] + i)";
                               }
                               if(stage.getIterationSpace()[1]) {
                                 if(stage.getIterationSpace()[0]) {

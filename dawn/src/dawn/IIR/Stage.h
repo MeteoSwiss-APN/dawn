@@ -55,7 +55,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
   /// is assumed. This is built on top of the DerivdeInfo::extents class and for a full compute
   /// domain, those have to be added together.
-  std::array<std::optional<Extent>, 2> iterationSpace_;
+  std::array<std::optional<Interval>, 2> iterationSpace_;
 
   struct DerivedInfo {
 
@@ -231,10 +231,10 @@ public:
   ast::Expr::LocationType getLocationType() const;
 
   /// @brief setter for the horizontal iteration space
-  void setIterationSpace(iir::Extent extent, int direction);
+  void setIterationSpace(iir::Interval interval, int direction);
 
   /// @brief returns the horizontal iteration space
-  const std::array<std::optional<iir::Extent>, 2>& getIterationSpace() const;
+  const std::array<std::optional<Interval>, 2>& getIterationSpace() const;
 };
 
 } // namespace iir

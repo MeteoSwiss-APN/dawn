@@ -60,18 +60,8 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     return vertical_region_stmt
 
 
-def create_boundary_correction_region(i_min=0, i_max=0, j_min=0, j_max=0) -> VerticalRegionDeclStmt:
+def create_boundary_correction_region(i_interval=None, j_interval=None) -> VerticalRegionDeclStmt:
     interval = make_interval(Interval.Start, Interval.End, 0, 0)
-    if i_min == 0 and i_max == 0:
-        global_i_interval = None
-    else:
-        global_i_interval = make_interval(i_min, i_max, 0, 0)
-
-    if j_min == 0 and j_max == 0:
-        global_j_interval = None
-    else:
-        global_j_interval = make_interval(j_min, j_max, 0, 0)
-
     boundary_body = make_ast(
         [
             make_assignment_stmt(
@@ -80,7 +70,7 @@ def create_boundary_correction_region(i_min=0, i_max=0, j_min=0, j_max=0) -> Ver
         ]
     )
     vertical_region_stmt = make_vertical_region_decl_stmt(
-        boundary_body, interval, VerticalRegion.Forward, IRange=global_i_interval, JRange=global_j_interval
+        boundary_body, interval, VerticalRegion.Forward, IRange=i_interval, JRange=j_interval
     )
     return vertical_region_stmt
 
@@ -92,8 +82,8 @@ hir = make_sir(
             "global_indexing",
             make_ast(
                 [
-                    create_boundary_correction_region(i_max=3),
-                    create_boundary_correction_region(j_max=2),
+                    create_boundary_correction_region(i_interval=make_interval(0, 0, 0, 1)),
+                    create_boundary_correction_region(j_interval=make_interval(0, 0, 0, 1)),
                     create_vertical_region_stmt(),
                 ]
             ),
@@ -130,8 +120,8 @@ backend = dawn.dawnOptionsEntryCreateString("c++-naive".encode("utf-8"))
 dawn.dawnOptionsSet.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
 dawn.dawnOptionsSet(options, "Backend".encode("utf-8"), backend)
 
-none = dawn.dawnOptionsEntryCreateString("none".encode("utf-8"))
-dawn.dawnOptionsSet(options, "ReorderStrategy".encode("utf-8"), none)
+one = dawn.dawnOptionsEntryCreateInteger(1)
+dawn.dawnOptionsSet(options, "DumpStencilInstantiation".encode("utf-8"), one)
 
 # dawn.dawnOptionsSet(options, "WriteSIR".encode("utf-8"), one)
 # dawn.dawnOptionsSet(options, "SIRFormat".encode("utf-8"), backend)

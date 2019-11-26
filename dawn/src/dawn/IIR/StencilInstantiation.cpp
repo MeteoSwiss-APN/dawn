@@ -252,12 +252,10 @@ void StencilInstantiation::dump() const {
         auto iterSpace = stage->getIterationSpace();
         std::string globidx;
         if(iterSpace[0]) {
-          globidx += "I: [" + std::to_string(iterSpace[0]->minus()) + " , " +
-                     std::to_string(iterSpace[0]->plus()) + "] ";
+          globidx += "I: " + iterSpace[0]->toString() + " ";
         }
         if(iterSpace[1]) {
-          globidx += "J: [" + std::to_string(iterSpace[1]->minus()) + " , " +
-                     std::to_string(iterSpace[1]->plus()) + "] ";
+          globidx += "J: " + iterSpace[1]->toString() + " ";
         }
 
         PrintDescLine<3> kline(Twine("Stage_") + Twine(k) + Twine(" ") + Twine(globidx));
