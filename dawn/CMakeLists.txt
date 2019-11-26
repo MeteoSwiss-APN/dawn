@@ -117,7 +117,9 @@ include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 # Protobuf
-find_package(Protobuf 3.4.0)
+if(NOT USE_BUNDLED_PROTOBUF)
+  find_package(Protobuf 3.4.0)
+endif()
 if(NOT Protobuf_FOUND)
   message(STATUS " Fetching Protobuf...")
   # Configuration options for Protobuf
@@ -138,6 +140,9 @@ if(NOT Protobuf_FOUND)
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
   endif()
+
+  set(USE_BUNDLED_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
+  mark_as_advanced(USE_BUNDLED_PROTOBUF)
 
   # Protobuf in build dir does not add standard headers
   set(PROTOBUF_ADD_ARGS -I${protobuf_SOURCE_DIR}/src)
