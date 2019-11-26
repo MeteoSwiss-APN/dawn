@@ -160,8 +160,6 @@ set(codegen_tests copy_stencil lap conditional_stencil coriolis_stencil hori_dif
   kparallel_solver asymmetric)
 foreach(_test ${codegen_tests})
   generate_target(DIRECTORY CodeGen TEST ${_test} BACKEND c++-naive)
-  compile_target(DIRECTORY CodeGen TEST ${_test} BACKEND c++-naive)
-
   generate_target(DIRECTORY CodeGen TEST ${_test} BACKEND gt)
   compile_target(DIRECTORY CodeGen TEST ${_test} BACKEND gt)
 endforeach()

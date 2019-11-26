@@ -123,7 +123,6 @@ endfunction()
 
 # Project dependencies
 find_package(Clang 6.0.0 REQUIRED)
-find_package(Boost REQUIRED) #TODO only needed for compiling generated tests, i.e. move to tests
 
 include(FetchContent)
 
@@ -142,7 +141,9 @@ if(NOT DAWN_GTCLANG_MULTIPROJECT)
   find_package(Dawn REQUIRED)
 endif()
 
-find_package(GridTools 1.0.3)
+if(NOT USE_BUNDLED_GRIDTOOLS)
+  find_package(GridTools 1.0.3)
+endif()
 if(NOT GridTools_FOUND)
   # GridTools uses BUILD_TESTING, cache it and reset after
   set(build_testing ${BUILD_TESTING})
@@ -160,6 +161,9 @@ if(NOT GridTools_FOUND)
     FetchContent_Populate(GridTools)
     add_subdirectory(${gridtools_SOURCE_DIR} ${gridtools_BINARY_DIR})
   endif()
+
+  set(USE_BUNDLED_GRIDTOOLS ON CACHE BOOL "Use GridTools from bundle.")
+  mark_as_advanced(USE_BUNDLED_GRIDTOOLS)
 
   # Reset here
   set(BUILD_TESTING ${build_testing})
@@ -188,6 +192,7 @@ add_subdirectory(src)
 # TODO: Make examples!
 
 if(${PROJECT_NAME}_TESTING)
+  find_package(Boost REQUIRED)
   add_subdirectory(test)
 endif()
 
