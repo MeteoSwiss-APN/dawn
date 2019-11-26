@@ -16,7 +16,30 @@
 
 #pragma once
 
-#if __cplusplus < 201103L
-#error This file requires compiler and library support for the ISO C++ 2011 standard. \
-This support must be enabled with the -std=c++11 or -std=gnu++11 compiler options.
-#endif
+#include "gtclang_dsl_defs/dimension.hpp"
+
+namespace gridtools {
+
+namespace clang {
+
+/*
+ * @brief A stencil which can be called as a function from other `stencils`
+ * @ingroup gridtools_clang
+ */
+class stencil_function {
+protected:
+  dimension i;
+  dimension j;
+  dimension k;
+
+private:
+  stencil_function& operator=(stencil_function) = delete;
+
+public:
+  template <typename... T>
+  stencil_function(T&&...);
+
+  operator double() const;
+};
+} // namespace clang
+} // namespace gridtools

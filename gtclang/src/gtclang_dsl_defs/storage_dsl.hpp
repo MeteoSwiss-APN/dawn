@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "gridtools/clang/dimension.hpp"
-#include "gridtools/clang/direction.hpp"
-#include "gridtools/clang/interval.hpp"
-#include "gridtools/clang/offset.hpp"
+#include "gtclang_dsl_defs/dimension.hpp"
+#include "gtclang_dsl_defs/direction.hpp"
+#include "gtclang_dsl_defs/interval.hpp"
+#include "gtclang_dsl_defs/offset.hpp"
 #include <type_traits>
 
 #define STORAGE_CLASS_DEFN(Type)                                                                   \
@@ -169,36 +169,5 @@ struct var : public storage {
 };
 
 #undef STORAGE_CLASS_DEFN
-
-#ifndef GRIDTOOLS_CLANG_META_DATA_T_DEFINED
-struct meta_data {
-  template <typename T>
-  meta_data(T...);
-};
-using meta_data_t = meta_data;
-using meta_data_ijk_t = meta_data;
-using meta_data_ij_t = meta_data;
-using meta_data_j_t = meta_data;
-using meta_data_j_t = meta_data;
-using meta_data_k_t = meta_data;
-using meta_data_scalar_t = meta_data;
-#endif
-
-#ifndef GRIDTOOLS_CLANG_STORAGE_T_DEFINED
-using storage_t = storage;
-using storage_ijk_t = storage_ijk;
-using storage_ij_t = storage_ij;
-using storage_i_t = storage_i;
-using storage_j_t = storage_j;
-using storage_k_t = storage_k;
-using storage_scalar_t = storage;
-#endif
-
-#ifdef GRIDTOOLS_CLANG_GENERATED
-using ::gridtools::make_host_view;
-#else
-template <typename T>
-storage_t make_host_view(T...);
-#endif
 } // namespace clang
 } // namespace gridtools

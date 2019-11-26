@@ -1,5 +1,4 @@
 #include <fstream>
-#include <gridtools/clang_dsl.hpp>
 
 #include "atlas/functionspace/CellColumns.h"
 #include "atlas/functionspace/EdgeColumns.h"

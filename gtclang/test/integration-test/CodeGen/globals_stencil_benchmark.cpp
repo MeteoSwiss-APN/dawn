@@ -26,7 +26,7 @@
 #include "test/integration-test/CodeGen/generated/globals_stencil_c++-naive.cpp"
 
 #include <gtest/gtest.h>
-#include "gridtools/clang/verify.hpp"
+#include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 

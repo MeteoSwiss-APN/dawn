@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 // RUN: %gtclang% %file% -fno-codegen -freport-bc
 // EXPECTED: PASS: PassSetBoundaryCondition: Test01 : No boundary conditions applied
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 

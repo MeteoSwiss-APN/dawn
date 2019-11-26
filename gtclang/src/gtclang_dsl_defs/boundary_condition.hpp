@@ -16,37 +16,20 @@
 
 #pragma once
 
-#include "gridtools/clang/dimension.hpp"
+#include "gtclang_dsl_defs/stencil_function.hpp"
 
 namespace gridtools {
 
 namespace clang {
 
-/**
- * @brief A runnable stencil
+/*
+ * @brief Boundary condition specification
  * @ingroup gridtools_clang
  */
-class stencil {
-protected:
-  dimension i;
-  dimension j;
-  dimension k;
-
+class boundary_condition {
 public:
   template <typename... T>
-  stencil(T&&...);
-
-  /**
-   * @brief Invoke the stencil program by calling the individual stencils
-   *
-   * @param make_steady   Prepare the stencil for execuation first (calls `make_steady`)
-   */
-  void run(bool make_steady = true);
-
-  /**
-   * @brief Prepare the stencil for execuation by copying all fields to the device
-   */
-  void make_steady();
+  boundary_condition(const stencil_function&, T&&...);
 };
 } // namespace clang
 } // namespace gridtools

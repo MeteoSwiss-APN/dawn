@@ -1,7 +1,7 @@
 #define GRIDTOOLS_CLANG_GENERATED 1 // this is important, defines meta_data_t
 
-#include "gridtools/clang/domain.hpp"
-#include "gridtools/clang_dsl.hpp"
+#include "driver-includes/domain.hpp"
+#include "driver-includes/gridtools_includes.hpp"
 
 using namespace gridtools::clang;
 

@@ -14,31 +14,39 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GRIDTOOLS_CLANG_PARAMWRAPPER_HPP
-#define GRIDTOOLS_CLANG_PARAMWRAPPER_HPP
+#pragma once
+
+#include "gtclang_dsl_defs/dimension.hpp"
 
 namespace gridtools {
+
 namespace clang {
 
-template <class DataView>
-struct param_wrapper {
-  using offset_t = std::array<int, DataView::storage_info_t::ndims>;
-  DataView dview_;
-  offset_t offsets_;
+/**
+ * @brief A runnable stencil
+ * @ingroup gridtools_clang
+ */
+class stencil {
+protected:
+  dimension i;
+  dimension j;
+  dimension k;
 
-  param_wrapper(DataView dview, std::array<int, DataView::storage_info_t::ndims> offsets)
-      : dview_(dview), offsets_(offsets) {}
+public:
+  template <typename... T>
+  stencil(T&&...);
 
-  void addOffset(offset_t offsets) { offsets_ = offsets_ + offsets; }
+  /**
+   * @brief Invoke the stencil program by calling the individual stencils
+   *
+   * @param make_steady   Prepare the stencil for execuation first (calls `make_steady`)
+   */
+  void run(bool make_steady = true);
 
-  param_wrapper<DataView> cloneWithOffset(offset_t offset) const {
-    param_wrapper<DataView> res(*this);
-    res.addOffset(offset);
-    return res;
-  }
+  /**
+   * @brief Prepare the stencil for execuation by copying all fields to the device
+   */
+  void make_steady();
 };
-
 } // namespace clang
 } // namespace gridtools
-
-#endif

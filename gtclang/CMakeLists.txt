@@ -102,6 +102,9 @@ foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads
   endif()
 endforeach()
 
+#TODO: REMOVE THIS, it's a workaround to add driver-includes from dawn, otherwise parsing fails.
+set(GTCLANG_DSL_INCLUDES "${GTCLANG_DSL_INCLUDES}" "${DAWN_INCLUDE_DIRS}")
+
 if(GTCLANG_BUILD_GT_CPU_EXAMPLES OR GTCLANG_BUILD_GT_GPU_EXAMPLES OR GTCLANG_BUILD_CUDA_EXAMPLES)
   include("AddGridTools")
   if(GridTools_FOUND)
@@ -160,6 +163,15 @@ gtclang_gen_install_config()
 # Install headers
 install(
   DIRECTORY src/
+  DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR}
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
+)
+find_path(DAWN_INSTALL_PATH
+    NAMES driver-includes
+    HINTS ${DAWN_INCLUDE_DIRS}
+    )
+install(
+  DIRECTORY ${DAWN_INSTALL_PATH}/driver-includes
   DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR}
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )

@@ -17,7 +17,7 @@
 // RUN: %gtclang% %file% -fno-codegen -fmerge-temporaries -freport-pass-temporary-merger
 // EXPECTED: PASS: PassTemporaryMerger: Test: merging: tmp_1, tmp_2, tmp_3, tmp_4, tmp_5
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 
