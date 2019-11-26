@@ -16,8 +16,8 @@
 
 #include <array>
 
+namespace dawn {
 namespace gridtools {
-namespace clang {
 
 template <size_t N>
 std::array<int, N> operator+(std::array<int, N> const& lhs, std::array<int, N> const& rhs) {
@@ -27,5 +27,5 @@ std::array<int, N> operator+(std::array<int, N> const& lhs, std::array<int, N> c
   }
   return res;
 }
-} // namespace clang
 } // namespace gridtools
+} // namespace dawn

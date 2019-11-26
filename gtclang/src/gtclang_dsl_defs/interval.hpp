@@ -18,9 +18,8 @@
 
 #include <initializer_list>
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Defintion of a vertical interval
@@ -142,5 +141,5 @@ struct interval19 {
   template <typename T>
   interval19(T...);
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

@@ -43,7 +43,7 @@
 //#include "test/integration-test/CodeGen/generated/nested_stencil_functions_gridtools.cpp"
 //#include "test/integration-test/CodeGen/generated/nested_stencil_functions_c++-naive.cpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 using namespace dawn;
 
 namespace nsftest {

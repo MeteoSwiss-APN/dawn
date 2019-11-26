@@ -20,9 +20,8 @@
 #include <stdexcept>
 #endif
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 #ifdef GRIDTOOLS_CLANG_GENERATED
 /**
@@ -114,5 +113,5 @@ public:
   static void reset();
 };
 #endif
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

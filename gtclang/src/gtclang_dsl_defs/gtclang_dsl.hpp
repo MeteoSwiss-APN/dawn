@@ -18,16 +18,16 @@
 
 #ifdef GRIDTOOLS_CLANG_DOXYGEN
 /**
- * @namespace gridtools
- * @brief Namespace of the gridtools library
+ * @namespace gtclang
+ * @brief Namespace of gtclang frontend
  */
-namespace gridtools {
+namespace gtclang {
 /**
- * @namespace clang
- * @brief Namespace of the gridtools clang DSL
+ * @namespace dsl
+ * @brief Namespace of the gtclang DSL
  */
-namespace clang {}
-} // namespace gridtools
+namespace dsl {}
+} // namespace gtclang
 
 /**
  * @defgroup gridtools_clang gridtools_clang DSL

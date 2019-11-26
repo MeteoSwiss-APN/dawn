@@ -2,7 +2,7 @@
 #include "atlas_interface.hpp"
 #include <type_traits>
 
-// quick verifiyer class, very close in behaviour to gridtools::clang::verifyer
+// quick verifiyer class, very close in behaviour to dawn::gridtools::verifyer
 class atlasVerifyer {
 private:
   bool use_default_precision_ = false;

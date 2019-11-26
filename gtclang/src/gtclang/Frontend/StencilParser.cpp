@@ -276,7 +276,7 @@ private:
     std::string typeStr = expr->getType().getAsString();
 
     // Type has to be intervalX
-    if(!clang::StringRef(typeStr).startswith("struct gridtools::clang::interval")) {
+    if(!clang::StringRef(typeStr).startswith("struct gtclang::dsl::interval")) {
       parser_->reportDiagnostic(expr->getLocation(),
                                 Diagnostics::DiagKind::err_interval_invalid_type)
           << typeStr;
@@ -848,7 +848,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
 
   std::vector<std::string> fieldNames;
 
-  // Check if arguments are of type `gridtools::clang::storage` and the number of arguments match
+  // Check if arguments are of type `gtclang::dsl::storage` and the number of arguments match
   for(auto* arg : stencilCall->arguments()) {
     if(clang::MemberExpr* member = clang::dyn_cast<clang::MemberExpr>(arg)) {
       std::string type = member->getMemberDecl()->getType().getAsString();

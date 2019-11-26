@@ -222,7 +222,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
 
     for(const auto& field : tempFields) {
-      paramNameToType.emplace(field.second.Name, c_gtc().str() + "storage_t");
+      paramNameToType.emplace(field.second.Name, c_dgt().str() + "storage_t");
     }
   }
 

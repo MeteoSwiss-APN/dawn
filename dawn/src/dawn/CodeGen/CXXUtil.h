@@ -670,7 +670,7 @@ struct Struct : public Structure {
 };
 
 auto c_gt = []() { return Twine("gridtools::"); };
-auto c_gtc = []() { return Twine("gridtools::clang::"); };
+auto c_dgt = []() { return Twine("dawn::gridtools::"); };
 auto c_gt_enum = []() { return Twine("gridtools::enumtype::"); };
 auto c_gt_intent = []() { return Twine("gridtools::intent::"); };
 

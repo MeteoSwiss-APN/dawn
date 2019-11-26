@@ -19,7 +19,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil Test {
   storage field_1, field_2, field_3, field_4, field_5;

@@ -255,10 +255,10 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   //
   // Define allocated memebers if necessary
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
-      stencilWrapperClass.addMember(c_gtc() + "storage_t",
+      stencilWrapperClass.addMember(c_dgt() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }

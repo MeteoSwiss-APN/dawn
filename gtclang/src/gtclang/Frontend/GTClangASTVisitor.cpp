@@ -74,7 +74,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
       for(const CXXBaseSpecifier& base : recordDecl->bases()) {
         StringRef baseTypeName = base.getType().getBaseTypeIdentifier()->getName();
 
-        // Found `gridtools::clang::stencil`
+        // Found `gtclang::dsl::stencil`
         if(baseTypeName == "stencil") {
           auto name = recordDecl->getIdentifier()->getName().str();
 
@@ -84,7 +84,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           stencilParser_.parseStencil(recordDecl, name);
         }
 
-        // Found `gridtools::clang::stencil_function`
+        // Found `gtclang::dsl::stencil_function`
         else if(baseTypeName == "stencil_function") {
           auto name = recordDecl->getIdentifier()->getName().str();
 

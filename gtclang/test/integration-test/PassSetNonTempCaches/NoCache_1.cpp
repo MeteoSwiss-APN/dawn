@@ -18,7 +18,7 @@
 // EXPECTED: PASS: PassSetNonTempCaches: NotCorrectlyPointwise : no fields cached
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 using namespace gridtools;
 
 stencil NotCorrectlyPointwise {

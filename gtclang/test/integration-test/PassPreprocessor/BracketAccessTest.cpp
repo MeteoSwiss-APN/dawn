@@ -18,7 +18,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 using namespace gridtools;
 
 // clang-format off
@@ -42,7 +42,7 @@ stencil Test01 {
 };
 
 stencil Test02 {
-  gridtools::clang::storage foo, bar;
+  gtclang::dsl::storage foo, bar;
 
   void Do() {
     vertical_region(k_start, k_start) 

@@ -322,7 +322,7 @@ private:
 };
 
 const std::array<const char*, 3> FunctionResolver::TypeStr = {
-    {"gridtools::clang::storage", "gridtools::clang::direction", "gridtools::clang::offset"}};
+    {"gtclang::dsl::storage", "gtclang::dsl::direction", "gtclang::dsl::offset"}};
 
 namespace {
 

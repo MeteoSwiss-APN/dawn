@@ -1,10 +1,12 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _
-//                         | |
-//                       __| | __ ___      ___ ___
-//                      / _` |/ _` \ \ /\ / / '_  |
-//                     | (_| | (_| |\ V  V /| | | |
-//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -14,7 +16,6 @@
 
 #pragma once
 
-#include "driver-includes/gridtools_includes.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -22,9 +23,9 @@
 #define GT_FUNCTION
 #endif
 
-namespace gridtools {
+namespace gtclang {
 
-namespace clang {
+namespace dsl {
 
 /**
  * @namespace math
@@ -172,5 +173,5 @@ GT_FUNCTION T log(const T x) {
 
 /** @} */
 } // namespace math
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

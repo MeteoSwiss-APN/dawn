@@ -18,7 +18,7 @@
 // EXPECTED: PASS: PassSetNonTempCaches: Test01 : Cached: field_b : Type: cache_type::ij:local Cached: field_c : Type: cache_type::ij:local
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 using namespace gridtools;
 
 stencil Test01 {

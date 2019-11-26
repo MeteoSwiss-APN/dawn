@@ -18,14 +18,14 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
-globals { // EXPECTED: %line%: struct globals : public gridtools::clang::globals_impl<globals> {
+globals { // EXPECTED: %line%: struct globals : public gtclang::dsl::globals_impl<globals> {
   bool var1;
   double var2 = 5.0;
 };
 
-stencil Test1 { // EXPECTED: %line%: struct Test1 : public gridtools::clang::stencil, public globals { using gridtools::clang::stencil::stencil;
+stencil Test1 { // EXPECTED: %line%: struct Test1 : public gtclang::dsl::stencil, public globals { using gtclang::dsl::stencil::stencil;
   storage field_a0, field_a1;
 
   Do {

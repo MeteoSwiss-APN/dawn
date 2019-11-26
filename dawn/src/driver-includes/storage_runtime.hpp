@@ -25,9 +25,9 @@
 #include <gridtools/stencil_composition/stencil_functions.hpp>
 #include <gridtools/storage/storage_facility.hpp>
 
-namespace gridtools {
+namespace dawn {
 
-namespace clang {
+namespace gridtools {
 
 /**
  * @name Runtime storage environment
@@ -96,5 +96,5 @@ using storage_t = storage_ijk_t;
 #define GT_BACKEND_DECISION_viewmaker(x) make_device_view(x)
 #define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply_gpu
 #endif
-} // namespace clang
 } // namespace gridtools
+} // namespace dawn

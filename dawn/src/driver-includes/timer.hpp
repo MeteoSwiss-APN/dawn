@@ -17,8 +17,8 @@
 #include <string>
 #include <utility>
 
+namespace dawn {
 namespace gridtools {
-namespace clang {
 
 /**
  * @class Timer
@@ -80,5 +80,5 @@ private:
   double m_total_time = 0;
   size_t m_counter = 0;
 };
-} // namespace clang
 } // namespace gridtools
+} // namespace dawn

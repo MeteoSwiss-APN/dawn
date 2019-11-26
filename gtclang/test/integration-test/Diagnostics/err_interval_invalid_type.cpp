@@ -18,13 +18,13 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil Test {
   storage in, out;
 
   Do {
-    vertical_region(i + 1, i + 10) // EXPECTED_ERROR: invalid type 'struct gridtools::clang::dimension' for vertical region declaration
+    vertical_region(i + 1, i + 10) // EXPECTED_ERROR: invalid type 'struct gtclang::dsl::dimension' for vertical region declaration
         in = out;
   }
 };

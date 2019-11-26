@@ -30,8 +30,7 @@ private:
           m_out_field(t) =
               reduceCellToCell(LibTag{}, m_mesh, t, ((-cnt) * m_in_field(t)),
                                [&](auto& lhs, auto const& t) { return lhs += m_in_field(t); });
-          m_out_field(t) =
-              (m_in_field(t) + ((gridtools::clang::float_type)0.100000 * m_out_field(t)));
+          m_out_field(t) = (m_in_field(t) + ((dawn::float_type)0.100000 * m_out_field(t)));
         }
       }
       sync_storages();

@@ -20,7 +20,7 @@
 #include "interface/atlas_interface.hpp"
 #include <type_traits>
 
-// Verifiyer class for atlas' ArrayViews, very close in behaviour to gridtools::clang::verifyer
+// Verifiyer class for atlas' ArrayViews, very close in behaviour to dawn::gridtools::verifyer
 class AtlasVerifyer {
 private:
   bool use_default_precision_ = false;
