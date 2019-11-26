@@ -28,15 +28,6 @@ project(GTClang
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
   LANGUAGES CXX C)
 
-# Optionally enable CUDA for integration tests
-include(CheckLanguage)
-check_language(CUDA)
-if(CMAKE_CUDA_COMPILER)
-  enable_language(CUDA)
-else()
-  message(STATUS "Could NOT find CUDA compiler. Disabling GPU integration tests.")
-endif()
-
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use GTCLANG_BUILD_TESTING to override).
 # - BUILD_SHARED_LIBS<Bool>: Build gtclang shared libraries instead of static. If true, requires dependencies to be built as position independent code
@@ -48,16 +39,13 @@ option(BUILD_EXAMPLES "Build examples" ON)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(GTCLANG_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
 
-cmake_dependent_option(BUILD_CPU_TESTS "Build CPU integration tests" ON "BUILD_TESTING" OFF)
-cmake_dependent_option(BUILD_GPU_TESTS "Build GPU integration tests" ON "BUILD_TESTING;CMAKE_CUDA_COMPILER" OFF)
-
-option(BUILD_CPU_TESTS "Build CPU examples" ON)
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
 if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
+include(CTest)
 include(GNUInstallDirs)
 
 # Path for Find*.cmake files
@@ -123,7 +111,6 @@ endfunction()
 
 # Project dependencies
 find_package(Clang 6.0.0 REQUIRED)
-find_package(Boost REQUIRED) #TODO only needed for compiling generated tests, i.e. move to tests
 
 include(FetchContent)
 
@@ -142,29 +129,6 @@ if(NOT DAWN_GTCLANG_MULTIPROJECT)
   find_package(Dawn REQUIRED)
 endif()
 
-find_package(GridTools 1.0.3)
-if(NOT GridTools_FOUND)
-  # GridTools uses BUILD_TESTING, cache it and reset after
-  set(build_testing ${BUILD_TESTING})
-  set(BUILD_TESTING OFF)
-  set(INSTALL_TOOLS OFF)
-
-  # NOTE: Need CMake fixes to v1.0.3
-  FetchContent_Declare(GridTools
-    GIT_REPOSITORY https://github.com/jdahm/gridtools.git
-    GIT_TAG v1.0.3/fix-cmake-project
-  )
-
-  FetchContent_GetProperties(GridTools)
-  if(NOT GridTools_POPULATED)
-    FetchContent_Populate(GridTools)
-    add_subdirectory(${gridtools_SOURCE_DIR} ${gridtools_BINARY_DIR})
-  endif()
-
-  # Reset here
-  set(BUILD_TESTING ${build_testing})
-endif()
-
 if(${PROJECT_NAME}_TESTING AND NOT TARGET gtest)
   # Google Test
   set(INSTALL_GTEST OFF)
@@ -177,10 +141,9 @@ if(${PROJECT_NAME}_TESTING AND NOT TARGET gtest)
   FetchContent_GetProperties(googletest)
   if(NOT googletest_POPULATED)
     FetchContent_Populate(googletest)
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
   endif()
-
-  enable_testing()
 endif()
 
 add_subdirectory(src)
@@ -188,6 +151,19 @@ add_subdirectory(src)
 # TODO: Make examples!
 
 if(${PROJECT_NAME}_TESTING)
+  # Optionally enable CUDA for integration tests
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+  else()
+    message(STATUS "Could NOT find CUDA compiler. Disabling GPU integration tests.")
+  endif()
+
+  cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_MC "Build integration tests with the GridTools MC backend" ON "BUILD_TESTING" OFF)
+  cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_CUDA "Build integration tests with the GridTools CUDA backend" ON "BUILD_TESTING;CMAKE_CUDA_COMPILER" OFF)
+  cmake_dependent_option(GTCLANG_BUILD_TESTING_PLAIN_CUDA "Build integration tests with the plain CUDA backend" ON "BUILD_TESTING;CMAKE_CUDA_COMPILER" OFF)
+
   add_subdirectory(test)
 endif()
 

@@ -14,88 +14,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+add_subdirectory(CodeGen)
+
 set(dummy_source ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dummy.cpp)
 file(WRITE ${dummy_source} "int main() { return 0; }")
-
-include(CMakeParseArguments)
-macro(ADD_COMPILER_FLAG_TO_EXAMPLE _KEY _VALUE)
-  set(MyMap_${_KEY} ${MyMap_${_KEY}} ${_VALUE})
-endmacro(ADD_COMPILER_FLAG_TO_EXAMPLE)
-
-macro(GET_COMPILER_FLAGS _KEY _RETVAL)
-  if(${MyMap_${_KEY}} STREQUAL "")
-    set(${_RETVAL} "")
-  else()
-    set(${_RETVAL} ${MyMap_${_KEY}})
-  endif()
-endmacro(GET_COMPILER_FLAGS)
-
-function(generate_target)
-  set(options)
-  set(oneValueArgs TEST BACKEND DIRECTORY)
-  set(multiValueArgs)
-  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-
-  set(backend ${ARG_BACKEND})
-  set(test ${ARG_TEST})
-  set(directory ${ARG_DIRECTORY})
-
-  # Add json input files if they exist
-  set(config_str)
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
-    set(config_str --config=${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
-  endif()
-
-  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-    list(APPEND config_str -fpass-verbose)
-  endif()
-
-  # Add make target
-  set(generated_file ${CMAKE_CURRENT_BINARY_DIR}/${directory}/generated/${test}_${backend}.cpp)
-  set(source_file ${CMAKE_CURRENT_SOURCE_DIR}/${directory}/${test}.cpp)
-  add_custom_command(OUTPUT ${generated_file}
-    COMMAND $<TARGET_FILE:gtclang> -backend=${backend} ${config_str} -o ${generated_file} ${source_file}
-    DEPENDS gtclang ${source_file}
-  )
-
-  add_custom_target(${directory}_${test}_${backend}_codegen DEPENDS ${generated_file})
-endfunction()
-
-function(compile_target)
-  set(options DUMMY)
-  set(oneValueArgs TEST BACKEND DIRECTORY)
-  set(multiValueArgs)
-  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-  set(backend ${ARG_BACKEND})
-  set(test ${ARG_TEST})
-  set(directory ${ARG_DIRECTORY})
-
-  if(${ARG_DUMMY})
-    set(executable ${test}_${backend})
-    set(sources ${dummy_source})
-  else()
-    set(executable ${test}_${backend}_test)
-    set(sources ${directory}/${test}_benchmark.cpp ${directory}/TestMain.cpp ${directory}/Options.cpp)
-  endif()
-
-  add_executable(${executable} ${sources})
-  add_dependencies(${executable}
-    ${directory}_${test}_${backend}_codegen ${directory}_${test}_c++-naive_codegen)
-  target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
-
-  if(${backend} STREQUAL gt)
-    target_compile_definitions(${executable} PRIVATE -DBACKEND_MC -DGT_ENABLE_METERS)
-  endif()
-
-  target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
-  target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GTClang GTClangUnittest GridTools::gridtools gtest)
-
-  add_test(NAME ${executable}
-    COMMAND $<TARGET_FILE:${executable}> 12 12 10 --gtest_output=xml:${executable}_unittest.xml
-  )
-endfunction()
 
 set(directories
   Accesses
@@ -117,64 +39,36 @@ set(directories
 )
 
 # The cuda backend is not supported by the python scripts for no-codegen
-# TODO: Is this check correct?
-if(NOT BUILD_GPU_TESTS)
-  find_package(Python3 COMPONENTS Interpreter REQUIRED)
-  set(command_no_dir ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py
-    --gtclang=$<TARGET_FILE:gtclang>
-    --cxx=${CMAKE_CXX_COMPILER})
-  set(command ${command_no_dir} ${directories})
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+set(command ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py
+  --gtclang=$<TARGET_FILE:gtclang>
+  --cxx=${CMAKE_CXX_COMPILER})
 
-  list(APPEND gridtools_flags ${compiler_flags} ${include_flags} ${library_flags})
+foreach(dir ${directories})
+  set(command ${command} ${CMAKE_CURRENT_SOURCE_DIR}/${dir})
+endforeach()
 
-  set(command ${command} --gridtools_flags="${gridtools_flags}")
-  set(command_no_dir ${command_no_dir} --gridtools_flags="${gridtools_flags}")
+list(APPEND gridtools_flags ${compiler_flags} ${include_flags} ${library_flags})
 
-  string(REPLACE ";" " " cmd_script "${command}")
-  file(WRITE ${PROJECT_BINARY_DIR}/gtclang-tester-${ARG_NAME}.sh "#!/bin/bash\n${cmd_script} $*\n")
+set(command ${command} --gridtools_flags="${gridtools_flags}")
 
-  string(REPLACE ";" " " _cmd_script_no_dir "${command_no_dir}")
-  file(WRITE ${PROJECT_BINARY_DIR}/gtclang-tester.sh "#!/bin/bash\n${cmd_script_no_dir} $*\n")
+string(REPLACE ";" " " cmd_script "${command}")
+file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/gtclang-tester-no-codegen.sh CONTENT "#!/bin/bash\n${cmd_script} $*\n")
 
-  # Add make target
-  add_custom_target(
-    integrationtest-no-codegen
-    COMMAND ${BASH_EXECUTABLE} ${CMAKE_BINARY_DIR}/gtclang-tester-no-codegen.sh
-    DEPENDS gtclang
-    )
+# Add make target
+add_custom_target(
+  integrationtest-no-codegen
+  COMMAND ${BASH_EXECUTABLE} ${PROJECT_BINARY_DIR}/gtclang-tester-no-codegen.sh
+  DEPENDS gtclang
+  )
 
-  # Add CTest target
-  find_program (BASH_EXECUTABLE bash)
-  add_test(NAME CTest-IntegrationTest-no-codegen
-    COMMAND ${BASH_EXECUTABLE} ${CMAKE_BINARY_DIR}/gtclang-tester-no-codegen.sh)
-endif()
+# Add CTest target
+find_program (BASH_EXECUTABLE bash)
+add_test(NAME CTest-IntegrationTest-no-codegen
+  COMMAND ${BASH_EXECUTABLE} ${PROJECT_BINARY_DIR}/gtclang-tester-no-codegen.sh)
 
 # list(APPEND compiler_flags -std=c++11 -O2)
 # list(APPEND library_flags ${Boost_LIBRARIES})
-
-
-# Codegen tests require GridTools -- but that is a dependency now
-set(codegen_tests copy_stencil lap conditional_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02
-  hori_diff_type2_stencil hd_smagorinsky intervals_stencil globals_stencil stencil_functions
-  nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
-  kparallel_solver asymmetric)
-foreach(_test ${codegen_tests})
-  generate_target(DIRECTORY CodeGen TEST ${_test} BACKEND c++-naive)
-  compile_target(DIRECTORY CodeGen TEST ${_test} BACKEND c++-naive)
-
-  generate_target(DIRECTORY CodeGen TEST ${_test} BACKEND gt)
-  compile_target(DIRECTORY CodeGen TEST ${_test} BACKEND gt)
-endforeach()
-
-# # specific examples for cuda backend
-set(cuda_codegen_tests intervals01 intervals02 intervals03 local_kcache kcache_fill kcache_fill_kparallel
-  kcache_fill_backward kcache_flush kcache_epflush)
-# foreach(_test ${cuda_codegen_tests})
-#   if(BUILD_CPU_TESTS)
-
-#   endif()
-#   generate_target(TEST ${_test} BACKEND cuda DIRECTORY CodeGen)
-# endforeach()
 
 # # examples from FV3
 # set(fv3_tests p_grad_c)

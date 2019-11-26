@@ -45,6 +45,7 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
+include(CTest)
 include(GNUInstallDirs)
 
 # Path for Find*.cmake files
@@ -134,6 +135,7 @@ if(NOT Protobuf_FOUND)
   FetchContent_GetProperties(protobuf)
   if(NOT protobuf_POPULATED)
     FetchContent_Populate(protobuf)
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
   endif()
 
@@ -171,10 +173,9 @@ if(${PROJECT_NAME}_TESTING)
   FetchContent_GetProperties(googletest)
   if(NOT googletest_POPULATED)
     FetchContent_Populate(googletest)
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
   endif()
-
-  enable_testing()
 endif()
 
 add_subdirectory(src)
