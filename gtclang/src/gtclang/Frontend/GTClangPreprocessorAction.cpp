@@ -285,6 +285,66 @@ private:
         consumeTokens(peekedTokens);
       }
 
+      // Replace `vertical_region(ARG_1, ARG_2)` with `for(auto k : {ARG_1, ARG_2})`
+      if(token_.is(tok::identifier) && token_.getIdentifierInfo()->getName() == "iteration_space") {
+        unsigned peekedTokens = 0;
+
+        // Check for '('
+        if(!PP_.LookAhead(peekedTokens++).is(tok::l_paren))
+          continue;
+
+        // Check for 'ARG_1' until ','
+        std::string Arg1;
+        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg1))
+          continue;
+
+        // Consume ','
+        peekedTokens++;
+
+        // Check for 'ARG_1' until ','
+        std::string Arg2;
+        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg2))
+          continue;
+
+        // Consume ','
+        peekedTokens++;
+
+        // Check for 'ARG_1' until ','
+        std::string Arg3;
+        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg3))
+          continue;
+
+        // Consume ','
+        peekedTokens++;
+
+        // Check for 'ARG_1' until ','
+        std::string Arg4;
+        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg4))
+          continue;
+
+        // Consume ','
+        peekedTokens++;
+
+        // Check for 'ARG_1' until ','
+        std::string Arg5;
+        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg5))
+          continue;
+
+        // Consume ','
+        peekedTokens++;
+
+        // Check for 'ARG_2' until ')'
+        std::string Arg6;
+        if(!peekAndAccumulateUntil(tok::r_paren, peekedTokens, Arg6))
+          continue;
+
+        registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
+                            dawn::format("for(auto __k_indexrange__ : {%s, %s, %s, %s, %s, %s})",
+                                         Arg1, Arg2, Arg3, Arg4, Arg5, Arg6));
+
+        consumeTokens(peekedTokens);
+      }
+
       // Check for var ARG1 [ = RHS];
       if(token_.is(tok::identifier) && token_.getIdentifierInfo()->getName() == "var") {
 
