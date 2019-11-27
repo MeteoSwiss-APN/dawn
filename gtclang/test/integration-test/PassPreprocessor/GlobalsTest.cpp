@@ -20,7 +20,7 @@
 
 using namespace gtclang::dsl;
 
-globals { // EXPECTED: %line%: struct globals : public gtclang::dsl::globals_impl<globals> {
+globals { // EXPECTED: %line%: struct globals {
   bool var1;
   double var2 = 5.0;
 };

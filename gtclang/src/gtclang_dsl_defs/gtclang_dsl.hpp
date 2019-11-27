@@ -44,7 +44,6 @@ namespace dsl {}
 #define BOOST_PP_VARIADICS 1
 
 #include "gtclang_dsl_defs/boundary_condition.hpp"
-#include "gtclang_dsl_defs/globals_impl.hpp"
 #include "gtclang_dsl_defs/interval.hpp"
 #include "gtclang_dsl_defs/stencil.hpp"
 #include "gtclang_dsl_defs/stencil_function.hpp"

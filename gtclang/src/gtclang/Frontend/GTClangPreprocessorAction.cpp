@@ -625,8 +625,7 @@ private:
           hasGlobals_ = true;
 
           // Create replacement `globals {`
-          registerReplacement(token_.getLocation(), tokenLBrace.getLocation(),
-                              "struct globals : public gtclang::dsl::globals_impl<globals> {");
+          registerReplacement(token_.getLocation(), tokenLBrace.getLocation(), "struct globals {");
           consumeTokens(peekedTokens);
         }
 
