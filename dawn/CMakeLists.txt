@@ -16,7 +16,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 # project version
-set(VERSION_MAJOR 0)
+set(VERSION_MAJOR 0) #TODO move version number to a file (like in GridTools), makes it easy for gt4py to read the version
 set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
 
