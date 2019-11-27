@@ -1,12 +1,10 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _
-//                        | |     | |
-//                    __ _| |_ ___| | __ _ _ __   __ _
-//                   / _` | __/ __| |/ _` | '_ \ / _` |
-//                  | (_| | || (__| | (_| | | | | (_| |
-//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
-//                    __/ |                       __/ |
-//                   |___/                       |___/
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -16,17 +14,16 @@
 
 #pragma once
 
-#ifndef GT_FUNCTION
-#define GT_FUNCTION
-#endif
+#include <algorithm>
+#include <cmath>
 
-namespace gtclang {
+namespace gridtools {
 
-namespace dsl {
+namespace dawn {
 
 /**
  * @namespace math
- * @brief Namespace of DSL's math functions
+ * @brief Namepsace of gridtools portable math functions
  *
  * @see math_function
  */
@@ -34,10 +31,9 @@ namespace math {
 
 /**
  * @defgroup math_function Math functions
- * @brief Math functions which can be safely used inside stencil and stencil_function
- * Do-methods
+ * @brief Math functions implementations
  *
- * @ingroup gtclang_dsl
+ * @ingroup gridtools_dawn
  * @{
  */
 
@@ -47,7 +43,9 @@ namespace math {
  * @see http://en.cppreference.com/w/cpp/numeric/math/fabs
  */
 template <typename T>
-GT_FUNCTION T fabs(const T x);
+T fabs(const T x) {
+  return ::fabs(x);
+}
 
 /**
  * @brief Computes the largest integer value not greater than @c arg
@@ -55,7 +53,9 @@ GT_FUNCTION T fabs(const T x);
  * @see http://en.cppreference.com/w/cpp/numeric/math/floor
  */
 template <typename T>
-GT_FUNCTION T floor(const T arg);
+T floor(const T arg) {
+  return ::floor(arg);
+}
 
 /**
  * @brief Computes the smallest integer value not less than @c arg
@@ -63,7 +63,9 @@ GT_FUNCTION T floor(const T arg);
  * @see http://en.cppreference.com/w/cpp/numeric/math/ceil
  */
 template <typename T>
-GT_FUNCTION T ceil(const T arg);
+T ceil(const T arg) {
+  return ::ceil(arg);
+}
 
 /**
  * @brief Truncate @c arg to an integer
@@ -71,7 +73,9 @@ GT_FUNCTION T ceil(const T arg);
  * The truncation is performed by casting @c arg to @c int
  */
 template <typename T>
-GT_FUNCTION int trunc(const T arg);
+int trunc(const T arg) {
+  return static_cast<int>(arg);
+}
 
 /**
  * @brief Returns the floating-point remainder of @c x/y (rounded towards zero)
@@ -82,7 +86,9 @@ GT_FUNCTION int trunc(const T arg);
  * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
  */
 template <typename T>
-GT_FUNCTION T fmod(const T x, const T y);
+T fmod(const T x, const T y) {
+  return ::fmod(x, y);
+}
 
 /**
  * @brief Raise @c x to power @c y.
@@ -93,7 +99,9 @@ GT_FUNCTION T fmod(const T x, const T y);
  * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
  */
 template <typename T>
-GT_FUNCTION T pow(const T x, const T y);
+T pow(const T x, const T y) {
+  return ::pow(x, y);
+}
 
 /**
  * @brief Compute square root
@@ -104,7 +112,9 @@ GT_FUNCTION T pow(const T x, const T y);
  * @see http://en.cppreference.com/w/cpp/numeric/math/sqrt
  */
 template <typename T>
-GT_FUNCTION T sqrt(const T x);
+T sqrt(const T x) {
+  return ::sqrt(x);
+}
 
 /**
  * @brief Returns the smaller value of @c x and @c y
@@ -112,7 +122,13 @@ GT_FUNCTION T sqrt(const T x);
  * @see http://en.cppreference.com/w/cpp/algorithm/min
  */
 template <typename T>
-GT_FUNCTION T min(const T x, const T y);
+T min(const T x, const T y) {
+#if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
+  return x < y ? x : y;
+#else
+  return std::min(x, y);
+#endif
+}
 
 /**
  * @brief Returns the greater value of @c x and @c y
@@ -120,7 +136,13 @@ GT_FUNCTION T min(const T x, const T y);
  * @see http://en.cppreference.com/w/cpp/algorithm/max
  */
 template <typename T>
-GT_FUNCTION T max(const T x, const T y);
+T max(const T x, const T y) {
+#if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
+  return x > y ? x : y;
+#else
+  return std::max(x, y);
+#endif
+}
 
 /**
  * @brief Computes the @c e (Euler's number, 2.7182818) raised to the given power @c arg
@@ -128,7 +150,9 @@ GT_FUNCTION T max(const T x, const T y);
  * @see http://en.cppreference.com/w/cpp/numeric/math/exp
  */
 template <typename T>
-GT_FUNCTION T exp(const T arg);
+T exp(const T arg) {
+  return ::exp(arg);
+}
 
 /**
  * @brief Computes the the natural (base @c e) logarithm of arg.
@@ -136,9 +160,11 @@ GT_FUNCTION T exp(const T arg);
  * @see http://en.cppreference.com/w/cpp/numeric/math/log
  */
 template <typename T>
-GT_FUNCTION T log(const T x);
+T log(const T x) {
+  return ::log(x);
+}
 
 /** @} */
 } // namespace math
-} // namespace dsl
-} // namespace gtclang
+} // namespace dawn
+} // namespace gridtools

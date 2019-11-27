@@ -19,5 +19,6 @@
 #include "defs.hpp"
 #include "domain.hpp"
 #include "halo.hpp"
+#include "math.hpp"
 #include "param_wrapper.hpp"
 #include "storage.hpp"
