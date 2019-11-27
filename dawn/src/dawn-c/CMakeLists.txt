@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(${PROJECT_NAME}C
+add_library(${PROJECT_NAME}CObjects
   Dawn.h
   Compiler.cpp
   Compiler.h
@@ -29,6 +29,19 @@ add_library(${PROJECT_NAME}C
   util/OptionsWrapper.h
   util/TranslationUnitWrapper.h
 )
+target_add_dawn_standard_props(${PROJECT_NAME}CObjects)
+target_link_libraries(${PROJECT_NAME}CObjects PUBLIC ${PROJECT_NAME})
 
-target_add_dawn_standard_props(${PROJECT_NAME}C)
-target_link_libraries(${PROJECT_NAME}C PUBLIC ${PROJECT_NAME})
+# build shared library unconditionally as needed for python
+add_library(${PROJECT_NAME}CShared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}CObjects>)
+set_target_properties(${PROJECT_NAME}CShared PROPERTIES OUTPUT_NAME ${PROJECT_NAME}C)
+target_link_libraries(${PROJECT_NAME}CShared PUBLIC ${PROJECT_NAME})
+
+if(BUILD_SHARED_LIBS)
+  add_library(${PROJECT_NAME}C ALIAS ${PROJECT_NAME}CShared)
+else()
+  add_library(${PROJECT_NAME}CStatic STATIC $<TARGET_OBJECTS:${PROJECT_NAME}CObjects>)
+  set_target_properties(${PROJECT_NAME}CStatic PROPERTIES OUTPUT_NAME ${PROJECT_NAME}C)
+  target_link_libraries(${PROJECT_NAME}CStatic PUBLIC ${PROJECT_NAME})
+  add_library(${PROJECT_NAME}C ALIAS ${PROJECT_NAME}CStatic)
+endif()

@@ -29,10 +29,14 @@ project(Dawn
 
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use DAWN_BUILD_TESTING to override).
+# - BUILD_SHARED_LIBS<Bool>:
+#     Build dawn as shared libraries instead of static. If true,
+#     requires dependencies to be built as position independent code.
+#     In any case, Dawn objects are built as position independent code to allow
+#     building a shared library for python bindings.
 # - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
 
 # Other options
-option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
@@ -129,10 +133,11 @@ add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LI
 # Target properties
 set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
 
-if (BUILD_SHARED_LIBS)
-  # Needed because we use object libraries, set globally to propagate to dependencies (e.g. Protobuf)
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
+# Position independent code is enabled globally
+# - we need a shared library for python support (even if BUILD_SHARED_LIBS=OFF)
+# - parts of our testing relies on python -> currently no strong reason for a no-python option
+# - dependencies, e.g. protobuf, needs to be built with PIC as well
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(Python3 COMPONENTS Interpreter)
 
@@ -167,10 +172,7 @@ if(NOT Protobuf_FOUND)
   set(protobuf_BUILD_EXAMPLES OFF)
   set(protobuf_BUILD_TESTS OFF)
   set(protobuf_INSTALL_EXAMPLES OFF)
-  # If not using bundle, we at least need protoc binary
   set(protobuf_BUILD_PROTOC_BINARIES ON)
-  # It's simpler for the python package if protobuf is linked staticly into the shared library
-  set(protobuf_BUILD_SHARED_LIBS OFF)
 
   FetchContent_Declare(protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git

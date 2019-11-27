@@ -18,7 +18,7 @@ set(config_out "${CMAKE_CURRENT_BINARY_DIR}/config.py")
 # This two-step hack is necessary because there are both variables and generator
 # expressions necessary to generate config.py
 set(DAWN_INSTALL_MODULE ${CMAKE_INSTALL_PREFIX}/python)
-set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_FULL_LIBDIR}/$<TARGET_FILE_NAME:DawnC>)
+set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_FULL_LIBDIR}/$<TARGET_FILE_NAME:DawnCShared>)
 configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/config.py.tmp @ONLY)
 file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/config.py.tmp)
 
@@ -37,7 +37,7 @@ if(${PROJECT_NAME}_TESTING)
   set(examples_build_dir "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/for_test")
   set(config_out "${examples_build_dir}/config.py")
   set(DAWN_INSTALL_MODULE ${PROJECT_BINARY_DIR}/python/)
-  set(DAWN_INSTALL_DAWNCLIB $<TARGET_FILE:DawnC>)
+  set(DAWN_INSTALL_DAWNCLIB $<TARGET_FILE:DawnCShared>)
   configure_file(${config_in} ${examples_build_dir}/config.py.tmp @ONLY)
   file(GENERATE OUTPUT ${config_out} INPUT ${examples_build_dir}/config.py.tmp)
   file(COPY . DESTINATION ${examples_build_dir})
