@@ -184,8 +184,6 @@ endif()
 
 add_subdirectory(src)
 
-# TODO: Make examples!
-
 if(${PROJECT_NAME}_TESTING)
   # Optionally enable CUDA for integration tests
   include(CheckLanguage)

@@ -12,25 +12,18 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(proto_files
-  proto/IIR/IIR.proto
+include(DawnProtobufGenerate)
+dawn_protobuf_generate(
+  OUT_FILES sir_proto_cpp_files
+  OUT_INCLUDE_DIRS sir_proto_include_dirs
+  PROTOS IIR/IIR.proto
+  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+  PACKG IIR
+  LANGUAGE cpp
 )
 
-list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.cc" OUTPUT_VARIABLE proto_cc)
-list(TRANSFORM proto_cc REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
-
-list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.h" OUTPUT_VARIABLE proto_h)
-list(TRANSFORM proto_h REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
-
-add_custom_command(
-  COMMAND protobuf::protoc --cpp_out=${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_ADD_ARGS} -I ../SIR/proto --proto_path=proto ${proto_files}
-  OUTPUT  ${proto_cc} ${proto_h}
-  DEPENDS protobuf::protoc ${proto_files}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Generating IIR protobuf cpp files"
-)
-
-add_library(DawnIIRProto OBJECT ${proto_cc} ${proto_h})
+add_library(DawnIIRProto OBJECT ${sir_proto_cpp_files})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -116,18 +109,43 @@ target_add_dawn_standard_props(DawnIIR)
 target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
 
 if(ENABLE_PYTHON)
-  list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
-  list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
-
-  add_custom_command(
-    COMMAND protobuf::protoc --python_out=${PROJECT_BINARY_DIR}/python/dawn ${PROTOBUF_ADD_ARGS} -I ../SIR/proto --proto_path=proto ${proto_files}
-    OUTPUT  ${proto_py}
-    DEPENDS ${proto_files}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating IIR protobuf python files"
+  # Generate python proto files
+  include(DawnProtobufGenerate)
+  dawn_protobuf_generate(
+    OUT_FILES iir_proto_python_files
+    PROTOS IIR/IIR.proto
+    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG IIR
+    LANGUAGE python
   )
 
-#   install(FILES ${iir_proto_python_files} DESTINATION {DAWN_INSTALL_PYTHON_DIR}/IIR)
-#   install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
+  add_custom_target(DawnIIRPythonProto ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/IIR
+    DEPENDS ${iir_proto_python_files}
+  )
 
+  # TODO
+  # install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
+  # install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
 endif()
+
+# TODO
+# if(DAWN_JAVA)
+#   # Genreate python proto files
+#   dawn_protobuf_generate(
+#     OUT_FILES iir_proto_java_files
+#     OUT_DIRS iir_proto_java_dirs
+#     PROTOS IIR/IIR.proto
+#     INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+#     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+#     PACKG IIR
+#     LANGUAGE java
+#   )
+#   add_custom_target(DawnIIRJavaProto ALL
+#     COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
+#     DEPENDS ${iir_proto_java_files}
+#   )
+#   install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
+# endif(DAWN_JAVA)

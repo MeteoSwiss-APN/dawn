@@ -134,6 +134,8 @@ if (BUILD_SHARED_LIBS)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+find_package(Python3 COMPONENTS Interpreter)
+
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
   target_include_directories(${target}
@@ -157,7 +159,10 @@ if(NOT USE_BUNDLED_PROTOBUF)
 endif()
 if(NOT Protobuf_FOUND)
   # TODO move to separate file
-  message(STATUS " Fetching Protobuf...")
+  if(NOT USE_BUNDLED_PROTOBUF)
+    message(STATUS " Fetching Protobuf...")
+  endif()
+
   # Configuration options for Protobuf
   set(protobuf_BUILD_EXAMPLES OFF)
   set(protobuf_BUILD_TESTS OFF)
@@ -180,12 +185,9 @@ if(NOT Protobuf_FOUND)
   set(USE_BUNDLED_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
   mark_as_advanced(USE_BUNDLED_PROTOBUF)
 
-  # Protobuf in build dir does not add standard headers
-  set(PROTOBUF_ADD_ARGS -I${protobuf_SOURCE_DIR}/src)
-
   if(Python3_FOUND)
     add_custom_target(build-protobuf-python
-      COMMAND PROTOC=$<TARGET_FILE:protobuf::libprotoc> ${Python3_EXECUTABLE} setup.py build
+      COMMAND PROTOC=$<TARGET_FILE:protobuf::protoc> ${Python3_EXECUTABLE} setup.py build
       WORKING_DIRECTORY ${protobuf_SOURCE_DIR}/python
     )
     add_custom_target(protobuf-python
@@ -219,22 +221,28 @@ if(${PROJECT_NAME}_TESTING)
   endif()
 endif()
 
-add_subdirectory(src)
-
-find_package(Python3 COMPONENTS Interpreter)
-if (Python3_FOUND)
-  # Look for protobuf python module
-  find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
-    PATHS ${Protobuf_INCLUDE_DIR}/../python ${PROTOBUF_PYTHON_MODULE_DIR}
-    DOC "Path to protobuf python module")
+if(Python3_FOUND)
+  if(USE_BUNDLED_PROTOBUF)
+    # we know where it will be after the build step
+    set(PROTOBUF_PYTHON_DIR ${protobuf_BINARY_DIR}/python)
+  else()
+    # we try to find it
+    find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
+      PATHS ${Protobuf_INCLUDE_DIR}/../python ${PROTOBUF_PYTHON_MODULE_DIR}
+      DOC "Path to protobuf python module")
+  endif()
   mark_as_advanced(PROTOBUF_PYTHON_DIR)
-  if (PROTOBUF_PYTHON_DIR)
+  if(PROTOBUF_PYTHON_DIR)
     set(ENABLE_PYTHON ON)
+  else()
+    message(STATUS "PROTOBUF_PYTHON_DIR not found, not installing python bindings")
   endif()
   add_subdirectory(python)
 else()
   message(STATUS "Python3 not found, not installing python bindings")
 endif()
+
+add_subdirectory(src)
 
 # Only build examples if BUILD_EXAMPLES and main project, or DAWN_BUILD_EXAMPLES is on
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_EXAMPLES) AND BUILD_EXAMPLES)

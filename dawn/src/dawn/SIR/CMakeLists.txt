@@ -12,26 +12,17 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(proto_files
-  proto/SIR/SIR.proto
-  proto/SIR/statements.proto
+include(DawnProtobufGenerate)
+dawn_protobuf_generate(
+  OUT_FILES sir_proto_cpp_files
+  OUT_INCLUDE_DIRS sir_proto_include_dirs
+  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+  PROTOS SIR/SIR.proto SIR/statements.proto
+  PACKG SIR
+  LANGUAGE cpp
 )
 
-list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.cc" OUTPUT_VARIABLE proto_cc)
-list(TRANSFORM proto_cc REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
-
-list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.h" OUTPUT_VARIABLE proto_h)
-list(TRANSFORM proto_h REPLACE "^proto/" "${CMAKE_CURRENT_BINARY_DIR}/")
-
-add_custom_command(
-  COMMAND $<TARGET_FILE:protobuf::protoc> --cpp_out=${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
-  OUTPUT  ${proto_cc} ${proto_h}
-  DEPENDS $<TARGET_FILE:protobuf::protoc> ${proto_files}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Generating SIR protobuf cpp files"
-)
-
-add_library(DawnSIRProto OBJECT ${proto_cc} ${proto_h})
+add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files})
 target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -63,16 +54,30 @@ target_add_dawn_standard_props(DawnSIR)
 target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
 
 if(ENABLE_PYTHON)
-  list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
-  list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
+    # Generate python proto files
+  include(DawnProtobufGenerate)
+  dawn_protobuf_generate(
+    OUT_FILES sir_proto_python_files
+    PROTOS SIR/SIR.proto SIR/statements.proto
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG SIR
+    LANGUAGE python
+    )
 
-  add_custom_command(
-    COMMAND $<TARGET_FILE:protobuf::protoc> --python_out=${PROJECT_BINARY_DIR}/python/dawn ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
-    OUTPUT  ${proto_py}
-    DEPENDS ${proto_files}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating SIR protobuf python files"
-  )
+  add_custom_target(DawnSIRPythonProto ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    DEPENDS ${sir_proto_python_files}
+    )
+
+  # list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
+  # list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
+  # add_custom_command(
+  #   COMMAND $<TARGET_FILE:protobuf::protoc> --python_out=${PROJECT_BINARY_DIR}/python/SIR ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
+  #   OUTPUT  ${proto_py}
+  #   DEPENDS ${proto_files}
+  #   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  #   COMMENT "Generating SIR protobuf python files"
+  # )
 
 #   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
 #   install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
