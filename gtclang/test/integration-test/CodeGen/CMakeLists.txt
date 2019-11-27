@@ -115,7 +115,7 @@ function(compile_target_cuda)
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
   target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GridTools::gridtools gtest) # TODO GT only if GT backend
+  target_link_libraries(${executable} GridTools::gridtools gtest)
 
   target_include_directories(${executable}
     PUBLIC  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
