@@ -29,10 +29,10 @@ project(Dawn
 
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use DAWN_BUILD_TESTING to override).
-# - BUILD_SHARED_LIBS<Bool>: Build dawn as shared libraries instead of static. If true, requires dependencies to be built as position independent code
 # - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
 
 # Other options
+option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
@@ -169,6 +169,8 @@ if(NOT Protobuf_FOUND)
   set(protobuf_INSTALL_EXAMPLES OFF)
   # If not using bundle, we at least need protoc binary
   set(protobuf_BUILD_PROTOC_BINARIES ON)
+  # It's simpler for the python package if protobuf is linked staticly into the shared library
+  set(protobuf_BUILD_SHARED_LIBS OFF)
 
   FetchContent_Declare(protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
@@ -204,6 +206,7 @@ else()
   set(${PROJECT_NAME}_TESTING OFF)
 endif()
 mark_as_advanced(${PROJECT_NAME}_TESTING)
+
 if(${PROJECT_NAME}_TESTING)
   # Google Test
   message(STATUS " Fetching GoogleTest...")
