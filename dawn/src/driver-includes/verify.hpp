@@ -26,7 +26,7 @@ namespace dawn {
 class verifier {
 public:
   verifier(const domain& dom,
-           double precision = std::is_same<dawn::float_type, double>::value ? 1e-10 : 1e-6)
+           double precision = std::is_same<::dawn::float_type, double>::value ? 1e-10 : 1e-6)
       : m_domain(dom), m_precision(precision) {}
 
   template <class FunctorType, class... StorageTypes>
@@ -46,16 +46,17 @@ public:
   template <class... StorageTypes>
   void fillMath(double a, double b, double c, double d, double e, double f,
                 StorageTypes&... storages) const {
-    const dawn::float_type pi = std::atan(1.) * 4.;
+    const ::dawn::float_type pi = std::atan(1.) * 4.;
     for_each(
         [&](std::array<unsigned int, 3> dims, int i, int j, int k) {
           // 8,2,1.5,1.5,2,4
-          double x = i / (dawn::float_type)dims[0];
-          double y = j / (dawn::float_type)dims[1];
-          return k * 10e-3 + (dawn::float_type)a *
-                                 ((dawn::float_type)b + cos(pi * (x + (dawn::float_type)c * y)) +
-                                  sin((dawn::float_type)d * pi * (x + (dawn::float_type)e * y))) /
-                                 (dawn::float_type)f;
+          double x = i / (::dawn::float_type)dims[0];
+          double y = j / (::dawn::float_type)dims[1];
+          return k * 10e-3 +
+                 (::dawn::float_type)a *
+                     ((::dawn::float_type)b + cos(pi * (x + (::dawn::float_type)c * y)) +
+                      sin((::dawn::float_type)d * pi * (x + (::dawn::float_type)e * y))) /
+                     (::dawn::float_type)f;
         },
         storages...);
   }

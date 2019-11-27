@@ -53,7 +53,7 @@ void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
         iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
 
     kernel.addStatement(
-        "__shared__ dawn::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
+        "__shared__ ::dawn::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
         std::to_string(blockSize_[0] + (hMaxExtents.iPlus() - hMaxExtents.iMinus())) + "*" +
         std::to_string(blockSize_[1] + (hMaxExtents.jPlus() - hMaxExtents.jMinus())) + "]");
   }
@@ -71,7 +71,7 @@ void MSCodeGen::generateKCacheDecl(MemberFunction& kernel) const {
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = ms_->getKCacheVertExtent(accessID);
 
-    kernel.addStatement("dawn::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
+    kernel.addStatement("::dawn::float_type " + cacheProperties_.getCacheName(accessID) + "[" +
                         std::to_string(-vertExtent.minus() + vertExtent.plus() + 1) + "]");
   }
 }
@@ -748,7 +748,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // first we construct non temporary field arguments
   for(const auto& fieldPair : nonTempFields) {
-    cudaKernel.addArg("dawn::float_type * const " +
+    cudaKernel.addArg("::dawn::float_type * const " +
                       metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
   }
 
@@ -758,7 +758,7 @@ void MSCodeGen::generateCudaKernelCode() {
       cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg("dawn::float_type * const " +
+      cudaKernel.addArg("::dawn::float_type * const " +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
   }
@@ -773,7 +773,7 @@ void MSCodeGen::generateCudaKernelCode() {
     for(const auto& fieldPair : tempFieldsNonLocalCached) {
       std::string fieldName = metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
-      cudaKernel.addStatement("dawn::float_type* " + fieldName + " = &" + fieldName +
+      cudaKernel.addStatement("::dawn::float_type* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
     }
   }

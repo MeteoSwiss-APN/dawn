@@ -77,12 +77,12 @@ using meta_data_t = meta_data_ijk_t;
  * @brief Storage types
  * @{
  */
-using storage_ijk_t = storage_traits_t::data_store_t<float_type, meta_data_ijk_t>;
-using storage_ij_t = storage_traits_t::data_store_t<float_type, meta_data_ij_t>;
-using storage_i_t = storage_traits_t::data_store_t<float_type, meta_data_i_t>;
-using storage_j_t = storage_traits_t::data_store_t<float_type, meta_data_j_t>;
-using storage_k_t = storage_traits_t::data_store_t<float_type, meta_data_k_t>;
-using storage_scalar_t = storage_traits_t::data_store_t<float_type, meta_data_scalar_t>;
+using storage_ijk_t = storage_traits_t::data_store_t<::dawn::float_type, meta_data_ijk_t>;
+using storage_ij_t = storage_traits_t::data_store_t<::dawn::float_type, meta_data_ij_t>;
+using storage_i_t = storage_traits_t::data_store_t<::dawn::float_type, meta_data_i_t>;
+using storage_j_t = storage_traits_t::data_store_t<::dawn::float_type, meta_data_j_t>;
+using storage_k_t = storage_traits_t::data_store_t<::dawn::float_type, meta_data_k_t>;
+using storage_scalar_t = storage_traits_t::data_store_t<::dawn::float_type, meta_data_scalar_t>;
 using storage_t = storage_ijk_t;
 /** @} */
 

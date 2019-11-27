@@ -572,7 +572,7 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
       .addType("storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >");
 
   stencilClass.addTypeDef(tmpStorageTypename_)
-      .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
+      .addType("storage_traits_t::data_store_t< ::dawn::float_type, " + tmpMetadataTypename_ + ">");
 }
 
 void CudaCodeGen::addTmpStorageInit(

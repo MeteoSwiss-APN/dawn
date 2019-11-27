@@ -33,7 +33,7 @@ private:
                 LibTag{}, m_mesh, t, ((-cnt) * m_in_field(t, k + 0)),
                 [&](auto& lhs, auto const& t) { return lhs += m_in_field(t, k + 0); });
             m_out_field(t, k + 0) =
-                (m_in_field(t, k + 0) + ((dawn::float_type)0.100000 * m_out_field(t, k + 0)));
+                (m_in_field(t, k + 0) + ((::dawn::float_type)0.100000 * m_out_field(t, k + 0)));
           }
         }
       }
