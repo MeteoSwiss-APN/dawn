@@ -29,8 +29,9 @@ function(add_gtclang_library)
     install(
       TARGETS ${_l}
       EXPORT ${PROJECT_NAME}Targets
-      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      # NOTE: Not installing library headers. Uncomment the lines below if needed.
+      # LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      # ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
   endforeach()
 endfunction()
@@ -52,5 +53,3 @@ add_executable(gtclang Driver/gtclang.cpp)
 set_target_properties(gtclang PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 target_link_libraries(gtclang GTClang)
-
-#TODO install the executable and the headers needed for compiling generated code

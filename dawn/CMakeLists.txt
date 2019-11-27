@@ -204,6 +204,7 @@ endif()
 mark_as_advanced(${PROJECT_NAME}_TESTING)
 if(${PROJECT_NAME}_TESTING)
   # Google Test
+  message(STATUS " Fetching GoogleTest...")
   set(INSTALL_GTEST OFF)
   set(BUILD_GMOCK OFF)
   FetchContent_Declare(
