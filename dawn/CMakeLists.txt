@@ -140,8 +140,8 @@ find_package(Python3 COMPONENTS Interpreter)
 function(target_add_dawn_standard_props target)
   target_include_directories(${target}
     PUBLIC  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+            $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
   )
   target_compile_features(${target} PUBLIC cxx_std_17)
   target_compile_options(${target} PRIVATE ${DAWN_CXX_FLAGS})
@@ -206,6 +206,7 @@ endif()
 mark_as_advanced(${PROJECT_NAME}_TESTING)
 if(${PROJECT_NAME}_TESTING)
   # Google Test
+  message(STATUS " Fetching GoogleTest...")
   set(INSTALL_GTEST OFF)
   set(BUILD_GMOCK OFF)
   FetchContent_Declare(

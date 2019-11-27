@@ -15,3 +15,6 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(gtclang)
+
+# headers for codegen
+add_subdirectory(gridtools)

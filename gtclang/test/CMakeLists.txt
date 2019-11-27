@@ -19,7 +19,9 @@ if(NOT USE_BUNDLED_GRIDTOOLS)
 endif()
 if(NOT GridTools_FOUND)
   # GridTools uses BUILD_TESTING, cache it and reset after
+  message(STATUS " Fetching GridTools...")
   set(build_testing ${BUILD_TESTING})
+  set(install_tools ${INSTALL_TOOLS})
   set(BUILD_TESTING OFF)
   set(INSTALL_TOOLS OFF)
 
@@ -40,6 +42,7 @@ if(NOT GridTools_FOUND)
 
   # Reset here
   set(BUILD_TESTING ${build_testing})
+  set(INSTALL_TOOLS ${install_tools})
 endif()
 
 add_subdirectory(unit-test)

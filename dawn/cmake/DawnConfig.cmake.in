@@ -2,7 +2,7 @@ set(@PROJECT_NAME@_VERSION @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@)
 
 @PACKAGE_INIT@
 
-message(STATUS "Found Dawn ${@PROJECT_NAME@_VERSION} at ${CMAKE_CURRENT_LIST_FILE}" )
+message(STATUS "Found @PROJECT_NAME@ ${@PROJECT_NAME@_VERSION} at ${CMAKE_CURRENT_LIST_FILE}" )
 
 include(CMakeFindDependencyMacro)
 find_dependency(Protobuf 3.4.0

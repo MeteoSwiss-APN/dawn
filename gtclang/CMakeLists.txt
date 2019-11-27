@@ -167,6 +167,7 @@ endif()
 
 if(${PROJECT_NAME}_TESTING AND NOT TARGET gtest)
   # Google Test
+  message(STATUS " Fetching GoogleTest...")
   set(INSTALL_GTEST OFF)
   set(BUILD_GMOCK OFF)
   FetchContent_Declare(
@@ -201,3 +202,29 @@ if(${PROJECT_NAME}_TESTING)
 
   add_subdirectory(test)
 endif()
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/${PROJECT_NAME}Config.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
+  COMPATIBILITY SameMajorVersion
+)
+
+install(
+  EXPORT ${PROJECT_NAME}Targets
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
