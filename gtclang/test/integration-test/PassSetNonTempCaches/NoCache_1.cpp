@@ -19,7 +19,6 @@
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gtclang::dsl;
-using namespace gridtools;
 
 stencil NotCorrectlyPointwise {
   storage field_a, field_b, field_c, field_d, field_e;
