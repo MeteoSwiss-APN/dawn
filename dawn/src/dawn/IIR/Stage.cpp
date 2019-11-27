@@ -301,6 +301,12 @@ Stage::split(std::deque<int>& splitterIndices,
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
+    if(thisDoMethod.getParent()->getIterationSpace()[0]) {
+      newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace()[0].value(), 0);
+    }
+    if(thisDoMethod.getParent()->getIterationSpace()[1]) {
+      newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace()[1].value(), 1);
+    }
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
     if(graphs)

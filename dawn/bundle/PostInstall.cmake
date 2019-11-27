@@ -1,6 +1,6 @@
 cmake_policy(SET CMP0057 NEW)
 cmake_policy(SET CMP0011 NEW)
-set(examples "copy_stencil;hori_diff;tridiagonal_solve;unstructured_stencil;global_index_stencil")
+set(examples "copy_stencil;hori_diff;tridiagonal_solve;unstructured_stencil;global_index_stencil;global_index_pass_tester")
 set(verified_examples "copy_stencil;hori_diff;tridiagonal_solve")
 
 if(NOT DEFINED PYTHON_EXECUTABLE)
