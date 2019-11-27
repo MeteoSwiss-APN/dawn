@@ -30,6 +30,7 @@ function(add_dawn_library)
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
+  add_library(${PROJECT_NAME}::${_l} ALIAS ${_l})
   endforeach()
 endfunction()
 

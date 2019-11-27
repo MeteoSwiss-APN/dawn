@@ -18,9 +18,10 @@ add_executable(DawnIntegrationTest
   TestIIRDeserializer.cpp
   GenerateInMemoryStencils.cpp
 )
+target_add_dawn_standard_props(DawnIntegrationTest)
 target_link_libraries(DawnIntegrationTest Dawn DawnUnittest gtest)
-target_compile_options(DawnIntegrationTest ${DAWN_CXX_FLAGS})
-set_target_properties(DawnIntegrationTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(DawnIntegrationTest PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_test(NAME DawnIntegrationTest
   COMMAND $<TARGET_FILE:DawnIntegrationTest>
 )
@@ -30,8 +31,7 @@ add_executable(DawnUpdateIIRReferences
   GenerateInMemoryStencils.cpp
 )
 target_link_libraries(DawnUpdateIIRReferences Dawn gtest)
-target_compile_options(DawnUpdateIIRReferences ${DAWN_CXX_FLAGS})
-
+target_add_dawn_standard_props(DawnUpdateIIRReferences)
 file(COPY reference_iir DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/integrationtest
