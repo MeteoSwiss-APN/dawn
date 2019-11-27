@@ -121,17 +121,16 @@ if(ENABLE_PYTHON)
   )
 
   add_custom_target(DawnIIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
     COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/IIR
     DEPENDS ${iir_proto_python_files}
   )
 
-  # TODO
+  # TODO do we have a use-case for an installation at the moment?
   # install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
   # install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
 endif()
 
-# TODO
+# TODO add this if CLAW needs it (-> Matthias)
 # if(DAWN_JAVA)
 #   # Genreate python proto files
 #   dawn_protobuf_generate(

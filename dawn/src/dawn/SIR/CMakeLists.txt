@@ -65,20 +65,11 @@ if(ENABLE_PYTHON)
     )
 
   add_custom_target(DawnSIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/SIR
     DEPENDS ${sir_proto_python_files}
     )
 
-  # list(TRANSFORM proto_files REPLACE "[.]proto$" ".pb.py" OUTPUT_VARIABLE proto_py)
-  # list(TRANSFORM proto_py PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
-  # add_custom_command(
-  #   COMMAND $<TARGET_FILE:protobuf::protoc> --python_out=${PROJECT_BINARY_DIR}/python/SIR ${PROTOBUF_ADD_ARGS} --proto_path=proto/ ${proto_files}
-  #   OUTPUT  ${proto_py}
-  #   DEPENDS ${proto_files}
-  #   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  #   COMMENT "Generating SIR protobuf python files"
-  # )
-
-#   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-#   install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
+  # TODO do we have a use-case for an installation at the moment?
+  # install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
+  # install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
 endif()

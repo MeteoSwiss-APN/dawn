@@ -18,8 +18,8 @@ configure_file(${config_in} ${config_out})
 
 # Copy to build directory
 file(
-  COPY ${PROJECT_CURRENT_SOURCE_DIR}
-  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+  COPY .
+  DESTINATION .
   FILES_MATCHING PATTERN "*.py")
 
 # Copy to install
@@ -32,3 +32,11 @@ install(
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python
   FILES_MATCHING PATTERN "*.py"
 )
+
+if(${PROJECT_NAME}_TESTING)
+  if(NOT Python3_FOUND)
+    find_package(Python3 COMPONENTS Interpreter)
+  endif()
+
+  add_test(NAME python-test_sir.py COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
+endif()

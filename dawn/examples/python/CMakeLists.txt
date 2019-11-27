@@ -42,7 +42,7 @@ if(${PROJECT_NAME}_TESTING)
   file(GENERATE OUTPUT ${config_out} INPUT ${examples_build_dir}/config.py.tmp)
   file(COPY . DESTINATION ${examples_build_dir})
 
-  set(examples copy_stencil hori_diff tridiagonal_solve unstructured_stencil)
+  set(examples copy_stencil hori_diff tridiagonal_solve) # TODO  unstructured_stencil
   foreach(example ${examples})
     add_test(NAME "python-test-${example}.py"
       COMMAND
