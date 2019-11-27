@@ -17,7 +17,7 @@
 // RUN: %gtclang% %file% -fno-codegen -freport-pass-multi-stage-split
 // EXPECTED: PASS: PassMultiStageSplitter: Test: no split
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 

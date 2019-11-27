@@ -12,17 +12,21 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(GTCLANG_ATLAS_INTEGRATION_TESTS)
-
+if(GTCLANG_FORCE_ATLAS_INTEGRATION_TESTS)
+    find_package(eckit REQUIRED)
+    find_package(atlas REQUIRED)
+else()
     find_package(eckit)
     if(NOT eckit_FOUND)
-            message(FATAL_ERROR "Couldn't find eckit. If you don't need atlas set GTCLANG_ATLAS_INTEGRATION_TESTS to OFF.")
+            message(WARNING "Couldn't find eckit. Atlas integration tests are disabled.")
     endif()
-
     find_package(atlas)
     if(NOT atlas_FOUND)
-            message(FATAL_ERROR "Couldn't find atlas. If you don't need atlas set GTCLANG_ATLAS_INTEGRATION_TESTS to OFF.")
+            message(WARNING "Couldn't find atlas. Atlas integration tests are disabled.")
     endif()
+endif()
+
+if(eckit_FOUND AND atlas_FOUND)
 
     # Need to specify here the names of the stencil codes that are going to be generated.
     set(generated_stencil_codes generated_copyCell.hpp
@@ -76,7 +80,4 @@ if(GTCLANG_ATLAS_INTEGRATION_TESTS)
     target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
     target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-
-else()
-    message(STATUS "Atlas integration tests are disabled.")
 endif()

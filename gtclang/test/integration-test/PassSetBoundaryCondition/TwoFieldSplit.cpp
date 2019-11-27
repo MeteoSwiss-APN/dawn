@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 // RUN: %gtclang% %file% -fno-codegen -fsplit-stencils -freport-bc -max-fields=2
 // EXPECTED: PASS: PassSetBoundaryCondition: Test01 : Boundary Condition for field 'foo' inserted
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 

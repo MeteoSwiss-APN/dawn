@@ -77,14 +77,6 @@ while getopts i:gcd: flag; do
   esac
 done
 
-if [ ${myhost} == "kesch" ]; then
-  PROTOBUFDIR="/scratch/jenkins/workspace/protobuf/slave/kesch/install/lib64/cmake/protobuf/"
-elif [ ${myhost} == "daint" ]; then
-  PROTOBUFDIR="/scratch/snx3000/jenkins/workspace/protobuf/slave/daint/install/lib64/cmake/protobuf/"
-else
-  echo" Error Machine not found: ${myhost}"
-  exit 1
-fi
 
 base_dir=$(pwd)
 build_dir=${base_dir}/bundle/build
@@ -94,10 +86,7 @@ cd $build_dir
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR} -DGTCLANG_ENABLE_GRIDTOOLS=ON \
         -DProtobuf_DIR=${PROTOBUFDIR}  -DLLVM_ROOT=${LLVM_DIR}" 
 
-if [ ${myhost} == "daint" ]; then
-  # Point to atlas and eckit installation
-  CMAKE_ARGS="${CMAKE_ARGS} -DGTCLANG_ATLAS_INTEGRATION_TESTS=ON -Datlas_DIR=${ATLAS_DIR}/release/cpu/lib/cmake/atlas -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit"
-fi
+CMAKE_ARGS="${CMAKE_ARGS} -DGTCLANG_FORCE_ATLAS_INTEGRATION_TESTS=ON -Datlas_DIR=${ATLAS_DIR}/release/cpu/lib/cmake/atlas -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit"
 
 if [ -n ${INSTALL_DIR} ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"

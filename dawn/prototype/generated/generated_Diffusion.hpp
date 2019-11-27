@@ -1,6 +1,6 @@
 #define GRIDTOOLS_CLANG_GENERATED 1
 #define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO
-#include <gridtools/clang_dsl.hpp>
+#include <driver-includes/interface.hpp>
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>

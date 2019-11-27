@@ -17,7 +17,7 @@
 // RUN: %gtclang% %file% -fno-codegen -fmerge-stages -fmerge-do-methods -freport-pass-stage-merger
 // EXPECTED_FILE: OUTPUT:%filename%_before.json,%filename%_after.json REFERENCE:%filename%_before_ref.json,%filename%_after_ref.json
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 

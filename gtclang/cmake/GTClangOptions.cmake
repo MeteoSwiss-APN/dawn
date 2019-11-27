@@ -28,7 +28,7 @@ option(GTCLANG_USE_CCACHE "Use compile cache (ccache)" ON)
 option(GTCLANG_BUILD_GT_CPU_EXAMPLES "Build cpu GT examples" ON)
 option(GTCLANG_BUILD_GT_GPU_EXAMPLES "Build gpu GT examples" OFF)
 option(GTCLANG_BUILD_CUDA_EXAMPLES "Build cuda native examples" OFF)
-option(GTCLANG_ATLAS_INTEGRATION_TESTS "Run atlas integration tests (need atlas and eckit)" ON)
+option(GTCLANG_FORCE_ATLAS_INTEGRATION_TESTS "Force running atlas integration tests (need atlas and eckit)" OFF)
 
 set(GTCLANG_HAS_CUDA 0)
 if(GTCLANG_BUILD_GT_GPU_EXAMPLES OR GTCLANG_BUILD_CUDA_EXAMPLES)

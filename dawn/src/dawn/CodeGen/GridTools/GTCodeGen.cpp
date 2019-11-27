@@ -972,6 +972,8 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);
 
+  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+
   generateBCHeaders(ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";

@@ -633,6 +633,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
+  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
 
   generateBCHeaders(ppDefines);
 
