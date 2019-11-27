@@ -22,8 +22,8 @@ if(NOT protobuf_POPULATED)
   add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
 endif()
 
-set(USE_BUNDLED_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
-mark_as_advanced(USE_BUNDLED_PROTOBUF)
+set(DAWN_BUILT_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
+mark_as_advanced(DAWN_BUILT_PROTOBUF)
 
 if(Python3_FOUND)
   add_custom_target(build-protobuf-python

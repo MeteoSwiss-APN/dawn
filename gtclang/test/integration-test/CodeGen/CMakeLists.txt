@@ -65,6 +65,7 @@ function(compile_target)
   add_dependencies(${executable}
     CodeGen_${test}_${backend}_codegen CodeGen_${test}_c++-naive_codegen)
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}) #TODO do we need the binary dir?
+  target_include_directories(${executable} PRIVATE ${DAWN_DRIVER_INCLUDEDIR}) #TODO Dawn should export this as a target
 
   if(${backend} STREQUAL gt)
     target_compile_definitions(${executable} PRIVATE -DBACKEND_MC -DGT_ENABLE_METERS)
@@ -112,6 +113,7 @@ function(compile_target_cuda)
   endif()
 
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+  target_include_directories(${executable} PRIVATE ${DAWN_DRIVER_INCLUDEDIR}) #TODO Dawn should export this as a target
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
   target_compile_features(${executable} PRIVATE cxx_std_11)

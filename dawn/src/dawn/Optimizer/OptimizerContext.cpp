@@ -602,7 +602,7 @@ bool OptimizerContext::fillIIRFromSIR(
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
   auto& metadata = stencilInstantiation->getMetaData();
-  metadata.setStencilname(SIRStencil->Name);
+  metadata.setStencilName(SIRStencil->Name);
   metadata.setFileName(fullSIR->Filename);
   metadata.setStencilLocation(SIRStencil->Loc);
 
@@ -703,7 +703,7 @@ void OptimizerContext::fillIIR() {
 bool OptimizerContext::restoreIIR(std::string const& name,
                                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
-  metadata.setStencilname(stencilInstantiation->getName());
+  metadata.setStencilName(stencilInstantiation->getName());
   metadata.setFileName("<unknown>");
 
   stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
@@ -729,7 +729,7 @@ bool OptimizerContext::restoreIIR(std::string const& name,
   // contained in the DoMethods
   checkAndPushBack<PassSetStageName>();
   checkAndPushBack<PassComputeStageExtents>();
-  if(!getPassManager().runAllPassesOnStecilInstantiation(*this, stencilInstantiation))
+  if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
     return false;
 
   return true;

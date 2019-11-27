@@ -20,7 +20,7 @@
 
 namespace dawn {
 
-bool PassManager::runAllPassesOnStecilInstantiation(
+bool PassManager::runAllPassesOnStencilInstantiation(
     OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   std::vector<std::string> passesRan;
 
@@ -34,7 +34,7 @@ bool PassManager::runAllPassesOnStecilInstantiation(
         return false;
       }
 
-    if(!runPassOnStecilInstantiation(context, instantiation, pass.get()))
+    if(!runPassOnStencilInstantiation(context, instantiation, pass.get()))
       return false;
 
     passesRan.emplace_back(pass->getName());
@@ -42,7 +42,7 @@ bool PassManager::runAllPassesOnStecilInstantiation(
   return true;
 }
 
-bool PassManager::runPassOnStecilInstantiation(
+bool PassManager::runPassOnStencilInstantiation(
     OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
     Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";

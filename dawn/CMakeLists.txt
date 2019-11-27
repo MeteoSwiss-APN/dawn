@@ -191,11 +191,17 @@ if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
 
+set(DAWN_DRIVER_INCLUDEDIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE INTERNAL
+  "Absolute path to driver includes in the source directory (used for super-builds) "
+)
+set(DAWN_INSTALL_DRIVER_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/driver-includes)
+
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
   cmake/${PROJECT_NAME}Config.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  PATH_VARS DAWN_INSTALL_DRIVER_INCLUDEDIR
 )
 
 write_basic_package_version_file(

@@ -22,6 +22,7 @@
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
@@ -203,8 +204,10 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
     optimizer->checkAndPushBack<PassSetNonTempCaches>();
     optimizer->checkAndPushBack<PassSetCaches>();
+    optimizer->checkAndPushBack<PassFixVersionedInputFields>();
     optimizer->checkAndPushBack<PassComputeStageExtents>();
-    optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+    // This pass is disabled because the boundary conditions need to be fixed.
+    // optimizer->checkAndPushBack<PassSetBoundaryCondition>();
     if(getOptions().Backend == "cuda") {
       optimizer->checkAndPushBack<PassSetBlockSize>();
     }
@@ -228,7 +231,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
-      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(*optimizer, instantiation))
+      if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
         return nullptr;
 
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"

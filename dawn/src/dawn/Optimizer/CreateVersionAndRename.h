@@ -31,7 +31,7 @@ enum class RenameDirection {
 /// @brief Add a new version to the field/local variable given by `AccessID`
 ///
 /// This will create a **new** field and trigger a renaming of all the remaining occurences in the
-/// AccessID maps either above or below that statement, starting one statment before or after
+/// AccessID maps either above or below that statement, starting one statement before or after
 /// the current statement. Optionally, an `Expr` can be passed which will be renamed as well
 /// (usually the left- or right-hand side of an assignment).
 /// Consider the following example:

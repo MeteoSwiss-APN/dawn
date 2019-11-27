@@ -25,7 +25,7 @@
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
 #include <gtest/gtest.h>
-#include "gridtools/clang/verify.hpp"
+#include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/boundary_condition_c++-naive.cpp"
@@ -39,7 +39,7 @@
 // clang-format on
 
 using namespace dawn;
-TEST(split_stencil, test) {
+TEST(DISABLED_split_stencil, test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
              Options::getInstance().m_size[2]);
   dom.set_halos(GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND,

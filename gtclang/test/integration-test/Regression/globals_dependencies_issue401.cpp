@@ -17,7 +17,7 @@
 // RUN: %gtclang% %file% -fno-codegen --write-iir -o %filename%.cpp
 // EXPECTED_FILE: OUTPUT:%filename%.0.iir REFERENCE:%filename%_ref.0.iir IGNORE:filename
 
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 

@@ -366,7 +366,7 @@ public:
     return children_.empty();
   }
 
-  /// @brief clear the container of chilren
+  /// @brief clear the container of children
   void clearChildren() {
     static_assert(!std::is_void<Child>::value, "Child type must not be void");
     children_.clear();

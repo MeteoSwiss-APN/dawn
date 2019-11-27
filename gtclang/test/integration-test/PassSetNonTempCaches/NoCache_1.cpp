@@ -16,7 +16,7 @@
 
 // RUN: %gtclang% %file% -fno-codegen -fcache-non-temp-fields -freport-cache-non-temp-fields
 // EXPECTED: PASS: PassSetNonTempCaches: NotCorrectlyPointwise : no fields cached
-#include "gridtools/clang_dsl.hpp"
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 using namespace gridtools;

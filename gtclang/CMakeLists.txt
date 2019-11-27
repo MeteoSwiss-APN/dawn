@@ -37,6 +37,7 @@ project(GTClang
 include(CMakeDependentOption)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+#TODO put the force atlas option somewhere
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -150,6 +151,11 @@ if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
 
+#TODO put this at the right place
+#TODO: REMOVE THIS, it's a workaround to add driver-includes from dawn, otherwise parsing fails.
+# set(GTCLANG_DSL_INCLUDES "${GTCLANG_DSL_INCLUDES}" "${DAWN_INCLUDE_DIRS}")
+
+
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
   cmake/${PROJECT_NAME}Config.cmake.in
@@ -174,4 +180,10 @@ install(
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY ${DAWN_DRIVER_INCLUDEDIR}/driver-includes #TODO check location
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )

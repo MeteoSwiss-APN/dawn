@@ -500,6 +500,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   // ==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
+  ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);

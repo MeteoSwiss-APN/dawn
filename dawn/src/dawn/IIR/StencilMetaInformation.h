@@ -234,7 +234,7 @@ public:
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
-  void removeAccessID(int AccesssID);
+  void removeAccessID(int AccessID);
 
   void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
   void eraseStencilID(const int stencilID);
@@ -266,7 +266,7 @@ public:
   }
 
   bool isFieldType(FieldAccessType accessType) const;
-  void setStencilname(const std::string& name) { stencilName_ = name; }
+  void setStencilName(const std::string& name) { stencilName_ = name; }
   void setFileName(const std::string& name) { fileName_ = name; }
   void setStencilLocation(const SourceLocation& location) { stencilLocation_ = location; }
 

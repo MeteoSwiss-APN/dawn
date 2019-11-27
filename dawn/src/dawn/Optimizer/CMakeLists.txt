@@ -24,6 +24,8 @@ add_library(DawnOptimizer
   PassDataLocalityMetric.h
   PassFieldVersioning.cpp
   PassFieldVersioning.h
+  PassFixVersionedInputFields.cpp
+  PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
   PassIntervalPartitioner.cpp

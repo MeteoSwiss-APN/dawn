@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 #include "test/integration-test/CodeGen/Macros.hpp"
-#include "gridtools/clang/verify.hpp"
+#include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/kcache_fill_backward_c++-naive.cpp"
 
