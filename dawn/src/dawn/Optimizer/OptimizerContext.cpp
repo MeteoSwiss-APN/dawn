@@ -390,9 +390,7 @@ public:
     // set the iteration space
     for(int i = 0, size = stmt->getVerticalRegion()->iterationSpace_.size(); i < size; ++i) {
       if(stmt->getVerticalRegion()->iterationSpace_[i]) {
-        stage->setIterationSpace({stmt->getVerticalRegion()->iterationSpace_[i]->first,
-                                  stmt->getVerticalRegion()->iterationSpace_[i]->second},
-                                 i);
+        stage->setIterationSpace(stmt->getVerticalRegion()->iterationSpace_[i].value(), i);
       }
     }
 
@@ -491,8 +489,9 @@ public:
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
     if(instantiation_->insertBoundaryConditions(stmt->getFields()[0], stmt) == false)
       DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
-    //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
-    //      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
+    //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) ==
+    //      false) DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same
+    //      field");
   }
 
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {

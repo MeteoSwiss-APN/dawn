@@ -63,7 +63,7 @@ std::string makeIntervalBound(std::string dim, iir::Interval const& interval,
 std::string makeIntervalBoundExplicit(std::string dim, iir::Interval const& interval,
                                       iir::Interval::Bound bound, std::string dom) {
   if(interval.levelIsEnd(bound)) {
-    return dom + "." + "size() - " + dom + "." + dim + "plus() -1 + " +
+    return dom + "." + dim + "size() - " + dom + "." + dim + "plus()  + " +
            std::to_string(interval.offset(bound));
   }
   auto notEnd = interval.level(bound);
@@ -378,7 +378,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
 
     if(iterationSpaceSet) {
-      stencilClassCtr.addInit("globalOffsets(computeGlobalOffsets(rank, m_dom, xcols, ycols))");
+      stencilClassCtr.addInit("globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)})");
     }
 
     addTmpStorageInit(stencilClassCtr, stencil, tempFields);

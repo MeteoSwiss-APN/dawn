@@ -364,14 +364,12 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
 
   // VerticalRegion.VerticalInterval
   if(verticalRegion->iterationSpace_[0]) {
-    auto interval = sir::Interval(verticalRegion->iterationSpace_[0]->first,
-                                  verticalRegion->iterationSpace_[0]->second);
-    setInterval(verticalRegionProto->mutable_i_range(), &interval);
+    setInterval(verticalRegionProto->mutable_i_range(),
+                &verticalRegion->iterationSpace_[0].value());
   }
   if(verticalRegion->iterationSpace_[1]) {
-    auto interval = sir::Interval(verticalRegion->iterationSpace_[1]->first,
-                                  verticalRegion->iterationSpace_[1]->second);
-    setInterval(verticalRegionProto->mutable_j_range(), &interval);
+    setInterval(verticalRegionProto->mutable_j_range(),
+                &verticalRegion->iterationSpace_[1].value());
   }
 }
 
@@ -969,13 +967,12 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     stmt->setID(stmtProto.id());
     if(stmtProto.vertical_region().has_i_range()) {
       auto range = stmtProto.vertical_region().i_range();
-      verticalRegion->iterationSpace_[0]->first = range.lower_offset() + range.lower_level();
-      verticalRegion->iterationSpace_[0]->second = range.upper_offset() + range.upper_level();
+      verticalRegion->iterationSpace_[0] = *makeInterval(range);
     }
     if(stmtProto.vertical_region().has_j_range()) {
       auto range = stmtProto.vertical_region().j_range();
-      verticalRegion->iterationSpace_[1]->first = range.lower_offset() + range.lower_level();
-      verticalRegion->iterationSpace_[1]->second = range.upper_offset() + range.upper_level();
+      verticalRegion->iterationSpace_[1] = *makeInterval(range);
+      ;
     }
     return stmt;
   }

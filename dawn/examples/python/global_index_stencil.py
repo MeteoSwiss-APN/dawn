@@ -60,12 +60,12 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     return vertical_region_stmt
 
 
-def create_boundary_correction_region(i_interval=None, j_interval=None) -> VerticalRegionDeclStmt:
+def create_boundary_correction_region(value="0", i_interval=None, j_interval=None) -> VerticalRegionDeclStmt:
     interval = make_interval(Interval.Start, Interval.End, 0, 0)
     boundary_body = make_ast(
         [
             make_assignment_stmt(
-                make_field_access_expr("out", [0, 0, 0]), make_literal_access_expr("0.0", BuiltinType.Float), "="
+                make_field_access_expr("out", [0, 0, 0]), make_literal_access_expr(value, BuiltinType.Float), "="
             )
         ]
     )
@@ -82,9 +82,39 @@ hir = make_sir(
             "global_indexing",
             make_ast(
                 [
-                    create_boundary_correction_region(i_interval=make_interval(0, 0, 0, 1)),
-                    create_boundary_correction_region(j_interval=make_interval(0, 0, 0, 1)),
                     create_vertical_region_stmt(),
+                    create_boundary_correction_region(
+                        value="4", i_interval=make_interval(Interval.End, Interval.End, -1, 0)
+                    ),
+                    create_boundary_correction_region(
+                        value="8", i_interval=make_interval(Interval.Start, Interval.Start, 0, 1)
+                    ),
+                    create_boundary_correction_region(
+                        value="6", j_interval=make_interval(Interval.End, Interval.End, -1, 0)
+                    ),
+                    create_boundary_correction_region(
+                        value="2", j_interval=make_interval(Interval.Start, Interval.Start, 0, 1)
+                    ),
+                    create_boundary_correction_region(
+                        value="1",
+                        j_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                        i_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                    ),
+                    create_boundary_correction_region(
+                        value="3",
+                        j_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                        i_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                    ),
+                    create_boundary_correction_region(
+                        value="7",
+                        j_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                        i_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                    ),
+                    create_boundary_correction_region(
+                        value="5",
+                        j_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                        i_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                    ),
                 ]
             ),
             [make_field("in"), make_field("out")],
@@ -124,7 +154,8 @@ one = dawn.dawnOptionsEntryCreateInteger(1)
 dawn.dawnOptionsSet(options, "DumpStencilInstantiation".encode("utf-8"), one)
 
 # dawn.dawnOptionsSet(options, "WriteSIR".encode("utf-8"), one)
-# dawn.dawnOptionsSet(options, "SIRFormat".encode("utf-8"), backend)
+none = dawn.dawnOptionsEntryCreateString("none".encode("utf-8"))
+dawn.dawnOptionsSet(options, "ReorderStrategy".encode("utf-8"), none)
 
 # call the compiler that generates a translation unit
 

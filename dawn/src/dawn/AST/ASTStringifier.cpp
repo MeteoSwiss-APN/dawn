@@ -104,18 +104,14 @@ public:
 
     ss_ << "vertical-region";
     if(stmt->getVerticalRegion()->iterationSpace_[0]) {
-      ss_ << " IRange : [";
-      ss_ << stmt->getVerticalRegion()->iterationSpace_[0]->first;
-      ss_ << " , ";
-      ss_ << stmt->getVerticalRegion()->iterationSpace_[0]->second;
-      ss_ << "] ";
+      ss_ << " IRange : ";
+      ss_ << stmt->getVerticalRegion()->iterationSpace_[0].value().toString();
+      ss_ << " ";
     }
     if(stmt->getVerticalRegion()->iterationSpace_[1]) {
-      ss_ << " JRange : [";
-      ss_ << stmt->getVerticalRegion()->iterationSpace_[1]->first;
-      ss_ << " , ";
-      ss_ << stmt->getVerticalRegion()->iterationSpace_[1]->second;
-      ss_ << "] ";
+      ss_ << " JRange : ";
+      ss_ << stmt->getVerticalRegion()->iterationSpace_[1].value().toString();
+      ss_ << " ";
     }
     ss_ << " K-Range : ";
     ss_ << *stmt->getVerticalRegion()->VerticalInterval.get();
