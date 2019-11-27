@@ -1,0 +1,19 @@
+*.pyc
+*.log
+*.old
+*.out
+*.DS_Store
+*.~
+*~
+*.user
+*.project
+
+# Build directories
+build*/
+install*/
+
+# Ignore IDEs
+.idea
+.vscode/
+**/compile_commands.json
+.clangd/

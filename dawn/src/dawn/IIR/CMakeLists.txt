@@ -121,7 +121,8 @@ if(ENABLE_PYTHON)
   )
 
   add_custom_target(DawnIIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/IIR
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/python/IIR/
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${PROJECT_BINARY_DIR}/python/IIR/
     DEPENDS ${iir_proto_python_files}
   )
 

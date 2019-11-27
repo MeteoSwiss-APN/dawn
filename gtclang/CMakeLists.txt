@@ -37,7 +37,6 @@ project(GTClang
 include(CMakeDependentOption)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
-option(GTCLANG_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -161,7 +160,7 @@ else()
 endif()
 mark_as_advanced(${PROJECT_NAME}_TESTING)
 
-if(NOT DAWN_GTCLANG_MULTIPROJECT)
+if(NOT TARGET Dawn::Dawn)
   find_package(Dawn REQUIRED)
 endif()
 

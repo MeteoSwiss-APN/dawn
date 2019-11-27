@@ -65,7 +65,8 @@ if(ENABLE_PYTHON)
     )
 
   add_custom_target(DawnSIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/SIR
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/python/SIR/
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${PROJECT_BINARY_DIR}/python/SIR/
     DEPENDS ${sir_proto_python_files}
     )
 
