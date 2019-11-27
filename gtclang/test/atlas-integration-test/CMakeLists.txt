@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(GTCLANG_FORCE_ATLAS_INTEGRATION_TESTS)
+if(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING)
     find_package(eckit REQUIRED)
     find_package(atlas REQUIRED)
 else()
@@ -42,14 +42,9 @@ if(eckit_FOUND AND atlas_FOUND)
     list(JOIN generated_stencil_codes " " generated_stencil_codes_str)
     list(JOIN reference_stencil_codes " " reference_stencil_codes_str)
 
-
     # Compile the executable that will programatically construct an IIR and code-generate it to file
-    yoda_add_executable(
-      NAME AtlasIntegrationTestCodeGenerate
-      SOURCES GenerateUnstructuredStencils.cpp
-      DEPENDS Dawn::DawnShared
-      OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest
-    )
+    add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp)
+    target_link_libraries(AtlasIntegrationTestCodeGenerate Dawn DawnUnittest)
 
     # And run such executable. Outputs are the generated (stencil) codes: generated_*.hpp
     add_custom_target(AtlasIntegrationTestMkdirGenerated ALL
@@ -66,18 +61,27 @@ if(eckit_FOUND AND atlas_FOUND)
         configure_file(${reference} ${reference} COPYONLY)
     endforeach()
 
-
-    # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
-    yoda_add_unittest(
-        NAME AtlasIntegrationTestCompareOutput
-        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifyer.h ${generated_stencil_codes_str} ${reference_stencil_codes_str}
-        DEPENDS eckit atlas gtest
-        OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest
-        GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml
+    # TODO probably we want to put this skeleton in a add_gtclang_test
+    set(test_name AtlasIntegrationTestCompareOutput)
+    add_executable(${test_name}
+      TestCompareOutputMain.cpp
+      AtlasIntegrationTestCompareOutput.cpp
+      AtlasVerifyer.h
+      ${generated_stencil_codes_str}
+      ${reference_stencil_codes_str}
     )
-
     target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
     target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
+    target_add_gtclang_standard_props(${test_name})
+    target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest)
+
+    set_target_properties(${test_name} PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
+    )
+
+    add_test(NAME ${test_name}
+      COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
+    )
 endif()
