@@ -12,7 +12,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-
 add_executable(DawnIntegrationTest
   TestMain.cpp
   TestIIRDeserializer.cpp
@@ -33,6 +32,3 @@ add_executable(DawnUpdateIIRReferences
 target_link_libraries(DawnUpdateIIRReferences Dawn gtest)
 target_add_dawn_standard_props(DawnUpdateIIRReferences)
 file(COPY reference_iir DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-# OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/integrationtest
-# file(COPY reference_iir DESTINATION ${CMAKE_BINARY_DIR}/bin/integrationtest)

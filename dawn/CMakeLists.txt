@@ -49,33 +49,17 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
+# Path for Find*.cmake files
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+
 include(CTest)
 include(GNUInstallDirs)
+include(EnableCCache)
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON) # Do not attempt to update packages -- speeds up configure process
 
-# TODO move back to a find_package
-if(NOT DEFINED CCACHE_EXECUTABLE)
-  find_program(CCACHE_EXECUTABLE
-    NAMES ccache
-    DOC "Path to ccache executable"
-  )
-  mark_as_advanced(CCACHE_EXECUTABLE)
-endif()
-if(CCACHE_EXECUTABLE)
-  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
-endif()
-
-# TODO move to file
-# Git version string
-if(NOT DEFINED GIT_EXECUTABLE)
-  find_program(GIT_EXECUTABLE
-    NAMES git
-    DOC "Path to git executable"
-  )
-  mark_as_advanced(GIT_EXECUTABLE)
-endif()
-if(GIT_EXECUTABLE)
-  execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE git_hash_short OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif()
+include(GitVersionHash)
+get_git_version_hash(DAWN_GIT_HASH)
 
 if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_short}")
   set(DAWN_GIT_HASH ${git_hash_short} CACHE INTERNAL "git hash (short) of current head")
@@ -85,10 +69,6 @@ set(compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
 set(DAWN_FULL_VERSION
     "${Dawn_VERSION}-${DAWN_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${compiler}"
     CACHE STRING "Full version string of dawn" FORCE)
-#endTODO move to FILE
-
-# Path for Find*.cmake files
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -109,20 +89,7 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
 endif("${isSystemDir}" STREQUAL "-1")
 
-# CXX flags
-include(CheckCXXCompilerFlag)
-function(add_cxx_compiler_flag_if_supported flag var)
-  string(FIND "${var}" "${flag}" flag_already_set)
-  if(flag_already_set EQUAL -1)
-    check_cxx_compiler_flag("${flag}" flag_supported)
-    if(flag_supported)
-      list(APPEND ${var} "${flag}")
-      set(${var} "${${var}}" PARENT_SCOPE)
-    endif()
-  endif()
-endfunction()
-
-# Build up DAWN_CXX_FLAGS -- used to compile dawn sources later
+include(AddCXXCompilerFlagIfSuppported)
 add_cxx_compiler_flag_if_supported("-Wall" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
@@ -153,52 +120,12 @@ function(target_add_dawn_standard_props target)
   set_target_properties(${target} PROPERTIES ${DAWN_TARGET_PROPERTIES})
 endfunction()
 
-include(FetchContent)
-
-# Do not attempt to update packages -- speeds up configure process
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-
 # Protobuf
 if(NOT USE_BUNDLED_PROTOBUF)
   find_package(Protobuf 3.4.0)
 endif()
 if(NOT Protobuf_FOUND)
-  # TODO move to separate file
-  if(NOT USE_BUNDLED_PROTOBUF)
-    message(STATUS " Fetching Protobuf...")
-  endif()
-
-  # Configuration options for Protobuf
-  set(protobuf_BUILD_EXAMPLES OFF)
-  set(protobuf_BUILD_TESTS OFF)
-  set(protobuf_INSTALL_EXAMPLES OFF)
-  set(protobuf_BUILD_PROTOC_BINARIES ON)
-
-  FetchContent_Declare(protobuf
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG v3.10.1
-  )
-
-  FetchContent_GetProperties(protobuf)
-  if(NOT protobuf_POPULATED)
-    FetchContent_Populate(protobuf)
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-    add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
-  endif()
-
-  set(USE_BUNDLED_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
-  mark_as_advanced(USE_BUNDLED_PROTOBUF)
-
-  if(Python3_FOUND)
-    add_custom_target(build-protobuf-python
-      COMMAND PROTOC=$<TARGET_FILE:protobuf::protoc> ${Python3_EXECUTABLE} setup.py build
-      WORKING_DIRECTORY ${protobuf_SOURCE_DIR}/python
-    )
-    add_custom_target(protobuf-python
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_SOURCE_DIR}/python ${protobuf_BINARY_DIR}/python
-      DEPENDS build-protobuf-python
-    )
-  endif()
+  include(FetchProtobuf)
 endif()
 
 # Only test if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
@@ -210,25 +137,12 @@ endif()
 mark_as_advanced(${PROJECT_NAME}_TESTING)
 
 if(${PROJECT_NAME}_TESTING)
-  # Google Test
-  message(STATUS " Fetching GoogleTest...")
-  set(INSTALL_GTEST OFF)
-  set(BUILD_GMOCK OFF)
-  FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        release-1.10.0
-    )
-  FetchContent_GetProperties(googletest)
-  if(NOT googletest_POPULATED)
-    FetchContent_Populate(googletest)
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-  endif()
+  include(FetchGoogleTest)
 endif()
 
 if(Python3_FOUND)
-  if(USE_BUNDLED_PROTOBUF)
+  # TODO can we make this cleaner
+  if(DAWN_BUILT_PROTOBUF)
     # we know where it will be after the build step
     set(PROTOBUF_PYTHON_DIR ${protobuf_BINARY_DIR}/python)
   else()
@@ -269,7 +183,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   if(Doxygen_FOUND AND SPHINX_FOUND)
 	  add_subdirectory(docs)
   else()
-	  message(STATUS "Doxygen and Sphinx not found, not building docs")
+	  message(STATUS "Doxygen or Sphinx not found, not building docs")
   endif()
 endif()
 
