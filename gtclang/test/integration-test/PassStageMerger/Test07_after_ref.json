@@ -1,0 +1,247 @@
+{
+  "IIR": {
+    "Fields": {
+      "in": {
+        "IsTemporary": false,
+        "dim": "[1,1,1]",
+        "field": {
+          "accessID": 15,
+          "extents": {
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
+            "write_access": "null"
+          },
+          "intend": 2,
+          "interval": "{ Start : End }",
+          "redundant extents": {
+            "read_access": "[<no_horizontal_extent>,(0,0)]",
+            "write_access": "null"
+          }
+        }
+      },
+      "out": {
+        "IsTemporary": false,
+        "dim": "[1,1,1]",
+        "field": {
+          "accessID": 16,
+          "extents": {
+            "read_access": "null",
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
+          },
+          "intend": 0,
+          "interval": "{ Start : End }",
+          "redundant extents": {
+            "read_access": "null",
+            "write_access": "[<no_horizontal_extent>,(0,0)]"
+          }
+        }
+      }
+    },
+    "Stencil0": {
+      "Fields": {
+        "in": {
+          "IsTemporary": false,
+          "dim": "[1,1,1]",
+          "field": {
+            "accessID": 15,
+            "extents": {
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
+              "write_access": "null"
+            },
+            "intend": 2,
+            "interval": "{ Start : End }",
+            "redundant extents": {
+              "read_access": "[<no_horizontal_extent>,(0,0)]",
+              "write_access": "null"
+            }
+          }
+        },
+        "out": {
+          "IsTemporary": false,
+          "dim": "[1,1,1]",
+          "field": {
+            "accessID": 16,
+            "extents": {
+              "read_access": "null",
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
+            },
+            "intend": 0,
+            "interval": "{ Start : End }",
+            "redundant extents": {
+              "read_access": "null",
+              "write_access": "[<no_horizontal_extent>,(0,0)]"
+            }
+          }
+        }
+      },
+      "ID": "17",
+      "MultiStages": [
+        {
+          "Caches": null,
+          "Fields": {
+            "in": {
+              "accessID": 15,
+              "extents": {
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
+                "write_access": "null"
+              },
+              "intend": 2,
+              "interval": "{ Start : End }",
+              "redundant extents": {
+                "read_access": "[<no_horizontal_extent>,(0,0)]",
+                "write_access": "null"
+              }
+            },
+            "out": {
+              "accessID": 16,
+              "extents": {
+                "read_access": "null",
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
+              },
+              "intend": 0,
+              "interval": "{ Start : End }",
+              "redundant extents": {
+                "read_access": "null",
+                "write_access": "[<no_horizontal_extent>,(0,0)]"
+              }
+            }
+          },
+          "ID": 39,
+          "Loop": "parallel",
+          "Stages": [
+            {
+              "DoMethods": [
+                {
+                  "Fields": {
+                    "in": {
+                      "accessID": 15,
+                      "extents": {
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "[<no_horizontal_extent>,(0,0)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "out": {
+                      "accessID": 16,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[<no_horizontal_extent>,(0,0)]"
+                      }
+                    }
+                  },
+                  "ID": 0,
+                  "Stmts": [
+                    {
+                      "read_accesses": [
+                        {
+                          "access_id": 15,
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
+                          "name": "in"
+                        }
+                      ],
+                      "stmt": "out[<no_horizontal_offset>,0] = in[<no_horizontal_offset>,0];\n",
+                      "write_accesses": [
+                        {
+                          "access_id": 16,
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
+                          "name": "out"
+                        }
+                      ]
+                    },
+                    {
+                      "read_accesses": null,
+                      "stmt": "out[<no_horizontal_offset>,0] = 0;\n",
+                      "write_accesses": [
+                        {
+                          "access_id": 16,
+                          "extents": "[<no_horizontal_extent>,(0,0)]",
+                          "name": "out"
+                        }
+                      ]
+                    }
+                  ],
+                  "interval": "{ Start : End }"
+                }
+              ],
+              "Extents": "[<no_horizontal_extent>,(0,0)]",
+              "Fields": {
+                "in": {
+                  "accessID": 15,
+                  "extents": {
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
+                    "write_access": "null"
+                  },
+                  "intend": 2,
+                  "interval": "{ Start : End }",
+                  "redundant extents": {
+                    "read_access": "[<no_horizontal_extent>,(0,0)]",
+                    "write_access": "null"
+                  }
+                },
+                "out": {
+                  "accessID": 16,
+                  "extents": {
+                    "read_access": "null",
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
+                  },
+                  "intend": 0,
+                  "interval": "{ Start : End }",
+                  "redundant extents": {
+                    "read_access": "null",
+                    "write_access": "[<no_horizontal_extent>,(0,0)]"
+                  }
+                }
+              },
+              "RequiresSync": false
+            }
+          ]
+        }
+      ]
+    },
+    "globals": null
+  },
+  "MetaInformation": {
+    "AccessIDToName": {
+      "15": "in",
+      "16": "out"
+    },
+    "FieldDims": {
+      "15": "[1,1,1]",
+      "16": "[1,1,1]"
+    },
+    "FieldToBC": null,
+    "GlobalAccessIDs": null,
+    "IDToStencilCall": {
+      "17": "stencil-call:__code_gen_17();\n"
+    },
+    "TemporaryAccessIDs": null,
+    "VariableVersions": {
+      "versionIDs": null,
+      "versions": null
+    },
+    "apiAccessIDs": [
+      15,
+      16
+    ],
+    "fieldAccessIDs": [
+      15,
+      16
+    ],
+    "filename": "Test07.cpp",
+    "literalAccessIDs": {
+      "-38": "0"
+    },
+    "stencilLocation": "24:8",
+    "stencilname": "Test"
+  }
+}
