@@ -2,7 +2,7 @@
 
 set -e
 
-BASEPATH_SCRIPT=$(dirname "${0}")
+BASEPATH_SCRIPT=$(dirname $(realpath -s $0))
 source ${BASEPATH_SCRIPT}/machine_env.sh
 source ${BASEPATH_SCRIPT}/env_${myhost}.sh
 
@@ -36,7 +36,7 @@ while getopts i: flag; do
   esac
 done
 
-source_dir=$(pwd)/${BASEPATH_SCRIPT}/../..
+source_dir=${BASEPATH_SCRIPT}/../..
 base_dir=$(pwd)
 build_dir=${base_dir}/build
 
@@ -64,7 +64,13 @@ fi
 CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 
 cmake ${CMAKE_ARGS} ${source_dir} 
-make -j8 install
+
+if [ -z ${PARALLEL_BUILD_JOBS+x} ]; then
+  PARALLEL_BUILD_JOBS=8
+fi
+
+echo "Building with ${PARALLEL_BUILD_JOBS} jobs."
+cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 
 # Run unittests
 #ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
