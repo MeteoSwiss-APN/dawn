@@ -26,8 +26,6 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   if(!fromStage.overlaps(toStage))
     return false;
 
-  bool intervalsMatch = fromStage.getEnclosingInterval() == toStage.getEnclosingInterval();
-
   for(const auto& fromFieldPair : fromStage.getFields()) {
     const iir::Field& fromField = fromFieldPair.second;
     for(const auto& toFieldPair : toStage.getFields()) {
