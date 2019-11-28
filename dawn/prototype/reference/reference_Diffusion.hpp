@@ -1,6 +1,6 @@
 #define GRIDTOOLS_CLANG_reference 1
 #define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO
-#include <driver-includes/interface.hpp>
+#include <driver-includes/unstructured_interface.hpp>
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>

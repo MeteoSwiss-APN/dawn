@@ -550,7 +550,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define GRIDTOOLS_CLANG_GENERATED 1");
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO");
-  ppDefines.push_back("#include <driver-includes/interface.hpp>");
+  ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);
