@@ -26,8 +26,6 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   if(!fromStage.overlaps(toStage))
     return false;
 
-  bool intervalsMatch = fromStage.getEnclosingInterval() == toStage.getEnclosingInterval();
-
   for(const auto& fromFieldPair : fromStage.getFields()) {
     const iir::Field& fromField = fromFieldPair.second;
     for(const auto& toFieldPair : toStage.getFields()) {
@@ -43,8 +41,7 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
         // This used to check if IntendKind was Input or InputOutput, but this
         // reorders stages when there is a WAW dependency. Instead, we should
         // catch all output dependencies
-        if(!intervalsMatch)
-          return true;
+        return true;
         break;
       case iir::Field::IntendKind::InputOutput:
         return true;
