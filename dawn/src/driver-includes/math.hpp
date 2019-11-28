@@ -14,6 +14,10 @@
 
 #pragma once
 
+#ifndef GT_FUNCTION
+#define GT_FUNCTION
+#endif
+
 #include <algorithm>
 #include <cmath>
 
@@ -43,7 +47,7 @@ namespace math {
  * @see http://en.cppreference.com/w/cpp/numeric/math/fabs
  */
 template <typename T>
-T fabs(const T x) {
+GT_FUNCTION T fabs(const T x) {
   return ::fabs(x);
 }
 
@@ -53,7 +57,7 @@ T fabs(const T x) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/floor
  */
 template <typename T>
-T floor(const T arg) {
+GT_FUNCTION T floor(const T arg) {
   return ::floor(arg);
 }
 
@@ -63,7 +67,7 @@ T floor(const T arg) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/ceil
  */
 template <typename T>
-T ceil(const T arg) {
+GT_FUNCTION T ceil(const T arg) {
   return ::ceil(arg);
 }
 
@@ -73,7 +77,7 @@ T ceil(const T arg) {
  * The truncation is performed by casting @c arg to @c int
  */
 template <typename T>
-int trunc(const T arg) {
+GT_FUNCTION int trunc(const T arg) {
   return static_cast<int>(arg);
 }
 
@@ -86,7 +90,7 @@ int trunc(const T arg) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
  */
 template <typename T>
-T fmod(const T x, const T y) {
+GT_FUNCTION T fmod(const T x, const T y) {
   return ::fmod(x, y);
 }
 
@@ -99,7 +103,7 @@ T fmod(const T x, const T y) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
  */
 template <typename T>
-T pow(const T x, const T y) {
+GT_FUNCTION T pow(const T x, const T y) {
   return ::pow(x, y);
 }
 
@@ -112,7 +116,7 @@ T pow(const T x, const T y) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/sqrt
  */
 template <typename T>
-T sqrt(const T x) {
+GT_FUNCTION T sqrt(const T x) {
   return ::sqrt(x);
 }
 
@@ -122,7 +126,7 @@ T sqrt(const T x) {
  * @see http://en.cppreference.com/w/cpp/algorithm/min
  */
 template <typename T>
-T min(const T x, const T y) {
+GT_FUNCTION T min(const T x, const T y) {
 #if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
   return x < y ? x : y;
 #else
@@ -136,7 +140,7 @@ T min(const T x, const T y) {
  * @see http://en.cppreference.com/w/cpp/algorithm/max
  */
 template <typename T>
-T max(const T x, const T y) {
+GT_FUNCTION T max(const T x, const T y) {
 #if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
   return x > y ? x : y;
 #else
@@ -150,7 +154,7 @@ T max(const T x, const T y) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/exp
  */
 template <typename T>
-T exp(const T arg) {
+GT_FUNCTION T exp(const T arg) {
   return ::exp(arg);
 }
 
@@ -160,7 +164,7 @@ T exp(const T arg) {
  * @see http://en.cppreference.com/w/cpp/numeric/math/log
  */
 template <typename T>
-T log(const T x) {
+GT_FUNCTION T log(const T x) {
   return ::log(x);
 }
 
