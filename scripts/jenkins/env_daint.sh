@@ -16,6 +16,5 @@ export PROTOBUFDIR=/scratch/snx3000/jenkins/workspace/protobuf/slave/daint/insta
 export ATLAS_DIR=/project/c14/install/daint/atlas_install/release/cpu
 export ECKIT_DIR=/project/c14/install/daint/eckit_install
 
-export SLURM_RESOURCES=('--gres=gpu:1 -C gpu --account=g110')
-export SLURM_PARTITION="debug"
 export CUDA_ARCH="sm_60"
+

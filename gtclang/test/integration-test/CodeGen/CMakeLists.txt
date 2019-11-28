@@ -81,13 +81,6 @@ function(compile_target)
 endfunction()
 
 function(compile_target_cuda)
-#       if(CTEST_CUDA_SUBMIT)
-#         string(REPLACE " " ";" GTCLANG_SLURM_RESOURCES_LIST ${GTCLANG_SLURM_RESOURCES})
-#         set(CTEST_SUBMIT_COMMAND "${SLURM_SRUN_COMMAND}" "-n" "${GTCLANG_SLURM_N_TASKS}" ${GTCLANG_SLURM_RESOURCES_LIST} "-p" "${GTCLANG_SLURM_PARTITION}")
-#       endif(CTEST_CUDA_SUBMIT)
-
-#       add_test(NAME CTest-${example}_benchmarks_${backend}_cuda COMMAND ${CTEST_SUBMIT_COMMAND} $<TARGET_FILE:${example}_benchmarks_${backend}_cuda> 12 12 10 --gtest_output=xml:${example}_cuda_unittest.xml)
-
   set(options)
   set(oneValueArgs TEST BACKEND)
   set(multiValueArgs)
@@ -124,11 +117,6 @@ function(compile_target_cuda)
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
   )
 
-#TODO
-#       if(CTEST_CUDA_SUBMIT)
-#         string(REPLACE " " ";" GTCLANG_SLURM_RESOURCES_LIST ${GTCLANG_SLURM_RESOURCES})
-#         set(CTEST_SUBMIT_COMMAND "${SLURM_SRUN_COMMAND}" "-n" "${GTCLANG_SLURM_N_TASKS}" ${GTCLANG_SLURM_RESOURCES_LIST} "-p" "${GTCLANG_SLURM_PARTITION}")
-#       endif(CTEST_CUDA_SUBMIT)
   add_test(NAME ${executable}
     COMMAND $<TARGET_FILE:${executable}> 12 12 10 --gtest_output=xml:${executable}_unittest.xml
   )

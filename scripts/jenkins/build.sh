@@ -73,5 +73,5 @@ echo "Building with ${PARALLEL_BUILD_JOBS} jobs."
 cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 
 # Run unittests
-#ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
+ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
 
