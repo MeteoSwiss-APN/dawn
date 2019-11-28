@@ -161,7 +161,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const gtclang::mesh_t<LibTag> &mesh");
+  StencilWrapperConstructor.addArg("const dawn::mesh_t<LibTag> &mesh");
   StencilWrapperConstructor.addArg("int k_size");
 
   auto getLocationTypeString = [](ast::Expr::LocationType type) {
@@ -181,7 +181,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     std::string typeString =
         getLocationTypeString(metadata.getLocationTypeFromAccessID(APIfieldID));
 
-    StencilWrapperConstructor.addArg("gtclang::" + typeString + "field_t<LibTag, double>& " +
+    StencilWrapperConstructor.addArg("dawn::" + typeString + "field_t<LibTag, double>& " +
                                      metadata.getNameFromAccessID(APIfieldID));
   }
 
@@ -300,18 +300,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
       switch(info.field.getLocation()) {
       case ast::Expr::LocationType::Cells:
-        return std::string("gtclang::cell_field_t<LibTag, double>");
+        return std::string("dawn::cell_field_t<LibTag, double>");
       case ast::Expr::LocationType::Vertices:
-        return std::string("gtclang::vertex_field_t<LibTag, double>");
+        return std::string("dawn::vertex_field_t<LibTag, double>");
       case ast::Expr::LocationType::Edges:
-        return std::string("gtclang::edge_field_t<LibTag, double>");
+        return std::string("dawn::edge_field_t<LibTag, double>");
       default:
         dawn_unreachable("invalid location");
         return std::string("");
       }
     };
 
-    StencilClass.addMember("gtclang::mesh_t<LibTag> const&", "m_mesh");
+    StencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
     StencilClass.addMember("int", "m_k_size");
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
@@ -324,7 +324,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("gtclang::mesh_t<LibTag> const &mesh");
+    stencilClassCtr.addArg("dawn::mesh_t<LibTag> const &mesh");
     stencilClassCtr.addArg("int k_size");
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
@@ -366,7 +366,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     StencilRunMethod.startBody();
 
     // TODO the generic deref should be moved to a different namespace
-    StencilRunMethod.addStatement("using gtclang::deref;");
+    StencilRunMethod.addStatement("using dawn::deref;");
 
     // StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil->getChildren()) {
