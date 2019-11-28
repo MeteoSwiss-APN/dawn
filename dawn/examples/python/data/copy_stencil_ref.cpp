@@ -1,6 +1,6 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
+__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
 
   // Start kernel
   const unsigned int nx = isize;
@@ -78,10 +78,10 @@ public:
     using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
-    const gridtools::clang::domain m_dom;
+    const gridtools::dawn::domain m_dom;
   public:
 
-    stencil_11(const gridtools::clang::domain& dom_) : sbase("stencil_11"), m_dom(dom_){}
+    stencil_11(const gridtools::dawn::domain& dom_) : sbase("stencil_11"), m_dom(dom_){}
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
 
@@ -115,7 +115,7 @@ public:
 
   // Stencil-Data
 
-  copy_stencil(const gridtools::clang::domain& dom) : m_stencil_11(dom){}
+  copy_stencil(const gridtools::dawn::domain& dom) : m_stencil_11(dom){}
 
   template<typename S>
   void sync_storages(S field) {

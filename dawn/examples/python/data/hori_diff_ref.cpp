@@ -1,9 +1,9 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(256)  hori_diff_stencil41_ms87_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out, gridtools::clang::float_type * const coeff) {
+__global__ void __launch_bounds__(256)  hori_diff_stencil41_ms87_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out, ::dawn::float_type * const coeff) {
 
   // Start kernel
-  __shared__ gridtools::clang::float_type lap_ijcache[34*6];
+  __shared__ ::dawn::float_type lap_ijcache[34*6];
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
@@ -58,10 +58,10 @@ if(threadIdx.y < +6) {
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
 for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
   if(iblock >= -1 && iblock <= block_size_i -1 + 1 && jblock >= -1 && jblock <= block_size_j -1 + 1) {
-lap_ijcache[ijcacheindex] = (((gridtools::clang::float_type) -4.0 * __ldg(&(in[idx111]))) + (__ldg(&(coeff[idx111])) * (__ldg(&(in[idx111+1*1])) + (__ldg(&(in[idx111+1*-1])) + (__ldg(&(in[idx111+stride_111_1*1])) + __ldg(&(in[idx111+stride_111_1*-1])))))));
+lap_ijcache[ijcacheindex] = (((::dawn::float_type) -4.0 * __ldg(&(in[idx111]))) + (__ldg(&(coeff[idx111])) * (__ldg(&(in[idx111+1*1])) + (__ldg(&(in[idx111+1*-1])) + (__ldg(&(in[idx111+stride_111_1*1])) + __ldg(&(in[idx111+stride_111_1*-1])))))));
   }    __syncthreads();
   if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-out[idx111] = (((gridtools::clang::float_type) -4.0 * lap_ijcache[ijcacheindex]) + (__ldg(&(coeff[idx111])) * (lap_ijcache[ijcacheindex+1] + (lap_ijcache[ijcacheindex+-1] + (lap_ijcache[ijcacheindex+1*34] + lap_ijcache[ijcacheindex+-1*34])))));
+out[idx111] = (((::dawn::float_type) -4.0 * lap_ijcache[ijcacheindex]) + (__ldg(&(coeff[idx111])) * (lap_ijcache[ijcacheindex+1] + (lap_ijcache[ijcacheindex+-1] + (lap_ijcache[ijcacheindex+1*34] + lap_ijcache[ijcacheindex+-1*34])))));
   }    __syncthreads();
 
     // Slide kcaches
@@ -90,14 +90,14 @@ public:
     using tmp_halo_t = gridtools::halo< 1,1, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
-    const gridtools::clang::domain m_dom;
+    const gridtools::dawn::domain m_dom;
 
     // temporary storage declarations
     tmp_meta_data_t m_tmp_meta_data;
     tmp_storage_t m_lap;
   public:
 
-    stencil_41(const gridtools::clang::domain& dom_) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
+    stencil_41(const gridtools::dawn::domain& dom_) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
 
@@ -132,7 +132,7 @@ public:
 
   // Stencil-Data
 
-  hori_diff(const gridtools::clang::domain& dom) : m_stencil_41(dom){}
+  hori_diff(const gridtools::dawn::domain& dom) : m_stencil_41(dom){}
 
   template<typename S>
   void sync_storages(S field) {

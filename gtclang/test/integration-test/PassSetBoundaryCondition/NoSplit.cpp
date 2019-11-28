@@ -17,7 +17,7 @@
 // EXPECTED: PASS: PassSetBoundaryCondition: Test01 : No boundary conditions applied
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 globals {
   double glob_bar;
