@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTStringifier.h"
@@ -34,6 +35,30 @@
 
 namespace dawn {
 namespace iir {
+
+namespace {
+class ReplaceNamesVisitor : public iir::ASTVisitorForwarding, public NonCopyable {
+  const StencilMetaInformation& metadata_;
+
+public:
+  ReplaceNamesVisitor(const StencilMetaInformation& metadata) : metadata_(metadata) {}
+  virtual ~ReplaceNamesVisitor() override {}
+
+  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+    auto data = stmt->getData<iir::IIRStmtData>();
+    auto accesses = data.CallerAccesses;
+    auto accessmap = accesses->getWriteAccesses();
+    DAWN_ASSERT_MSG(accessmap.size() == 1, "can only be one write access");
+    std::string realName = metadata_.getNameFromAccessID(accessmap.begin()->first);
+    stmt->getName() = realName;
+  }
+  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+    auto data = expr->getData<iir::IIRAccessExprData>();
+    std::string realName = metadata_.getNameFromAccessID(data.AccessID.value());
+    expr->setName(realName);
+  }
+};
+} // namespace
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
@@ -253,6 +278,14 @@ void DoMethod::updateLevel() {
 
       derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
     }
+  }
+
+  // Compute the extents of each field by accumulating the extents of each access to field in the
+  // stage
+  ReplaceNamesVisitor nameReplacer(metaData_);
+  for(const auto& stmt : getAST().getStatements()) {
+    // Visitor to loop trough and fix name = access name
+    stmt->accept(nameReplacer);
   }
 }
 
