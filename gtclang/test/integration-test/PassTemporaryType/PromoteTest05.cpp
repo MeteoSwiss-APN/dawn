@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -freport-pass-temporary-type
-// EXPECTED: PASS: PassTemporaryType: Test: promote:local_variable
+// EXPECTED: PASS: PassTemporaryType: Test: promote:.*local_variable.*
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 

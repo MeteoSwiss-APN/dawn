@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -freport-pass-set-caches
-// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:cache_type::k:flush:[0,0]
+// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:cache_type::k:flush:\[0,0\]
 // EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:cache_type::k:fill_and_flush
 // EXPECTED: PASS: PassSetCaches: Test: MS1: b1:cache_type::k:fill
 // EXPECTED: PASS: PassSetCaches: Test: MS2: b2:cache_type::k:fill
