@@ -77,7 +77,7 @@ public:
     // Temporary storage typedefs
     using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
-    using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
+    using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
     const gridtools::dawn::domain m_dom;
   public:
 
