@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(${PROJECT_NAME}CObjects
+add_library(${PROJECT_NAME}CObjects OBJECT
   Dawn.h
   Compiler.cpp
   Compiler.h

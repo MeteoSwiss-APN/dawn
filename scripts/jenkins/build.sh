@@ -36,7 +36,8 @@ while getopts i: flag; do
   esac
 done
 
-base_dir=${BASEPATH_SCRIPT}/../..
+source_dir=$(pwd)/${BASEPATH_SCRIPT}/../..
+base_dir=$(pwd)
 build_dir=${base_dir}/build
 
 mkdir -p $build_dir
@@ -49,17 +50,22 @@ fi
 #TODO -DDAWN_BUNDLE_JAVA=ON
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
             -DProtobuf_DIR=${PROTOBUFDIR} \
-            -DGTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON"
+            -DPROTOBUF_PYTHON_MODULE_DIR=${PROTOBUFDIR}/../../../python \
+            -DGTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON \
+            -DDAWN_REQUIRE_PYTHON_TESTING=ON \
+            -Datlas_DIR=${ATLAS_DIR}/lib/cmake/atlas \
+            -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit \
+            "
 
-if [ -n ${INSTALL_DIR} ]; then
-  rm -rf ${INSTALL_DIR}
-  CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
-else
-  CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${base_dir}/install"
+if [ -z ${INSTALL_DIR+x} ]; then
+  INSTALL_DIR=$(pwd)/install
 fi
 
-cmake ${CMAKE_ARGS} ..
+CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
+
+cmake ${CMAKE_ARGS} ${source_dir} 
 make -j8 install
 
 # Run unittests
-ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
+#ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
+

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-module rm CMake
-module load /users/jenkins/easybuild/daint/haswell/modules/all/CMake/3.12.4
+module load daint-gpu
+module load CMake/3.14.5
 
 module swap PrgEnv-cray PrgEnv-gnu
 module load cray-python/3.6.5.7
@@ -11,9 +11,9 @@ module load /project/c14/install/daint/clang/module_6.0.1-gcc-8.3.0
 export CXX=`which g++`
 export CC=`which gcc`
 
-export BOOST_DIR=/project/c14/install/daint/boost/boost_1_67_0/
-export PROTOBUFDIR="/scratch/snx3000/jenkins/workspace/protobuf/slave/daint/install/lib64/cmake/protobuf/"
-export ATLAS_DIR=/project/c14/install/daint/atlas_install
+export BOOST_ROOT=/project/c14/install/daint/boost/boost_1_67_0/
+export PROTOBUFDIR=/scratch/snx3000/jenkins/workspace/protobuf/slave/daint/install/lib64/cmake/protobuf/
+export ATLAS_DIR=/project/c14/install/daint/atlas_install/release/cpu
 export ECKIT_DIR=/project/c14/install/daint/eckit_install
 
 export SLURM_RESOURCES=('--gres=gpu:1 -C gpu --account=g110')

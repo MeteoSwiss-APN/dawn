@@ -15,7 +15,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT USE_BUNDLED_GRIDTOOLS)
-  find_package(GridTools 1.0.3)
+  find_package(GridTools 1.0.3 QUIET)
 endif()
 if(NOT GridTools_FOUND)
   # GridTools uses BUILD_TESTING, cache it and reset after
