@@ -15,17 +15,19 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-# project version
-set(VERSION_MAJOR 0) #TODO move version number to a file (like in GridTools), makes it easy for gt4py to read the version
-set(VERSION_MINOR 0)
-set(VERSION_PATCH 1)
+file(STRINGS "version.txt" __DAWN_VERSION)
+string(REPLACE "." ";" __VERSION_LIST ${__DAWN_VERSION})
 
-set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+list(GET __VERSION_LIST 0 VERSION_MAJOR)
+list(GET __VERSION_LIST 1 VERSION_MINOR)
+list(GET __VERSION_LIST 2 VERSION_PATCH)
+unset(__VERSION_LIST)
 
 project(Dawn
-  VERSION ${VERSION}
-  HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C)
+VERSION ${__DAWN_VERSION}
+HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
+LANGUAGES CXX C)
+unset(__DAWN_VERSION)
 
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use DAWN_BUILD_TESTING to override).
@@ -59,16 +61,13 @@ include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON) # Do not attempt to update packages -- speeds up configure process
 
 include(GitVersionHash)
-get_git_version_hash(DAWN_GIT_HASH)
-
-if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_short}")
-  set(DAWN_GIT_HASH ${git_hash_short} CACHE INTERNAL "git hash (short) of current head")
-endif()
-
-set(compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+get_git_version_hash(__Dawn_GIT_HASH)
+set(__compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
 set(DAWN_FULL_VERSION
-    "${Dawn_VERSION}-${DAWN_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${compiler}"
-    CACHE STRING "Full version string of dawn" FORCE)
+    "${Dawn_VERSION}-${__Dawn_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${__compiler}"
+    CACHE INTERNAL "Full version string of dawn")
+unset(__Dawn_GIT_HASH)
+unset(__compiler)
 
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)

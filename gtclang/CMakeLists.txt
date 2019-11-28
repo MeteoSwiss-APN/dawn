@@ -41,8 +41,6 @@ option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project 
 # GTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON will force an error if atlas or eckit are not found.
 option(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING "Require building tests for unstructured grids." OFF)
 
-#TODO put the force atlas option somewhere
-
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
 if(EXISTS "${LOC_PATH}")
@@ -59,16 +57,13 @@ include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON) # Do not attempt to update packages -- speeds up configure process
 
 include(GitVersionHash)
-get_git_version_hash(GTCLANG_GIT_HASH)
-
-if(NOT DEFINED GTCLANG_GIT_HASH OR NOT "${GTCLANG_GIT_HASH}" STREQUAL "${git_hash_short}")
-  set(GTCLANG_GIT_HASH ${git_hash_short} CACHE INTERNAL "git hash (short) of current head")
-endif()
-
-set(compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+get_git_version_hash(__GTClang_GIT_HASH)
+set(__compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
 set(GTCLANG_FULL_VERSION
-    "${GTClang_VERSION}-${GTCLANG_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${compiler}"
-    CACHE STRING "Full version string of gtclang" FORCE)
+    "${GTClang_VERSION}-${__GTClang_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${__compiler}"
+    CACHE INTERNAL "Full version string of gtclang")
+unset(__GTClang_GIT_HASH)
+unset(__compiler)
 
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
