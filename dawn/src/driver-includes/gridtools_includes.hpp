@@ -14,6 +14,8 @@
 
 #pragma once
 
+#define GT_FLOAT_PRECISION 8
+
 #include "arrayAddons.hpp"
 #include "cxx11_warning.hpp"
 #include "defs.hpp"

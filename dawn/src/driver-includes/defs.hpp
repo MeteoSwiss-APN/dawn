@@ -19,9 +19,9 @@
  * @ingroup gridtools_clang
  * @{
  */
-#define GRIDTOOLS_CLANG_STORAGE_DUMMY 0
-#define GRIDTOOLS_CLANG_STORAGE_HOST 1
-#define GRIDTOOLS_CLANG_STORAGE_CUDA 2
+#define DAWN_STORAGE_DUMMY 0
+#define DAWN_STORAGE_HOST 1
+#define DAWN_STORAGE_CUDA 2
 /** @} */
 
 /**
@@ -29,7 +29,7 @@
  * @ingroup gridtools_clang
  * @{
  */
-#define GRIDTOOLS_CLANG_GRID_STRUCTURED 0
+#define DAWN_GRID_STRUCTURED 0
 /** @} */
 
 /**
@@ -37,31 +37,30 @@
  * @ingroup gridtools_clang
  * @{
  */
-#define GRIDTOOLS_CLANG_SINGLE_PRECISION 0
-#define GRIDTOOLS_CLANG_DOUBLE_PRECISION 1
+#define DAWN_SINGLE_PRECISION 0
+#define DAWN_DOUBLE_PRECISION 1
 /** @} */
 
 // Default precision:
-//  1. Honor defintions of gridtools FLOAT_PRECISION
+//  1. Honor defintions of gridtools GT_FLOAT_PRECISION
 //  2. Fall back to double precision
-#ifndef GRIDTOOLS_CLANG_PRECISION
+#ifndef DAWN_PRECISION
 
-#ifdef FLOAT_PRECISION
+#ifdef GT_FLOAT_PRECISION
 
-#if FLOAT_PRECISION == 4
-#define GRIDTOOLS_CLANG_PRECISION GRIDTOOLS_CLANG_FLOAT_PRECISION
+#if GT_FLOAT_PRECISION == 4
+#define DAWN_PRECISION DAWN_SINGLE_PRECISION
 #else
-#define GRIDTOOLS_CLANG_PRECISION GRIDTOOLS_CLANG_DOUBLE_PRECISION
+#define DAWN_PRECISION DAWN_DOUBLE_PRECISION
 #endif
-#undef FLOAT_PRECISION
 
-#else // !defined(FLOAT_PRECISION)
+#else // !defined(GT_FLOAT_PRECISION)
 
-#define GRIDTOOLS_CLANG_PRECISION GRIDTOOLS_CLANG_DOUBLE_PRECISION
+#define DAWN_PRECISION DAWN_DOUBLE_PRECISION
 
-#endif // FLOAT_PRECISION
+#endif // GT_FLOAT_PRECISION
 
-#endif // GRIDTOOLS_CLANG_PRECISION
+#endif // DAWN_PRECISION
 
 namespace dawn {
 
@@ -69,20 +68,18 @@ namespace dawn {
  * @typedef float_type
  * @brief Floating point type [default: `double`]
  *
- * This is either a `double` or `float` depending if `GRIDTOOLS_CLANG_SINGLE_PRECISION` or
- * `GRIDTOOLS_CLANG_DOUBLE_PRECISION` is defined. Note that it is strongly adviced to use this
+ * This is either a `double` or `float` depending if `DAWN_SINGLE_PRECISION` or
+ * `DAWN_DOUBLE_PRECISION` is defined. Note that it is strongly adviced to use this
  * typedef instead of `double` or `float` directly as the latter may incur unnecessary casts
  * in CUDA code.
  *
- * @ingroup gridtools_clang
+ * @ingroup dawn
  */
-#if GRIDTOOLS_CLANG_PRECISION == GRIDTOOLS_CLANG_SINGLE_PRECISION
-#define FLOAT_PRECISION 4
+#if DAWN_PRECISION == DAWN_SINGLE_PRECISION
 using float_type = float;
-#elif GRIDTOOLS_CLANG_PRECISION == GRIDTOOLS_CLANG_DOUBLE_PRECISION
-#define FLOAT_PRECISION 8
+#elif DAWN_PRECISION == DAWN_DOUBLE_PRECISION
 using float_type = double;
 #else
-#error GRIDTOOLS_CLANG_PRECISION is invalid
+#error DAWN_PRECISION is invalid
 #endif
 } // namespace dawn

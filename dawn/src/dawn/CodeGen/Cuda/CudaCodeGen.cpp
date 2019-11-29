@@ -623,8 +623,8 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     return "#define " + define + " " + std::to_string(value);
   };
 
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CUDA");
+  ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#define DAWN_BACKEND_T CUDA");
   //==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
   // these
