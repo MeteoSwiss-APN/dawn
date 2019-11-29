@@ -1,5 +1,5 @@
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 globals {
   double dt2;

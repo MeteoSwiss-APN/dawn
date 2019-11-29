@@ -222,7 +222,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
 
     for(const auto& field : tempFields) {
-      paramNameToType.emplace(field.second.Name, c_gtc().str() + "storage_t");
+      paramNameToType.emplace(field.second.Name, c_dgt().str() + "storage_t");
     }
   }
 
@@ -296,7 +296,7 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const&
       .addType("storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >");
 
   stencilClass.addTypeDef(tmpStorageTypename_)
-      .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
+      .addType("storage_traits_t::data_store_t< ::dawn::float_type, " + tmpMetadataTypename_ + ">");
 }
 
 void CodeGen::addTmpStorageDeclaration(

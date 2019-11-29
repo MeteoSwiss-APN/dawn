@@ -58,9 +58,8 @@
                                                                                                    \
   operator double() const;
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Dummy 3-dimensional storage
@@ -169,5 +168,5 @@ struct var : public storage {
 };
 
 #undef STORAGE_CLASS_DEFN
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

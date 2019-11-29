@@ -16,7 +16,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil local_kcache {
   storage out_a, out_b, out_c, out_d;

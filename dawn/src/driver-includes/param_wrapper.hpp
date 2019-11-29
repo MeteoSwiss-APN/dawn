@@ -15,7 +15,7 @@
 #pragma once
 
 namespace gridtools {
-namespace clang {
+namespace dawn {
 
 template <class DataView>
 struct param_wrapper {
@@ -35,5 +35,5 @@ struct param_wrapper {
   }
 };
 
-} // namespace clang
+} // namespace dawn
 } // namespace gridtools

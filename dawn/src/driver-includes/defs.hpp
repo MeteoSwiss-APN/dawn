@@ -63,9 +63,7 @@
 
 #endif // GRIDTOOLS_CLANG_PRECISION
 
-namespace gridtools {
-
-namespace clang {
+namespace dawn {
 
 /**
  * @typedef float_type
@@ -87,5 +85,4 @@ using float_type = double;
 #else
 #error GRIDTOOLS_CLANG_PRECISION is invalid
 #endif
-} // namespace clang
-} // namespace gridtools
+} // namespace dawn

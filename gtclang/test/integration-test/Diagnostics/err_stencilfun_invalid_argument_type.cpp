@@ -18,7 +18,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil_function TestFun {
   double a; // EXPECTED_ERROR: invalid type 'double' of stencil function argument 'a'

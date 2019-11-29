@@ -18,7 +18,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 interval k_flat; // EXPECTED_ERROR: missing initialization for custom interval 'k_flat'
 

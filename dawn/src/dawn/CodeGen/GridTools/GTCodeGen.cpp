@@ -358,7 +358,7 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
 
   // Initialize allocated fields
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
@@ -411,16 +411,16 @@ void GTCodeGen::generateStencilWrapperMembers(
   stencilWrapperClass.addComment("Stencil-Data");
 
   if(codeGenProperties.hasAllocatedFields()) {
-    stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
   }
 
   // Define allocated memebers if necessary
   for(const auto& fieldName : codeGenProperties.getAllocatedFields()) {
-    stencilWrapperClass.addMember(c_gtc() + "storage_t", "m_" + fieldName);
+    stencilWrapperClass.addMember(c_dgt() + "storage_t", "m_" + fieldName);
   }
 
   // Stencil members
-  stencilWrapperClass.addMember("const " + c_gtc() + "domain", "m_dom");
+  stencilWrapperClass.addMember("const " + c_dgt() + "domain", "m_dom");
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
@@ -828,7 +828,7 @@ void GTCodeGen::generateStencilClasses(
     // Generate constructor
     auto StencilConstructor = stencilClass.addConstructor();
 
-    StencilConstructor.addArg("const gridtools::clang::domain& dom");
+    StencilConstructor.addArg("const " + c_dgt() + "domain& dom");
     if(!globalsMap.empty()) {
       StencilConstructor.addArg("const globals_gp_t& globals_gp");
     }
@@ -973,6 +973,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);
 
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+  ppDefines.push_back("using namespace gridtools::dawn;");
 
   generateBCHeaders(ppDefines);
 
