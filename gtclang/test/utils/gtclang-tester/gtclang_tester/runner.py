@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                         _       _                   
-##                        | |     | |                  
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                         _       _
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -22,6 +22,7 @@ from json import load, dumps, loads
 from os import rename, remove
 from signal import SIGSEGV
 from time import time
+import re
 
 from .config import Config
 from .error import report_info
@@ -51,10 +52,10 @@ class TestRunner(object):
             if Config.no_progressbar:
                 self.__progressbar = EmptyProgressbar()
             else:
-                self.__progressbar = ProgressBar(self.__term, 'Tests')
+                self.__progressbar = ProgressBar(self.__term, "Tests")
         except ValueError:
             report_info("Failed to initialize advanced progressbar")
-            self.__progressbar = SimpleProgressBar('Tests  ')
+            self.__progressbar = SimpleProgressBar("Tests  ")
 
     def run(self):
 
@@ -85,7 +86,7 @@ class TestRunner(object):
 
                     if Config.verbose:
                         self.__progressbar.clear()
-                        report_info("Running TEST: %s" % ' '.join(cmd))
+                        report_info("Running TEST: %s" % " ".join(cmd))
 
                     (out, err, exit_code) = executeCommand(cmd, cwd=test.get_cwd())
 
@@ -94,9 +95,11 @@ class TestRunner(object):
                         if exit_code == -SIGSEGV:
                             err += "Segmentation fault"
 
-                        self.add_failure(file, "EXECUTION",
-                                         "expected error code '%i', got '%i':\n%s" % (
-                                             test.expected_exit_code(), exit_code, err))
+                        self.add_failure(
+                            file,
+                            "EXECUTION",
+                            "expected error code '%i', got '%i':\n%s" % (test.expected_exit_code(), exit_code, err),
+                        )
 
                         has_failure = True
                         break
@@ -104,8 +107,7 @@ class TestRunner(object):
                     # Generate reference files
                     if Config.generate_reference:
                         for files in test.get_expected_file():
-                            for outputfile, referencefile in zip(files.get_output_files(),
-                                                                 files.get_reference_files()):
+                            for outputfile, referencefile in zip(files.get_output_files(), files.get_reference_files()):
                                 rename(outputfile, referencefile)
 
                     stdout += out
@@ -121,12 +123,11 @@ class TestRunner(object):
             # Check expected files
             if test.get_expected_file() and not Config.generate_reference:
                 for files in test.get_expected_file():
-                    for outputfile, referencefile in zip(files.get_output_files(),
-                                                         files.get_reference_files()):
+                    for outputfile, referencefile in zip(files.get_output_files(), files.get_reference_files()):
 
                         try:
-                            output_json = load(open(outputfile, 'r'))
-                            reference_json = load(open(referencefile, 'r'))
+                            output_json = load(open(outputfile, "r"))
+                            reference_json = load(open(referencefile, "r"))
                             # Json does not enforce sorting, so we sort the files by sorting here
                             output_json = loads(dumps(output_json, sort_keys=True))
                             reference_json = loads(dumps(reference_json, sort_keys=True))
@@ -143,13 +144,10 @@ class TestRunner(object):
                         output, reference = dumps(output_json, indent=2), dumps(reference_json, indent=2)
 
                         if output != reference:
-                            output = list(map(lambda x : x + "\n", output.split("\n")))
-                            reference = list(map(lambda x : x + "\n", reference.split("\n")))
+                            output = list(map(lambda x: x + "\n", output.split("\n")))
+                            reference = list(map(lambda x: x + "\n", reference.split("\n")))
                             msg = "\n"
-                            for line in unified_diff(output,
-                                                     reference,
-                                                     fromfile=outputfile,
-                                                     tofile=referencefile):
+                            for line in unified_diff(output, reference, fromfile=outputfile, tofile=referencefile):
                                 msg += line
 
                             self.add_failure(file, "EXPECTED_FILE", msg)
@@ -160,12 +158,12 @@ class TestRunner(object):
                                 remove(discarded_file)
 
             # Check expected output
-            out = stdout.split('\n')
+            out = stdout.split("\n")
 
             if test.get_expected_output():
                 for expected_output in test.get_expected_output():
-                    if expected_output not in out:
-                        msg = "expected:\n\"%s\"" % expected_output
+                    if not any(re.fullmatch(expected_output, line) for line in out):
+                        msg = 'expected:\n"%s"' % expected_output
                         msg += self.__get_closest_match(expected_output, out)
 
                         self.add_failure(file, "EXPECTED", msg)
@@ -182,18 +180,17 @@ class TestRunner(object):
                             break
 
                     if line_idx == -1:
-                        msg = "expected: \"%s\"" % prefix
+                        msg = 'expected: "%s"' % prefix
                         msg += self.__get_closest_match(expected_accesses.get_prefix(), out)
                         self.add_failure(file, "EXPECTED_ACCESSES", msg)
                         has_failure = True
                         break
 
                     line = out[line_idx]
-                    line = line[line.find(prefix) + len(prefix):].strip().split(' ')
+                    line = line[line.find(prefix) + len(prefix) :].strip().split(" ")
                     for access in expected_accesses.get_expected_output():
                         if access not in line:
-                            msg = "expected in line %s \n\"%s\"" % (
-                                expected_accesses.get_line_number(), access)
+                            msg = 'expected in line %s \n"%s"' % (expected_accesses.get_line_number(), access)
                             msg += self.__get_closest_match(access, line)
                             self.add_failure(file, "EXPECTED_ACCESSES", msg)
                             has_failure = True
@@ -203,8 +200,7 @@ class TestRunner(object):
             if test.get_expected_error_output():
                 for expected_error in test.get_expected_error_output():
                     if "error: " + expected_error not in stderr:
-                        msg = "expected error message:\n\"%s\"\n\ngot:\n%s" % (
-                            expected_error, stderr)
+                        msg = 'expected error message:\n"%s"\n\ngot:\n%s' % (expected_error, stderr)
 
                         self.add_failure(file, "EXPECTED_ERROR", msg)
                         has_failure = True
@@ -220,13 +216,24 @@ class TestRunner(object):
         # Report results
         #
         t = self.__term
-        print(t.BOLD + t.GREEN + "[==========]" + t.NORMAL + " %i test%s ran. (%i ms total)" % (
-            self.__test_count, "s" if self.__test_count > 1 else "", self.__test_time))
+        print(
+            t.BOLD
+            + t.GREEN
+            + "[==========]"
+            + t.NORMAL
+            + " %i test%s ran. (%i ms total)"
+            % (self.__test_count, "s" if self.__test_count > 1 else "", self.__test_time)
+        )
 
         # Report passed test
         if self.__test_count_passed > 0:
-            print(t.BOLD + t.GREEN + "[  PASSED  ] " + t.NORMAL + "%i test%s." % (
-                self.__test_count_passed, "s" if self.__test_count_passed > 1 else ""))
+            print(
+                t.BOLD
+                + t.GREEN
+                + "[  PASSED  ] "
+                + t.NORMAL
+                + "%i test%s." % (self.__test_count_passed, "s" if self.__test_count_passed > 1 else "")
+            )
 
         # Report failed tests
         if self.__failure_map:
@@ -242,15 +249,19 @@ class TestRunner(object):
         t = self.__term
 
         test_count_failed = self.__test_count - self.__test_count_passed
-        print(t.BOLD + t.RED + "[  FAILED  ] " + t.NORMAL + "%i test%s." % (
-            test_count_failed, "s" if test_count_failed > 1 else ""))
+        print(
+            t.BOLD
+            + t.RED
+            + "[  FAILED  ] "
+            + t.NORMAL
+            + "%i test%s." % (test_count_failed, "s" if test_count_failed > 1 else "")
+        )
 
         for key, test_failaure_map in self.__failure_map.items():
             print(t.BOLD + t.RED + "[----------] " + t.NORMAL)
             print(t.BOLD + t.RED + "[  FAILED  ] " + t.NORMAL + key)
 
-            report = lambda type, msg: print(
-                self.__split_line(t.BOLD + type + ": " + t.NORMAL + value, 13, 160))
+            report = lambda type, msg: print(self.__split_line(t.BOLD + type + ": " + t.NORMAL + value, 13, 160))
 
             for error_type, value in test_failaure_map.items():
                 if error_type is "EXECUTION":
@@ -265,15 +276,15 @@ class TestRunner(object):
                     report("Error mismatch", value)
 
     def __split_line(self, line, indent, max_line):
-        ws = indent * ' '
+        ws = indent * " "
         new_line = str()
 
-        for subline in line.split('\n'):
+        for subline in line.split("\n"):
 
             new_sub_line = ws
             cur_len = len(new_sub_line)
 
-            for token in subline.split(' '):
+            for token in subline.split(" "):
                 if cur_len + 1 + len(token) <= max_line:
                     cur_len += len(token) + 1
                     new_sub_line += token + " "
@@ -292,6 +303,6 @@ class TestRunner(object):
             edit_distances += [levenshtein(output, o)]
 
         if min(edit_distances) < 10:
-            return "\nclosest match:\n\"" + out[edit_distances.index(min(edit_distances))] + "\""
+            return '\nclosest match:\n"' + out[edit_distances.index(min(edit_distances))] + '"'
         else:
             return ""

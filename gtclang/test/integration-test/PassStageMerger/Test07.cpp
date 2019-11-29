@@ -13,44 +13,20 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
-// RUN: %gtclang% %file% -fno-codegen -freport-pass-set-caches
-// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:cache_type::k:flush:\[0,0\]
-// EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:cache_type::k:fill_and_flush
-// EXPECTED: PASS: PassSetCaches: Test: MS1: b1:cache_type::k:fill
-// EXPECTED: PASS: PassSetCaches: Test: MS2: b2:cache_type::k:fill
-// EXPECTED: PASS: PassSetCaches: Test: MS2: tmp:cache_type::k:fill
-
+// clang-format off
+// RUN: %gtclang% %file% -fno-codegen -fmerge-stages -fmerge-do-methods -freport-pass-stage-merger
+// EXPECTED_FILE: OUTPUT:%filename%_before.json,%filename%_after.json REFERENCE:%filename%_before_ref.json,%filename%_after_ref.json
+// clang-format on
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gridtools::clang;
 
 stencil Test {
   storage in, out;
-  storage a1, a2, b1, b2, c1, c2;
-  var tmp;
 
   Do {
-    vertical_region(k_start, k_end) {
-      // --- MS0 ---
-      tmp = in;
 
-      b1 = a1;
-      // --- MS1 ---
-      c1 = b1(k + 1);
-      c1 = b1(k - 1);
-
-      out = tmp;
-      tmp = in;
-
-      b2 = a2;
-      // --- MS2 ---
-      c2 = b2(k + 1);
-      c2 = b2(k - 1);
-
-      out = tmp;
-    }
+    vertical_region(k_start, k_end) { out = in; }
+    vertical_region(k_start, k_end) { out = 0; }
   }
 };
-
-int main() {}
