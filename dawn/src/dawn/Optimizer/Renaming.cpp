@@ -44,6 +44,7 @@ public:
     if(varAccessID == oldAccessID_)
       varAccessID = newAccessID_;
     iir::ASTVisitorForwarding::visit(stmt);
+    stmt->getName() = instantiation_->getNameFromAccessID(varAccessID);
   }
 
   virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
@@ -57,6 +58,7 @@ public:
     int& varAccessID = *expr->getData<iir::IIRAccessExprData>().AccessID;
     if(varAccessID == oldAccessID_)
       varAccessID = newAccessID_;
+    expr->setName(instantiation_->getNameFromAccessID(varAccessID));
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {

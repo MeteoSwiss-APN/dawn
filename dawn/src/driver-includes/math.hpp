@@ -14,14 +14,14 @@
 
 #pragma once
 
-#ifndef GT_FUNCTION
-#define GT_FUNCTION
-#endif
-
 #include "defs.hpp"
 #include "storage.hpp"
 #include <algorithm>
 #include <cmath>
+
+#ifndef GT_FUNCTION
+#define GT_FUNCTION
+#endif
 
 namespace gridtools {
 

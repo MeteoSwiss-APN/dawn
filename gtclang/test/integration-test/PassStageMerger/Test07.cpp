@@ -13,24 +13,20 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
-// RUN: %gtclang% %file% -fno-codegen -freport-pass-temporary-type
-// EXPECTED: PASS: PassTemporaryType: Test: promote:.*local_variable.*
-
+// clang-format off
+// RUN: %gtclang% %file% -fno-codegen -fmerge-stages -fmerge-do-methods -freport-pass-stage-merger
+// EXPECTED_FILE: OUTPUT:%filename%_before.json,%filename%_after.json REFERENCE:%filename%_before_ref.json,%filename%_after_ref.json
+// clang-format on
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gtclang::dsl;
 
 stencil Test {
-  storage field_a, field_b, field_c;
+  storage in, out;
 
   Do {
-    vertical_region(k_start, k_end) {
-      double local_variable = 5.0;
-      field_a = field_b;
-      field_c = field_a(i + 1) + local_variable;
-    }
+
+    vertical_region(k_start, k_end) { out = in; }
+    vertical_region(k_start, k_end) { out = 0; }
   }
 };
-
-int main() {}
