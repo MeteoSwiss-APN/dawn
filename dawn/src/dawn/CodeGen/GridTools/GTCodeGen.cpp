@@ -120,32 +120,31 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
   stencilConstructor.addStatement("gridtools::halo_descriptor dj = {dom.jminus(), dom.jminus(), "
                                   "dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()}");
 
-  auto getLevelSize = [](int level) -> std::string {
+  auto getLevel = [](int level) -> std::string {
     switch(level) {
     case sir::Interval::Start:
       return "dom.kminus()";
     case sir::Interval::End:
-      return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
+      return "dom.ksize() - dom.kplus()";
     default:
       return std::to_string(level);
     }
   };
 
-  int levelIdx = 0;
-
   // compile the size of all the intervals in a vector from their positional definition
-  std::vector<std::string> gridLevels;
-  // notice we skip the first level since it is kstart and not included in the GT grid definition
-  for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
-      it != end; ++it, ++levelIdx) {
-    gridLevels.push_back(getLevelSize(*it));
+  std::vector<std::string> gridLevelSizes;
+  for(auto it = intervalDefinitions.Levels.begin(),
+           end = std::prev(intervalDefinitions.Levels.end());
+      it != end; ++it) {
+    gridLevelSizes.push_back(getLevel(*std::next(it)) + " - " + getLevel(*it) + " + 1");
   }
 
   std::string stencilName =
       codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
-  stencilConstructor.addStatement(getGridName(stencilName) + " grid_(di, dj, " +
-                                  RangeToString(",", "{", "}")(gridLevels) + ")");
+  stencilConstructor.addStatement(getGridName(stencilName) + " grid_(make_grid(" + "di, dj, " +
+                                  getAxisName(stencilName) +
+                                  RangeToString(",", "{", "}")(gridLevelSizes) + "))");
 }
 
 void GTCodeGen::generatePlaceholderDefinitions(
@@ -523,18 +522,16 @@ void GTCodeGen::generateStencilClasses(
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
-    const iir::Interval& axis = intervalDefinitions.Axis;
     stencilClass.addTypeDef(getAxisName(StencilName))
-        .addType(c_gt() + "interval")
-        .addTemplates(makeArrayRef(
-            {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 2),
-             makeLevelName(axis.upperLevel(),
-                           (axis.upperOffset() + 1) == 0 ? 1 : (axis.upperOffset() + 1))}));
+        .addType(c_gt() + "axis")
+        .addTemplates(makeArrayRef({std::to_string(intervalDefinitions.Levels.size() - 1),
+                                    "gridtools::axis_config::offset_limit<" +
+                                        std::to_string(intervalDefinitions.OffsetLimit) + ">"}));
 
     // Generate typedef of the grid
     stencilClass.addTypeDef(getGridName(StencilName))
         .addType(c_gt() + "grid")
-        .addTemplate(getAxisName(StencilName));
+        .addTemplate(getAxisName(StencilName) + "::axis_interval_t");
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
