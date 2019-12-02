@@ -32,7 +32,7 @@ namespace dawn {
 
 /**
  * @name Runtime storage environment
- * @ingroup gridtools_clang
+ * @ingroup gridtools_dawn
  * @{
  */
 

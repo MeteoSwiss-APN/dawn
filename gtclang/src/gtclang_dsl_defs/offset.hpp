@@ -21,7 +21,7 @@ namespace dsl {
 
 /**
  * @brief Defintion of an offset which can be as argument in stencil functions
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct offset {
   offset operator+(int);

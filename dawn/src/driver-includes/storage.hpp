@@ -66,7 +66,7 @@
 /**
  * @macro GRIDTOOLS_DAWN_PERFORMANCE_METERS
  * @name Compile the stencil with performance meters
- * @ingroup gridtools_clang
+ * @ingroup gridtools_dawn
  */
 #ifdef GRIDTOOLS_DAWN_PERFORMANCE_METERS
 #define ENABLE_METERS

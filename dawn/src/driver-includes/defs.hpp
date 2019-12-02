@@ -16,7 +16,7 @@
 
 /**
  * @name Storage defintions
- * @ingroup gridtools_clang
+ * @ingroup dawn
  * @{
  */
 #define DAWN_STORAGE_DUMMY 0
@@ -26,7 +26,7 @@
 
 /**
  * @name Grid defintions
- * @ingroup gridtools_clang
+ * @ingroup dawn
  * @{
  */
 #define DAWN_GRID_STRUCTURED 0
@@ -34,7 +34,7 @@
 
 /**
  * @name Floating point precisions
- * @ingroup gridtools_clang
+ * @ingroup dawn
  * @{
  */
 #define DAWN_SINGLE_PRECISION 0
