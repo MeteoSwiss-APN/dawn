@@ -6,10 +6,10 @@ Introduction
 
 This document attempts to describe a few coding standards that are being used in the Dawn source tree. Although no coding standards should be regarded as absolute requirements to be followed in all instances, you should try to follow the `LLVM <https://llvm.org/docs/CodingStandards.html>`_ coding standard. We deviate from the LLVM standard in certain areas as listed in the following.
 
-Supported C++11 Language and Library Features
+Supported C++17 Language and Library Features
 =============================================
 
-While LLVM restricts the usage of C++11, we do not impose any constraints on the allowed features. While we generally allow the usage of C++ exceptions, you should avoid them at the interface boundary to make exposing the API more convenient - `RTII <https://en.wikipedia.org/wiki/Run-time_type_information>`_ should be avoided.
+We do not impose any restrictions on C++17 features. The generated code however needs to be compliant to C++11. While we generally allow the usage of C++ exceptions, you should avoid them at the interface boundary to make exposing the API more convenient.
 
 Style Issues
 ============
@@ -25,6 +25,8 @@ For types, functions and enumerators you should follow the LLVM style.
 
 Source Code Formatting
 ======================
+
+These rules have been updated as of December 2019. All new code should conform to these rules. Old code can be adapted continousely if it is affected by a new task. 
 
 Source Code Width
 ^^^^^^^^^^^^^^^^^
@@ -80,13 +82,25 @@ while the following is considered bad
 
   const char **ptr = ...
 
+Includes
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Miscellaneous Guidelines
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+** Do not use `inline` on class member functions
+** Do not use `extern` in free header functions
+** Prefer `#pragma once` over include guards
+** Always use braces for `if-else` and loop bodies (also if they are one line)
+
+    Naming of struct vs. class members
+    virtual in derived functions (no)
+    include order and absolute vs. relative path (same folder -> same library -> other -> std; no absolute path if in same folder)
+    east const / west const (east const)
+    naming of namespaces?
+
+
 Clang Format
 ============ 
 
-To enforce most of these coding standards, CMake can be configured to run `clang-format <https://clang.llvm.org/docs/ClangFormat.html>`_ on each file with
-
-.. code-block:: bash
-
-  make format
-
-The clang-format file is located in the root directory at ``<dawn-dir>/.clangformat``.
+To enforce most of these coding standards, there is a `clang-format <https://clang.llvm.org/docs/ClangFormat.html>`_ file located in the root directory at ``<dawn-dir>/.clangformat``. There is also a git pre-commit hook to enforce that all code commited is formatted according to the `.clang-format` file. 
