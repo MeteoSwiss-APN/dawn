@@ -14,12 +14,14 @@
 
 #pragma once
 
-#ifndef GRIDTOOLS_CLANG_GENERATED
+#ifndef DAWN_GENERATED
 #error "This file should only be used in generated code!"
 #endif
 
-#define GRIDTOOLS_CLANG_META_DATA_T_DEFINED
-#define GRIDTOOLS_CLANG_STORAGE_T_DEFINED
+#include "defs.hpp"
+
+#define GRIDTOOLS_DAWN_META_DATA_T_DEFINED
+#define GRIDTOOLS_DAWN_STORAGE_T_DEFINED
 
 #include <gridtools/stencil_composition/stencil_composition.hpp>
 #include <gridtools/stencil_composition/stencil_functions.hpp>
@@ -30,11 +32,11 @@ namespace dawn {
 
 /**
  * @name Runtime storage environment
- * @ingroup gridtools_clang
+ * @ingroup gridtools_dawn
  * @{
  */
 
-#ifdef GRIDTOOLS_CLANG_HALO_EXTEND
+#ifdef GRIDTOOLS_DAWN_HALO_EXTENT
 using halo_ijk_t = gridtools::halo<halo::value, halo::value, 0>;
 using halo_ij_t = gridtools::halo<halo::value, halo::value, 0>;
 using halo_i_t = gridtools::halo<halo::value, 0, 0>;
@@ -88,10 +90,10 @@ using storage_t = storage_ijk_t;
 
 /** @} */
 
-#if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_HOST
+#if DAWN_STORAGE_TYPE == DAWN_STORAGE_HOST
 #define GT_BACKEND_DECISION_viewmaker(x) make_host_view(x)
 #define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply
-#elif GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
+#elif DAWN_STORAGE_TYPE == DAWN_STORAGE_CUDA
 #define GT_BACKEND_DECISION_viewmaker(x) make_device_view(x)
 #define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply_gpu
 #endif

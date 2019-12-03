@@ -13,8 +13,8 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
+#define DAWN_GENERATED 1
+#define GRIDTOOLS_DAWN_HALO_EXTENT 3
 #define GT_VECTOR_LIMIT_SIZE 30
 
 #undef FUSION_MAX_VECTOR_SIZE
@@ -43,8 +43,8 @@ TEST(hori_diff_type2_stencil, test) {
 
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
              Options::getInstance().m_size[2]);
-  dom.set_halos(GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND,
-                GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, 0, 0);
+  dom.set_halos(GRIDTOOLS_DAWN_HALO_EXTENT, GRIDTOOLS_DAWN_HALO_EXTENT,
+                GRIDTOOLS_DAWN_HALO_EXTENT, GRIDTOOLS_DAWN_HALO_EXTENT, 0, 0);
 
   verifier verif(dom);
 

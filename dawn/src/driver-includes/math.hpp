@@ -129,7 +129,7 @@ GT_FUNCTION T sqrt(const T x) {
  */
 template <typename T>
 GT_FUNCTION T min(const T x, const T y) {
-#if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
+#if DAWN_STORAGE_TYPE == DAWN_STORAGE_CUDA
   return x < y ? x : y;
 #else
   return std::min(x, y);
@@ -143,7 +143,7 @@ GT_FUNCTION T min(const T x, const T y) {
  */
 template <typename T>
 GT_FUNCTION T max(const T x, const T y) {
-#if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
+#if DAWN_STORAGE_TYPE == DAWN_STORAGE_CUDA
   return x > y ? x : y;
 #else
   return std::max(x, y);
