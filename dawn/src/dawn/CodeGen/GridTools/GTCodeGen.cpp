@@ -526,7 +526,9 @@ void GTCodeGen::generateStencilClasses(
         .addType(c_gt() + "axis")
         .addTemplates(makeArrayRef({std::to_string(intervalDefinitions.Levels.size() - 1),
                                     "gridtools::axis_config::offset_limit<" +
-                                        std::to_string(intervalDefinitions.OffsetLimit) + ">"}));
+                                        std::to_string(intervalDefinitions.OffsetLimit) +
+                                        ">, gridtools::axis_config::extra_offsets<" +
+                                        std::to_string(intervalDefinitions.ExtraOffsets) + ">"}));
 
     // Generate typedef of the grid
     stencilClass.addTypeDef(getGridName(StencilName))

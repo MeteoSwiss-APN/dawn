@@ -61,6 +61,9 @@ public:
 
     // TODO we should compute the OffsetLimit, not use a hard-coded value!
     static constexpr int OffsetLimit = 3;
+
+    // TODO we should avoid the ExtraOffsets, not use a hard-coded value!
+    static constexpr int ExtraOffsets = 1;
   };
 
 private:
