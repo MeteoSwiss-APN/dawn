@@ -168,7 +168,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
   StencilWrapperConstructor.addArg("int rank = 1");
   StencilWrapperConstructor.addArg("int xcols = 1");
   StencilWrapperConstructor.addArg("int ycols = 1");
