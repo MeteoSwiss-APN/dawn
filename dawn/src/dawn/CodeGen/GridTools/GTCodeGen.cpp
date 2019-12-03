@@ -136,7 +136,7 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
   for(auto it = intervalDefinitions.Levels.begin(),
            end = std::prev(intervalDefinitions.Levels.end());
       it != end; ++it) {
-    gridLevelSizes.push_back(getLevel(*std::next(it)) + " - " + getLevel(*it) + " + 1");
+    gridLevelSizes.push_back(getLevel(*std::next(it)) + " - " + getLevel(*it));
   }
 
   std::string stencilName =
