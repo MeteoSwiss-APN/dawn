@@ -24,9 +24,10 @@ list(GET __VERSION_LIST 2 VERSION_PATCH)
 unset(__VERSION_LIST)
 
 project(Dawn
-VERSION ${__DAWN_VERSION}
-HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-LANGUAGES CXX C)
+  VERSION ${__DAWN_VERSION}
+  HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
+  LANGUAGES CXX C
+)
 unset(__DAWN_VERSION)
 
 # Useful standard options:
@@ -71,7 +72,7 @@ unset(__Dawn_GIT_HASH)
 unset(__compiler)
 
 # use, i.e. don't skip the full RPATH for the build tree
-set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
 # when building, don't use the install RPATH already
 # (but later on when installing)
@@ -121,7 +122,7 @@ function(target_add_dawn_standard_props target)
 endfunction()
 
 # Protobuf
-if(NOT DAWN_BUILT_PROTOBUF)
+if(NOT DAWN_BUILD_PROTOBUF)
     find_package(Protobuf 3.4.0 CONFIG)
 endif()
 if(NOT Protobuf_FOUND)
@@ -141,8 +142,8 @@ if(${PROJECT_NAME}_TESTING)
 endif()
 
 if(Python3_FOUND)
-  # TODO can we make this cleaner
-  if(DAWN_BUILT_PROTOBUF)
+  # TODO can we make this cleaner?
+  if(DAWN_BUILD_PROTOBUF)
     # we know where it will be after the build step
     set(PROTOBUF_PYTHON_DIR ${protobuf_BINARY_DIR}/python)
   else()

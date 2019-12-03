@@ -1,6 +1,6 @@
 # TODO maybe function
 
-if(NOT DAWN_BUILT_PROTOBUF)
+if(NOT DAWN_BUILD_PROTOBUF)
   message(STATUS " Fetching Protobuf...")
 endif()
 
@@ -22,8 +22,8 @@ if(NOT protobuf_POPULATED)
   add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
 endif()
 
-set(DAWN_BUILT_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
-mark_as_advanced(DAWN_BUILT_PROTOBUF)
+set(DAWN_BUILD_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
+mark_as_advanced(DAWN_BUILD_PROTOBUF)
 
 if(Python3_FOUND)
   add_custom_target(build-protobuf-python

@@ -12,14 +12,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/dawn/config.py.in")
-set(config_out "${CMAKE_CURRENT_BINARY_DIR}/dawn/config.py")
+set(config_in ${CMAKE_CURRENT_SOURCE_DIR}/dawn/config.py.in)
+set(config_out ${CMAKE_CURRENT_BINARY_DIR}/dawn/config.py)
 configure_file(${config_in} ${config_out})
 
 # Copy to build directory
 file(
-  COPY .
-  DESTINATION .
+  COPY ${CMAKE_CURRENT_SOURCE_DIR}/
+  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
   FILES_MATCHING PATTERN "*.py")
 
 # Copy to install
@@ -38,5 +38,6 @@ if(${PROJECT_NAME}_TESTING)
     find_package(Python3 COMPONENTS Interpreter)
   endif()
 
-  add_test(NAME python-test_sir.py COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
+  add_test(NAME python-test_sir.py
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
 endif()

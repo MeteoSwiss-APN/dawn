@@ -26,7 +26,8 @@ set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 project(GTClang
   VERSION ${VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C)
+  LANGUAGES CXX C
+)
 
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use GTCLANG_BUILD_TESTING to override).
@@ -138,7 +139,7 @@ if(${PROJECT_NAME}_TESTING)
   check_language(CUDA)
   if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
-    set(CUDA_ARCH "sm_60" CACHE STRING "CUDA architecture (e.g. sm_35, sm_60, sm_70)" )
+    set(CUDA_ARCH "sm_60" CACHE STRING "CUDA architecture (e.g. sm_35, sm_60, sm_70)")
   else()
     message(STATUS "Could NOT find CUDA compiler. Disabling GPU integration tests.")
   endif()

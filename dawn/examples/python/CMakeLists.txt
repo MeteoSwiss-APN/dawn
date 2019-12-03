@@ -12,13 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/config.py.in")
-set(config_out "${CMAKE_CURRENT_BINARY_DIR}/config.py")
+set(config_in ${CMAKE_CURRENT_SOURCE_DIR}/config.py.in)
+set(config_out ${CMAKE_CURRENT_BINARY_DIR}/config.py)
 
-# This two-step hack is necessary because there are both variables and generator
-# expressions necessary to generate config.py
-set(DAWN_INSTALL_MODULE ${CMAKE_INSTALL_PREFIX}/python)
-set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_FULL_LIBDIR}/$<TARGET_FILE_NAME:DawnCShared>)
+set(DAWN_BUILD_MODULE ${PROJECT_BINARY_DIR}/python)
+set(DAWN_BUILD_DAWNCLIB $<TARGET_FILE:DawnCShared>)
 configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/config.py.tmp @ONLY)
 file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/config.py.tmp)
 
@@ -28,28 +26,31 @@ install(
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/examples/python
 )
 install(
-  DIRECTORY .
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/examples/python
 )
 
 if(${PROJECT_NAME}_TESTING)
   # configure python examples in the build directory for testing
-  set(examples_build_dir "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/for_test")
-  set(config_out "${examples_build_dir}/config.py")
-  set(DAWN_INSTALL_MODULE ${PROJECT_BINARY_DIR}/python/)
-  set(DAWN_INSTALL_DAWNCLIB $<TARGET_FILE:DawnCShared>)
-  configure_file(${config_in} ${examples_build_dir}/config.py.tmp @ONLY)
-  file(GENERATE OUTPUT ${config_out} INPUT ${examples_build_dir}/config.py.tmp)
-  file(COPY . DESTINATION ${examples_build_dir})
+  set(examples_build_dir ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
 
-  set(examples copy_stencil hori_diff tridiagonal_solve) # TODO  unstructured_stencil
+  find_program (SH_PROGRAM sh)
+
+  # TODO unstructured_stencil
+  set(examples
+    copy_stencil
+    hori_diff
+    tridiagonal_solve
+  )
   foreach(example ${examples})
-    add_test(NAME "python-test-${example}.py"
-      COMMAND
-        ${CMAKE_COMMAND}
-        -DEXAMPLE=${example}
-        -DDAWN_PYTHON_MODULES_DIR=${DAWN_INSTALL_MODULE}
-        -DDAWN_PYTHON_EXAMPLES_DIR=${examples_build_dir}
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/test_python.cmake)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python-test.sh.in
+      ${examples_build_dir}/python-test-${example}.sh
+    )
+    add_test(NAME python-test-${example}.sh
+      COMMAND ${CMAKE_COMMAND} -E env
+      PYTHONPATH=${PROJECT_BINARY_DIR}/python:${examples_build_dir}
+      ${SH_PROGRAM} python-test-${example}.sh
+      WORKING_DIRECTORY ${examples_build_dir}
+    )
   endforeach()
 endif()

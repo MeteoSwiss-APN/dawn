@@ -36,11 +36,11 @@ import textwrap
 from ctypes import *
 from optparse import OptionParser
 
-from config import __dawn_install_module__, __dawn_install_dawnclib__
+from config import __dawn_build_module__, __dawn_build_dawnclib__
 from dawn import *
 from dawn import sir_printer
 
-dawn = CDLL(__dawn_install_dawnclib__)
+dawn = CDLL(__dawn_build_dawnclib__)
 
 
 def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
@@ -182,7 +182,7 @@ dawn.dawnTranslationUnitGetStencil.argtypes = [
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file
-f = open(os.path.dirname(os.path.realpath(__file__)) + "/data/hori_diff.cpp", "w")
+f = open('hori_diff.cpp', mode='w')
 f.write(ctypes.c_char_p(code).value.decode("utf-8"))
 
 f.close()
