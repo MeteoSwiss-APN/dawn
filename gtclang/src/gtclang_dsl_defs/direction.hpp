@@ -16,9 +16,8 @@
 
 #pragma once
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Defintion of a direction which can be as argument in stencil functions
@@ -28,5 +27,5 @@ struct direction {
   direction operator+(int);
   direction operator-(int);
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

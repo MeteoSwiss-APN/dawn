@@ -16,7 +16,7 @@
 
 #include "defs.hpp"
 
-namespace gtclang {
+namespace dawn {
 
 template <typename T>
 void cellFieldType(...);
@@ -39,4 +39,4 @@ template <typename Tag, typename LocationType>
 auto deref(Tag, LocationType const& l) -> LocationType const& {
   return l;
 }
-} // namespace gtclang
+} // namespace dawn

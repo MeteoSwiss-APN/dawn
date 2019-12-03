@@ -387,7 +387,7 @@ private:
       if(token_.is(tok::identifier)) {
         unsigned peekedTokens = 0;
 
-        // Consume gridtools::clang:: of the storage if necessary
+        // Consume gtclang::dsl:: of the storage if necessary
         peekNamespaces({"gridtools", "clang"}, peekedTokens);
 
         // Get the token which describes the `storage`
@@ -556,7 +556,7 @@ private:
 
     while(lexNext()) {
 
-      // Check for the pattern `struct IDENTIFIER : public [gridtools::clang::]stencil {`
+      // Check for the pattern `struct IDENTIFIER : public [gtclang::dsl::]stencil {`
       if(token_.is(tok::kw_struct) || token_.is(tok::kw_class)) {
         unsigned peekedTokens = 0;
 
@@ -625,8 +625,7 @@ private:
           hasGlobals_ = true;
 
           // Create replacement `globals {`
-          registerReplacement(token_.getLocation(), tokenLBrace.getLocation(),
-                              "struct globals : public gridtools::clang::globals_impl<globals> {");
+          registerReplacement(token_.getLocation(), tokenLBrace.getLocation(), "struct globals {");
           consumeTokens(peekedTokens);
         }
 
@@ -648,10 +647,9 @@ private:
           const char* stencilKindStr = toString(stencilKind);
           registerReplacement(
               token_.getLocation(), tokenLBrace.getLocation(),
-              dawn::format(
-                  "struct %s : public gridtools::clang::%s%s{ using gridtools::clang::%s::%s;",
-                  identifier, stencilKindStr, hasGlobals_ ? ", public globals " : " ",
-                  stencilKindStr, stencilKindStr));
+              dawn::format("struct %s : public gtclang::dsl::%s%s{ using gtclang::dsl::%s::%s;",
+                           identifier, stencilKindStr, hasGlobals_ ? ", public globals " : " ",
+                           stencilKindStr, stencilKindStr));
 
           consumeTokens(peekedTokens);
           lexStencilBody(stencilKind, identifier, tokenIdentifier.getLocation());

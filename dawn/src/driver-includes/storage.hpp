@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "defs.hpp"
 #include <type_traits>
 #ifdef GRIDTOOLS_CLANG_GENERATED
 

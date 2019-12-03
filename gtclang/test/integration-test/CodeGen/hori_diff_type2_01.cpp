@@ -1,7 +1,7 @@
 #include "driver-includes/verify.hpp"
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil_function delta {
   offset off;

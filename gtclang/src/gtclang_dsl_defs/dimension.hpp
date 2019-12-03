@@ -16,10 +16,8 @@
 
 #pragma once
 
-namespace gridtools {
-
-namespace clang {
-
+namespace gtclang {
+namespace dsl {
 /**
  * @brief Defintion of a dimension in an access of a storage
  * @ingroup gridtools_clang
@@ -28,5 +26,5 @@ struct dimension {
   dimension operator+(int);
   dimension operator-(int);
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

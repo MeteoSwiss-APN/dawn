@@ -28,6 +28,7 @@
 #include "gtclang/Support/Logger.h"
 #include "gtclang/Support/StringUtil.h"
 #include "clang/AST/AST.h"
+#include <regex>
 #include <sstream>
 #include <stack>
 
@@ -117,8 +118,12 @@ public:
     scope_.top()->Kind = FK_CXXFunction;
 
     DAWN_ASSERT_MSG(expr->getDirectCallee(), "only C-function calls are supported");
+    static const std::regex toReplace{"^gtclang::dsl"};
+    static const std::string replaceWith{"gridtools::dawn"};
+    const std::string funQualifiedName = std::regex_replace(
+        expr->getDirectCallee()->getQualifiedNameAsString(), toReplace, replaceWith);
     scope_.top()->DAWNFunCallExpr = std::make_shared<dawn::sir::FunCallExpr>(
-        expr->getDirectCallee()->getQualifiedNameAsString(), resolver_->getSourceLocation(expr));
+        funQualifiedName, resolver_->getSourceLocation(expr));
 
     return true;
   }
@@ -322,7 +327,7 @@ private:
 };
 
 const std::array<const char*, 3> FunctionResolver::TypeStr = {
-    {"gridtools::clang::storage", "gridtools::clang::direction", "gridtools::clang::offset"}};
+    {"gtclang::dsl::storage", "gtclang::dsl::direction", "gtclang::dsl::offset"}};
 
 namespace {
 

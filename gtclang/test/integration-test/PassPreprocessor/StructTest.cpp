@@ -18,9 +18,9 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
-stencil_function TestFun { // EXPECTED: %line%: struct TestFun : public gridtools::clang::stencil_function { using gridtools::clang::stencil_function::stencil_function;
+stencil_function TestFun { // EXPECTED: %line%: struct TestFun : public gtclang::dsl::stencil_function { using gtclang::dsl::stencil_function::stencil_function;
 
   storage field_a0, field_a1;
 
@@ -29,7 +29,7 @@ stencil_function TestFun { // EXPECTED: %line%: struct TestFun : public gridtool
   }
 };
 
-stencil Test1 { // EXPECTED: %line%: struct Test1 : public gridtools::clang::stencil { using gridtools::clang::stencil::stencil;
+stencil Test1 { // EXPECTED: %line%: struct Test1 : public gtclang::dsl::stencil { using gtclang::dsl::stencil::stencil;
 
   storage field_a0, field_a1;
 

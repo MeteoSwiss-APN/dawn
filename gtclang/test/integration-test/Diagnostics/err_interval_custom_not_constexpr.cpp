@@ -18,7 +18,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 int a = 5;
 interval k_flat = k_start + a; // EXPECTED_ERROR: offset of built-in interval 'k_start' is not a constant expression

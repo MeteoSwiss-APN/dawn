@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "AtlasVerifyer.h"
+#include "AtlasVerifier.h"
 #include "atlas/functionspace/CellColumns.h"
 #include "atlas/functionspace/EdgeColumns.h"
 #include "atlas/grid.h"
@@ -271,7 +271,7 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
   {
     auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
     auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
-    AtlasVerifyer v;
+    AtlasVerifier v;
     EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
   }
 }

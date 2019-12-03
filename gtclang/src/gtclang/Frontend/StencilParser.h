@@ -87,10 +87,10 @@ private:
 public:
   StencilParser(GTClangContext* context, GlobalVariableParser& globalVariableParser);
 
-  /// @brief Parse a `gridtools::clang::stencil`
+  /// @brief Parse a `gtclang::dsl::stencil`
   void parseStencil(clang::CXXRecordDecl* recordDecl, const std::string& name);
 
-  /// @brief Parse a `gridtools::clang::stencil_function`
+  /// @brief Parse a `gtclang::dsl::stencil_function`
   void parseStencilFunction(clang::CXXRecordDecl* recordDecl, const std::string& name);
 
   /// @brief Get the StencilMap
