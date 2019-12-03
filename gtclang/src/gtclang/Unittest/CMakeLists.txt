@@ -14,18 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(config_in "${CMAKE_CURRENT_SOURCE_DIR}/Config.h.cmake")
-set(config_out "${CMAKE_CURRENT_BINARY_DIR}/Config.h")
-
 set(GTCLANG_EXECUTABLE "${PROJECT_BINARY_DIR}/bin/gtclang")
 set(GTCLANG_UNITTEST_DATAPATH ${PROJECT_BINARY_DIR}/test/unit-test)
 set(GTCLANG_INTEGRATIONTEST_DATAPATH ${PROJECT_BINARY_DIR}/test/integration-test)
 set(GTCLANG_UNITTEST_INCLUDES ${PROJECT_SOURCE_DIR}/src)
-
-# This two-step hack is necessary because there are both variables and generator
-# expressions necessary to generate config.py
-configure_file(${config_in} ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
-file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}/.tmp)
+configure_file(Config.h.in ${CMAKE_CURRENT_BINARY_DIR}/Config.h @ONLY)
 
 add_library(GTClangUnittest
   ${CMAKE_CURRENT_BINARY_DIR}/Config.h
