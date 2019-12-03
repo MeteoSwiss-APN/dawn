@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 #define DAWN_GENERATED 1
 #define GT_VECTOR_LIMIT_SIZE 30
-#define GRIDTOOLS_DAWN_HALO_EXTEND 3
+#define GRIDTOOLS_DAWN_HALO_EXTENT 3
 
 #undef FUSION_MAX_VECTOR_SIZE
 #undef FUSION_MAX_MAP_SIZE

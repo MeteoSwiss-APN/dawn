@@ -36,7 +36,7 @@ namespace dawn {
  * @{
  */
 
-#ifdef GRIDTOOLS_DAWN_HALO_EXTEND
+#ifdef GRIDTOOLS_DAWN_HALO_EXTENT
 using halo_ijk_t = gridtools::halo<halo::value, halo::value, 0>;
 using halo_ij_t = gridtools::halo<halo::value, halo::value, 0>;
 using halo_i_t = gridtools::halo<halo::value, 0, 0>;

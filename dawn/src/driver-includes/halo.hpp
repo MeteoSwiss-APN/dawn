@@ -22,8 +22,8 @@ namespace dawn {
  * @ingroup gridtools_dawn
  */
 struct halo {
-#ifdef GRIDTOOLS_DAWN_HALO_EXTEND
-  static constexpr int value = GRIDTOOLS_DAWN_HALO_EXTEND;
+#ifdef GRIDTOOLS_DAWN_HALO_EXTENT
+  static constexpr int value = GRIDTOOLS_DAWN_HALO_EXTENT;
 #else
   static constexpr int value = 3;
 #endif
