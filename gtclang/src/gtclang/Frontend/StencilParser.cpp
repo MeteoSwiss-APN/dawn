@@ -767,7 +767,11 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
         if(CXXForRangeStmt* s = dyn_cast<CXXForRangeStmt>(stmt)) {
           // stmt is a range-based for loop which corresponds to a VerticalRegion
-          stencilDescAst->getRoot()->push_back(parseVerticalRegion(s));
+          if(s->getLoopVariable()->getName() == "__k_indexrange__") {
+            stencilDescAst->getRoot()->push_back(parseIterationSpace(s));
+          } else {
+            stencilDescAst->getRoot()->push_back(parseVerticalRegion(s));
+          }
 
         } else if(CXXConstructExpr* s = dyn_cast<CXXConstructExpr>(stmt)) {
 
