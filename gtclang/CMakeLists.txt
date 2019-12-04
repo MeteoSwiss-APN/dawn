@@ -157,7 +157,6 @@ endif()
 #TODO: REMOVE THIS, it's a workaround to add driver-includes from dawn, otherwise parsing fails.
 # set(GTCLANG_DSL_INCLUDES "${GTCLANG_DSL_INCLUDES}" "${DAWN_INCLUDE_DIRS}")
 
-
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
   cmake/${PROJECT_NAME}Config.cmake.in

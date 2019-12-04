@@ -26,14 +26,17 @@ set(DAWN_BUILD_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
 mark_as_advanced(DAWN_BUILD_PROTOBUF)
 
 if(Python3_FOUND)
-  add_custom_target(build-protobuf-python
+  add_custom_command(OUTPUT ${protobuf_SOURCE_DIR}/python/build
     COMMAND PROTOC=$<TARGET_FILE:protobuf::protoc> ${Python3_EXECUTABLE} setup.py build
     WORKING_DIRECTORY ${protobuf_SOURCE_DIR}/python
-    )
+    DEPENDS protobuf::protoc
+  )
+  add_custom_command(OUTPUT ${protobuf_BINARY_DIR}/python/google
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_SOURCE_DIR}/python/build/lib ${protobuf_BINARY_DIR}/python
+    DEPENDS ${protobuf_SOURCE_DIR}/python/build
+  )
   add_custom_target(protobuf-python
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_SOURCE_DIR}/python ${protobuf_BINARY_DIR}/python
-    DEPENDS build-protobuf-python
-    )
+    DEPENDS ${protobuf_BINARY_DIR}/python/google)
   if(DAWN_BUILD_PROTOBUF)
     install(DIRECTORY ${protobuf_SOURCE_DIR}/python/google DESTINATION ${CMAKE_INSTALL_LIBDIR}/python3)
   endif()

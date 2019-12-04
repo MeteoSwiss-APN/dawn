@@ -1,1 +1,6 @@
 # TODO add headers for IDEs if needed
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING REGEX ".h|.hpp$"
+)

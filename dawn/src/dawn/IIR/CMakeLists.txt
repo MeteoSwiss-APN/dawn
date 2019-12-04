@@ -12,11 +12,13 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+set(protos IIR/IIR.proto)
+
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
-  PROTOS IIR/IIR.proto
+  PROTOS ${protos}
   INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PACKG IIR
@@ -113,16 +115,21 @@ if(ENABLE_PYTHON)
   include(DawnProtobufGenerate)
   dawn_protobuf_generate(
     OUT_FILES iir_proto_python_files
-    PROTOS IIR/IIR.proto
+    PROTOS ${protos}
     INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG IIR
     LANGUAGE python
   )
 
-  add_custom_target(DawnIIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/python/IIR/
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${PROJECT_BINARY_DIR}/python/IIR/
+  set(output_dir ${PROJECT_BINARY_DIR}/python/IIR/)
+
+  list(TRANSFORM protos PREPEND ${output_dir}
+    OUTPUT_VARIABLE iir_proto_python_build_files)
+
+  add_custom_command(OUTPUT ${iir_proto_python_build_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
     DEPENDS ${iir_proto_python_files}
   )
 

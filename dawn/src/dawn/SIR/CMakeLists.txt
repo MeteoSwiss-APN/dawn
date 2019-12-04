@@ -12,12 +12,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+set(protos SIR/SIR.proto SIR/statements.proto)
+
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS SIR/SIR.proto SIR/statements.proto
+  PROTOS ${protos}
   PACKG SIR
   LANGUAGE cpp
 )
@@ -54,21 +56,25 @@ target_add_dawn_standard_props(DawnSIR)
 target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
 
 if(ENABLE_PYTHON)
-    # Generate python proto files
+  # Generate python proto files
   include(DawnProtobufGenerate)
   dawn_protobuf_generate(
     OUT_FILES sir_proto_python_files
-    PROTOS SIR/SIR.proto SIR/statements.proto
+    PROTOS ${protos}
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE python
-    )
+  )
 
-  add_custom_target(DawnSIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/python/SIR/
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${PROJECT_BINARY_DIR}/python/SIR/
+  set(output_dir ${PROJECT_BINARY_DIR}/python/IIR/)
+
+  list(TRANSFORM protos PREPEND ${output_dir}
+    OUTPUT_VARIABLE sir_proto_python_build_files)
+  add_custom_command(OUTPUT ${sir_proto_python_build_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
     DEPENDS ${sir_proto_python_files}
-    )
+  )
 
   # TODO do we have a use-case for an installation at the moment?
   # install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
