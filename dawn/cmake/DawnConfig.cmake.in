@@ -2,7 +2,7 @@ set(@PROJECT_NAME@_VERSION @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@)
 
 @PACKAGE_INIT@
 
-message(STATUS "Found @PROJECT_NAME@ ${@PROJECT_NAME@_VERSION} at ${CMAKE_CURRENT_LIST_FILE}" )
+message(STATUS "Found @PROJECT_NAME@ ${@PROJECT_NAME@_VERSION} at ${CMAKE_CURRENT_LIST_FILE}")
 
 include(CMakeFindDependencyMacro)
 find_dependency(Protobuf 3.4.0
@@ -17,4 +17,4 @@ endif()
 set_and_check(DAWN_DRIVER_INCLUDEDIR @PACKAGE_DAWN_INSTALL_DRIVER_INCLUDEDIR@)
 mark_as_advanced(DAWN_DRIVER_INCLUDEDIR)
 
-check_required_components("@PROJECT_NAME@")
+check_required_components(@PROJECT_NAME@)
