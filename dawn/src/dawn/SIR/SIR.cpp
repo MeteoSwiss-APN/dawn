@@ -459,6 +459,14 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
     output += intervalComp.why();
     return CompareResult{output, false};
   }
+  if(iterationSpace_[0] != rhs.iterationSpace_[0]) {
+    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
+    return CompareResult{output, false};
+  }
+  if(iterationSpace_[1] != rhs.iterationSpace_[1]) {
+    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
+    return CompareResult{output, false};
+  }
 
   auto astComp = compareAst(Ast, rhs.Ast);
   if(!astComp.second) {
@@ -647,7 +655,10 @@ std::string sir::Value::toString() const {
 }
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  auto retval =
+      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  retval->iterationSpace_ = iterationSpace_;
+  return retval;
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }

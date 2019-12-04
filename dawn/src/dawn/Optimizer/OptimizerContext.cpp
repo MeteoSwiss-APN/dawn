@@ -387,6 +387,12 @@ public:
                        : LoopOrderKind::Backward);
     std::unique_ptr<Stage> stage =
         std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
+    // set the iteration space
+    for(int i = 0, size = stmt->getVerticalRegion()->iterationSpace_.size(); i < size; ++i) {
+      if(stmt->getVerticalRegion()->iterationSpace_[i]) {
+        stage->setIterationSpace(stmt->getVerticalRegion()->iterationSpace_[i].value(), i);
+      }
+    }
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
