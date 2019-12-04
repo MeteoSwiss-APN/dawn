@@ -448,7 +448,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
                 auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
-
                 auto doMethodGenerator = [&]() {
                   // Check if we need to execute this statement:
 

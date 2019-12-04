@@ -650,8 +650,6 @@ def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) ->
     return expr
 
 
-
-
 __all__ = [
     # SIR
     "SIR",
