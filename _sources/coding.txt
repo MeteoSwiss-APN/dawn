@@ -84,6 +84,19 @@ while the following is considered bad
 
   const char **ptr = ...
 
+Minimal Code
+^^^^^^^^^^^^
+
+Always favor minimal code. Do not introduce convenience functions without a good reason, e.g.
+
+.. code-block:: cpp
+  class Foo {
+    Foo(int, int, int);
+    Foo(std::array<int, 3>);
+  };
+
+is bad. Delete one of the constructors.
+
 Include Order
 ^^^^^^^^^^^^^
 
@@ -94,7 +107,7 @@ Includes should be placed in the following order
 # Other libraries
 # `std` headers
 
-For headers in the same folder, do not put the absolute path
+For headers in the same folder, do not put the absolute path.
 
 Miscellaneous Guidelines
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -127,8 +140,7 @@ is ok. The following is not:
 
 ** Always use braces for `if-else` and loop bodies (also if they are one line). This helps to avoid bugs, for example if additional statements are appended to a loop or if-else clause at a later stage.
 
-    virtual in derived functions (no)
-    east const / west const (east const)
+** `virtual` functions should specify exactly on of `virtual`, `override` and `final`, see also `C++ Core Guidelines C.128 <https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rh-override>`_
 
 Clang Format
 ============ 
