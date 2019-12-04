@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name="dawn_PR"
+#SBATCH --job-name=dawn_PR
 #SBATCH --output=dawn_PR.log
 #SBATCH --time=00:20:00
 #SBATCH --nodes=1
@@ -7,6 +7,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=cscsci
 #SBATCH --constraint=gpu
+#SBATCH --account=c14
 
 export CRAY_CUDA_MPS=1
 
