@@ -48,7 +48,7 @@ if(${PROJECT_NAME}_TESTING)
     )
     add_test(NAME python-test-${example}.sh
       COMMAND ${CMAKE_COMMAND} -E env
-      PYTHONPATH=${PROJECT_BINARY_DIR}/python:${examples_build_dir}
+      PYTHONPATH=${PROJECT_BINARY_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}
       ${SH_PROGRAM} python-test-${example}.sh
       WORKING_DIRECTORY ${examples_build_dir}
     )
