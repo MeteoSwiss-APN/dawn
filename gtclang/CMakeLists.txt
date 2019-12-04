@@ -16,18 +16,20 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-# project version
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 0)
-set(VERSION_PATCH 1)
+file(STRINGS "version.txt" __GTCLANG_VERSION)
+string(REPLACE "." ";" __VERSION_LIST ${__GTCLANG_VERSION})
 
-set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+list(GET __VERSION_LIST 0 VERSION_MAJOR)
+list(GET __VERSION_LIST 1 VERSION_MINOR)
+list(GET __VERSION_LIST 2 VERSION_PATCH)
+unset(__VERSION_LIST)
 
 project(GTClang
-  VERSION ${VERSION}
+  VERSION ${__GTCLANG_VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
   LANGUAGES CXX C
 )
+unset(__GTCLANG_VERSION)
 
 # Useful standard options:
 # - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use GTCLANG_BUILD_TESTING to override).
