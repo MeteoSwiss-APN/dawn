@@ -66,7 +66,7 @@ inline std::string dim2str(int dim) {
 /// maps to).
 ///
 /// @b Example:
-/// Consider the following example (given in the gridtools_clang DSL):
+/// Consider the following example (given in the gtclang DSL):
 ///
 /// @code
 /// stencil_function avg {

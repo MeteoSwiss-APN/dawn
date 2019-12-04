@@ -23,7 +23,7 @@ namespace dawn {
 
 /**
  * @brief 3-dimensional domain definition
- * @ingroup gridtools_clang
+ * @ingroup gridtools_dawn
  */
 class domain {
   std::array<unsigned int, 3> m_dims;

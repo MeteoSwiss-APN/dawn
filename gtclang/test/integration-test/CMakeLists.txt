@@ -136,7 +136,7 @@ function(cuda_compile_generated_examples)
       endif()
 
       target_link_libraries(${example}_benchmarks_${backend}_cuda gtest ${CUDA_CUDART_LIBRARY})
-      target_compile_definitions(${example}_benchmarks_${backend}_cuda PUBLIC GRIDTOOLS_CLANG_CUDA ${GTCLANG_DEFINITIONS})
+      target_compile_definitions(${example}_benchmarks_${backend}_cuda PUBLIC GRIDTOOLS_DAWN_CUDA ${GTCLANG_DEFINITIONS})
       target_compile_definitions(${example}_benchmarks_${backend}_cuda PRIVATE -DOPTBACKEND=${backend})
 
       add_custom_target(

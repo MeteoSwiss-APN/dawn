@@ -548,8 +548,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   std::string globals = generateGlobals(context_, "dawn_generated", "cxxnaiveico");
 
   std::vector<std::string> ppDefines;
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_GENERATED 1");
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO");
+  ppDefines.push_back("#define DAWN_GENERATED 1");
+  ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVEICO");
   ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
   DAWN_LOG(INFO) << "Done generating code";
 

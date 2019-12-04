@@ -32,7 +32,7 @@ class StencilInstantiation;
 namespace codegen {
 namespace cxxnaive {
 
-/// @brief GridTools C++ code generation for the gridtools_clang DSL
+/// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup cxxnaive
 class CXXNaiveCodeGen : public CodeGen {
 public:

@@ -23,7 +23,7 @@ namespace dsl {
 
 /**
  * @brief A runnable stencil
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 class stencil {
 protected:

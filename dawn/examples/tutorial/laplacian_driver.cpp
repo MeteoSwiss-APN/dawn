@@ -1,4 +1,4 @@
-#define GRIDTOOLS_CLANG_GENERATED 1 // this is important, defines meta_data_t
+#define DAWN_GENERATED 1 // this is important, defines meta_data_t
 
 #include "driver-includes/domain.hpp"
 #include "driver-includes/gridtools_includes.hpp"

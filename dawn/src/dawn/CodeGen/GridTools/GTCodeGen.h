@@ -33,7 +33,7 @@ class Stencil;
 namespace codegen {
 namespace gt {
 
-/// @brief GridTools C++ code generation for the gridtools_clang DSL
+/// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
@@ -61,6 +61,9 @@ public:
 
     // TODO we should compute the OffsetLimit, not use a hard-coded value!
     static constexpr int OffsetLimit = 3;
+
+    // TODO we should avoid the ExtraOffsets, not use a hard-coded value!
+    static constexpr int ExtraOffsets = 1;
   };
 
 private:

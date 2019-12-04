@@ -20,7 +20,7 @@ namespace gtclang {
 namespace dsl {
 /**
  * @brief Defintion of a dimension in an access of a storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct dimension {
   dimension operator+(int);
