@@ -21,6 +21,8 @@ Naming of Types, Functions, Variables, and Enumerators
 
   * **Members** should start with a lower-case letter and contain an `_` suffix (e.g ``myMember_``) 
 
+  * **Namespaces** are all lower case and are in snake_case (e.g. `dawn_generated`)
+
 For types, functions and enumerators you should follow the LLVM style.
 
 Source Code Formatting
@@ -82,25 +84,53 @@ while the following is considered bad
 
   const char **ptr = ...
 
-Includes
-^^^^^^^^^^^^^^^^^^^^^^^^
+Include Order
+^^^^^^^^^^^^^
+
+Includes should be placed in the following order
+
+# Headers in the same folder
+# Headers in the same library
+# Other libraries
+# `std` headers
+
+For headers in the same folder, do not put the absolute path
 
 Miscellaneous Guidelines
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-** Do not use `inline` on class member functions
-** Do not use `extern` in free header functions
-** Prefer `#pragma once` over include guards
-** Always use braces for `if-else` and loop bodies (also if they are one line)
+** Do not define member functions which are longer than one line in header files (except for templated functions). E.g.
 
-    Naming of struct vs. class members
+.. code-block:: cpp
+
+  class Foo {
+    int i;
+    int getI() { return i; }
+  };
+
+is ok. The following is not:
+
+.. code-block:: cpp
+
+  class Bar {
+    int computeI() { 
+      bool converged = false;
+      while (!converged) {
+        //some complicated algorithm
+      }
+    }
+  };
+
+** Do not use `extern` in free header functions since its redundant. 
+
+** Prefer `#pragma once` over include guards, since include guards need to be maintaned if the header file is renamed and code or includes could accidentally be placed outside of the guards.
+
+** Always use braces for `if-else` and loop bodies (also if they are one line). This helps to avoid bugs, for example if additional statements are appended to a loop or if-else clause at a later stage.
+
     virtual in derived functions (no)
-    include order and absolute vs. relative path (same folder -> same library -> other -> std; no absolute path if in same folder)
     east const / west const (east const)
-    naming of namespaces?
-
 
 Clang Format
 ============ 
 
-To enforce most of these coding standards, there is a `clang-format <https://clang.llvm.org/docs/ClangFormat.html>`_ file located in the root directory at ``<dawn-dir>/.clangformat``. There is also a git pre-commit hook to enforce that all code commited is formatted according to the `.clang-format` file. 
+To enforce most of these coding standards, there is a `clang-format <https://clang.llvm.org/docs/ClangFormat.html>`_ file located in the root directory at ``<dawn-dir>/.clangformat``. There is also a git pre-commit hook to ensure that all code commited is formatted according to the `.clang-format` file. 
