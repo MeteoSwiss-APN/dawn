@@ -15,6 +15,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
@@ -32,10 +33,10 @@ namespace dawn {
 namespace iir {
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID)
-    : metaData_(metaData), StageID_(StageID) {}
+    : metaData_(metaData), StageID_(StageID), iterationSpace_({}) {}
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval)
-    : metaData_(metaData), StageID_(StageID) {
+    : metaData_(metaData), StageID_(StageID), iterationSpace_({}) {
   insertChild(std::make_unique<DoMethod>(interval, metaData));
 }
 
@@ -300,6 +301,12 @@ Stage::split(std::deque<int>& splitterIndices,
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
+    if(thisDoMethod.getParent()->getIterationSpace()[0]) {
+      newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace()[0].value(), 0);
+    }
+    if(thisDoMethod.getParent()->getIterationSpace()[1]) {
+      newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace()[1].value(), 1);
+    }
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
     if(graphs)
@@ -338,6 +345,15 @@ bool Stage::isEmptyOrNullStmt() const {
 void Stage::setLocationType(ast::Expr::LocationType type) { type_ = type; }
 
 ast::Expr::LocationType Stage::getLocationType() const { return type_; }
+
+void Stage::setIterationSpace(Interval iterationSpace, int direction) {
+  DAWN_ASSERT_MSG(direction < iterationSpace_.size(), "unknown direction ");
+  iterationSpace_[direction] = iterationSpace;
+};
+
+const std::array<std::optional<Interval>, 2>& Stage::getIterationSpace() const {
+  return iterationSpace_;
+}
 
 } // namespace iir
 } // namespace dawn
