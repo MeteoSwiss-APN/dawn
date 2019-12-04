@@ -72,7 +72,6 @@ function(dawn_protobuf_generate)
     set(ARG_LANGUAGE cpp)
   endif()
 
-
   if("${ARG_LANGUAGE}" STREQUAL "cpp")
     set(extensions .pb.h .pb.cc)
   elseif("${ARG_LANGUAGE}" STREQUAL "python")
@@ -97,6 +96,11 @@ function(dawn_protobuf_generate)
     set(include_path ${include_path} -I${incl})
   endforeach()
 
+  # If protobuf is bundled, ensure it's built first
+  if(DAWN_BUILD_PROTOBUF)
+    set(depends protobuf-python)
+  endif()
+
   set(output_files)
   set(output_include_dirs)
 
@@ -119,7 +123,7 @@ function(dawn_protobuf_generate)
       ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}"
            ${include_path} "${proto}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
-      DEPENDS ${abs_file} protobuf::protoc
+      DEPENDS ${abs_file} protobuf::protoc ${depends}
       WORKING_DIRECTORY ${ARG_WDIR}
       VERBATIM
     )

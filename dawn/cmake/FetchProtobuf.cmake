@@ -1,7 +1,7 @@
 # TODO maybe function
 
 if(NOT DAWN_BUILD_PROTOBUF)
-  message(STATUS " Fetching Protobuf...")
+  message(STATUS "Fetching Protobuf...")
 endif()
 
 # Configuration options for Protobuf
@@ -13,7 +13,7 @@ set(protobuf_BUILD_PROTOC_BINARIES ON)
 FetchContent_Declare(protobuf
   GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
   GIT_TAG v3.10.1
-  )
+)
 
 FetchContent_GetProperties(protobuf)
 if(NOT protobuf_POPULATED)
@@ -34,4 +34,7 @@ if(Python3_FOUND)
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_SOURCE_DIR}/python ${protobuf_BINARY_DIR}/python
     DEPENDS build-protobuf-python
     )
+  if(DAWN_BUILD_PROTOBUF)
+    install(DIRECTORY ${protobuf_SOURCE_DIR}/python/google DESTINATION ${CMAKE_INSTALL_LIBDIR}/python3)
+  endif()
 endif()

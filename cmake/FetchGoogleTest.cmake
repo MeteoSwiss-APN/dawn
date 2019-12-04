@@ -2,7 +2,7 @@
 
 if(NOT TARGET gtest)
   if(NOT FETCHED_GTEST)
-    message(STATUS " Fetching GoogleTest...")
+    message(STATUS "Fetching GoogleTest...")
   endif()
   set(INSTALL_GTEST OFF)
   set(BUILD_GMOCK OFF)

@@ -19,13 +19,14 @@ if(NOT GTCLANG_BUILD_GRIDTOOLS)
 endif()
 if(NOT GridTools_FOUND)
   if(NOT GTCLANG_BUILD_GRIDTOOLS)
-    message(STATUS " Fetching GridTools...")
+    message(STATUS "Fetching GridTools...")
   endif()
   # GridTools uses BUILD_TESTING, cache it and reset after
   set(build_testing ${BUILD_TESTING})
   set(install_tools ${INSTALL_TOOLS})
   set(BUILD_TESTING OFF)
   set(INSTALL_TOOLS OFF)
+  set(GT_INSTALL_EXAMPLES OFF)
 
   # NOTE: Need CMake fixes to v1.0.3
   FetchContent_Declare(GridTools

@@ -123,7 +123,7 @@ endfunction()
 
 # Protobuf
 if(NOT DAWN_BUILD_PROTOBUF)
-    find_package(Protobuf 3.4.0 CONFIG)
+  find_package(Protobuf 3.4.0 CONFIG)
 endif()
 if(NOT Protobuf_FOUND)
   include(FetchProtobuf)
@@ -150,7 +150,8 @@ if(Python3_FOUND)
     # we try to find it
     find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
       PATHS ${Protobuf_INCLUDE_DIR}/../python ${PROTOBUF_PYTHON_MODULE_DIR}
-      DOC "Path to protobuf python module")
+      DOC "Path to protobuf python module"
+    )
   endif()
   mark_as_advanced(PROTOBUF_PYTHON_DIR)
   if(PROTOBUF_PYTHON_DIR)
