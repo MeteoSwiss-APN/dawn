@@ -189,7 +189,7 @@ void CudaCodeGen::generateStencilClasses(
     }
 
     for(const auto& fieldPair : tempFields) {
-      paramNameToType.emplace(fieldPair.second.Name, c_gtc().str() + "storage_t");
+      paramNameToType.emplace(fieldPair.second.Name, c_dgt().str() + "storage_t");
     }
 
     generateStencilClassMembers(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
@@ -222,7 +222,7 @@ void CudaCodeGen::generateStencilClassMembers(
     stencilClass.addMember("globals&", "m_globals");
   }
 
-  stencilClass.addMember("const " + c_gtc() + "domain", "m_dom");
+  stencilClass.addMember("const " + c_dgt() + "domain", "m_dom");
 
   if(!tempFields.empty()) {
     stencilClass.addComment("temporary storage declarations");
@@ -237,7 +237,7 @@ void CudaCodeGen::generateStencilClassCtr(
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
-  stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
+  stencilClassCtr.addArg("const " + c_dgt() + "domain& dom_");
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
@@ -263,7 +263,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
 
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
-  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
 
   const auto& stencils = stencilInstantiation->getStencils();
 
@@ -328,11 +328,11 @@ void CudaCodeGen::generateStencilWrapperMembers(
 
   // Define allocated memebers if necessary
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(
-          c_gtc() + "storage_t",
+          c_dgt() + "storage_t",
           "m_" + stencilInstantiation->getMetaData().getFieldNameFromAccessID(AccessID));
   }
 
@@ -572,7 +572,7 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
       .addType("storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >");
 
   stencilClass.addTypeDef(tmpStorageTypename_)
-      .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
+      .addType("storage_traits_t::data_store_t< ::dawn::float_type, " + tmpMetadataTypename_ + ">");
 }
 
 void CudaCodeGen::addTmpStorageInit(
@@ -623,8 +623,8 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     return "#define " + define + " " + std::to_string(value);
   };
 
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CUDA");
+  ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#define DAWN_BACKEND_T CUDA");
   //==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
   // these
@@ -634,6 +634,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+  ppDefines.push_back("using namespace gridtools::dawn;");
 
   generateBCHeaders(ppDefines);
 

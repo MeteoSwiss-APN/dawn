@@ -120,32 +120,31 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
   stencilConstructor.addStatement("gridtools::halo_descriptor dj = {dom.jminus(), dom.jminus(), "
                                   "dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()}");
 
-  auto getLevelSize = [](int level) -> std::string {
+  auto getLevel = [](int level) -> std::string {
     switch(level) {
     case sir::Interval::Start:
       return "dom.kminus()";
     case sir::Interval::End:
-      return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
+      return "dom.ksize() - dom.kplus()";
     default:
       return std::to_string(level);
     }
   };
 
-  int levelIdx = 0;
-
   // compile the size of all the intervals in a vector from their positional definition
-  std::vector<std::string> gridLevels;
-  // notice we skip the first level since it is kstart and not included in the GT grid definition
-  for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
-      it != end; ++it, ++levelIdx) {
-    gridLevels.push_back(getLevelSize(*it));
+  std::vector<std::string> gridLevelSizes;
+  for(auto it = intervalDefinitions.Levels.begin(),
+           end = std::prev(intervalDefinitions.Levels.end());
+      it != end; ++it) {
+    gridLevelSizes.push_back(getLevel(*std::next(it)) + " - " + getLevel(*it));
   }
 
   std::string stencilName =
       codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
-  stencilConstructor.addStatement(getGridName(stencilName) + " grid_(di, dj, " +
-                                  RangeToString(",", "{", "}")(gridLevels) + ")");
+  stencilConstructor.addStatement(getGridName(stencilName) + " grid_(make_grid(" + "di, dj, " +
+                                  getAxisName(stencilName) +
+                                  RangeToString(",", "{", "}")(gridLevelSizes) + "))");
 }
 
 void GTCodeGen::generatePlaceholderDefinitions(
@@ -358,7 +357,7 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
 
   // Initialize allocated fields
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
@@ -411,16 +410,16 @@ void GTCodeGen::generateStencilWrapperMembers(
   stencilWrapperClass.addComment("Stencil-Data");
 
   if(codeGenProperties.hasAllocatedFields()) {
-    stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
   }
 
   // Define allocated memebers if necessary
   for(const auto& fieldName : codeGenProperties.getAllocatedFields()) {
-    stencilWrapperClass.addMember(c_gtc() + "storage_t", "m_" + fieldName);
+    stencilWrapperClass.addMember(c_dgt() + "storage_t", "m_" + fieldName);
   }
 
   // Stencil members
-  stencilWrapperClass.addMember("const " + c_gtc() + "domain", "m_dom");
+  stencilWrapperClass.addMember("const " + c_dgt() + "domain", "m_dom");
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
@@ -523,18 +522,18 @@ void GTCodeGen::generateStencilClasses(
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
-    const iir::Interval& axis = intervalDefinitions.Axis;
     stencilClass.addTypeDef(getAxisName(StencilName))
-        .addType(c_gt() + "interval")
-        .addTemplates(makeArrayRef(
-            {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 2),
-             makeLevelName(axis.upperLevel(),
-                           (axis.upperOffset() + 1) == 0 ? 1 : (axis.upperOffset() + 1))}));
+        .addType(c_gt() + "axis")
+        .addTemplates(makeArrayRef({std::to_string(intervalDefinitions.Levels.size() - 1),
+                                    "gridtools::axis_config::offset_limit<" +
+                                        std::to_string(intervalDefinitions.OffsetLimit) +
+                                        ">, gridtools::axis_config::extra_offsets<" +
+                                        std::to_string(intervalDefinitions.ExtraOffsets) + ">"}));
 
     // Generate typedef of the grid
     stencilClass.addTypeDef(getGridName(StencilName))
         .addType(c_gt() + "grid")
-        .addTemplate(getAxisName(StencilName));
+        .addTemplate(getAxisName(StencilName) + "::axis_interval_t");
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -828,7 +827,7 @@ void GTCodeGen::generateStencilClasses(
     // Generate constructor
     auto StencilConstructor = stencilClass.addConstructor();
 
-    StencilConstructor.addArg("const gridtools::clang::domain& dom");
+    StencilConstructor.addArg("const " + c_dgt() + "domain& dom");
     if(!globalsMap.empty()) {
       StencilConstructor.addArg("const globals_gp_t& globals_gp");
     }
@@ -967,12 +966,13 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
     return "#define " + define + " " + std::to_string(value);
   };
 
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
+  ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#define DAWN_BACKEND_T GT");
 
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);
 
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+  ppDefines.push_back("using namespace gridtools::dawn;");
 
   generateBCHeaders(ppDefines);
 

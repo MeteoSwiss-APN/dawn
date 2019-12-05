@@ -18,7 +18,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 interval k_flat = k_start + 11;
 interval k_flat2 = k_flat + 1; // EXPECTED_ERROR: invalid built-in interval 'k_flat'

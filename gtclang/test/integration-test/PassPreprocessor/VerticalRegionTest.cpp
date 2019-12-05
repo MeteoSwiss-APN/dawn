@@ -18,22 +18,22 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil Test01 {
   storage foo;
 
   void Do() {
-    vertical_region(k_start, k_start) // EXPECTED: %line%: for(auto __k_loopvar__ : {k_start, k_start})
+    vertical_region(k_start, k_start) // EXPECTED: %line%: for\(auto __k_loopvar__ : \{k_start, k_start\}\)
         foo = 1;
 
-    vertical_region(k_start, k_end - 1) // EXPECTED: %line%: for(auto __k_loopvar__ : {k_start, k_end-1})
+    vertical_region(k_start, k_end - 1) // EXPECTED: %line%: for\(auto __k_loopvar__ : \{k_start, k_end-1\}\)
         foo = 1;
 
-    vertical_region(k_start + 1, k_end - 1) // EXPECTED: %line%: for(auto __k_loopvar__ : {k_start+1, k_end-1})
+    vertical_region(k_start + 1, k_end - 1) // EXPECTED: %line%: for\(auto __k_loopvar__ : \{k_start\+1, k_end-1\}\)
         foo = 1;
 
-    vertical_region(k_end, k_end) { // EXPECTED: %line%: for(auto __k_loopvar__ : {k_end, k_end}) {
+    vertical_region(k_end, k_end) { // EXPECTED: %line%: for\(auto __k_loopvar__ : \{k_end, k_end\}\) \{
       foo = 1;
     }
   }

@@ -1,10 +1,10 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms105_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const a, gridtools::clang::float_type * const b, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms105_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
-  gridtools::clang::float_type c_kcache[2];
-  gridtools::clang::float_type d_kcache[2];
+  ::dawn::float_type c_kcache[2];
+  ::dawn::float_type d_kcache[2];
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
@@ -84,7 +84,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
       c_kcache[1] =c[idx111];
       d_kcache[1] =d[idx111];
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-int __local_m_100 = ((gridtools::clang::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
+int __local_m_100 = ((::dawn::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
 c_kcache[1] = (c_kcache[1] * __local_m_100);
 d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_100);
   }
@@ -113,10 +113,10 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
 
   // Final flush of kcaches
 }
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
-  gridtools::clang::float_type d_kcache[2];
+  ::dawn::float_type d_kcache[2];
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
@@ -214,11 +214,11 @@ public:
     // Temporary storage typedefs
     using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
-    using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
-    const gridtools::clang::domain m_dom;
+    using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
+    const gridtools::dawn::domain m_dom;
   public:
 
-    stencil_49(const gridtools::clang::domain& dom_) : sbase("stencil_49"), m_dom(dom_){}
+    stencil_49(const gridtools::dawn::domain& dom_) : sbase("stencil_49"), m_dom(dom_){}
 
     void run(storage_ijk_t a_ds, storage_ijk_t b_ds, storage_ijk_t c_ds, storage_ijk_t d_ds) {
 
@@ -267,7 +267,7 @@ public:
 
   // Stencil-Data
 
-  tridiagonal_solve(const gridtools::clang::domain& dom) : m_stencil_49(dom){}
+  tridiagonal_solve(const gridtools::dawn::domain& dom) : m_stencil_49(dom){}
 
   template<typename S>
   void sync_storages(S field) {

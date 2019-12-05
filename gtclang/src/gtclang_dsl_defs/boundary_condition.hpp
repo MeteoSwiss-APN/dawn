@@ -18,18 +18,16 @@
 
 #include "gtclang_dsl_defs/stencil_function.hpp"
 
-namespace gridtools {
-
-namespace clang {
-
+namespace gtclang {
+namespace dsl {
 /*
  * @brief Boundary condition specification
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 class boundary_condition {
 public:
   template <typename... T>
   boundary_condition(const stencil_function&, T&&...);
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

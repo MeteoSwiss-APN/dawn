@@ -18,13 +18,12 @@
 
 #include <initializer_list>
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Defintion of a vertical interval
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct interval {
   interval operator+(int) { return *this; }
@@ -33,13 +32,13 @@ struct interval {
 
 /**
  * Lowest k-level
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 static interval k_start;
 
 /**
  * Highest k-level
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 static interval k_end;
 
@@ -142,5 +141,5 @@ struct interval19 {
   template <typename T>
   interval19(T...);
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

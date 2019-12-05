@@ -15,19 +15,18 @@
 #pragma once
 
 namespace gridtools {
-
-namespace clang {
+namespace dawn {
 
 /**
  * @brief Halo extend (passed to gtclang by "-max-halo")
- * @ingroup gridtools_clang
+ * @ingroup gridtools_dawn
  */
 struct halo {
-#ifdef GRIDTOOLS_CLANG_HALO_EXTEND
-  static constexpr int value = GRIDTOOLS_CLANG_HALO_EXTEND;
+#ifdef GRIDTOOLS_DAWN_HALO_EXTENT
+  static constexpr int value = GRIDTOOLS_DAWN_HALO_EXTENT;
 #else
   static constexpr int value = 3;
 #endif
 };
-} // namespace clang
+} // namespace dawn
 } // namespace gridtools

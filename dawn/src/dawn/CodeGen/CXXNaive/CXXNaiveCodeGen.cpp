@@ -142,7 +142,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
 
   // add the ctr initialization of each stencil
   for(const auto& stencilPtr : stencils) {
@@ -203,10 +203,10 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addComment("Members");
 
-    stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
-      stencilWrapperClass.addMember(c_gtc() + "storage_t",
+      stencilWrapperClass.addMember(c_dgt() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }
@@ -252,7 +252,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
-    stencilClass.addMember("const " + c_gtc() + "domain", "m_dom");
+    stencilClass.addMember("const " + c_dgt() + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("const globals&", "m_globals");
@@ -266,7 +266,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = stencilClass.addConstructor();
 
-    stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
+    stencilClassCtr.addArg("const " + c_dgt() + "domain& dom_");
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("const globals& globals_");
     }
@@ -491,8 +491,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     return "#define " + define + " " + std::to_string(value);
   };
 
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
+  ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
   // these variables also in the naive code-generation in order to not break it. Once the move to
@@ -501,6 +501,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   // ==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+  ppDefines.push_back("using namespace gridtools::dawn;");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);

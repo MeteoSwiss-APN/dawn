@@ -16,7 +16,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil coriolis_stencil {
   storage u_tens, u_nnow, v_tens, v_nnow, fc;

@@ -18,7 +18,7 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 #pragma gtclang no_codegen // EXPECTED_ERROR: statement after '#pragma gtclang no_codegen' must be a stencil declaration
 double a;

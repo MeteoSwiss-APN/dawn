@@ -18,13 +18,12 @@
 
 #include "gtclang_dsl_defs/dimension.hpp"
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /*
  * @brief A stencil which can be called as a function from other `stencils`
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 class stencil_function {
 protected:
@@ -41,5 +40,5 @@ public:
 
   operator double() const;
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

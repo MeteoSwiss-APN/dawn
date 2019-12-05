@@ -15,12 +15,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -freport-pass-set-caches
-// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:cache_type::k:epflush:[-3,0]
-// EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:cache_type::k:bpfill:[0,3]
+// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:cache_type::k:epflush:\[-3,0\]
+// EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:cache_type::k:bpfill:\[0,3\]
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil Test {
   storage a, b, c;

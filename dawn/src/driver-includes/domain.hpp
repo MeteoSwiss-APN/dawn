@@ -19,12 +19,11 @@
 #include <type_traits>
 
 namespace gridtools {
-
-namespace clang {
+namespace dawn {
 
 /**
  * @brief 3-dimensional domain definition
- * @ingroup gridtools_clang
+ * @ingroup gridtools_dawn
  */
 class domain {
   std::array<unsigned int, 3> m_dims;
@@ -91,5 +90,5 @@ struct is_domain : std::false_type {};
 
 template <>
 struct is_domain<domain> : std::true_type {};
-} // namespace clang
+} // namespace dawn
 } // namespace gridtools

@@ -13,8 +13,8 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
+#define DAWN_GENERATED 1
+#define GRIDTOOLS_DAWN_HALO_EXTENT 3
 
 #define GT_VECTOR_LIMIT_SIZE 30
 

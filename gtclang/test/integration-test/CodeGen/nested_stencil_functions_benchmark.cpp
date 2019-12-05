@@ -25,8 +25,8 @@
 //            will be reevaluated if gridtools choses to abandon nested function calls
 // =================================================================================================
 
-#define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
+#define DAWN_GENERATED 1
+#define GRIDTOOLS_DAWN_HALO_EXTENT 3
 #define GT_VECTOR_LIMIT_SIZE 30
 
 #undef FUSION_MAX_VECTOR_SIZE
@@ -36,14 +36,14 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
-#include "driver-includes/verify.hpp"
 #include "driver-includes/gridtools_includes.hpp"
+#include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include <gtest/gtest.h>
 //#include "test/integration-test/CodeGen/generated/nested_stencil_functions_gridtools.cpp"
 //#include "test/integration-test/CodeGen/generated/nested_stencil_functions_c++-naive.cpp"
 
-using namespace gridtools::clang;
+using namespace gridtools::dawn;
 using namespace dawn;
 
 namespace nsftest {

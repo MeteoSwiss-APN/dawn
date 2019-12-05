@@ -58,13 +58,12 @@
                                                                                                    \
   operator double() const;
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Dummy 3-dimensional storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage {
   storage();
@@ -79,7 +78,7 @@ struct storage {
 
 /**
  * @brief Dummy 1-dimensional i-storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_i : public storage {
   storage_i();
@@ -91,7 +90,7 @@ struct storage_i : public storage {
 
 /**
  * @brief Dummy 1-dimensional j-storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_j : public storage {
   storage_j();
@@ -103,7 +102,7 @@ struct storage_j : public storage {
 
 /**
  * @brief Dummy 1-dimensional k-storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_k : public storage {
   storage_k();
@@ -114,7 +113,7 @@ struct storage_k : public storage {
 };
 /**
  * @brief Dummy 2-dimensional ij-storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_ij : public storage {
   storage_ij();
@@ -126,7 +125,7 @@ struct storage_ij : public storage {
 
 /**
  * @brief Dummy 2-dimensional ik-storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_ik : public storage {
   storage_ik();
@@ -138,7 +137,7 @@ struct storage_ik : public storage {
 
 /**
  * @brief Dummy 2-dimensional storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_jk : public storage {
   storage_jk();
@@ -150,7 +149,7 @@ struct storage_jk : public storage {
 
 /**
  * @brief Dummy 3-dimensional storage
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct storage_ijk {
   storage_ijk();
@@ -169,5 +168,5 @@ struct var : public storage {
 };
 
 #undef STORAGE_CLASS_DEFN
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

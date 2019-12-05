@@ -46,7 +46,7 @@ DIAG(note_globals_allowed_types, clang::DiagnosticIDs::Note, "only 'bool', 'int'
 DIAG(err_boundary_condition_invalid_functor, clang::DiagnosticIDs::Error, "invalid functor '%0' in boundary condition: %1")
 DIAG(err_boundary_condition_invalid_arg, clang::DiagnosticIDs::Error, "invalid argument '%0' in boundary condition")
 DIAG(err_boundary_condition_invalid_type, clang::DiagnosticIDs::Error, "invalid type '%0' of argument '%1' in boundary condition")
-DIAG(note_boundary_condition_only_storage_allowed, clang::DiagnosticIDs::Note, "only 'gridtools::clang::storage' is allowed")
+DIAG(note_boundary_condition_only_storage_allowed, clang::DiagnosticIDs::Note, "only 'gtclang::dsl::storage' is allowed")
 
 // StencilFunction
 DIAG(err_stencilfun_do_method_invalid_num_arg, clang::DiagnosticIDs::Error, "Do-method specialization requires exactly 2 arguments")
@@ -63,12 +63,12 @@ DIAG(note_stencilfun_argument_declared_here, clang::DiagnosticIDs::Note, "argume
 // StencilCall
 DIAG(err_stencilcall_invalid_call, clang::DiagnosticIDs::Error, "no matching stencil for call to '%0'")
 DIAG(err_stencilcall_invalid_argument_type, clang::DiagnosticIDs::Error, "invalid type '%0' of stencil argument '%1'") 
-DIAG(note_stencilcall_only_storage_allowed, clang::DiagnosticIDs::Note, "only 'gridtools::clang::storage' is allowed")
+DIAG(note_stencilcall_only_storage_allowed, clang::DiagnosticIDs::Note, "only 'gtclang::dsl::storage' is allowed")
 DIAG(note_stencilcall_not_viable, clang::DiagnosticIDs::Note, "candidate stencil not viable: %0")
 
 // Stencil
 DIAG(err_stencil_invalid_storage_decl, clang::DiagnosticIDs::Error, "invalid type '%0' of stencil argument '%1'")
-DIAG(note_only_storages_allowed, clang::DiagnosticIDs::Note, "only 'gridtools::clang::storage' or 'gridtools::clang::var' are allowed as stencil arguments")
+DIAG(note_only_storages_allowed, clang::DiagnosticIDs::Note, "only 'gtclang::dsl::storage' or 'gtclang::dsl::var' are allowed as stencil arguments")
 
 // Interval
 DIAG(err_interval_invalid_type, clang::DiagnosticIDs::Error, "invalid type '%0' for vertical region declaration")
@@ -76,7 +76,7 @@ DIAG(err_interval_not_constexpr, clang::DiagnosticIDs::Error, "offset of vertica
 DIAG(err_interval_custom_missing_init, clang::DiagnosticIDs::Error, "missing initialization for custom interval '%0'")
 DIAG(err_interval_custom_not_constexpr, clang::DiagnosticIDs::Error, "offset of built-in interval '%0' is not a constant expression")
 DIAG(err_interval_custom_not_builtin, clang::DiagnosticIDs::Error, "invalid built-in interval '%0'")
-DIAG(note_only_builtin_interval_allowed, clang::DiagnosticIDs::Note, "only 'gridtools::clang::k_start' or 'gridtools::clang::k_end' are allowed built-in intervals")
+DIAG(note_only_builtin_interval_allowed, clang::DiagnosticIDs::Note, "only 'gtclang::dsl::k_start' or 'gtclang::dsl::k_end' are allowed built-in intervals")
 
 // Index
 DIAG(err_index_not_constexpr, clang::DiagnosticIDs::Error, "offset of index is not a constant expression")

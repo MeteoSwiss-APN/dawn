@@ -16,17 +16,16 @@
 
 #pragma once
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Defintion of a direction which can be as argument in stencil functions
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct direction {
   direction operator+(int);
   direction operator-(int);
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

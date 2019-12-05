@@ -18,13 +18,12 @@
 
 #include "gtclang_dsl_defs/dimension.hpp"
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief A runnable stencil
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 class stencil {
 protected:
@@ -48,5 +47,5 @@ public:
    */
   void make_steady();
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

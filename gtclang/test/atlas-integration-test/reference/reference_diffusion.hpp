@@ -1,21 +1,21 @@
-#define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO
-#include <driver-includes/interface.hpp>
+#define DAWN_GENERATED 1
+#define DAWN_BACKEND_T CXXNAIVEICO
+#include <driver-includes/unstructured_interface.hpp>
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>
 class reference_diffusion {
 private:
   struct stencil_109 {
-    gtclang::mesh_t<LibTag> const& m_mesh;
+    dawn::mesh_t<LibTag> const& m_mesh;
     int m_k_size;
-    gtclang::cell_field_t<LibTag, double>& m_in_field;
-    gtclang::cell_field_t<LibTag, double>& m_out_field;
+    dawn::cell_field_t<LibTag, double>& m_in_field;
+    dawn::cell_field_t<LibTag, double>& m_out_field;
 
   public:
-    stencil_109(gtclang::mesh_t<LibTag> const& mesh, int k_size,
-                gtclang::cell_field_t<LibTag, double>& in_field,
-                gtclang::cell_field_t<LibTag, double>& out_field)
+    stencil_109(dawn::mesh_t<LibTag> const& mesh, int k_size,
+                dawn::cell_field_t<LibTag, double>& in_field,
+                dawn::cell_field_t<LibTag, double>& out_field)
         : m_mesh(mesh), m_k_size(k_size), m_in_field(in_field), m_out_field(out_field) {}
 
     ~stencil_109() {}
@@ -33,8 +33,7 @@ private:
                 LibTag{}, m_mesh, t, ((-cnt) * m_in_field(t, k + 0)),
                 [&](auto& lhs, auto const& t) { return lhs += m_in_field(t, k + 0); });
             m_out_field(t, k + 0) =
-                (m_in_field(t, k + 0) +
-                 ((gridtools::clang::float_type)0.100000 * m_out_field(t, k + 0)));
+                (m_in_field(t, k + 0) + ((::dawn::float_type)0.100000 * m_out_field(t, k + 0)));
           }
         }
       }
@@ -49,9 +48,9 @@ public:
 
   // Members
 
-  reference_diffusion(const gtclang::mesh_t<LibTag>& mesh, int k_size,
-                      gtclang::cell_field_t<LibTag, double>& in_field,
-                      gtclang::cell_field_t<LibTag, double>& out_field)
+  reference_diffusion(const dawn::mesh_t<LibTag>& mesh, int k_size,
+                      dawn::cell_field_t<LibTag, double>& in_field,
+                      dawn::cell_field_t<LibTag, double>& out_field)
       : m_stencil_109(mesh, k_size, in_field, out_field) {}
 
   void run() {

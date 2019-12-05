@@ -16,13 +16,12 @@
 
 #pragma once
 
-namespace gridtools {
-
-namespace clang {
+namespace gtclang {
+namespace dsl {
 
 /**
  * @brief Defintion of an offset which can be as argument in stencil functions
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct offset {
   offset operator+(int);
@@ -31,5 +30,5 @@ struct offset {
   offset operator+();
   offset operator-();
 };
-} // namespace clang
-} // namespace gridtools
+} // namespace dsl
+} // namespace gtclang

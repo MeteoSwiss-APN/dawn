@@ -222,7 +222,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
 
     for(const auto& field : tempFields) {
-      paramNameToType.emplace(field.second.Name, c_gtc().str() + "storage_t");
+      paramNameToType.emplace(field.second.Name, c_dgt().str() + "storage_t");
     }
   }
 
@@ -289,14 +289,14 @@ std::string CodeGen::getStorageType(const iir::Stencil::FieldInfo& field) {
 
 void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const {
   stencilClass.addTypeDef("tmp_halo_t")
-      .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
+      .addType("gridtools::halo< GRIDTOOLS_DAWN_HALO_EXTENT, GRIDTOOLS_DAWN_HALO_EXTENT, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
 
   stencilClass.addTypeDef(tmpMetadataTypename_)
       .addType("storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >");
 
   stencilClass.addTypeDef(tmpStorageTypename_)
-      .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
+      .addType("storage_traits_t::data_store_t< ::dawn::float_type, " + tmpMetadataTypename_ + ">");
 }
 
 void CodeGen::addTmpStorageDeclaration(
@@ -346,8 +346,7 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
 
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(
-      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", codeGenOptions.MaxHaloPoints));
+  ppDefines.push_back(makeIfNotDefined("GRIDTOOLS_DAWN_HALO_EXTENT", codeGenOptions.MaxHaloPoints));
   ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));

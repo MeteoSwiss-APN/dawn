@@ -15,11 +15,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -freport-pass-temporary-type
-// EXPECTED: PASS: PassTemporaryType: Test: promote:local_variable
+// EXPECTED: PASS: PassTemporaryType: Test: promote:.*local_variable.*
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
 stencil Test {
   storage field_a, field_b, field_c, field_d;

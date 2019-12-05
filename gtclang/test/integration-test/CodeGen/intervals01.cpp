@@ -16,9 +16,9 @@
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-using namespace gridtools::clang;
+using namespace gtclang::dsl;
 
-#ifndef GRIDTOOLS_CLANG_GENERATED
+#ifndef DAWN_GENERATED
 interval k_flat = k_start + 4;
 #endif
 
