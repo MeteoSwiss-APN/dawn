@@ -163,7 +163,9 @@ public:
   std::unique_ptr<iir::Stage> stage(int direction, Interval interval, DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
-    ret->setIterationSpace(interval, direction);
+    iir::Stage::IterationSpace iterationSpace;
+    iterationSpace[direction] = interval;
+    ret->setIterationSpace(iterationSpace);
     int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
