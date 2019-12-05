@@ -106,12 +106,10 @@ public:
     if(stmt->getVerticalRegion()->iterationSpace_[0]) {
       ss_ << " IRange : ";
       ss_ << stmt->getVerticalRegion()->iterationSpace_[0].value().toString();
-      ss_ << " ";
     }
     if(stmt->getVerticalRegion()->iterationSpace_[1]) {
       ss_ << " JRange : ";
       ss_ << stmt->getVerticalRegion()->iterationSpace_[1].value().toString();
-      ss_ << " ";
     }
     ss_ << " K-Range : ";
     ss_ << *stmt->getVerticalRegion()->VerticalInterval.get();

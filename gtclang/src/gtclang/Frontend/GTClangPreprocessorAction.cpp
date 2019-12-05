@@ -285,7 +285,8 @@ private:
         consumeTokens(peekedTokens);
       }
 
-      // Replace `vertical_region(ARG_1, ARG_2)` with `for(auto k : {ARG_1, ARG_2})`
+      // Replace `iteration_space(ARG_1, ARG_2, ARG_3, ARG_4, ARG_5, ARG_6)` with `for(auto k :
+      // {ARG_1, ARG_2, ARG_3, ARG_4, ARG_5, ARG_6})`
       if(token_.is(tok::identifier) && token_.getIdentifierInfo()->getName() == "iteration_space") {
         unsigned peekedTokens = 0;
 
@@ -301,7 +302,7 @@ private:
         // Consume ','
         peekedTokens++;
 
-        // Check for 'ARG_1' until ','
+        // Check for 'ARG_2' until ','
         std::string Arg2;
         if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg2))
           continue;
@@ -309,7 +310,7 @@ private:
         // Consume ','
         peekedTokens++;
 
-        // Check for 'ARG_1' until ','
+        // Check for 'ARG_3' until ','
         std::string Arg3;
         if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg3))
           continue;
@@ -317,7 +318,7 @@ private:
         // Consume ','
         peekedTokens++;
 
-        // Check for 'ARG_1' until ','
+        // Check for 'ARG_4' until ','
         std::string Arg4;
         if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg4))
           continue;
@@ -325,7 +326,7 @@ private:
         // Consume ','
         peekedTokens++;
 
-        // Check for 'ARG_1' until ','
+        // Check for 'ARG_5' until ','
         std::string Arg5;
         if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg5))
           continue;
@@ -333,7 +334,7 @@ private:
         // Consume ','
         peekedTokens++;
 
-        // Check for 'ARG_2' until ')'
+        // Check for 'ARG_6' until ')'
         std::string Arg6;
         if(!peekAndAccumulateUntil(tok::r_paren, peekedTokens, Arg6))
           continue;

@@ -375,25 +375,19 @@ public:
 
     // Note that intervals have the the invariant lowerBound <= upperBound. We thus encapsulate the
     // loop order here.
-    if(dim == 2) {
-      if((level_[4] + offset_[4]) <= (level_[5] + offset_[5]))
+    if(dim < 3 && dim >= 0) {
+      if((level_[2 * dim] + offset_[2 * dim]) <= (level_[2 * dim + 1] + offset_[2 * dim + 1]))
         return std::make_pair(
-            std::make_shared<dawn::sir::Interval>(level_[4], level_[5], offset_[4], offset_[5]),
+            std::make_shared<dawn::sir::Interval>(level_[2 * dim], level_[2 * dim + 1],
+                                                  offset_[2 * dim], offset_[2 * dim + 1]),
             dawn::sir::VerticalRegion::LoopOrderKind::Forward);
       else
         return std::make_pair(
-            std::make_shared<dawn::sir::Interval>(level_[5], level_[4], offset_[5], offset_[4]),
+            std::make_shared<dawn::sir::Interval>(level_[2 * dim + 1], level_[2 * dim],
+                                                  offset_[2 * dim + 1], offset_[2 * dim]),
             dawn::sir::VerticalRegion::LoopOrderKind::Backward);
-    } else if(dim == 0) {
-      return std::make_pair(
-          std::make_shared<dawn::sir::Interval>(level_[0], level_[1], offset_[0], offset_[1]),
-          dawn::sir::VerticalRegion::LoopOrderKind::Forward);
-    } else if(dim == 1) {
-      return std::make_pair(
-          std::make_shared<dawn::sir::Interval>(level_[2], level_[3], offset_[2], offset_[3]),
-          dawn::sir::VerticalRegion::LoopOrderKind::Forward);
     } else {
-      dawn_unreachable("bad dim");
+      dawn_unreachable("unknown dimension");
     }
   }
 
@@ -1132,21 +1126,21 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
 }
 
 std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
-StencilParser::parseIterationSpace(clang::CXXForRangeStmt* verticalRegion) {
+StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
   using namespace clang;
   using namespace llvm;
 
-  DAWN_LOG(INFO) << "Parsing vertical region at " << getLocation(verticalRegion);
+  DAWN_LOG(INFO) << "Parsing iteraion space at " << getLocation(iterationSpaceDecl);
 
-  // The idea is to translate each vertical region, given as a C++11 range-based for loop (i.e
-  // `for(auto k : {X,X})`) into a VerticalRegionDeclStmt
+  // The idea is to translate each iteration space, given as a C++11 range-based for loop (i.e
+  // `for(auto __k_indexrange__ : {X,X,Y,Y,Z,Z})`) into a VerticalRegionDeclStmt with the set bounds
 
   // Extract the Interval from the loop bounds
   IterationSpaceResolver intervalResolver(this);
-  intervalResolver.resolve(verticalRegion);
+  intervalResolver.resolve(iterationSpaceDecl);
 
   // Extract the Do-Method body (AST) from the loop body
-  auto SIRBlockStmt = dawn::sir::makeBlockStmt(getLocation(verticalRegion));
+  auto SIRBlockStmt = dawn::sir::makeBlockStmt(getLocation(iterationSpaceDecl));
 
   // There is a difference between
   //
@@ -1155,11 +1149,11 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* verticalRegion) {
   //                 }
   //
   // In the former case we direclty get the one Stmt node, while in the latter we get a CompountStmt
-  if(verticalRegion->getBody()) {
+  if(iterationSpaceDecl->getBody()) {
 
     ClangASTStmtResolver stmtResolver(context_, this);
 
-    if(CompoundStmt* compoundStmt = dyn_cast<CompoundStmt>(verticalRegion->getBody())) {
+    if(CompoundStmt* compoundStmt = dyn_cast<CompoundStmt>(iterationSpaceDecl->getBody())) {
       // Case for(...) { XXX }
       for(Stmt* stmt : compoundStmt->body()) {
         // ignore implicit nodes
@@ -1171,7 +1165,7 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* verticalRegion) {
 
     } else {
       // Case for(...) XXX
-      SIRBlockStmt->insert_back(stmtResolver.resolveStmt(verticalRegion->getBody(),
+      SIRBlockStmt->insert_back(stmtResolver.resolveStmt(iterationSpaceDecl->getBody(),
                                                          ClangASTStmtResolver::AK_StencilBody));
     }
   }
@@ -1184,7 +1178,7 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* verticalRegion) {
   auto kIntervalPair = intervalResolver.getInterval(2);
 
   auto SIRVerticalRegion = std::make_shared<dawn::sir::VerticalRegion>(
-      SIRAST, kIntervalPair.first, kIntervalPair.second, getLocation(verticalRegion));
+      SIRAST, kIntervalPair.first, kIntervalPair.second, getLocation(iterationSpaceDecl));
   if(iInterval->LowerLevel != dawn::sir::Interval::Start || iInterval->LowerOffset != 0 ||
      iInterval->UpperLevel != dawn::sir::Interval::End || iInterval->UpperOffset != 0) {
     SIRVerticalRegion->iterationSpace_[0] = *iInterval;
@@ -1194,7 +1188,7 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* verticalRegion) {
     SIRVerticalRegion->iterationSpace_[1] = *jInterval;
   }
 
-  DAWN_LOG(INFO) << "Done parsing vertical region";
+  DAWN_LOG(INFO) << "Done parsing iteration space";
   return dawn::sir::makeVerticalRegionDeclStmt(SIRVerticalRegion, SIRVerticalRegion->Loc);
 }
 
