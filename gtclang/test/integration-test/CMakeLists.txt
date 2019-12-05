@@ -17,7 +17,7 @@
 include(yodaAddCustomDummyTarget)
 
 # TODO cleanup when switching to cuda as a language
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++14")
 
 macro(ADD_COMPILER_FLAG_TO_EXAMPLE _KEY _VALUE)
   set("MyMap_${_KEY}" "${MyMap_${_KEY}}" "${_VALUE}")
@@ -175,7 +175,7 @@ set(directories
   ${cwd}/Regression
 )
 
-list(APPEND compiler_flags -std=c++11 -O2)
+list(APPEND compiler_flags -std=c++14 -O2)
 list(APPEND library_flags ${Boost_LIBRARIES})
 
 list(APPEND gridtools_flags ${compiler_flags} ${include_flags} ${library_flags})
