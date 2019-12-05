@@ -62,10 +62,13 @@ function(compile_target)
   set(sources ${test}_benchmark.cpp TestMain.cpp Options.cpp)
 
   add_executable(${executable} ${sources})
-  add_dependencies(${executable}
-    CodeGen_${test}_${backend}_codegen CodeGen_${test}_c++-naive_codegen)
-  target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}) #TODO do we need the binary dir?
-  target_include_directories(${executable} PRIVATE ${DAWN_DRIVER_INCLUDEDIR}) #TODO Dawn should export this as a target
+  add_dependencies(${executable} CodeGen_${test}_${backend}_codegen CodeGen_${test}_c++-naive_codegen)
+  target_include_directories(${executable} PRIVATE
+    #TODO Dawn should export this as a target
+    ${DAWN_DRIVER_INCLUDEDIR}
+    # Binary dir needed for the generated source
+    ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}
+  )
 
   if(${backend} STREQUAL gt)
     target_compile_definitions(${executable} PRIVATE -DBACKEND_MC -DGT_ENABLE_METERS)
@@ -73,10 +76,10 @@ function(compile_target)
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
   target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GTClang GTClangUnittest GridTools::gridtools gtest)
+  target_link_libraries(${executable} GTClang GridTools::gridtools gtest)
 
   add_test(NAME ${executable}
-    COMMAND $<TARGET_FILE:${executable}> 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
   )
 endfunction()
 
@@ -105,20 +108,19 @@ function(compile_target_cuda)
     target_compile_definitions(${executable} PRIVATE -DGRIDTOOLS_CLANG_CUDA)
   endif()
 
-  target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
-  target_include_directories(${executable} PRIVATE ${DAWN_DRIVER_INCLUDEDIR}) #TODO Dawn should export this as a target
+  target_include_directories(${executable} PRIVATE
+    #TODO Dawn should export this as a target
+    ${DAWN_DRIVER_INCLUDEDIR}
+    # Binary dir needed for the generated source
+    ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}
+  )
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
   target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GridTools::gridtools gtest)
-
-  target_include_directories(${executable}
-    PUBLIC  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-  )
+  target_link_libraries(${executable} GTClang GridTools::gridtools gtest)
 
   add_test(NAME ${executable}
-    COMMAND $<TARGET_FILE:${executable}> 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
   )
 endfunction()
 

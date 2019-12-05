@@ -11,8 +11,7 @@ set(protobuf_INSTALL_EXAMPLES OFF)
 set(protobuf_BUILD_PROTOC_BINARIES ON)
 
 FetchContent_Declare(protobuf
-  GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-  GIT_TAG v3.10.1
+  URL https://github.com/protocolbuffers/protobuf/archive/v3.10.1.tar.gz
 )
 
 FetchContent_GetProperties(protobuf)
@@ -22,7 +21,7 @@ if(NOT protobuf_POPULATED)
   add_subdirectory(${protobuf_SOURCE_DIR}/cmake ${protobuf_BINARY_DIR})
 endif()
 
-set(DAWN_BUILD_PROTOBUF ON CACHE BOOL "Use Protobuf from bundle.")
+set(DAWN_BUILD_PROTOBUF ON CACHE BOOL "Build Protobuf when building Dawn.")
 mark_as_advanced(DAWN_BUILD_PROTOBUF)
 
 if(Python3_FOUND)
