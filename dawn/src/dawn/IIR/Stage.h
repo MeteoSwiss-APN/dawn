@@ -16,6 +16,7 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
@@ -48,8 +49,13 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
-  // Location type of the stage (which loop it represents)
+  /// Location type of the stage (which loop it represents)
   ast::Expr::LocationType type_ = ast::Expr::LocationType::Cells;
+
+  /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
+  /// is assumed. This is built on top of the DerivedInfo::Extents class and for a full compute
+  /// domain, those have to be added together.
+  std::array<std::optional<Interval>, 2> iterationSpace_;
 
   struct DerivedInfo {
 
@@ -73,6 +79,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 public:
   static constexpr const char* name = "Stage";
 
+  using IterationSpace = std::array<std::optional<Interval>, 2>;
   using DoMethodSmartPtr_t = child_smartptr_t<DoMethod>;
   using ChildrenIterator = std::vector<child_smartptr_t<DoMethod>>::iterator;
 
@@ -211,18 +218,24 @@ public:
   /// @brief true if it contains no do methods or they are empty
   bool isEmptyOrNullStmt() const;
 
-  /// @brief set the flag that specifies that the stage will require an explicit sync before
+  /// @brief Get the flag that specifies that the space will require an explicit sync before
   /// execution
+  /// @{
   void setRequiresSync(const bool sync);
-  /// @brief get the flag that specifies that the stage will require an explicit sync before
-  /// execution
   bool getRequiresSync() const;
+  /// @}
 
-  /// @brief setter for the location type
+  /// @brief Get the location type
+  /// @{
   void setLocationType(ast::Expr::LocationType type);
-
-  /// @brief returns the location type of a stage
   ast::Expr::LocationType getLocationType() const;
+  /// @}
+
+  /// @brief Get the horizontal iteration space
+  /// @{
+  void setIterationSpace(const IterationSpace& value);
+  const IterationSpace& getIterationSpace() const;
+  /// @}
 };
 
 } // namespace iir
