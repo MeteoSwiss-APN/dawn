@@ -49,8 +49,8 @@ std::string makeIJLoop(int lowerExtent, int upperExtent, const std::string dom,
   return makeLoopImpl(lowerExtent, upperExtent, dim, dim + "Min", dim + "Max", " <= ", "++");
 }
 
-std::string makeIntervalBound(std::string dim, const iir::Interval& interval,
-                              iir::Interval::Bound bound) {
+std::string makeIntervalBoundReadable(std::string dim, const iir::Interval& interval,
+                                      iir::Interval::Bound bound) {
   if(interval.levelIsEnd(bound)) {
     return dim + "Max + " + std::to_string(interval.offset(bound));
   }
@@ -60,7 +60,7 @@ std::string makeIntervalBound(std::string dim, const iir::Interval& interval,
   }
   return dim + "Min + " + std::to_string(notEnd + interval.offset(bound));
 }
-std::string makeIntervalBoundExplicit(std::string dim, iir::Interval const& interval,
+std::string makeIntervalBoundExplicit(std::string dim, const iir::Interval& interval,
                                       iir::Interval::Bound bound, std::string dom) {
   if(interval.levelIsEnd(bound)) {
     return dom + "." + dim + "size() - " + dom + "." + dim + "plus()  + " +
@@ -73,10 +73,10 @@ std::string makeIntervalBoundExplicit(std::string dim, iir::Interval const& inte
   return dom + "." + dim + "minus() + " + std::to_string(notEnd + interval.offset(bound));
 }
 
-std::string makeKLoop(const std::string dom, bool isBackward, iir::Interval const& interval) {
+std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 
-  const std::string lower = makeIntervalBound("k", interval, iir::Interval::Bound::lower);
-  const std::string upper = makeIntervalBound("k", interval, iir::Interval::Bound::upper);
+  const std::string lower = makeIntervalBoundReadable("k", interval, iir::Interval::Bound::lower);
+  const std::string upper = makeIntervalBoundReadable("k", interval, iir::Interval::Bound::upper);
 
   return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
                     : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
@@ -440,8 +440,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
         // for each interval, we generate naive nested loops
         stencilRunMethod.addBlockStatement(
-            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::Backward),
-                      interval),
+            makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getChildren()) {
                 iir::Stage& stage = *stagePtr;
