@@ -20,6 +20,7 @@
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -388,11 +389,15 @@ public:
     std::unique_ptr<Stage> stage =
         std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
     // set the iteration space
-    for(int i = 0, size = stmt->getVerticalRegion()->iterationSpace_.size(); i < size; ++i) {
+    // auto is = stmt->getVerticalRegion()->iterationSpace_;
+    int size = stmt->getVerticalRegion()->iterationSpace_.size();
+    std::array<std::optional<iir::Interval>, 2> intervals;
+    for(int i = 0; i < size; ++i) {
       if(stmt->getVerticalRegion()->iterationSpace_[i]) {
-        stage->setIterationSpace(stmt->getVerticalRegion()->iterationSpace_[i].value(), i);
+        intervals[i] = stmt->getVerticalRegion()->iterationSpace_[i].value();
       }
     }
+    stage->setIterationSpace(intervals);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
