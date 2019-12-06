@@ -441,7 +441,7 @@ private:
     std::string typeStr = expr->getType().getAsString();
 
     // Type has to be intervalX
-    if(!clang::StringRef(typeStr).startswith("struct gridtools::clang::interval")) {
+    if(!clang::StringRef(typeStr).startswith("struct gtclang::dsl::interval")) {
       parser_->reportDiagnostic(expr->getLocation(),
                                 Diagnostics::DiagKind::err_interval_invalid_type)
           << typeStr;
@@ -932,7 +932,11 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
         if(CXXForRangeStmt* s = dyn_cast<CXXForRangeStmt>(stmt)) {
           // stmt is a range-based for loop which corresponds to a VerticalRegion
-          stencilDescAst->getRoot()->push_back(parseVerticalRegion(s));
+          if(s->getLoopVariable()->getName() == "__k_indexrange__") {
+            stencilDescAst->getRoot()->push_back(parseIterationSpace(s));
+          } else {
+            stencilDescAst->getRoot()->push_back(parseVerticalRegion(s));
+          }
 
         } else if(CXXConstructExpr* s = dyn_cast<CXXConstructExpr>(stmt)) {
 
