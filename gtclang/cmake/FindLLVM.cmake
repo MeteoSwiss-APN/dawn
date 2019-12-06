@@ -14,10 +14,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+set(config_names 6.0 7.0 8.0 9.0 10.0)
+list(TRANSFORM config_names PREPEND "llvm-config-")
+list(APPEND config_names "llvm-config")
+
 # if the user specified LLVM_ROOT, use that and fail otherwise
 if (LLVM_ROOT)
   find_program(LLVM_CONFIG_EXECUTABLE
-    NAMES llvm-config
+    NAMES ${_config_names}
     HINTS ${LLVM_ROOT}/bin
     DOC "llvm-config executable"
     NO_DEFAULT_PATH
