@@ -34,6 +34,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <iostream>
 
 namespace gtclang {
 
@@ -96,21 +97,18 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH);
 
 #ifdef DAWN_ON_APPLE
-  // On Mac OSX it is even more severe as it usually can't even find the STL headers ...
+  // Set the root where system headers are located.
   ccArgs.push_back("-internal-isystem");
   ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "/../../../../include/c++/v1/");
+  // 20191208: -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk does not work, so we
+  // add the full path manually
+  ccArgs.push_back("-internal-isystem");
+  ccArgs.push_back("/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include");
 #endif
 
   std::shared_ptr<CompilerInvocation> CI(new CompilerInvocation);
   clang_compat::CompilerInvocation::CreateFromArgs(*CI, ccArgs, diagnostics);
   CI->getFrontendOpts().DisableFree = false;
-
-  // Show the invocation, with -v
-  if(CI->getHeaderSearchOpts().Verbose) {
-    errs() << "gtclang invocation:\n";
-    jobs.Print(errs(), "\n", true);
-    errs() << "\n";
-  }
 
   // Create a compiler instance to handle the actual work.
   DAWN_LOG(INFO) << "Creating GTClang compiler instance ...";
@@ -122,10 +120,10 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   if(!GTClang->hasDiagnostics())
     return nullptr;
 
-  // Check that we are atleast in C++11 mode and correct if necessary
+  // Check that we are at least in C++11 mode and correct if necessary
   auto& langOpts = GTClang->getLangOpts();
   if(!langOpts.CPlusPlus11 && !langOpts.CPlusPlus14 && !langOpts.CPlusPlus17) {
-    DAWN_LOG(WARNING) << "C++98 mode detected; switchting to C++11";
+    DAWN_LOG(WARNING) << "C++98 mode detected; switching to C++11";
     langOpts.CPlusPlus11 = 1;
   }
 
@@ -142,6 +140,14 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
     DAWN_LOG(INFO) << "Adding DSL include path: " << path.str();
     GTClang->getHeaderSearchOpts().AddPath(path, clang::frontend::System, false, false);
   }
+
+  // Show the invocation, with -v
+  if(CI->getHeaderSearchOpts().Verbose) {
+    errs() << "gtclang invocation:\n";
+    jobs.Print(errs(), "\n", true);
+    errs() << "\n";
+  }
+
   return GTClang;
 }
 
