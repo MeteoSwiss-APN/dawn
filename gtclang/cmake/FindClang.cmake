@@ -34,7 +34,8 @@ if(LLVM_FOUND)
     OUTPUT_VARIABLE llvm_install_prefix
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSION}/include")
+set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSION}/include")
+message(WARNING "CLANG_RESSOURCE_INCLUDE_PATH ${CLANG_RESSOURCE_INCLUDE_PATH}")
 
   # potentially add include dir from binary dir for non-installed LLVM
   execute_process(

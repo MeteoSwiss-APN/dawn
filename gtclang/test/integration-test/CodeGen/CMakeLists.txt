@@ -20,7 +20,7 @@ function(generate_target)
   set(options)
   set(oneValueArgs TEST BACKEND)
   set(multiValueArgs FLAGS)
-  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(backend ${ARG_BACKEND})
   set(test ${ARG_TEST})
@@ -38,7 +38,7 @@ function(generate_target)
   list(APPEND config_str ${ARG_FLAGS})
 
   # Add make target
-  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated/)
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated)
   set(generated_file ${CMAKE_CURRENT_BINARY_DIR}/generated/${test}_${backend}.cpp)
   set(source_file ${CMAKE_CURRENT_SOURCE_DIR}/${test}.cpp)
   add_custom_command(OUTPUT ${generated_file}

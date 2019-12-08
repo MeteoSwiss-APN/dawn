@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <array>
 
 namespace dawn::ast {
 
