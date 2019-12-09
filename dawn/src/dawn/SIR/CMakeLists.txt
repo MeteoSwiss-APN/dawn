@@ -24,7 +24,36 @@ dawn_protobuf_generate(
   LANGUAGE cpp
 )
 
-add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files})
+if(ENABLE_PYTHON)
+  # Generate python proto files
+  include(DawnProtobufGenerate)
+  dawn_protobuf_generate(
+    OUT_FILES sir_proto_python_files
+    PROTOS ${protos}
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG SIR
+    LANGUAGE python
+  )
+
+  set(output_dir ${PROJECT_BINARY_DIR}/python/SIR/)
+
+  list(TRANSFORM protos PREPEND ${output_dir}
+    OUTPUT_VARIABLE sir_proto_python_build_files)
+  add_custom_command(OUTPUT ${sir_proto_python_build_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
+    DEPENDS ${sir_proto_python_files}
+  )
+
+  # TODO do we have a use-case for an installation at the moment?
+  # Maybe not, but just in case...
+  install(
+    FILES ${sir_proto_python_build_files}
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/SIR
+  )
+endif()
+
+add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files} ${sir_proto_python_build_files})
 target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -54,29 +83,3 @@ add_library(DawnSIR
 
 target_add_dawn_standard_props(DawnSIR)
 target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
-
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES sir_proto_python_files
-    PROTOS ${protos}
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG SIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${PROJECT_BINARY_DIR}/python/IIR/)
-
-  list(TRANSFORM protos PREPEND ${output_dir}
-    OUTPUT_VARIABLE sir_proto_python_build_files)
-  add_custom_command(OUTPUT ${sir_proto_python_build_files}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
-    DEPENDS ${sir_proto_python_files}
-  )
-
-  # TODO do we have a use-case for an installation at the moment?
-  # install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-  # install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-endif()

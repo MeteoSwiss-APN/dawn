@@ -22,11 +22,11 @@ file(GENERATE OUTPUT ${config_out} INPUT ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILE
 
 # Copy to install
 install(
-  FILES ${config_out}
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/examples/python
 )
 install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  FILES ${config_out}
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/examples/python
 )
 

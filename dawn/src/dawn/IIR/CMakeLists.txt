@@ -25,7 +25,38 @@ dawn_protobuf_generate(
   LANGUAGE cpp
 )
 
-add_library(DawnIIRProto OBJECT ${sir_proto_cpp_files})
+if(ENABLE_PYTHON)
+  # Generate python proto files
+  include(DawnProtobufGenerate)
+  dawn_protobuf_generate(
+    OUT_FILES iir_proto_python_files
+    PROTOS ${protos}
+    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG IIR
+    LANGUAGE python
+  )
+
+  set(output_dir ${PROJECT_BINARY_DIR}/python/IIR/)
+
+  list(TRANSFORM protos PREPEND ${output_dir}
+    OUTPUT_VARIABLE iir_proto_python_build_files)
+
+  add_custom_command(OUTPUT ${iir_proto_python_build_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
+    DEPENDS ${iir_proto_python_files}
+  )
+
+  # TODO do we have a use-case for an installation at the moment?
+  # Maybe not, but just in case...
+  install(
+    FILES ${iir_proto_python_build_files}
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/IIR
+  )
+endif()
+
+add_library(DawnIIRProto OBJECT ${sir_proto_cpp_files} ${iir_proto_python_build_files})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -109,34 +140,6 @@ add_library(DawnIIR
 
 target_add_dawn_standard_props(DawnIIR)
 target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
-
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES iir_proto_python_files
-    PROTOS ${protos}
-    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG IIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${PROJECT_BINARY_DIR}/python/IIR/)
-
-  list(TRANSFORM protos PREPEND ${output_dir}
-    OUTPUT_VARIABLE iir_proto_python_build_files)
-
-  add_custom_command(OUTPUT ${iir_proto_python_build_files}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
-    DEPENDS ${iir_proto_python_files}
-  )
-
-  # TODO do we have a use-case for an installation at the moment?
-  # install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
-  # install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
-endif()
 
 # TODO add this if CLAW needs it (-> Matthias)
 # if(DAWN_JAVA)

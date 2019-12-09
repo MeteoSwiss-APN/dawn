@@ -24,13 +24,13 @@ file(
 
 # Copy to install
 install(
-  FILES ${config_out}
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/dawn
-)
-install(
   DIRECTORY dawn
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python
   FILES_MATCHING PATTERN "*.py"
+)
+install(
+  FILES ${config_out}
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/dawn
 )
 
 if(${PROJECT_NAME}_TESTING)

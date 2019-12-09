@@ -15,4 +15,5 @@
 ##===------------------------------------------------------------------------------------------===##
 
 __dawn_versioninfo__ = (@VERSION_MAJOR@, @VERSION_MINOR@, @VERSION_PATCH@)
+# NOTE: If dawn builds protobuf, then this points to the BUILD directory of protobuf bindings
 __dawn_install_protobuf_module__ = '@PROTOBUF_PYTHON_DIR@'
