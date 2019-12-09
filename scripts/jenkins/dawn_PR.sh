@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 exitError()
 {
     echo "ERROR $1: $3" 1>&2
@@ -32,4 +34,3 @@ shift 1
 time ./scripts/jenkins/build.sh "$@"
 
 rm -rf ${workdir}
-
