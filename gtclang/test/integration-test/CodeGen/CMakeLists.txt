@@ -76,7 +76,12 @@ function(compile_target)
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
   target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GTClang GridTools::gridtools gtest)
+  target_link_libraries(${executable} GridTools::gridtools)
+  target_link_libraries(${executable} gtest)
+  # TODO The following line must not be there!
+  # Due to bug https://github.com/MeteoSwiss-APN/dawn/issues/534, we need to include the
+  # gtclang_dsl_defs.
+  target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
   add_test(NAME ${executable}
     COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
@@ -105,7 +110,7 @@ function(compile_target_cuda)
     target_compile_definitions(${executable} PRIVATE -DGT_ENABLE_METERS)
   endif()
   if(${backend} STREQUAL cuda)
-    target_compile_definitions(${executable} PRIVATE -DGRIDTOOLS_CLANG_CUDA)
+    target_compile_definitions(${executable} PRIVATE -DGRIDTOOLS_DAWN_CUDA)
   endif()
 
   target_include_directories(${executable} PRIVATE
@@ -116,8 +121,14 @@ function(compile_target_cuda)
   )
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
-  target_compile_features(${executable} PRIVATE cxx_std_11)
-  target_link_libraries(${executable} GTClang GridTools::gridtools gtest)
+  target_compile_features(${executable} PRIVATE cxx_std_14)
+  target_link_libraries(${executable} GridTools::gridtools)
+  target_link_libraries(${executable} gtest)
+  # TODO The following line must not be there!
+  # Due to bug https://github.com/MeteoSwiss-APN/dawn/issues/534, we need to include the
+  # gtclang_dsl_defs.
+  target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR}/src)
+
 
   add_test(NAME ${executable}
     COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
@@ -153,8 +164,6 @@ function(add_codegen_test)
     compile_target_cuda(TEST ${ARG_TEST} BACKEND cuda)
   endif()
 endfunction()
-
-set(CMAKE_CUDA_STANDARD 14)
 
 add_codegen_test(TEST copy_stencil)
 add_codegen_test(TEST lap FLAGS -fpass-tmp-to-function)
