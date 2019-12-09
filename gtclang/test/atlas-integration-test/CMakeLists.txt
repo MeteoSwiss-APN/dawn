@@ -66,7 +66,7 @@ if(eckit_FOUND AND atlas_FOUND)
     add_executable(${test_name}
       TestCompareOutputMain.cpp
       AtlasIntegrationTestCompareOutput.cpp
-      AtlasVerifyer.h
+      AtlasVerifier.h
       ${generated_stencil_codes_str}
       ${reference_stencil_codes_str}
     )
