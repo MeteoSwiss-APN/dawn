@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 exitError()
 {
     echo "ERROR $1: $3" 1>&2
@@ -30,7 +28,14 @@ echo "done"
 cd ${workdir}
 
 # TODO check argument forwarding, e.g. install dir
-shift 1
-time ./scripts/jenkins/build.sh "$@"
+#shift 1
+#./scripts/jenkins/build.sh "$@"
 
+./scripts/jenkins/build.sh
+ret=$?
+
+echo "Cleaning up"
 rm -rf ${workdir}
+
+exit $ret
+
