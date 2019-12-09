@@ -16,7 +16,10 @@
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/Type.h"
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
 
 using namespace dawn;
 
@@ -80,6 +83,32 @@ TEST_P(StencilTest, AST) {
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
+TEST_P(StencilTest, AST_Reduction) {
+  const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
+      "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
+      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double));
+
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
+      std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
+
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
+
+TEST_P(StencilTest, AST_ReductionWeighted) {
+  std::vector<std::shared_ptr<sir::Value>> weights{std::make_shared<sir::Value>(1.),
+                                                   std::make_shared<sir::Value>(2.),
+                                                   std::make_shared<sir::Value>(3.)};
+
+  const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
+      "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
+      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights);
+
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
+      std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
+
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
+
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, StencilTest,
                         ::testing::Values(SIRSerializer::Format::Json,
                                           SIRSerializer::Format::Byte));
@@ -110,10 +139,17 @@ TEST_P(StencilFunctionTest, Arguments) {
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
-TEST_P(StencilFunctionTest, ASTs) {
+TEST_P(StencilFunctionTest, ASTsFieldAccess) {
   sirRef->StencilFunctions[0]->Asts.emplace_back(
       std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
           sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
+
+TEST_P(StencilFunctionTest, ASTsLiteralAccess) {
+  sirRef->StencilFunctions[0]->Asts.emplace_back(std::make_shared<sir::AST>(
+      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(
+          std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double))})));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 

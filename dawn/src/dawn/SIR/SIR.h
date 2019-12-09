@@ -348,7 +348,7 @@ struct Stencil : public dawn::NonCopyable {
 
 class Value : NonCopyable {
 public:
-  enum class Kind { Boolean = 0, Integer, Double, String };
+  enum class Kind { Boolean = 0, Integer, Float, Double, String };
   template <typename T>
   struct TypeInfo;
 
@@ -403,7 +403,7 @@ public:
   }
 
 private:
-  std::optional<std::variant<bool, int, double, std::string>> value_;
+  std::optional<std::variant<bool, int, float, double, std::string>> value_;
   bool is_constexpr_;
   Kind type_;
 };
@@ -416,6 +416,11 @@ struct Value::TypeInfo<bool> {
 template <>
 struct Value::TypeInfo<int> {
   static constexpr Kind Type = Kind::Integer;
+};
+
+template <>
+struct Value::TypeInfo<float> {
+  static constexpr Kind Type = Kind::Float;
 };
 
 template <>

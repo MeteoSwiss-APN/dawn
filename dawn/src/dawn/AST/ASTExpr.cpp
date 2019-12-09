@@ -15,6 +15,7 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/AST/ASTVisitor.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/StringRef.h"
@@ -445,16 +446,26 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
          (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
-                                                     std::shared_ptr<Expr> const& rhs,
-                                                     std::shared_ptr<Expr> const& init,
-                                                     ast::Expr::LocationType rhs_location,
-                                                     SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op),
+//===------------------------------------------------------------------------------------------===//
+//     ReductionOverNeighborExpr
+//===------------------------------------------------------------------------------------------===//
+
+ReductionOverNeighborExpr::ReductionOverNeighborExpr(
+    std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
+    ast::Expr::LocationType lhs_location, ast::Expr::LocationType rhs_location, SourceLocation loc)
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), lhs_location_(lhs_location),
       rhs_location_(rhs_location), operands_{rhs, init} {}
+
+ReductionOverNeighborExpr::ReductionOverNeighborExpr(
+    std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
+    std::vector<std::shared_ptr<sir::Value>> weights, ast::Expr::LocationType lhs_location,
+    ast::Expr::LocationType rhs_location, SourceLocation loc)
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
+      lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
+      weights_(expr.getWeights()), lhs_location_(expr.getRhsLocation()),
       rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
                                                       expr.getInit()->clone()} {}
 
@@ -464,10 +475,11 @@ operator=(ReductionOverNeighborExpr const& expr) {
   op_ = expr.op_;
   operands_[Rhs] = expr.getRhs();
   operands_[Init] = expr.getInit();
+  rhs_location_ = expr.getRhsLocation();
+  lhs_location_ = expr.getLhsLocation();
+  weights_ = expr.getWeights();
   return *this;
 }
-
-ast::Expr::LocationType ReductionOverNeighborExpr::getRhsLocation() const { return rhs_location_; }
 
 std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
   return std::make_shared<ReductionOverNeighborExpr>(*this);
@@ -475,8 +487,24 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
 
 bool ReductionOverNeighborExpr::equals(const Expr* other) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
-  return otherPtr && otherPtr->getInit() == getInit() && otherPtr->getOp() == getOp() &&
-         otherPtr->getRhs() == getRhs();
+
+  if(weights_.has_value()) {
+    if(!otherPtr->getWeights().has_value()) {
+      return false;
+    }
+    if(otherPtr->getWeights()->size() != weights_->size()) {
+      return false;
+    }
+    for(int i = 0; i < weights_->size(); i++) {
+      if(!weights_->at(i)->comparison(*otherPtr->getWeights()->at(i))) {
+        return false;
+      }
+    }
+  }
+
+  return otherPtr && *otherPtr->getInit() == *getInit() && otherPtr->getOp() == getOp() &&
+         *otherPtr->getRhs() == *getRhs();
 }
+
 } // namespace ast
 } // namespace dawn

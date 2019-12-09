@@ -91,10 +91,11 @@ message GlobalVariableValue {
     int32 integer_value = 2;
     double double_value = 3;
     string string_value = 4;
+    float float_value = 5;
   }
 
   // Is the value a a compile time constant?
-  bool is_constexpr = 5;
+  bool is_constexpr = 6;
 }
 
 // @brief Map of global variables

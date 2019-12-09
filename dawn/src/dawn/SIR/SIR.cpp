@@ -611,6 +611,8 @@ const char* sir::Value::typeToString(sir::Value::Kind type) {
     return "int";
   case Kind::Double:
     return "double";
+  case Kind::Float:
+    return "float";
   case Kind::String:
     return "std::string";
   }
@@ -624,6 +626,8 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
   case Kind::Integer:
     return BuiltinTypeID::Integer;
   case Kind::Double:
+    return BuiltinTypeID::Double;
+  case Kind::Float:
     return BuiltinTypeID::Float;
   default:
     dawn_unreachable("invalid type");
@@ -639,6 +643,8 @@ std::string sir::Value::toString() const {
     return std::to_string(std::get<int>(*value_));
   case Kind::Double:
     return std::to_string(std::get<double>(*value_));
+  case Kind::Float:
+    return std::to_string(std::get<float>(*value_));
   case Kind::String:
     return std::get<std::string>(*value_);
   default:

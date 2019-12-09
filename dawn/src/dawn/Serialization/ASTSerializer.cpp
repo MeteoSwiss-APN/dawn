@@ -17,7 +17,9 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/SIR/ASTStmt.h"
+#include "dawn/SIR/SIR/SIR.pb.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <iterator>
@@ -609,6 +611,33 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
   currentExprProto_.push(protoExpr->mutable_init());
   expr->getInit()->accept(*this);
   currentExprProto_.pop();
+
+  if(expr->getWeights()) {
+    auto protoWeights = protoExpr->mutable_weights();
+    for(const auto& weight : expr->getWeights().value()) {
+      dawn::proto::statements::Weight weightProto;
+      assert(weight->has_value());
+      switch(weight->getType()) {
+      case sir::Value::Kind::Boolean:
+        weightProto.set_boolean_value(weight->getValue<bool>());
+        break;
+      case sir::Value::Kind::Integer:
+        weightProto.set_integer_value(weight->getValue<int>());
+        break;
+      case sir::Value::Kind::Double:
+        weightProto.set_double_value(weight->getValue<double>());
+        break;
+      case sir::Value::Kind::Float:
+        weightProto.set_float_value(weight->getValue<float>());
+        break;
+      case sir::Value::Kind::String:
+        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
+                         "of arithmetic type)");
+        break;
+      }
+      protoWeights->Add(std::move(weightProto));
+    }
+  }
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -666,6 +695,8 @@ BuiltinTypeID makeBuiltinTypeID(const proto::statements::BuiltinType& builtinTyp
     return BuiltinTypeID::Integer;
   case proto::statements::BuiltinType_TypeID_Float:
     return BuiltinTypeID::Float;
+  case proto::statements::BuiltinType_TypeID_Double:
+    return BuiltinTypeID::Double;
   default:
     return BuiltinTypeID::Invalid;
   }

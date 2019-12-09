@@ -185,6 +185,9 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
       case sir::Value::Kind::Double:
         valueProto.set_double_value(value.getValue<double>());
         break;
+      case sir::Value::Kind::Float:
+        valueProto.set_float_value(value.getValue<float>());
+        break;
       case sir::Value::Kind::String:
         valueProto.set_string_value(value.getValue<std::string>());
         break;
@@ -279,6 +282,8 @@ makeBuiltinTypeID(const dawn::proto::statements::BuiltinType& builtinTypeProto) 
     return BuiltinTypeID::Integer;
   case dawn::proto::statements::BuiltinType_TypeID_Float:
     return BuiltinTypeID::Float;
+  case dawn::proto::statements::BuiltinType_TypeID_Double:
+    return BuiltinTypeID::Double;
   default:
     return BuiltinTypeID::Invalid;
   }
@@ -484,8 +489,39 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    return std::make_shared<sir::ReductionOverNeighborExpr>(
-        exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+    std::vector<std::shared_ptr<dawn::sir::Value>> weights;
+
+    for(const auto& weightProto : exprProto.weights()) {
+      switch(weightProto.Value_case()) {
+      case proto::statements::Weight::kBooleanValue:
+        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.boolean_value()));
+        break;
+      case proto::statements::Weight::kFloatValue:
+        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.float_value()));
+        break;
+      case proto::statements::Weight::kDoubleValue:
+        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.double_value()));
+        break;
+      case proto::statements::Weight::kIntegerValue:
+        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.integer_value()));
+        break;
+      case proto::statements::Weight::kStringValue:
+        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
+                         "of arithmetic type)\n");
+        break;
+      case proto::statements::Weight::VALUE_NOT_SET:
+        dawn_unreachable("weight with undefined value encountered!\n");
+        break;
+      }
+    }
+
+    if(weights.size() > 0) {
+      return std::make_shared<sir::ReductionOverNeighborExpr>(
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights);
+    } else {
+      return std::make_shared<sir::ReductionOverNeighborExpr>(
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+    }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
   default:

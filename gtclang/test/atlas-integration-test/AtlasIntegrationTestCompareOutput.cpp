@@ -186,8 +186,9 @@ TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
       .run();
 
   // Check correctness of the output
-  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
+  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
     ASSERT_EQ(out_v(cell_idx, 0), 4.0);
+  }
 }
 } // namespace
 
@@ -273,6 +274,55 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
     auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
     AtlasVerifier v;
     EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
+  }
+}
+} // namespace
+
+#include <generated_gradient.hpp>
+#include <reference_gradient.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, Gradient) {
+  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+
+  int nb_levels = 1;
+  atlas::functionspace::CellColumns fs_cols(mesh, atlas::option::levels(nb_levels));
+  atlas::Field ref_cells_f{fs_cols.createField<double>(atlas::option::name("ref_cells"))};
+  atlas::Field gen_cells_f{fs_cols.createField<double>(atlas::option::name("gen_cells"))};
+
+  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
+  atlas::Field ref_edges_f{fs_edges.createField<double>(atlas::option::name("ref_edges"))};
+  atlas::Field gen_edges_f{fs_edges.createField<double>(atlas::option::name("gen_edges"))};
+
+  atlas::mesh::actions::build_edges(mesh);
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  atlasInterface::Field<double> ref_cells_v = atlas::array::make_view<double, 2>(ref_cells_f);
+  atlasInterface::Field<double> gen_cells_v = atlas::array::make_view<double, 2>(gen_cells_f);
+  atlasInterface::Field<double> ref_edges_v = atlas::array::make_view<double, 2>(ref_edges_f);
+  atlasInterface::Field<double> gen_edges_v = atlas::array::make_view<double, 2>(gen_edges_f);
+
+  for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+    ref_cells_v(cell, 0) = 1.;
+    gen_cells_v(cell, 0) = 1.;
+  }
+
+  dawn_generated::cxxnaiveico::reference_gradient<atlasInterface::atlasTag>(
+      mesh, nb_levels, ref_cells_v, ref_edges_v)
+      .run();
+  dawn_generated::cxxnaiveico::gradient<atlasInterface::atlasTag>(mesh, nb_levels, gen_cells_v,
+                                                                  gen_edges_v)
+      .run();
+
+  // Check correctness of the output
+  {
+    auto ref_cells_v = atlas::array::make_view<double, 2>(ref_cells_f);
+    auto gen_cells_v = atlas::array::make_view<double, 2>(gen_cells_f);
+    AtlasVerifier v;
+    EXPECT_TRUE(v.compareArrayView(ref_cells_v, gen_cells_v))
+        << "while comparing output (on cells)";
   }
 }
 } // namespace
