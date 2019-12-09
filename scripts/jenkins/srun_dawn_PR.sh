@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 BASEPATH_SCRIPT=$(dirname $(realpath -s $0))
 
 export PARALLEL_BUILD_JOBS=24
