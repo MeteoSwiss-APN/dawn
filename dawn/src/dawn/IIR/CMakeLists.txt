@@ -37,10 +37,10 @@ if(ENABLE_PYTHON)
     LANGUAGE python
   )
 
-  set(output_dir ${PROJECT_BINARY_DIR}/python/IIR/)
+  set(output_dir ${PROJECT_BINARY_DIR}/python)
 
-  list(TRANSFORM protos PREPEND ${output_dir}
-    OUTPUT_VARIABLE iir_proto_python_build_files)
+  string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
+    iir_proto_python_build_files "${iir_proto_python_files}")
 
   add_custom_command(OUTPUT ${iir_proto_python_build_files}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}

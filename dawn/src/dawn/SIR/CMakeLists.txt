@@ -35,18 +35,19 @@ if(ENABLE_PYTHON)
     LANGUAGE python
   )
 
-  set(output_dir ${PROJECT_BINARY_DIR}/python/SIR/)
+  set(output_dir ${PROJECT_BINARY_DIR}/python)
 
-  list(TRANSFORM protos PREPEND ${output_dir}
-    OUTPUT_VARIABLE sir_proto_python_build_files)
+  string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
+    sir_proto_python_build_files "${sir_proto_python_files}")
+
   add_custom_command(OUTPUT ${sir_proto_python_build_files}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
     COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
     DEPENDS ${sir_proto_python_files}
   )
 
-  # TODO do we have a use-case for an installation at the moment?
-  # Maybe not, but just in case...
+  # # TODO do we have a use-case for an installation at the moment?
+  # # Maybe not, but just in case...
   install(
     FILES ${sir_proto_python_build_files}
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/SIR
