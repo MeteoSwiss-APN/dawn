@@ -1,7 +1,6 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Serialization/SIRSerializer.h"
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -253,7 +252,7 @@ PYBIND11_MODULE(_dawn4py, m) {
              auto pp_defines_list = py::list();
              auto stencils_dict = py::dict();
 
-             if(translationUnit != nullptr) {
+             if(translationUnit) {
                export_info = true;
                if(!unit_info_obj.is_none()) {
                  auto unit_info_dict = unit_info_obj.cast<py::dict>();
