@@ -53,7 +53,7 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        # Check a recent version of CMake is present
+        # Check if a recent version of CMake is present
         try:
             out = subprocess.check_output(["cmake", "--version"])
         except OSError:
