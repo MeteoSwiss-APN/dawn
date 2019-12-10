@@ -172,4 +172,78 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   of.close();
 }
 
+TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+  UnstructuredIIRBuilder b;
+
+  auto cell_f = b.field("cell_field", LocType::Cells);
+  auto edge_f = b.field("edge_field", LocType::Edges);
+
+  auto stencil_instantiation = b.build(
+      "gradient",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Parallel,
+          b.stage(
+              LocType::Edges,
+              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(b.at(edge_f),
+                                            b.reduceOverNeighborExpr<float>(
+                                                Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
+                                                b.lit(0.), dawn::ast::Expr::LocationType::Edges,
+                                                dawn::ast::Expr::LocationType::Cells,
+                                                std::vector<float>({1., -1.})))))),
+          b.stage(
+              LocType::Cells,
+              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(b.at(cell_f),
+                                            b.reduceOverNeighborExpr<float>(
+                                                Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                b.lit(0.), dawn::ast::Expr::LocationType::Cells,
+                                                dawn::ast::Expr::LocationType::Edges,
+                                                std::vector<float>({1., 0., 0.})))))))));
+
+  std::ofstream of("prototype/generated_triGradient.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
+
+TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+  UnstructuredIIRBuilder b;
+
+  auto cell_f = b.field("cell_field", LocType::Cells);
+  auto edge_f = b.field("edge_field", LocType::Edges);
+
+  auto stencil_instantiation = b.build(
+      "gradient",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Parallel,
+          b.stage(
+              LocType::Edges,
+              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(b.at(edge_f),
+                                            b.reduceOverNeighborExpr<float>(
+                                                Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
+                                                b.lit(0.), dawn::ast::Expr::LocationType::Edges,
+                                                dawn::ast::Expr::LocationType::Cells,
+                                                std::vector<float>({1., -1.})))))),
+          b.stage(
+              LocType::Cells,
+              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(b.at(cell_f),
+                                            b.reduceOverNeighborExpr<float>(
+                                                Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                b.lit(0.), dawn::ast::Expr::LocationType::Cells,
+                                                dawn::ast::Expr::LocationType::Edges,
+                                                std::vector<float>({0.5, 0., 0.5, 0.})))))))));
+
+  std::ofstream of("prototype/generated_quadGradient.hpp");
+  DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
+
 } // anonymous namespace

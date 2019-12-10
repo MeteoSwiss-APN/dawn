@@ -117,7 +117,6 @@ std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& id
       }
     }
   }
-  // assert(neighs[idx].size() >= 1 && neighs[idx].size() <= 3);
   return neighs[idx];
 }
 
@@ -127,7 +126,6 @@ std::vector<int> const& edgeNeighboursOfCell(atlas::Mesh const& m, int const& id
   if(neighs.count(idx) == 0) {
     neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
   }
-  // assert(neighs[idx].size() == 3);
   return neighs[idx];
 }
 
@@ -137,7 +135,6 @@ std::vector<int> const& nodeNeighboursOfCell(atlas::Mesh const& m, int const& id
   if(neighs.count(idx) == 0) {
     neighs[idx] = getNeighs(m.cells().node_connectivity(), idx);
   }
-  // assert(neighs[idx].size() == 3);
   return neighs[idx];
 }
 
@@ -167,7 +164,6 @@ std::vector<int> cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   if(neighs.count(idx) == 0) {
     neighs[idx] = getNeighs(m.edges().cell_connectivity(), idx);
   }
-  // assert(neighs[idx].size() == 5 || neighs[idx].size() == 6);
   return neighs[idx];
 }
 
@@ -177,7 +173,6 @@ std::vector<int> edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   if(neighs.count(idx) == 0) {
     neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
   }
-  // assert(neighs[idx].size() == 5 || neighs[idx].size() == 6);
   return neighs[idx];
 }
 
@@ -198,7 +193,6 @@ std::vector<int> nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
       }
     }
   }
-  // assert(neighs[idx].size() == 5 || neighs[idx].size() == 6);
   return neighs[idx];
 }
 

@@ -27,6 +27,8 @@ inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<mylib::Edge> co
   return e; // implicit conversion
 }
 
+// unweighted version
+
 template <typename Objs, typename Init, typename Op>
 auto reduce(Objs&& objs, Init init, Op&& op) {
   for(auto&& obj : objs)
@@ -77,6 +79,64 @@ template <typename Init, typename Op>
 auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
                           Op&& op) {
   return reduce(v.vertices(), init, op);
+}
+
+// weighted versions
+
+template <typename Objs, typename Init, typename Op, typename Weight>
+auto reduce(Objs&& objs, Init init, Op&& op, const std::vector<Weight> weights) {
+  int i = 0;
+  for(auto&& obj : objs)
+    op(init, *obj, weights[i++]);
+  return init;
+}
+
+template <typename Init, typename Op, typename Weight>
+auto reduceCellToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op,
+                      std::vector<Weight> weights) {
+  return reduce(f.faces(), init, op, weights);
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceEdgeToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op,
+                      std::vector<Weight> weights) {
+  return reduce(f.edges(), init, op, weights);
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceVertexToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op,
+                        std::vector<Weight> weights) {
+  return reduce(f.vertices(), init, op, weights);
+}
+
+template <typename Init, typename Op, typename Weight>
+auto reduceCellToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&& op,
+                      std::vector<Weight> weights) {
+  return reduce(e.faces(), init, op, weights);
+}
+// template <typename Init, typename Op, typename Weight>
+// auto reduceEdgeToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&&
+// op) {
+//   return reduce(e.edges(), init, op);
+// }
+template <typename Init, typename Op, typename Weight>
+auto reduceVertexToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&& op,
+                        std::vector<Weight> weights) {
+  return reduce(e.vertices(), init, op, weights);
+}
+
+template <typename Init, typename Op, typename Weight>
+auto reduceCellToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
+                        Op&& op, std::vector<Weight> weights) {
+  return reduce(v.faces(), init, op, weights);
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceEdgeToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
+                        Op&& op, std::vector<Weight> weights) {
+  return reduce(v.edges(), init, op, weights);
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
+                          Op&& op, std::vector<Weight> weights) {
+  return reduce(v.vertices(), init, op, weights);
 }
 
 } // namespace mylibInterface

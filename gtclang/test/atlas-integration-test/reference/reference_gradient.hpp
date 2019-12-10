@@ -4,7 +4,7 @@
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>
-class gradient {
+class reference_gradient {
 private:
   struct stencil_165 {
     dawn::mesh_t<LibTag> const& m_mesh;
@@ -34,7 +34,7 @@ private:
                                    return lhs +=
                                           weight * m_cell_field(deref(LibTag{}, red_loc), k + 0);
                                  },
-                                 std::vector<float>({1.000000, 1.000000}));
+                                 std::vector<float>({1.000000, -1.000000}));
           }
           for(auto const& loc : getCells(LibTag{}, m_mesh)) {
             m_cell_field(deref(LibTag{}, loc), k + 0) =
@@ -43,7 +43,7 @@ private:
                                    return lhs +=
                                           weight * m_edge_field(deref(LibTag{}, red_loc), k + 0);
                                  },
-                                 std::vector<float>({0.250000, 0.250000, 0.250000, 0.250000}));
+                                 std::vector<float>({0.500000, 0.000000, 0.500000, 0.000000}));
           }
         }
       }
@@ -54,13 +54,13 @@ private:
   stencil_165 m_stencil_165;
 
 public:
-  gradient(const gradient&) = delete;
+  reference_gradient(const reference_gradient&) = delete;
 
   // Members
 
-  gradient(const dawn::mesh_t<LibTag>& mesh, int k_size,
-           dawn::cell_field_t<LibTag, double>& cell_field,
-           dawn::cell_field_t<LibTag, double>& edge_field)
+  reference_gradient(const dawn::mesh_t<LibTag>& mesh, int k_size,
+                     dawn::cell_field_t<LibTag, double>& cell_field,
+                     dawn::edge_field_t<LibTag, double>& edge_field)
       : m_stencil_165(mesh, k_size, cell_field, edge_field) {}
 
   void run() {

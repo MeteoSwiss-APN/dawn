@@ -52,10 +52,13 @@ namespace cxxnaiveico {
 // - A function `<Location>Type const& deref(X const& x)` should be defined,
 //   where X is decltype(*get<Locations>(...).begin())
 //
-// - The following combinatorial of functions should be defined:
+// - The following combinatorial of functions should be defined, where Weight is an arithmetic type:
 //
 //   template<typename Init, typename Op>
 //   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op)
+//
+//   template<typename Init, typename Op, typename Weight>
+//   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op, std::vector<Weight>)
 //
 //   where Op must be callable as
 //     Op(Init, ValueType);
