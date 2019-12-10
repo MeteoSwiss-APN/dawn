@@ -11,4 +11,4 @@ Compiling and running the prototype (until we have a proper setup)
 4. For atlas: cd prototype && g++ -o out atlas[TestCase]Driver.cpp -std=c++17 -I../../dawn/src -I<path/to/atlas>/include -I<path/to/eckit>/include -L</path/to/atlas>/lib -latlas -L<path/to/eckit>/lib -leckit; ./out
    --> gmsh mymesh.msh
 
-NOTE: TestCase is curently one of [Copy|Diffusion|VerticalSum]
+NOTE: TestCase is curently one of [Copy|Diffusion|VerticalSum|Gradient]
