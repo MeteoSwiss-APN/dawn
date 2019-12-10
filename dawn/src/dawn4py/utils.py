@@ -19,10 +19,6 @@
 import re
 from typing import List
 
-import attr
-
-NOTHING = object()
-
 
 def camel_case_split(name: str) -> List[str]:
     """Split a CamelCase name in its components.

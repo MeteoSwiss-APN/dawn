@@ -51,7 +51,9 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        # Build extension
+        assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
+
+        # Check a recent version of CMake is present
         try:
             out = subprocess.check_output(["cmake", "--version"])
         except OSError:
@@ -64,21 +66,6 @@ class CMakeBuild(build_ext):
         if cmake_version < "3.12.0":
             raise RuntimeError("CMake >= 3.12.0 is required")
 
-        cmake_args = [
-            "-DPYTHON_EXECUTABLE=" + sys.executable,
-            "-DUSE_SYSTEM_DAWN=False",
-            "-DUSE_SYSTEM_PROTOBUF=False",
-            "-DDAWN_BUNDLE_PYTHON=True",
-            "-DBUILD_TESTING=False",
-        ]
-
-        cfg = "Debug" if self.debug else "Release"
-        cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
-
-        env = os.environ.copy()
-        env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get("CXXFLAGS", ""), self.distribution.get_version()
-        )
         # Set build folder inside bundle and remove CMake cache if it contains wrong paths.
         # Installing in editable/develop mode builds the extension in the original build path,
         # but a regular `pip install` copies the full tree to a temporary folder
@@ -96,10 +83,31 @@ class CMakeBuild(build_ext):
                     assert not os.path.exists(cmake_cache_file)
         os.makedirs(self.bundle_build_temp, exist_ok=True)
 
+        # Prepare cmake environment and args
+        env = os.environ.copy()
+        env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
+            env.get("CXXFLAGS", ""), self.distribution.get_version()
+        )
+
+        cmake_args = [
+            "-DPYTHON_EXECUTABLE=" + sys.executable,
+            "-DUSE_SYSTEM_DAWN=False",
+            "-DUSE_SYSTEM_PROTOBUF=False",
+            "-DDAWN_BUNDLE_PYTHON=True",
+            "-DBUILD_TESTING=False",
+        ]
+
+        cfg = "Debug" if self.debug else "Release"
+        cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
+
+        # Run CMake configure
         print("-" * 10, "Running CMake prepare", "-" * 40)
         cmake_cmd = ["cmake", BUNDLE_ABS_DIR] + cmake_args
         print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp, env=env)
+
+        # Run CMake build
+        # TODO: run build for the target with the extension name for each extension in self.extensions
         print("-" * 10, "Building extensions", "-" * 40)
         build_args = ["--config", cfg, "-j", str(BUILD_JOBS), "--target", "dawn"]
         cmake_cmd = ["cmake", "--build", "."] + build_args
@@ -108,12 +116,13 @@ class CMakeBuild(build_ext):
 
         # Move from build temp to final position
         for ext in self.extensions:
-            self._install_ext(ext)
+            self.build_extension(ext)
 
         # Install included headers
         self.run_command("install_dawn_includes")
 
-    def _install_ext(self, ext):
+    def build_extension(self, ext):
+        # Currently just copy the generated CPython extension to the package folder
         filename = self.get_ext_filename(ext.name)
         source_path = os.path.abspath(
             os.path.join(
