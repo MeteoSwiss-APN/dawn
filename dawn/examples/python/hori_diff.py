@@ -118,7 +118,7 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     return vertical_region_stmt
 
 
-hir = make_sir(GridType.Structured, "hori_diff.cpp", [
+hir = make_sir(GridType.Value('Structured'), "hori_diff.cpp", [
     make_stencil(
         "hori_diff",
         make_ast([create_vertical_region_stmt()]),

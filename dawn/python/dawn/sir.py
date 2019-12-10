@@ -30,11 +30,9 @@ sys_path.insert(1, __dawn_install_protobuf_module__)
 #
 from SIR.SIR_pb2 import *
 from SIR.statements_pb2 import *
+from SIR.enums_pb2 import *
 from google.protobuf import json_format
 
-class GridType(Enum):
-    Structured = 0
-    Unstructured = 1
 
 ExprType = TypeVar('Expr',
                    Expr,
@@ -214,7 +212,7 @@ def make_sir(gridtype: GridType, filename: str, stencils: List[Stencil], functio
     """
 
     sir = SIR()
-    sir.gridtype = gridtype
+    sir.gridType = gridtype
     sir.filename = filename
     sir.stencils.extend(stencils)
     sir.stencil_functions.extend(functions)
