@@ -39,4 +39,4 @@ add_library(GTClangUnittest
 )
 
 target_add_gtclang_standard_props(GTClangUnittest)
-target_link_libraries(GTClangUnittest PUBLIC Dawn::Dawn LLVM::LLVM Clang gtest)
+target_link_libraries(GTClangUnittest PUBLIC GTClangSupport GTClangDriver Dawn::Dawn LLVM::LLVM Clang gtest)
