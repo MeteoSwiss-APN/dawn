@@ -44,7 +44,7 @@ if(ENABLE_PYTHON)
 
   add_custom_command(OUTPUT ${iir_proto_python_build_files}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}/IIR
     DEPENDS ${iir_proto_python_files}
   )
 

@@ -42,12 +42,12 @@ if(ENABLE_PYTHON)
 
   add_custom_command(OUTPUT ${sir_proto_python_build_files}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}/SIR
     DEPENDS ${sir_proto_python_files}
   )
 
-  # # TODO do we have a use-case for an installation at the moment?
-  # # Maybe not, but just in case...
+  # TODO do we have a use-case for an installation at the moment?
+  # Maybe not, but just in case...
   install(
     FILES ${sir_proto_python_build_files}
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/SIR
