@@ -634,6 +634,7 @@ def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) ->
 
 __all__ = [
     # SIR
+    'GridType',
     'SIR',
     'Stencil',
     'StencilFunction',
