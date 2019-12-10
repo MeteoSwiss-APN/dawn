@@ -48,7 +48,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(
-    const ast::GridType gridType, sir::GlobalVariableMap const& globalVariables,
+    ast::GridType const gridType, sir::GlobalVariableMap const& globalVariables,
     std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions)
     : metadata_(globalVariables),
       IIR_(std::make_unique<IIR>(gridType, globalVariables, stencilFunctions)) {}
