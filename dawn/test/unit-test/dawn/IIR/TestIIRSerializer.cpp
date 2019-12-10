@@ -40,6 +40,7 @@ namespace {
 #define IIR_EXPECT_NE(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), FALSE)
 
 bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
+  IIR_EARLY_EXIT((lhs->getGridType() == rhs->getGridType()));
   IIR_EARLY_EXIT(lhs->checkTreeConsistency());
   IIR_EARLY_EXIT(rhs->checkTreeConsistency());
   // checking the stencils
@@ -147,7 +148,7 @@ class createEmptyOptimizerContext : public ::testing::Test {
 protected:
   virtual void SetUp() override {
     dawn::DiagnosticsEngine diag;
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>();
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Structured);
     dawn::OptimizerContext::OptimizerContextOptions options;
     context_ = std::make_unique<OptimizerContext>(diag, options, sir);
   }
@@ -160,7 +161,8 @@ protected:
   virtual void SetUp() override {
     createEmptyOptimizerContext::SetUp();
     referenceInstantiaton = std::make_shared<iir::StencilInstantiation>(
-        *context_->getSIR()->GlobalVariableMap, context_->getSIR()->StencilFunctions);
+        context_->getSIR()->GridType, *context_->getSIR()->GlobalVariableMap,
+        context_->getSIR()->StencilFunctions);
   }
   virtual void TearDown() override { referenceInstantiaton.reset(); }
 

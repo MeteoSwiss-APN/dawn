@@ -106,7 +106,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   auto& SM = context_->getSourceManager();
 
   // Assemble SIR
-  std::shared_ptr<dawn::SIR> SIR = std::make_shared<dawn::SIR>();
+  std::shared_ptr<dawn::SIR> SIR = std::make_shared<dawn::SIR>(dawn::ast::GridType::Structured);
   SIR->Filename = SM.getFileEntryForID(SM.getMainFileID())->getName();
 
   const StencilParser& stencilParser = visitor_->getStencilParser();

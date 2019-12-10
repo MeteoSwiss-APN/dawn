@@ -32,6 +32,10 @@ from SIR.SIR_pb2 import *
 from SIR.statements_pb2 import *
 from google.protobuf import json_format
 
+class GridType(Enum):
+    Structured = 0
+    Unstructured = 1
+
 ExprType = TypeVar('Expr',
                    Expr,
                    UnaryOperator,
@@ -198,10 +202,11 @@ def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
     return stencil
 
 
-def make_sir(filename: str, stencils: List[Stencil], functions: List[StencilFunction] = [],
+def make_sir(gridtype: GridType, filename: str, stencils: List[Stencil], functions: List[StencilFunction] = [],
              global_variables: GlobalVariableMap = None) -> SIR:
     """ Create a SIR
 
+    :param gridtype:          Grid type
     :param filename:          Source filename
     :param stencils:          list of stencils that compose the SIR
     :param functions:         list of functions used in the SIR
@@ -209,6 +214,7 @@ def make_sir(filename: str, stencils: List[Stencil], functions: List[StencilFunc
     """
 
     sir = SIR()
+    sir.gridtype = gridtype
     sir.filename = filename
     sir.stencils.extend(stencils)
     sir.stencil_functions.extend(functions)

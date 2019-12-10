@@ -106,6 +106,18 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   // Convert SIR to protobuf SIR
   sir::proto::SIR sirProto;
 
+  // SIR.GridType
+  switch(sir->GridType) {
+  case ast::GridType::Structured:
+    sirProto.set_gridtype(proto::enums::GridType::Structured);
+    break;
+  case ast::GridType::Unstructured:
+    sirProto.set_gridtype(proto::enums::GridType::Unstructured);
+    break;
+  default:
+    dawn_unreachable("invalid grid type");
+  }
+
   // SIR.Filename
   sirProto.set_filename(sir->Filename);
 
@@ -595,9 +607,22 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
   }
 
   // Convert protobuf SIR to SIR
-  std::shared_ptr<SIR> sir = std::make_shared<SIR>();
+  std::shared_ptr<SIR> sir;
 
   try {
+
+    // SIR.GridType
+    switch(sirProto.gridtype()) {
+    case dawn::proto::enums::GridType::Structured:
+      sir = std::make_shared<SIR>(ast::GridType::Structured);
+      break;
+    case dawn::proto::enums::GridType::Unstructured:
+      sir = std::make_shared<SIR>(ast::GridType::Unstructured);
+      break;
+    default:
+      dawn_unreachable("unknown grid type");
+    }
+
     // SIR.Filename
     sir->Filename = sirProto.filename();
 

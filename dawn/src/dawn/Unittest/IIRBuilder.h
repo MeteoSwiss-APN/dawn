@@ -67,7 +67,8 @@ protected:
   };
 
 public:
-  IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}
+  IIRBuilder(const ast::GridType gridType)
+      : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
@@ -210,6 +211,7 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Unstructured) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);
@@ -221,6 +223,7 @@ public:
 
 class CartesianIIRBuilder : public IIRBuilder {
 public:
+  CartesianIIRBuilder() : IIRBuilder(ast::GridType::Structured) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, Array3i const& offset);
   std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);

@@ -20,6 +20,7 @@ syntax = "proto3";
 
 package dawn.proto.iir;
 import "SIR/statements.proto";
+import "SIR/enums.proto";
 
 /* ===-----------------------------------------------------------------------------------------===*/
 //      Caches
@@ -132,15 +133,17 @@ message BoundaryConditionFunctor {
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
 // defined Stencil.
 message IIR {
-    // Map of the globally defined variable names to their Values
-    map<string, GlobalValueAndType> globalVariableToValue = 1;
+    dawn.proto.enums.GridType gridType = 1;
 
-    repeated Stencil stencils = 2;
+    // Map of the globally defined variable names to their Values
+    map<string, GlobalValueAndType> globalVariableToValue = 2;
+
+    repeated Stencil stencils = 3;
 
     // Stencil description statements for the overall program flow
-    repeated dawn.proto.statements.Stmt controlFlowStatements = 3;
+    repeated dawn.proto.statements.Stmt controlFlowStatements = 4;
 
-    repeated BoundaryConditionFunctor boundaryConditions = 4;
+    repeated BoundaryConditionFunctor boundaryConditions = 5;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

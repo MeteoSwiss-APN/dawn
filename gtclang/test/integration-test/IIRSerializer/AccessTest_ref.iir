@@ -64,6 +64,7 @@
   "stencilName": "Test"
  },
  "internalIR": {
+  "gridType": "Structured",
   "globalVariableToValue": {},
   "stencils": [
    {
@@ -427,5 +428,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
+ "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
 }

@@ -48,7 +48,7 @@ public:
 
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(
-      sir::GlobalVariableMap const& globalVariables = {},
+      const ast::GridType gridType, sir::GlobalVariableMap const& globalVariables = {},
       std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions = {});
 
   StencilMetaInformation& getMetaData();
