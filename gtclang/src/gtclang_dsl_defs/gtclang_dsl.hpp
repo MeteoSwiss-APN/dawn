@@ -16,7 +16,7 @@
 
 #pragma once
 
-#ifdef GRIDTOOLS_CLANG_DOXYGEN
+#ifdef GTCLANG_DSL_DOXYGEN
 /**
  * @namespace gtclang
  * @brief Namespace of gtclang frontend
@@ -30,8 +30,8 @@ namespace dsl {}
 } // namespace gtclang
 
 /**
- * @defgroup gridtools_clang gridtools_clang DSL
- * @brief gridtools clang DSL description
+ * @defgroup gtclan_dsl gtclan_dsl DSL
+ * @brief gtclang DSL description
  */
 #endif
 

@@ -487,7 +487,7 @@ class FieldAccessExpr : public Expr {
   // indicating this argument is unused. The `argumentOffset` holds the parsed offsets of the
   // direction (or offset).
   //
-  // Consider the following example (given in the gridtools_clang DSL) which implements an average
+  // Consider the following example (given in the gtclang DSL) which implements an average
   // stencil function :
   //
   // stencil_function avg {

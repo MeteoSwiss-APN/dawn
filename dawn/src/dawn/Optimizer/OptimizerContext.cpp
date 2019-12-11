@@ -483,8 +483,9 @@ public:
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
     if(instantiation_->insertBoundaryConditions(stmt->getFields()[0], stmt) == false)
       DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
-    //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
-    //      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
+    //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) ==
+    //      false) DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same
+    //      field");
   }
 
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {

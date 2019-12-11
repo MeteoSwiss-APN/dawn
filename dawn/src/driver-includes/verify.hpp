@@ -18,6 +18,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 
 namespace gridtools {
@@ -171,7 +172,10 @@ public:
       for(int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j) {
         for(int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i) {
           typename StorageType::data_t value = storage_v(i, j, k);
-          std::cout << value << "\t";
+          std::cout << std::setprecision(5) // precision of floating point output
+                    << std::setfill(' ')    // character used to fill the column
+                    << std::setw(7)         // width of column
+                    << value << "\t";
         }
         std::cout << "\n";
       }

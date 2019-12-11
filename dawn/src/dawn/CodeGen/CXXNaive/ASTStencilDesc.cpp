@@ -77,8 +77,6 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt
       return fieldp.second.Name;
     }
   });
-
-  ss_ << std::endl;
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {

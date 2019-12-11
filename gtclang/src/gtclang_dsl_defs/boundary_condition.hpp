@@ -22,7 +22,7 @@ namespace gtclang {
 namespace dsl {
 /*
  * @brief Boundary condition specification
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 class boundary_condition {
 public:
