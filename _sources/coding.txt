@@ -114,7 +114,7 @@ For headers in the same folder, do not put the absolute path.
 Miscellaneous Guidelines
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-** Do not define member functions which are longer than one line in header files (except for templated functions). E.g.
+** Do not define non-templated member functions which are longer than one line in header files (except for templated functions). E.g.
 
 .. code-block:: cpp
 
