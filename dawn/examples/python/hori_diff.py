@@ -36,7 +36,7 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 
-OUTPUT_NAME = "hori_diff"
+OUTPUT_NAME = "hori_diff_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "data", f"{OUTPUT_NAME}.cpp")
 

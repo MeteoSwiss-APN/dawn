@@ -173,6 +173,6 @@ setup(
     ext_modules=[CMakeExtension("dawn4py._dawn4py")],
     cmdclass={"build_ext": CMakeBuild, "install_dawn_includes": InstallDawnIncludesCommand},
     install_requires=install_requires,
-    extras_require={"dev": ["Jinja2"]},
+    extras_require={"dev": ["Jinja2", "pytest", "tox"]},
     zip_safe=False,
 )

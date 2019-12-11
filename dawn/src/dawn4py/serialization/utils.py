@@ -716,16 +716,19 @@ def make_reduction_over_neighbor_expr(
 
 
 class SIRPrinter:
-    def __init__(self, indent_size=2):
+    def __init__(self, indent_size=2, file=None):
         self._indent = 0
         self.indent_size = indent_size
         self.wrapper = textwrap.TextWrapper(
             initial_indent=" " * self._indent, width=120, subsequent_indent=" " * self._indent
         )
+        self.file = file if file is not None else sys.stdout
+        if not hasattr(self.file, "write"):
+            raise ValueError(f"Invalid output file {file}")
 
     @classmethod
-    def apply(cls, node, *, indent_size=2):
-        cls(indent_size=indent_size).visit(node)
+    def apply(cls, node, *, indent_size=2, file=None):
+        cls(indent_size=indent_size, file=file).visit(node)
 
     def visit(self, node):
         name = type(node).__name__.split(".")[-1]
@@ -861,22 +864,24 @@ class SIRPrinter:
         for expr in var_decl.init_list:
             str_ += self.visit_expr(expr)
 
-        print(self.wrapper.fill(str_))
+        print(self.wrapper.fill(str_), file=self.file)
 
     def visit_expr_stmt(self, stmt):
-        print(self.wrapper.fill(self.visit_expr(stmt.expr)))
+        print(self.wrapper.fill(self.visit_expr(stmt.expr)), file=self.file)
 
     def visit_if_stmt(self, stmt):
         cond = stmt.cond_part
         if cond.WhichOneof("stmt") != "expr_stmt":
             raise ValueError("Not expected stmt")
 
-        print(self.wrapper.fill("if(" + self.visit_expr(cond.expr_stmt.expr) + ")"))
+        print(
+            self.wrapper.fill("if(" + self.visit_expr(cond.expr_stmt.expr) + ")"), file=self.file
+        )
         self.visit_body_stmt(stmt.then_part)
         self.visit_body_stmt(stmt.else_part)
 
     def visit_block_stmt(self, stmt):
-        print(self.wrapper.fill("{"))
+        print(self.wrapper.fill("{"), file=self.file)
         self._indent += self.indent_size
         self.wrapper.initial_indent = " " * self._indent
 
@@ -885,7 +890,7 @@ class SIRPrinter:
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
 
-        print(self.wrapper.fill("}"))
+        print(self.wrapper.fill("}"), file=self.file)
 
     def visit_body_stmt(self, stmt):
         if stmt.WhichOneof("stmt") == "var_decl_stmt":
@@ -925,7 +930,7 @@ class SIRPrinter:
             else:
                 str_ += "-" + str(-interval.upper_offset)
         str_ += ")"
-        print(self.wrapper.fill(str_))
+        print(self.wrapper.fill(str_), file=self.file)
 
         self._indent += self.indent_size
         self.wrapper.initial_indent = " " * self._indent
@@ -937,7 +942,7 @@ class SIRPrinter:
         self.wrapper.initial_indent = " " * self._indent
 
     def visit_stencil(self, stencil):
-        print(self.wrapper.fill("stencil " + stencil.name))
+        print(self.wrapper.fill("stencil " + stencil.name), file=self.file)
         self._indent += self.indent_size
         self.wrapper.initial_indent = " " * self._indent
 
@@ -955,33 +960,33 @@ class SIRPrinter:
         if not global_variables.IsInitialized():
             return
 
-        print(self.wrapper.fill("globals"))
+        print(self.wrapper.fill("globals"), file=self.file)
 
         self._indent += self.indent_size
         self.wrapper.initial_indent = " " * self._indent
         for name, value in global_variables.map.items():
             str_ = ""
-        if value.WhichOneof("Value") == "integer_value":
-            str_ += "integer " + name
-            if value.is_constexpr:
-                str_ += "= " + value.integer_value
+            if value.WhichOneof("Value") == "integer_value":
+                str_ += "integer " + name
+                if value.is_constexpr:
+                    str_ += "= " + value.integer_value
 
-        if value.WhichOneof("Value") == "double_value":
-            str_ += "double " + name
-            if value.is_constexpr:
-                str_ += "= " + value.double_value
+            if value.WhichOneof("Value") == "double_value":
+                str_ += "double " + name
+                if value.is_constexpr:
+                    str_ += "= " + value.double_value
 
-        if value.WhichOneof("Value") == "boolean_value":
-            str_ += "bool " + name
-            if value.is_constexpr:
-                str_ += "= " + value.boolean_value
+            if value.WhichOneof("Value") == "boolean_value":
+                str_ += "bool " + name
+                if value.is_constexpr:
+                    str_ += "= " + value.boolean_value
 
-        if value.WhichOneof("Value") == "string_value":
-            str_ += "string " + name
-            if value.is_constexpr:
-                str_ += "= " + value.string_value
+            if value.WhichOneof("Value") == "string_value":
+                str_ += "string " + name
+                if value.is_constexpr:
+                    str_ += "= " + value.string_value
 
-        print(self.wrapper.fill(str_))
+            print(self.wrapper.fill(str_), file=self.file)
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
 
@@ -996,7 +1001,7 @@ class SIRPrinter:
                     dims_.append(dims[i])
             str_ += str(dims_)
             str_ += ","
-        print(self.wrapper.fill(str_))
+        print(self.wrapper.fill(str_), file=self.file)
 
     def visit_sir(self, sir):
         for stencil in sir.stencils:

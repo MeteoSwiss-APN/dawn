@@ -46,7 +46,7 @@ using namespace gridtools::dawn;
 //---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(256)  hori_diff_stencil41_ms87_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out, ::dawn::float_type * const coeff) {
+__global__ void __launch_bounds__(256)  hori_diff_stencil_stencil41_ms87_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out, ::dawn::float_type * const coeff) {
 
   // Start kernel
   __shared__ ::dawn::float_type lap_ijcache[34*6];
@@ -116,7 +116,7 @@ out[idx111] = (((::dawn::float_type) -4.0 * lap_ijcache[ijcacheindex]) + (__ldg(
     idx111+=stride_111_2;
 }}
 
-class hori_diff {
+class hori_diff_stencil {
 public:
 
   struct sbase : public timer_cuda {
@@ -161,24 +161,24 @@ public:
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      hori_diff_stencil41_ms87_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+coeff_ds.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
+      hori_diff_stencil_stencil41_ms87_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+coeff_ds.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
       };
 
       // stopping timers
       pause();
     }
   };
-  static constexpr const char* s_name = "hori_diff";
+  static constexpr const char* s_name = "hori_diff_stencil";
   stencil_41 m_stencil_41;
 public:
 
-  hori_diff(const hori_diff&) = delete;
+  hori_diff_stencil(const hori_diff_stencil&) = delete;
 
   // Members
 
   // Stencil-Data
 
-  hori_diff(const gridtools::dawn::domain& dom) : m_stencil_41(dom){}
+  hori_diff_stencil(const gridtools::dawn::domain& dom) : m_stencil_41(dom){}
 
   template<typename S>
   void sync_storages(S field) {

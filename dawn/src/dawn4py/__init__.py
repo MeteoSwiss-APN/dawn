@@ -21,10 +21,10 @@ Python bindings for the C++ Dawn compiler project.
 
 from typing import Any, Dict, Optional, Union
 
-from ._version import __version__, __versioninfo__
 from . import _dawn4py
-from ._dawn4py import Options, SerializerFormat
 from . import serialization
+from ._dawn4py import Options, SerializerFormat
+from ._version import __version__, __versioninfo__
 
 
 def compile(
