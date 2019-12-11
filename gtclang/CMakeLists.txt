@@ -28,8 +28,8 @@ if(NOT CMAKE_INSTALL_PREFIX)
       "Install path prefix, prepended onto install directories." FORCE)
 endif()
 
-project(gtclang CXX)
 cmake_minimum_required(VERSION 3.3)
+project(gtclang CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 

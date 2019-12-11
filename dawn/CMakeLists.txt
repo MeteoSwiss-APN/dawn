@@ -26,8 +26,8 @@ if(NOT CMAKE_INSTALL_PREFIX)
       "Install path prefix, prepended onto install directories." FORCE)
 endif()
 
-project(dawn C CXX)
 cmake_minimum_required(VERSION 3.3)
+project(dawn C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(YODA_ROOT CACHE PATH "path to yoda package")
