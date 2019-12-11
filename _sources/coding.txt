@@ -21,7 +21,9 @@ Naming of Types, Functions, Variables, and Enumerators
 
   * **Members** should start with a lower-case letter and contain an `_` suffix (e.g ``myMember_``) 
 
-  * **Namespaces** are all lower case and are in snake_case (e.g. `dawn_generated`)
+  * **Namespaces** are all lower case and are in snake_case (e.g. ``dawn_generated``)
+
+  * **Template Typenames** all start with an uppercase T, followed by an uppercase name (e.g. ``TValue``, ``TWeight``)
 
 For types, functions and enumerators you should follow the LLVM style.
 
