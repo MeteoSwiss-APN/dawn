@@ -44,7 +44,7 @@ message Field {
     Cell = 2;
   }
   // Location where the field is defined on
-  LocationType location_type = 5;
+  repeated LocationType location_type = 5;
 }
 
 // @brief Directional argument of a StencilFunction

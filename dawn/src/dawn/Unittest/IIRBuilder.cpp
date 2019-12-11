@@ -233,7 +233,7 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
                                        sir::FieldDimension(ast::cartesian, {true, true, true}),
-                                       location);
+                                       {location});
   return {id, name};
 }
 

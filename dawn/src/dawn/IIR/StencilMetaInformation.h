@@ -156,7 +156,7 @@ public:
 
   int addField(FieldAccessType type, const std::string& name,
                const sir::FieldDimension& fieldDimensions,
-               ast::Expr::LocationType = ast::Expr::LocationType::Cells);
+               std::vector<Expr::LocationType> locationTypes = {ast::Expr::LocationType::Cells});
 
   int addTmpField(FieldAccessType type, const std::string& basename,
                   const sir::FieldDimension& fieldDimensions);
@@ -355,8 +355,8 @@ public:
   }
 
   bool getIsUnstructuredFromAccessID(int AccessID) const;
-  dawn::ast::Expr::LocationType getLocationTypeFromAccessID(int ID) const;
-  void addAccessIDLocationPair(int ID, dawn::ast::Expr::LocationType location);
+  std::vector<dawn::ast::Expr::LocationType> getLocationTypeFromAccessID(int ID) const;
+  void addAccessIDLocationPair(int ID, const std::vector<Expr::LocationType>& locations);
 
 private:
   //================================================================================================
@@ -371,7 +371,7 @@ private:
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
 
   /// Stores the location type for every field as a map to the AccessID
-  std::unordered_map<int, ast::Expr::LocationType> FieldAccessIDToLocationTypeMap_;
+  std::unordered_map<int, std::vector<ast::Expr::LocationType>> FieldAccessIDToLocationTypeMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)

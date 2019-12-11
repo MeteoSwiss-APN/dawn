@@ -342,7 +342,7 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
                                      const sir::FieldDimension& fieldDimensions,
-                                     ast::Expr::LocationType locationType) {
+                                     std::vector<Expr::LocationType> locationTypes) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
@@ -350,7 +350,7 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
   DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 
-  addAccessIDLocationPair(accessID, locationType);
+  addAccessIDLocationPair(accessID, locationTypes);
 
   return accessID;
 }
@@ -374,15 +374,16 @@ bool StencilMetaInformation::getIsUnstructuredFromAccessID(int AccessID) const {
   return FieldAccessIDToLocationTypeMap_.count(AccessID) != 0;
 }
 
-ast::Expr::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
+std::vector<ast::Expr::LocationType>
+StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
   DAWN_ASSERT(getIsUnstructuredFromAccessID(AccessID));
   return FieldAccessIDToLocationTypeMap_.at(AccessID);
 }
 
-void StencilMetaInformation::addAccessIDLocationPair(int AccessID,
-                                                     ast::Expr::LocationType location) {
+void StencilMetaInformation::addAccessIDLocationPair(
+    int AccessID, const std::vector<ast::Expr::LocationType>& locations) {
   DAWN_ASSERT(!FieldAccessIDToLocationTypeMap_.count(AccessID));
-  FieldAccessIDToLocationTypeMap_.emplace(AccessID, location);
+  FieldAccessIDToLocationTypeMap_.emplace(AccessID, locations);
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {

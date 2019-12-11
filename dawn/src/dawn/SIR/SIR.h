@@ -217,11 +217,12 @@ T dimension_cast(FieldDimension const& dimension) {
 struct Field : public StencilFunctionArg {
   Field(const std::string& name, SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
-        fieldDimensions(dawn::ast::cartesian, {{0, 0, 0}}) {}
+        fieldDimensions(dawn::ast::cartesian, {{0, 0, 0}}),
+        locationTypes({ast::Expr::LocationType::Cells}) {}
 
   bool IsTemporary;
   FieldDimension fieldDimensions;
-  ast::Expr::LocationType locationType = ast::Expr::LocationType::Cells;
+  std::vector<ast::Expr::LocationType> locationTypes;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }

@@ -29,7 +29,7 @@ import textwrap
 from ctypes import *
 from optparse import OptionParser
 
-from config import __dawn_install_module__, __dawn_install_dawnclib__
+#from config import __dawn_install_module__, __dawn_install_dawnclib__
 from dawn import *
 from dawn import sir_printer
 
