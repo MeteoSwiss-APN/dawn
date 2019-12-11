@@ -12,6 +12,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+if(APPLE)
+set(DAWN_ON_APPLE 1)
+endif()
 yoda_configure_file(Config.h.cmake)
 
 yoda_add_library(
