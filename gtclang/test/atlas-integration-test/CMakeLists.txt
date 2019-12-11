@@ -33,15 +33,15 @@ if(eckit_FOUND AND atlas_FOUND)
                                 generated_copyEdge.hpp
                                 generated_accumulateEdgeToCell.hpp
                                 generated_verticalSum.hpp
-                                generated_diffusion.hpp)
-    set(reference_stencil_codes reference_diffusion.hpp)
-
+                                generated_diffusion.hpp
+                                generated_gradient.hpp)
+    set(reference_stencil_codes reference_diffusion.hpp
+                                reference_gradient.hpp)
     list(TRANSFORM generated_stencil_codes PREPEND generated/)
     list(TRANSFORM reference_stencil_codes PREPEND reference/)
     # NOTE: need to add the quotes here, otherwise CMAKE won't enforce the dependency on every file when setting OUTPUT of add_custom_command
     list(JOIN generated_stencil_codes " " generated_stencil_codes_str)
     list(JOIN reference_stencil_codes " " reference_stencil_codes_str)
-
 
     # Compile the executable that will programatically construct an IIR and code-generate it to file
     yoda_add_executable(
@@ -60,12 +60,6 @@ if(eckit_FOUND AND atlas_FOUND)
       DEPENDS AtlasIntegrationTestMkdirGenerated
       COMMENT "Generating unstructured stencils to be tested"
     )
-
-    # Copy references
-    foreach(reference ${reference_stencil_codes})
-        configure_file(${reference} ${reference} COPYONLY)
-    endforeach()
-
 
     # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
     yoda_add_unittest(
