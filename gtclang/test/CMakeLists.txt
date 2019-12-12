@@ -15,7 +15,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT GTCLANG_BUILD_GRIDTOOLS)
-  find_package(GridTools 1.0.3 QUIET)
+  find_package(GridTools 1.0.4 QUIET)
 endif()
 if(NOT GridTools_FOUND)
   if(NOT GTCLANG_BUILD_GRIDTOOLS)
@@ -28,10 +28,9 @@ if(NOT GridTools_FOUND)
   set(INSTALL_TOOLS OFF)
   set(GT_INSTALL_EXAMPLES OFF)
 
-  # NOTE: Need CMake fixes to v1.0.3
   FetchContent_Declare(GridTools
-    GIT_REPOSITORY https://github.com/jdahm/gridtools.git
-    GIT_TAG v1.0.3/fix-cmake-project
+    GIT_REPOSITORY https://github.com/GridTools/gridtools.git
+    GIT_TAG v1.0.4
   )
 
   FetchContent_GetProperties(GridTools)
