@@ -623,6 +623,10 @@ message LiteralAccessExpr {
   int32 ID = 5;            // ID of the Expr
 }
 
+// @brief A weight needed in the weighted reduction on unstrcutred stencils, which is consistent with
+//        the Value class for globals
+//
+// @ingroup sir_proto
 message Weight {
   oneof Value {
     bool boolean_value = 1;
@@ -637,10 +641,10 @@ message Weight {
 //
 // @ingroup sir_proto
 message ReductionOverNeighborExpr {
-  string op = 1; // Reduction operation
-  Expr rhs = 2;  // Operation to be applied for each neighbor
-  Expr init = 3; // Initial value of reduction
-  repeated Weight weights = 4; // weights
+  string op = 1;               // Reduction operation
+  Expr rhs = 2;                // Operation to be applied for each neighbor
+  Expr init = 3;               // Initial value of reduction
+  repeated Weight weights = 4; // weights (required to be of equal type, e.g. just floats)
 }
 
 // @brief Abstract syntax tree of the SIR

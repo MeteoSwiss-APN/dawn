@@ -25,6 +25,7 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
+#include <algorithm>
 #include <iosfwd>
 #include <memory>
 #include <optional>
@@ -346,23 +347,36 @@ struct Stencil : public dawn::NonCopyable {
 ///
 /// @ingroup sir
 
-class Value : NonCopyable {
+class Value {
 public:
   enum class Kind { Boolean = 0, Integer, Float, Double, String };
   template <typename T>
   struct TypeInfo;
 
   template <class T>
-  explicit Value(T&& value)
-      : value_{std::forward<T>(value)},
-        is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+  Value(T value)
+      : value_{std::move(value)}, is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+
+  Value(const Value& other)
+      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+
+  Value(Value&& other)
+      : value_{std::move(other.value_)}, is_constexpr_{other.isConstexpr()}, type_{
+                                                                                 other.getType()} {}
 
   template <class T>
-  explicit Value(T value, bool is_constexpr)
+  Value(T value, bool is_constexpr)
       : value_{std::forward<T>(value)},
         is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
-  explicit Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+  Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+
+  Value& operator=(const Value& other) {
+    value_ = other.value_;
+    is_constexpr_ = other.isConstexpr();
+    type_ = other.getType();
+    return *this;
+  }
 
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return is_constexpr_; }
@@ -432,6 +446,8 @@ template <>
 struct Value::TypeInfo<std::string> {
   static constexpr Kind Type = Kind::String;
 };
+
+// class Global : public Value, NonCopyable {};
 
 using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>>;
 

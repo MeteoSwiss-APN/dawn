@@ -17,9 +17,9 @@
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
-#include <c++/7/optional>
 #include <cstring>
 #include <fstream>
+#include <optional>
 
 template <typename CG>
 void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {

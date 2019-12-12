@@ -61,6 +61,11 @@ if(eckit_FOUND AND atlas_FOUND)
       COMMENT "Generating unstructured stencils to be tested"
     )
 
+    # Copy references
+    foreach(reference ${reference_stencil_codes})
+        configure_file(${reference} ${reference} COPYONLY)
+    endforeach()
+
     # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
     yoda_add_unittest(
         NAME AtlasIntegrationTestCompareOutput

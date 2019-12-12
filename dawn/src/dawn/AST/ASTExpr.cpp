@@ -458,14 +458,14 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(
     std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    std::vector<std::shared_ptr<sir::Value>> weights, ast::Expr::LocationType lhs_location,
+    std::vector<sir::Value> weights, ast::Expr::LocationType lhs_location,
     ast::Expr::LocationType rhs_location, SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
       lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
-      weights_(expr.getWeights()), lhs_location_(expr.getRhsLocation()),
+      weights_(expr.getWeights()), lhs_location_(expr.getLhsLocation()),
       rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
                                                       expr.getInit()->clone()} {}
 
@@ -496,7 +496,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other) const {
       return false;
     }
     for(int i = 0; i < weights_->size(); i++) {
-      if(!weights_->at(i)->comparison(*otherPtr->getWeights()->at(i))) {
+      if(!weights_->at(i).comparison(otherPtr->getWeights()->at(i))) {
         return false;
       }
     }

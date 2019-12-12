@@ -115,9 +115,9 @@ public:
                                                     const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
-    std::vector<std::shared_ptr<sir::Value>> vWeights;
+    std::vector<sir::Value> vWeights;
     for(const auto& it : weights) {
-      vWeights.push_back(std::make_shared<sir::Value>(it));
+      vWeights.push_back(sir::Value(it));
     }
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(

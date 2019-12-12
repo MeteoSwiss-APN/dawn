@@ -616,19 +616,19 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
     auto protoWeights = protoExpr->mutable_weights();
     for(const auto& weight : expr->getWeights().value()) {
       auto weightProto = protoWeights->Add();
-      assert(weight->has_value());
-      switch(weight->getType()) {
+      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered during serialization");
+      switch(weight.getType()) {
       case sir::Value::Kind::Boolean:
-        weightProto->set_boolean_value(weight->getValue<bool>());
+        weightProto->set_boolean_value(weight.getValue<bool>());
         break;
       case sir::Value::Kind::Integer:
-        weightProto->set_integer_value(weight->getValue<int>());
+        weightProto->set_integer_value(weight.getValue<int>());
         break;
       case sir::Value::Kind::Double:
-        weightProto->set_double_value(weight->getValue<double>());
+        weightProto->set_double_value(weight.getValue<double>());
         break;
       case sir::Value::Kind::Float:
-        weightProto->set_float_value(weight->getValue<float>());
+        weightProto->set_float_value(weight.getValue<float>());
         break;
       case sir::Value::Kind::String:
         dawn_unreachable("string type for weight encountered in serialization (weights need to be "

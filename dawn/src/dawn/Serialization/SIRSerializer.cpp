@@ -489,21 +489,21 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    std::vector<std::shared_ptr<dawn::sir::Value>> weights;
+    std::vector<dawn::sir::Value> weights;
 
     for(const auto& weightProto : exprProto.weights()) {
       switch(weightProto.Value_case()) {
       case proto::statements::Weight::kBooleanValue:
-        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.boolean_value()));
+        weights.push_back(dawn::sir::Value(weightProto.boolean_value()));
         break;
       case proto::statements::Weight::kFloatValue:
-        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.float_value()));
+        weights.push_back(dawn::sir::Value(weightProto.float_value()));
         break;
       case proto::statements::Weight::kDoubleValue:
-        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.double_value()));
+        weights.push_back(dawn::sir::Value(weightProto.double_value()));
         break;
       case proto::statements::Weight::kIntegerValue:
-        weights.push_back(std::make_shared<dawn::sir::Value>(weightProto.integer_value()));
+        weights.push_back(dawn::sir::Value(weightProto.integer_value()));
         break;
       case proto::statements::Weight::kStringValue:
         dawn_unreachable("string type for weight encountered in serialization (weights need to be "
