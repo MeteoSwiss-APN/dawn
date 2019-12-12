@@ -16,7 +16,7 @@
 
 """Generator for a stencil using global indices
 
-This program creates the HIR cusing the Python API of the HIR.
+This program creates the HIR using the Python API of the HIR.
 The code is meant as an example for high-level DSLs that could generate HIR from their own
 internal IR.
 The program contains two parts:
