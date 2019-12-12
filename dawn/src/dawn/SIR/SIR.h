@@ -298,19 +298,14 @@ struct VerticalRegion {
   std::shared_ptr<sir::AST> Ast;              ///< AST of the region
   std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
   LoopOrderKind LoopOrder;                    ///< Loop order (usually associated with the k-loop)
+
   /// If it is not instantiated, iteration over the full domain is assumed.
-  std::array<std::optional<Interval>, 2> iterationSpace_; /// < Iteration space in the horizontal.
+  std::array<std::optional<Interval>, 2> IterationSpace; /// < Iteration space in the horizontal.
 
   VerticalRegion(const std::shared_ptr<sir::AST>& ast,
                  const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
                  SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
-  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
-                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
-                 std::optional<Interval> iterationSpaceI, std::optional<Interval> iterationSpaceJ,
-                 SourceLocation loc = SourceLocation())
-      : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder),
-        iterationSpace_({iterationSpaceI, iterationSpaceJ}) {}
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;

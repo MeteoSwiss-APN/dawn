@@ -103,14 +103,14 @@ public:
       ss_ << std::string(curIndent_, ' ');
 
     ss_ << "vertical-region";
-    if(stmt->getVerticalRegion()->iterationSpace_[0]) {
+    if(stmt->getVerticalRegion()->IterationSpace[0]) {
       ss_ << " IRange : ";
-      ss_ << stmt->getVerticalRegion()->iterationSpace_[0].value().toString();
+      ss_ << stmt->getVerticalRegion()->IterationSpace[0].value().toString();
       ss_ << " ";
     }
-    if(stmt->getVerticalRegion()->iterationSpace_[1]) {
+    if(stmt->getVerticalRegion()->IterationSpace[1]) {
       ss_ << " JRange : ";
-      ss_ << stmt->getVerticalRegion()->iterationSpace_[1].value().toString();
+      ss_ << stmt->getVerticalRegion()->IterationSpace[1].value().toString();
       ss_ << " ";
     }
     ss_ << " K-Range : ";
