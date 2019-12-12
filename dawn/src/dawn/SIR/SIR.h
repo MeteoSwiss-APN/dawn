@@ -357,19 +357,24 @@ public:
   Value(T value)
       : value_{std::move(value)}, is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
+  template <class T>
+  Value(T value, bool is_constexpr)
+      : value_{std::move(value)},
+        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+
   Value(const Value& other)
+      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+
+  Value(Value& other)
       : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value&& other)
       : value_{std::move(other.value_)}, is_constexpr_{other.isConstexpr()}, type_{
                                                                                  other.getType()} {}
 
-  template <class T>
-  Value(T value, bool is_constexpr)
-      : value_{std::forward<T>(value)},
-        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
-
   Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+
+  virtual ~Value() = default;
 
   Value& operator=(const Value& other) {
     value_ = other.value_;
@@ -379,7 +384,7 @@ public:
   }
 
   /// @brief Get/Set if the variable is `constexpr`
-  bool isConstexpr() const { return is_constexpr_; }
+  virtual bool isConstexpr() const { return is_constexpr_; }
 
   /// @brief `Type` to string
   static const char* typeToString(Kind type);
@@ -388,13 +393,13 @@ public:
   static BuiltinTypeID typeToBuiltinTypeID(Kind type);
 
   /// Convert the value to string
-  std::string toString() const;
+  virtual std::string toString() const;
 
   /// @brief Check if value is set
-  bool has_value() const { return value_.has_value(); }
+  virtual bool has_value() const { return value_.has_value(); }
 
   /// @brief Get/Set the underlying type
-  Kind getType() const { return type_; }
+  virtual Kind getType() const { return type_; }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
@@ -405,10 +410,10 @@ public:
     return std::get<T>(*value_);
   }
 
-  bool operator==(const Value& rhs) const;
-  CompareResult comparison(const sir::Value& rhs) const;
+  virtual bool operator==(const Value& rhs) const;
+  virtual CompareResult comparison(const sir::Value& rhs) const;
 
-  json::json jsonDump() const {
+  virtual json::json jsonDump() const {
     json::json valueJson;
     valueJson["type"] = Value::typeToString(getType());
     valueJson["isConstexpr"] = isConstexpr();
@@ -416,7 +421,7 @@ public:
     return valueJson;
   }
 
-private:
+protected:
   std::optional<std::variant<bool, int, float, double, std::string>> value_;
   bool is_constexpr_;
   Kind type_;
@@ -447,9 +452,18 @@ struct Value::TypeInfo<std::string> {
   static constexpr Kind Type = Kind::String;
 };
 
-// class Global : public Value, NonCopyable {};
+class Global : public Value, NonCopyable {
+public:
+  template <class T>
+  Global(T value) : Value(value) {}
 
-using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>>;
+  template <class T>
+  Global(T value, bool is_constexpr) : Value(value, is_constexpr) {}
+
+  Global(Kind type) : Value(type) {}
+};
+
+using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Global>>;
 
 } // namespace sir
 

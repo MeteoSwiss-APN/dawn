@@ -35,7 +35,7 @@ if(eckit_FOUND AND atlas_FOUND)
                                 generated_verticalSum.hpp
                                 generated_diffusion.hpp
                                 generated_gradient.hpp)
-    set(reference_stencil_codes reference_diffusion.hpp)
+    set(reference_stencil_codes reference_gradient.hpp reference_diffusion.hpp)
     list(TRANSFORM generated_stencil_codes PREPEND generated/)
     list(TRANSFORM reference_stencil_codes PREPEND reference/)
     # NOTE: need to add the quotes here, otherwise CMAKE won't enforce the dependency on every file when setting OUTPUT of add_custom_command
@@ -68,7 +68,7 @@ if(eckit_FOUND AND atlas_FOUND)
     # Compare output of the generated stencils with output from reference implementation through calls to atlas_interface.hpp.
     yoda_add_unittest(
         NAME AtlasIntegrationTestCompareOutput
-        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifier.h ${generated_stencil_codes_str} ${reference_stencil_codes_str}
+        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifier.h ${reference_stencil_codes_str} ${generated_stencil_codes_str}
         DEPENDS eckit atlas gtest
         OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest
         GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml

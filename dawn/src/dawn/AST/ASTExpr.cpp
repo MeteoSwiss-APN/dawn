@@ -461,7 +461,9 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(
     std::vector<sir::Value> weights, ast::Expr::LocationType lhs_location,
     ast::Expr::LocationType rhs_location, SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
-      lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {}
+      lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {
+  DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
+}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),

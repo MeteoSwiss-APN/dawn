@@ -99,7 +99,7 @@ public:
 
   const sir::GlobalVariableMap& getGlobalVariableMap() const { return globalVariableMap_; }
 
-  void insertGlobalVariable(std::string varName, std::shared_ptr<sir::Value> value) {
+  void insertGlobalVariable(std::string varName, std::shared_ptr<sir::Global> value) {
     globalVariableMap_.emplace(varName, value);
   }
 
