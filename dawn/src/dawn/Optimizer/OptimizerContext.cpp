@@ -386,12 +386,10 @@ public:
         metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
                        ? LoopOrderKind::Forward
                        : LoopOrderKind::Backward);
+    Stage::IterationSpace iterationspace = {stmt->getVerticalRegion()->IterationSpace[0],
+                                            stmt->getVerticalRegion()->IterationSpace[1]};
     std::unique_ptr<Stage> stage =
-        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
-    // set the iteration space
-    // TODO Add a constructor for stage that takes an SIR iteration space
-    stage->setIterationSpace({stmt->getVerticalRegion()->IterationSpace[0],
-                              stmt->getVerticalRegion()->IterationSpace[1]});
+        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval, iterationspace);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 

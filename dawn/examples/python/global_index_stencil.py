@@ -14,10 +14,9 @@
 #
 # ===------------------------------------------------------------------------------------------===##
 
-"""Copy stencil HIR generator
+"""Generator for a stencil using global indices
 
-This program creates the HIR corresponding to a copy stencil using the Python API of the HIR.
-The copy stencil is a hello world for stencil computations.
+This program creates the HIR cusing the Python API of the HIR.
 The code is meant as an example for high-level DSLs that could generate HIR from their own
 internal IR.
 The program contains two parts:
