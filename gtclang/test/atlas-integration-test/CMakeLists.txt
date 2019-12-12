@@ -35,8 +35,7 @@ if(eckit_FOUND AND atlas_FOUND)
                                 generated_verticalSum.hpp
                                 generated_diffusion.hpp
                                 generated_gradient.hpp)
-    set(reference_stencil_codes reference_diffusion.hpp
-                                reference_gradient.hpp)
+    set(reference_stencil_codes reference_diffusion.hpp)
     list(TRANSFORM generated_stencil_codes PREPEND generated/)
     list(TRANSFORM reference_stencil_codes PREPEND reference/)
     # NOTE: need to add the quotes here, otherwise CMAKE won't enforce the dependency on every file when setting OUTPUT of add_custom_command
