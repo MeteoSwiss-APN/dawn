@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -32,32 +32,35 @@ from SIR.SIR_pb2 import *
 from SIR.statements_pb2 import *
 from google.protobuf import json_format
 
-ExprType = TypeVar('Expr',
-                   Expr,
-                   UnaryOperator,
-                   BinaryOperator,
-                   AssignmentExpr,
-                   TernaryOperator,
-                   FunCallExpr,
-                   StencilFunCallExpr,
-                   StencilFunArgExpr,
-                   VarAccessExpr,
-                   FieldAccessExpr,
-                   LiteralAccessExpr,
-                   ReductionOverNeighborExpr,
-                   )
+ExprType = TypeVar(
+    "Expr",
+    Expr,
+    UnaryOperator,
+    BinaryOperator,
+    AssignmentExpr,
+    TernaryOperator,
+    FunCallExpr,
+    StencilFunCallExpr,
+    StencilFunArgExpr,
+    VarAccessExpr,
+    FieldAccessExpr,
+    LiteralAccessExpr,
+    ReductionOverNeighborExpr,
+)
 
-StmtType = TypeVar('Stmt',
-                   Stmt,
-                   BlockStmt,
-                   ExprStmt,
-                   ReturnStmt,
-                   VarDeclStmt,
-                   VerticalRegionDeclStmt,
-                   StencilCallDeclStmt,
-                   BoundaryConditionDeclStmt,
-                   IfStmt
-                   )
+StmtType = TypeVar(
+    "Stmt",
+    Stmt,
+    BlockStmt,
+    ExprStmt,
+    ReturnStmt,
+    VarDeclStmt,
+    VerticalRegionDeclStmt,
+    StencilCallDeclStmt,
+    BoundaryConditionDeclStmt,
+    IfStmt,
+)
+
 
 class LocationType(Enum):
     Cell = 0
@@ -110,8 +113,9 @@ def make_type(builtin_type_or_name, is_const: bool = False, is_volatile: bool = 
         t.builtin_type.CopyFrom(builtin_type)
     else:
         raise TypeError(
-            "expected 'builtin_type_or_name' to be either of type 'dawn.sir.BuiltinType.TypeID'" +
-            "or 'str' (got {})".format(type(builtin_type_or_name)))
+            "expected 'builtin_type_or_name' to be either of type 'dawn.sir.BuiltinType.TypeID'"
+            + "or 'str' (got {})".format(type(builtin_type_or_name))
+        )
     return t
 
 
@@ -128,7 +132,12 @@ def make_ast(root: List[StmtType]) -> AST:
     return ast
 
 
-def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1, 1, 1], location_type: LocationType = LocationType.Cell) -> Field:
+def make_field(
+    name: str,
+    is_temporary: bool = False,
+    dimensions: List[int] = [1, 1, 1],
+    location_type: LocationType = LocationType.Cell,
+) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
@@ -148,8 +157,7 @@ def make_field(name: str, is_temporary: bool = False, dimensions: List[int] = [1
     return field
 
 
-def make_interval(lower_level, upper_level, lower_offset: int = 0,
-                  upper_offset: int = 0) -> Interval:
+def make_interval(lower_level, upper_level, lower_offset: int = 0, upper_offset: int = 0) -> Interval:
     """ Create an Interval
 
     Representation of a vertical interval, given by a lower and upper bound where a bound
@@ -198,8 +206,12 @@ def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
     return stencil
 
 
-def make_sir(filename: str, stencils: List[Stencil], functions: List[StencilFunction] = [],
-             global_variables: GlobalVariableMap = None) -> SIR:
+def make_sir(
+    filename: str,
+    stencils: List[Stencil],
+    functions: List[StencilFunction] = [],
+    global_variables: GlobalVariableMap = None,
+) -> SIR:
     """ Create a SIR
 
     :param filename:          Source filename
@@ -230,8 +242,13 @@ def make_stencil_call(callee: str, arguments: List[str]) -> StencilCall:
     return call
 
 
-def make_vertical_region(ast: AST, interval: Interval,
-                         loop_order: VerticalRegion.LoopOrder) -> VerticalRegion:
+def make_vertical_region(
+    ast: AST,
+    interval: Interval,
+    loop_order: VerticalRegion.LoopOrder,
+    i_range: Interval = None,
+    j_range: Interval = None,
+) -> VerticalRegion:
     """ Create a VerticalRegion
 
     :param ast:         Syntax tree of the body of the vertical region
@@ -242,6 +259,10 @@ def make_vertical_region(ast: AST, interval: Interval,
     vr.ast.CopyFrom(ast)
     vr.interval.CopyFrom(interval)
     vr.loop_order = loop_order
+    if i_range is not None:
+        vr.i_range.CopyFrom(i_range)
+    if j_range is not None:
+        vr.j_range.CopyFrom(j_range)
     return vr
 
 
@@ -346,8 +367,7 @@ def make_return_stmt(expr: ExprType) -> ReturnStmt:
     return stmt
 
 
-def make_var_decl_stmt(type: Type, name: str, dimension: int = 0, op: str = "=",
-                       init_list=None) -> VarDeclStmt:
+def make_var_decl_stmt(type: Type, name: str, dimension: int = 0, op: str = "=", init_list=None) -> VarDeclStmt:
     """ Create an ReturnStmt
 
     :param type:        Type of the variable.
@@ -391,19 +411,19 @@ def make_vertical_region_decl_stmt(vertical_region: VerticalRegion) -> VerticalR
     return stmt
 
 
-def make_vertical_region_decl_stmt(ast: AST, interval: Interval,
-                                   loop_order: VerticalRegion.LoopOrder) -> VerticalRegionDeclStmt:
+def make_vertical_region_decl_stmt(
+    ast: AST, interval: Interval, loop_order: VerticalRegion.LoopOrder, IRange: Interval = None, JRange: Interval = None
+) -> VerticalRegionDeclStmt:
     """ Create a VerticalRegionDeclStmt
 
     :param vertical_region:   Vertical region.
     """
     stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order))
+    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order, IRange, JRange))
     return stmt
 
- 
-def make_boundary_condition_decl_stmt(functor: str,
-                                      fields: List[str]) -> BoundaryConditionDeclStmt:
+
+def make_boundary_condition_decl_stmt(functor: str, fields: List[str]) -> BoundaryConditionDeclStmt:
     """ Create a BoundaryConditionDeclStmt
 
     :param functor:  Identifier of the boundary condition functor.
@@ -455,6 +475,7 @@ def make_binary_operator(left: ExprType, op: str, right: ExprType) -> BinaryOper
     expr.right.CopyFrom(make_expr(right))
     return expr
 
+
 def make_assignment_stmt(left: ExprType, right: ExprType, op: str = "=") -> ExprStmt:
     """ Create an AssignmentStmt
 
@@ -463,6 +484,7 @@ def make_assignment_stmt(left: ExprType, right: ExprType, op: str = "=") -> Expr
     :param op:      Operation (e.g "=" or "+=").
     """
     return make_expr_stmt(make_assignment_expr(left, right, op))
+
 
 def make_assignment_expr(left: ExprType, right: ExprType, op: str = "=") -> AssignmentExpr:
     """ Create an AssignmentExpr
@@ -516,8 +538,9 @@ def make_stencil_fun_call_expr(callee: str, arguments: List[ExprType]) -> Stenci
     return expr
 
 
-def make_stencil_fun_arg_expr(direction: Dimension.Direction, offset: int = 0,
-                              argument_index: int = -1) -> StencilFunArgExpr:
+def make_stencil_fun_arg_expr(
+    direction: Dimension.Direction, offset: int = 0, argument_index: int = -1
+) -> StencilFunArgExpr:
     """ Create a StencilFunArgExpr
 
     :param direction:       Direction of the argument.
@@ -535,10 +558,13 @@ def make_stencil_fun_arg_expr(direction: Dimension.Direction, offset: int = 0,
     return expr
 
 
-def make_field_access_expr(name: str, offset = None,
-                           argument_map: List[int] = [-1, -1, -1],
-                           argument_offset: List[int] = [0, 0, 0],
-                           negate_offset: bool = False) -> FieldAccessExpr:
+def make_field_access_expr(
+    name: str,
+    offset=None,
+    argument_map: List[int] = [-1, -1, -1],
+    argument_offset: List[int] = [0, 0, 0],
+    negate_offset: bool = False,
+) -> FieldAccessExpr:
     """ Create a FieldAccessExpr.
 
     :param name:            Name of the field.
@@ -573,15 +599,14 @@ def make_field_access_expr(name: str, offset = None,
         expr.vertical_offset = offset[1]
 
     else:
-        assert(False)
+        assert False
     expr.argument_map.extend(argument_map)
     expr.argument_offset.extend(argument_offset)
     expr.negate_offset = negate_offset
     return expr
 
 
-def make_var_access_expr(name: str, index: ExprType = None,
-                         is_external: bool = False) -> VarAccessExpr:
+def make_var_access_expr(name: str, index: ExprType = None, is_external: bool = False) -> VarAccessExpr:
     """ Create a VarAccessExpr.
 
     :param name:        Name of the variable.
@@ -610,6 +635,7 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     expr.type.CopyFrom(builtin_type)
     return expr
 
+
 def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
@@ -628,78 +654,75 @@ def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) ->
 
 __all__ = [
     # SIR
-    'SIR',
-    'Stencil',
-    'StencilFunction',
-    'GlobalVariableMap',
-    'SourceLocation',
-    'AST',
-    'make_ast',
-    'Field',
-    'make_field',
-    'Interval',
-    'make_interval',
-    'BuiltinType',
-    'SourceLocation',
-    'LocationType',
-    'Type',
-    'make_type',
-    'Dimension',
-    'VerticalRegion',
-    'make_vertical_region',
-    'StencilCall',
-    'make_stencil_call',
-    'make_stencil',
-    'make_sir',
-
+    "SIR",
+    "Stencil",
+    "StencilFunction",
+    "GlobalVariableMap",
+    "SourceLocation",
+    "AST",
+    "make_ast",
+    "Field",
+    "make_field",
+    "Interval",
+    "make_interval",
+    "BuiltinType",
+    "SourceLocation",
+    "LocationType",
+    "Type",
+    "make_type",
+    "Dimension",
+    "VerticalRegion",
+    "make_vertical_region",
+    "StencilCall",
+    "make_stencil_call",
+    "make_stencil",
+    "make_sir",
     # Stmt
-    'Stmt',
-    'make_stmt',
-    'BlockStmt',
-    'make_block_stmt',
-    'ExprStmt',
-    'make_expr_stmt',
-    'ReturnStmt',
-    'make_return_stmt',
-    'VarDeclStmt',
-    'make_var_decl_stmt',
-    'VerticalRegionDeclStmt',
-    'make_vertical_region_decl_stmt',
-    'StencilCallDeclStmt',
-    'make_stencil_call_decl_stmt',
-    'BoundaryConditionDeclStmt',
-    'make_boundary_condition_decl_stmt',
-    'IfStmt',
-    'make_if_stmt',
-
+    "Stmt",
+    "make_stmt",
+    "BlockStmt",
+    "make_block_stmt",
+    "ExprStmt",
+    "make_expr_stmt",
+    "ReturnStmt",
+    "make_return_stmt",
+    "VarDeclStmt",
+    "make_var_decl_stmt",
+    "VerticalRegionDeclStmt",
+    "make_vertical_region_decl_stmt",
+    "StencilCallDeclStmt",
+    "make_stencil_call_decl_stmt",
+    "BoundaryConditionDeclStmt",
+    "make_boundary_condition_decl_stmt",
+    "IfStmt",
+    "make_if_stmt",
     # Expr
-    'Expr',
-    'make_expr',
-    'UnaryOperator',
-    'make_unary_operator',
-    'BinaryOperator',
-    'make_binary_operator',
-    'AssignmentExpr',
-    'make_assignment_expr',
-    'make_assignment_stmt',
-    'TernaryOperator',
-    'make_ternary_operator',
-    'FunCallExpr',
-    'make_fun_call_expr',
-    'StencilFunCallExpr',
-    'make_stencil_fun_call_expr',
-    'StencilFunArgExpr',
-    'make_stencil_fun_arg_expr',
-    'VarAccessExpr',
-    'make_var_access_expr',
-    'FieldAccessExpr',
-    'make_field_access_expr',
-    'LiteralAccessExpr',
-    'make_literal_access_expr',
-    'ReductionOverNeighborExpr',
-    'make_reduction_over_neighbor_expr',
-
+    "Expr",
+    "make_expr",
+    "UnaryOperator",
+    "make_unary_operator",
+    "BinaryOperator",
+    "make_binary_operator",
+    "AssignmentExpr",
+    "make_assignment_expr",
+    "make_assignment_stmt",
+    "TernaryOperator",
+    "make_ternary_operator",
+    "FunCallExpr",
+    "make_fun_call_expr",
+    "StencilFunCallExpr",
+    "make_stencil_fun_call_expr",
+    "StencilFunArgExpr",
+    "make_stencil_fun_arg_expr",
+    "VarAccessExpr",
+    "make_var_access_expr",
+    "FieldAccessExpr",
+    "make_field_access_expr",
+    "LiteralAccessExpr",
+    "make_literal_access_expr",
+    "ReductionOverNeighborExpr",
+    "make_reduction_over_neighbor_expr",
     # Convenience functions
-    'to_json',
-    'from_json',
+    "to_json",
+    "from_json",
 ]

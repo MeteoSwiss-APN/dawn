@@ -454,9 +454,15 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
   }
 
   auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
-  if(!bool(intervalComp)) {
+  if(!static_cast<bool>(intervalComp)) {
     output += "[VerticalRegion mismatch] Intervals do not match\n";
     output += intervalComp.why();
+    return CompareResult{output, false};
+  } else if(IterationSpace[0] != rhs.IterationSpace[0]) {
+    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
+    return CompareResult{output, false};
+  } else if(IterationSpace[1] != rhs.IterationSpace[1]) {
+    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
     return CompareResult{output, false};
   }
 
@@ -465,12 +471,14 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
     output += "[VerticalRegion mismatch] ASTs do not match\n";
     output += astComp.first;
     return CompareResult{output, false};
+  } else {
+    return CompareResult{output, true};
   }
-  return CompareResult{output, true};
 }
 
 bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
-  return bool(this->comparison(rhs));
+  // casted to bool by return statement
+  return this->comparison(rhs);
 }
 
 namespace sir {
@@ -647,7 +655,10 @@ std::string sir::Value::toString() const {
 }
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  auto retval =
+      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  retval->IterationSpace = IterationSpace;
+  return retval;
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }

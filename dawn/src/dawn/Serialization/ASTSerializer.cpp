@@ -18,6 +18,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/SIR/ASTStmt.h"
+#include "dawn/SIR/SIR.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <iterator>
@@ -108,21 +109,22 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  extent_dispatch(extents.horizontalExtent(),
-                  [&](iir::CartesianExtent const& hExtent) {
-                    auto cartesianExtent = protoExtents.mutable_cartesian_extent();
-                    auto protoIExtent = cartesianExtent->mutable_i_extent();
-                    protoIExtent->set_minus(hExtent.iMinus());
-                    protoIExtent->set_plus(hExtent.iPlus());
-                    auto protoJExtent = cartesianExtent->mutable_j_extent();
-                    protoJExtent->set_minus(hExtent.jMinus());
-                    protoJExtent->set_plus(hExtent.jPlus());
-                  },
-                  [&](iir::UnstructuredExtent const& hExtent) {
-                    auto protoHExtent = protoExtents.mutable_unstructured_extent();
-                    protoHExtent->set_has_extent(hExtent.hasExtent());
-                  },
-                  [&] { protoExtents.mutable_zero_extent(); });
+  extent_dispatch(
+      extents.horizontalExtent(),
+      [&](iir::CartesianExtent const& hExtent) {
+        auto cartesianExtent = protoExtents.mutable_cartesian_extent();
+        auto protoIExtent = cartesianExtent->mutable_i_extent();
+        protoIExtent->set_minus(hExtent.iMinus());
+        protoIExtent->set_plus(hExtent.iPlus());
+        auto protoJExtent = cartesianExtent->mutable_j_extent();
+        protoJExtent->set_minus(hExtent.jMinus());
+        protoJExtent->set_plus(hExtent.jPlus());
+      },
+      [&](iir::UnstructuredExtent const& hExtent) {
+        auto protoHExtent = protoExtents.mutable_unstructured_extent();
+        protoHExtent->set_has_extent(hExtent.hasExtent());
+      },
+      [&] { protoExtents.mutable_zero_extent(); });
 
   auto const& vExtent = extents.verticalExtent();
   auto protoVExtent = protoExtents.mutable_vertical_extent();
@@ -360,6 +362,14 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
   setStmtData(protoStmt->mutable_data(), *stmt);
 
   protoStmt->set_id(stmt->getID());
+
+  // VerticalRegion.VerticalInterval
+  if(verticalRegion->IterationSpace[0]) {
+    setInterval(verticalRegionProto->mutable_i_range(), &verticalRegion->IterationSpace[0].value());
+  }
+  if(verticalRegion->IterationSpace[1]) {
+    setInterval(verticalRegionProto->mutable_j_range(), &verticalRegion->IterationSpace[1].value());
+  }
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
@@ -555,16 +565,16 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   protoExpr->set_name(expr->getName());
 
   auto const& offset = expr->getOffset();
-  ast::offset_dispatch(offset.horizontalOffset(),
-                       [&](ast::CartesianOffset const& hOffset) {
-                         protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
-                         protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
-                       },
-                       [&](ast::UnstructuredOffset const& hOffset) {
-                         protoExpr->mutable_unstructured_offset()->set_has_offset(
-                             hOffset.hasOffset());
-                       },
-                       [&] { protoExpr->mutable_zero_offset(); });
+  ast::offset_dispatch(
+      offset.horizontalOffset(),
+      [&](ast::CartesianOffset const& hOffset) {
+        protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
+        protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
+      },
+      [&](ast::UnstructuredOffset const& hOffset) {
+        protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
+      },
+      [&] { protoExpr->mutable_zero_offset(); });
   protoExpr->set_vertical_offset(offset.verticalOffset());
 
   for(int argOffset : expr->getArgumentOffset())
@@ -954,6 +964,15 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType, stmtProto.data()),
                                                          verticalRegion, loc);
     stmt->setID(stmtProto.id());
+    if(stmtProto.vertical_region().has_i_range()) {
+      auto range = stmtProto.vertical_region().i_range();
+      verticalRegion->IterationSpace[0] = *makeInterval(range);
+    }
+    if(stmtProto.vertical_region().has_j_range()) {
+      auto range = stmtProto.vertical_region().j_range();
+      verticalRegion->IterationSpace[1] = *makeInterval(range);
+      ;
+    }
     return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {

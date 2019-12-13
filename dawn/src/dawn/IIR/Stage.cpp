@@ -35,8 +35,9 @@ namespace iir {
 Stage::Stage(const StencilMetaInformation& metaData, int StageID)
     : metaData_(metaData), StageID_(StageID), iterationSpace_() {}
 
-Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval)
-    : metaData_(metaData), StageID_(StageID), iterationSpace_() {
+Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval,
+             IterationSpace iterationSpace)
+    : metaData_(metaData), StageID_(StageID), iterationSpace_(iterationSpace) {
   insertChild(std::make_unique<DoMethod>(interval, metaData));
 }
 
