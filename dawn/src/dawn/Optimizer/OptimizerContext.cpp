@@ -378,7 +378,7 @@ public:
     // Note that we may need to operate on copies of the ASTs because we want to have a *unique*
     // mapping of AST nodes to AccessIDs, hence we clone the ASTs of the vertical regions of
     // stencil calls
-    bool cloneAST = scope_.size() > 1;
+    const bool cloneAST = scope_.size() > 1;
     std::shared_ptr<iir::AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
@@ -386,18 +386,10 @@ public:
         metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
                        ? LoopOrderKind::Forward
                        : LoopOrderKind::Backward);
+    Stage::IterationSpace iterationspace = {stmt->getVerticalRegion()->IterationSpace[0],
+                                            stmt->getVerticalRegion()->IterationSpace[1]};
     std::unique_ptr<Stage> stage =
-        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
-    // set the iteration space
-    // auto is = stmt->getVerticalRegion()->iterationSpace_;
-    int size = stmt->getVerticalRegion()->iterationSpace_.size();
-    std::array<std::optional<iir::Interval>, 2> intervals;
-    for(int i = 0; i < size; ++i) {
-      if(stmt->getVerticalRegion()->iterationSpace_[i]) {
-        intervals[i] = stmt->getVerticalRegion()->iterationSpace_[i].value();
-      }
-    }
-    stage->setIterationSpace(intervals);
+        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval, iterationspace);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 

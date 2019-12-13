@@ -339,10 +339,10 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   auto verticalRegion = std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 
   if(verticalRegionProto.has_i_range()) {
-    verticalRegion->iterationSpace_[0] = *makeInterval(verticalRegionProto.i_range());
+    verticalRegion->IterationSpace[0] = *makeInterval(verticalRegionProto.i_range());
   }
   if(verticalRegionProto.has_j_range()) {
-    verticalRegion->iterationSpace_[1] = *makeInterval(verticalRegionProto.j_range());
+    verticalRegion->IterationSpace[1] = *makeInterval(verticalRegionProto.j_range());
   }
 
   return verticalRegion;
