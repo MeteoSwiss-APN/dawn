@@ -311,7 +311,8 @@ private:
           }
           // fill with standard intervals if nothing is specified
           std::string replacement = "for(auto __k_indexrange__ : {";
-          for(int pos = 0, resolved = 0; resolved < 3; resolved++) {
+          int pos = 0;
+          for(int resolved = 0; resolved < 3; resolved++) {
             if(pos < indexRange.size() && *indexRange[pos].begin() == (char)(resolved + 105)) {
               replacement += indexRange[pos];
               replacement += ",";
@@ -331,6 +332,11 @@ private:
             }
           }
           replacement += "})";
+          if(pos != indexRange.size()) {
+            reportError(token_.getLocation(),
+                        "failed parsing iterationspace arguments " + intervalBounds);
+            return;
+          }
           registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
                               replacement);
         }
