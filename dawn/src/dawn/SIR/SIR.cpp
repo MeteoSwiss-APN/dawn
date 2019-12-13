@@ -465,14 +465,6 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
     output += "[VerticalRegion mismatch] iteration space in j do not match\n";
     return CompareResult{output, false};
   }
-  if(iterationSpace_[0] != rhs.iterationSpace_[0]) {
-    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
-    return CompareResult{output, false};
-  }
-  if(iterationSpace_[1] != rhs.iterationSpace_[1]) {
-    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
-    return CompareResult{output, false};
-  }
 
   auto astComp = compareAst(Ast, rhs.Ast);
   if(!astComp.second) {

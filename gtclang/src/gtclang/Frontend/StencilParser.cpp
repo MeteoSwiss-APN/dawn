@@ -1185,11 +1185,11 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
       SIRAST, kIntervalPair.first, kIntervalPair.second, getLocation(iterationSpaceDecl));
   if(iInterval->LowerLevel != dawn::sir::Interval::Start || iInterval->LowerOffset != 0 ||
      iInterval->UpperLevel != dawn::sir::Interval::End || iInterval->UpperOffset != 0) {
-    SIRVerticalRegion->iterationSpace_[0] = *iInterval;
+    SIRVerticalRegion->IterationSpace[0] = *iInterval;
   }
   if(jInterval->LowerLevel != dawn::sir::Interval::Start || jInterval->LowerOffset != 0 ||
      jInterval->UpperLevel != dawn::sir::Interval::End || jInterval->UpperOffset != 0) {
-    SIRVerticalRegion->iterationSpace_[1] = *jInterval;
+    SIRVerticalRegion->IterationSpace[1] = *jInterval;
   }
 
   DAWN_LOG(INFO) << "Done parsing iteration space";

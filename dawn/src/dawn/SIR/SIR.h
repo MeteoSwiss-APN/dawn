@@ -311,7 +311,7 @@ struct VerticalRegion {
                  std::optional<Interval> iterationSpaceI, std::optional<Interval> iterationSpaceJ,
                  SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder),
-        iterationSpace_({iterationSpaceI, iterationSpaceJ}) {}
+        IterationSpace({iterationSpaceI, iterationSpaceJ}) {}
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;
