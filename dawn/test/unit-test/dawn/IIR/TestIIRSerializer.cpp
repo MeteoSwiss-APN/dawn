@@ -148,7 +148,7 @@ class createEmptyOptimizerContext : public ::testing::Test {
 protected:
   virtual void SetUp() override {
     dawn::DiagnosticsEngine diag;
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Structured);
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     dawn::OptimizerContext::OptimizerContextOptions options;
     context_ = std::make_unique<OptimizerContext>(diag, options, sir);
   }

@@ -211,7 +211,7 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
-  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Unstructured) {}
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Triangular) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);
@@ -223,7 +223,7 @@ public:
 
 class CartesianIIRBuilder : public IIRBuilder {
 public:
-  CartesianIIRBuilder() : IIRBuilder(ast::GridType::Structured) {}
+  CartesianIIRBuilder() : IIRBuilder(ast::GridType::Cartesian) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, Array3i const& offset);
   std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);

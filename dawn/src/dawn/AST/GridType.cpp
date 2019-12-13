@@ -5,10 +5,10 @@ namespace dawn {
 
 std::ostream& operator<<(std::ostream& os, const ast::GridType& gridType) {
   switch(gridType) {
-  case ast::GridType::Structured:
+  case ast::GridType::Cartesian:
     os << "structured";
     break;
-  case ast::GridType::Unstructured:
+  case ast::GridType::Triangular:
     os << "unstructured";
     break;
   }

@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Structured));
+                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   {
     UIDGenerator::getInstance()->reset();

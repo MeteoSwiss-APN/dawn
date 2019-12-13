@@ -4,7 +4,7 @@
 
 namespace dawn {
 namespace ast {
-enum class GridType { Structured, Unstructured };
+enum class GridType { Cartesian, Triangular };
 }
 std::ostream& operator<<(std::ostream& os, const ast::GridType& gridType);
 } // namespace dawn

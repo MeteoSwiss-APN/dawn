@@ -108,10 +108,10 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
 
   // SIR.GridType
   switch(sir->GridType) {
-  case ast::GridType::Structured:
+  case ast::GridType::Cartesian:
     sirProto.set_gridtype(proto::enums::GridType::Structured);
     break;
-  case ast::GridType::Unstructured:
+  case ast::GridType::Triangular:
     sirProto.set_gridtype(proto::enums::GridType::Unstructured);
     break;
   default:
@@ -614,10 +614,10 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     // SIR.GridType
     switch(sirProto.gridtype()) {
     case dawn::proto::enums::GridType::Structured:
-      sir = std::make_shared<SIR>(ast::GridType::Structured);
+      sir = std::make_shared<SIR>(ast::GridType::Cartesian);
       break;
     case dawn::proto::enums::GridType::Unstructured:
-      sir = std::make_shared<SIR>(ast::GridType::Unstructured);
+      sir = std::make_shared<SIR>(ast::GridType::Triangular);
       break;
     default:
       dawn_unreachable("unknown grid type");

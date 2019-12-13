@@ -159,7 +159,7 @@ parser.add_option("-v", "--verbose",
 
 (options, args) = parser.parse_args()
 
-hir = make_sir(GridType.Value('Structured'), "tridiagonal_solve.cpp", [
+hir = make_sir(GridType.Value('Cartesian'), "tridiagonal_solve.cpp", [
     make_stencil(
         "tridiagonal_solve",
         make_ast([

@@ -217,7 +217,7 @@ TEST(IIRDeserializerTest, CopyStencil) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Structured));
+                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // read IIR from file
   auto copy_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/copy_stencil.iir");
@@ -234,7 +234,7 @@ TEST(IIRDeserializerTest, LapStencil) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Structured));
+                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // read IIR from file
   auto lap_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/lap_stencil.iir");

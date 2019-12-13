@@ -34,8 +34,8 @@ namespace {
 class SIRTest : public ::testing::Test {
 protected:
   virtual void SetUp() override {
-    sir1 = std::make_unique<SIR>(ast::GridType::Structured);
-    sir2 = std::make_unique<SIR>(ast::GridType::Structured);
+    sir1 = std::make_unique<SIR>(ast::GridType::Cartesian);
+    sir2 = std::make_unique<SIR>(ast::GridType::Cartesian);
   }
 
   virtual void TearDown() override {
@@ -43,8 +43,8 @@ protected:
     sir2.release();
   }
 
-  std::unique_ptr<SIR> sir1 = std::make_unique<SIR>(ast::GridType::Structured);
-  std::unique_ptr<SIR> sir2 = std::make_unique<SIR>(ast::GridType::Structured);
+  std::unique_ptr<SIR> sir1 = std::make_unique<SIR>(ast::GridType::Cartesian);
+  std::unique_ptr<SIR> sir2 = std::make_unique<SIR>(ast::GridType::Cartesian);
 };
 
 class SIRStencilTest : public SIRTest {
