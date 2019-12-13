@@ -192,6 +192,9 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
 CompareResult SIR::comparison(const SIR& rhs) const {
   std::string output;
 
+  if(GridType != rhs.GridType)
+    return CompareResult{"[SIR mismatch] grid type differs\n", false};
+
   // Stencils
   if((Stencils.size() != rhs.Stencils.size()))
     return CompareResult{"[SIR mismatch] number of Stencils do not match\n", false};
@@ -567,6 +570,9 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   const char* indent2 = MakeIndent<2>::value;
 
   os << "SIR : " << Sir.Filename << "\n{\n";
+
+  os << "Grid type : " << Sir.GridType << "\n";
+
   for(const auto& stencilFunction : Sir.StencilFunctions) {
     os << "\n"
        << indent1 << "StencilFunction : " << stencilFunction->Name << "\n"
@@ -607,7 +613,8 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   return os;
 }
 
-SIR::SIR() : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()) {}
+SIR::SIR(const ast::GridType gridType)
+    : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
 
 void SIR::dump() { std::cout << *this << std::endl; }
 

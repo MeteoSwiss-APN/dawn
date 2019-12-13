@@ -64,7 +64,7 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     return vertical_region_stmt
 
 
-hir = make_sir("copy_stencil.cpp", [
+hir = make_sir(GridType.Value('Cartesian'), "copy_stencil.cpp", [
     make_stencil(
         "copy_stencil",
         make_ast([create_vertical_region_stmt()]),

@@ -694,9 +694,10 @@ void OptimizerContext::fillIIR() {
   for(const auto& stencil : SIR_->Stencils) {
     DAWN_ASSERT(stencil);
     if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
-      stencilInstantiationMap_.insert(
-          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(
-                                            *getSIR()->GlobalVariableMap, iirStencilFunctions)));
+      stencilInstantiationMap_.insert(std::make_pair(
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType,
+                                                                     *getSIR()->GlobalVariableMap,
+                                                                     iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";

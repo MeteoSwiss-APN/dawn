@@ -30,6 +30,7 @@ sys_path.insert(1, __dawn_install_protobuf_module__)
 #
 from SIR.SIR_pb2 import *
 from SIR.statements_pb2 import *
+from SIR.enums_pb2 import *
 from google.protobuf import json_format
 
 ExprType = TypeVar(
@@ -207,6 +208,7 @@ def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
 
 
 def make_sir(
+    gridtype: GridType,
     filename: str,
     stencils: List[Stencil],
     functions: List[StencilFunction] = [],
@@ -214,6 +216,7 @@ def make_sir(
 ) -> SIR:
     """ Create a SIR
 
+    :param gridtype:          Grid type
     :param filename:          Source filename
     :param stencils:          list of stencils that compose the SIR
     :param functions:         list of functions used in the SIR
@@ -221,6 +224,7 @@ def make_sir(
     """
 
     sir = SIR()
+    sir.gridType = gridtype
     sir.filename = filename
     sir.stencils.extend(stencils)
     sir.stencil_functions.extend(functions)
@@ -654,6 +658,7 @@ def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) ->
 
 __all__ = [
     # SIR
+    "GridType",
     "SIR",
     "Stencil",
     "StencilFunction",

@@ -15,6 +15,7 @@
 #ifndef DAWN_SIR_SIR_H
 #define DAWN_SIR_SIR_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
@@ -444,7 +445,7 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>
 struct SIR : public dawn::NonCopyable {
 
   /// @brief Default Ctor that initializes all the shared pointers
-  SIR();
+  SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
   void dump();
@@ -467,6 +468,7 @@ struct SIR : public dawn::NonCopyable {
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
   std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
+  const ast::GridType GridType;
 };
 
 } // namespace dawn
