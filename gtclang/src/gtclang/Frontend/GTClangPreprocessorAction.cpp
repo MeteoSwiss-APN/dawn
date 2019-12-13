@@ -289,60 +289,51 @@ private:
       // {ARG_1, ARG_2, ARG_3, ARG_4, ARG_5, ARG_6})`
       if(token_.is(tok::identifier) && token_.getIdentifierInfo()->getName() == "iteration_space") {
         unsigned peekedTokens = 0;
-
+        std::string intervalBounds;
         // Check for '('
         if(!PP_.LookAhead(peekedTokens++).is(tok::l_paren))
           continue;
-
-        // Check for 'ARG_1' until ','
-        std::string Arg1;
-        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg1))
-          continue;
-
-        // Consume ','
-        peekedTokens++;
-
-        // Check for 'ARG_2' until ','
-        std::string Arg2;
-        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg2))
-          continue;
-
-        // Consume ','
-        peekedTokens++;
-
-        // Check for 'ARG_3' until ','
-        std::string Arg3;
-        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg3))
-          continue;
-
-        // Consume ','
-        peekedTokens++;
-
-        // Check for 'ARG_4' until ','
-        std::string Arg4;
-        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg4))
-          continue;
-
-        // Consume ','
-        peekedTokens++;
-
-        // Check for 'ARG_5' until ','
-        std::string Arg5;
-        if(!peekAndAccumulateUntil(tok::comma, peekedTokens, Arg5))
-          continue;
-
-        // Consume ','
-        peekedTokens++;
-
-        // Check for 'ARG_6' until ')'
-        std::string Arg6;
-        if(!peekAndAccumulateUntil(tok::r_paren, peekedTokens, Arg6))
-          continue;
-
-        registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
-                            dawn::format("for(auto __k_indexrange__ : {%s, %s, %s, %s, %s, %s})",
-                                         Arg1, Arg2, Arg3, Arg4, Arg5, Arg6));
-
+        if(peekAndAccumulateUntil(tok::r_paren, peekedTokens, intervalBounds)) {
+          // Split the comma separated string
+          llvm::SmallVector<StringRef, 6> curBounds;
+          if(intervalBounds.size())
+            StringRef(intervalBounds).split(curBounds, ',');
+          // sort them in pairs to have i - j - k ordering
+          std::vector<std::pair<std::string, std::string>> pairs;
+          for(int i = 0, size = curBounds.size(); i < size; i += 2) {
+            pairs.emplace_back(curBounds[i], curBounds[i + 1]);
+          }
+          std::sort(pairs.begin(), pairs.end());
+          std::vector<std::string> indexRange;
+          for(auto elem : pairs) {
+            indexRange.push_back(elem.first);
+            indexRange.push_back(elem.second);
+          }
+          // fill with standard intervals if nothing is specified
+          std::string replacement = "for(auto __k_indexrange__ : {";
+          for(int pos = 0, resolved = 0; resolved < 3; resolved++) {
+            if(pos < indexRange.size() && *indexRange[pos].begin() == (char)(resolved + 105)) {
+              replacement += indexRange[pos];
+              replacement += ",";
+              replacement += indexRange[pos + 1];
+              if(resolved != 2) {
+                replacement += ",";
+              }
+              pos += 2;
+            } else {
+              replacement += (char)(resolved + 105);
+              replacement += "_start, ";
+              replacement += (char)(resolved + 105);
+              replacement += "_end";
+              if(resolved != 2) {
+                replacement += ",";
+              }
+            }
+          }
+          replacement += "})";
+          registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
+                              replacement);
+        }
         consumeTokens(peekedTokens);
       }
 
