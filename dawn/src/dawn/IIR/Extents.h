@@ -149,8 +149,8 @@ public:
   HorizontalExtent(ast::cartesian_);
   HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus);
 
-  HorizontalExtent(ast::unstructured_);
-  HorizontalExtent(ast::unstructured_, bool hasExtent);
+  HorizontalExtent(ast::triangular_);
+  HorizontalExtent(ast::triangular_, bool hasExtent);
 
   HorizontalExtent(HorizontalExtent const& other);
   HorizontalExtent(HorizontalExtent&& other) = default;
@@ -237,8 +237,8 @@ public:
           int extent3minus, int extent3plus);
   explicit Extents(ast::cartesian_);
 
-  Extents(ast::unstructured_, bool hasExtent, Extent const& vExtent);
-  explicit Extents(ast::unstructured_);
+  Extents(ast::triangular_, bool hasExtent, Extent const& vExtent);
+  explicit Extents(ast::triangular_);
   /// @}
 
   bool hasVerticalCenter() const;

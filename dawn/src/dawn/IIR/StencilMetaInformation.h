@@ -136,7 +136,7 @@ public:
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
-  sir::FieldDimension getFieldDimensionsMask(int fieldID) const;
+  sir::FieldDimensions getFieldDimensions(int fieldID) const;
 
   template <FieldAccessType TFieldAccessType>
   bool hasAccessesOfType() const {
@@ -155,11 +155,11 @@ public:
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
   int addField(FieldAccessType type, const std::string& name,
-               const sir::FieldDimension& fieldDimensions,
-               std::vector<Expr::LocationType> locationTypes = {ast::Expr::LocationType::Cells});
+               const sir::FieldDimensions& fieldDimensions,
+               std::vector<ast::LocationType> locationTypes = {ast::LocationType::Cells});
 
   int addTmpField(FieldAccessType type, const std::string& basename,
-                  const sir::FieldDimension& fieldDimensions);
+                  const sir::FieldDimensions& fieldDimensions);
 
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
@@ -345,7 +345,7 @@ public:
     stencilFunInstantiationCandidate_.emplace(stencilFun, candidate);
   }
 
-  const std::unordered_map<int, sir::FieldDimension>& getFieldIDToDimsMap() const {
+  const std::unordered_map<int, sir::FieldDimensions>& getFieldIDToDimsMap() const {
     return fieldIDToInitializedDimensionsMap_;
   }
 
@@ -355,8 +355,8 @@ public:
   }
 
   bool getIsUnstructuredFromAccessID(int AccessID) const;
-  std::vector<dawn::ast::Expr::LocationType> getLocationTypeFromAccessID(int ID) const;
-  void addAccessIDLocationPair(int ID, const std::vector<Expr::LocationType>& locations);
+  std::vector<dawn::ast::LocationType> getLocationTypeFromAccessID(int ID) const;
+  void addAccessIDLocationPair(int ID, const std::vector<ast::LocationType>& locations);
 
 private:
   //================================================================================================
@@ -371,7 +371,7 @@ private:
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
 
   /// Stores the location type for every field as a map to the AccessID
-  std::unordered_map<int, std::vector<ast::Expr::LocationType>> FieldAccessIDToLocationTypeMap_;
+  std::unordered_map<int, std::vector<ast::LocationType>> FieldAccessIDToLocationTypeMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
@@ -390,7 +390,7 @@ private:
       fieldnameToBoundaryConditionMap_;
 
   /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
-  std::unordered_map<int, dawn::sir::FieldDimension> fieldIDToInitializedDimensionsMap_;
+  std::unordered_map<int, dawn::sir::FieldDimensions> fieldIDToInitializedDimensionsMap_;
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;

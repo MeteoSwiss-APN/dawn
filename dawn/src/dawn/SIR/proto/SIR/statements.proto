@@ -30,21 +30,27 @@ message SourceLocation {
   int32 Column = 2; // Column in the `Line`
 }
 
+message FieldDimensions {
+  int32 maskCartI = 1;                 // mask for cartesian dimensions
+  int32 maskCartJ = 2;
+  enum LocationType {
+    Edge = 0;
+    Vertex = 1;
+    Cell = 2;
+  }
+ 
+  repeated LocationType location_type = 3;   // set of location types (dense, sparse...)
+
+  int32 maskK = 4;                        // mask for vertical dimension
+}
+
 // @brief Description of a field argument of a Stencil or StencilFunction
 // @ingroup sir_proto
 message Field {
   string name = 1;                     // Name of the field
   SourceLocation loc = 2;              // Source location
   bool is_temporary = 3;               // Is the field a temporary?
-  repeated int32 field_dimensions = 4; // Legal dimension of the field initialized by the user
-
-  enum LocationType {
-    Edge = 0;
-    Vertex = 1;
-    Cell = 2;
-  }
-  // Location where the field is defined on
-  repeated LocationType location_type = 5;
+  FieldDimensions field_dimensions = 4;
 }
 
 // @brief Directional argument of a StencilFunction

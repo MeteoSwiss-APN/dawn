@@ -45,8 +45,8 @@ TEST(OffsetsTest, CartesianConstruction) {
   EXPECT_EQ(offset1, offset5);
 }
 TEST(OffsetsTest, UnstructuredConstruction) {
-  Offsets offset1{unstructured, true, 10};
-  Offsets offset2{unstructured, false, 14};
+  Offsets offset1{triangular, true, 10};
+  Offsets offset2{triangular, false, 14};
 
   // copy assignment
   offset2 = offset1;
@@ -103,7 +103,7 @@ TEST(OffsetsTest, OffsetCast) {
   EXPECT_EQ(cOffset.offsetJ(), 2);
   EXPECT_THROW(offset_cast<UnstructuredOffset const&>(offset.horizontalOffset()), std::bad_cast);
 
-  Offsets offset2{unstructured, true, 0};
+  Offsets offset2{triangular, true, 0};
   auto const& uOffset2 = offset_cast<UnstructuredOffset const&>(offset2.horizontalOffset());
   EXPECT_TRUE(uOffset2.hasOffset());
   EXPECT_THROW(offset_cast<CartesianOffset const&>(offset2.horizontalOffset()), std::bad_cast);
@@ -125,17 +125,17 @@ TEST(OffsetsTest, Comparison) {
   EXPECT_EQ(Offsets(cartesian), Offsets());
   EXPECT_NE(Offsets(), Offsets(cartesian, 0, 0, 1));
 
-  EXPECT_EQ(Offsets(unstructured), Offsets());
-  EXPECT_EQ(Offsets(unstructured, false, 0), Offsets());
-  EXPECT_NE(Offsets(unstructured, true, 0), Offsets());
-  EXPECT_NE(Offsets(unstructured, false, 1), Offsets());
+  EXPECT_EQ(Offsets(triangular), Offsets());
+  EXPECT_EQ(Offsets(triangular, false, 0), Offsets());
+  EXPECT_NE(Offsets(triangular, true, 0), Offsets());
+  EXPECT_NE(Offsets(triangular, false, 1), Offsets());
 
-  EXPECT_EQ(Offsets(unstructured, false, 1), Offsets(unstructured, false, 1));
-  EXPECT_NE(Offsets(unstructured, false, 1), Offsets(unstructured, false, 0));
-  EXPECT_NE(Offsets(unstructured, true, 1), Offsets(unstructured, false, 1));
+  EXPECT_EQ(Offsets(triangular, false, 1), Offsets(triangular, false, 1));
+  EXPECT_NE(Offsets(triangular, false, 1), Offsets(triangular, false, 0));
+  EXPECT_NE(Offsets(triangular, true, 1), Offsets(triangular, false, 1));
 
-  EXPECT_THROW(Offsets(cartesian, 1, 2, 3) == Offsets(unstructured, false, 1), std::bad_cast);
-  EXPECT_THROW(Offsets(cartesian) == Offsets(unstructured), std::bad_cast);
+  EXPECT_THROW(Offsets(cartesian, 1, 2, 3) == Offsets(triangular, false, 1), std::bad_cast);
+  EXPECT_THROW(Offsets(cartesian) == Offsets(triangular), std::bad_cast);
 }
 
 TEST(OffsetsTest, AddCartesian) {
@@ -153,22 +153,22 @@ TEST(OffsetsTest, AddCartesian) {
   EXPECT_EQ(offset2, Offsets(cartesian, 2, 4, 6));
 }
 TEST(OffsetsTest, AddUnstructured) {
-  Offsets offset{unstructured, false, 4};
+  Offsets offset{triangular, false, 4};
   offset += offset;
-  EXPECT_EQ(offset, Offsets(unstructured, false, 8));
+  EXPECT_EQ(offset, Offsets(triangular, false, 8));
 
   offset += Offsets();
-  EXPECT_EQ(offset, Offsets(unstructured, false, 8));
+  EXPECT_EQ(offset, Offsets(triangular, false, 8));
 
   Offsets offset2{};
   offset2 += offset;
-  EXPECT_EQ(offset2, Offsets(unstructured, false, 8));
+  EXPECT_EQ(offset2, Offsets(triangular, false, 8));
 
-  Offsets offset3 = offset + Offsets{unstructured, true, 0};
-  EXPECT_EQ(offset3, Offsets(unstructured, true, 8));
+  Offsets offset3 = offset + Offsets{triangular, true, 0};
+  EXPECT_EQ(offset3, Offsets(triangular, true, 8));
 
-  EXPECT_THROW(Offsets(unstructured) + Offsets(cartesian), std::bad_cast);
-  EXPECT_THROW(Offsets(cartesian) + Offsets(unstructured), std::bad_cast);
+  EXPECT_THROW(Offsets(triangular) + Offsets(cartesian), std::bad_cast);
+  EXPECT_THROW(Offsets(cartesian) + Offsets(triangular), std::bad_cast);
 }
 
 TEST(OffsetsTest, isZero) {
@@ -180,15 +180,15 @@ TEST(OffsetsTest, isZero) {
   EXPECT_FALSE(Offsets(cartesian, 0, 1, 0).isZero());
   EXPECT_FALSE(Offsets(cartesian, 0, 0, 1).isZero());
 
-  EXPECT_TRUE(Offsets(unstructured, false, 0).isZero());
-  EXPECT_FALSE(Offsets(unstructured, true, 0).isZero());
-  EXPECT_FALSE(Offsets(unstructured, false, 1).isZero());
+  EXPECT_TRUE(Offsets(triangular, false, 0).isZero());
+  EXPECT_FALSE(Offsets(triangular, true, 0).isZero());
+  EXPECT_FALSE(Offsets(triangular, false, 1).isZero());
 }
 
 TEST(OffsetsTest, verticalOffset) {
   EXPECT_EQ(Offsets().verticalOffset(), 0);
   EXPECT_EQ(Offsets(cartesian, 1, 2, 3).verticalOffset(), 3);
-  EXPECT_EQ(Offsets(unstructured, true, 3).verticalOffset(), 3);
+  EXPECT_EQ(Offsets(triangular, true, 3).verticalOffset(), 3);
 }
 
 TEST(OffsetsTest, to_string) {
@@ -198,8 +198,8 @@ TEST(OffsetsTest, to_string) {
   EXPECT_EQ(to_string(Offsets(cartesian, 0, 0, 1)), "<no_horizontal_offset>,1");
   EXPECT_EQ(to_string(Offsets(cartesian, 1, 0, 1)), "1,0,1");
 
-  EXPECT_EQ(to_string(Offsets(unstructured, false, 4)), "<no_horizontal_offset>,4");
-  EXPECT_EQ(to_string(Offsets(unstructured, true, 2)), "<has_horizontal_offset>,2");
+  EXPECT_EQ(to_string(Offsets(triangular, false, 4)), "<no_horizontal_offset>,4");
+  EXPECT_EQ(to_string(Offsets(triangular, true, 2)), "<has_horizontal_offset>,2");
 
   EXPECT_EQ(to_string(Offsets()), "<no_horizontal_offset>,0");
 
@@ -212,8 +212,8 @@ TEST(OffsetsTest, to_string) {
   auto toString2 = [](std::string const& n, int i) { return i > 0 ? n : ""; };
   EXPECT_EQ(to_string(cartesian, Offsets(cartesian, 0, 2, 3), ";", toString2), "j;k");
 
-  EXPECT_EQ(to_string(unstructured, Offsets()), "<no_horizontal_offset>,0");
-  EXPECT_EQ(to_string(unstructured, Offsets(unstructured, false, 4)), "<no_horizontal_offset>,4");
+  EXPECT_EQ(to_string(triangular, Offsets()), "<no_horizontal_offset>,0");
+  EXPECT_EQ(to_string(triangular, Offsets(triangular, false, 4)), "<no_horizontal_offset>,4");
 }
 
 } // namespace

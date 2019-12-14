@@ -552,6 +552,10 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
+const HorizontalFieldDimension& FieldDimensions::getHorizontalFieldDimension() const {
+  return horizontalFieldDimension_;
+}
+
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {

@@ -248,21 +248,11 @@ static SourceLocation makeLocation(const T& proto) {
 }
 
 static std::shared_ptr<sir::Field> makeField(const dawn::proto::statements::Field& fieldProto) {
-  auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
+  auto field = std::make_shared<sir::Field>(fieldProto.name(),
+                                            makeFieldDimensions(fieldProto.field_dimensions()),
+                                            makeLocation(fieldProto));
   field->IsTemporary = fieldProto.is_temporary();
-  if(!fieldProto.field_dimensions().empty()) {
-    auto throwException = [&fieldProto](const char* member) {
-      throw std::runtime_error(
-          format("Field::%s (loc %s) exceeds 3 dimensions", member, makeLocation(fieldProto)));
-    };
-    if(fieldProto.field_dimensions().size() > 3)
-      throwException("field_dimensions");
 
-    field->fieldDimensions = sir::FieldDimension(
-        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
-                                                   (bool)fieldProto.field_dimensions()[1],
-                                                   (bool)fieldProto.field_dimensions()[2]}));
-  }
   return field;
 }
 
@@ -446,7 +436,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
-      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      offset = ast::Offsets{ast::triangular, hOffset.has_offset(), exprProto.vertical_offset()};
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:

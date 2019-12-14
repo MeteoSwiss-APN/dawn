@@ -158,7 +158,7 @@ iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
   }
   case ProtoExtents::kUnstructuredExtent: {
     auto const& hExtent = protoExtents->unstructured_extent();
-    return {iir::HorizontalExtent{ast::unstructured, hExtent.has_extent()}, vExtent};
+    return {iir::HorizontalExtent{ast::triangular, hExtent.has_extent()}, vExtent};
   }
   case ProtoExtents::kZeroExtent:
     return iir::Extents{iir::HorizontalExtent{}, vExtent};
@@ -210,35 +210,70 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
   setLocation(offsetProto->mutable_loc(), offset->Loc);
 }
 
+void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
+                        const sir::FieldDimensions& fieldDimensions) {
+  // TODO use gridtpype
+  if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
+         fieldDimensions.getHorizontalFieldDimension())) {
+    //  if(true) {
+    auto const& cartesianDimensions =
+        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+            fieldDimensions.getHorizontalFieldDimension());
+
+    protoFieldDimensions->set_maskcarti(cartesianDimensions.I());
+    protoFieldDimensions->set_maskcartj(cartesianDimensions.J());
+    protoFieldDimensions->set_maskk(fieldDimensions.K());
+  } else {
+    auto const& triangularDimensions =
+        dawn::sir::dimension_cast<dawn::sir::TriangularFieldDimension const&>(
+            fieldDimensions.getHorizontalFieldDimension());
+
+    proto::statements::FieldDimensions_LocationType protoLocationType;
+    if(triangularDimensions.isSparse()) {
+
+      for(int i = 0; i < triangularDimensions.getNeighborChain().size(); ++i) {
+        switch(triangularDimensions.getNeighborChain()[i]) {
+        case dawn::ast::LocationType::Cells:
+          protoLocationType = proto::statements::FieldDimensions_LocationType_Cell;
+          break;
+        case dawn::ast::LocationType::Edges:
+          protoLocationType = proto::statements::FieldDimensions_LocationType_Edge;
+          break;
+        case dawn::ast::LocationType::Vertices:
+          protoLocationType = proto::statements::FieldDimensions_LocationType_Vertex;
+          break;
+        default:
+          dawn_unreachable("unknown location type");
+        }
+        protoFieldDimensions->set_location_type(i, protoLocationType);
+      }
+    } else {
+      switch(triangularDimensions.getDenseLocation()) {
+      case dawn::ast::LocationType::Cells:
+        protoLocationType = proto::statements::FieldDimensions_LocationType_Cell;
+        break;
+      case dawn::ast::LocationType::Edges:
+        protoLocationType = proto::statements::FieldDimensions_LocationType_Edge;
+        break;
+      case dawn::ast::LocationType::Vertices:
+        protoLocationType = proto::statements::FieldDimensions_LocationType_Vertex;
+        break;
+      default:
+        dawn_unreachable("unknown location type");
+      }
+      protoFieldDimensions->set_location_type(0, protoLocationType);
+    }
+
+    protoFieldDimensions->set_maskk(fieldDimensions.K());
+  }
+}
+
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field) {
   fieldProto->set_name(field->Name);
   fieldProto->set_is_temporary(field->IsTemporary);
-
-  auto const dimensions = field->fieldDimensions;
-  auto const& structuredDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(dimensions);
-  fieldProto->add_field_dimensions(structuredDimensions.I());
-  fieldProto->add_field_dimensions(structuredDimensions.J());
-  fieldProto->add_field_dimensions(structuredDimensions.K());
-
   setLocation(fieldProto->mutable_loc(), field->Loc);
-  proto::statements::Field_LocationType protoLocationType;
-  for(int i = 0; i < field->locationTypes.size(); ++i) {
-    switch(field->locationTypes[i]) {
-    case dawn::ast::Expr::LocationType::Cells:
-      protoLocationType = proto::statements::Field_LocationType_Cell;
-      break;
-    case dawn::ast::Expr::LocationType::Edges:
-      protoLocationType = proto::statements::Field_LocationType_Edge;
-      break;
-    case dawn::ast::Expr::LocationType::Vertices:
-      protoLocationType = proto::statements::Field_LocationType_Vertex;
-      break;
-    default:
-      dawn_unreachable("unknown location type");
-    }
-    fieldProto->set_location_type(i, protoLocationType);
-  }
+
+  setFieldDimensions(fieldProto->mutable_field_dimensions(), field->fieldDimensions);
 }
 
 ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto,
@@ -624,41 +659,72 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
 // Deserialization
 //===------------------------------------------------------------------------------------------===//
 
-std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto) {
-  auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
-  field->IsTemporary = fieldProto.is_temporary();
-  if(!fieldProto.field_dimensions().empty()) {
-    auto throwException = [&fieldProto](const char* member) {
-      throw std::runtime_error(
-          format("Field::%s (loc %s) exceeds 3 dimensions", member, makeLocation(fieldProto)));
-    };
-    if(fieldProto.field_dimensions().size() > 3)
-      throwException("field_dimensions");
+sir::FieldDimensions
+makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions) {
 
-    field->fieldDimensions = sir::FieldDimension(
-        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
-                                                   (bool)fieldProto.field_dimensions()[1],
-                                                   (bool)fieldProto.field_dimensions()[2]}));
-  }
-  for(int i = 0; i < fieldProto.location_type_size(); ++i) {
-    ast::Expr::LocationType loc;
-    switch(fieldProto.location_type(i)) {
+  // TODO use grid type
+  if(protoFieldDimensions.location_type().empty()) {
+    return sir::FieldDimensions(
+        sir::HorizontalFieldDimension(
+            dawn::ast::cartesian, std::array<bool, 2>({(bool)protoFieldDimensions.maskcarti(),
+                                                       (bool)protoFieldDimensions.maskcartj()})),
+        (bool)protoFieldDimensions.maskk());
+  } else {
+    if(protoFieldDimensions.location_type_size() > 1) {
 
-    case proto::statements::Field_LocationType_Cell:
-      loc = ast::Expr::LocationType::Cells;
-      break;
-    case proto::statements::Field_LocationType_Edge:
-      loc = ast::Expr::LocationType::Edges;
-      break;
-    case proto::statements::Field_LocationType_Vertex:
-      loc = ast::Expr::LocationType::Vertices;
-      break;
-    default:
-      dawn_unreachable("unknown location type");
+      NeighborChain neighborChain;
+      for(int i = 0; i < protoFieldDimensions.location_type_size(); ++i) {
+        ast::LocationType loc;
+        switch(protoFieldDimensions.location_type(i)) {
+
+        case proto::statements::FieldDimensions_LocationType_Cell:
+          loc = ast::LocationType::Cells;
+          break;
+        case proto::statements::FieldDimensions_LocationType_Edge:
+          loc = ast::LocationType::Edges;
+          break;
+        case proto::statements::FieldDimensions_LocationType_Vertex:
+          loc = ast::LocationType::Vertices;
+          break;
+        default:
+          dawn_unreachable("unknown location type");
+        }
+        neighborChain.push_back(loc);
+      }
+
+      return sir::FieldDimensions(
+          sir::HorizontalFieldDimension(dawn::ast::triangular, neighborChain),
+          protoFieldDimensions.maskk());
+
+    } else {
+
+      ast::LocationType loc;
+      switch(protoFieldDimensions.location_type(0)) {
+
+      case proto::statements::FieldDimensions_LocationType_Cell:
+        loc = ast::LocationType::Cells;
+        break;
+      case proto::statements::FieldDimensions_LocationType_Edge:
+        loc = ast::LocationType::Edges;
+        break;
+      case proto::statements::FieldDimensions_LocationType_Vertex:
+        loc = ast::LocationType::Vertices;
+        break;
+      default:
+        dawn_unreachable("unknown location type");
+      }
+
+      return sir::FieldDimensions(sir::HorizontalFieldDimension(dawn::ast::triangular, loc),
+                                  protoFieldDimensions.maskk());
     }
-    field->locationTypes.clear();
-    field->locationTypes.push_back(loc);
   }
+}
+
+std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto) {
+  // TODO use grid type
+  auto field = std::make_shared<sir::Field>(fieldProto.name(),
+                                            makeFieldDimensions(fieldProto.field_dimensions()));
+  field->IsTemporary = fieldProto.is_temporary();
   return field;
 }
 
@@ -823,7 +889,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
-      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      offset = ast::Offsets{ast::triangular, hOffset.has_offset(), exprProto.vertical_offset()};
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:

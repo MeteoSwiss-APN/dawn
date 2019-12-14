@@ -212,16 +212,12 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   }
 
   // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 10;
-  auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtolegaldimensions();
+  auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtodimensions();
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
-    auto const& cartDimensions =
-        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
-            IDToLegalDimension.second);
-    proto::iir::Array3i array;
-    array.set_int1(cartDimensions.I());
-    array.set_int2(cartDimensions.J());
-    array.set_int3(cartDimensions.K());
-    protoInitializedDimensionsMap.insert({IDToLegalDimension.first, array});
+    dawn::proto::statements::FieldDimensions protoFieldDimensions;
+    setFieldDimensions(&protoFieldDimensions, IDToLegalDimension.second);
+
+    protoInitializedDimensionsMap.insert({IDToLegalDimension.first, protoFieldDimensions});
   }
 
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
@@ -538,12 +534,9 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                   makeStmt(FieldnameToBC.second, ast::StmtData::IIR_DATA_TYPE));
   }
 
-  for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
+  for(auto fieldIDInitializedDims : protoMetaData.fieldidtodimensions()) {
     metadata.fieldIDToInitializedDimensionsMap_.emplace(
-        fieldIDInitializedDims.first,
-        sir::FieldDimension(ast::cartesian, {fieldIDInitializedDims.second.int1() == 1,
-                                             fieldIDInitializedDims.second.int2() == 1,
-                                             fieldIDInitializedDims.second.int3() == 1}));
+        fieldIDInitializedDims.first, makeFieldDimensions(fieldIDInitializedDims.second));
   }
 
   for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())

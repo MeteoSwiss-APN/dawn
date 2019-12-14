@@ -122,7 +122,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 std::shared_ptr<iir::Expr>
 IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                    std::shared_ptr<iir::Expr>&& init,
-                                   ast::Expr::LocationType rhs_location) {
+                                   ast::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), rhs_location);
@@ -229,7 +229,7 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::Expr::LocationType location) {
+                                                ast::LocationType location) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
                                        sir::FieldDimension(ast::cartesian, {true, true, true}),
@@ -238,7 +238,7 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
 }
 
 std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(Field const& field, AccessType access) {
-  return at(field, access, ast::Offsets{ast::unstructured});
+  return at(field, access, ast::Offsets{ast::triangular});
 }
 
 std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
@@ -250,7 +250,7 @@ std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& f
                                                       AccessType access, HOffsetType hOffset,
                                                       int vOffset) {
   return at(field, AccessType::r,
-            ast::Offsets{ast::unstructured, hOffset == HOffsetType::withOffset, vOffset});
+            ast::Offsets{ast::triangular, hOffset == HOffsetType::withOffset, vOffset});
 }
 } // namespace iir
 } // namespace dawn

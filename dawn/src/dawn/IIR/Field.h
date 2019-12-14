@@ -49,7 +49,7 @@ private:
                       ///  from where the Field has been accessed
 
   bool unstrucutred_;
-  std::vector<ast::Expr::LocationType> location_ = {ast::Expr::LocationType::Cells};
+  std::vector<ast::LocationType> location_ = {ast::LocationType::Cells};
 
 public:
   Field(Field&& f) = default;
@@ -64,7 +64,7 @@ public:
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval,
-        const std::vector<ast::Expr::LocationType>& location)
+        const std::vector<ast::LocationType>& location)
       : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
         extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(true),
         location_(location) {}
@@ -136,7 +136,7 @@ public:
   ///
   void extendInterval(Interval const& interval) { interval_.merge(interval); }
 
-  const std::vector<ast::Expr::LocationType>& getLocation() { return location_; }
+  const std::vector<ast::LocationType>& getLocation() { return location_; }
 
   bool isUnstructured() { return unstrucutred_; }
 };

@@ -309,12 +309,9 @@ bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
          accessType == FieldAccessType::InterStencilTemporary;
 }
 
-sir::FieldDimension StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
+sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int FieldID) const {
   if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
-    return sir::FieldDimension(
-        ast::cartesian,
-        {true, true,
-         true}); // NOTE: return default unstructured in case of unstructured compilation here!
+    throw std::runtime_error("Field id does not exist");
   }
   return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
 }
@@ -342,7 +339,7 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
                                      const sir::FieldDimension& fieldDimensions,
-                                     std::vector<Expr::LocationType> locationTypes) {
+                                     std::vector<ast::LocationType> locationTypes) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
@@ -374,14 +371,14 @@ bool StencilMetaInformation::getIsUnstructuredFromAccessID(int AccessID) const {
   return FieldAccessIDToLocationTypeMap_.count(AccessID) != 0;
 }
 
-std::vector<ast::Expr::LocationType>
+std::vector<ast::LocationType>
 StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
   DAWN_ASSERT(getIsUnstructuredFromAccessID(AccessID));
   return FieldAccessIDToLocationTypeMap_.at(AccessID);
 }
 
 void StencilMetaInformation::addAccessIDLocationPair(
-    int AccessID, const std::vector<ast::Expr::LocationType>& locations) {
+    int AccessID, const std::vector<ast::LocationType>& locations) {
   DAWN_ASSERT(!FieldAccessIDToLocationTypeMap_.count(AccessID));
   FieldAccessIDToLocationTypeMap_.emplace(AccessID, locations);
 }

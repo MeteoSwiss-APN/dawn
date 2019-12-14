@@ -213,7 +213,7 @@ message StencilMetaInfo {
     map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 9;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 10;
+    map<int32, dawn.proto.statements.FieldDimensions> fieldIDtoDimensions = 10;
 
     // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> idToStencilCall = 11;

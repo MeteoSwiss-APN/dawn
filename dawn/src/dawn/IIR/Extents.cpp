@@ -156,7 +156,7 @@ HorizontalExtent::HorizontalExtent(ast::HorizontalOffset const& hOffset) {
                                                     cOffset.offsetJ());
                           },
                           [](ast::UnstructuredOffset const& uOffset) {
-                            return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+                            return HorizontalExtent(ast::triangular, uOffset.hasOffset());
                           },
                           []() { return HorizontalExtent(); });
 }
@@ -164,9 +164,9 @@ HorizontalExtent::HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<Car
 HorizontalExtent::HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
     : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
 
-HorizontalExtent::HorizontalExtent(ast::unstructured_)
+HorizontalExtent::HorizontalExtent(ast::triangular_)
     : impl_(std::make_unique<UnstructuredExtent>()) {}
-HorizontalExtent::HorizontalExtent(ast::unstructured_, bool hasExtent)
+HorizontalExtent::HorizontalExtent(ast::triangular_, bool hasExtent)
     : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {}
 
 HorizontalExtent::HorizontalExtent(HorizontalExtent const& other)
@@ -233,9 +233,9 @@ Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2
           Extent{extent3minus, extent3plus}) {}
 Extents::Extents(ast::cartesian_) : horizontalExtent_(ast::cartesian) {}
 
-Extents::Extents(ast::unstructured_, bool hasExtent, Extent const& vExtent)
-    : Extents(HorizontalExtent{ast::unstructured, hasExtent}, Extent{vExtent}) {}
-Extents::Extents(ast::unstructured_) : horizontalExtent_(ast::unstructured) {}
+Extents::Extents(ast::triangular_, bool hasExtent, Extent const& vExtent)
+    : Extents(HorizontalExtent{ast::triangular, hasExtent}, Extent{vExtent}) {}
+Extents::Extents(ast::triangular_) : horizontalExtent_(ast::triangular) {}
 
 void Extents::merge(const Extents& other) {
   horizontalExtent_.merge(other.horizontalExtent_);

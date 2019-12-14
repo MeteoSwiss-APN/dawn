@@ -132,7 +132,7 @@ void Stencil::updateFromChildren() {
 
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
     bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
-    auto specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
+    auto specifiedDimension = metadata_.getFieldDimensions(accessID);
 
     derivedInfo_.fields_.emplace(
         std::make_pair(accessID, FieldInfo{isTemporary, fieldName, specifiedDimension, field}));

@@ -49,11 +49,11 @@ public:
   // field is allowed to have extens in this dimension: [1,0,0] is a storage_i and cannot be
   // accessed with field[j+1]
   struct FieldInfo {
-    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimension dim, const Field& f)
+    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimensions dim, const Field& f)
         : Name(fieldName), Dimensions(dim), field(f), IsTemporary(t) {}
 
     std::string Name;
-    dawn::sir::FieldDimension Dimensions;
+    dawn::sir::FieldDimensions Dimensions;
     Field field;
     bool IsTemporary;
     json::json jsonDump() const;

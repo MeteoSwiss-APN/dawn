@@ -72,7 +72,7 @@ public:
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    ast::Expr::LocationType rhs_location);
+                                                    ast::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, Op operation);
@@ -148,7 +148,7 @@ public:
 
   // specialized builder for the stage that accepts a location type
   template <typename... DoMethods>
-  std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
+  std::unique_ptr<iir::Stage> stage(ast::LocationType type, DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     ret->setLocationType(type);
@@ -202,7 +202,7 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, HOffsetType hOffset, int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
-  Field field(std::string const& name, ast::Expr::LocationType location);
+  Field field(std::string const& name, ast::LocationType location);
 };
 
 class CartesianIIRBuilder : public IIRBuilder {

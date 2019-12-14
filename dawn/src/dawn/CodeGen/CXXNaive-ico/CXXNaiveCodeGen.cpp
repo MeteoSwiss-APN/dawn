@@ -164,13 +164,13 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   StencilWrapperConstructor.addArg("const dawn::mesh_t<LibTag> &mesh");
   StencilWrapperConstructor.addArg("int k_size");
 
-  auto getLocationTypeString = [](ast::Expr::LocationType type) {
+  auto getLocationTypeString = [](ast::LocationType type) {
     switch(type) {
-    case ast::Expr::LocationType::Cells:
+    case ast::LocationType::Cells:
       return "cell_";
-    case ast::Expr::LocationType::Vertices:
+    case ast::LocationType::Vertices:
       return "vertex_";
-    case ast::Expr::LocationType::Edges:
+    case ast::LocationType::Edges:
       return "edge_";
     default:
       dawn_unreachable("unexpected type");
@@ -299,11 +299,11 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
       switch(info.field.getLocation()) {
-      case ast::Expr::LocationType::Cells:
+      case ast::LocationType::Cells:
         return std::string("dawn::cell_field_t<LibTag, double>");
-      case ast::Expr::LocationType::Vertices:
+      case ast::LocationType::Vertices:
         return std::string("dawn::vertex_field_t<LibTag, double>");
-      case ast::Expr::LocationType::Edges:
+      case ast::LocationType::Edges:
         return std::string("dawn::edge_field_t<LibTag, double>");
       default:
         dawn_unreachable("invalid location");
@@ -394,13 +394,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
-      auto getLoop = [](ast::Expr::LocationType type) {
+      auto getLoop = [](ast::LocationType type) {
         switch(type) {
-        case ast::Expr::LocationType::Cells:
+        case ast::LocationType::Cells:
           return "for(auto const& loc : getCells(LibTag{}, m_mesh))";
-        case ast::Expr::LocationType::Vertices:
+        case ast::LocationType::Vertices:
           return "for(auto const& loc : getVertices(LibTag{}, m_mesh))";
-        case ast::Expr::LocationType::Edges:
+        case ast::LocationType::Edges:
           return "for(auto const& loc : getEdges(LibTag{}, m_mesh))";
         default:
           dawn_unreachable("invalid type");

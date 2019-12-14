@@ -32,6 +32,10 @@ namespace dawn {
 namespace ast {
 class ASTVisitor;
 
+// TODO move this to a new LocationType file
+enum class LocationType { Cells, Edges, Vertices };
+using NeighborChain = std::vector<ast::LocationType>;
+
 /// @brief Abstract base class of all expressions
 /// @ingroup ast
 class Expr : public std::enable_shared_from_this<Expr> {
@@ -51,8 +55,6 @@ public:
     NOPExpr,
     ReductionOverNeighborExpr,
   };
-
-  enum class LocationType { Cells, Edges, Vertices };
 
   using ExprRangeType = ArrayRef<std::shared_ptr<Expr>>;
 
@@ -618,7 +620,7 @@ private:
   enum OperandKind { Rhs = 0, Init };
 
   std::string op_ = "+";
-  ast::Expr::LocationType rhs_location_;
+  ast::LocationType rhs_location_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
 
 public:
@@ -626,7 +628,7 @@ public:
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init,
-                            ast::Expr::LocationType rhs_location = ast::Expr::LocationType::Cells,
+                            ast::LocationType rhs_location = ast::LocationType::Cells,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -637,7 +639,7 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  ast::Expr::LocationType getRhsLocation() const;
+  ast::LocationType getRhsLocation() const;
 
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   std::shared_ptr<Expr> clone() const override;

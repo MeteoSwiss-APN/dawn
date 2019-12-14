@@ -185,7 +185,7 @@ void CudaCodeGen::generateStencilClasses(
 
     for(const auto& fieldPair : nonTempFields) {
       paramNameToType.emplace(fieldPair.second.Name,
-                              getStorageType(metadata.getFieldDimensionsMask(fieldPair.first)));
+                              getStorageType(metadata.getFieldDimensions(fieldPair.first)));
     }
 
     for(const auto& fieldPair : tempFields) {

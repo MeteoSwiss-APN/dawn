@@ -163,48 +163,95 @@ private:
 };
 
 class CartesianFieldDimension : public FieldDimensionImpl {
-  bool maskI_, maskJ_, maskK_;
+  bool maskI_, maskJ_;
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<CartesianFieldDimension>(maskI_, maskJ_, maskK_);
+    return std::make_unique<CartesianFieldDimension>(maskI_, maskJ_);
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
     auto const& otherCartesian = dynamic_cast<CartesianFieldDimension const&>(other);
-    return otherCartesian.I() == I() && otherCartesian.J() == J() && otherCartesian.K() == K();
+    return otherCartesian.I() == I() && otherCartesian.J() == J();
   }
 
 public:
   bool I() const { return maskI_; }
   bool J() const { return maskJ_; }
-  bool K() const { return maskK_; }
-  explicit CartesianFieldDimension(std::array<bool, 3> mask)
-      : maskI_(mask[0]), maskJ_(mask[1]), maskK_(mask[2]) {}
-  explicit CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
-      : maskI_(dimi), maskJ_(dimj), maskK_(dimk) {}
+  explicit CartesianFieldDimension(std::array<bool, 2> mask) : maskI_(mask[0]), maskJ_(mask[1]) {}
+  explicit CartesianFieldDimension(bool dimi, bool dimj) : maskI_(dimi), maskJ_(dimj) {}
 };
 
-class FieldDimension {
+class TriangularFieldDimension : public FieldDimensionImpl {
+  std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
+    return std::make_unique<TriangularFieldDimension>(neighborChain_);
+  }
+  virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
+    auto const& otherTriangular = dynamic_cast<TriangularFieldDimension const&>(other);
+    return std::equal(otherTriangular.getNeighborChain().begin(), neighborChain_.begin(),
+                      neighborChain_.end());
+  }
+
+  ast::NeighborChain neighborChain_;
+
+public:
+  explicit TriangularFieldDimension(ast::NeighborChain neighborChain)
+      : neighborChain_(neighborChain) {
+    DAWN_ASSERT(neighborChain.size() > 0);
+  }
+  const ast::NeighborChain& getNeighborChain() const {
+    DAWN_ASSERT(neighborChain_.size() > 1);
+    return neighborChain_;
+  }
+  ast::LocationType getDenseLocation() const { return neighborChain_[0]; }
+  ast::LocationType getLastSparseLocation() const { return neighborChain_.back(); }
+  bool isSparse() const { return neighborChain_.size() > 1; }
+};
+
+class HorizontalFieldDimension {
   std::unique_ptr<FieldDimensionImpl> impl_;
 
 public:
-  FieldDimension(dawn::ast::cartesian_, std::array<bool, 3> mask)
+  HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
 
-  FieldDimension& operator=(const FieldDimension& other) {
+  HorizontalFieldDimension(dawn::ast::triangular_, ast::NeighborChain neighborChain)
+      : impl_(std::make_unique<TriangularFieldDimension>(neighborChain)) {}
+
+  HorizontalFieldDimension(dawn::ast::triangular_, ast::LocationType locationType)
+      : impl_(std::make_unique<TriangularFieldDimension>(ast::NeighborChain{locationType})) {}
+
+  HorizontalFieldDimension& operator=(const HorizontalFieldDimension& other) {
     impl_ = other.impl_->clone();
     return *this;
   }
-  bool operator==(const FieldDimension& other) const { return *impl_ == *other.impl_; }
-  FieldDimension& operator=(FieldDimension&& other) = default;
+  bool operator==(const HorizontalFieldDimension& other) const { return *impl_ == *other.impl_; }
+  HorizontalFieldDimension& operator=(HorizontalFieldDimension&& other) = default;
 
-  FieldDimension(const FieldDimension& other) { *this = other; }
-  FieldDimension(FieldDimension&& other) = default;
+  HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
+  HorizontalFieldDimension(HorizontalFieldDimension&& other) = default;
 
   template <typename T>
-  friend T dimension_cast(FieldDimension const& dimension);
+  friend T dimension_cast(HorizontalFieldDimension const& dimension);
+  template <typename T>
+  friend bool dimension_isa(HorizontalFieldDimension const& dimension);
+};
+
+class FieldDimensions {
+public:
+  bool K() const { return maskK_; }
+  FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
+      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
+
+  bool operator==(const FieldDimensions& other) const {
+    return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
+  }
+  const HorizontalFieldDimension& getHorizontalFieldDimension() const;
+
+private:
+  HorizontalFieldDimension horizontalFieldDimension_;
+  bool maskK_;
 };
 
 template <typename T>
-T dimension_cast(FieldDimension const& dimension) {
+T dimension_cast(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_reference_t<T>;
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
                 "Can only be casted to a valid field dimension implementation");
@@ -212,17 +259,24 @@ T dimension_cast(FieldDimension const& dimension) {
   return dynamic_cast<T>(*dimension.impl_);
 }
 
+// TODO move this into HorizontalFieldDimension?
+template <typename T>
+bool dimension_isa(HorizontalFieldDimension const& dimension) {
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid field dimension implementation");
+  return (bool)(dynamic_cast<std::remove_cv<T>*>(dimension.impl_.get()));
+}
+
 /// @brief Representation of a field
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
-  Field(const std::string& name, SourceLocation loc = SourceLocation())
+  Field(const std::string& name, FieldDimensions&& fieldD, SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
-        fieldDimensions(dawn::ast::cartesian, {{0, 0, 0}}),
-        locationTypes({ast::Expr::LocationType::Cells}) {}
+        fieldDimensions(fieldD) {}
 
   bool IsTemporary;
-  FieldDimension fieldDimensions;
-  std::vector<ast::Expr::LocationType> locationTypes;
+  const FieldDimensions fieldDimensions;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }
