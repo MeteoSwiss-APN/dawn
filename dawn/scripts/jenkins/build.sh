@@ -47,7 +47,7 @@ python -m venv dawn_venv
 source dawn_venv/bin/activate
 pip install --upgrade pip
 pip install wheel
-pip install -e base_dir -v
+pip install -e ${base_dir} -v
 
 cd ${base_dir}/examples/python
 bash run.sh
