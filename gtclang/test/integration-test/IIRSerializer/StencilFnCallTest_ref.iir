@@ -65,7 +65,7 @@
   "stencilName": "Test"
  },
  "internalIR": {
-  "gridType": "Structured",
+  "gridType": "Cartesian",
   "globalVariableToValue": {},
   "stencils": [
    {

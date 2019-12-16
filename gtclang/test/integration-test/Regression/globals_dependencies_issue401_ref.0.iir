@@ -89,7 +89,7 @@
   "stencilName": "copystencil"
  },
  "internalIR": {
-  "gridType": "Structured",
+  "gridType": "Cartesian",
   "globalVariableToValue": {
    "global": {
     "type": "Integer",

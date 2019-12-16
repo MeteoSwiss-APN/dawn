@@ -502,13 +502,13 @@ class FieldAccessExpr : public Expr {
   // Convention for a non set value is -1 for argumentMap and 0 for an argumentOffset.
   //
   // Notice that dawn (or SIR) does not impose any limitation other than it can at the moment accept
-  // only 3 arguments, since they are stored as Array3i. However, if there would be 3 different 
+  // only 3 arguments, since they are stored as Array3i. However, if there would be 3 different
   // dimension arguments passed to a function, more than one can point to the same actual dimension.
-  // For example, in[dir1+2, dir2+3, dir3-3] where dir1 and dir3 are instantiated as 'i' and dir2 as 'k'
-  // would result into an access to in[i-1,k+3]
-  // Additionally the other limitation is that offsets and direction/dimensions can not be combined in 
-  // the same FieldAccess, but this limitation is only coming from gtclang (that does not provide the 
-  // corresponding overload operators) but not from dawn/SIR
+  // For example, in[dir1+2, dir2+3, dir3-3] where dir1 and dir3 are instantiated as 'i' and dir2 as
+  // 'k' would result into an access to in[i-1,k+3] Additionally the other limitation is that
+  // offsets and direction/dimensions can not be combined in the same FieldAccess, but this
+  // limitation is only coming from gtclang (that does not provide the corresponding overload
+  // operators) but not from dawn/SIR
   Array3i argumentMap_;
   Array3i argumentOffset_;
 
