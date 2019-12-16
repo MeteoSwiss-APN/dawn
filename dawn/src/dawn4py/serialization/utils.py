@@ -33,6 +33,7 @@ from .SIR.statements_pb2 import *
 from .. import utils
 
 __all__ = [
+    "GridType",
     "make_ast",
     "make_field",
     "make_interval",
@@ -272,6 +273,7 @@ def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
 
 
 def make_sir(
+    gridtype: GridType,
     filename: str,
     stencils: List[Stencil],
     functions: List[StencilFunction] = [],
