@@ -65,8 +65,8 @@ cd $build_dir
 if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIF needs to be set in the machine env"
 fi
-CMAKE_ARGS="-DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DDAWN_PYTHON_EXAMPLES=ON -DCMAKE_BUILD_TYPE=${build_type}  \
-        -DProtobuf_DIR=${PROTOBUFDIR} -DPROTOBUF_PYTHON_INSTALL=${PROTOBUFDIR}/../../../python"
+CMAKE_ARGS="-DDAWN_BUNDLE_JAVA=ON -DCMAKE_BUILD_TYPE=${build_type}  \
+        -DProtobuf_DIR=${PROTOBUFDIR}"
 
 if [ -n ${INSTALL_DIR} ]; then
   rm -rf ${INSTALL_DIR}
