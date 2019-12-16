@@ -55,7 +55,8 @@ def main(args: argparse.Namespace):
         body_ast, interval, SIR.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(GridType.Value('Triangular'),
+    sir = sir_utils.make_sir(
+        sir_utils.GridType.Value('Triangular'),
         OUTPUT_FILE,
         [
                 OUTPUT_NAME,

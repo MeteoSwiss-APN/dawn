@@ -137,7 +137,7 @@ def main(args: argparse.Namespace):
     )
 
     sir = sir_utils.make_sir(
-        GridType.Value("Cartesian"),
+        sir_utils.GridType.Value("Cartesian"),
         OUTPUT_FILE,
         [
             sir_utils.make_stencil(
