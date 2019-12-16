@@ -86,8 +86,8 @@ private:
   /// @param str    the sting to deserialize
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
   /// @param target The newly creadte StencilInstantiation
-  static void deserializeImpl(const std::string& str, IIRSerializer::Format kind,
-                              std::shared_ptr<iir::StencilInstantiation>& target);
+  static std::shared_ptr<iir::StencilInstantiation> deserializeImpl(const std::string& str,
+                                                                    IIRSerializer::Format kind);
 
   /// @brief deserializeIIR deserializes the IIR tree
   /// @param target     the StencilInstantiation to insert the IIR into

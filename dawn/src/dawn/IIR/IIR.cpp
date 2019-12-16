@@ -60,7 +60,7 @@ const Stencil& IIR::getStencil(const int stencilID) const {
 }
 
 std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = std::make_unique<IIR>(globalVariableMap_, stencilFunctions_);
+  auto cloneIIR = std::make_unique<IIR>(gridType_, globalVariableMap_, stencilFunctions_);
   clone(cloneIIR);
   return cloneIIR;
 }
@@ -99,9 +99,9 @@ json::json IIR::jsonDump() const {
   return node;
 }
 
-IIR::IIR(const sir::GlobalVariableMap& sirGlobals,
+IIR::IIR(const ast::GridType gridType, const sir::GlobalVariableMap& sirGlobals,
          const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
-    : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
+    : gridType_(gridType), globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
 
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);

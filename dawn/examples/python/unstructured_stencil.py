@@ -55,15 +55,15 @@ def main(args: argparse.Namespace):
         body_ast, interval, SIR.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(
+hir = make_sir(GridType.Value('Triangular'), "unstructured_stencil.cpp", [
         OUTPUT_FILE,
         [
-            sir_utils.make_stencil(
                 OUTPUT_NAME,
+            sir_utils.make_stencil(
                 sir_utils.make_ast([vertical_region_stmt]),
                 [sir_utils.make_field("in"), sir_utils.make_field("out")],
-            )
         ],
+            )
     )
 
     # print the SIR

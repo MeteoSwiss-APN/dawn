@@ -19,7 +19,7 @@ dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS SIR/SIR.proto SIR/statements.proto
+  PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
   PACKG SIR
   LANGUAGE cpp
 )
@@ -64,7 +64,7 @@ if(DAWN_PYTHON)
   # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES sir_proto_python_files
-    PROTOS SIR/SIR.proto SIR/statements.proto
+    PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE python
@@ -84,7 +84,7 @@ if(DAWN_JAVA)
   dawn_protobuf_generate(
     OUT_FILES sir_proto_java_files
     OUT_DIRS sir_proto_java_dirs
-    PROTOS SIR/SIR.proto SIR/statements.proto 
+    PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE java
