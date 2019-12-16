@@ -311,7 +311,11 @@ def make_stencil_call(callee: str, arguments: List[str]) -> StencilCall:
 
 
 def make_vertical_region(
-    ast: AST, interval: Interval, loop_order: VerticalRegion.LoopOrder
+    ast: AST,
+    interval: Interval,
+    loop_order: VerticalRegion.LoopOrder,
+    i_range: Interval = None,
+    j_range: Interval = None,
 ) -> VerticalRegion:
     """ Create a VerticalRegion
 
@@ -323,7 +327,12 @@ def make_vertical_region(
     vr.ast.CopyFrom(ast)
     vr.interval.CopyFrom(interval)
     vr.loop_order = loop_order
+    if i_range is not None:
+        vr.i_range.CopyFrom(i_range)
+    if j_range is not None:
+        vr.j_range.CopyFrom(j_range)
     return vr
+
 
 
 def make_expr(expr: ExprType):
@@ -474,16 +483,15 @@ def make_vertical_region_decl_stmt(vertical_region: VerticalRegion) -> VerticalR
 
 
 def make_vertical_region_decl_stmt(
-    ast: AST, interval: Interval, loop_order: VerticalRegion.LoopOrder
+    ast: AST, interval: Interval, loop_order: VerticalRegion.LoopOrder, IRange: Interval = None, JRange: Interval = None
 ) -> VerticalRegionDeclStmt:
     """ Create a VerticalRegionDeclStmt
 
     :param vertical_region:   Vertical region.
     """
     stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order))
+    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order, IRange, JRange))
     return stmt
-
 
 def make_boundary_condition_decl_stmt(
     functor: str, fields: List[str]
