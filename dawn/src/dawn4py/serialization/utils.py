@@ -30,7 +30,7 @@ from google.protobuf import json_format
 from .error import ParseError, SIRError
 from .SIR.SIR_pb2 import *
 from .SIR.statements_pb2 import *
-from SIR.enums_pb2 import *
+from .SIR.enums_pb2 import *
 from .. import utils
 
 __all__ = [
