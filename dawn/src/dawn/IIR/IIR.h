@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_IIR_H
 #define DAWN_IIR_IIR_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/Support/RemoveIf.hpp"
@@ -26,6 +27,8 @@ namespace iir {
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
+
+  const ast::GridType gridType_;
 
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
@@ -48,10 +51,12 @@ public:
 
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
 
+  ast::GridType getGridType() const { return gridType_; }
+
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
-  IIR(const sir::GlobalVariableMap& sirGlobals,
+  IIR(const ast::GridType gridType, const sir::GlobalVariableMap& sirGlobals,
       const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;

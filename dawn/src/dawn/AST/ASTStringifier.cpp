@@ -102,7 +102,18 @@ public:
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
 
-    ss_ << "vertical-region : ";
+    ss_ << "vertical-region";
+    if(stmt->getVerticalRegion()->IterationSpace[0]) {
+      ss_ << " IRange : ";
+      ss_ << stmt->getVerticalRegion()->IterationSpace[0].value().toString();
+      ss_ << " ";
+    }
+    if(stmt->getVerticalRegion()->IterationSpace[1]) {
+      ss_ << " JRange : ";
+      ss_ << stmt->getVerticalRegion()->IterationSpace[1].value().toString();
+      ss_ << " ";
+    }
+    ss_ << " K-Range : ";
     ss_ << *stmt->getVerticalRegion()->VerticalInterval.get();
     ss_ << " ["
         << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward

@@ -16,6 +16,7 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
@@ -51,6 +52,11 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   // Location type of the stage (which loop it represents)
   ast::LocationType type_ = ast::LocationType::Cells;
 
+  /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
+  /// is assumed. This is built on top of the DerivedInfo::Extents class and for a full compute
+  /// domain, those have to be added together.
+  std::array<std::optional<Interval>, 2> iterationSpace_;
+
   struct DerivedInfo {
 
     void clear();
@@ -73,12 +79,14 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 public:
   static constexpr const char* name = "Stage";
 
+  using IterationSpace = std::array<std::optional<Interval>, 2>;
   using DoMethodSmartPtr_t = child_smartptr_t<DoMethod>;
   using ChildrenIterator = std::vector<child_smartptr_t<DoMethod>>::iterator;
 
   /// @name Constructors and Assignment
   /// @{
-  Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval);
+  Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval,
+        IterationSpace iterationspace = {std::optional<Interval>(), std::optional<Interval>()});
   Stage(const StencilMetaInformation& metaData, int StageID);
 
   Stage(Stage&&) = default;
@@ -211,18 +219,23 @@ public:
   /// @brief true if it contains no do methods or they are empty
   bool isEmptyOrNullStmt() const;
 
-  /// @brief set the flag that specifies that the stage will require an explicit sync before
+  /// @brief Get the flag that specifies that the space will require an explicit sync before
   /// execution
+  /// @{
   void setRequiresSync(const bool sync);
-  /// @brief get the flag that specifies that the stage will require an explicit sync before
-  /// execution
   bool getRequiresSync() const;
+  /// @}
 
   /// @brief setter for the location type
   void setLocationType(ast::LocationType type);
 
   /// @brief returns the location type of a stage
   ast::LocationType getLocationType() const;
+  /// @brief Get the horizontal iteration space
+  /// @{
+  void setIterationSpace(const IterationSpace& value);
+  const IterationSpace& getIterationSpace() const;
+  /// @}
 };
 
 } // namespace iir

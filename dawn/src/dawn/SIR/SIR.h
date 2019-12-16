@@ -15,6 +15,7 @@
 #ifndef DAWN_SIR_SIR_H
 #define DAWN_SIR_SIR_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
@@ -352,7 +353,10 @@ struct VerticalRegion {
   SourceLocation Loc;                         ///< Source location of the vertical region
   std::shared_ptr<sir::AST> Ast;              ///< AST of the region
   std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
-  LoopOrderKind LoopOrder;                    /// Loop order (usually associated with the k-loop)
+  LoopOrderKind LoopOrder;                    ///< Loop order (usually associated with the k-loop)
+
+  /// If it is not instantiated, iteration over the full domain is assumed.
+  std::array<std::optional<Interval>, 2> IterationSpace; /// < Iteration space in the horizontal.
 
   VerticalRegion(const std::shared_ptr<sir::AST>& ast,
                  const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
@@ -496,7 +500,7 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>
 struct SIR : public dawn::NonCopyable {
 
   /// @brief Default Ctor that initializes all the shared pointers
-  SIR();
+  SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
   void dump();
@@ -519,6 +523,7 @@ struct SIR : public dawn::NonCopyable {
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
   std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
+  const ast::GridType GridType;
 };
 
 } // namespace dawn
