@@ -257,6 +257,17 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
                                  std::set<std::string> const& usedBC) {
   auto protoIIR = target.mutable_internalir();
 
+  switch(iir->getGridType()) {
+  case ast::GridType::Cartesian:
+    protoIIR->set_gridtype(proto::enums::GridType::Cartesian);
+    break;
+  case ast::GridType::Triangular:
+    protoIIR->set_gridtype(proto::enums::GridType::Triangular);
+    break;
+  default:
+    dawn_unreachable("invalid grid type");
+  }
+
   auto& protoGlobalVariableMap = *protoIIR->mutable_globalvariabletovalue();
   for(auto& globalToValue : iir->getGlobalVariableMap()) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
@@ -691,8 +702,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
 }
 
-void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind,
-                                    std::shared_ptr<iir::StencilInstantiation>& target) {
+std::shared_ptr<iir::StencilInstantiation>
+IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
@@ -713,10 +724,25 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Forma
     dawn_unreachable("invalid SerializationKind");
   }
 
+  std::shared_ptr<iir::StencilInstantiation> target;
+
+  switch(protoStencilInstantiation.internalir().gridtype()) {
+  case dawn::proto::enums::GridType::Cartesian:
+    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
+    break;
+  case dawn::proto::enums::GridType::Triangular:
+    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Triangular);
+    break;
+  default:
+    dawn_unreachable("unknown grid type");
+  }
+
   deserializeIIR(target, (protoStencilInstantiation.internalir()));
   deserializeMetaData(target, (protoStencilInstantiation.metadata()));
   target->getMetaData().fileName_ = protoStencilInstantiation.filename();
   computeInitialDerivedInfo(target);
+
+  return target;
 }
 
 std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
@@ -728,19 +754,14 @@ std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std:
         dawn::format("cannot deserialize IIR: failed to open file \"%s\"", file));
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-  std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>();
-  deserializeImpl(str, kind, returnvalue);
-  return returnvalue;
+
+  return deserializeImpl(str, kind);
 }
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::Format kind) {
-  std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>();
-  deserializeImpl(str, kind, returnvalue);
-  return returnvalue;
+  return deserializeImpl(str, kind);
 }
 
 void IIRSerializer::serialize(const std::string& file,

@@ -19,6 +19,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
@@ -66,7 +67,8 @@ protected:
   };
 
 public:
-  IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}
+  IIRBuilder(const ast::GridType gridType)
+      : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
@@ -157,6 +159,19 @@ public:
     return ret;
   }
 
+  // specialized builder for the stage that accepts a global index
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(int direction, Interval interval, DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    iir::Stage::IterationSpace iterationSpace;
+    iterationSpace[direction] = interval;
+    ret->setIterationSpace(iterationSpace);
+    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
+    return ret;
+  }
+
   // default builder for the stage that assumes stages are over cells
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
@@ -196,6 +211,7 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Triangular) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);
@@ -207,6 +223,7 @@ public:
 
 class CartesianIIRBuilder : public IIRBuilder {
 public:
+  CartesianIIRBuilder() : IIRBuilder(ast::GridType::Cartesian) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, Array3i const& offset);
   std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);

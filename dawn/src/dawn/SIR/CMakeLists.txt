@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(protos SIR/SIR.proto SIR/statements.proto)
+set(protos SIR/SIR.proto SIR/statements.proto SIR/enums.proto)
 
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(

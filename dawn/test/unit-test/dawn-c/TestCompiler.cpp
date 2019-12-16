@@ -83,6 +83,25 @@ TEST(CompilerTest, CompileCopyStencil) {
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
+TEST(CompilerTest, CompileGlobalIndexStencil) {
+  using namespace dawn::iir;
+
+  CartesianIIRBuilder b;
+  auto in_f = b.field("in_field", FieldType::ijk);
+  auto out_f = b.field("out_field", FieldType::ijk);
+
+  auto stencil_instantiation = b.build(
+      "generated", b.stencil(b.multistage(
+                       LoopOrderKind::Parallel,
+                       b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                       b.stage(1, {0, 2},
+                               b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+  std::ofstream of("prototype/generated/global_indexing.cpp");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
+}
+
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
