@@ -73,53 +73,54 @@ def create_boundary_correction_region(value="0", i_interval=None, j_interval=Non
     )
     return vertical_region_stmt
 
+    hir = make_sir(
+        GridType.Value("Cartesian"),
+        "global_indexing.cpp",
+        [
+            make_stencil(
+                "global_indexing",
+                make_ast(
+                    [
+                        create_vertical_region_stmt(),
+                        create_boundary_correction_region(
+                            value="4", i_interval=make_interval(Interval.End, Interval.End, -1, 0)
+                        ),
+                        create_boundary_correction_region(
+                            value="8", i_interval=make_interval(Interval.Start, Interval.Start, 0, 1)
+                        ),
+                        create_boundary_correction_region(
+                            value="6", j_interval=make_interval(Interval.End, Interval.End, -1, 0)
+                        ),
+                        create_boundary_correction_region(
+                            value="2", j_interval=make_interval(Interval.Start, Interval.Start, 0, 1)
+                        ),
+                        create_boundary_correction_region(
+                            value="1",
+                            j_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                            i_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                        ),
+                        create_boundary_correction_region(
+                            value="3",
+                            j_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                            i_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                        ),
+                        create_boundary_correction_region(
+                            value="7",
+                            j_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                            i_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
+                        ),
+                        create_boundary_correction_region(
+                            value="5",
+                            j_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                            i_interval=make_interval(Interval.End, Interval.End, -1, 0),
+                        ),
+                    ]
+                ),
+                [make_field("in"), make_field("out")],
+            )
+        ],
+    )
 
-hir = make_sir(GridType.Value('Cartesian'),
-    "global_indexing.cpp",
-    [
-        make_stencil(
-            "global_indexing",
-            make_ast(
-                [
-                    create_vertical_region_stmt(),
-                    create_boundary_correction_region(
-                        value="4", i_interval=make_interval(Interval.End, Interval.End, -1, 0)
-                    ),
-                    create_boundary_correction_region(
-                        value="8", i_interval=make_interval(Interval.Start, Interval.Start, 0, 1)
-                    ),
-                    create_boundary_correction_region(
-                        value="6", j_interval=make_interval(Interval.End, Interval.End, -1, 0)
-                    ),
-                    create_boundary_correction_region(
-                        value="2", j_interval=make_interval(Interval.Start, Interval.Start, 0, 1)
-                    ),
-                    create_boundary_correction_region(
-                        value="1",
-                        j_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
-                        i_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
-                    ),
-                    create_boundary_correction_region(
-                        value="3",
-                        j_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
-                        i_interval=make_interval(Interval.End, Interval.End, -1, 0),
-                    ),
-                    create_boundary_correction_region(
-                        value="7",
-                        j_interval=make_interval(Interval.End, Interval.End, -1, 0),
-                        i_interval=make_interval(Interval.Start, Interval.Start, 0, 1),
-                    ),
-                    create_boundary_correction_region(
-                        value="5",
-                        j_interval=make_interval(Interval.End, Interval.End, -1, 0),
-                        i_interval=make_interval(Interval.End, Interval.End, -1, 0),
-                    ),
-                ]
-            ),
-            [make_field("in"), make_field("out")],
-        )
-    ],
-)
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="print the SIR")
