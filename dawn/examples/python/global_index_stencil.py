@@ -73,7 +73,7 @@ def create_boundary_correction_region(value="0", i_interval=None, j_interval=Non
     )
     return vertical_region_stmt
 
-    hir = make_sir(
+    hir = sir_utils.make_sir(
         GridType.Value("Cartesian"),
         "global_indexing.cpp",
         [

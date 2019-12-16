@@ -56,7 +56,7 @@ def main(args: argparse.Namespace):
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
 
-    sir = make_sir(
+    sir = sir_utils.make_sir(
         GridType.Value("Cartesian"),
         OUTPUT_FILE,
         [
