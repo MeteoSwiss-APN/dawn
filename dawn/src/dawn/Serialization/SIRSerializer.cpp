@@ -170,7 +170,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   auto mapProto = sirProto.mutable_global_variables()->mutable_map();
   for(const auto& nameValuePair : *sir->GlobalVariableMap) {
     const std::string& name = nameValuePair.first;
-    const sir::Value& value = *nameValuePair.second;
+    const sir::Global& value = nameValuePair.second;
 
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
@@ -723,7 +723,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
         dawn_unreachable("value not set");
       }
 
-      sir->GlobalVariableMap->emplace(sirName, std::move(value));
+      sir->GlobalVariableMap->emplace(sirName, std::move(*value));
     }
 
   } catch(std::runtime_error& error) {

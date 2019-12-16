@@ -125,7 +125,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       return;
     }
 
-    std::shared_ptr<dawn::sir::Global> value;
+    std::shared_ptr<dawn::sir::Global> value = 0;
 
     // Check if we have a default value `value` i.e `T var = value`
     if(arg->hasInClassInitializer()) {
@@ -185,7 +185,9 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       value = std::make_shared<dawn::sir::Global>(typeKind);
     }
 
-    variableMap_->emplace(name, value);
+    if(value) {
+      variableMap_->emplace(std::pair(std::string(name), std::move(*value)));
+    }
   }
 
   // Try to parse the config file
@@ -230,7 +232,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
         continue;
       }
 
-      dawn::sir::Global& global = *varIt->second;
+      dawn::sir::Global& global = varIt->second;
       std::shared_ptr<dawn::sir::Global> parsed_global;
 
       // Treat the value as a compile time constant
@@ -260,11 +262,12 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
         return;
       }
 
-      variableMap_->at(key) = parsed_global; // update varIt in map
-      assert(variableMap_->at(key)->has_value());
+      // update varIt in map
+      variableMap_->erase(key);
+      variableMap_->insert(std::pair(std::string(key), std::move(*parsed_global)));
 
       DAWN_LOG(INFO) << "Setting constant value of '" << key << " to '"
-                     << variableMap_->at(key)->toString() << "'";
+                     << variableMap_->at(key).toString() << "'";
     }
   }
 

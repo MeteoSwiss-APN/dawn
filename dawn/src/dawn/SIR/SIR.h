@@ -463,7 +463,7 @@ public:
   Global(Kind type) : Value(type) {}
 };
 
-using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Global>>;
+using GlobalVariableMap = std::unordered_map<std::string, Global>;
 
 } // namespace sir
 

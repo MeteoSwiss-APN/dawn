@@ -48,7 +48,8 @@ public:
 
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(
-      sir::GlobalVariableMap const& globalVariables = {},
+      std::shared_ptr<sir::GlobalVariableMap> globalVariables =
+          std::make_shared<sir::GlobalVariableMap>(),
       std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions = {});
 
   StencilMetaInformation& getMetaData();
@@ -77,7 +78,7 @@ public:
   bool isIDAccessedMultipleMSs(int accessID) const;
 
   /// @brief Get the value of the global variable `name`
-  const sir::Value& getGlobalVariableValue(const std::string& name) const;
+  const sir::Global& getGlobalVariableValue(const std::string& name) const;
 
   enum class RenameDirection {
     Above, ///< Rename all fields above the current statement

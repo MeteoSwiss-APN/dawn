@@ -182,18 +182,18 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
   stencilWrapperClass.addComment("Globals API");
 
   for(const auto& globalProp : globalsMap) {
-    auto globalValue = globalProp.second;
-    if(globalValue->isConstexpr()) {
+    const auto& globalValue = globalProp.second;
+    if(globalValue.isConstexpr()) {
       continue;
     }
     auto getter = stencilWrapperClass.addMemberFunction(
-        sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
+        sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
     getter.finishArgs();
     getter.addStatement("return m_globals." + globalProp.first);
     getter.commit();
 
     auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
-    setter.addArg(std::string(sir::Value::typeToString(globalValue->getType())) + " " +
+    setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
                   globalProp.first);
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);

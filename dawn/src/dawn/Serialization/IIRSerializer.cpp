@@ -263,24 +263,24 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     proto::iir::GlobalValueAndType protoGlobalToStore;
     bool valueIsSet = false;
 
-    switch(globalToValue.second->getType()) {
+    switch(globalToValue.second.getType()) {
     case sir::Value::Kind::Boolean:
-      if(globalToValue.second->has_value()) {
-        protoGlobalToStore.set_value(globalToValue.second->getValue<bool>());
+      if(globalToValue.second.has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second.getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Kind::Integer:
-      if(globalToValue.second->has_value()) {
-        protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
+      if(globalToValue.second.has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second.getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Kind::Double:
-      if(globalToValue.second->has_value()) {
-        protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
+      if(globalToValue.second.has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second.getValue<double>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Double);
@@ -589,7 +589,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       dawn_unreachable("unsupported type");
     }
 
-    target->getIIR()->insertGlobalVariable(GlobalToValue.first, value);
+    target->getIIR()->insertGlobalVariable(std::string(GlobalToValue.first),
+                                           std::move(*value.get()));
   }
 
   int stencilPos = 0;

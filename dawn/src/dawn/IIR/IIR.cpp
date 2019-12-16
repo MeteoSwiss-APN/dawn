@@ -59,12 +59,6 @@ const Stencil& IIR::getStencil(const int stencilID) const {
   return *(*it);
 }
 
-std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = std::make_unique<IIR>(globalVariableMap_, stencilFunctions_);
-  clone(cloneIIR);
-  return cloneIIR;
-}
-
 void IIR::updateFromChildren() {
   derivedInfo_.fields_.clear();
 
@@ -91,15 +85,15 @@ json::json IIR::jsonDump() const {
   }
 
   json::json globalsJson;
-  for(const auto& globalPair : globalVariableMap_) {
-    globalsJson[globalPair.first] = globalPair.second->jsonDump();
+  for(const auto& globalPair : *globalVariableMap_) {
+    globalsJson[globalPair.first] = globalPair.second.jsonDump();
   }
   node["globals"] = globalsJson;
 
   return node;
 }
 
-IIR::IIR(const sir::GlobalVariableMap& sirGlobals,
+IIR::IIR(std::shared_ptr<sir::GlobalVariableMap> sirGlobals,
          const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
     : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
 
@@ -108,6 +102,12 @@ void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->setBlockSize(blockSize_);
   dest->controlFlowDesc_ = controlFlowDesc_.clone();
   dest->globalVariableMap_ = globalVariableMap_;
+}
+
+std::unique_ptr<IIR> IIR::clone() const {
+  auto cloneIIR = std::make_unique<IIR>(globalVariableMap_, stencilFunctions_);
+  clone(cloneIIR);
+  return cloneIIR;
 }
 
 } // namespace iir

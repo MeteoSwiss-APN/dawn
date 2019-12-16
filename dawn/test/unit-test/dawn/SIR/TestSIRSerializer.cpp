@@ -176,10 +176,10 @@ class GlobalVariableTest : public SIRSerializerTest {
 };
 
 TEST_P(GlobalVariableTest, Value) {
-  sirRef->GlobalVariableMap->emplace("int", std::make_shared<sir::Global>(5));
-  sirRef->GlobalVariableMap->emplace("double", std::make_shared<sir::Global>(5.5));
-  sirRef->GlobalVariableMap->emplace("string", std::make_shared<sir::Global>(std::string{"str"}));
-  sirRef->GlobalVariableMap->emplace("bool", std::make_shared<sir::Global>(true));
+  sirRef->GlobalVariableMap->insert(std::pair("int", sir::Global(5)));
+  sirRef->GlobalVariableMap->insert(std::pair("double", sir::Global(5.5)));
+  sirRef->GlobalVariableMap->insert(std::pair("string", sir::Global(std::string{"str"})));
+  sirRef->GlobalVariableMap->insert(std::pair("bool", sir::Global(true)));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }

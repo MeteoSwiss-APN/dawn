@@ -185,28 +185,30 @@ class SIRGlobalVariableTest : public SIRTest {
 };
 
 TEST_F(SIRGlobalVariableTest, Comparison) {
-  sir1->GlobalVariableMap->emplace("foo", std::make_shared<sir::Global>(5));
-  sir2->GlobalVariableMap->emplace("foo", std::make_shared<sir::Global>(5));
+  sir1->GlobalVariableMap->insert(std::pair("foo", sir::Global(5)));
+  sir2->GlobalVariableMap->insert(std::pair("foo", sir::Global(5)));
   SIR_EXCPECT_EQ(sir1, sir2);
 
-  // Member is identical (not inserted)
-  sir1->GlobalVariableMap->emplace("foo", std::make_shared<sir::Global>(5));
+  // key is identical (not inserted)
+  sir1->GlobalVariableMap->insert(std::pair("foo", sir::Global(5)));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   // Different number of members
-  sir1->GlobalVariableMap->emplace("bar", std::make_shared<sir::Global>(5.0));
+  sir1->GlobalVariableMap->insert(std::pair("bar", sir::Global(5.0)));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Different values
-  sir2->GlobalVariableMap->emplace("bar", std::make_shared<sir::Global>(4.0));
+  sir2->GlobalVariableMap->insert(std::pair("bar", sir::Global(4.0)));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Different types
-  (*sir2->GlobalVariableMap)["bar"] = std::make_shared<sir::Global>(bool(true));
+  sir2->GlobalVariableMap->erase("bar");
+  sir2->GlobalVariableMap->insert(std::pair("bar", sir::Global(bool(true))));
   SIR_EXCPECT_NE(sir1, sir2);
 
-  // Same type/value
-  (*sir2->GlobalVariableMap)["bar"] = std::make_shared<sir::Global>(double(5.0));
+  // // Same type/value
+  sir2->GlobalVariableMap->erase("bar");
+  sir2->GlobalVariableMap->insert(std::pair("bar", sir::Global(double(5.0))));
   SIR_EXCPECT_EQ(sir1, sir2);
 }
 
