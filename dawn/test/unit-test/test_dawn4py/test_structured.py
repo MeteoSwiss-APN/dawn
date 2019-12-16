@@ -51,8 +51,8 @@ def test_compilation(grid_sir_with_reference_code):
 
     unit_info = {}
     code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    with open("new_code.hpp", "w") as f:
-        f.write(code)
+    # with open("new_code.hpp", "w") as f:
+    #     f.write(code)
     # assert code == reference_code
     assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
 

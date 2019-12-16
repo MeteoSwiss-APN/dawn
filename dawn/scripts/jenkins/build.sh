@@ -38,7 +38,25 @@ done
 
 base_dir=$(pwd)
 build_dir=${base_dir}/bundle/build
+# Setup for the python tests:
+mkdir -p $build_dir
+cd $build_dir
+export TMPDIR=${build_dir}/temp
+mkdir -p $TMPDIR
+python -m venv dawn_venv
+source dawn_venv/bin/activate
+pip install --upgrade pip
+pip install wheel
+pip install -e base_dir -v
 
+cd ${base_dir}/examples/python
+bash run.sh
+pytest -v ${base_dir}/test/unit-test/test_dawn4py/
+
+# clean up the build directory for the c++ tests
+rm -rf $build_dir
+
+# Test for the c++ side:
 mkdir -p $build_dir
 cd $build_dir
 
