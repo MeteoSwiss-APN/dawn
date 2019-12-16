@@ -1,5 +1,5 @@
 {
- "gridType": "Structured",
+ "gridType": "Cartesian",
  "filename": "AccessTest.cpp",
  "stencils": [
   {
