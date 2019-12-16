@@ -58,7 +58,7 @@ def main(args: argparse.Namespace):
         body_ast, interval, SIR.VerticalRegion.Forward
     )
 
-hir = make_sir(GridType.Value('Cartesian'), "copy_stencil.cpp", [
+hir = make_sir(GridType.Value('Cartesian'),
         OUTPUT_FILE,
         [
             sir_utils.make_stencil(
