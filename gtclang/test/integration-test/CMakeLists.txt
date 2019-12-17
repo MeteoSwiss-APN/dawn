@@ -38,31 +38,17 @@ set(directories
   Regression
 )
 
-# The cuda backend is not supported by the python scripts for no-codegen
+list(TRANSFORM directories PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/)
+
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
-set(command ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py
+
+# NOTE The cuda backend is not supported by the python scripts for no-codegen
+add_test(NAME GTClangIntegrationTestNoCodegen
+  COMMAND ${Python3_EXECUTABLE}
+  ${PROJECT_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py
   --gtclang=$<TARGET_FILE:gtclang>
-  --cxx=${CMAKE_CXX_COMPILER})
+  --cxx=${CMAKE_CXX_COMPILER}
+  --gridtools_flags="${compiler_flags} ${include_flags} ${library_flags}"
+  ${directories})
 
-foreach(dir ${directories})
-  set(command ${command} ${CMAKE_CURRENT_SOURCE_DIR}/${dir})
-endforeach()
-
-list(APPEND gridtools_flags ${compiler_flags} ${include_flags} ${library_flags})
-
-set(command ${command} --gridtools_flags="${gridtools_flags}")
-
-string(REPLACE ";" " " cmd_script "${command}")
-file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/gtclang-tester-no-codegen.sh CONTENT "#!/bin/bash\n${cmd_script} $*\n")
-
-# Add make target
-add_custom_target(
-  integrationtest-no-codegen
-  COMMAND ${BASH_EXECUTABLE} ${PROJECT_BINARY_DIR}/gtclang-tester-no-codegen.sh
-  DEPENDS gtclang
-  )
-
-# Add CTest target
-find_program (BASH_EXECUTABLE bash)
-add_test(NAME CTest-IntegrationTest-no-codegen
-  COMMAND ${BASH_EXECUTABLE} ${PROJECT_BINARY_DIR}/gtclang-tester-no-codegen.sh)
+set_property(TEST GTClangIntegrationTestNoCodegen APPEND PROPERTY DEPENDS gtclang)
