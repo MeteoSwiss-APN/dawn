@@ -17,6 +17,7 @@ endif()
 
 set(ENV{PYTHONPATH} "$ENV{PYTHONPATH}:${CMAKE_INSTALL_PREFIX}/python")
 foreach(example ${examples})
+  message("Running ${example}")
   execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_INSTALL_PREFIX}/examples/python/${example}.py RESULT_VARIABLE res)
   if(NOT ${res} EQUAL 0)
     message(FATAL_ERROR "SIR Python example did not run. TEST failed")
