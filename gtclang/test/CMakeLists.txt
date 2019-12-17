@@ -29,8 +29,7 @@ if(NOT GridTools_FOUND)
   set(GT_INSTALL_EXAMPLES OFF)
 
   FetchContent_Declare(GridTools
-    GIT_REPOSITORY https://github.com/GridTools/gridtools.git
-    GIT_TAG v1.0.4
+    URL https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz
   )
 
   FetchContent_GetProperties(GridTools)
