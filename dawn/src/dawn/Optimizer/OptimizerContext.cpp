@@ -20,6 +20,7 @@
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -377,7 +378,7 @@ public:
     // Note that we may need to operate on copies of the ASTs because we want to have a *unique*
     // mapping of AST nodes to AccessIDs, hence we clone the ASTs of the vertical regions of
     // stencil calls
-    bool cloneAST = scope_.size() > 1;
+    const bool cloneAST = scope_.size() > 1;
     std::shared_ptr<iir::AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
@@ -385,8 +386,10 @@ public:
         metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
                        ? LoopOrderKind::Forward
                        : LoopOrderKind::Backward);
+    Stage::IterationSpace iterationspace = {stmt->getVerticalRegion()->IterationSpace[0],
+                                            stmt->getVerticalRegion()->IterationSpace[1]};
     std::unique_ptr<Stage> stage =
-        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
+        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval, iterationspace);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -483,8 +486,9 @@ public:
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
     if(instantiation_->insertBoundaryConditions(stmt->getFields()[0], stmt) == false)
       DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
-    //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
-    //      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
+    //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) ==
+    //      false) DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same
+    //      field");
   }
 
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {

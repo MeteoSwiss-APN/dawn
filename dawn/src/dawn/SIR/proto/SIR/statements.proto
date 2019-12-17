@@ -167,6 +167,8 @@ message VerticalRegion {
   AST ast = 2;              // Syntax tree of the body of the vertical region
   Interval interval = 3;    // Vertical interval
   LoopOrder loop_order = 4; // Loop order of execution
+  Interval i_range = 5;     // Global index space in the I dimension
+  Interval j_range = 6;     // Global index space in the J dimension
 }
 
 // @brief Stencil call declaration

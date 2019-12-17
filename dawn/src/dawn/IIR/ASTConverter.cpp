@@ -67,6 +67,7 @@ void ASTConverter::visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stm
           stmtMap_.at(stmt->getVerticalRegion()->Ast->getRoot()))),
       stmt->getVerticalRegion()->VerticalInterval, stmt->getVerticalRegion()->LoopOrder,
       stmt->getVerticalRegion()->Loc);
+  verticalRegion->IterationSpace = stmt->getVerticalRegion()->IterationSpace;
 
   stmtMap_.emplace(stmt,
                    iir::makeVerticalRegionDeclStmt(verticalRegion, stmt->getSourceLocation()));

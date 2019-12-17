@@ -1,5 +1,5 @@
-#define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO
+#define DAWN_GENERATED 1
+#define DAWN_BACKEND_T CXXNAIVEICO
 #include <driver-includes/unstructured_interface.hpp>
 namespace dawn_generated {
 namespace cxxnaiveico {

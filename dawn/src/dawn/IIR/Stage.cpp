@@ -15,6 +15,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
@@ -32,10 +33,11 @@ namespace dawn {
 namespace iir {
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID)
-    : metaData_(metaData), StageID_(StageID) {}
+    : metaData_(metaData), StageID_(StageID), iterationSpace_() {}
 
-Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval)
-    : metaData_(metaData), StageID_(StageID) {
+Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval,
+             IterationSpace iterationSpace)
+    : metaData_(metaData), StageID_(StageID), iterationSpace_(iterationSpace) {
   insertChild(std::make_unique<DoMethod>(interval, metaData));
 }
 
@@ -300,10 +302,12 @@ Stage::split(std::deque<int>& splitterIndices,
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
+    newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace());
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
-    if(graphs)
+    if(graphs) {
       doMethod.setDependencyGraph((*graphs)[i]);
+    }
 
     // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)
     doMethod.getAST().insert_back(prevSplitterIndex, nextSplitterIndex);
@@ -338,6 +342,10 @@ bool Stage::isEmptyOrNullStmt() const {
 void Stage::setLocationType(ast::Expr::LocationType type) { type_ = type; }
 
 ast::Expr::LocationType Stage::getLocationType() const { return type_; }
+
+void Stage::setIterationSpace(const IterationSpace& value) { iterationSpace_ = value; }
+
+const Stage::IterationSpace& Stage::getIterationSpace() const { return iterationSpace_; }
 
 } // namespace iir
 } // namespace dawn

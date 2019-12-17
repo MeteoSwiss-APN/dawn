@@ -192,6 +192,9 @@ static std::pair<std::string, bool> globalMapComparison(const sir::GlobalVariabl
 CompareResult SIR::comparison(const SIR& rhs) const {
   std::string output;
 
+  if(GridType != rhs.GridType)
+    return CompareResult{"[SIR mismatch] grid type differs\n", false};
+
   // Stencils
   if((Stencils.size() != rhs.Stencils.size()))
     return CompareResult{"[SIR mismatch] number of Stencils do not match\n", false};
@@ -454,9 +457,15 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
   }
 
   auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
-  if(!bool(intervalComp)) {
+  if(!static_cast<bool>(intervalComp)) {
     output += "[VerticalRegion mismatch] Intervals do not match\n";
     output += intervalComp.why();
+    return CompareResult{output, false};
+  } else if(IterationSpace[0] != rhs.IterationSpace[0]) {
+    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
+    return CompareResult{output, false};
+  } else if(IterationSpace[1] != rhs.IterationSpace[1]) {
+    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
     return CompareResult{output, false};
   }
 
@@ -465,12 +474,14 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
     output += "[VerticalRegion mismatch] ASTs do not match\n";
     output += astComp.first;
     return CompareResult{output, false};
+  } else {
+    return CompareResult{output, true};
   }
-  return CompareResult{output, true};
 }
 
 bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
-  return bool(this->comparison(rhs));
+  // casted to bool by return statement
+  return this->comparison(rhs);
 }
 
 namespace sir {
@@ -559,6 +570,9 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   const char* indent2 = MakeIndent<2>::value;
 
   os << "SIR : " << Sir.Filename << "\n{\n";
+
+  os << "Grid type : " << Sir.GridType << "\n";
+
   for(const auto& stencilFunction : Sir.StencilFunctions) {
     os << "\n"
        << indent1 << "StencilFunction : " << stencilFunction->Name << "\n"
@@ -599,7 +613,8 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   return os;
 }
 
-SIR::SIR() : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()) {}
+SIR::SIR(const ast::GridType gridType)
+    : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
 
 void SIR::dump() { std::cout << *this << std::endl; }
 
@@ -653,7 +668,10 @@ std::string sir::Value::toString() const {
 }
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  auto retval =
+      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  retval->IterationSpace = IterationSpace;
+  return retval;
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }

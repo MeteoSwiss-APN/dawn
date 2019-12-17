@@ -51,6 +51,8 @@ public:
     DAWN_ASSERT_MSG(accessmap.size() == 1, "can only be one write access");
     std::string realName = metadata_.getNameFromAccessID(accessmap.begin()->first);
     stmt->getName() = realName;
+    for(const auto& expr : stmt->getInitList())
+      expr->accept(*this);
   }
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
     auto data = expr->getData<iir::IIRAccessExprData>();

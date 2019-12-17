@@ -21,7 +21,7 @@ namespace dsl {
 
 /**
  * @brief Defintion of a direction which can be as argument in stencil functions
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct direction {
   direction operator+(int);

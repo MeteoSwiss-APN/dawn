@@ -23,7 +23,7 @@ namespace dsl {
 
 /**
  * @brief Defintion of a vertical interval
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 struct interval {
   interval operator+(int) { return *this; }
@@ -32,13 +32,13 @@ struct interval {
 
 /**
  * Lowest k-level
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 static interval k_start;
 
 /**
  * Highest k-level
- * @ingroup gridtools_clang
+ * @ingroup gtclang_dsl
  */
 static interval k_end;
 

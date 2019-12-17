@@ -92,6 +92,11 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
               candidateStageIt != multiStage.childrenREnd(); ++candidateStageIt) {
             iir::Stage& candidateStage = **candidateStageIt;
 
+            // do the iterationspaces match?
+            if(candidateStage.getIterationSpace() != curStage.getIterationSpace()) {
+              continue;
+            }
+
             // Does the interval of `curDoMethod` overlap with any DoMethod interval in
             // `candidateStage`?
             auto candidateDoMethodIt = std::find_if(

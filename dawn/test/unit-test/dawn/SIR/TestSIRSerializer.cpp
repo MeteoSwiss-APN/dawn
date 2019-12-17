@@ -33,7 +33,7 @@ namespace {
 
 class SIRSerializerTest : public ::testing::TestWithParam<SIRSerializer::Format> {
 protected:
-  virtual void SetUp() override { sirRef = std::make_shared<SIR>(); }
+  virtual void SetUp() override { sirRef = std::make_shared<SIR>(ast::GridType::Cartesian); }
   virtual void TearDown() override { sirRef.reset(); }
 
   std::shared_ptr<SIR> serializeAndDeserializeRef() {

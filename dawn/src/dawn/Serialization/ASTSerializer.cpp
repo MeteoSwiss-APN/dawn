@@ -19,6 +19,7 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/SIR/ASTStmt.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
@@ -362,6 +363,14 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
   setStmtData(protoStmt->mutable_data(), *stmt);
 
   protoStmt->set_id(stmt->getID());
+
+  // VerticalRegion.VerticalInterval
+  if(verticalRegion->IterationSpace[0]) {
+    setInterval(verticalRegionProto->mutable_i_range(), &verticalRegion->IterationSpace[0].value());
+  }
+  if(verticalRegion->IterationSpace[1]) {
+    setInterval(verticalRegionProto->mutable_j_range(), &verticalRegion->IterationSpace[1].value());
+  }
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
@@ -984,6 +993,15 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType, stmtProto.data()),
                                                          verticalRegion, loc);
     stmt->setID(stmtProto.id());
+    if(stmtProto.vertical_region().has_i_range()) {
+      auto range = stmtProto.vertical_region().i_range();
+      verticalRegion->IterationSpace[0] = *makeInterval(range);
+    }
+    if(stmtProto.vertical_region().has_j_range()) {
+      auto range = stmtProto.vertical_region().j_range();
+      verticalRegion->IterationSpace[1] = *makeInterval(range);
+      ;
+    }
     return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {
