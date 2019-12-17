@@ -182,7 +182,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   auto mapProto = sirProto.mutable_global_variables()->mutable_map();
   for(const auto& nameValuePair : *sir->GlobalVariableMap) {
     const std::string& name = nameValuePair.first;
-    const sir::Value& value = *nameValuePair.second;
+    const sir::Global& value = nameValuePair.second;
 
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
@@ -196,6 +196,9 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
         break;
       case sir::Value::Kind::Double:
         valueProto.set_double_value(value.getValue<double>());
+        break;
+      case sir::Value::Kind::Float:
+        valueProto.set_float_value(value.getValue<float>());
         break;
       case sir::Value::Kind::String:
         valueProto.set_string_value(value.getValue<std::string>());
@@ -291,6 +294,8 @@ makeBuiltinTypeID(const dawn::proto::statements::BuiltinType& builtinTypeProto) 
     return BuiltinTypeID::Integer;
   case dawn::proto::statements::BuiltinType_TypeID_Float:
     return BuiltinTypeID::Float;
+  case dawn::proto::statements::BuiltinType_TypeID_Double:
+    return BuiltinTypeID::Double;
   default:
     return BuiltinTypeID::Invalid;
   }
@@ -505,8 +510,39 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    return std::make_shared<sir::ReductionOverNeighborExpr>(
-        exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+    std::vector<dawn::sir::Value> weights;
+
+    for(const auto& weightProto : exprProto.weights()) {
+      switch(weightProto.Value_case()) {
+      case proto::statements::Weight::kBooleanValue:
+        weights.push_back(dawn::sir::Value(weightProto.boolean_value()));
+        break;
+      case proto::statements::Weight::kFloatValue:
+        weights.push_back(dawn::sir::Value(weightProto.float_value()));
+        break;
+      case proto::statements::Weight::kDoubleValue:
+        weights.push_back(dawn::sir::Value(weightProto.double_value()));
+        break;
+      case proto::statements::Weight::kIntegerValue:
+        weights.push_back(dawn::sir::Value(weightProto.integer_value()));
+        break;
+      case proto::statements::Weight::kStringValue:
+        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
+                         "of arithmetic type)\n");
+        break;
+      case proto::statements::Weight::VALUE_NOT_SET:
+        dawn_unreachable("weight with undefined value encountered!\n");
+        break;
+      }
+    }
+
+    if(weights.size() > 0) {
+      return std::make_shared<sir::ReductionOverNeighborExpr>(
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights);
+    } else {
+      return std::make_shared<sir::ReductionOverNeighborExpr>(
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+    }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
   default:
@@ -699,29 +735,29 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     for(const auto& nameValuePair : sirProto.global_variables().map()) {
       const std::string& sirName = nameValuePair.first;
       const sir::proto::GlobalVariableValue& sirValue = nameValuePair.second;
-      std::shared_ptr<Value> value = nullptr;
+      std::shared_ptr<Global> value = nullptr;
       bool isConstExpr = sirValue.is_constexpr();
 
       switch(sirValue.Value_case()) {
       case sir::proto::GlobalVariableValue::kBooleanValue:
-        value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
+        value = std::make_shared<Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kIntegerValue:
-        value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()), isConstExpr);
+        value = std::make_shared<Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
-        value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()), isConstExpr);
+        value = std::make_shared<Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kStringValue:
-        value =
-            std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()), isConstExpr);
+        value = std::make_shared<Global>(static_cast<std::string>(sirValue.string_value()),
+                                         isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:
         dawn_unreachable("value not set");
       }
 
-      sir->GlobalVariableMap->emplace(sirName, std::move(value));
+      sir->GlobalVariableMap->emplace(sirName, std::move(*value));
     }
 
   } catch(std::runtime_error& error) {

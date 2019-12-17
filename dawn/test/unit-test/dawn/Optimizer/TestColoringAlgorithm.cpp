@@ -30,7 +30,7 @@ class TestGraph : public iir::DependencyGraphAccesses {
   using Base = iir::DependencyGraphAccesses;
 
 public:
-  TestGraph() : Base(iir::StencilMetaInformation{sir::GlobalVariableMap{}}) {}
+  TestGraph() : Base(iir::StencilMetaInformation{std::make_shared<sir::GlobalVariableMap>()}) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
     Base::insertEdge(IDFrom, IDTo, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
