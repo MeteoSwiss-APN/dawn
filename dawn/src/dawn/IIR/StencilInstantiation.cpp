@@ -48,7 +48,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(
-    std::shared_ptr<sir::GlobalVariableMap> globalVariables,
+    ast::GridType const gridType, std::shared_ptr<sir::GlobalVariableMap> globalVariables,
     std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions)
     : metadata_(globalVariables),
       IIR_(std::make_unique<IIR>(gridType, globalVariables, stencilFunctions)) {}
@@ -58,13 +58,14 @@ StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; 
 std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   std::shared_ptr<StencilInstantiation> stencilInstantiation =
-      std::make_shared<StencilInstantiation>(IIR_->getGlobalVariableMapPtr(),
+      std::make_shared<StencilInstantiation>(IIR_->getGridType(), IIR_->getGlobalVariableMapPtr(),
                                              IIR_->getStencilFunctions());
 
   stencilInstantiation->metadata_.clone(metadata_);
 
   stencilInstantiation->IIR_ =
-      std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMapPtr(),
+      std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGridType(),
+                                 stencilInstantiation->getIIR()->getGlobalVariableMapPtr(),
                                  stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
