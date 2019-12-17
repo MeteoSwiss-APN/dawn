@@ -62,7 +62,7 @@ StmtType = TypeVar(
     IfStmt,
 )
 
-LocationType = NewType('LocationType', int)
+LocationTypeEnum = NewType('LocationTypeEnum', int)
 
 def to_json(msg):
     """ Converts protobuf message to JSON format.
@@ -138,9 +138,10 @@ def make_field_dimensions_cartesian(
     fieldDims.maskCartI = ijk_mask[0]
     fieldDims.maskCartJ = ijk_mask[1]
     fieldDims.maskK = ijk_mask[2]
+    return fieldDims
     
 def make_field_dimensions_triangular(
-    neighbor_chain: List[LocationType],
+    neighbor_chain: List[LocationTypeEnum],
     k_mask: int
 ) -> FieldDimensions:
     """ Create a FieldDimensions (overload for Triangular)
@@ -167,7 +168,7 @@ def make_field(
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
-    field.field_dimensions = dimensions
+    field.field_dimensions.CopyFrom(dimensions)
     return field
 
 

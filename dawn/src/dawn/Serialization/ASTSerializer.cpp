@@ -669,7 +669,6 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
 
 sir::FieldDimensions
 makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions) {
-
   // TODO use grid type
   if(protoFieldDimensions.neighbor_chain().empty()) {
     return sir::FieldDimensions(
