@@ -68,7 +68,7 @@ hir = make_sir(GridType.Value('Cartesian'), "copy_stencil.cpp", [
     make_stencil(
         "copy_stencil",
         make_ast([create_vertical_region_stmt()]),
-        [make_field("in"), make_field("out")]
+        [make_field("in", make_field_dimensions_cartesian()), make_field("out", make_field_dimensions_cartesian())]
     )
 
 ])

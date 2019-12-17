@@ -119,10 +119,10 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   return map;
 }
-std::shared_ptr<iir::Expr>
-IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                   std::shared_ptr<iir::Expr>&& init,
-                                   ast::LocationType rhs_location) {
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
+                                                              std::shared_ptr<iir::Expr>&& rhs,
+                                                              std::shared_ptr<iir::Expr>&& init,
+                                                              ast::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), rhs_location);
@@ -210,8 +210,10 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
 IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
-  sir::FieldDimension dimensions(
-      ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
+  sir::FieldDimensions dimensions(
+      sir::HorizontalFieldDimension{ast::cartesian,
+                                    {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
+      fieldMaskArray[2] == 1);
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, dimensions);
   return {id, name};
 }
@@ -231,9 +233,18 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
                                                 ast::LocationType location) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
-                                       sir::FieldDimension(ast::cartesian, {true, true, true}),
-                                       {location});
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::APIField, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::triangular, location}, true));
+  return {id, name};
+}
+
+IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
+                                                ast::NeighborChain sparseChain) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::APIField, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::triangular, sparseChain}, true));
   return {id, name};
 }
 

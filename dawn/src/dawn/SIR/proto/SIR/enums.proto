@@ -20,3 +20,9 @@ syntax = "proto3";
 package dawn.proto.enums;
 
 enum GridType { Cartesian = 0; Triangular = 1; }
+
+enum LocationType {
+    Edge = 0;
+    Vertex = 1;
+    Cell = 2;
+  }

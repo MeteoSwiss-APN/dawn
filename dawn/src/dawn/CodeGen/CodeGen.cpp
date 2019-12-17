@@ -218,7 +218,8 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
         });
 
     for(const auto& field : nonTempFields) {
-      paramNameToType.emplace(field.second.Name, getStorageType(field.second.Dimensions));
+      paramNameToType.emplace(field.second.Name,
+                              getStorageType(field.second.field.getFieldDimensions()));
     }
 
     for(const auto& field : tempFields) {
@@ -268,23 +269,28 @@ void CodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const
   syncStoragesMethod.commit();
 }
 
-std::string CodeGen::getStorageType(const sir::FieldDimension& dimensions) {
-  auto const& structuredDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(dimensions);
+std::string CodeGen::getStorageType(const sir::FieldDimensions& dimensions) {
+  DAWN_ASSERT_MSG(
+      sir::dimension_isa<sir::CartesianFieldDimension>(dimensions.getHorizontalFieldDimension()),
+      "Storage type requested for a non cartesian horizontal dimension");
+  auto const& cartesianDimensions =
+      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+          dimensions.getHorizontalFieldDimension());
+
   std::string storageType = "storage_";
-  storageType += structuredDimensions.I() ? "i" : "";
-  storageType += structuredDimensions.J() ? "j" : "";
-  storageType += structuredDimensions.K() ? "k" : "";
+  storageType += cartesianDimensions.I() ? "i" : "";
+  storageType += cartesianDimensions.J() ? "j" : "";
+  storageType += dimensions.K() ? "k" : "";
   storageType += "_t";
   return storageType;
 }
 
 std::string CodeGen::getStorageType(const sir::Field& field) {
-  return getStorageType(field.fieldDimensions);
+  return getStorageType(field.Dimensions);
 }
 
 std::string CodeGen::getStorageType(const iir::Stencil::FieldInfo& field) {
-  return getStorageType(field.Dimensions);
+  return getStorageType(field.field.getFieldDimensions());
 }
 
 void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const {

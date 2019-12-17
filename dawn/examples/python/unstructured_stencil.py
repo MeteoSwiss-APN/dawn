@@ -62,7 +62,7 @@ hir = make_sir(GridType.Value('Triangular'), "unstructured_stencil.cpp", [
     make_stencil(
         "unstructured_stencil",
         make_ast([create_vertical_region_stmt()]),
-        [make_field("in"), make_field("out")]
+        [make_field("in", make_field_dimensions_triangular([LocationType.Cell], 1)), make_field("out", make_field_dimensions_triangular([LocationType.Edge], 1))]
     )
 
 ])

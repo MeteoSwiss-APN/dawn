@@ -18,6 +18,7 @@
 
 syntax = "proto3";
 package dawn.proto.statements;
+import "SIR/enums.proto";
 
 import "google/protobuf/wrappers.proto";
 
@@ -31,15 +32,10 @@ message SourceLocation {
 }
 
 message FieldDimensions {
-  int32 maskCartI = 1;                 // mask for cartesian dimensions
-  int32 maskCartJ = 2;
-  enum LocationType {
-    Edge = 0;
-    Vertex = 1;
-    Cell = 2;
-  }
+  int32 maskCartI = 1;                 // mask for cartesian dimension i
+  int32 maskCartJ = 2;                 // mask for cartesian dimension j
  
-  repeated LocationType location_type = 3;   // set of location types (dense, sparse...)
+  repeated dawn.proto.enums.LocationType neighbor_chain = 3;   // dense + sparse parts condensed representation (neighbor chain)
 
   int32 maskK = 4;                        // mask for vertical dimension
 }

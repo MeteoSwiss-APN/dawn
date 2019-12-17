@@ -163,6 +163,11 @@ private:
   virtual bool equalityImpl(const FieldDimensionImpl& other) const = 0;
 };
 
+/// @brief In the cartesian case, the horizontal dimension is an IJ-mask describing if the
+/// field is allowed to have extents in I and/or J: [1,0] is a storage_i and cannot be
+/// accessed with field[j+1]
+///
+/// @ingroup sir
 class CartesianFieldDimension : public FieldDimensionImpl {
   bool maskI_, maskJ_;
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
@@ -180,6 +185,16 @@ public:
   explicit CartesianFieldDimension(bool dimi, bool dimj) : maskI_(dimi), maskJ_(dimj) {}
 };
 
+/// @brief In the triangular case, the horizontal dimension can be either dense or sparse.
+/// A field on dense corresponds to 1 value for each location of type defined by the "dense location
+/// type". A field on sparse corresponds to as many values as indirect neighbors defined through a
+/// neighbor chain.
+///
+/// Construct with a neighbor chain. If it is of size = 1, then the dimension is dense (with
+/// location type = single element of chain), otherwise sparse (with dense location type being the
+/// first element of the chain).
+///
+/// @ingroup sir
 class TriangularFieldDimension : public FieldDimensionImpl {
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
     return std::make_unique<TriangularFieldDimension>(neighborChain_);
@@ -193,29 +208,27 @@ class TriangularFieldDimension : public FieldDimensionImpl {
   ast::NeighborChain neighborChain_;
 
 public:
-  explicit TriangularFieldDimension(ast::NeighborChain neighborChain)
-      : neighborChain_(neighborChain) {
-    DAWN_ASSERT(neighborChain.size() > 0);
-  }
-  const ast::NeighborChain& getNeighborChain() const {
-    DAWN_ASSERT(neighborChain_.size() > 1);
-    return neighborChain_;
-  }
+  explicit TriangularFieldDimension(const ast::NeighborChain neighborChain);
+  const ast::NeighborChain& getNeighborChain() const;
   ast::LocationType getDenseLocation() const { return neighborChain_[0]; }
   ast::LocationType getLastSparseLocation() const { return neighborChain_.back(); }
   bool isSparse() const { return neighborChain_.size() > 1; }
+  bool isDense() const { return !isSparse(); }
+  std::string toString() const;
 };
 
 class HorizontalFieldDimension {
   std::unique_ptr<FieldDimensionImpl> impl_;
 
 public:
+  // Construct a Cartesian horizontal field dimension with specified ij mask.
   HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
-
+  // Construct a Triangular horizontal field sparse dimension with specified neighbor chain (sparse
+  // part). Dense part is the first element of the chain.
   HorizontalFieldDimension(dawn::ast::triangular_, ast::NeighborChain neighborChain)
       : impl_(std::make_unique<TriangularFieldDimension>(neighborChain)) {}
-
+  // Construct a Triangular horizontal field dense dimension with specified (dense) location type.
   HorizontalFieldDimension(dawn::ast::triangular_, ast::LocationType locationType)
       : impl_(std::make_unique<TriangularFieldDimension>(ast::NeighborChain{locationType})) {}
 
@@ -224,6 +237,7 @@ public:
     return *this;
   }
   bool operator==(const HorizontalFieldDimension& other) const { return *impl_ == *other.impl_; }
+
   HorizontalFieldDimension& operator=(HorizontalFieldDimension&& other) = default;
 
   HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
@@ -237,14 +251,23 @@ public:
 
 class FieldDimensions {
 public:
-  bool K() const { return maskK_; }
   FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
       : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
+  FieldDimensions(const FieldDimensions&) = default;
+  FieldDimensions(FieldDimensions&&) = default;
+
+  FieldDimensions& operator=(const FieldDimensions&) = default;
+  FieldDimensions& operator=(FieldDimensions&&) = default;
 
   bool operator==(const FieldDimensions& other) const {
     return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
   }
-  const HorizontalFieldDimension& getHorizontalFieldDimension() const;
+
+  bool K() const { return maskK_; }
+  const HorizontalFieldDimension& getHorizontalFieldDimension() const {
+    return horizontalFieldDimension_;
+  }
+  std::string toString() const;
 
 private:
   HorizontalFieldDimension horizontalFieldDimension_;
@@ -272,12 +295,13 @@ bool dimension_isa(HorizontalFieldDimension const& dimension) {
 /// @brief Representation of a field
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
-  Field(const std::string& name, FieldDimensions&& fieldD, SourceLocation loc = SourceLocation())
+  Field(const std::string& name, FieldDimensions&& fieldDimensions,
+        SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
-        fieldDimensions(fieldD) {}
+        Dimensions(fieldDimensions) {}
 
   bool IsTemporary;
-  const FieldDimensions fieldDimensions;
+  FieldDimensions Dimensions;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }

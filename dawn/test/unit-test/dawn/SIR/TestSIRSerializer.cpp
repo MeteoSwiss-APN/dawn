@@ -60,16 +60,24 @@ TEST_P(StencilTest, SourceLocation) {
 }
 
 TEST_P(StencilTest, Fields) {
-  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
-  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("bar"));
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  sirRef->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
+  sirRef->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("bar", makeFieldDimensions()));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
 TEST_P(StencilTest, FieldsWithAttributes) {
-  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
+  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>(
+      "foo", sir::FieldDimensions(sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}),
+                                  true)));
   sirRef->Stencils[0]->Fields[0]->IsTemporary = true;
-  sirRef->Stencils[0]->Fields[0]->fieldDimensions =
-      sir::FieldDimension(dawn::ast::cartesian, {true, true, false});
+  sirRef->Stencils[0]->Fields[0]->Dimensions = sir::FieldDimensions(
+      sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), false);
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
@@ -104,7 +112,12 @@ TEST_P(StencilFunctionTest, SourceLocation) {
 }
 
 TEST_P(StencilFunctionTest, Arguments) {
-  sirRef->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Field>("foo"));
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  sirRef->StencilFunctions[0]->Args.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
   sirRef->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Offset>("foo"));
   sirRef->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Direction>("foo"));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());

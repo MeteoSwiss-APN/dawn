@@ -122,7 +122,7 @@ hir = make_sir(GridType.Value('Cartesian'), "hori_diff.cpp", [
     make_stencil(
         "hori_diff",
         make_ast([create_vertical_region_stmt()]),
-        [make_field("in"), make_field("out"), make_field("coeff"), make_field("lap", is_temporary=True)]
+        [make_field("in", make_field_dimensions_cartesian()), make_field("out", make_field_dimensions_cartesian()), make_field("coeff", make_field_dimensions_cartesian()), make_field("lap", make_field_dimensions_cartesian(), is_temporary=True)]
     )
 
 ])

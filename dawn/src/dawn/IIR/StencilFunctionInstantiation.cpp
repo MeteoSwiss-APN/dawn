@@ -393,7 +393,8 @@ void StencilFunctionInstantiation::update() {
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     std::optional<Extents>(), interval_);
+                                     std::optional<Extents>(), interval_,
+                                     metadata_.getFieldDimensions(AccessID));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -405,7 +406,8 @@ void StencilFunctionInstantiation::update() {
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                    std::optional<Extents>(), interval_);
+                                    std::optional<Extents>(), interval_,
+                                    metadata_.getFieldDimensions(AccessID));
     }
   }
 
@@ -414,8 +416,8 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(
-          AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{},
+                                          interval_, metadata_.getFieldDimensions(AccessID)));
       unusedFields_.insert(AccessID);
     }
   }

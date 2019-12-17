@@ -824,11 +824,11 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -838,11 +838,11 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -852,11 +852,11 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -866,11 +866,11 @@
       "Column": 26
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -880,11 +880,11 @@
       "Column": 31
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     }
    ]

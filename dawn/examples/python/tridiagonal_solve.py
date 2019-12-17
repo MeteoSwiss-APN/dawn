@@ -167,7 +167,7 @@ hir = make_sir(GridType.Value('Cartesian'), "tridiagonal_solve.cpp", [
             create_vertical_region_stmt2(),
             create_vertical_region_stmt3()
         ]),
-        [make_field("a"), make_field("b"), make_field("c"), make_field("d")]
+        [make_field("a", make_field_dimensions_cartesian()), make_field("b", make_field_dimensions_cartesian()), make_field("c", make_field_dimensions_cartesian()), make_field("d", make_field_dimensions_cartesian())]
     )
 
 ])

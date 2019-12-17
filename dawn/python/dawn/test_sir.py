@@ -110,12 +110,21 @@ class Testmake_type(unittest.TestCase):
 
 
 class TestMakeField(unittest.TestCase):
-    def test_make_field(self):
-        field = make_field("foo")
+    def test_make_field_cartesian(self):
+        field = make_field("foo", make_field_dimensions_cartesian())
         self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.maskCartI, 1)
+        self.assertEqual(field.field_dimensions.maskCartJ, 1)
+        self.assertEqual(field.field_dimensions.maskK, 1)
+
+    def test_make_field_triangular(self):
+        field = make_field("foo", make_field_dimensions_triangular([LocationType.Edge], 1))
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.neighbor_chain, [LocationType.Edge])
+        self.assertEqual(field.field_dimensions.maskK, 1)
 
     def test_make_field_temporary(self):
-        field = make_field("foo", True)
+        field = make_field("foo", make_field_dimensions_cartesian(), True)
         self.assertEqual(field.name, "foo")
         self.assertEqual(field.is_temporary, True)
 

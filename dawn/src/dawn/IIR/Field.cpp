@@ -33,6 +33,9 @@ json::json Field::jsonDump() const {
   std::stringstream ss;
   ss << interval_;
   node["interval"] = ss.str();
+
+  node["dim"] = fieldDimensions_.toString();
+
   return node;
 }
 

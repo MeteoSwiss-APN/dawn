@@ -746,11 +746,11 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -760,11 +760,11 @@
       "Column": 15
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -774,11 +774,11 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -788,11 +788,11 @@
       "Column": 15
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -802,11 +802,11 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -816,11 +816,11 @@
       "Column": 23
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -830,11 +830,11 @@
       "Column": 27
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -844,11 +844,11 @@
       "Column": 31
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     },
     {
@@ -858,11 +858,11 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "maskK": 1
+     },
      "location_type": "Cell"
     }
    ]

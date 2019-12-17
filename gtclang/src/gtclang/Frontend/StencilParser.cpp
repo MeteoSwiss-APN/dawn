@@ -571,6 +571,7 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
 }
 
 void StencilParser::parseStorage(clang::FieldDecl* field) {
+  using namespace dawn::sir;
   DAWN_ASSERT(currentParserRecord_->CurrentKind == SK_Stencil);
 
   auto name = field->getDeclName().getAsString();
@@ -584,20 +585,19 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
   if(typeStr.find("storage") != std::string::npos) {
 
     DAWN_LOG(INFO) << "Parsing field: " << name;
-    auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(field));
+    auto fieldDimensions =
+        dawn::StringSwitch<FieldDimensions>(typeStr)
+            .Case("storage", {HorizontalFieldDimension(ast::cartesian, {true, true}), true})
+            .Case("storage_i", {HorizontalFieldDimension(ast::cartesian, {true, false}), false})
+            .Case("storage_j", {HorizontalFieldDimension(ast::cartesian, {false, true}), false})
+            .Case("storage_k", {HorizontalFieldDimension(ast::cartesian, {false, false}), true})
+            .Case("storage_ij", {HorizontalFieldDimension(ast::cartesian, {true, true}), false})
+            .Case("storage_ik", {HorizontalFieldDimension(ast::cartesian, {true, false}), true})
+            .Case("storage_jk", {HorizontalFieldDimension(ast::cartesian, {false, true}), true})
+            .Case("storage_ijk", {HorizontalFieldDimension(ast::cartesian, {true, true}), true})
+            .Default({{false, false, false}});
+    auto SIRField = std::make_shared<Field>(name, std::move(fieldDimensions), getLocation(field));
     SIRField->IsTemporary = false;
-    auto fieldDimensions = dawn::StringSwitch<std::array<bool, 3>>(typeStr)
-                               .Case("storage", {{true, true, true}})
-                               .Case("storage_i", {{true, false, false}})
-                               .Case("storage_j", {{false, true, false}})
-                               .Case("storage_k", {{false, false, true}})
-                               .Case("storage_ij", {{true, true, false}})
-                               .Case("storage_ik", {{true, false, true}})
-                               .Case("storage_jk", {{false, true, true}})
-                               .Case("storage_ijk", {{true, true, true}})
-                               .Default({{false, false, false}});
-    SIRField->fieldDimensions = dawn::sir::FieldDimension(
-        dawn::ast::cartesian, {fieldDimensions[0], fieldDimensions[1], fieldDimensions[2]});
     currentParserRecord_->CurrentStencil->Fields.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, field);
 

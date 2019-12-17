@@ -130,9 +130,6 @@ public:
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
 
-  /// @brief get the iir::Field given an access ID
-  iir::Field getFieldFromFieldAccessID(int accessID) const;
-
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
@@ -155,8 +152,7 @@ public:
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
   int addField(FieldAccessType type, const std::string& name,
-               const sir::FieldDimensions& fieldDimensions,
-               std::vector<ast::LocationType> locationTypes = {ast::LocationType::Cells});
+               const sir::FieldDimensions& fieldDimensions);
 
   int addTmpField(FieldAccessType type, const std::string& basename,
                   const sir::FieldDimensions& fieldDimensions);
@@ -354,9 +350,7 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-  bool getIsUnstructuredFromAccessID(int AccessID) const;
-  std::vector<dawn::ast::LocationType> getLocationTypeFromAccessID(int ID) const;
-  void addAccessIDLocationPair(int ID, const std::vector<ast::LocationType>& locations);
+  dawn::ast::LocationType getLocationTypeFromAccessID(int ID) const;
 
 private:
   //================================================================================================
@@ -365,13 +359,10 @@ private:
 
   FieldAccessMetadata fieldAccessMetadata_;
 
-  /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the
+  /// Map of AccessIDs and to< the name of the variable/field. Note that only for fields of the
   /// "main stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
-
-  /// Stores the location type for every field as a map to the AccessID
-  std::unordered_map<int, std::vector<ast::LocationType>> FieldAccessIDToLocationTypeMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)

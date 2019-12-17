@@ -16,7 +16,7 @@
 
 from collections import Iterable
 from sys import path as sys_path
-from typing import List, TypeVar
+from typing import List, TypeVar, NewType
 from enum import Enum
 
 from dawn.config import __dawn_install_protobuf_module__
@@ -62,12 +62,7 @@ StmtType = TypeVar(
     IfStmt,
 )
 
-
-class LocationType(Enum):
-    Cell = 0
-    Edge = 1
-    Vertex = 2
-
+LocationType = NewType('LocationType', int)
 
 def to_json(msg):
     """ Converts protobuf message to JSON format.
@@ -132,29 +127,47 @@ def make_ast(root: List[StmtType]) -> AST:
     ast.root.CopyFrom(make_stmt(block_stmt))
     return ast
 
+def make_field_dimensions_cartesian(
+    ijk_mask: List[int] = [1, 1, 1]
+) -> FieldDimensions:
+    """ Create a FieldDimensions (overload for Cartesian)
+
+    :param ijk_mask:     mask list to identify cartesian dimensions used
+    """
+    fieldDims = FieldDimensions()
+    fieldDims.maskCartI = ijk_mask[0]
+    fieldDims.maskCartJ = ijk_mask[1]
+    fieldDims.maskK = ijk_mask[2]
+    
+def make_field_dimensions_triangular(
+    neighbor_chain: List[LocationType],
+    k_mask: int
+) -> FieldDimensions:
+    """ Create a FieldDimensions (overload for Triangular)
+
+    :param neighbor_chain:    dense + sparse parts condensed representation (neighbor chain)
+    :param k_mask:    mask of whether vertical is used or not
+    """
+    fieldDims = FieldDimensions()
+    fieldDims.neighbor_chain.extend(neighbor_chain)
+    fieldDims.maskK = k_mask
+    return fieldDims
 
 def make_field(
     name: str,
-    is_temporary: bool = False,
-    dimensions: List[int] = [1, 1, 1],
-    location_type: LocationType = LocationType.Cell,
+    dimensions: FieldDimensions,
+    is_temporary: bool = False
 ) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
     :param is_temporary: Is it a temporary field?
-    :param dimensions:   mask list to identify dimensions contained by the field
+    :param dimensions:   FieldDimensions containing horizontal + vertical dimensions description
     """
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
-    field.field_dimensions.extend(dimensions)
-    if location_type == LocationType.Cell:
-        field.location_type = Field.Cell
-    elif location_type == LocationType.Edge:
-        field.location_type = Field.Edge
-    elif location_type == LocationType.Vertex:
-        field.location_type = Field.Vertex
+    field.field_dimensions = dimensions
     return field
 
 
@@ -666,6 +679,9 @@ __all__ = [
     "SourceLocation",
     "AST",
     "make_ast",
+    "FieldDimensions",
+    "make_field_dimensions_cartesian",
+    "make_field_dimensions_triangular",
     "Field",
     "make_field",
     "Interval",

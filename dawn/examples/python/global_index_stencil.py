@@ -116,7 +116,7 @@ hir = make_sir(GridType.Value('Cartesian'),
                     ),
                 ]
             ),
-            [make_field("in"), make_field("out")],
+            [make_field("in", make_field_dimensions_cartesian()), make_field("out", make_field_dimensions_cartesian())],
         )
     ],
 )

@@ -298,7 +298,10 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
-      switch(info.field.getLocation()) {
+      const auto& triangularDims = sir::dimension_cast<sir::TriangularFieldDimension const&>(
+          info.field.getFieldDimensions().getHorizontalFieldDimension());
+      DAWN_ASSERT(triangularDims.isDense());
+      switch(triangularDims.getDenseLocation()) {
       case ast::LocationType::Cells:
         return std::string("dawn::cell_field_t<LibTag, double>");
       case ast::LocationType::Vertices:
