@@ -183,6 +183,37 @@ private:
   std::string filename_;
 };
 
+class FieldFinder : public dawn::ast::ASTVisitorForwarding {
+public:
+  virtual void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) {
+    auto fieldFromExpression = dawn::sir::Field(
+        expr->getName(),
+        dawn::sir::FieldDimensions(
+            dawn::sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), true));
+
+    auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
+    if(iter == allFields_.end())
+      allFields_.push_back(fieldFromExpression);
+    dawn::ast::ASTVisitorForwarding::visit(expr);
+  }
+
+  virtual void visit(const std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>& stmt) {
+    stmt->getVerticalRegion()->Ast->accept(*this);
+  }
+
+  const std::vector<dawn::sir::Field>& getFields() const { return allFields_; }
+
+private:
+  std::vector<dawn::sir::Field> allFields_;
+};
+
+extern std::vector<dawn::sir::Field>
+getFieldFromStencilAST(const std::shared_ptr<dawn::ast::AST>& ast) {
+  FieldFinder finder;
+  ast->accept(finder);
+  return finder.getFields();
+}
+
 CompareResult ParsingComparison::compare(const ParsedString& ps,
                                          const std::shared_ptr<dawn::sir::Stmt>& stmt) {
   std::unique_ptr<dawn::SIR> test01SIR =
@@ -232,7 +263,7 @@ void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
                 std::make_shared<sir::AST>(std::make_shared<sir::BlockStmt>(*blockstmt)),
                 std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
                 sir::VerticalRegion::LoopOrderKind::Forward))}));
-    auto allFields = dawn::sir::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
+    auto allFields = getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
     for(const auto& a : allFields) {
       sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
     }
