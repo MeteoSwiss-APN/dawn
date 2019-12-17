@@ -28,8 +28,11 @@ yoda_add_library(
           ASTVisitor.cpp
           ASTVisitor.h
           ASTVisitorHelpers.h
+          GridType.cpp
+          GridType.h
           Offsets.h
           Offsets.cpp
+          Tags.h
   OBJECT
 )
 

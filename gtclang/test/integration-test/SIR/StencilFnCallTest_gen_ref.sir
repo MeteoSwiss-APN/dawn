@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "StencilFnCallTest.cpp",
  "stencils": [
   {

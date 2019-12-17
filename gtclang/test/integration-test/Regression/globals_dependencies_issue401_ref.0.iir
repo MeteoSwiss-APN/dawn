@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
-   "29": "global",
    "30": "in_field",
-   "31": "out_field"
+   "31": "out_field",
+   "29": "global"
   },
   "accessIDToType": {
    "30": 6,
@@ -43,24 +43,6 @@
    }
   },
   "idToStencilCall": {
-   "67": {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_67",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 68
-    }
-   },
    "62": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
@@ -78,6 +60,24 @@
      "data": {},
      "ID": 63
     }
+   },
+   "67": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_67",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 68
+    }
    }
   },
   "boundaryCallToExtent": {},
@@ -89,6 +89,7 @@
   "stencilName": "copystencil"
  },
  "internalIR": {
+  "gridType": "Cartesian",
   "globalVariableToValue": {
    "global": {
     "type": "Integer",
@@ -590,5 +591,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "/home/giacomo/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }

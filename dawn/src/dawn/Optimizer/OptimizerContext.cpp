@@ -20,6 +20,7 @@
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -377,7 +378,7 @@ public:
     // Note that we may need to operate on copies of the ASTs because we want to have a *unique*
     // mapping of AST nodes to AccessIDs, hence we clone the ASTs of the vertical regions of
     // stencil calls
-    bool cloneAST = scope_.size() > 1;
+    const bool cloneAST = scope_.size() > 1;
     std::shared_ptr<iir::AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
@@ -385,8 +386,10 @@ public:
         metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LoopOrderKind::Forward
                        ? LoopOrderKind::Forward
                        : LoopOrderKind::Backward);
+    Stage::IterationSpace iterationspace = {stmt->getVerticalRegion()->IterationSpace[0],
+                                            stmt->getVerticalRegion()->IterationSpace[1]};
     std::unique_ptr<Stage> stage =
-        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
+        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval, iterationspace);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -691,9 +694,10 @@ void OptimizerContext::fillIIR() {
   for(const auto& stencil : SIR_->Stencils) {
     DAWN_ASSERT(stencil);
     if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
-      stencilInstantiationMap_.insert(
-          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(
-                                            *getSIR()->GlobalVariableMap, iirStencilFunctions)));
+      stencilInstantiationMap_.insert(std::make_pair(
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType,
+                                                                     *getSIR()->GlobalVariableMap,
+                                                                     iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";

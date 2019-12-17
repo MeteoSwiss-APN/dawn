@@ -106,6 +106,18 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   // Convert SIR to protobuf SIR
   sir::proto::SIR sirProto;
 
+  // SIR.GridType
+  switch(sir->GridType) {
+  case ast::GridType::Cartesian:
+    sirProto.set_gridtype(proto::enums::GridType::Cartesian);
+    break;
+  case ast::GridType::Triangular:
+    sirProto.set_gridtype(proto::enums::GridType::Triangular);
+    break;
+  default:
+    dawn_unreachable("invalid grid type");
+  }
+
   // SIR.Filename
   sirProto.set_filename(sir->Filename);
 
@@ -336,7 +348,16 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
           ? sir::VerticalRegion::LoopOrderKind::Backward
           : sir::VerticalRegion::LoopOrderKind::Forward;
 
-  return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
+  auto verticalRegion = std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
+
+  if(verticalRegionProto.has_i_range()) {
+    verticalRegion->IterationSpace[0] = *makeInterval(verticalRegionProto.i_range());
+  }
+  if(verticalRegionProto.has_j_range()) {
+    verticalRegion->IterationSpace[1] = *makeInterval(verticalRegionProto.j_range());
+  }
+
+  return verticalRegion;
 }
 
 static std::shared_ptr<ast::StencilCall>
@@ -595,9 +616,22 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
   }
 
   // Convert protobuf SIR to SIR
-  std::shared_ptr<SIR> sir = std::make_shared<SIR>();
+  std::shared_ptr<SIR> sir;
 
   try {
+
+    // SIR.GridType
+    switch(sirProto.gridtype()) {
+    case dawn::proto::enums::GridType::Cartesian:
+      sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+      break;
+    case dawn::proto::enums::GridType::Triangular:
+      sir = std::make_shared<SIR>(ast::GridType::Triangular);
+      break;
+    default:
+      dawn_unreachable("unknown grid type");
+    }
+
     // SIR.Filename
     sir->Filename = sirProto.filename();
 
