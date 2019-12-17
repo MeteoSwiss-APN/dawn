@@ -1,6 +1,24 @@
-#pragma once
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
+#ifndef DAWN_INTERFACE_ATLAS_INTERFACE_H_
+#define DAWN_INTERFACE_ATLAS_INTERFACE_H_
+
 #include "atlas/mesh.h"
+#include <algorithm>
 #include <cassert>
+#include <iterator>
 
 namespace utility {
 namespace impl_ {
@@ -124,8 +142,9 @@ std::vector<int> cellNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    neighs[idx] = getNeighs(m.cells().cell_connectivity(), idx);
+    neighs[idx] = getNeighs(m.edges().cell_connectivity(), idx);
   }
+  assert(neighs[idx].size() == 1 || neighs[idx].size() == 2); // boundary edges may have 1 cell
   return neighs[idx];
 }
 
@@ -133,8 +152,9 @@ std::vector<int> nodeNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    neighs[idx] = getNeighs(m.cells().node_connectivity(), idx);
+    neighs[idx] = getNeighs(m.edges().node_connectivity(), idx);
   }
+  assert(neighs[idx].size() == 2);
   return neighs[idx];
 }
 
@@ -142,7 +162,7 @@ std::vector<int> cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    neighs[idx] = getNeighs(m.cells().cell_connectivity(), idx);
+    neighs[idx] = getNeighs(m.edges().cell_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -176,55 +196,135 @@ std::vector<int> nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   return neighs[idx];
 }
 
+// weighted versions
+
+template <typename Init, typename Op, typename Weight>
+auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                      const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : cellNeighboursOfCell(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                      const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : edgeNeighboursOfCell(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                        const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : nodeNeighboursOfCell(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+
+template <typename Init, typename Op, typename Weight>
+auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                      const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : cellNeighboursOfEdge(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                        const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : nodeNeighboursOfEdge(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+
+template <typename Init, typename Op, typename Weight>
+auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                        const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : cellNeighboursOfNode(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                        const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : edgeNeighboursOfNode(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+template <typename Init, typename Op, typename Weight>
+auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+                          const std::vector<Weight>&& weights) {
+  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : nodeNeighboursOfNode(m, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+
+// unweighted versions
+
 template <typename Init, typename Op>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : cellNeighboursOfCell(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : cellNeighboursOfCell(m, idx))
+    op(init, objIdx);
   return init;
 }
 template <typename Init, typename Op>
 auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : edgeNeighboursOfCell(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : edgeNeighboursOfCell(m, idx))
+    op(init, objIdx);
   return init;
 }
 template <typename Init, typename Op>
 auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : nodeNeighboursOfCell(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : nodeNeighboursOfCell(m, idx))
+    op(init, objIdx);
   return init;
 }
 
 template <typename Init, typename Op>
 auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : cellNeighboursOfEdge(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : cellNeighboursOfEdge(m, idx))
+    op(init, objIdx);
   return init;
 }
 template <typename Init, typename Op>
 auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : nodeNeighboursOfEdge(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : nodeNeighboursOfEdge(m, idx))
+    op(init, objIdx);
   return init;
 }
 
 template <typename Init, typename Op>
 auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : cellNeighboursOfNode(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : cellNeighboursOfNode(m, idx))
+    op(init, objIdx);
   return init;
 }
 template <typename Init, typename Op>
 auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : edgeNeighboursOfNode(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : edgeNeighboursOfNode(m, idx))
+    op(init, objIdx);
   return init;
 }
 template <typename Init, typename Op>
 auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& obj : nodeNeighboursOfNode(m, idx))
-    op(init, obj);
+  for(auto&& objIdx : nodeNeighboursOfNode(m, idx))
+    op(init, objIdx);
   return init;
 }
 
 } // namespace atlasInterface
+#endif

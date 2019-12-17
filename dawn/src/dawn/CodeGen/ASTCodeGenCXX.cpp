@@ -172,6 +172,8 @@ const char* ASTCodeGenCXX::builtinTypeIDToCXXType(const BuiltinTypeID& builtinTy
     return "bool";
   case BuiltinTypeID::Float:
     return "::dawn::float_type";
+  case BuiltinTypeID::Double:
+    return "::dawn::float_type";
   case BuiltinTypeID::Integer:
     return "int";
   default:

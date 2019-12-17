@@ -114,7 +114,7 @@ public:
     // We add all global variables which have constant values
     for(const auto& keyValuePair : globalVariableMap) {
       const std::string& key = keyValuePair.first;
-      const sir::Value& value = *keyValuePair.second;
+      const sir::Global& value = keyValuePair.second;
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
@@ -696,7 +696,7 @@ void OptimizerContext::fillIIR() {
     if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
           stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType,
-                                                                     *getSIR()->GlobalVariableMap,
+                                                                     getSIR()->GlobalVariableMap,
                                                                      iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
