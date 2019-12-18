@@ -378,3 +378,60 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
   }
 }
 } // namespace
+
+#include <generated_verticalSolver.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
+  const int numCell = 5;
+
+  // This tests the unstructured vertical solver
+  // A small system with a manufactured solution is generated for each cell
+
+  // apparently, one needs to be added to the second dimension in order to get a
+  // square mesh, or we are mis-interpreting the output
+  atlas::StructuredGrid structuredGrid =
+      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+
+  // the 4 fields required for the thomas algorithm
+  //  c.f.
+  //  https://en.wikibooks.org/wiki/Algorithm_Implementation/Linear_Algebra/Tridiagonal_matrix_algorithm#C
+  int nb_levels = 5;
+  atlas::functionspace::CellColumns fs_cols(mesh, atlas::option::levels(nb_levels));
+  atlas::Field a_f{fs_cols.createField<double>(atlas::option::name("a_cells"))};
+  atlas::Field b_f{fs_cols.createField<double>(atlas::option::name("b_cells"))};
+  atlas::Field c_f{fs_cols.createField<double>(atlas::option::name("c_cells"))};
+  atlas::Field d_f{fs_cols.createField<double>(atlas::option::name("d_cells"))};
+
+  atlasInterface::Field<double> a_v = atlas::array::make_view<double, 2>(a_f);
+  atlasInterface::Field<double> b_v = atlas::array::make_view<double, 2>(b_f);
+  atlasInterface::Field<double> c_v = atlas::array::make_view<double, 2>(c_f);
+  atlasInterface::Field<double> d_v = atlas::array::make_view<double, 2>(d_f);
+
+  // solution to this problem will be [1,2,3,4,5] at each cell location
+  for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+    for(int k = 0; k < nb_levels; k++) {
+      a_v(cell, k) = k + 1;
+      b_v(cell, k) = k + 1;
+      c_v(cell, k) = k + 2;
+    }
+
+    d_v(cell, 0) = 5;
+    d_v(cell, 1) = 15;
+    d_v(cell, 2) = 31;
+    d_v(cell, 3) = 53;
+    d_v(cell, 4) = 45;
+  }
+
+  dawn_generated::cxxnaiveico::tridiagonalSolve<atlasInterface::atlasTag>(mesh, nb_levels, a_v, b_v,
+                                                                          c_v, d_v)
+      .run();
+
+  for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+    for(int k = 0; k < nb_levels; k++) {
+      EXPECT_TRUE(abs(d_v(cell, k) - (k + 1)) < 1e3 * std::numeric_limits<double>::epsilon());
+    }
+  }
+}
+} // namespace

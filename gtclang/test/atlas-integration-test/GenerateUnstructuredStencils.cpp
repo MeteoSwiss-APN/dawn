@@ -181,57 +181,14 @@ int main() {
                 LoopOrderKind::Backward,
                 b.stage(
                     LocType::Cells,
-                    b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, -1, 0,
+                    b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0, -1,
                               b.stmt(b.assignExpr(
                                   b.at(d_f),
                                   b.binaryExpr(b.at(d_f),
                                                b.binaryExpr(b.at(c_f),
-                                                            b.at(d_f, HOffsetType::noOffset, -1),
+                                                            b.at(d_f, HOffsetType::noOffset, +1),
                                                             Op::multiply),
                                                Op::minus))))))));
-
-    // auto stencil_instantiation = b.build(
-    //     "tridiagonalSolve",
-    //     b.stencil(b.multistage(
-    //         LoopOrderKind::Parallel,
-    //         b.stage(
-    //             LocType::Cells,
-    //             b.vregion(
-    //                 dawn::sir::Interval::Start, dawn::sir::Interval::Start, 0, 0,
-    //                 b.stmt(b.assignExpr(b.at(c_f), b.binaryExpr(b.at(c_f), b.at(b_f),
-    //                 Op::divide))), b.stmt(
-    //                     b.assignExpr(b.at(d_f), b.binaryExpr(b.at(d_f), b.at(b_f),
-    //                     Op::divide)))),
-    //             b.vregion(
-    //                 dawn::sir::Interval::Start, dawn::sir::Interval::Start, 0, 0,
-    //                 b.stmt(b.assignExpr(
-    //                     b.at(m_var),
-    //                     b.binaryExpr(b.lit(1.),
-    //                                  b.binaryExpr(b.at(b_f),
-    //                                               b.binaryExpr(b.at(a_f),
-    //                                                            b.at(c_f, HOffsetType::noOffset,
-    //                                                            -1), Op::multiply),
-    //                                               Op::minus),
-    //                                  Op::divide))),
-    //                 b.stmt(b.assignExpr(b.at(c_f), b.binaryExpr(b.at(c_f, HOffsetType::noOffset,
-    //                 0),
-    //                                                             b.at(m_var), Op::multiply))),
-    //                 b.stmt(b.assignExpr(
-    //                     b.at(d_f),
-    //                     b.binaryExpr(b.binaryExpr(b.at(d_f),
-    //                                               b.binaryExpr(b.at(a_f),
-    //                                                            b.at(d_f, HOffsetType::noOffset,
-    //                                                            -1), Op::multiply),
-    //                                               Op::minus),
-    //                                  b.at(m_var), Op::multiply)))),
-    //             b.vregion(
-    //                 dawn::sir::Interval::End, dawn::sir::Interval::Start, -1, 0,
-    //                 b.stmt(b.assignExpr(
-    //                     b.at(d_f),
-    //                     b.binaryExpr(b.at(d_f),
-    //                                  b.binaryExpr(b.at(c_f), b.at(d_f, HOffsetType::noOffset, 1),
-    //                                               Op::multiply),
-    //                                  Op::minus))))))));
 
     std::ofstream of("generated/generated_verticalSolver.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
