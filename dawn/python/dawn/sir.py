@@ -542,6 +542,11 @@ def make_stencil_fun_call_expr(callee: str, arguments: List[ExprType]) -> Stenci
     return expr
 
 
+def make_unstructured_offset(has_offset: bool = False) -> UnstructuredOffset:
+    unstructured_offset = UnstructuredOffset()
+    unstructured_offset.has_offset = has_offset
+    return unstructured_offset
+
 def make_stencil_fun_arg_expr(
     direction: Dimension.Direction, offset: int = 0, argument_index: int = -1
 ) -> StencilFunArgExpr:
@@ -561,6 +566,20 @@ def make_stencil_fun_arg_expr(
     expr.argument_index = argument_index
     return expr
 
+
+def make_unstructured_field_access_expr(
+    name: str,
+    horizontal_offset: UnstructuredOffset = None, 
+    vertical_offset: int = 0,
+) -> FieldAccessExpr:
+    expr = FieldAccessExpr()
+    expr.name = name
+    if (horizontal_offset is None):
+        expr.unstructured_offset.CopyFrom(make_unstructured_offset(False))
+    else:
+        expr.unstructured_offset.CopyFrom(horizontal_offset)
+    expr.vertical_offset = vertical_offset
+    return expr
 
 def make_field_access_expr(
     name: str,
@@ -706,6 +725,7 @@ __all__ = [
     "make_expr",
     "UnaryOperator",
     "make_unary_operator",
+    "make_unstructured_offset",
     "BinaryOperator",
     "make_binary_operator",
     "AssignmentExpr",
@@ -723,6 +743,7 @@ __all__ = [
     "make_var_access_expr",
     "FieldAccessExpr",
     "make_field_access_expr",
+    "make_unstructured_field_access_expr",
     "LiteralAccessExpr",
     "make_literal_access_expr",
     "ReductionOverNeighborExpr",
