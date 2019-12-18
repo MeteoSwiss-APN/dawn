@@ -34,7 +34,8 @@ if(eckit_FOUND AND atlas_FOUND)
                                 generated_accumulateEdgeToCell.hpp
                                 generated_verticalSum.hpp
                                 generated_diffusion.hpp
-                                generated_gradient.hpp)
+                                generated_gradient.hpp
+                                generated_verticalSolver.hpp)
     set(reference_stencil_codes reference_diffusion.hpp reference_gradient.hpp)
     list(TRANSFORM generated_stencil_codes PREPEND generated/)
     list(TRANSFORM reference_stencil_codes PREPEND reference/)
