@@ -66,7 +66,7 @@ if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIF needs to be set in the machine env"
 fi
 CMAKE_ARGS="-DDAWN_BUNDLE_JAVA=ON -DCMAKE_BUILD_TYPE=${build_type}  \
-        -DProtobuf_DIR=${PROTOBUFDIR} -DDAWN_TESTING=ON BUILD_TESTING=ON"
+        -DProtobuf_DIR=${PROTOBUFDIR} -DDAWN_TESTING=ON -DBUILD_TESTING=ON"
 
 if [ -n ${INSTALL_DIR} ]; then
   rm -rf ${INSTALL_DIR}
@@ -74,7 +74,7 @@ if [ -n ${INSTALL_DIR} ]; then
 fi
 
 
-message("cmake ${CMAKE_ARGS} ../")
+echo "cmake ${CMAKE_ARGS} ../"
 cmake ${CMAKE_ARGS} ../
 
 make -j8 install
