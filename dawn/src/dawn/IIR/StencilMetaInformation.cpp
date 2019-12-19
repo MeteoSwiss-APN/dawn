@@ -309,11 +309,14 @@ bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
          accessType == FieldAccessType::InterStencilTemporary;
 }
 
-sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int FieldID) const {
-  if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) const {
+  if(isAccessIDAVersion(fieldID)) {
+    fieldID = getOriginalVersionOfAccessID(fieldID);
+  }
+  if(fieldIDToInitializedDimensionsMap_.count(fieldID) == 0) {
     throw std::runtime_error("Field id does not exist");
   }
-  return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+  return fieldIDToInitializedDimensionsMap_.find(fieldID)->second;
 }
 
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
