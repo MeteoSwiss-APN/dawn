@@ -27,7 +27,7 @@
 #include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
-#include "test/integration-test/FV3/generated/p_grad_c_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/p_grad_c_c++-naive.cpp"
 #include <gtest/gtest.h>
 
 #ifndef OPTBACKEND
@@ -35,7 +35,7 @@
 #endif
 
 // clang-format off
-#include INCLUDE_FILE(test/integration-test/FV3/generated/p_grad_c_,OPTBACKEND.cpp)
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/p_grad_c_,OPTBACKEND.cpp)
 // clang-format on
 
 using namespace dawn;
