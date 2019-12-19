@@ -446,6 +446,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
 
+  // TODO: this method is broken, it's on cartesian
+
   const auto& metadata = stencilInstantiation->getMetaData();
   // stencil functions
   //
@@ -494,14 +496,16 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
           continue;
         const std::string argName = exprArg->Name;
 
-        DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
-        const std::string argType = stencilProp->paramNameToType_[argName];
+        // TODO: the following commented lines are broken (using gridtools::data_view)
+        //        DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
+        //        const std::string argType = stencilProp->paramNameToType_[argName];
         // each parameter being passed to a stencil function, is wrapped around the param_wrapper
         // that contains the storage and the offset, in order to resolve offset passed to the
         // storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
-                                argName);
+        //        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">>
+        //        pw_" +
+        //                                argName);
       }
 
       // add global parameter
@@ -517,10 +521,11 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
 
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
-
-        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
-                         << paramName << " = pw_" << paramName << ".dview_;";
-        stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
+        // TODO: the following commented lines are broken (using gridtools::data_view)
+        //        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
+        //                         << paramName << " = pw_" << paramName << ".dview_;";
+        //        stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName <<
+        //        ".offsets_;";
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
