@@ -74,9 +74,7 @@ if [ -n ${INSTALL_DIR} ]; then
 fi
 
 
-echo "cmake ${CMAKE_ARGS} ../"
 cmake ${CMAKE_ARGS} ../
-
 make -j8 install
 
 # Run unittests
