@@ -37,9 +37,5 @@ def grid_sir_with_reference_code(request):
 def unstructure_sir_with_reference_code(request):
     sir = getattr(utils, f"make_{request.param}_sir")(name=request.param)
     reference_code = ""
-    # with open(
-    #     os.path.join(os.path.dirname(__file__), "data", f"{request.param}_reference.cpp"), "r"
-    # ) as f:
-    #     reference_code = f.read()
 
     return sir, reference_code

@@ -34,15 +34,15 @@ from .SIR.enums_pb2 import *
 from .. import utils
 
 __all__ = [
-    "GridType",
-    "make_ast",
-    "make_field",
-    "make_interval",
+    "make_sir",
+    "make_stencil",
+    "make_stencil",
     "make_type",
+    "make_field",
+    "make_ast",
+    "make_interval",
     "make_vertical_region",
     "make_stencil_call",
-    "make_stencil",
-    "make_sir",
     "make_stmt",
     "make_block_stmt",
     "make_expr_stmt",
@@ -109,53 +109,47 @@ class LocationType(Enum):
     Vertex = 2
 
 
-def to_bytes(msg):
-    """ Converts protobuf message to JSON format.
+def make_sir(
+    filename: str,
+    grid_type: GridType,
+    stencils: List[Stencil],
+    functions: List[StencilFunction] = [],
+    global_variables: GlobalVariableMap = None,
+) -> SIR:
+    """ Create a SIR
 
-    :param msg: The protocol buffers message instance to serialize.
-    :returns: A byte string containing the serialized protocol buffer message.
+    :param filename:          Source filename
+    :param grid_type:         Grid type definition
+    :param stencils:          list of stencils that compose the SIR
+    :param functions:         list of functions used in the SIR
+    :param global_variables:  global variable map used in the SIR
     """
-    return msg.SerializeToString()
+
+    sir = SIR()
+    sir.filename = filename
+    sir.gridType = grid_type
+    sir.stencils.extend(stencils)
+    sir.stencil_functions.extend(functions)
+    if global_variables:
+        sir.global_variables.CopyFrom(global_variables)
+
+    return sir
 
 
-def from_bytes(byte_string: bytes, message_type):
-    """ Parses a serialized representation of a protocol message and returns the parsed message.
+def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
+    """ Create a Stencil
 
-    :param text: Text JSON representation of the message.
-    :param message_type: The *type* of message to parse.
-    :returns: The parsed message.
-    :raises ParseError: Failed to parse message
+    :param name:      Name of the stencil
+    :param ast:       AST with stmts of the stencil
+    :param fields:    list of input-output fields
     """
-    try:
-        msg = message_type.FromString(byte_string)
-    except Exception as e:
-        raise ParseError(str(e))
-    return msg
 
+    stencil = Stencil()
+    stencil.name = name
+    stencil.ast.CopyFrom(ast)
+    stencil.fields.extend(fields)
 
-def to_json(msg):
-    """ Converts protobuf message to JSON format.
-
-    :param msg: The protocol buffers message instance to serialize.
-    :returns: A string containing the JSON formatted protocol buffer message.
-    """
-    return json_format.MessageToJson(msg)
-
-
-def from_json(text: str, message_type):
-    """ Parses a JSON representation of a protocol message and returns the parsed message.
-
-    :param text: Text JSON representation of the message.
-    :param message_type: The *type* of message to parse.
-    :returns: The parsed message.
-    :raises ParseError: Failed to parse JSON
-    """
-    msg = message_type()
-    try:
-        json_format.Parse(text, msg)
-    except json_format.ParseError as e:
-        raise ParseError(str(e))
-    return msg
+    return stencil
 
 
 def make_type(builtin_type_or_name, is_const: bool = False, is_volatile: bool = False):
@@ -184,19 +178,6 @@ def make_type(builtin_type_or_name, is_const: bool = False, is_volatile: bool = 
     return t
 
 
-def make_ast(root: List[StmtType]) -> AST:
-    """ Create an AST
-
-    :param root:    Root node of the AST (needs to be of type BlockStmt)
-    """
-    ast = AST()
-
-    block_stmt = make_block_stmt(root)
-
-    ast.root.CopyFrom(make_stmt(block_stmt))
-    return ast
-
-
 def make_field(
     name: str,
     is_temporary: bool = False,
@@ -220,6 +201,19 @@ def make_field(
     elif location_type == LocationType.Vertex:
         field.location_type = Field.Vertex
     return field
+
+
+def make_ast(root: List[StmtType]) -> AST:
+    """ Create an AST
+
+    :param root:    Root node of the AST (needs to be of type BlockStmt)
+    """
+    ast = AST()
+
+    block_stmt = make_block_stmt(root)
+
+    ast.root.CopyFrom(make_stmt(block_stmt))
+    return ast
 
 
 def make_interval(
@@ -257,59 +251,6 @@ def make_interval(
     return interval
 
 
-def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
-    """ Create a Stencil
-
-    :param name:      Name of the stencil
-    :param ast:       AST with stmts of the stencil
-    :param fields:    list of input-output fields
-    """
-
-    stencil = Stencil()
-    stencil.name = name
-    stencil.ast.CopyFrom(ast)
-    stencil.fields.extend(fields)
-
-    return stencil
-
-
-def make_sir(
-    gridtype: GridType,
-    filename: str,
-    stencils: List[Stencil],
-    functions: List[StencilFunction] = [],
-    global_variables: GlobalVariableMap = None,
-) -> SIR:
-    """ Create a SIR
-
-    :param filename:          Source filename
-    :param stencils:          list of stencils that compose the SIR
-    :param functions:         list of functions used in the SIR
-    :param global_variables:  global variable map used in the SIR
-    """
-
-    sir = SIR()
-    sir.filename = filename
-    sir.stencils.extend(stencils)
-    sir.stencil_functions.extend(functions)
-    if global_variables:
-        sir.global_variables.CopyFrom(global_variables)
-
-    return sir
-
-
-def make_stencil_call(callee: str, arguments: List[str]) -> StencilCall:
-    """ Create a StencilCall
-
-    :param callee:      Name of the called stencil (i.e callee)
-    :param arguments:   Fields passed as arguments during the stencil call
-    """
-    call = StencilCall()
-    call.callee = callee
-    call.arguments.extend(arguments)
-    return call
-
-
 def make_vertical_region(
     ast: AST,
     interval: Interval,
@@ -334,42 +275,16 @@ def make_vertical_region(
     return vr
 
 
+def make_stencil_call(callee: str, arguments: List[str]) -> StencilCall:
+    """ Create a StencilCall
 
-def make_expr(expr: ExprType):
-    """ Wrap a concrete expression (e.g VarAccessExpr) into an Expr object
-
-    :param expr: Expression to wrap
-    :return: Expression wrapped into Expr
+    :param callee:      Name of the called stencil (i.e callee)
+    :param arguments:   Fields passed as arguments during the stencil call
     """
-    if isinstance(expr, Expr):
-        return expr
-    wrapped_expr = Expr()
-
-    if isinstance(expr, UnaryOperator):
-        wrapped_expr.unary_operator.CopyFrom(expr)
-    elif isinstance(expr, BinaryOperator):
-        wrapped_expr.binary_operator.CopyFrom(expr)
-    elif isinstance(expr, AssignmentExpr):
-        wrapped_expr.assignment_expr.CopyFrom(expr)
-    elif isinstance(expr, TernaryOperator):
-        wrapped_expr.ternary_operator.CopyFrom(expr)
-    elif isinstance(expr, FunCallExpr):
-        wrapped_expr.fun_call_expr.CopyFrom(expr)
-    elif isinstance(expr, StencilFunCallExpr):
-        wrapped_expr.stencil_fun_call_expr.CopyFrom(expr)
-    elif isinstance(expr, StencilFunArgExpr):
-        wrapped_expr.stencil_fun_arg_expr.CopyFrom(expr)
-    elif isinstance(expr, VarAccessExpr):
-        wrapped_expr.var_access_expr.CopyFrom(expr)
-    elif isinstance(expr, FieldAccessExpr):
-        wrapped_expr.field_access_expr.CopyFrom(expr)
-    elif isinstance(expr, LiteralAccessExpr):
-        wrapped_expr.literal_access_expr.CopyFrom(expr)
-    elif isinstance(expr, ReductionOverNeighborExpr):
-        wrapped_expr.reduction_over_neighbor_expr.CopyFrom(expr)
-    else:
-        raise SIRError("cannot create Expr from type {}".format(type(expr)))
-    return wrapped_expr
+    call = StencilCall()
+    call.callee = callee
+    call.arguments.extend(arguments)
+    return call
 
 
 def make_stmt(stmt: StmtType):
@@ -483,7 +398,11 @@ def make_vertical_region_decl_stmt(vertical_region: VerticalRegion) -> VerticalR
 
 
 def make_vertical_region_decl_stmt(
-    ast: AST, interval: Interval, loop_order: VerticalRegion.LoopOrder, IRange: Interval = None, JRange: Interval = None
+    ast: AST,
+    interval: Interval,
+    loop_order: VerticalRegion.LoopOrder,
+    IRange: Interval = None,
+    JRange: Interval = None,
 ) -> VerticalRegionDeclStmt:
     """ Create a VerticalRegionDeclStmt
 
@@ -492,6 +411,7 @@ def make_vertical_region_decl_stmt(
     stmt = VerticalRegionDeclStmt()
     stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order, IRange, JRange))
     return stmt
+
 
 def make_boundary_condition_decl_stmt(
     functor: str, fields: List[str]
@@ -520,6 +440,43 @@ def make_if_stmt(cond_part: StmtType, then_part: StmtType, else_part: StmtType =
     if else_part:
         stmt.else_part.CopyFrom(make_stmt(else_part))
     return stmt
+
+
+def make_expr(expr: ExprType):
+    """ Wrap a concrete expression (e.g VarAccessExpr) into an Expr object
+
+    :param expr: Expression to wrap
+    :return: Expression wrapped into Expr
+    """
+    if isinstance(expr, Expr):
+        return expr
+    wrapped_expr = Expr()
+
+    if isinstance(expr, UnaryOperator):
+        wrapped_expr.unary_operator.CopyFrom(expr)
+    elif isinstance(expr, BinaryOperator):
+        wrapped_expr.binary_operator.CopyFrom(expr)
+    elif isinstance(expr, AssignmentExpr):
+        wrapped_expr.assignment_expr.CopyFrom(expr)
+    elif isinstance(expr, TernaryOperator):
+        wrapped_expr.ternary_operator.CopyFrom(expr)
+    elif isinstance(expr, FunCallExpr):
+        wrapped_expr.fun_call_expr.CopyFrom(expr)
+    elif isinstance(expr, StencilFunCallExpr):
+        wrapped_expr.stencil_fun_call_expr.CopyFrom(expr)
+    elif isinstance(expr, StencilFunArgExpr):
+        wrapped_expr.stencil_fun_arg_expr.CopyFrom(expr)
+    elif isinstance(expr, VarAccessExpr):
+        wrapped_expr.var_access_expr.CopyFrom(expr)
+    elif isinstance(expr, FieldAccessExpr):
+        wrapped_expr.field_access_expr.CopyFrom(expr)
+    elif isinstance(expr, LiteralAccessExpr):
+        wrapped_expr.literal_access_expr.CopyFrom(expr)
+    elif isinstance(expr, ReductionOverNeighborExpr):
+        wrapped_expr.reduction_over_neighbor_expr.CopyFrom(expr)
+    else:
+        raise SIRError("cannot create Expr from type {}".format(type(expr)))
+    return wrapped_expr
 
 
 def make_unary_operator(op: str, operand: ExprType) -> UnaryOperator:
@@ -724,6 +681,55 @@ def make_reduction_over_neighbor_expr(
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
     return expr
+
+
+def to_bytes(msg):
+    """ Converts protobuf message to JSON format.
+
+    :param msg: The protocol buffers message instance to serialize.
+    :returns: A byte string containing the serialized protocol buffer message.
+    """
+    return msg.SerializeToString()
+
+
+def from_bytes(byte_string: bytes, message_type):
+    """ Parses a serialized representation of a protocol message and returns the parsed message.
+
+    :param text: Text JSON representation of the message.
+    :param message_type: The *type* of message to parse.
+    :returns: The parsed message.
+    :raises ParseError: Failed to parse message
+    """
+    try:
+        msg = message_type.FromString(byte_string)
+    except Exception as e:
+        raise ParseError(str(e))
+    return msg
+
+
+def to_json(msg):
+    """ Converts protobuf message to JSON format.
+
+    :param msg: The protocol buffers message instance to serialize.
+    :returns: A string containing the JSON formatted protocol buffer message.
+    """
+    return json_format.MessageToJson(msg)
+
+
+def from_json(text: str, message_type):
+    """ Parses a JSON representation of a protocol message and returns the parsed message.
+
+    :param text: Text JSON representation of the message.
+    :param message_type: The *type* of message to parse.
+    :returns: The parsed message.
+    :raises ParseError: Failed to parse JSON
+    """
+    msg = message_type()
+    try:
+        json_format.Parse(text, msg)
+    except json_format.ParseError as e:
+        raise ParseError(str(e))
+    return msg
 
 
 class SIRPrinter:
@@ -1015,6 +1021,7 @@ class SIRPrinter:
         print(self.wrapper.fill(str_), file=self.file)
 
     def visit_sir(self, sir):
+        print(self.wrapper.fill("grid_type['{}']".format(str(sir.gridType))), file=self.file)
         for stencil in sir.stencils:
             self.visit_stencil(stencil)
 

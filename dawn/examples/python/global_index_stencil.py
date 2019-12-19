@@ -28,12 +28,7 @@ The program contains two parts:
 """
 
 import argparse
-import ctypes
 import os.path
-import sys
-import textwrap
-from ctypes import *
-from optparse import OptionParser
 
 import dawn4py
 from dawn4py.serialization import SIR
@@ -61,11 +56,15 @@ def create_vertical_region_stmt() -> SIR.VerticalRegionDeclStmt:
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
     return vertical_region_stmt
 
 
-def create_boundary_correction_region(value="0", i_interval=None, j_interval=None) -> SIR.VerticalRegionDeclStmt:
+def create_boundary_correction_region(
+    value="0", i_interval=None, j_interval=None
+) -> SIR.VerticalRegionDeclStmt:
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
     boundary_body = sir_utils.make_ast(
         [
@@ -84,8 +83,8 @@ def create_boundary_correction_region(value="0", i_interval=None, j_interval=Non
 
 def main(args: argparse.Namespace):
     sir = sir_utils.make_sir(
-        sir_utils.GridType.Value("Cartesian"),
         OUTPUT_FILE,
+        SIR.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 "global_indexing",
@@ -93,36 +92,64 @@ def main(args: argparse.Namespace):
                     [
                         create_vertical_region_stmt(),
                         create_boundary_correction_region(
-                            value="4", i_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0)
+                            value="4",
+                            i_interval=sir_utils.make_interval(
+                                SIR.Interval.End, SIR.Interval.End, -1, 0
+                            ),
                         ),
                         create_boundary_correction_region(
-                            value="8", i_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1)
+                            value="8",
+                            i_interval=sir_utils.make_interval(
+                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
+                            ),
                         ),
                         create_boundary_correction_region(
-                            value="6", j_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0)
+                            value="6",
+                            j_interval=sir_utils.make_interval(
+                                SIR.Interval.End, SIR.Interval.End, -1, 0
+                            ),
                         ),
                         create_boundary_correction_region(
-                            value="2", j_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1)
+                            value="2",
+                            j_interval=sir_utils.make_interval(
+                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
+                            ),
                         ),
                         create_boundary_correction_region(
                             value="1",
-                            j_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
-                            i_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
+                            j_interval=sir_utils.make_interval(
+                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
+                            ),
+                            i_interval=sir_utils.make_interval(
+                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
+                            ),
                         ),
                         create_boundary_correction_region(
                             value="3",
-                            j_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
-                            i_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
+                            j_interval=sir_utils.make_interval(
+                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
+                            ),
+                            i_interval=sir_utils.make_interval(
+                                SIR.Interval.End, SIR.Interval.End, -1, 0
+                            ),
                         ),
                         create_boundary_correction_region(
                             value="7",
-                            j_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
-                            i_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
+                            j_interval=sir_utils.make_interval(
+                                SIR.Interval.End, SIR.Interval.End, -1, 0
+                            ),
+                            i_interval=sir_utils.make_interval(
+                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
+                            ),
                         ),
                         create_boundary_correction_region(
                             value="5",
-                            j_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
-                            i_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
+                            j_interval=sir_utils.make_interval(
+                                SIR.Interval.End, SIR.Interval.End, -1, 0
+                            ),
+                            i_interval=sir_utils.make_interval(
+                                SIR.Interval.End, SIR.Interval.End, -1, 0
+                            ),
                         ),
                     ]
                 ),
@@ -145,61 +172,15 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a simple copy-shift stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(
+        description="Generate a simple copy-shift stencil using Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())
-
-
-# parser = OptionParser()
-# parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="print the SIR")
-
-# (options, args) = parser.parse_args()
-
-# # Print the SIR to stdout only in verbose mode
-# if options.verbose:
-#     T = textwrap.TextWrapper(initial_indent=" " * 1, width=120, subsequent_indent=" " * 1)
-#     des = sir_printer.SIRPrinter()
-
-#     for stencil in hir.stencils:
-#         des.visit_stencil(stencil)
-
-# # serialize the hir to pass it to the compiler
-# hirstr = hir.SerializeToString()
-
-# # create the options to control the compiler
-# dawn.dawnOptionsCreate.restype = c_void_p
-# options = dawn.dawnOptionsCreate()
-
-# # we set the backend of the compiler to cuda
-# dawn.dawnOptionsEntryCreateString.restype = c_void_p
-# dawn.dawnOptionsEntryCreateString.argtypes = [ctypes.c_char_p]
-
-# dawn.dawnOptionsSet.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
-# backend = dawn.dawnOptionsEntryCreateString("c++-naive".encode("utf-8"))
-# dawn.dawnOptionsSet(options, "Backend".encode("utf-8"), backend)
-
-# none = dawn.dawnOptionsEntryCreateString("none".encode("utf-8"))
-# dawn.dawnOptionsSet(options, "ReorderStrategy".encode("utf-8"), none)
-
-# # one = dawn.dawnOptionsEntryCreateInteger(1)
-# # dawn.dawnOptionsSet(options, "DumpStencilInstantiation".encode("utf-8"), one)
-
-# # call the compiler that generates a translation unit
-
-# dawn.dawnCompile.restype = c_void_p
-# dawn.dawnCompile.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p]
-# tu = dawn.dawnCompile(hirstr, len(hirstr), options)
-# stencilname = "global_indexing"
-# b_stencilName = stencilname.encode("utf-8")
-# # get the code of the translation unit for the given stencil
-# dawn.dawnTranslationUnitGetStencil.restype = c_void_p
-# dawn.dawnTranslationUnitGetStencil.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
-# code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
-
-# # write to file
-# f = open(os.path.dirname(os.path.realpath(__file__)) + "/data/global_indexing.cpp", "w")
-# f.write(ctypes.c_char_p(code).value.decode("utf-8"))
-
-# f.close()

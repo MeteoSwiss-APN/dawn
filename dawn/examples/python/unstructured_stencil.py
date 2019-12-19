@@ -51,11 +51,13 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
-        sir_utils.GridType.Value("Triangular"),
         OUTPUT_FILE,
+        SIR.GridType.Value("Triangular"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -79,8 +81,15 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a simple unstructured copy stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(
+        description="Generate a simple unstructured copy stencil using Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())
