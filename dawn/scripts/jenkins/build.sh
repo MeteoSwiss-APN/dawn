@@ -73,7 +73,9 @@ if [ -n ${INSTALL_DIR} ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 fi
 
+message("cmake ${CMAKE_ARGS} ../")
 cmake ${CMAKE_ARGS} ../
+
 make -j8 install
 
 # Run unittests
