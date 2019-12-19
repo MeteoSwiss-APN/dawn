@@ -55,6 +55,15 @@ def create_vertical_region_stmt1() -> VerticalRegionDeclStmt:
                 make_unstructured_field_access_expr("b")
             ),
             "="
+        ),
+        make_assignment_stmt(
+            make_unstructured_field_access_expr("d"),
+            make_binary_operator(
+                make_unstructured_field_access_expr("d"),
+                "/",
+                make_unstructured_field_access_expr("b")
+            ),
+            "="
         )
         ]
     )
@@ -74,7 +83,7 @@ def create_vertical_region_stmt2() -> VerticalRegionDeclStmt:
     body_ast = make_ast(
         [
             make_var_decl_stmt(
-                make_type(BuiltinType.Integer),
+                make_type(BuiltinType.Float),
                 "m", 0, "=",
                 make_expr(
                     make_binary_operator(
