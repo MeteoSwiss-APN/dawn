@@ -56,15 +56,11 @@ def create_vertical_region_stmt() -> SIR.VerticalRegionDeclStmt:
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
-    )
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
     return vertical_region_stmt
 
 
-def create_boundary_correction_region(
-    value="0", i_interval=None, j_interval=None
-) -> SIR.VerticalRegionDeclStmt:
+def create_boundary_correction_region(value="0", i_interval=None, j_interval=None) -> SIR.VerticalRegionDeclStmt:
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
     boundary_body = sir_utils.make_ast(
         [
@@ -92,64 +88,36 @@ def main(args: argparse.Namespace):
                     [
                         create_vertical_region_stmt(),
                         create_boundary_correction_region(
-                            value="4",
-                            i_interval=sir_utils.make_interval(
-                                SIR.Interval.End, SIR.Interval.End, -1, 0
-                            ),
+                            value="4", i_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
                         ),
                         create_boundary_correction_region(
-                            value="8",
-                            i_interval=sir_utils.make_interval(
-                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
-                            ),
+                            value="8", i_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
                         ),
                         create_boundary_correction_region(
-                            value="6",
-                            j_interval=sir_utils.make_interval(
-                                SIR.Interval.End, SIR.Interval.End, -1, 0
-                            ),
+                            value="6", j_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
                         ),
                         create_boundary_correction_region(
-                            value="2",
-                            j_interval=sir_utils.make_interval(
-                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
-                            ),
+                            value="2", j_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
                         ),
                         create_boundary_correction_region(
                             value="1",
-                            j_interval=sir_utils.make_interval(
-                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
-                            ),
-                            i_interval=sir_utils.make_interval(
-                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
-                            ),
+                            j_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
+                            i_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
                         ),
                         create_boundary_correction_region(
                             value="3",
-                            j_interval=sir_utils.make_interval(
-                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
-                            ),
-                            i_interval=sir_utils.make_interval(
-                                SIR.Interval.End, SIR.Interval.End, -1, 0
-                            ),
+                            j_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
+                            i_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
                         ),
                         create_boundary_correction_region(
                             value="7",
-                            j_interval=sir_utils.make_interval(
-                                SIR.Interval.End, SIR.Interval.End, -1, 0
-                            ),
-                            i_interval=sir_utils.make_interval(
-                                SIR.Interval.Start, SIR.Interval.Start, 0, 1
-                            ),
+                            j_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
+                            i_interval=sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.Start, 0, 1),
                         ),
                         create_boundary_correction_region(
                             value="5",
-                            j_interval=sir_utils.make_interval(
-                                SIR.Interval.End, SIR.Interval.End, -1, 0
-                            ),
-                            i_interval=sir_utils.make_interval(
-                                SIR.Interval.End, SIR.Interval.End, -1, 0
-                            ),
+                            j_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
+                            i_interval=sir_utils.make_interval(SIR.Interval.End, SIR.Interval.End, -1, 0),
                         ),
                     ]
                 ),
@@ -172,15 +140,8 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate a simple copy-shift stencil using Dawn compiler"
-    )
+    parser = argparse.ArgumentParser(description="Generate a simple copy-shift stencil using Dawn compiler")
     parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=False,
-        help="Print the generated SIR",
+        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
     )
     main(parser.parse_args())

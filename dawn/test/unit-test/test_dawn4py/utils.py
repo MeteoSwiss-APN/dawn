@@ -44,8 +44,8 @@ def make_copy_stencil_sir(name=None):
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
-        sir_utils.GridType.Value("Cartesian"),
         OUTPUT_FILE,
+        sir_utils.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -131,8 +131,8 @@ def make_hori_diff_stencil_sir(name=None):
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
-        sir_utils.GridType.Value("Cartesian"),
         OUTPUT_FILE,
+        sir_utils.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -247,8 +247,8 @@ def make_tridiagonal_solve_stencil_sir(name=None):
     )
 
     sir = sir_utils.make_sir(
-        sir_utils.GridType.Value("Cartesian"),
         OUTPUT_FILE,
+        sir_utils.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -290,8 +290,8 @@ def make_unstructured_stencil_sir(name=None):
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
-        sir_utils.GridType.Value("Cartesian"),
         OUTPUT_FILE,
+        sir_utils.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,

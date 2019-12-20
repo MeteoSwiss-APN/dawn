@@ -208,8 +208,8 @@ def make_stencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
 
 
 def make_sir(
-    gridtype: GridType,
     filename: str,
+    gridtype: GridType,
     stencils: List[Stencil],
     functions: List[StencilFunction] = [],
     global_variables: GlobalVariableMap = None,
