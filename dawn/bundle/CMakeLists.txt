@@ -105,11 +105,3 @@ install(
   FILES ${conf_bundle_filename}
   DESTINATION bundle_conf
 )
-
-# if(DAWN_BUNDLE_PYTHON)
-#   if(NOT DEFINED PROTOBUF_PYTHON_INSTALL)
-#     message(FATAL_ERROR "protobuf python not set")
-#   endif()
-#   install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
-#   install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
-# endif(DAWN_BUNDLE_PYTHON)

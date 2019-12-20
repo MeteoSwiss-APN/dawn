@@ -76,7 +76,6 @@ if(DAWN_PYTHON)
     DEPENDS ${sir_proto_python_files}
   )
   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-  install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
 endif(DAWN_PYTHON)
 
 if(DAWN_JAVA)
