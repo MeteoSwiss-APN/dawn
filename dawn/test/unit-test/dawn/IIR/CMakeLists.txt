@@ -12,7 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_executable(DawnUnittestIIR
+set(executable ${PROJECT_NAME}UnittestIIR)
+add_executable(${executable}
   TestExtent.cpp
   TestField.cpp
   TestInterval.cpp
@@ -24,8 +25,6 @@ add_executable(DawnUnittestIIR
   TestStencil.cpp
   TestIIRSerializer.cpp
 )
-target_link_libraries(DawnUnittestIIR PRIVATE DawnIIR DawnSerialization DawnUnittest gtest)
-target_add_dawn_standard_props(DawnUnittestIIR)
-add_test(NAME DawnUnittestIIR
-  COMMAND DawnUnittestIIR
-)
+target_link_libraries(${executable} PRIVATE DawnIIR DawnSerialization DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+add_test(NAME ${executable} COMMAND ${executable})

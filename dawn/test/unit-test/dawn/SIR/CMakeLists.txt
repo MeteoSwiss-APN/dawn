@@ -12,15 +12,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_executable(DawnUnittestSIR
+set(executable ${PROJECT_NAME}UnittestSIR)
+add_executable(${executable}
   TestMain.cpp
   TestAST.cpp
   TestASTVisitor.cpp
   TestSIR.cpp
   TestSIRSerializer.cpp
 )
-target_link_libraries(DawnUnittestSIR PRIVATE DawnSIR DawnSerialization DawnUnittest gtest)
-target_add_dawn_standard_props(DawnUnittestSIR)
-add_test(NAME DawnUnittestSIR
-  COMMAND DawnUnittestSIR
-)
+target_link_libraries(${executable} PRIVATE DawnSIR DawnSerialization DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+add_test(NAME ${executable} COMMAND ${executable})

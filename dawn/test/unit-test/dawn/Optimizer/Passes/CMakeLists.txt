@@ -12,8 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-
-add_executable(DawnUnittestOptimizerPasses
+set(executable ${PROJECT_NAME}UnittestOptimizerPasses)
+add_executable(${executable}
   TestMain.cpp
   TestPassComputeStageExtents.cpp
   TestComputeMaxExtent.cpp
@@ -21,11 +21,11 @@ add_executable(DawnUnittestOptimizerPasses
   TestFieldAccessIntervals.cpp
   TestTemporaryToFunction.cpp
 )
-target_link_libraries(DawnUnittestOptimizerPasses PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
-target_add_dawn_standard_props(DawnUnittestOptimizerPasses)
-target_include_directories(DawnUnittestOptimizerPasses
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
-add_test(NAME DawnUnittestOptimizerPasses
-  COMMAND DawnUnittestOptimizerPasses "${CMAKE_CURRENT_LIST_DIR}"
+add_test(NAME ${executable}
+  COMMAND ${executable} "${CMAKE_CURRENT_LIST_DIR}"
 )

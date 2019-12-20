@@ -38,6 +38,6 @@ if(${PROJECT_NAME}_TESTING)
     find_package(Python3 COMPONENTS Interpreter)
   endif()
 
-  add_test(NAME python-test_sir.py
+  add_test(NAME Dawn-python-test_sir.py
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/dawn/test_sir.py)
 endif()

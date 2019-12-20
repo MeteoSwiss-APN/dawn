@@ -12,7 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_executable(DawnUnittestOptimizer
+set(executable ${PROJECT_NAME}UnittestOptimizer)
+add_executable(${executable}
   TestColoringAlgorithm.cpp
   TestEnvironment.h
   TestGraph.cpp
@@ -21,11 +22,9 @@ add_executable(DawnUnittestOptimizer
   TestMain.cpp
   TestSCCAlgorithm.cpp
 )
-target_link_libraries(DawnUnittestOptimizer PRIVATE DawnOptimizer DawnUnittest gtest)
-target_add_dawn_standard_props(DawnUnittestOptimizer)
-add_test(NAME DawnUnittestOptimizer
-  COMMAND DawnUnittestOptimizer
-)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+add_test(NAME ${executable} COMMAND ${executable})
 
 add_subdirectory(TestsFromSIR)
 add_subdirectory(Passes)

@@ -12,18 +12,18 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-
-add_executable(DawnUnittestOptimizerFromSIR
+set(executable ${PROJECT_NAME}UnittestOptimizerFromSIR)
+add_executable(${executable}
   TestMain.cpp
   TestComputeMaximumExtent.cpp
   TestMultiStage.cpp
   TestStage.cpp
 )
-target_link_libraries(DawnUnittestOptimizerFromSIR PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
-target_add_dawn_standard_props(DawnUnittestOptimizerFromSIR)
-target_include_directories(DawnUnittestOptimizerFromSIR
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
-add_test(NAME DawnUnittestOptimizerFromSIR
-  COMMAND DawnUnittestOptimizerFromSIR "${CMAKE_CURRENT_LIST_DIR}/../Passes"
+add_test(NAME ${executable}
+  COMMAND ${executable} "${CMAKE_CURRENT_LIST_DIR}/../Passes"
 )

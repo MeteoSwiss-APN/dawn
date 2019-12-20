@@ -46,7 +46,7 @@ if(${PROJECT_NAME}_TESTING)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python-test.sh.in
       ${examples_build_dir}/python-test-${example}.sh
     )
-    add_test(NAME python-test-${example}.sh
+    add_test(NAME Dawn-python-test-${example}.sh
       COMMAND ${CMAKE_COMMAND} -E env
       PYTHONPATH=${PROJECT_BINARY_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}
       ${SH_PROGRAM} python-test-${example}.sh

@@ -12,7 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_executable(DawnUnittestSupport
+set(executable ${PROJECT_NAME}UnittestSupport)
+add_executable(${executable}
   TestMain.cpp
   TestSmallVector.cpp
   TestStringRef.cpp
@@ -23,8 +24,6 @@ add_executable(DawnUnittestSupport
   TestRangeToString.cpp
   TestType.cpp
 )
-target_link_libraries(DawnUnittestSupport DawnSupport DawnUnittest gtest)
-target_add_dawn_standard_props(DawnUnittestSupport)
-add_test(NAME DawnUnittestSupport
-  COMMAND DawnUnittestSupport
-)
+target_link_libraries(${executable} DawnSupport DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+add_test(NAME ${executable} COMMAND ${executable})
