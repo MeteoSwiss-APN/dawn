@@ -18,6 +18,7 @@
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -72,15 +73,44 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       return "";
     }
   };
-  std::string typeString = getLocationTypeString(expr->getRhsLocation());
-  ss_ << std::string(indent_, ' ') << "reduce" + typeString + "ToCell(LibTag{}, m_mesh, loc, ";
+  std::string typeStringRHS = getLocationTypeString(expr->getRhsLocation());
+  std::string typeStringLHS = getLocationTypeString(expr->getLhsLocation());
+
+  bool hasWeights = expr->getWeights().has_value();
+
+  ss_ << std::string(indent_, ' ')
+      << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh, loc, ";
   expr->getInit()->accept(*this);
-  ss_ << ", [&](auto& lhs, auto const& red_loc) { return lhs " << expr->getOp() << "= ";
+  if(hasWeights) {
+    ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) { return lhs "
+        << expr->getOp() << "= ";
+    ss_ << "weight * ";
+  } else {
+    ss_ << ", [&](auto& lhs, auto const& red_loc) { return lhs " << expr->getOp() << "= ";
+  }
+
   auto argName = argName_;
   argName_ = "red_loc";
   expr->getRhs()->accept(*this);
   argName_ = argName;
-  ss_ << ";})";
+  ss_ << ";}";
+  if(hasWeights) {
+    auto weights = expr->getWeights().value();
+    bool first = true;
+    auto typeStr = sir::Value::typeToString(weights[0].getType());
+    ss_ << ", std::vector<" << typeStr << ">({";
+    for(auto const& weight : weights) {
+      if(!first) {
+        ss_ << ", ";
+      }
+      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered in code generation!\n");
+      ss_ << weight.toString();
+      first = false;
+    }
+
+    ss_ << "})";
+  }
+  ss_ << ")";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
