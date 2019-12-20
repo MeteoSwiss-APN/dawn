@@ -69,7 +69,7 @@ if(eckit_FOUND AND atlas_FOUND)
 
     yoda_add_unittest(
         NAME AtlasIntegrationTestCompareOutput
-        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifier.h ${generated_stencil_codes_str}
+        SOURCES TestCompareOutputMain.cpp AtlasIntegrationTestCompareOutput.cpp AtlasVerifier.h AtlasCartesianWrapper.h AtlasCartesianWrapper.cpp ${generated_stencil_codes_str}
         DEPENDS eckit atlas gtest
         OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/atlas-integrationtest
         GTEST_ARGS --gtest_color=yes --gtest_output=xml:AtlasIntegrationTestCompareOutput.xml
