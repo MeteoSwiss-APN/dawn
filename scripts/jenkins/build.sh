@@ -63,7 +63,7 @@ fi
 
 CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 
-cmake ${CMAKE_ARGS} ${source_dir} 
+cmake ${CMAKE_ARGS} ${source_dir}
 
 if [ -z ${PARALLEL_BUILD_JOBS+x} ]; then
   PARALLEL_BUILD_JOBS=8
@@ -75,3 +75,4 @@ cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
 
+cmake --build . --parallel ${PARALLEL_BUILD_JOBS} --target install
