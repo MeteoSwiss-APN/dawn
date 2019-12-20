@@ -133,7 +133,6 @@ if(DAWN_PYTHON)
     DEPENDS ${iir_proto_python_files}
   )
   install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
-  install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
 endif(DAWN_PYTHON)
 
 if(DAWN_JAVA)
