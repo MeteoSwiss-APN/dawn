@@ -117,7 +117,7 @@ yoda_combine_libraries(
 )
 
 if(DAWN_PYTHON)
-  # Genreate python proto files
+  # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES iir_proto_python_files
     PROTOS IIR/IIR.proto
@@ -129,6 +129,7 @@ if(DAWN_PYTHON)
 
   add_custom_target(DawnIIRPythonProto ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_SOURCE_DIR}/src/dawn4py/serialization/IIR
     DEPENDS ${iir_proto_python_files}
   )
   install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
@@ -136,7 +137,7 @@ if(DAWN_PYTHON)
 endif(DAWN_PYTHON)
 
 if(DAWN_JAVA)
-  # Genreate python proto files
+  # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES iir_proto_java_files
     OUT_DIRS iir_proto_java_dirs

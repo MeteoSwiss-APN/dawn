@@ -1,0 +1,12 @@
+# Custom ignores
+_local_*
+_local_/*
+
+# Ignore IDEs
+.idea
+.vscode/
+**/compile_commands.json
+.clangd/
+
+# Ignore python editable installs
+*.egg-info/
