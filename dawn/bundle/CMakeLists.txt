@@ -76,7 +76,7 @@ endif()
 
 include("thirdparty/DawnAddProtobuf")
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA} -DDAWN_TESTING=${BUILD_TESTING})
 
 yoda_find_package(
   PACKAGE dawn
@@ -106,10 +106,10 @@ install(
   DESTINATION bundle_conf
 )
 
-if(DAWN_BUNDLE_PYTHON)
-  if(NOT DEFINED PROTOBUF_PYTHON_INSTALL)
-    message(FATAL_ERROR "protobuf python not set")
-  endif()
-  install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
-  install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
-endif(DAWN_BUNDLE_PYTHON)
+# if(DAWN_BUNDLE_PYTHON)
+#   if(NOT DEFINED PROTOBUF_PYTHON_INSTALL)
+#     message(FATAL_ERROR "protobuf python not set")
+#   endif()
+#   install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
+#   install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
+# endif(DAWN_BUNDLE_PYTHON)
