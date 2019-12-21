@@ -215,7 +215,7 @@
                   "Stmts": [
                     {
                       "read_accesses": null,
-                      "stmt": "out[<no_horizontal_offset>,0] = 0;\n",
+                      "stmt": "out[<no_horizontal_offset>,0] = int_type 0;\n",
                       "write_accesses": [
                         {
                           "access_id": 16,

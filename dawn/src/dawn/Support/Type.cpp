@@ -38,6 +38,9 @@ std::ostream& operator<<(std::ostream& os, Type type) {
     case BuiltinTypeID::Float:
       os << "float_type";
       break;
+    case BuiltinTypeID::Double:
+      os << "double_type";
+      break;
     default:
       dawn_unreachable("invalid BuiltinTypeID");
     }

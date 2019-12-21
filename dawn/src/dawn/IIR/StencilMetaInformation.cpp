@@ -423,8 +423,9 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
   }
 }
 
-StencilMetaInformation::StencilMetaInformation(const sir::GlobalVariableMap& globalVariables) {
-  for(const auto& global : globalVariables) {
+StencilMetaInformation::StencilMetaInformation(
+    std::shared_ptr<sir::GlobalVariableMap> globalVariables) {
+  for(const auto& global : *globalVariables) {
     insertAccessOfType(iir::FieldAccessType::GlobalVariable, global.first);
   }
 }

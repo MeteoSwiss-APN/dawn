@@ -268,7 +268,9 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override { ss_ << expr->getValue(); }
+  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+    ss_ << expr->getBuiltinType() << " " << expr->getValue();
+  }
 
   std::string toString() const { return ss_.str(); }
 };
