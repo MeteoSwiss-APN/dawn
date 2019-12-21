@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _
@@ -13,7 +12,3 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
-
-__dawn_versioninfo__ = (@VERSION_MAJOR@, @VERSION_MINOR@, @VERSION_PATCH@)
-__dawn_build_module__ = '@DAWN_BUILD_MODULE@'
-__dawn_build_dawnclib__ = '@DAWN_BUILD_DAWNCLIB@'

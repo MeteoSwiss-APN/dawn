@@ -1,6 +1,52 @@
+//---- Preprocessor defines ----
+#define DAWN_GENERATED 1
+#define DAWN_BACKEND_T CUDA
+#ifndef BOOST_RESULT_OF_USE_TR1
+ #define BOOST_RESULT_OF_USE_TR1 1
+#endif
+#ifndef BOOST_NO_CXX11_DECLTYPE
+ #define BOOST_NO_CXX11_DECLTYPE 1
+#endif
+#ifndef GRIDTOOLS_DAWN_HALO_EXTENT
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 3
+#endif
+#ifndef BOOST_PP_VARIADICS
+ #define BOOST_PP_VARIADICS 1
+#endif
+#ifndef BOOST_FUSION_DONT_USE_PREPROCESSED_FILES
+ #define BOOST_FUSION_DONT_USE_PREPROCESSED_FILES 1
+#endif
+#ifndef BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+ #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS 1
+#endif
+#ifndef GT_VECTOR_LIMIT_SIZE
+ #define GT_VECTOR_LIMIT_SIZE 30
+#endif
+#ifndef BOOST_FUSION_INVOKE_MAX_ARITY
+ #define BOOST_FUSION_INVOKE_MAX_ARITY GT_VECTOR_LIMIT_SIZE
+#endif
+#ifndef FUSION_MAX_VECTOR_SIZE
+ #define FUSION_MAX_VECTOR_SIZE GT_VECTOR_LIMIT_SIZE
+#endif
+#ifndef FUSION_MAX_MAP_SIZE
+ #define FUSION_MAX_MAP_SIZE GT_VECTOR_LIMIT_SIZE
+#endif
+#ifndef BOOST_MPL_LIMIT_VECTOR_SIZE
+ #define BOOST_MPL_LIMIT_VECTOR_SIZE GT_VECTOR_LIMIT_SIZE
+#endif
+#include <driver-includes/gridtools_includes.hpp>
+using namespace gridtools::dawn;
+
+//---- Includes ----
+#include "driver-includes/gridtools_includes.hpp"
+using namespace gridtools::dawn;
+
+//---- Globals ----
+
+//---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms105_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms105_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
   ::dawn::float_type c_kcache[2];
@@ -84,6 +130,8 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
       c_kcache[1] =c[idx111];
       d_kcache[1] =d[idx111];
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+c_kcache[1] = (c_kcache[1] / __ldg(&(b[idx111])));
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
 int __local_m_100 = ((::dawn::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
 c_kcache[1] = (c_kcache[1] * __local_m_100);
 d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_100);
@@ -113,7 +161,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
 
   // Final flush of kcaches
 }
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
   ::dawn::float_type d_kcache[2];
@@ -195,7 +243,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
   // Final flush of kcaches
 }
 
-class tridiagonal_solve {
+class tridiagonal_solve_stencil {
 public:
 
   struct sbase : public timer_cuda {
@@ -237,7 +285,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil49_ms105_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil_stencil49_ms105_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
       {;
       gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
@@ -250,24 +298,24 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil49_ms106_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil_stencil49_ms106_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
 
       // stopping timers
       pause();
     }
   };
-  static constexpr const char* s_name = "tridiagonal_solve";
+  static constexpr const char* s_name = "tridiagonal_solve_stencil";
   stencil_49 m_stencil_49;
 public:
 
-  tridiagonal_solve(const tridiagonal_solve&) = delete;
+  tridiagonal_solve_stencil(const tridiagonal_solve_stencil&) = delete;
 
   // Members
 
   // Stencil-Data
 
-  tridiagonal_solve(const gridtools::dawn::domain& dom) : m_stencil_49(dom){}
+  tridiagonal_solve_stencil(const gridtools::dawn::domain& dom) : m_stencil_49(dom){}
 
   template<typename S>
   void sync_storages(S field) {

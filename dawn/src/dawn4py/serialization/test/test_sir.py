@@ -1,15 +1,14 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -17,12 +16,10 @@
 from os import path
 from sys import path as sys_path
 
-sys_path.insert(1, path.join(path.dirname(path.realpath(__file__)), ".."))
-
 import unittest
 
-from dawn.error import SIRError
-from dawn.sir import *
+from dawn4py.serialization.error import SIRError
+from dawn4py.serialization.utils import *
 
 
 class ExprTestBase(unittest.TestCase):
@@ -54,8 +51,9 @@ class ASTTestBase(StmtTestBase):
 class VerticalRegionTestBase(ASTTestBase):
     def vertical_region(self):
         """ Create a dummy vertical region """
-        return make_vertical_region(self.ast(), make_interval(Interval.Start, Interval.End),
-                                  VerticalRegion.Forward)
+        return make_vertical_region(
+            self.ast(), make_interval(Interval.Start, Interval.End), VerticalRegion.Forward
+        )
 
 
 class TestJSON(unittest.TestCase):
@@ -172,8 +170,9 @@ class TestMakeStencilCall(unittest.TestCase):
 
 class TestMakeVerticalRegion(ASTTestBase):
     def test_make_vertical_region(self):
-        vr = make_vertical_region(self.ast(), make_interval(Interval.Start, Interval.End),
-                                VerticalRegion.Backward)
+        vr = make_vertical_region(
+            self.ast(), make_interval(Interval.Start, Interval.End), VerticalRegion.Backward
+        )
         self.assertEqual(vr.ast, self.ast())
         self.assertEqual(vr.interval, make_interval(Interval.Start, Interval.End))
         self.assertEqual(vr.loop_order, VerticalRegion.Backward)
@@ -278,8 +277,9 @@ class TestExpr(ExprTestBase):
         self.assertEqual(field2.argument_offset, [0, 0, 0])
         self.assertEqual(field2.negate_offset, False)
 
-        field2 = make_field_access_expr("a", [0, 2, -1], negate_offset=True,
-                                     argument_offset=[1, -2, 3], argument_map=[0, 1, 2])
+        field2 = make_field_access_expr(
+            "a", [0, 2, -1], negate_offset=True, argument_offset=[1, -2, 3], argument_map=[0, 1, 2]
+        )
         self.assertEqual(field2.name, "a")
         self.assertEqual(field2.cartesian_offset.i_offset, 0)
         self.assertEqual(field2.cartesian_offset.j_offset, 2)
@@ -308,6 +308,7 @@ class TestAST(StmtTestBase):
     def test_make_ast(self):
         ast = make_ast([self.var_stmt()])
         self.assertEqual(ast.root, make_stmt(make_block_stmt(self.var_stmt())))
+
 
 class TestSIR(unittest.TestCase):
     def test_filename(self):

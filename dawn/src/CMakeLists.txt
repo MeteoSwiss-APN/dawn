@@ -15,10 +15,14 @@
 add_subdirectory(dawn)
 add_subdirectory(dawn-c)
 
-# TODO: Switch from globbing to target-specific headers
-install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING REGEX ".h|.inc$"
-  REGEX "Unittest/*" EXCLUDE
-)
+if(DAWN_PYTHON)
+  add_subdirectory(dawn4py)
+endif()
+
+# Add a dummy target with the interface headers for correct IDE parsing
+yoda_add_custom_dummy_target(NAME DawnParseInterfaceHeaders
+                             DIRECTORIES "interface")
+
+# Add a dummy target with the driver-includes headers for correct IDE parsing
+yoda_add_custom_dummy_target(NAME DawnParseDriverIncludes
+                          DIRECTORIES "driver-includes")
