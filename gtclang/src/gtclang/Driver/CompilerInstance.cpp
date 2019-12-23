@@ -138,7 +138,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   StringRef(GTCLANG_DSL_INCLUDES).split(DSLIncludes, ';');
   for(const auto& path : DSLIncludes) {
     DAWN_LOG(INFO) << "Adding DSL include path: " << path.str();
-    GTClang->getHeaderSearchOpts().AddPath(path, clang::frontend::System, false, false);
+    GTClang->getHeaderSearchOpts().AddPath(path, clang::frontend::System, false, true);
   }
 
   // Show the invocation, with -v
