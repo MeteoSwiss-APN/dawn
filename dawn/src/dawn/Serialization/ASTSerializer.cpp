@@ -17,8 +17,10 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/SIR/SIR.pb.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <iterator>
@@ -109,22 +111,21 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  extent_dispatch(
-      extents.horizontalExtent(),
-      [&](iir::CartesianExtent const& hExtent) {
-        auto cartesianExtent = protoExtents.mutable_cartesian_extent();
-        auto protoIExtent = cartesianExtent->mutable_i_extent();
-        protoIExtent->set_minus(hExtent.iMinus());
-        protoIExtent->set_plus(hExtent.iPlus());
-        auto protoJExtent = cartesianExtent->mutable_j_extent();
-        protoJExtent->set_minus(hExtent.jMinus());
-        protoJExtent->set_plus(hExtent.jPlus());
-      },
-      [&](iir::UnstructuredExtent const& hExtent) {
-        auto protoHExtent = protoExtents.mutable_unstructured_extent();
-        protoHExtent->set_has_extent(hExtent.hasExtent());
-      },
-      [&] { protoExtents.mutable_zero_extent(); });
+  extent_dispatch(extents.horizontalExtent(),
+                  [&](iir::CartesianExtent const& hExtent) {
+                    auto cartesianExtent = protoExtents.mutable_cartesian_extent();
+                    auto protoIExtent = cartesianExtent->mutable_i_extent();
+                    protoIExtent->set_minus(hExtent.iMinus());
+                    protoIExtent->set_plus(hExtent.iPlus());
+                    auto protoJExtent = cartesianExtent->mutable_j_extent();
+                    protoJExtent->set_minus(hExtent.jMinus());
+                    protoJExtent->set_plus(hExtent.jPlus());
+                  },
+                  [&](iir::UnstructuredExtent const& hExtent) {
+                    auto protoHExtent = protoExtents.mutable_unstructured_extent();
+                    protoHExtent->set_has_extent(hExtent.hasExtent());
+                  },
+                  [&] { protoExtents.mutable_zero_extent(); });
 
   auto const& vExtent = extents.verticalExtent();
   auto protoVExtent = protoExtents.mutable_vertical_extent();
@@ -565,16 +566,16 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   protoExpr->set_name(expr->getName());
 
   auto const& offset = expr->getOffset();
-  ast::offset_dispatch(
-      offset.horizontalOffset(),
-      [&](ast::CartesianOffset const& hOffset) {
-        protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
-        protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
-      },
-      [&](ast::UnstructuredOffset const& hOffset) {
-        protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
-      },
-      [&] { protoExpr->mutable_zero_offset(); });
+  ast::offset_dispatch(offset.horizontalOffset(),
+                       [&](ast::CartesianOffset const& hOffset) {
+                         protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
+                         protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
+                       },
+                       [&](ast::UnstructuredOffset const& hOffset) {
+                         protoExpr->mutable_unstructured_offset()->set_has_offset(
+                             hOffset.hasOffset());
+                       },
+                       [&] { protoExpr->mutable_zero_offset(); });
   protoExpr->set_vertical_offset(offset.verticalOffset());
 
   for(int argOffset : expr->getArgumentOffset())
@@ -619,6 +620,32 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
   currentExprProto_.push(protoExpr->mutable_init());
   expr->getInit()->accept(*this);
   currentExprProto_.pop();
+
+  if(expr->getWeights()) {
+    auto protoWeights = protoExpr->mutable_weights();
+    for(const auto& weight : expr->getWeights().value()) {
+      auto weightProto = protoWeights->Add();
+      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered during serialization");
+      switch(weight.getType()) {
+      case sir::Value::Kind::Boolean:
+        weightProto->set_boolean_value(weight.getValue<bool>());
+        break;
+      case sir::Value::Kind::Integer:
+        weightProto->set_integer_value(weight.getValue<int>());
+        break;
+      case sir::Value::Kind::Double:
+        weightProto->set_double_value(weight.getValue<double>());
+        break;
+      case sir::Value::Kind::Float:
+        weightProto->set_float_value(weight.getValue<float>());
+        break;
+      case sir::Value::Kind::String:
+        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
+                         "of arithmetic type)");
+        break;
+      }
+    }
+  }
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -676,6 +703,8 @@ BuiltinTypeID makeBuiltinTypeID(const proto::statements::BuiltinType& builtinTyp
     return BuiltinTypeID::Integer;
   case proto::statements::BuiltinType_TypeID_Float:
     return BuiltinTypeID::Float;
+  case proto::statements::BuiltinType_TypeID_Double:
+    return BuiltinTypeID::Double;
   default:
     return BuiltinTypeID::Invalid;
   }

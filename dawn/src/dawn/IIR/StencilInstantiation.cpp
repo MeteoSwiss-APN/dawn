@@ -48,22 +48,24 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(
-    sir::GlobalVariableMap const& globalVariables,
+    ast::GridType const gridType, std::shared_ptr<sir::GlobalVariableMap> globalVariables,
     std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions)
-    : metadata_(globalVariables), IIR_(std::make_unique<IIR>(globalVariables, stencilFunctions)) {}
+    : metadata_(globalVariables),
+      IIR_(std::make_unique<IIR>(gridType, globalVariables, stencilFunctions)) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
 std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   std::shared_ptr<StencilInstantiation> stencilInstantiation =
-      std::make_shared<StencilInstantiation>(IIR_->getGlobalVariableMap(),
+      std::make_shared<StencilInstantiation>(IIR_->getGridType(), IIR_->getGlobalVariableMapPtr(),
                                              IIR_->getStencilFunctions());
 
   stencilInstantiation->metadata_.clone(metadata_);
 
   stencilInstantiation->IIR_ =
-      std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap(),
+      std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGridType(),
+                                 stencilInstantiation->getIIR()->getGlobalVariableMapPtr(),
                                  stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
@@ -82,9 +84,9 @@ bool StencilInstantiation::insertBoundaryConditions(
   }
 }
 
-const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
+const sir::Global& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   DAWN_ASSERT(IIR_->getGlobalVariableMap().count(name));
-  return *(IIR_->getGlobalVariableMap().at(name));
+  return IIR_->getGlobalVariableMap().at(name);
 }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {

@@ -24,6 +24,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 namespace iir {
@@ -55,6 +56,42 @@ enum class HOffsetType { withOffset, noOffset };
 // After creating the whole IIR, the stencil instantiation can be creating by calling build. The
 // builder must not be used after calling build.
 class IIRBuilder {
+private:
+  static std::string toStr(Op operation, std::vector<Op> const& valid_ops) {
+    DAWN_ASSERT(std::find(valid_ops.begin(), valid_ops.end(), operation) != valid_ops.end());
+    switch(operation) {
+    case Op::plus:
+      return "+";
+    case Op::minus:
+      return "-";
+    case Op::multiply:
+      return "*";
+    case Op::assign:
+      return "";
+    case Op::divide:
+      return "/";
+    case Op::equal:
+      return "==";
+    case Op::notEqual:
+      return "!=";
+    case Op::greater:
+      return ">";
+    case Op::less:
+      return "<";
+    case Op::greaterEqual:
+      return ">=";
+    case Op::lessEqual:
+      return "<=";
+    case Op::logicalAnd:
+      return "&&";
+    case Op::locigalOr:
+      return "||";
+    case Op::logicalNot:
+      return "!";
+    }
+    dawn_unreachable("Unreachable");
+  }
+
 protected:
   struct Field {
     int id;
@@ -67,12 +104,35 @@ protected:
   };
 
 public:
-  IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}
+  IIRBuilder(const ast::GridType gridType)
+      : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
+  template <class TWeight>
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
+                                                    ast::Expr::LocationType lhs_location,
+                                                    ast::Expr::LocationType rhs_location,
+                                                    const std::vector<TWeight>&& weights) {
+    static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
+
+    std::vector<sir::Value> vWeights;
+    for(const auto& it : weights) {
+      vWeights.push_back(sir::Value(it));
+    }
+
+    auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+        toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}),
+        std::move(rhs), std::move(init), vWeights, lhs_location, rhs_location);
+    expr->setID(si_->nextUID());
+
+    return expr;
+  }
+
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                                    std::shared_ptr<iir::Expr>&& init,
+                                                    ast::Expr::LocationType lhs_location,
                                                     ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
@@ -210,6 +270,7 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Triangular) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);
@@ -221,6 +282,7 @@ public:
 
 class CartesianIIRBuilder : public IIRBuilder {
 public:
+  CartesianIIRBuilder() : IIRBuilder(ast::GridType::Cartesian) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, Array3i const& offset);
   std::shared_ptr<iir::Expr> at(Field const& field, Array3i const& offset);

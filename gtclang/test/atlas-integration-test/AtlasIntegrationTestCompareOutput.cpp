@@ -20,6 +20,7 @@
 #include "atlas/grid.h"
 #include "atlas/mesh/actions/BuildCellCentres.h"
 #include "atlas/mesh/actions/BuildEdges.h"
+#include "atlas/mesh/actions/BuildPeriodicBoundaries.h"
 #include "atlas/meshgenerator.h"
 #include "atlas/option/Options.h"
 #include "atlas/output/Gmsh.h"
@@ -186,8 +187,9 @@ TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
       .run();
 
   // Check correctness of the output
-  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
+  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
     ASSERT_EQ(out_v(cell_idx, 0), 4.0);
+  }
 }
 } // namespace
 
@@ -273,6 +275,106 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
     auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
     AtlasVerifier v;
     EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
+  }
+}
+} // namespace
+
+#include <generated_gradient.hpp>
+#include <reference_gradient.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, Gradient) {
+  // this test is supposed to compute a gradient in a periodic domain
+  //
+  //   this is supposed to be achieved by reducing a signal from a cell
+  //   field onto the edges using the weights [1, -1]. This is equiavlent
+  //   to a second order finite difference stencils, missing the division by the cell spacing
+  //   (currently omitted).
+  //
+  //   after this first step, vertical edges contain the x gradient and horizontal edges contain the
+  //   y gradient of the original signal. to get the x gradients on the cells (in order to properly
+  //   visualize them) the edges are reduced again onto the cells, using weights [0.5, 0, 0.5, 0]
+  //
+  //   currently, there are problems with the periodic boundaries. using ATLAS, edges always feature
+  //   two cell neighbors, even at the boundaries, in the latter case one entry being -1. in order
+  //   to get periodic boundaries the entry -1 should point to the opposite direction of the domain.
+  //   simply calling
+  //        atlas::mesh::actions::build_periodic_boundaries(mesh);
+  //   does not result in the desired edge connectivity, but seems to manipulate things on the halo
+  //   / MPI level. For now, the situation is left as is, and this test serves as a sketch for a
+  //   future, proper gradient implementation.
+
+  // kept low for now to get easy debug-able output
+  const int numCell = 10;
+
+  // apparently, one needs to be added to the second dimension in order to get a
+  // square mesh, or we are mis-interpreting the output
+  atlas::StructuredGrid structuredGrid =
+      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+
+  int nb_levels = 1;
+  atlas::functionspace::CellColumns fs_cols(mesh, atlas::option::levels(nb_levels));
+  atlas::Field ref_cells_f{fs_cols.createField<double>(atlas::option::name("ref_cells"))};
+  atlas::Field gen_cells_f{fs_cols.createField<double>(atlas::option::name("gen_cells"))};
+
+  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
+  atlas::Field ref_edges_f{fs_edges.createField<double>(atlas::option::name("ref_edges"))};
+  atlas::Field gen_edges_f{fs_edges.createField<double>(atlas::option::name("gen_edges"))};
+
+  atlas::mesh::actions::build_edges(mesh);
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_periodic_boundaries(mesh);
+
+  atlasInterface::Field<double> ref_cells_v = atlas::array::make_view<double, 2>(ref_cells_f);
+  atlasInterface::Field<double> gen_cells_v = atlas::array::make_view<double, 2>(gen_cells_f);
+  atlasInterface::Field<double> ref_edges_v = atlas::array::make_view<double, 2>(ref_edges_f);
+  atlasInterface::Field<double> gen_edges_v = atlas::array::make_view<double, 2>(gen_edges_f);
+
+  {
+    auto const& node_connectivity = mesh.cells().node_connectivity();
+    auto lonlat = atlas::array::make_view<double, 2>(mesh.nodes().lonlat());
+
+    // longitudes [0, 360], latitudes [-72 to 90 (?!)]
+    auto lon0 = fmin(lonlat(node_connectivity(0, 0), 0),
+                     lonlat(node_connectivity(mesh.cells().size() - 1, 0), 0));
+    auto lat0 = fmin(lonlat(node_connectivity(0, 0), 1),
+                     lonlat(node_connectivity(mesh.cells().size() - 1, 0), 1));
+    auto lon1 = fmax(lonlat(node_connectivity(0, 0), 0),
+                     lonlat(node_connectivity(mesh.cells().size() - 1, 0), 0));
+    auto lat1 = fmax(lonlat(node_connectivity(0, 0), 1),
+                     lonlat(node_connectivity(mesh.cells().size() - 1, 0), 1));
+    for(int cell = 0, size = mesh.cells().size(); cell < size; ++cell) {
+      double llx = lonlat(node_connectivity(cell, 0), 0);
+      double lly = lonlat(node_connectivity(cell, 0), 1);
+      double cartx = (llx - lon0) / (lon1 - lon0) * M_PI;
+      double carty = (lly - lat0) / (lat1 - lat0) * M_PI;
+      double val = sin(cartx) * sin(carty); // periodic signal fitting periodic boundaries
+      ref_cells_v(cell, 0) = val;
+      gen_cells_v(cell, 0) = val;
+    }
+  }
+
+  for(int cell = 0; cell < mesh.cells().size(); ++cell) {
+    ref_cells_v(cell, 0) = 1.;
+    gen_cells_v(cell, 0) = 1.;
+  }
+
+  dawn_generated::cxxnaiveico::reference_gradient<atlasInterface::atlasTag>(
+      mesh, nb_levels, ref_cells_v, ref_edges_v)
+      .run();
+  dawn_generated::cxxnaiveico::gradient<atlasInterface::atlasTag>(mesh, nb_levels, gen_cells_v,
+                                                                  gen_edges_v)
+      .run();
+
+  // Check correctness of the output
+  {
+    auto ref_cells_v = atlas::array::make_view<double, 2>(ref_cells_f);
+    auto gen_cells_v = atlas::array::make_view<double, 2>(gen_cells_f);
+    AtlasVerifier v;
+    EXPECT_TRUE(v.compareArrayView(ref_cells_v, gen_cells_v))
+        << "while comparing output (on cells)";
   }
 }
 } // namespace

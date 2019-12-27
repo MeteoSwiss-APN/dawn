@@ -258,29 +258,40 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
                                  std::set<std::string> const& usedBC) {
   auto protoIIR = target.mutable_internalir();
 
+  switch(iir->getGridType()) {
+  case ast::GridType::Cartesian:
+    protoIIR->set_gridtype(proto::enums::GridType::Cartesian);
+    break;
+  case ast::GridType::Triangular:
+    protoIIR->set_gridtype(proto::enums::GridType::Triangular);
+    break;
+  default:
+    dawn_unreachable("invalid grid type");
+  }
+
   auto& protoGlobalVariableMap = *protoIIR->mutable_globalvariabletovalue();
   for(auto& globalToValue : iir->getGlobalVariableMap()) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
     bool valueIsSet = false;
 
-    switch(globalToValue.second->getType()) {
+    switch(globalToValue.second.getType()) {
     case sir::Value::Kind::Boolean:
-      if(globalToValue.second->has_value()) {
-        protoGlobalToStore.set_value(globalToValue.second->getValue<bool>());
+      if(globalToValue.second.has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second.getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Kind::Integer:
-      if(globalToValue.second->has_value()) {
-        protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
+      if(globalToValue.second.has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second.getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Kind::Double:
-      if(globalToValue.second->has_value()) {
-        protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
+      if(globalToValue.second.has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second.getValue<double>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Double);
@@ -560,36 +571,37 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
                                    const proto::iir::IIR& protoIIR) {
   for(auto GlobalToValue : protoIIR.globalvariabletovalue()) {
-    std::shared_ptr<sir::Value> value;
+    std::shared_ptr<sir::Global> value;
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Kind::Boolean);
+        value = std::make_shared<sir::Global>(sir::Value::Kind::Boolean);
       } else {
-        value = std::make_shared<sir::Value>(GlobalToValue.second.value());
+        value = std::make_shared<sir::Global>(GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Kind::Integer);
+        value = std::make_shared<sir::Global>(sir::Value::Kind::Integer);
       } else {
         // the explicit cast is needed since in this case GlobalToValue.second.value()
         // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
-        value = std::make_shared<sir::Value>((int)GlobalToValue.second.value());
+        value = std::make_shared<sir::Global>((int)GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Value>(sir::Value::Kind::Double);
+        value = std::make_shared<sir::Global>(sir::Value::Kind::Double);
       } else {
-        value = std::make_shared<sir::Value>((double)GlobalToValue.second.value());
+        value = std::make_shared<sir::Global>((double)GlobalToValue.second.value());
       }
       break;
     default:
       dawn_unreachable("unsupported type");
     }
 
-    target->getIIR()->insertGlobalVariable(GlobalToValue.first, value);
+    target->getIIR()->insertGlobalVariable(std::string(GlobalToValue.first),
+                                           std::move(*value.get()));
   }
 
   int stencilPos = 0;
@@ -692,8 +704,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
 }
 
-void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind,
-                                    std::shared_ptr<iir::StencilInstantiation>& target) {
+std::shared_ptr<iir::StencilInstantiation>
+IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
@@ -714,10 +726,25 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Forma
     dawn_unreachable("invalid SerializationKind");
   }
 
+  std::shared_ptr<iir::StencilInstantiation> target;
+
+  switch(protoStencilInstantiation.internalir().gridtype()) {
+  case dawn::proto::enums::GridType::Cartesian:
+    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
+    break;
+  case dawn::proto::enums::GridType::Triangular:
+    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Triangular);
+    break;
+  default:
+    dawn_unreachable("unknown grid type");
+  }
+
   deserializeIIR(target, (protoStencilInstantiation.internalir()));
   deserializeMetaData(target, (protoStencilInstantiation.metadata()));
   target->getMetaData().fileName_ = protoStencilInstantiation.filename();
   computeInitialDerivedInfo(target);
+
+  return target;
 }
 
 std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
@@ -729,19 +756,14 @@ std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std:
         dawn::format("cannot deserialize IIR: failed to open file \"%s\"", file));
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-  std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>();
-  deserializeImpl(str, kind, returnvalue);
-  return returnvalue;
+
+  return deserializeImpl(str, kind);
 }
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::Format kind) {
-  std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>();
-  deserializeImpl(str, kind, returnvalue);
-  return returnvalue;
+  return deserializeImpl(str, kind);
 }
 
 void IIRSerializer::serialize(const std::string& file,

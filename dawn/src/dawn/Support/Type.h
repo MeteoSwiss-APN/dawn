@@ -22,7 +22,7 @@ namespace dawn {
 
 /// @brief Builtin types recognized by the SIR
 /// @ingroup support
-enum class BuiltinTypeID : int { Invalid = 0, Auto, Boolean, Integer, Float };
+enum class BuiltinTypeID : int { Invalid = 0, Auto, Boolean, Integer, Float, Double };
 
 /// @brief Const-volatile qualifiers
 /// @ingroup support

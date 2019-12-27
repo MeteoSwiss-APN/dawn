@@ -27,7 +27,7 @@ if(NOT CMAKE_INSTALL_PREFIX)
 endif()
 
 project(dawn C CXX)
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.12.4)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(YODA_ROOT CACHE PATH "path to yoda package")
@@ -123,13 +123,6 @@ yoda_report_result("Package summary" ${package_info})
 
 # Add clang-format target
 yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test EXTENSION ".h;.cpp")
-
-if(DAWN_PYTHON)
-  if(NOT DEFINED PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3 REQUIRED)
-  endif()
-  add_subdirectory(python)
-endif()
 
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)

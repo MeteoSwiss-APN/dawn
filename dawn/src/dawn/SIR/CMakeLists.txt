@@ -19,7 +19,7 @@ dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS SIR/SIR.proto SIR/statements.proto
+  PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
   PACKG SIR
   LANGUAGE cpp
 )
@@ -61,29 +61,30 @@ target_include_directories(DawnSIRShared PUBLIC $<BUILD_INTERFACE:${sir_proto_in
 add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
 
 if(DAWN_PYTHON) 
-  # Genreate python proto files
+  # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES sir_proto_python_files
-    PROTOS SIR/SIR.proto SIR/statements.proto
+    PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE python
   )
 
   add_custom_target(DawnSIRPythonProto ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/python/dawn/
     COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_SOURCE_DIR}/src/dawn4py/serialization/SIR
     DEPENDS ${sir_proto_python_files}
   )
   install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-  install(FILES ${CMAKE_SOURCE_DIR}/python/SIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
 endif(DAWN_PYTHON)
 
 if(DAWN_JAVA)
-  # Genreate python proto files
+  # Generate python proto files
   dawn_protobuf_generate(
     OUT_FILES sir_proto_java_files
     OUT_DIRS sir_proto_java_dirs
-    PROTOS SIR/SIR.proto SIR/statements.proto 
+    PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE java

@@ -20,6 +20,7 @@ syntax = "proto3";
 
 package dawn.sir.proto;
 import "SIR/statements.proto";
+import "SIR/enums.proto";
 
 option java_package = "dawn.sir";
 option java_outer_classname = "SIR_pb2";
@@ -91,10 +92,11 @@ message GlobalVariableValue {
     int32 integer_value = 2;
     double double_value = 3;
     string string_value = 4;
+    float float_value = 5;
   }
 
   // Is the value a a compile time constant?
-  bool is_constexpr = 5;
+  bool is_constexpr = 6;
 }
 
 // @brief Map of global variables
@@ -121,15 +123,18 @@ message GlobalVariableMap {
 //
 // @ingroup sir_proto
 message SIR {
+
+  dawn.proto.enums.GridType gridType = 1;
+
   // Name of the file the SIR was parsed from (can be empty)
-  string filename = 4;
+  string filename = 2;
 
   // List of stencils
-  repeated Stencil stencils = 1;
+  repeated Stencil stencils = 3;
 
   // List of stencil functions
-  repeated StencilFunction stencil_functions = 2;
+  repeated StencilFunction stencil_functions = 4;
 
   // Map of global variables
-  GlobalVariableMap global_variables = 3;
+  GlobalVariableMap global_variables = 5;
 }

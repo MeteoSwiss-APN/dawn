@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_IIR_H
 #define DAWN_IIR_IIR_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/Support/RemoveIf.hpp"
@@ -27,10 +28,12 @@ namespace iir {
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
 
+  const ast::GridType gridType_;
+
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
 
-  sir::GlobalVariableMap globalVariableMap_;
+  std::shared_ptr<sir::GlobalVariableMap> globalVariableMap_;
   std::vector<std::shared_ptr<sir::StencilFunction>> stencilFunctions_;
 
   struct DerivedInfo {
@@ -48,19 +51,21 @@ public:
 
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
 
+  ast::GridType getGridType() const { return gridType_; }
+
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
-  IIR(const sir::GlobalVariableMap& sirGlobals,
+  IIR(const ast::GridType gridType, std::shared_ptr<sir::GlobalVariableMap> sirGlobals,
       const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;
   IIR& operator=(IIR&&) = default;
   /// @}
+
   /// @brief clone the IIR
   std::unique_ptr<IIR> clone() const;
-
   /// @brief clone the IIR
   void clone(std::unique_ptr<IIR>& dest) const;
 
@@ -97,10 +102,13 @@ public:
     return it->second;
   }
 
-  const sir::GlobalVariableMap& getGlobalVariableMap() const { return globalVariableMap_; }
+  std::shared_ptr<sir::GlobalVariableMap> getGlobalVariableMapPtr() const {
+    return globalVariableMap_;
+  }
+  const sir::GlobalVariableMap& getGlobalVariableMap() const { return *globalVariableMap_; }
 
-  void insertGlobalVariable(std::string varName, std::shared_ptr<sir::Value> value) {
-    globalVariableMap_.emplace(varName, value);
+  void insertGlobalVariable(std::string&& varName, sir::Global&& value) {
+    globalVariableMap_->insert(std::pair(std::move(varName), std::move(value)));
   }
 
   const Stencil& getStencil(const int stencilID) const;

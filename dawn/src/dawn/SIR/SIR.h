@@ -15,6 +15,7 @@
 #ifndef DAWN_SIR_SIR_H
 #define DAWN_SIR_SIR_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
@@ -25,6 +26,7 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
+#include <algorithm>
 #include <iosfwd>
 #include <memory>
 #include <optional>
@@ -355,26 +357,44 @@ struct Stencil : public dawn::NonCopyable {
 ///
 /// @ingroup sir
 
-class Value : NonCopyable {
+class Value {
 public:
-  enum class Kind { Boolean = 0, Integer, Double, String };
+  enum class Kind { Boolean = 0, Integer, Float, Double, String };
   template <typename T>
   struct TypeInfo;
 
   template <class T>
-  explicit Value(T&& value)
-      : value_{std::forward<T>(value)},
-        is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+  Value(T value)
+      : value_{std::move(value)}, is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   template <class T>
-  explicit Value(T value, bool is_constexpr)
-      : value_{std::forward<T>(value)},
+  Value(T value, bool is_constexpr)
+      : value_{std::move(value)},
         is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
-  explicit Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+  Value(const Value& other)
+      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+
+  Value(Value& other)
+      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+
+  Value(Value&& other)
+      : value_{std::move(other.value_)}, is_constexpr_{other.isConstexpr()}, type_{
+                                                                                 other.getType()} {}
+
+  Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+
+  virtual ~Value() = default;
+
+  Value& operator=(const Value& other) {
+    value_ = other.value_;
+    is_constexpr_ = other.isConstexpr();
+    type_ = other.getType();
+    return *this;
+  }
 
   /// @brief Get/Set if the variable is `constexpr`
-  bool isConstexpr() const { return is_constexpr_; }
+  virtual bool isConstexpr() const { return is_constexpr_; }
 
   /// @brief `Type` to string
   static const char* typeToString(Kind type);
@@ -383,13 +403,13 @@ public:
   static BuiltinTypeID typeToBuiltinTypeID(Kind type);
 
   /// Convert the value to string
-  std::string toString() const;
+  virtual std::string toString() const;
 
   /// @brief Check if value is set
-  bool has_value() const { return value_.has_value(); }
+  virtual bool has_value() const { return value_.has_value(); }
 
   /// @brief Get/Set the underlying type
-  Kind getType() const { return type_; }
+  virtual Kind getType() const { return type_; }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
@@ -400,10 +420,10 @@ public:
     return std::get<T>(*value_);
   }
 
-  bool operator==(const Value& rhs) const;
-  CompareResult comparison(const sir::Value& rhs) const;
+  virtual bool operator==(const Value& rhs) const;
+  virtual CompareResult comparison(const sir::Value& rhs) const;
 
-  json::json jsonDump() const {
+  virtual json::json jsonDump() const {
     json::json valueJson;
     valueJson["type"] = Value::typeToString(getType());
     valueJson["isConstexpr"] = isConstexpr();
@@ -411,8 +431,8 @@ public:
     return valueJson;
   }
 
-private:
-  std::optional<std::variant<bool, int, double, std::string>> value_;
+protected:
+  std::optional<std::variant<bool, int, float, double, std::string>> value_;
   bool is_constexpr_;
   Kind type_;
 };
@@ -428,6 +448,11 @@ struct Value::TypeInfo<int> {
 };
 
 template <>
+struct Value::TypeInfo<float> {
+  static constexpr Kind Type = Kind::Float;
+};
+
+template <>
 struct Value::TypeInfo<double> {
   static constexpr Kind Type = Kind::Double;
 };
@@ -437,7 +462,18 @@ struct Value::TypeInfo<std::string> {
   static constexpr Kind Type = Kind::String;
 };
 
-using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>>;
+class Global : public Value, NonCopyable {
+public:
+  template <class T>
+  Global(T value) : Value(value) {}
+
+  template <class T>
+  Global(T value, bool is_constexpr) : Value(value, is_constexpr) {}
+
+  Global(Kind type) : Value(type) {}
+};
+
+using GlobalVariableMap = std::unordered_map<std::string, Global>;
 
 } // namespace sir
 
@@ -450,7 +486,7 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>
 struct SIR : public dawn::NonCopyable {
 
   /// @brief Default Ctor that initializes all the shared pointers
-  SIR();
+  SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
   void dump();
@@ -473,6 +509,7 @@ struct SIR : public dawn::NonCopyable {
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
   std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
+  const ast::GridType GridType;
 };
 
 } // namespace dawn

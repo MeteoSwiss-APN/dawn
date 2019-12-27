@@ -5,8 +5,8 @@
    "10": "field_b"
   },
   "accessIDToType": {
-   "9": 6,
-   "10": 6
+   "10": 6,
+   "9": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -64,6 +64,7 @@
   "stencilName": "Test"
  },
  "internalIR": {
+  "gridType": "Cartesian",
   "globalVariableToValue": {},
   "stencils": [
    {
@@ -223,5 +224,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/scratch/snx3000/mlukas/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }
