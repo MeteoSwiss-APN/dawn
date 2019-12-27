@@ -45,13 +45,13 @@ export TMPDIR=${build_dir}/temp
 mkdir -p $TMPDIR
 python -m venv dawn_venv
 source dawn_venv/bin/activate
-pip install --upgrade pip
-pip install wheel
-pip install -e ${base_dir} -v
+python -m pip install --upgrade pip
+python -m pip install wheel
+python -m pip install -e ${base_dir} -v
 
 cd ${base_dir}/examples/python
 bash run.sh
-pytest -v ${base_dir}/test/unit-test/test_dawn4py/
+python -m pytest -v ${base_dir}/test/unit-test/test_dawn4py/
 
 # clean up the build directory for the c++ tests
 rm -rf $build_dir
