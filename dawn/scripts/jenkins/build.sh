@@ -54,6 +54,7 @@ bash run.sh
 python -m pytest -v ${base_dir}/test/unit-test/test_dawn4py/
 
 # clean up the build directory for the c++ tests
+deactivate
 rm -rf $build_dir
 rm -rf ${base_dir}/bundle/install
 rm -rf ${base_dir}/bundle/yoda
