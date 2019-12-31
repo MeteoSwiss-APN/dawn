@@ -222,8 +222,7 @@ computation happens. Dos in a St can't be overlapping.
 
 Execution Model from Internal Structures
 ----------------------------------------
-
-We assume that every back end upholds the following execution model:
+The above assumptions require the following execution order:
 
 .. code:: c++
 
@@ -233,6 +232,11 @@ We assume that every back end upholds the following execution model:
    4    for ij
    5     for DoMethod
    6      execute_statements()
+
+Since MS can be dependent on each other they have to be a sequential loop.
+The assumption that each stage will have all it's dependent statements executed
+on each lower k-level can be translated into the k-loop happening before the
+Stage loop.
 
 --------------
 
