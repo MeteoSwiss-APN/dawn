@@ -27,6 +27,11 @@ if(NOT pybind11_fetch_POPULATED)
     add_subdirectory(${pybind11_fetch_SOURCE_DIR} ${pybind11_fetch_BINARY_DIR})
 endif()
 
+# Remove when updated past v2.4.3. See https://github.com/pybind/pybind11/issues/1604
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_compile_options(pybind11 INTERFACE -fsized-deallocation)
+endif()
+
 pybind11_add_module(_dawn4py MODULE _dawn4py.cpp)
 target_link_libraries(_dawn4py PUBLIC pybind11::pybind11 Dawn)
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)

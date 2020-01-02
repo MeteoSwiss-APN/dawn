@@ -40,11 +40,7 @@ if(ENABLE_PYTHON)
   string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
     sir_proto_python_build_files "${sir_proto_python_files}")
 
-  add_custom_command(OUTPUT ${sir_proto_python_build_files}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}/SIR
-    DEPENDS ${sir_proto_python_files}
-  )
+  file(COPY ${sir_proto_python_files} DESTINATION ${output_dir}/SIR)
 
   # TODO do we have a use-case for an installation at the moment?
   # Maybe not, but just in case...
