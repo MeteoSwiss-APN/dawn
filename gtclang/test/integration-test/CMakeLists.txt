@@ -66,7 +66,7 @@ function(code_generate_examples)
       set_source_files_properties(${cwd}/${ARG_DIRECTORY}/generated/${example}_${backend}.cpp PROPERTIES GENERATED TRUE)
 
       add_custom_command(OUTPUT ${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp
-        COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" ${config_str} "-o" "${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp"  "${cwd}/${ARG_DIRECTORY}/${example}.cpp"
+        COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" ${config_str} "-o" "${cwd}/${ARG_DIRECTORY}/generated/${example}_c++-naive.cpp" "-fdebug" "${cwd}/${ARG_DIRECTORY}/${example}.cpp"
         DEPENDS ${cwd}/${ARG_DIRECTORY}/${example}.cpp gtclang
       )
 
@@ -213,11 +213,11 @@ if(GTCLANG_HAS_GRIDTOOLS)
 
   set(codegen_example_benchmarks)
 
-  ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-max-fields=2")
-  ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-fsplit-stencils")
+  # ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-max-fields=2")
+  # ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-fsplit-stencils")
 
-  ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-max-fields=2")
-  ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-fsplit-stencils")
+  # ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-max-fields=2")
+  # ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-fsplit-stencils")
 
   ADD_COMPILER_FLAG_TO_EXAMPLE("intervals02" "-disable-kcaches")
   ADD_COMPILER_FLAG_TO_EXAMPLE("intervals03" "-disable-kcaches")

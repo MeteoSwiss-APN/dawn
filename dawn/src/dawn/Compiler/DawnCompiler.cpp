@@ -31,6 +31,7 @@
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -180,45 +181,81 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
 
-    // Setup pass interface
+    // required passes to have proper, parallelized IR
     optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
-    // This pass is currently broken and needs to be redesigned before it can be enabled
-    //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
     optimizer->checkAndPushBack<PassFieldVersioning>();
-    optimizer->checkAndPushBack<PassSSA>();
     optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
     optimizer->checkAndPushBack<PassStageSplitter>();
-    optimizer->checkAndPushBack<PassPrintStencilGraph>();
     optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassSetStageName>();
-    optimizer->checkAndPushBack<PassSetStageGraph>();
-    optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
-    optimizer->checkAndPushBack<PassStageMerger>();
-    optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
-    optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassTemporaryMerger>();
-    optimizer->checkAndPushBack<PassInlining>(
-        (getOptions().InlineSF || getOptions().PassTmpToFunction),
-        PassInlining::InlineStrategy::ComputationsOnTheFly);
-    optimizer->checkAndPushBack<PassIntervalPartitioner>();
-    optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-    optimizer->checkAndPushBack<PassSetNonTempCaches>();
-    optimizer->checkAndPushBack<PassSetCaches>();
     optimizer->checkAndPushBack<PassFixVersionedInputFields>();
     optimizer->checkAndPushBack<PassComputeStageExtents>();
-    // This pass is disabled because the boundary conditions need to be fixed.
-    // optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-    if(getOptions().Backend == "cuda") {
-      optimizer->checkAndPushBack<PassSetBlockSize>();
-    }
-    optimizer->checkAndPushBack<PassDataLocalityMetric>();
     optimizer->checkAndPushBack<PassSetSyncStage>();
-    // Since both cuda code generation as well as serialization do not support stencil-functions, we
-    // need to inline here as the last step
-    optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
-                                                  getOptions().SerializeIIR,
-                                              PassInlining::InlineStrategy::ComputationsOnTheFly);
 
+    if(!options_->Debug) {
+      // Optimization, step by step
+      //===-----------------------------------------------------------------------------------------
+      // broken but should run with no prerequesits
+      optimizer->checkAndPushBack<PassSSA>();
+      // rerun things we might have changed
+      // optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+      // todo: this does not work since it does not check if it was already run
+      //===-----------------------------------------------------------------------------------------
+      // Plain diagnostics, should not even be a pass but is independent
+      optimizer->checkAndPushBack<PassPrintStencilGraph>();
+      //===-----------------------------------------------------------------------------------------
+      // This is never used but if we want to reenable it, it is independent
+      optimizer->checkAndPushBack<PassSetStageName>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassSetStageGraph>();
+      optimizer->checkAndPushBack<PassSetDependencyGraph>();
+      optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
+      // moved stages around ...
+      optimizer->checkAndPushBack<PassSetSyncStage>();
+      // if we want this info around, we should probably run this also
+      // optimizer->checkAndPushBack<PassSetStageName>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassStageMerger>();
+      // since this can change the scope of temporaries ...
+      optimizer->checkAndPushBack<PassTemporaryType>();
+      optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+      // modify stages and their extents ...
+      optimizer->checkAndPushBack<PassComputeStageExtents>();
+      // and changes their dependencies
+      optimizer->checkAndPushBack<PassSetSyncStage>();
+      //===-----------------------------------------------------------------------------------------
+      // // should be irrelevant now
+      // optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+      // // but would require a lot
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassTemporaryMerger>();
+      // this should not affect the temporaries but since we're touching them it would probably be a
+      // safe idea
+      optimizer->checkAndPushBack<PassTemporaryType>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassInlining>(
+          (getOptions().InlineSF || getOptions().PassTmpToFunction),
+          PassInlining::InlineStrategy::ComputationsOnTheFly);
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassIntervalPartitioner>();
+      // since this can change the scope of temporaries ...
+      optimizer->checkAndPushBack<PassTemporaryType>();
+      optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassSetNonTempCaches>();
+      // this should not affect the temporaries but since we're touching them it would probably be a
+      // safe idea
+      optimizer->checkAndPushBack<PassTemporaryType>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassSetCaches>();
+      //===-----------------------------------------------------------------------------------------
+      optimizer->checkAndPushBack<PassSetBlockSize>();
+      //===-----------------------------------------------------------------------------------------
+      // Plain diagnostics, should not even be a pass but is independent
+      optimizer->checkAndPushBack<PassDataLocalityMetric>();
+      //===-----------------------------------------------------------------------------------------
+    }
     DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
     for(const auto& a : optimizer->getPassManager().getPasses()) {
       DAWN_LOG(INFO) << a->getName();

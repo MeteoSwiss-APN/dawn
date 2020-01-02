@@ -43,6 +43,8 @@ yoda_add_library(
           PassSetBoundaryCondition.h
           PassSetCaches.cpp
           PassSetCaches.h
+          PassSetDependencyGraph.cpp
+          PassSetDependencyGraph.h
           PassSetNonTempCaches.cpp
           PassSetNonTempCaches.h
           PassSetStageGraph.cpp

@@ -118,17 +118,17 @@ public:
   /// the options.
   ///
   /// Currently this is a placeholder for the final design once a more elaborate scheme of
-  /// grouping is in place that enables more paths. This should also eventaully replace the
-  /// option-checks that are currently hiden in the passes run-methods
+  /// grouping is in place that enables more paths. This should also eventually replace the
+  /// option-checks that are currently hidden in the passes run-methods
   template <typename T>
   bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
 
-    bool retval;
-    if(options_.Debug)
-      retval = p->isDebug();
-    else
-      retval = true;
-    return retval;
+    // bool retval;
+    // if(options_.Debug)
+    //   retval = p->isDebug();
+    // else
+    //   retval = true;
+    return true;
   }
 };
 
