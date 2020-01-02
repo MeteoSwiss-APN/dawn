@@ -89,13 +89,6 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   // Initialize a compiler invocation object from the clang (-cc1) arguments
   llvm::opt::ArgStringList& ccArgs = const_cast<llvm::opt::ArgStringList&>(command.getArguments());
 
-  // // NOTE: This is a kind of a hack. The problem is that Clang tools are meant to be run from the
-  // // the same binary directory as Clang itself and thus rely on finding the internal header files in
-  // // `../lib/clang/X.X.X/include`. However, this is usually not the case for us! We just pass the
-  // // include dirs manually to cc1 which we grabbed from llvm-config in CMake.
-  ccArgs.push_back("-internal-isystem");
-  ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH);
-
 #ifdef __APPLE__
   // Set the root where system headers are located.
   ccArgs.push_back("-internal-isystem");
@@ -105,6 +98,13 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   ccArgs.push_back("-internal-isystem");
   ccArgs.push_back("/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include");
 #endif
+
+  // NOTE: This is a kind of a hack. The problem is that Clang tools are meant to be run from the
+  // the same binary directory as Clang itself and thus rely on finding the internal header files in
+  // `../lib/clang/X.X.X/include`. However, this is usually not the case for us! We just pass the
+  // include dirs manually to cc1 which we grabbed from llvm-config in CMake.
+  ccArgs.push_back("-internal-isystem");
+  ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH);
 
   std::shared_ptr<CompilerInvocation> CI(new CompilerInvocation);
   clang_compat::CompilerInvocation::CreateFromArgs(*CI, ccArgs, diagnostics);
