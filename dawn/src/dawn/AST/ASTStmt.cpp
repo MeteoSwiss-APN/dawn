@@ -31,9 +31,11 @@ BlockStmt::BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc)
 BlockStmt::BlockStmt(std::unique_ptr<StmtData> data,
                      const std::vector<std::shared_ptr<Stmt>>& statements, SourceLocation loc)
     : Stmt(std::move(data), Kind::BlockStmt, loc), statements_(statements) {
-  for([[maybe_unused]] const auto& s : statements)
+#if DAWN_USING_ASSERTS
+  for(const auto& s : statements)
     DAWN_ASSERT_MSG((checkSameDataType(*s)),
                     "Trying to insert child Stmt with different data type");
+#endif
 }
 
 BlockStmt::BlockStmt(const BlockStmt& stmt) : Stmt(stmt) {

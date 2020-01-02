@@ -192,12 +192,14 @@ public:
   /// for the right hand side of the =. Therefore all accesses capture here correspond to arguments
   /// for computing the tmp. They are captured as arguments of the stencil function being created
   virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
+#if DAWN_USING_ASSERTS
     DAWN_ASSERT(tmpFunction_);
-    for([[maybe_unused]] int idx : expr->getArgumentMap()) {
+    for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);
     }
-    for([[maybe_unused]] int off : expr->getArgumentOffset())
+    for(int off : expr->getArgumentOffset())
       DAWN_ASSERT(off == 0);
+#endif
 
     // record the field access as an argument to the stencil funcion
     if(!tmpFunction_->hasArg(expr->getName()) && expr != tmpFieldAccessExpr_) {
@@ -438,11 +440,13 @@ public:
       arg->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(accessID_);
     }
 
-    for([[maybe_unused]] int idx : expr->getArgumentMap()) {
+#if DAWN_USING_ASSERTS
+    for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);
     }
-    for([[maybe_unused]] int off : expr->getArgumentOffset())
+    for(int off : expr->getArgumentOffset())
       DAWN_ASSERT(off == 0);
+#endif
 
     const auto& argToAccessIDMap = stencilFun->ArgumentIndexToCallerAccessIDMap();
     for(auto pair : argToAccessIDMap) {
