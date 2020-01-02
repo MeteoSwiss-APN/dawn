@@ -132,7 +132,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
         // 1) Are the loop orders compatible?
         if(loopOrdersAreCompatible(stageLoopOrder, MS->getLoopOrder())) {
 
-          // 2) Can we merge the stage wihtout violating vertical dependencies?
+          // 2) Can we merge the stage without violating vertical dependencies?
           auto dependencyGraphLoopOrderPair = isMergable(stage, stageLoopOrder, *MS);
           auto multiStageDependencyGraph = dependencyGraphLoopOrderPair.first;
 
