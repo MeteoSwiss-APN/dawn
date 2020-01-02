@@ -314,7 +314,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   auto optimizer = runOptimizer(SIR);
 
   if(diagnostics_->hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occured. Skipping code generation.";
+    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
   }
 
