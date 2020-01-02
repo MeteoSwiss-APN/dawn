@@ -60,8 +60,6 @@ public:
       const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
-  IIR& operator=(const IIR&) = default;
-  IIR& operator=(IIR&&) = default;
   /// @}
 
   /// @brief clone the IIR

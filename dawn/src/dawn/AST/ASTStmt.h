@@ -185,11 +185,13 @@ public:
   /// @brief inserts stmts from (iterators) `first` to `last` into the block at `position`
   template <typename InputIterator>
   StmtIterator insert(StmtConstIterator position, InputIterator first, InputIterator last) {
+#if DAWN_USING_ASSERTS
     std::for_each(first, last, [&](const std::shared_ptr<Stmt>& stmt) {
       DAWN_ASSERT(stmt);
       DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
                       "Trying to insert child Stmt with different data type");
     });
+#endif
     return statements_.insert(position, first, last);
   }
 

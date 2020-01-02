@@ -39,6 +39,7 @@ protected:
 
 public:
   using Base = ASTCodeGenCXX;
+  using Base::visit;
 
   ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                  const CodeGenProperties& codeGenProperties,
