@@ -42,7 +42,11 @@ if(ENABLE_PYTHON)
   string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
     iir_proto_python_build_files "${iir_proto_python_files}")
 
-  file(COPY ${iir_proto_python_files} DESTINATION ${output_dir}/IIR)
+  add_custom_command(OUTPUT ${iir_proto_python_build_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}/IIR
+    DEPENDS ${iir_proto_python_files}
+  )
 
   # TODO do we have a use-case for an installation at the moment?
   # Maybe not, but just in case...
