@@ -31,7 +31,7 @@ BlockStmt::BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc)
 BlockStmt::BlockStmt(std::unique_ptr<StmtData> data,
                      const std::vector<std::shared_ptr<Stmt>>& statements, SourceLocation loc)
     : Stmt(std::move(data), Kind::BlockStmt, loc), statements_(statements) {
-  for(const auto& s : statements)
+  for([[maybe_unused]] const auto& s : statements)
     DAWN_ASSERT_MSG((checkSameDataType(*s)),
                     "Trying to insert child Stmt with different data type");
 }
@@ -79,7 +79,7 @@ void BlockStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
                                 std::shared_ptr<Stmt> const& newStmt) {
   DAWN_ASSERT_MSG((checkSameDataType(*newStmt)),
                   "Trying to insert child Stmt with different data type");
-  bool success = ASTHelper::replaceOperands(oldStmt, newStmt, statements_);
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldStmt, newStmt, statements_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
@@ -189,8 +189,8 @@ bool VarDeclStmt::equals(const Stmt* other) const {
 
 void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
                                   std::shared_ptr<Expr> const& newExpr) {
-  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, initList_);
-  DAWN_ASSERT_MSG((success), ("Expression not found"));
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, initList_);
+  DAWN_ASSERT_MSG(success, ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//

@@ -142,12 +142,13 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
 void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   int accessID = iir::getAccessID(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
-  auto vertExtent = ms_->getKCacheVertExtent(accessID);
+  [[maybe_unused]] auto vertExtent = ms_->getKCacheVertExtent(accessID);
 
   const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
 
   auto offset = expr->getOffset();
-  auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
+  [[maybe_unused]] auto const& hoffset =
+      ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   DAWN_ASSERT(hoffset.offsetI() == 0 && hoffset.offsetJ() == 0);
   DAWN_ASSERT((offset.verticalOffset() <= vertExtent.plus()) &&

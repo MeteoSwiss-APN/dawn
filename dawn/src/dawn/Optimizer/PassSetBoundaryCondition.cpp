@@ -266,12 +266,11 @@ bool PassSetBoundaryCondition::run(
         stencilInstantiation->getMetaData().addBoundaryConditiontoExtentPair(IDtoBCpair->second,
                                                                              fullExtents);
 
-        auto it = std::find_if(stencilInstantiation->getIIR()->childrenBegin(),
+        DAWN_ASSERT_MSG(std::find_if(stencilInstantiation->getIIR()->childrenBegin(),
                                stencilInstantiation->getIIR()->childrenEnd(),
                                [&stencil](const std::unique_ptr<iir::Stencil>& storedStencil) {
                                  return storedStencil->getStencilID() == stencil.getStencilID();
-                               });
-        DAWN_ASSERT_MSG(it != stencilInstantiation->getIIR()->childrenEnd(),
+                               }) != stencilInstantiation->getIIR()->childrenEnd(),
                         "Stencil Triggering the Boundary Condition is not called");
 
         // Find all the calls to this stencil before which we need to apply the boundary
