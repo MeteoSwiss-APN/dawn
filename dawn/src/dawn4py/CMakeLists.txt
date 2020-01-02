@@ -28,18 +28,6 @@ if(NOT pybind11_fetch_POPULATED)
 endif()
 
 pybind11_add_module(_dawn4py MODULE _dawn4py.cpp)
-target_link_libraries(_dawn4py PUBLIC
-  pybind11::pybind11
-  DawnASTObjects
-  DawnSIRObjects
-  DawnSupportObjects
-  DawnCompilerObjects
-  DawnSerializerObjects
-  DawnIIRObjects
-  DawnOptimizerObjects
-  DawnCodeGenObjects
-  ${DAWN_EXTERNAL_LIBRARIES}
-)
+target_link_libraries(_dawn4py PUBLIC pybind11::pybind11 Dawn)
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)
-
 add_custom_target(python DEPENDS DawnSIRPythonProto DawnIIRPythonProto _dawn4py)
