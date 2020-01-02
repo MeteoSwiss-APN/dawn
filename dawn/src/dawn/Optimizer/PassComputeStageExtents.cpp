@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -36,6 +37,12 @@ bool PassComputeStageExtents::run(
     // backward loop over stages
     for(int i = numStages - 1; i >= 0; --i) {
       iir::Stage& fromStage = *(stencil.getStage(i));
+      for(auto globalIterationSpace : fromStage.getIterationSpace()) {
+        if(globalIterationSpace) {
+          fromStage.setExtents(iir::Extents());
+          continue;
+        }
+      }
 
       iir::Extents const& stageExtent = fromStage.getExtents();
 
