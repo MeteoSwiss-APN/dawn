@@ -60,7 +60,7 @@ public:
   using EdgeList = std::list<Edge>;
 
   struct Vertex {
-    std::size_t VertexID; ///< Unqiue ID of the Vertex
+    std::size_t VertexID; ///< Unique ID of the Vertex
     int value;            ///< value of the data to be stored
   };
 
