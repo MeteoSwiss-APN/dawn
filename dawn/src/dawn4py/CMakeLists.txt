@@ -34,4 +34,6 @@ pybind11_add_module(_dawn4py MODULE _dawn4py.cpp)
 target_link_libraries(_dawn4py PUBLIC pybind11::pybind11 Dawn)
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)
 
-add_custom_target(python DEPENDS DawnSIRPythonProto DawnIIRPythonProto _dawn4py)
+# Depending on DawnSIRProto and DawnIIRProto ensures the python files are
+# generated and moved into the correct location
+add_custom_target(python DEPENDS DawnSIRProto DawnIIRProto _dawn4py)

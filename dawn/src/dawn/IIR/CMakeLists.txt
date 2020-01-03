@@ -48,7 +48,7 @@ if(ENABLE_PYTHON)
   )
 endif()
 
-add_library(DawnIIRProto OBJECT ${sir_proto_cpp_files} ${iir_proto_python_build_files})
+add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files} ${iir_proto_python_build_files})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 

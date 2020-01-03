@@ -71,7 +71,6 @@ add_library(DawnSIR
   ASTVisitor.h
   SIR.cpp
   SIR.h
-  $<TARGET_OBJECTS:DawnAST>
 )
 
 target_add_dawn_standard_props(DawnSIR)
