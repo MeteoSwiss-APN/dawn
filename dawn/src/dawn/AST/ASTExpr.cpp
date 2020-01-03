@@ -96,8 +96,8 @@ bool BinaryOperator::equals(const Expr* other) const {
 
 void BinaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                      const std::shared_ptr<Expr>& newExpr) {
-  DAWN_ASSERT_MSG(ASTHelper::replaceOperands(oldExpr, newExpr, operands_),
-                  ("Expression not found"));
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -197,8 +197,8 @@ bool TernaryOperator::equals(const Expr* other) const {
 
 void TernaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                       const std::shared_ptr<Expr>& newExpr) {
-  DAWN_ASSERT_MSG(ASTHelper::replaceOperands(oldExpr, newExpr, operands_),
-                  ("Expression not found"));
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -239,8 +239,8 @@ void FunCallExpr::insertArgument(const std::shared_ptr<Expr>& expr) { arguments_
 
 void FunCallExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                   const std::shared_ptr<Expr>& newExpr) {
-  DAWN_ASSERT_MSG(ASTHelper::replaceOperands(oldExpr, newExpr, arguments_),
-                  ("Expression not found"));
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, arguments_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
