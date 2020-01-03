@@ -16,8 +16,8 @@ set(protos IIR/IIR.proto)
 
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
-  OUT_FILES sir_proto_cpp_files
-  OUT_INCLUDE_DIRS sir_proto_include_dirs
+  OUT_FILES iir_proto_cpp_files
+  OUT_INCLUDE_DIRS iir_proto_include_dirs
   PROTOS ${protos}
   INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
@@ -37,22 +37,14 @@ if(ENABLE_PYTHON)
     LANGUAGE python
   )
 
-  set(output_dir ${PROJECT_BINARY_DIR}/python)
+  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/IIR)
 
   string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
     iir_proto_python_build_files "${iir_proto_python_files}")
 
   add_custom_command(OUTPUT ${iir_proto_python_build_files}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${output_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}/IIR
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
     DEPENDS ${iir_proto_python_files}
-  )
-
-  # TODO do we have a use-case for an installation at the moment?
-  # Maybe not, but just in case...
-  install(
-    FILES ${iir_proto_python_build_files}
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Dawn/python/IIR
   )
 endif()
 
