@@ -1,11 +1,52 @@
-[![](https://dxssrr2j0sq4w.cloudfront.net/3.2.0/img/external/zenhub-badge.png)](https://app.zenhub.com/workspaces/dawn-5db41ac773e8f70001d9e352/board?repos)
+# Dawn ![](https://img.shields.io/github/license/Meteoswiss-APN/dawn) [![](https://dxssrr2j0sq4w.cloudfront.net/3.2.0/img/external/zenhub-badge.png)](https://app.zenhub.com/workspaces/dawn-5db41ac773e8f70001d9e352/board?repos)
 
-GTClang & dawn
-===========
+> Compiler toolchain to enable generation of high-level DSLs for geophysical fluid dynamics models
 
-## Introduction
+Dawn is an optimizer and code generation library for geophysical fluid dynamics models, and GTClang is a DSL frontend using this toolchain. GTClang first translates the custom easy-to-understand language into a relatively simple Stencil Intermediate Representation (SIR). Dawn takes this SIR, performs an array of optimizations and subsequently generates code suitable for execution on different computing platforms.
 
-This is the shared repository of **GTClang** and **dawn**. GTClang and dawn build a source-to-source compiler toolchain for developing high level DSLs for geophyiscal fluid dynamics models. **GTClang** is the front end that translates a costum, easy to use DSL into a relatively simple Stencil Intermediate Representation (SIR). **dawn** in turn takes this SIR, performs a wide array of optimizations and subsequently generates code suitable for execution on distributed memory super computers.
+## Usage
+
+### Quickstart
+
+The easiest approach to try out gtclang is through a Docker container. Simply clone and build:
+
+```bash
+$ git clone https://github.com/MeteoSwiss-APN/dawn.git
+$ cd dawn && docker build -t gtclang . # Get a coffee...
+$ docker run -v $(pwd)/dawn/examples/tutorial/laplacian_stencil.cpp:/stencil.cpp gtclang /stencil.cpp
+```
+
+### Build Prerequisites
+
+The following are required to build dawn and gtclang:
+
+* C++-17 compatible compiler
+* CMake (>= 3.13)
+* LLVM and Clang development libraries (>= 6.0)
+
+A Python (>= 3.4) interpreter and setuptools are required to build and install the bindings.
+
+Sphinx and Doxygen are required to build the documentation and clang-format (version 6.0) is used to format new source code.
+
+The following are required to build, but are automatically fetched and compiled if not found:
+
+* Dawn: Google Protobuf (>= 3.4)
+* GTClang: [GridTools](https://github.com/GridTools/gridtools) (== 1.0.4)
+
+### Build Steps
+
+Dawn and gtclang are built together from a multi-project `CMakeLists.txt` at the project root. Usually, the configuration and compilation process is as simple as:
+
+```bash
+$ mkdir build
+$ cmake -S . -B build -DCMAKE_PREFIX_PATH=path/to/llvm/install -DBUILD_TESTING=ON
+$ cmake --build build # Get a coffee...
+$ cd build && ctest # To run tests
+```
+
+To use an existing GridTools and/or Google Protobuf installation, add it to the `CMAKE_PREFIX_PATH` variable or add `-DGridTools_DIR=path/to/gridtools/cmake` and `-DProtobuf_DIR=path/to/protobuf/cmake` in the configuration step.
+
+The Python bindings will be built as long as an interpreter and Python setuptools are found during configuration.
 
 ## Motivation
 
@@ -20,21 +61,6 @@ We introduce a new compiler framework, consisting of GTclang and Dawn, that deco
 * Dawn exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR. 
 * Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
 * Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
-
-## Building
-
-Even though **GTClang** and **dawn** share a common repository, they are built independently from each other. Dawn has to be built first, GTClang is then built "on top" of dawn in a second step. Please see the [dawn README](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/README.md) and [GTClang README](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/README.md) for detailed build and testing instructions. Dependencies include: 
-
-* C++-17 compatible compiler
-* clang > 6.0 and containing llvm
-* cmake (>= 3.3)
-* python (>= 3.4) and python3-setuptools
-* zlib 
-
-optional dependencies are:
-
-* clang format (=6.0)
-* LaTeX, Sphinx and Doxygen (for documentation)
 
 ## Developer Instructions
 
@@ -52,10 +78,4 @@ We use open development on [Zenhub](https://app.zenhub.com/workspaces/dawn-5db41
 
 ## About
 
-This Project is developed by [MeteoSwiss](https://www.meteoswiss.admin.ch/), [CSCS](https://www.cscs.ch/), [ETHZ](https://ethz.ch/), and [Vulcan](https://vulcan.com/)
-
-## License
-
-> The full license can be found [here](https://opensource.org/licenses/MIT).
-
-This project is licensed under the terms of the **MIT** license.
+This Project is developed by [MeteoSwiss](https://www.meteoswiss.admin.ch/), [CSCS](https://www.cscs.ch/), [ETHZ](https://ethz.ch/), and [Vulcan](https://vulcan.com/).
