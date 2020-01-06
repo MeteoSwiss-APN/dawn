@@ -23,20 +23,19 @@ internal IR.
 The program contains two parts:
     1. construct the HIR of the example
     2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
-       In this example the compiler is configured with the unstrctured naive backend
+       In this example the compiler is configured with the unstrctured naive backend"""
 
-"""
-import ctypes
-import os.path
-import textwrap
-from ctypes import *
-from optparse import OptionParser
+import argparse
+import os
 
-from config import __dawn_install_dawnclib__
-from dawn import *
-from dawn import sir_printer
+import dawn4py
+from dawn4py.serialization import SIR
+from dawn4py.serialization import utils as sir_utils
 
-dawn = CDLL(__dawn_install_dawnclib__)
+OUTPUT_NAME = "unstructured_vertical_solver"
+OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
+OUTPUT_PATH = os.path.join(os.path.dirname(
+    __file__), "data", f"{OUTPUT_NAME}.cpp")
 
 
 def create_vertical_region_stmt1() -> VerticalRegionDeclStmt:
@@ -45,7 +44,6 @@ def create_vertical_region_stmt1() -> VerticalRegionDeclStmt:
 
     interval = make_interval(Interval.Start, Interval.Start, 0, 0)
 
-    # create the out = in[i+1] statement
     body_ast = make_ast(
         [make_assignment_stmt(
             make_unstructured_field_access_expr("c"),
@@ -56,7 +54,7 @@ def create_vertical_region_stmt1() -> VerticalRegionDeclStmt:
             ),
             "="
         ),
-        make_assignment_stmt(
+            make_assignment_stmt(
             make_unstructured_field_access_expr("d"),
             make_binary_operator(
                 make_unstructured_field_access_expr("d"),
@@ -79,7 +77,6 @@ def create_vertical_region_stmt2() -> VerticalRegionDeclStmt:
 
     interval = make_interval(Interval.Start, Interval.End, 1, 0)
 
-    # create the out = in[i+1] statement
     body_ast = make_ast(
         [
             make_var_decl_stmt(
@@ -95,7 +92,8 @@ def create_vertical_region_stmt2() -> VerticalRegionDeclStmt:
                             make_binary_operator(
                                 make_unstructured_field_access_expr("a"),
                                 "*",
-                                make_unstructured_field_access_expr("c", make_unstructured_offset(False), -1)
+                                make_unstructured_field_access_expr(
+                                    "c", make_unstructured_offset(False), -1)
                             )
                         )
                     )
@@ -119,7 +117,8 @@ def create_vertical_region_stmt2() -> VerticalRegionDeclStmt:
                         make_binary_operator(
                             make_unstructured_field_access_expr("a"),
                             "*",
-                            make_unstructured_field_access_expr("d", make_unstructured_offset(False), - 1)
+                            make_unstructured_field_access_expr(
+                                "d", make_unstructured_offset(False), - 1)
                         )
                     ),
                     "*",
@@ -141,14 +140,14 @@ def create_vertical_region_stmt3() -> VerticalRegionDeclStmt:
 
     interval = make_interval(Interval.Start, Interval.End, 0, -1)
 
-    # create the out = in[i+1] statement
     body_ast = make_ast(
         [make_assignment_stmt(
             make_unstructured_field_access_expr("d"),
             make_binary_operator(
                 make_unstructured_field_access_expr("c"),
                 "*",
-                make_unstructured_field_access_expr("d", make_unstructured_offset(False), 1)
+                make_unstructured_field_access_expr(
+                    "d", make_unstructured_offset(False), 1)
             ),
             "-="
         )
@@ -160,77 +159,38 @@ def create_vertical_region_stmt3() -> VerticalRegionDeclStmt:
     return vertical_region_stmt
 
 
-parser = OptionParser()
-parser.add_option("-v", "--verbose",
-                  action="store_true", dest="verbose", default=False,
-                  help="print the SIR")
+def main(args: argparse.Namespace):
+    sir = make_sir(GridType.Value('Triangular'), "unstructured_tridiagonal_solve.cpp", [
+        make_stencil(
+            "unstructured_tridiagonal_solve",
+            make_ast([
+                create_vertical_region_stmt1(),
+                create_vertical_region_stmt2(),
+                create_vertical_region_stmt3()
+            ]),
+            [make_field("a"), make_field("b"),
+             make_field("c"), make_field("d")]
+        )
 
-(options, args) = parser.parse_args()
+    ])
 
-hir = make_sir(GridType.Value('Triangular'), "unstructured_tridiagonal_solve.cpp", [
-    make_stencil(
-        "unstructured_tridiagonal_solve",
-        make_ast([
-            create_vertical_region_stmt1(),
-            create_vertical_region_stmt2(),
-            create_vertical_region_stmt3()
-        ]),
-        [make_field("a"), make_field("b"), make_field("c"), make_field("d")]
+    # print the SIR
+    if args.verbose:
+        sir_utils.pprint(sir)
+
+    # compile
+    code = dawn4py.compile(sir, backend="c++-naive-ico")
+
+    # write to file
+    print(f"Writing generated code to '{OUTPUT_PATH}'")
+    with open(OUTPUT_PATH, "w") as f:
+        f.write(code)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Generate a unstructured vertical solver using the Dawn compiler")
+    parser.add_argument(
+        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
     )
-
-])
-
-# Print the SIR to stdout only in verbose mode
-if options.verbose:
-    T = textwrap.TextWrapper(
-        initial_indent=' ' * 1, width=120, subsequent_indent=' ' * 1)
-    des = sir_printer.SIRPrinter()
-
-    for stencil in hir.stencils:
-        des.visit_stencil(stencil)
-
-# serialize the hir to pass it to the compiler
-hirstr = hir.SerializeToString()
-
-# create the options to control the compiler
-dawn.dawnOptionsCreate.restype = c_void_p
-options = dawn.dawnOptionsCreate()
-
-# we set the backend of the compiler to cuda
-dawn.dawnOptionsEntryCreateString.restype = c_void_p
-dawn.dawnOptionsEntryCreateString.argtypes = [
-    ctypes.c_char_p
-]
-backend = dawn.dawnOptionsEntryCreateString("c++-naive-ico".encode('utf-8'))
-
-dawn.dawnOptionsSet.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_char_p,
-    ctypes.c_void_p
-]
-dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
-
-# call the compiler that generates a translation unit
-dawn.dawnCompile.restype = c_void_p
-dawn.dawnCompile.argtypes = [
-    ctypes.c_char_p,
-    ctypes.c_int,
-    ctypes.c_void_p
-]
-tu = dawn.dawnCompile(hirstr, len(hirstr), options)
-stencilname = "unstructured_tridiagonal_solve"
-b_stencilName = stencilname.encode('utf-8')
-# get the code of the translation unit for the given stencil
-dawn.dawnTranslationUnitGetStencil.restype = c_void_p
-dawn.dawnTranslationUnitGetStencil.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_char_p
-]
-code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
-
-# write to file
-f = open(os.path.dirname(os.path.realpath(__file__))
-         + "/data/unstructured_tridiagonal_solve.cpp", "w")
-f.write(ctypes.c_char_p(code).value.decode("utf-8"))
-
-f.close()
+    main(parser.parse_args())
