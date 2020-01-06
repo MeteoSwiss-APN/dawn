@@ -40,7 +40,7 @@ int main() {
 
   {
     using namespace dawn::iir;
-    using LocType = dawn::ast::Expr::LocationType;
+    using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
@@ -59,7 +59,7 @@ int main() {
 
   {
     using namespace dawn::iir;
-    using LocType = dawn::ast::Expr::LocationType;
+    using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Edges);
@@ -79,7 +79,7 @@ int main() {
 
   {
     using namespace dawn::iir;
-    using LocType = dawn::ast::Expr::LocationType;
+    using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Edges);
@@ -102,7 +102,7 @@ int main() {
 
   {
     using namespace dawn::iir;
-    using LocType = dawn::ast::Expr::LocationType;
+    using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
@@ -126,7 +126,7 @@ int main() {
 
   {
     using namespace dawn::iir;
-    using LocType = dawn::ast::Expr::LocationType;
+    using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
@@ -139,16 +139,16 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(b.vregion(
                 dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
-                b.stmt(b.assignExpr(
-                    b.at(cnt), b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
-                                                        dawn::ast::Expr::LocationType::Cells))),
+                b.stmt(b.assignExpr(b.at(cnt),
+                                    b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
+                                                             dawn::ast::LocationType::Cells))),
                 b.stmt(b.assignExpr(
                     b.at(out_f),
                     b.reduceOverNeighborExpr(Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                              b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
                                                           b.at(in_f, HOffsetType::withOffset, 0),
                                                           Op::multiply),
-                                             dawn::ast::Expr::LocationType::Cells))),
+                                             dawn::ast::LocationType::Cells))),
                 b.stmt(b.assignExpr(
                     b.at(out_f),
                     b.binaryExpr(b.at(in_f), b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
