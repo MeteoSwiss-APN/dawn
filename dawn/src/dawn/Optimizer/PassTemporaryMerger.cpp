@@ -142,7 +142,7 @@ bool PassTemporaryMerger::run(
     std::unordered_map<int, int> coloring;
     TemporaryDAG.greedyColoring(coloring);
 
-    // Compute the candiates for renaming. We will rename all fields of the same color to the same
+    // Compute the candidates for renaming. We will rename all fields of the same color to the same
     // AccessID.
     std::unordered_map<int, std::vector<int>> colorToAccessIDOfRenameCandidatesMap;
     for(const auto& colorAccessIDPair : coloring) {
@@ -156,25 +156,26 @@ bool PassTemporaryMerger::run(
     }
 
     for(const auto& colorRenameCandidatesPair : colorToAccessIDOfRenameCandidatesMap) {
-      const std::vector<int>& AccessIDOfRenameCandiates = colorRenameCandidatesPair.second;
+      const std::vector<int>& AccessIDOfRenameCandidates = colorRenameCandidatesPair.second;
 
-      // Print the rename candiates in alphabetical order
-      if(context_.getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
-        std::vector<std::string> renameCandiatesNames;
-        for(int AccessID : AccessIDOfRenameCandiates)
-          renameCandiatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
-        std::sort(renameCandiatesNames.begin(), renameCandiatesNames.end());
+      // Print the rename candidates in alphabetical order
+      if(context_.getOptions().ReportPassTemporaryMerger &&
+         AccessIDOfRenameCandidates.size() >= 2) {
+        std::vector<std::string> renameCandidatesNames;
+        for(int AccessID : AccessIDOfRenameCandidates)
+          renameCandidatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
+        std::sort(renameCandidatesNames.begin(), renameCandidatesNames.end());
         std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                  << ": merging: " << RangeToString(", ", "", "\n")(renameCandiatesNames);
+                  << ": merging: " << RangeToString(", ", "", "\n")(renameCandidatesNames);
       }
 
-      int newAccessID = AccessIDOfRenameCandiates[0];
+      int newAccessID = AccessIDOfRenameCandidates[0];
 
       // Rename all other fields of the color to the AccessID of the first field (note that it
       // wouldn't matter which AccessID we choose)
-      for(int i = 1; i < AccessIDOfRenameCandiates.size(); ++i) {
+      for(int i = 1; i < AccessIDOfRenameCandidates.size(); ++i) {
         merged = true;
-        int oldAccessID = AccessIDOfRenameCandiates[i];
+        int oldAccessID = AccessIDOfRenameCandidates[i];
         renameAccessIDInStencil(stencilPtr.get(), oldAccessID, newAccessID);
       }
     }
