@@ -289,6 +289,7 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
   Field field(std::string const& name, FieldType ft = FieldType::ijk);
+  Field tmpField(std::string const& name, FieldType ft = FieldType::ijk);
 };
 } // namespace iir
 } // namespace dawn

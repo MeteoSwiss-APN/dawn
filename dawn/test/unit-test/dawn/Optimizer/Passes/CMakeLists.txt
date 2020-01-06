@@ -18,6 +18,7 @@ yoda_add_unittest(
           TestMain.cpp
           TestPassComputeStageExtents.cpp
           TestComputeMaxExtent.cpp
+          TestPassCaching.cpp
           TestPassSetBoundaryCondition.cpp
           TestFieldAccessIntervals.cpp
           TestTemporaryToFunction.cpp

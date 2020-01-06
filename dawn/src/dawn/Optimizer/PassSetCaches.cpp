@@ -298,7 +298,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               ms.setCache(iir::Cache::CacheType::K, cacheCandidate.policy_, field.getAccessID(),
                           interval, enclosingAccessedInterval, cacheCandidate.window_);
 
-          if(context_.getOptions().ReportPassSetCaches) {
+          if(context_.getOptions().ReportPassSetCaches || true) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"

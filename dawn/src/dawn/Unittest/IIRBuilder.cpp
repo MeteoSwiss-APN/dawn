@@ -183,6 +183,15 @@ IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType 
   return {id, name};
 }
 
+IIRBuilder::Field CartesianIIRBuilder::tmpField(std::string const& name, FieldType ft) {
+  DAWN_ASSERT(si_);
+  auto fieldMaskArray = asArray(ft);
+  sir::FieldDimension dimensions(
+      ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
+  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::APIField, name, dimensions);
+  return {id, name};
+}
+
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {
   return at(field, access, ast::Offsets{ast::cartesian});
 }
