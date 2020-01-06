@@ -38,141 +38,148 @@ OUTPUT_PATH = os.path.join(os.path.dirname(
     __file__), "data", f"{OUTPUT_NAME}.cpp")
 
 
-def create_vertical_region_stmt1() -> VerticalRegionDeclStmt:
+def create_vertical_region_stmt1():
     """ create a vertical region statement for the stencil
     """
 
-    interval = make_interval(Interval.Start, Interval.Start, 0, 0)
+    interval = sir_utils.make_interval(
+        sir_utils.Interval.Start, sir_utils.Interval.Start, 0, 0)
 
-    body_ast = make_ast(
-        [make_assignment_stmt(
-            make_unstructured_field_access_expr("c"),
-            make_binary_operator(
-                make_unstructured_field_access_expr("c"),
+    body_ast = sir_utils.make_ast(
+        [sir_utils.make_assignment_stmt(
+            sir_utils.make_unstructured_field_access_expr("c"),
+            sir_utils.make_binary_operator(
+                sir_utils.make_unstructured_field_access_expr("c"),
                 "/",
-                make_unstructured_field_access_expr("b")
+                sir_utils.make_unstructured_field_access_expr("b")
             ),
             "="
         ),
-            make_assignment_stmt(
-            make_unstructured_field_access_expr("d"),
-            make_binary_operator(
-                make_unstructured_field_access_expr("d"),
+            sir_utils.make_assignment_stmt(
+            sir_utils.make_unstructured_field_access_expr("d"),
+            sir_utils.make_binary_operator(
+                sir_utils.make_unstructured_field_access_expr("d"),
                 "/",
-                make_unstructured_field_access_expr("b")
+                sir_utils.make_unstructured_field_access_expr("b")
             ),
             "="
         )
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(
-        body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward)
     return vertical_region_stmt
 
 
-def create_vertical_region_stmt2() -> VerticalRegionDeclStmt:
+def create_vertical_region_stmt2():
     """ create a vertical region statement for the stencil
     """
 
-    interval = make_interval(Interval.Start, Interval.End, 1, 0)
+    interval = sir_utils.make_interval(
+        sir_utils.Interval.Start, sir_utils.Interval.End, 1, 0)
 
-    body_ast = make_ast(
+    body_ast = sir_utils.make_ast(
         [
-            make_var_decl_stmt(
-                make_type(BuiltinType.Float),
+            sir_utils.make_var_decl_stmt(
+                sir_utils.make_type(sir_utils.BuiltinType.Float),
                 "m", 0, "=",
-                make_expr(
-                    make_binary_operator(
-                        make_literal_access_expr("1.0", BuiltinType.Float),
+                sir_utils.make_expr(
+                    sir_utils.make_binary_operator(
+                        sir_utils.make_literal_access_expr(
+                            "1.0", sir_utils.BuiltinType.Float),
                         "/",
-                        make_binary_operator(
-                            make_unstructured_field_access_expr("b"),
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_unstructured_field_access_expr("b"),
                             "-",
-                            make_binary_operator(
-                                make_unstructured_field_access_expr("a"),
+                            sir_utils.make_binary_operator(
+                                sir_utils.make_unstructured_field_access_expr(
+                                    "a"),
                                 "*",
-                                make_unstructured_field_access_expr(
-                                    "c", make_unstructured_offset(False), -1)
+                                sir_utils.make_unstructured_field_access_expr(
+                                    "c", sir_utils.make_unstructured_offset(False), -1)
                             )
                         )
                     )
                 )
             ),
-            make_assignment_stmt(
-                make_unstructured_field_access_expr("c"),
-                make_binary_operator(
-                    make_unstructured_field_access_expr("c"),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("c"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("c"),
                     "*",
-                    make_var_access_expr("m")
+                    sir_utils.make_var_access_expr("m")
                 ),
                 "="
             ),
-            make_assignment_stmt(
-                make_unstructured_field_access_expr("d"),
-                make_binary_operator(
-                    make_binary_operator(
-                        make_unstructured_field_access_expr("d"),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("d"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_binary_operator(
+                        sir_utils.make_unstructured_field_access_expr("d"),
                         "-",
-                        make_binary_operator(
-                            make_unstructured_field_access_expr("a"),
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_unstructured_field_access_expr("a"),
                             "*",
-                            make_unstructured_field_access_expr(
-                                "d", make_unstructured_offset(False), - 1)
+                            sir_utils.make_unstructured_field_access_expr(
+                                "d", sir_utils.make_unstructured_offset(False), - 1)
                         )
                     ),
                     "*",
-                    make_var_access_expr("m")
+                    sir_utils.make_var_access_expr("m")
                 ),
                 "="
             )
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(
-        body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward)
     return vertical_region_stmt
 
 
-def create_vertical_region_stmt3() -> VerticalRegionDeclStmt:
+def create_vertical_region_stmt3():
     """ create a vertical region statement for the stencil
     """
 
-    interval = make_interval(Interval.Start, Interval.End, 0, -1)
+    interval = sir_utils.make_interval(
+        sir_utils.Interval.Start, sir_utils.Interval.End, 0, -1)
 
-    body_ast = make_ast(
-        [make_assignment_stmt(
-            make_unstructured_field_access_expr("d"),
-            make_binary_operator(
-                make_unstructured_field_access_expr("c"),
+    body_ast = sir_utils.make_ast(
+        [sir_utils.make_assignment_stmt(
+            sir_utils.make_unstructured_field_access_expr("d"),
+            sir_utils.make_binary_operator(
+                sir_utils.make_unstructured_field_access_expr("c"),
                 "*",
-                make_unstructured_field_access_expr(
-                    "d", make_unstructured_offset(False), 1)
+                sir_utils.make_unstructured_field_access_expr(
+                    "d", sir_utils.make_unstructured_offset(False), 1)
             ),
             "-="
         )
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(
-        body_ast, interval, VerticalRegion.Backward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Backward)
     return vertical_region_stmt
 
 
 def main(args: argparse.Namespace):
-    sir = make_sir(GridType.Value('Triangular'), "unstructured_tridiagonal_solve.cpp", [
-        make_stencil(
-            "unstructured_tridiagonal_solve",
-            make_ast([
-                create_vertical_region_stmt1(),
-                create_vertical_region_stmt2(),
-                create_vertical_region_stmt3()
-            ]),
-            [make_field("a"), make_field("b"),
-             make_field("c"), make_field("d")]
-        )
+    sir = sir_utils.make_sir(
+        OUTPUT_FILE,
+        SIR.GridType.Value('Triangular'), [
+            sir_utils.make_stencil(
+                OUTPUT_NAME,
+                sir_utils.make_ast([
+                    create_vertical_region_stmt1(),
+                    create_vertical_region_stmt2(),
+                    create_vertical_region_stmt3()
+                ]),
+                [sir_utils.make_field("a"), sir_utils.make_field("b"),
+                 sir_utils.make_field("c"), sir_utils.make_field("d")]
+            )
 
-    ])
+        ])
 
     # print the SIR
     if args.verbose:
