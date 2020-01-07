@@ -19,4 +19,5 @@ LABEL Name=gtclang
 COPY --from=dawn-build /usr/local /usr/local
 # gtclang built above links to libLLVM-9 dynamically, and we need the C++ headers
 RUN apt update && apt install -y llvm-9-dev libclang-9-dev && apt clean
+COPY . /usr/src/dawn
 ENTRYPOINT /usr/local/bin/gtclang
