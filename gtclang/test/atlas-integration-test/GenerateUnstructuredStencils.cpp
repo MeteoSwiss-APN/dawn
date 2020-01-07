@@ -49,14 +49,10 @@ int main() {
     auto out_f = b.field("out_field", LocType::Cells);
 
     auto stencil_instantiation = b.build(
-        "copyCell",
-        b.stencil(
-            b.multistage(LoopOrderKind::Parallel,
-                         b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                           b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
-            b.multistage(LoopOrderKind::Parallel,
-                         b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                           b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+        "copyCell", b.stencil(b.multistage(
+                        LoopOrderKind::Parallel,
+                        b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                          b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyCell.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);

@@ -126,7 +126,7 @@ std::vector<int> const nodeNeighboursOfCell(atlas::Mesh const& m, int const& idx
 
 std::vector<int> const cellNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
   auto neighs = getNeighs(m.edges().cell_connectivity(), idx);
-  assert(neighs.size() == 2); // boundary edges may have 1 cell
+  assert(neighs.size() == 2);
   return neighs;
 }
 
