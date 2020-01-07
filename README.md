@@ -21,7 +21,7 @@ $ docker run -v $(pwd)/dawn/examples/tutorial/laplacian_stencil.cpp:/stencil.cpp
 The following are required to build dawn and gtclang:
 
 * C++-17 compatible compiler
-* CMake (>= 3.13)
+* [CMake](https://cmake.org/) (>= 3.13)
 * LLVM and Clang development libraries (>= 6.0)
 
 A Python (>= 3.4) interpreter and setuptools are required to build and install the bindings.
