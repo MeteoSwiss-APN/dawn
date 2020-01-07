@@ -37,11 +37,10 @@ bool PassComputeStageExtents::run(
     // backward loop over stages
     for(int i = numStages - 1; i >= 0; --i) {
       iir::Stage& fromStage = *(stencil.getStage(i));
-      for(auto globalIterationSpace : fromStage.getIterationSpace()) {
-        if(globalIterationSpace) {
-          fromStage.setExtents(iir::Extents());
-          continue;
-        }
+      if(std::any_of(fromStage.getIterationSpace().cbegin(), fromStage.getIterationSpace().cend(),
+                     [](const auto& p) -> bool { return p.has_value(); })) {
+        fromStage.setExtents(iir::Extents());
+        continue;
       }
 
       iir::Extents const& stageExtent = fromStage.getExtents();
