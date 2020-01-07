@@ -21,10 +21,16 @@ function help {
   exit 1
 }
 echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
-while getopts b: flag; do
+while getopts b:r:g: flag; do
   case $flag in
+    r)
+      CLANG_GRIDTOOLS_REPOSITORY=$OPTARG
+      ;;
     b)
       CLANG_GRIDTOOLS_BRANCH=$OPTARG
+      ;;
+    g)
+      GTCLANG_INSTALL_DIR=$OPTARG
       ;;
     h)
       help
@@ -36,12 +42,16 @@ while getopts b: flag; do
   esac
 done
 
+if [ -z ${CLANG_GRIDTOOLS_REPOSITORY+x} ]; then
+  export CLANG_GRIDTOOLS_REPOSITORY=git@github.com:MeteoSwiss-APN/clang-gridtools.git
+fi
 if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
   export CLANG_GRIDTOOLS_BRANCH=master
 fi
 
 cd ${root_dir}
-git clone git@github.com:MeteoSwiss-APN/clang-gridtools.git --depth=1 --branch=${CLANG_GRIDTOOLS_BRANCH}
+rm -rf clang-gridtools
+git clone ${CLANG_GRIDTOOLS_REPOSITORY} --depth=1 --branch=${CLANG_GRIDTOOLS_BRANCH}
 
 source_dir=${root_dir}/clang-gridtools
 build_dir=${source_dir}/build
@@ -49,13 +59,20 @@ build_dir=${source_dir}/build
 mkdir -p $build_dir
 cd $build_dir
 
+if [ -z ${GTCLANG_INSTALL_DIR+x} ]; then
+  export GTCLANG_INSTALL_DIR=${root_dir}/install #try this
+fi
+
+if [ -z ${PROTOBUFDIR+x} ]; then
+ echo "PROTOBUFDIR needs to be set in the machine env"
+fi
+
+
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
+            -DCMAKE_PREFIX_PATH=${GTCLANG_INSTALL_DIR} \
             -DProtobuf_DIR=${PROTOBUFDIR} \
             -DPROTOBUF_PYTHON_MODULE_DIR=${PROTOBUFDIR}/../../../python \
-            -DGTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON \
-            -DDAWN_REQUIRE_PYTHON_TESTING=ON \
-            -Datlas_DIR=${ATLAS_DIR}/lib/cmake/atlas \
-            -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit \
+            -DGridTools_DIR=${GTCLANG_INSTALL_DIR}/lib/cmake \
             "
 
 cmake ${CMAKE_ARGS} ${source_dir}
