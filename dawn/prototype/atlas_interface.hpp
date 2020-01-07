@@ -144,7 +144,7 @@ std::vector<int> cellNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
   if(neighs.count(idx) == 0) {
     neighs[idx] = getNeighs(m.edges().cell_connectivity(), idx);
   }
-  assert(neighs[idx].size() == 1 || neighs[idx].size() == 2); // boundary edges may have 1 cell
+  assert(neighs[idx].size() == 2);
   return neighs[idx];
 }
 

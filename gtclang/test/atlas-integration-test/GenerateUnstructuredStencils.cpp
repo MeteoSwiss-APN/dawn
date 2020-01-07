@@ -15,6 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
 #include <cstring>
@@ -256,7 +257,7 @@ int main() {
                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
                                                 dawn::ast::Expr::LocationType::Edges,
-                                                std::vector<float>({0.5, 0., 0.5, 0.})))))))));
+                                                std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
     std::ofstream of("generated/generated_gradient.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
