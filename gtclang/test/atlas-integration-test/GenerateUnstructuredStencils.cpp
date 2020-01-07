@@ -15,6 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
 #include <cstring>
@@ -131,6 +132,70 @@ int main() {
     using LocType = dawn::ast::Expr::LocationType;
 
     UnstructuredIIRBuilder b;
+    auto a_f = b.field("a", LocType::Cells);
+    auto b_f = b.field("b", LocType::Cells);
+    auto c_f = b.field("c", LocType::Cells);
+    auto d_f = b.field("d", LocType::Cells);
+    auto m_var = b.localvar("m");
+
+    auto stencil_instantiation = b.build(
+        "tridiagonalSolve",
+        b.stencil(
+            b.multistage(
+                LoopOrderKind::Forward,
+                b.stage(LocType::Cells,
+                        b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::Start, 0, 0,
+                                  b.stmt(b.assignExpr(
+                                      b.at(c_f), b.binaryExpr(b.at(c_f), b.at(b_f), Op::divide))),
+                                  b.stmt(b.assignExpr(
+                                      b.at(d_f), b.binaryExpr(b.at(d_f), b.at(b_f), Op::divide)))),
+                        b.vregion(
+                            dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                            b.declareVar(m_var),
+                            b.stmt(b.assignExpr(
+                                b.at(m_var),
+                                b.binaryExpr(
+                                    b.lit(1.),
+                                    b.binaryExpr(b.at(b_f),
+                                                 b.binaryExpr(b.at(a_f),
+                                                              b.at(c_f, HOffsetType::noOffset, -1),
+                                                              Op::multiply),
+                                                 Op::minus),
+                                    Op::divide))),
+                            b.stmt(b.assignExpr(
+                                b.at(c_f), b.binaryExpr(b.at(c_f), b.at(m_var), Op::multiply))),
+                            b.stmt(b.assignExpr(
+                                b.at(d_f),
+                                b.binaryExpr(
+                                    b.binaryExpr(b.at(d_f),
+                                                 b.binaryExpr(b.at(a_f),
+                                                              b.at(d_f, HOffsetType::noOffset, -1),
+                                                              Op::multiply),
+                                                 Op::minus),
+                                    b.at(m_var), Op::multiply)))))),
+            b.multistage(
+                LoopOrderKind::Backward,
+                b.stage(
+                    LocType::Cells,
+                    b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0, -1,
+                              b.stmt(b.assignExpr(
+                                  b.at(d_f),
+                                  b.binaryExpr(b.at(d_f),
+                                               b.binaryExpr(b.at(c_f),
+                                                            b.at(d_f, HOffsetType::noOffset, +1),
+                                                            Op::multiply),
+                                               Op::minus))))))));
+
+    std::ofstream of("generated/generated_verticalSolver.hpp");
+    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    of.close();
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::Expr::LocationType;
+
+    UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
     auto out_f = b.field("out_field", LocType::Cells);
     auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
@@ -192,7 +257,7 @@ int main() {
                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
                                                 dawn::ast::Expr::LocationType::Edges,
-                                                std::vector<float>({0.5, 0., 0.5, 0.})))))))));
+                                                std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
     std::ofstream of("generated/generated_gradient.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
