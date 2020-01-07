@@ -257,7 +257,7 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
                                                 dawn::ast::Expr::LocationType::Edges,
-                                                std::vector<float>({0.5, 0., 0.5, 0.})))))))));
+                                                std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
   std::ofstream of("prototype/generated_quadGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");

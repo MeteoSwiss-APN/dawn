@@ -1,24 +1,24 @@
-#define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO
+#define DAWN_GENERATED 1
+#define DAWN_BACKEND_T CXXNAIVEICO
 #include <driver-includes/unstructured_interface.hpp>
 namespace dawn_generated {
 namespace cxxnaiveico {
 template <typename LibTag>
 class reference_gradient {
 private:
-  struct stencil_165 {
+  struct stencil_284 {
     dawn::mesh_t<LibTag> const& m_mesh;
     int m_k_size;
     dawn::cell_field_t<LibTag, double>& m_cell_field;
-    dawn::cell_field_t<LibTag, double>& m_edge_field;
+    dawn::edge_field_t<LibTag, double>& m_edge_field;
 
   public:
-    stencil_165(dawn::mesh_t<LibTag> const& mesh, int k_size,
+    stencil_284(dawn::mesh_t<LibTag> const& mesh, int k_size,
                 dawn::cell_field_t<LibTag, double>& cell_field,
-                dawn::cell_field_t<LibTag, double>& edge_field)
+                dawn::edge_field_t<LibTag, double>& edge_field)
         : m_mesh(mesh), m_k_size(k_size), m_cell_field(cell_field), m_edge_field(edge_field) {}
 
-    ~stencil_165() {}
+    ~stencil_284() {}
 
     void sync_storages() {}
 
@@ -43,7 +43,7 @@ private:
                                    return lhs +=
                                           weight * m_edge_field(deref(LibTag{}, red_loc), k + 0);
                                  },
-                                 std::vector<float>({0.500000, 0.000000, 0.500000, 0.000000}));
+                                 std::vector<float>({0.500000, 0.000000, 0.000000, 0.500000}));
           }
         }
       }
@@ -51,7 +51,7 @@ private:
     }
   };
   static constexpr const char* s_name = "gradient";
-  stencil_165 m_stencil_165;
+  stencil_284 m_stencil_284;
 
 public:
   reference_gradient(const reference_gradient&) = delete;
@@ -61,10 +61,10 @@ public:
   reference_gradient(const dawn::mesh_t<LibTag>& mesh, int k_size,
                      dawn::cell_field_t<LibTag, double>& cell_field,
                      dawn::edge_field_t<LibTag, double>& edge_field)
-      : m_stencil_165(mesh, k_size, cell_field, edge_field) {}
+      : m_stencil_284(mesh, k_size, cell_field, edge_field) {}
 
   void run() {
-    m_stencil_165.run();
+    m_stencil_284.run();
     ;
   }
 };
