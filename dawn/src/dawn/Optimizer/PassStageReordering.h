@@ -20,7 +20,7 @@
 
 namespace dawn {
 
-/// @brief Pass for reordering stages to increase data locility
+/// @brief Pass for reordering stages to increase data locality
 ///
 /// This Pass depends on `PassSetStageGraph`.
 ///

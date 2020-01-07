@@ -35,6 +35,7 @@ if(eckit_FOUND AND atlas_FOUND)
                                 generated_verticalSum.hpp
                                 generated_diffusion.hpp
                                 generated_gradient.hpp
+                                generated_verticalSolver.hpp
                                 )
     set(reference_stencil_codes reference_diffusion.hpp
                                 reference_gradient.hpp
@@ -69,6 +70,8 @@ if(eckit_FOUND AND atlas_FOUND)
       TestCompareOutputMain.cpp
       AtlasIntegrationTestCompareOutput.cpp
       AtlasVerifier.h
+      AtlasCartesianWrapper.h
+      AtlasCartesianWrapper.cpp
       ${generated_stencil_codes}
       ${reference_stencil_codes}
     )
