@@ -37,8 +37,10 @@ bool PassComputeStageExtents::run(
     // backward loop over stages
     for(int i = numStages - 1; i >= 0; --i) {
       iir::Stage& fromStage = *(stencil.getStage(i));
+      // If the stage has a global interationspace set, we should never extend it since is is user
+      // defined where this computation should happen
       if(std::any_of(fromStage.getIterationSpace().cbegin(), fromStage.getIterationSpace().cend(),
-                     [](const auto& p) -> bool { return p.has_value(); })) {
+                     [](const auto& p) { return p.has_value(); })) {
         fromStage.setExtents(iir::Extents());
         continue;
       }
