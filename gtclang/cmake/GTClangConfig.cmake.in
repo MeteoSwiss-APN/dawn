@@ -9,6 +9,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 
 include(CMakeFindDependencyMacro)
 find_dependency(Clang 6.0.0 REQUIRED)
+
+# GridTools is only required for compiling generated code.
+# In the future, it could make sense to install a GTClangDSLDefsConfig which provides a target
+# for linking to generated code. For now, it doesn't harm to require GridTools.
 find_package(GridTools 1.0.4 REQUIRED)
 
 if(NOT TARGET @PROJECT_NAME@::@PROJECT_NAME@)
