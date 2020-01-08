@@ -11,9 +11,9 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include <dawn-c/Compiler.h>
-#include <dawn-c/Options.h>
-#include <dawn-c/TranslationUnit.h>
+#include "dawn-c/Compiler.h"
+#include "dawn-c/Options.h"
+#include "dawn-c/TranslationUnit.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>

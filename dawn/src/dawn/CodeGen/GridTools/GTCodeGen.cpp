@@ -478,6 +478,21 @@ void GTCodeGen::generateStencilClasses(
       return;
     }
 
+    // Check for horizontal iteration spaces
+    for(auto multiStageIt = stencil.getChildren().begin(),
+             multiStageEnd = stencil.getChildren().end();
+        multiStageIt != multiStageEnd; ++multiStageIt) {
+      for(auto stageIt = (*multiStageIt)->childrenBegin(),
+               stageEnd = (*multiStageIt)->childrenEnd();
+          stageIt != stageEnd; ++stageIt) {
+        if(std::any_of((*stageIt)->getIterationSpace().cbegin(),
+                       (*stageIt)->getIterationSpace().cend(),
+                       [](const auto& p) -> bool { return p.has_value(); })) {
+          throw std::runtime_error("GTCodeGen does not support horizontal iteration spaces");
+        }
+      }
+    }
+
     Structure stencilClass = stencilWrapperClass.addStruct(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()));
     std::string StencilName = stencilClass.getName();
@@ -843,9 +858,8 @@ void GTCodeGen::generateStencilClasses(
         auto const& ext = fieldInfo.field.getExtentsRB();
         // ===-----------------------------------------------------------------------------------===
         // PRODUCTIONTODO: [BADSTATICASSERTS]
-        // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once it
-        // is resolved
-        // https://github.com/MeteoSwiss-APN/dawn/issues/110
+        // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once
+        // it is resolved https://github.com/MeteoSwiss-APN/dawn/issues/110
         // ===-----------------------------------------------------------------------------------===
         std::string parameterType = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
         auto searchIterator = parameterTypeToFullExtentsMap.find(parameterType);

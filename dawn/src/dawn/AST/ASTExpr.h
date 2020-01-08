@@ -27,6 +27,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <array>
+#include <optional>
 
 namespace dawn {
 

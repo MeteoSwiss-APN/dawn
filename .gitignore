@@ -1,3 +1,17 @@
+*.pyc
+*.log
+*.old
+*.out
+*.DS_Store
+*.~
+*~
+*.user
+*.project
+
+# Build directories
+build*/
+install*/
+
 # Custom ignores
 _local_*
 _local_/*

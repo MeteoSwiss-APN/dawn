@@ -14,37 +14,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(yodaAddUnittest)
-
-set(GTCLANG_UNITTEST_EXTERNAL_LIBRARIES
-  GTClangUnittestStatic
-  GTClangStatic
-  ${GTCLANG_EXTERNAL_LIBRARIES}
-)
-
-# gtclang_add_unittest
-# --------------------
-#
-# Compile the given objects into a runnable unittest executable (.exe) and register it within CTest.
-# The executable will be stored in ${CMAKE_BINARY_DIR}/bin/unittest.
-#
-#    NAME:STRING=<>     - Name of the unittest exectuable as well as the CMake target to build it.
-#    SOURCES:STRING=<>   - List of source files making up the exectuable.
-#
-macro(gtclang_add_unittest)
-  cmake_parse_arguments(ARG "" "NAME" "SOURCES" ${ARGN})
-
-  if(NOT("${ARG_UNPARSED_ARGUMENTS}" STREQUAL ""))
-    message(FATAL_ERROR "gtclang_add_unittest: invalid argument ${ARG_UNPARSED_ARGUMENTS}")
-  endif()
-
-  yoda_add_unittest(
-    NAME ${ARG_NAME}
-    SOURCES ${ARG_SOURCES}
-    DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest
-    OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
-    GTEST_ARGS --gtest_color=yes --gtest_output=xml:${ARG_NAME}_unittest.xml
-  )
-endmacro()
-
-add_subdirectory(gtclang)
+add_subdirectory(Support)
+add_subdirectory(Frontend)
+add_subdirectory(Unittest)
