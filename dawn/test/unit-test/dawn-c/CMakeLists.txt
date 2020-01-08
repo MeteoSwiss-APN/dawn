@@ -20,3 +20,4 @@ add_executable(DawnCUnittest
 
 target_add_dawn_standard_props(DawnCUnittest)
 target_link_libraries(DawnCUnittest DawnC DawnUnittest gtest)
+add_test(NAME DawnCUnittest COMMAND DawnCUnittest)
