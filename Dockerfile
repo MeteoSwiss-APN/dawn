@@ -17,7 +17,8 @@ FROM ubuntu:rolling AS dawn-exec
 LABEL Name=gtclang
 COPY --from=dawn-build /usr/local /usr/local
 RUN apt update && apt install -y \
-    build-essential llvm-9-dev libclang-9-dev \
+    build-essential ninja-build cmake \
+    llvm-9-dev libclang-9-dev \
     libboost-dev && apt clean
 COPY . /usr/src/dawn
 CMD /usr/local/bin/gtclang

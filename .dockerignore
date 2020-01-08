@@ -8,3 +8,5 @@
 **/obj
 **/README.md
 **/LICENSE.txt
+Dockerfile
+**/Pipfile*
