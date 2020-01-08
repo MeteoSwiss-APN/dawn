@@ -227,6 +227,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
         const auto& fields = ms.getFields();
         for(const auto& AccessIDFieldPair : fields) {
           const iir::Field& field = AccessIDFieldPair.second;
+          // printf("%s: %d", ms.getMetadata().getNameFromAccessID(field.getAccessID()).c_str(), field.getIntend());
           bool mssProcessedField = mssProcessedFields.count(field.getAccessID());
           if(!mssProcessedField)
             mssProcessedFields.emplace(field.getAccessID());
@@ -247,6 +248,32 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               (field.getIntend() == iir::Field::IntendKind::Input &&
                field.getExtents().isPointwise())))
             continue;
+
+          // If the Field about to be cached is in a stage with a global index
+          // it can in fact only be chached if all subsequent stages have compatible iteration
+          // spaces
+
+          //find first stage in which the field is used
+          int stageIter = 0;
+          for (const auto& stage : ms.getChildren()) {
+            if (stage->getFields().count(field.getAccessID()) && stage->hasIterationSpace()) {
+              break;
+            }
+            stageIter++;
+          }
+
+          //check if subsequent uses are compatible
+          auto firstUsageWithGlobalIndex = ms.getChildren().begin();
+          std::advance(firstUsageWithGlobalIndex, stageIter);
+          bool incompatibleIterationSpaces = false;
+          for (auto it = firstUsageWithGlobalIndex; it != ms.getChildren().end(); it++) {
+            if (!firstUsageWithGlobalIndex->get()->iterationSpaceCompatible(*it->get())) {
+              incompatibleIterationSpaces = true;
+            }
+          }
+          if (incompatibleIterationSpaces) {
+            continue;
+          }
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
@@ -288,17 +315,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
             }
           }
 
-          // If the Field about to be cached is written to in a stage with a global index
-          // it can in fact only be chached if all subsequent stages have compatible iteration
-          // spaces
-          bool writeInGlobalIndex = false;
-          for(const auto& stage : ms.getChildren()) {
-            auto fields = stage->getFields();
-            if(fields.count(field.getAccessID())) {
-              const auto field = fields.at(field.getAccessID());
-            }
-          }
-
           iir::Interval interval = field.getInterval();
           auto interval_ = ms.computeEnclosingAccessInterval(field.getAccessID(), true);
           DAWN_ASSERT(interval_);
@@ -309,7 +325,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               ms.setCache(iir::Cache::CacheType::K, cacheCandidate.policy_, field.getAccessID(),
                           interval, enclosingAccessedInterval, cacheCandidate.window_);
 
-          if(context_.getOptions().ReportPassSetCaches || true) {
+          if(context_.getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"

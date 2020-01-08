@@ -241,9 +241,10 @@ public:
 
   /// @brief Are iteration spaces of this stage and another stage compatible?
   ///
-  /// Iteration spaces are said to be compatible if thei are either equal, or the iteration
+  /// Iteration spaces are said to be compatible if they are either equal, or the iteration
   /// space of the `other` stage is completely contained in this stages iteration space
-  /// If either of the stages do not contain an iteration space, this function simply returns true
+  /// If this stage contains an iteration space and the other does not, the iteration spaces are incompatible
+  /// If neither stage or just the other stage contains an iteration space they are compatible 
   bool iterationSpaceCompatible(const Stage& other) const;
 };
 

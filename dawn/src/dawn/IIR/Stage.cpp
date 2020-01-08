@@ -353,6 +353,12 @@ bool Stage::hasIterationSpace() const {
 
 bool Stage::iterationSpaceCompatible(const Stage& other) const {
   bool compatible = true;
+
+  if((iterationSpace_[0].has_value() && !other.getIterationSpace()[0].has_value()) ||
+     (iterationSpace_[1].has_value() && !other.getIterationSpace()[1].has_value())) {
+       return false;
+  }
+
   if(iterationSpace_[0].has_value() && other.getIterationSpace()[0].has_value()) {
     compatible &= iterationSpace_[0]->contains(*other.getIterationSpace()[0]);
   }
