@@ -16,7 +16,8 @@ RUN cmake --build /usr/src/dawn/build --target install -- -j$(nproc)
 FROM ubuntu:rolling AS dawn-exec
 LABEL Name=gtclang
 COPY --from=dawn-build /usr/local /usr/local
-# gtclang built above links to libLLVM-9 dynamically, and we need the C++ headers
-RUN apt update && apt install -y llvm-9-dev libclang-9-dev && apt clean
+RUN apt update && apt install -y \
+    build-essential llvm-9-dev libclang-9-dev \
+    libboost-dev && apt clean
 COPY . /usr/src/dawn
 CMD /usr/local/bin/gtclang
