@@ -31,7 +31,8 @@ function(generate_target)
     set(config_str --config=${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
   endif()
 
-  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+  string(TOLOWER "${CMAKE_BUILD_TYPE}" LOWERCASE_CMAKE_BUILD_TYPE)
+  if(LOWERCASE_CMAKE_BUILD_TYPE MATCHES debug)
     list(APPEND config_str -fpass-verbose)
   endif()
 
