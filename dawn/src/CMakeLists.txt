@@ -18,3 +18,7 @@ add_subdirectory(dawn-c)
 if(ENABLE_PYTHON)
   add_subdirectory(dawn4py)
 endif()
+
+# install headers
+install(DIRECTORY . DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h" PATTERN "dawn4py" EXCLUDE)

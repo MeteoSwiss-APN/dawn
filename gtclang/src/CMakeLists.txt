@@ -18,3 +18,7 @@ add_subdirectory(gtclang)
 
 # headers for codegen
 add_subdirectory(gtclang_dsl_defs)
+
+# install headers
+install(DIRECTORY . DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h")
