@@ -1,4 +1,4 @@
-FROM ubuntu:rolling AS dawn-build
+FROM ubuntu:rolling AS gtclang
 RUN apt update && apt install -y \
     build-essential ninja-build cmake \
     python3 libpython-dev python3-setuptools \
@@ -12,13 +12,5 @@ RUN cmake -S /usr/src/dawn -B /usr/src/dawn/build \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
     -GNinja
 RUN cmake --build /usr/src/dawn/build --target install -- -j$(nproc)
-
-FROM ubuntu:rolling AS dawn-exec
-LABEL Name=gtclang
-COPY --from=dawn-build /usr/local /usr/local
-RUN apt update && apt install -y \
-    build-essential ninja-build cmake \
-    llvm-9-dev libclang-9-dev \
-    libboost-dev && apt clean
-COPY . /usr/src/dawn
+RUN rm -rf usr/src/dawn/build
 CMD /usr/local/bin/gtclang
