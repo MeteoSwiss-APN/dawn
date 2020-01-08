@@ -3,6 +3,8 @@ project(dawn-gtclang-multiproject)
 
 include(CTest)
 
+message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+
 # Include sub-projects
 message(STATUS "Configuring Dawn...")
 option(DAWN_BUILD_TESTING "Enable Dawn tests." ${BUILD_TESTING})
