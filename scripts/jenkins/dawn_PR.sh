@@ -34,8 +34,20 @@ cd ${workdir}
 ./scripts/jenkins/build.sh
 ret=$?
 
+if [ -n "${BUILD_CLANG_GRIDTOOLS}" ]; then
+  clang_gridtools_args=""
+  if [ -n "${CLANG_GRIDTOOLS_REPOSITORY}" ]; then
+    clang_gridtools_args="${clang_gridtools_args} -r ${CLANG_GRIDTOOLS_REPOSITORY}"
+  fi
+  if [ -n "${CLANG_GRIDTOOLS_BRANCH}" ]; then
+    clang_gridtools_args="${clang_gridtools_args} -b ${CLANG_GRIDTOOLS_BRANCH}"
+  fi
+
+  ./scripts/jenkins/build.sh ${clang_gridtools_args} -g ${root_dir}
+  ret=$((ret || $? ))
+fi
+
 echo "Cleaning up"
 rm -rf ${workdir}
 
 exit $ret
-

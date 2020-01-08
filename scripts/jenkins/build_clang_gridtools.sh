@@ -50,7 +50,6 @@ if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
 fi
 
 cd ${root_dir}
-rm -rf clang-gridtools
 git clone ${CLANG_GRIDTOOLS_REPOSITORY} --depth=1 --branch=${CLANG_GRIDTOOLS_BRANCH}
 
 source_dir=${root_dir}/clang-gridtools

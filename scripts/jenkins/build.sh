@@ -44,7 +44,7 @@ mkdir -p $build_dir
 cd $build_dir
 
 if [ -z ${PROTOBUFDIR+x} ]; then
- echo "PROTOBUFDIF needs to be set in the machine env"
+ echo "PROTOBUFDIR needs to be set in the machine env"
 fi
 
 #TODO -DDAWN_BUNDLE_JAVA=ON
@@ -58,7 +58,7 @@ CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
             "
 
 if [ -z ${INSTALL_DIR+x} ]; then
-  INSTALL_DIR=$(pwd)/install
+  INSTALL_DIR=$(base_dir)/install
 fi
 
 CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
