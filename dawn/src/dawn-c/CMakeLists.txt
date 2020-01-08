@@ -37,6 +37,9 @@ add_library(${PROJECT_NAME}CShared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}CObjec
 set_target_properties(${PROJECT_NAME}CShared PROPERTIES OUTPUT_NAME ${PROJECT_NAME}C)
 target_link_libraries(${PROJECT_NAME}CShared PUBLIC ${PROJECT_NAME})
 
+set(DawnCLibs ${PROJECT_NAME}CShared)
+target_add_dawn_standard_props(${PROJECT_NAME}CShared)
+
 if(BUILD_SHARED_LIBS)
   add_library(${PROJECT_NAME}C ALIAS ${PROJECT_NAME}CShared)
 else()
@@ -44,4 +47,13 @@ else()
   set_target_properties(${PROJECT_NAME}CStatic PROPERTIES OUTPUT_NAME ${PROJECT_NAME}C)
   target_link_libraries(${PROJECT_NAME}CStatic PUBLIC ${PROJECT_NAME})
   add_library(${PROJECT_NAME}C ALIAS ${PROJECT_NAME}CStatic)
+  target_add_dawn_standard_props(${PROJECT_NAME}CStatic)
+  list(APPEND DawnCLibs ${PROJECT_NAME}CStatic)
 endif()
+
+install(
+  TARGETS ${DawnCLibs}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
