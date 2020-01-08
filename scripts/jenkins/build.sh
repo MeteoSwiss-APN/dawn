@@ -58,7 +58,7 @@ CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
             "
 
 if [ -z ${INSTALL_DIR+x} ]; then
-  INSTALL_DIR=$(base_dir)/install
+  INSTALL_DIR=${base_dir}/install
 fi
 
 CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"

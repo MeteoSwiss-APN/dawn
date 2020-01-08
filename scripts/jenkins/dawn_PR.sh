@@ -31,10 +31,12 @@ cd ${workdir}
 #shift 1
 #./scripts/jenkins/build.sh "$@"
 
-./scripts/jenkins/build.sh
+install_dir=${workdir}/install
+
+./scripts/jenkins/build.sh -i ${install_dir}
 ret=$?
 
-if [ -n "${BUILD_CLANG_GRIDTOOLS}" ]; then
+if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
   clang_gridtools_args=""
   if [ -n "${CLANG_GRIDTOOLS_REPOSITORY}" ]; then
     clang_gridtools_args="${clang_gridtools_args} -r ${CLANG_GRIDTOOLS_REPOSITORY}"
@@ -43,7 +45,7 @@ if [ -n "${BUILD_CLANG_GRIDTOOLS}" ]; then
     clang_gridtools_args="${clang_gridtools_args} -b ${CLANG_GRIDTOOLS_BRANCH}"
   fi
 
-  ./scripts/jenkins/build.sh ${clang_gridtools_args} -g ${root_dir}
+  ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir}
   ret=$((ret || $? ))
 fi
 
