@@ -347,5 +347,20 @@ void Stage::setIterationSpace(const IterationSpace& value) { iterationSpace_ = v
 
 const Stage::IterationSpace& Stage::getIterationSpace() const { return iterationSpace_; }
 
+bool Stage::hasIterationSpace() const {
+  return iterationSpace_[0].has_value() || iterationSpace_[1].has_value();
+}
+
+bool Stage::iterationSpaceCompatible(const Stage& other) const {
+  bool compatible = true;
+  if(iterationSpace_[0].has_value() && other.getIterationSpace()[0].has_value()) {
+    compatible &= iterationSpace_[0]->contains(*other.getIterationSpace()[0]);
+  }
+  if(iterationSpace_[1].has_value() && other.getIterationSpace()[1].has_value()) {
+    compatible &= iterationSpace_[1]->contains(*other.getIterationSpace()[1]);
+  }
+  return compatible;
+}
+
 } // namespace iir
 } // namespace dawn

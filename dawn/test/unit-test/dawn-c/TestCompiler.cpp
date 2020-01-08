@@ -77,8 +77,8 @@ TEST(CompilerTest, CompileCopyStencil) {
       b.build("generated",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                    b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))))));
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))))));
   std::ofstream of("/dev/null");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
@@ -90,14 +90,15 @@ TEST(CompilerTest, CompileGlobalIndexStencil) {
   auto in_f = b.field("in_field", FieldType::ijk);
   auto out_f = b.field("out_field", FieldType::ijk);
 
-  auto stencil_instantiation = b.build(
-      "generated", b.stencil(b.multistage(
-                       LoopOrderKind::Parallel,
-                       b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
-                       b.stage(1, {0, 2},
-                               b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+  auto stencil_instantiation =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
   std::ofstream of("prototype/generated/global_indexing.cpp");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
@@ -115,13 +116,13 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
       "generated",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                            b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
-          b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                            b.stmt(b.assignExpr(
-                                b.at(out_f), b.reduceOverNeighborExpr(
-                                                 Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), LocType::Cells, LocType::Edges))))))));
+          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
+          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(out_f), b.reduceOverNeighborExpr(
+                                                  Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                  b.lit(0.), LocType::Cells, LocType::Edges))))))));
 
   std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
@@ -142,11 +143,11 @@ TEST(CompilerTest, DISABLED_SumVertical) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
-                  b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
-                            b.stmt(b.assignExpr(b.at(out_f),
-                                                b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
-                                                             b.at(in_f, HOffsetType::noOffset, -1),
-                                                             Op::plus))))))));
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
+                             b.stmt(b.assignExpr(b.at(out_f),
+                                                 b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
+                                                              b.at(in_f, HOffsetType::noOffset, -1),
+                                                              Op::plus))))))));
 
   std::ofstream of("prototype/generated_verticalSum.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
@@ -167,7 +168,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Parallel,
-          b.stage(b.vregion(
+          b.stage(b.doMethod(
               dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
               b.stmt(b.assignExpr(b.at(cnt),
                                   b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
@@ -205,22 +206,22 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(
               LocType::Edges,
-              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                        b.stmt(b.assignExpr(b.at(edge_f),
-                                            b.reduceOverNeighborExpr<float>(
-                                                Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                dawn::ast::Expr::LocationType::Cells,
-                                                std::vector<float>({1., -1.})))))),
+              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                         b.stmt(b.assignExpr(b.at(edge_f),
+                                             b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
+                                                 dawn::ast::Expr::LocationType::Cells,
+                                                 std::vector<float>({1., -1.})))))),
           b.stage(
               LocType::Cells,
-              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                        b.stmt(b.assignExpr(b.at(cell_f),
-                                            b.reduceOverNeighborExpr<float>(
-                                                Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                dawn::ast::Expr::LocationType::Edges,
-                                                std::vector<float>({1., 0., 0.})))))))));
+              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                         b.stmt(b.assignExpr(b.at(cell_f),
+                                             b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
+                                                 dawn::ast::Expr::LocationType::Edges,
+                                                 std::vector<float>({1., 0., 0.})))))))));
 
   std::ofstream of("prototype/generated_triGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
@@ -242,22 +243,22 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(
               LocType::Edges,
-              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                        b.stmt(b.assignExpr(b.at(edge_f),
-                                            b.reduceOverNeighborExpr<float>(
-                                                Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                dawn::ast::Expr::LocationType::Cells,
-                                                std::vector<float>({1., -1.})))))),
+              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                         b.stmt(b.assignExpr(b.at(edge_f),
+                                             b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
+                                                 dawn::ast::Expr::LocationType::Cells,
+                                                 std::vector<float>({1., -1.})))))),
           b.stage(
               LocType::Cells,
-              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                        b.stmt(b.assignExpr(b.at(cell_f),
-                                            b.reduceOverNeighborExpr<float>(
-                                                Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                dawn::ast::Expr::LocationType::Edges,
-                                                std::vector<float>({0.5, 0., 0.5, 0.})))))))));
+              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                         b.stmt(b.assignExpr(b.at(cell_f),
+                                             b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
+                                                 dawn::ast::Expr::LocationType::Edges,
+                                                 std::vector<float>({0.5, 0., 0.5, 0.})))))))));
 
   std::ofstream of("prototype/generated_quadGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");

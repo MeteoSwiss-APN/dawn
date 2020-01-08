@@ -42,12 +42,12 @@ Array3i asArray(FieldType ft) {
 } // namespace
 
 dawn::codegen::stencilInstantiationContext
-IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil) {
+IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencilIIR) {
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
-  auto stencil_id = stencil->getStencilID();
+  auto stencil_id = stencilIIR->getStencilID();
   si_->getMetaData().setStencilName(name);
-  si_->getIIR()->insertChild(std::move(stencil), si_->getIIR());
+  si_->getIIR()->insertChild(std::move(stencilIIR), si_->getIIR());
 
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencil_id));
@@ -63,11 +63,11 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   }
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
+    iir::Stage& stageIIR = *stagePtr;
+    for(const auto& doMethodIIR : stageIIR.getChildren()) {
+      doMethodIIR->update(iir::NodeUpdateType::level);
     }
-    stage.update(iir::NodeUpdateType::level);
+    stageIIR.update(iir::NodeUpdateType::level);
   }
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
     stagePtr->update(iir::NodeUpdateType::levelAndTreeAbove);
@@ -188,7 +188,7 @@ IIRBuilder::Field CartesianIIRBuilder::tmpField(std::string const& name, FieldTy
   auto fieldMaskArray = asArray(ft);
   sir::FieldDimension dimensions(
       ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
-  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::APIField, name, dimensions);
+  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name, dimensions);
   return {id, name};
 }
 

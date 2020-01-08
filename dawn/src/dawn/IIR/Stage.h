@@ -236,7 +236,15 @@ public:
   /// @{
   void setIterationSpace(const IterationSpace& value);
   const IterationSpace& getIterationSpace() const;
+  bool hasIterationSpace() const;
   /// @}
+
+  /// @brief Are iteration spaces of this stage and another stage compatible?
+  ///
+  /// Iteration spaces are said to be compatible if thei are either equal, or the iteration
+  /// space of the `other` stage is completely contained in this stages iteration space
+  /// If either of the stages do not contain an iteration space, this function simply returns true
+  bool iterationSpaceCompatible(const Stage& other) const;
 };
 
 } // namespace iir

@@ -288,6 +288,17 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
             }
           }
 
+          // If the Field about to be cached is written to in a stage with a global index
+          // it can in fact only be chached if all subsequent stages have compatible iteration
+          // spaces
+          bool writeInGlobalIndex = false;
+          for(const auto& stage : ms.getChildren()) {
+            auto fields = stage->getFields();
+            if(fields.count(field.getAccessID())) {
+              const auto field = fields.at(field.getAccessID());
+            }
+          }
+
           iir::Interval interval = field.getInterval();
           auto interval_ = ms.computeEnclosingAccessInterval(field.getAccessID(), true);
           DAWN_ASSERT(interval_);
