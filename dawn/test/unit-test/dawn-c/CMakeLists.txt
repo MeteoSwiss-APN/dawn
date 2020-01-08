@@ -12,9 +12,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_unittest_impl(
-  NAME DawnCUnittest
-  SOURCES TestMain.cpp
-          TestOptions.cpp
-          TestCompiler.cpp
+add_executable(DawnCUnittest
+  TestMain.cpp
+  TestOptions.cpp
+  TestCompiler.cpp
 )
+
+target_add_dawn_standard_props(DawnCUnittest)
+target_link_libraries(DawnCUnittest DawnC DawnUnittest gtest)
+add_test(NAME DawnCUnittest COMMAND DawnCUnittest)

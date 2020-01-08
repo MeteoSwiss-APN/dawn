@@ -41,6 +41,8 @@ private:
 
 public:
   using Base = ASTCodeGenCXX;
+  using Base::visit;
+
   StencilFunctionAsBCGenerator(const iir::StencilMetaInformation& metadata,
                                const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
       : function_(functionToAnalyze), metadata_(metadata) {}

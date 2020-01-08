@@ -12,146 +12,219 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-      "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
-endif()
 
-if(NOT BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries." FORCE)
-endif()
+cmake_minimum_required(VERSION 3.13)
 
-if(NOT CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE STRING
-      "Install path prefix, prepended onto install directories." FORCE)
-endif()
+file(STRINGS "version.txt" __DAWN_VERSION)
+string(REPLACE "." ";" __VERSION_LIST ${__DAWN_VERSION})
 
-project(dawn C CXX)
-cmake_minimum_required(VERSION 3.12.4)
+list(GET __VERSION_LIST 0 VERSION_MAJOR)
+list(GET __VERSION_LIST 1 VERSION_MINOR)
+list(GET __VERSION_LIST 2 VERSION_PATCH)
+unset(__VERSION_LIST)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-set(YODA_ROOT CACHE PATH "path to yoda package")
-
-if("${YODA_ROOT}" STREQUAL "")
-  message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
-endif()
-list(APPEND CMAKE_MODULE_PATH "${YODA_ROOT}/cmake")
-include(yodaInit)
-yoda_init()
-
-include(DawnCMakeInit)
-set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
-
-dawn_cmake_init()
-
-include(yodaAddLibrary)
-include(yodaAddTargetClangFormat)
-include(yodaAddTargetCleanAll)
-include(yodaCombineLibraries)
-include(yodaConfigureFile)
-include(yodaCreatePackageString)
-include(yodaExportPackage)
-include(yodaGetGitHeadRevision)
-include(yodaMakeStringPair)
-include(yodaReportResult)
-include(yodaSetCXXStandard)
-include(yodaEnableFullRPATH)
-
-# Include the Dawn specific options, definitions and macros
-include(DawnOptions)
-include(DawnDefinitions)
-include(DawnMacros)
-
-# Set C++ standard
-yoda_set_cxx_standard(c++17)
-
-# Set C++ flags
-dawn_set_cxx_flags()
-
-# Add custom targets
-yoda_add_target_clean_all(
-  ${CMAKE_BINARY_DIR}/docs
-  ${CMAKE_BINARY_DIR}/sphinx
-  ${CMAKE_BINARY_DIR}/src
-  ${CMAKE_BINARY_DIR}/test
-  ${CMAKE_BINARY_DIR}/bin
-  ${CMAKE_BINARY_DIR}/python
-  ${CMAKE_BINARY_DIR}/dawn-cmake
+project(Dawn
+  VERSION ${__DAWN_VERSION}
+  HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
+  LANGUAGES CXX C
 )
+unset(__DAWN_VERSION)
 
-# Output summary of the configuration
-macro(make_config_string FIRST SECOND)
-  yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
-  list(APPEND config_info ${out})
-endmacro()
-make_config_string("Dawn version" ${DAWN_FULL_VERSION_STR})
-make_config_string("Platform" ${YODA_PLATFORM_STRING})
-make_config_string("Architecture" ${YODA_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${YODA_COMPILER_STRING})
-make_config_string("Build type" ${CMAKE_BUILD_TYPE})
-make_config_string("Asserts" ${DAWN_ASSERTS})
-make_config_string("Build shared " ${BUILD_SHARED_LIBS})
-make_config_string("Install prefix" ${CMAKE_INSTALL_PREFIX})
-yoda_report_result("Configuration summary" ${config_info})
+# Useful standard options:
+# - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use DAWN_BUILD_TESTING to override).
+# - BUILD_SHARED_LIBS<Bool>:
+#     Build dawn as shared libraries instead of static. If true,
+#     requires dependencies to be built as position independent code.
+#     In any case, Dawn objects are built as position independent code to allow
+#     building a shared library for python bindings.
+# - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
 
-# Include the packages
-if(DAWN_DOCUMENTATION)
-  set(doc_packages Python3 Sphinx LaTeX Doxygen)
+# Other options
+option(BUILD_EXAMPLES "Build examples" ON)
+option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
+option(DAWN_REQUIRE_PYTHON_TESTING "Require enabling python." OFF)
+set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
+mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR)
+
+### Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-foreach(package bash Protobuf ccache clang-format ${doc_packages})
-  include("Add${package}")
-  yoda_create_package_string(${package} info)
-  list(APPEND package_info ${info})
+# Path for Find*.cmake files
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
-  string(TOUPPER ${package} PACKAGE)
+include(CTest)
+include(GNUInstallDirs)
+include(EnableCCache)
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON) # Do not attempt to update packages -- speeds up configure process
 
-  list(APPEND DAWN_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
-  list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
-  list(APPEND DAWN_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
+include(GitVersionHash)
+get_git_version_hash(__Dawn_GIT_HASH)
+set(__compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+set(DAWN_FULL_VERSION
+    "${Dawn_VERSION}-${__Dawn_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${__compiler}"
+    CACHE INTERNAL "Full version string of dawn")
+unset(__Dawn_GIT_HASH)
+unset(__compiler)
 
-endforeach()
+# use, i.e. don't skip the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
-# Enable RPath support
-yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
 
-include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
-add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-yoda_report_result("Package summary" ${package_info})
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+endif("${isSystemDir}" STREQUAL "-1")
 
-# Add clang-format target
-yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test EXTENSION ".h;.cpp")
+include(AddCXXCompilerFlagIfSuppported)
+add_cxx_compiler_flag_if_supported("-Wall" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # Would like to remove
+add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
 
-# Build dawn
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_BINARY_DIR}/src)
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/src/dawn/Support/External)
+# Target properties
+set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
+
+# Position independent code is enabled globally
+# - we need a shared library for python support (even if BUILD_SHARED_LIBS=OFF)
+# - parts of our testing relies on python -> currently no strong reason for a no-python option
+# - dependencies, e.g. protobuf, needs to be built with PIC as well
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+find_package(Python3 COMPONENTS Interpreter)
+
+# Add cxx standard, include directories, and properties
+function(target_add_dawn_standard_props target)
+  target_include_directories(${target}
+    PUBLIC  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+            $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+  target_compile_features(${target} PUBLIC cxx_std_17)
+  target_compile_options(${target} PRIVATE ${DAWN_CXX_FLAGS})
+  set_target_properties(${target} PROPERTIES ${DAWN_TARGET_PROPERTIES})
+endfunction()
+
+# Protobuf
+if(NOT DAWN_BUILD_PROTOBUF)
+  find_package(Protobuf 3.4.0 CONFIG)
+endif()
+if(NOT Protobuf_FOUND)
+  include(FetchProtobuf)
+endif()
+
+# Only test if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
+  set(${PROJECT_NAME}_TESTING ON)
+else()
+  set(${PROJECT_NAME}_TESTING OFF)
+endif()
+mark_as_advanced(${PROJECT_NAME}_TESTING)
+
+if(${PROJECT_NAME}_TESTING)
+  include(FetchGoogleTest)
+endif()
+
+if(Python3_FOUND)
+  # TODO can we make this cleaner?
+  if(DAWN_BUILD_PROTOBUF)
+    # we know where it will be after the build step
+    set(PROTOBUF_PYTHON_DIR ${protobuf_BINARY_DIR}/python)
+  else()
+    # we try to find it
+    find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
+      PATHS ${Protobuf_INCLUDE_DIR}/../python ${PROTOBUF_PYTHON_MODULE_DIR}
+      DOC "Path to protobuf python module"
+    )
+  endif()
+  mark_as_advanced(PROTOBUF_PYTHON_DIR)
+  find_package(PythonLibs REQUIRED)
+  if(PROTOBUF_PYTHON_DIR AND PYTHONLIBS_FOUND)
+    set(ENABLE_PYTHON ON)
+  else()
+    set(ENABLE_PYTHON OFF)
+    message(STATUS "PROTOBUF_PYTHON_DIR not found, not installing python bindings")
+  endif()
+else()
+  message(STATUS "Python3 not found, not installing python bindings")
+endif()
+if(NOT ENABLE_PYTHON AND DAWN_REQUIRE_PYTHON_TESTING)
+  message(FATAL_ERROR "Python testing was requested, but required dependencies are not found")
+endif()
 
 add_subdirectory(src)
-add_subdirectory(cmake)
 
-if(DAWN_EXAMPLES)
+# Only build examples if BUILD_EXAMPLES and main project, or DAWN_BUILD_EXAMPLES is on
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_EXAMPLES) AND BUILD_EXAMPLES)
+  set(${PROJECT_NAME}_EXAMPLES ON)
+else()
+  set(${PROJECT_NAME}_EXAMPLES OFF)
+endif()
+mark_as_advanced(${PROJECT_NAME}_EXAMPLES)
+
+if(${PROJECT_NAME}_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-if(DAWN_TESTING)
-  enable_testing()
+# Docs only available if this is the main app
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  find_package(Doxygen)
+  find_package(Sphinx)
+  if(Doxygen_FOUND AND SPHINX_FOUND)
+	  add_subdirectory(docs)
+  else()
+	  message(STATUS "Doxygen or Sphinx not found, not building docs")
+  endif()
+endif()
+
+if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
 
-if(DAWN_DOCUMENTATION)
-  add_subdirectory(docs)
-endif()
+set(DAWN_DRIVER_INCLUDEDIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE INTERNAL
+  "Absolute path to driver includes in the source directory (used for super-builds) "
+)
+set(DAWN_INSTALL_DRIVER_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/driver-includes)
 
-# Install headers
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/
-  DESTINATION ${DAWN_INSTALL_INCLUDE_DIR}
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/${PROJECT_NAME}Config.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  PATH_VARS DAWN_INSTALL_DRIVER_INCLUDEDIR
 )
 
-# Install CMake package configuration
-dawn_gen_install_config()
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
+  COMPATIBILITY SameMajorVersion
+)
+
+install(
+  EXPORT ${PROJECT_NAME}Targets
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
