@@ -456,6 +456,14 @@ void CudaCodeGen::generateStencilRunMethod(
       maxExtents.merge(stage->getExtents());
     }
 
+    // Check for horizontal iteration spaces
+    for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
+      if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
+                     [](const auto& p) -> bool { return p.has_value(); })) {
+        throw std::runtime_error("CudaCodeGen does not support horizontal iteration spaces");
+      }
+    }
+
     stencilRunMethod.addStatement(
         "const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus()");
     stencilRunMethod.addStatement(

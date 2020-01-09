@@ -71,6 +71,7 @@ protected:
 
 public:
   using Base = ASTCodeGenCXX;
+  using Base::visit;
 
   /// @brief constructor
   ASTStencilBody(const iir::StencilMetaInformation& metadata, StencilContext stencilContext);

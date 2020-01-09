@@ -14,17 +14,18 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(yodaAddLibrary)
+add_library(GTClangDriver
+  CompilerInstance.cpp
+  CompilerInstance.h
+  Driver.cpp
+  Driver.h
+  Options.h
+  Options.inc
+  OptionsParser.cpp
+  OptionsParser.h
+)
 
-yoda_add_library(
-  NAME GTClangDriver
-  SOURCES CompilerInstance.cpp
-          CompilerInstance.h
-          Driver.cpp
-          Driver.h
-          Options.h
-          Options.inc
-          OptionsParser.cpp
-          OptionsParser.h
-  OBJECT
+target_add_gtclang_standard_props(GTClangDriver)
+target_link_libraries(GTClangDriver
+  PUBLIC GTClangFrontend GTClangSupport Dawn::Dawn Clang::Clang LLVM::LLVM
 )

@@ -252,13 +252,13 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
                                                  std::vector<float>({1., -1.})))))),
           b.stage(
               LocType::Cells,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                         b.stmt(b.assignExpr(b.at(cell_f),
-                                             b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                 dawn::ast::Expr::LocationType::Edges,
-                                                 std::vector<float>({0.5, 0., 0.5, 0.})))))))));
+              b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(b.at(cell_f),
+                                            b.reduceOverNeighborExpr<float>(
+                                                Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                b.lit(0.), dawn::ast::Expr::LocationType::Cells,
+                                                dawn::ast::Expr::LocationType::Edges,
+                                                std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
   std::ofstream of("prototype/generated_quadGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");

@@ -16,11 +16,11 @@
 # This script automagically finds all the scripts in <dawn>/cmake/modules directory, copies them in
 # the source tree and generates a corresponding .rst file
 
-set(porject_root @PROJECT_ROOT@)
+set(project_root @PROJECT_ROOT@)
 set(sphinx_root @SPHINX_ROOT@)
 
 # Copy the scripts from <dawn>/cmake/modules
-file(COPY ${porject_root}/cmake/modules/ DESTINATION ${sphinx_root}/cmake-modules)
+file(COPY ${project_root}/cmake/modules/ DESTINATION ${sphinx_root}/cmake-modules)
 file(GLOB scripts "${sphinx_root}/cmake-modules/*.cmake")
 list(SORT scripts)
 
@@ -55,7 +55,7 @@ foreach(script ${scripts})
 ")
 endforeach()
 
-# Configure cmake-modules.rst (we can't use configure file as this would not detect new files 
+# Configure cmake-modules.rst (we can't use configure file as this would not detect new files
 # in the cmake-modules/cmake directory)
 file(READ ${sphinx_root}/cmake-modules.rst.in file_content)
 string(REPLACE "__function_and_macros__" "${function_and_macros}" file_content ${file_content})

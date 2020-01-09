@@ -1,0 +1,12 @@
+**/build
+**/install
+**/.env
+**/.git
+**/.gitignore
+**/.vscode
+**/bin
+**/obj
+**/README.md
+**/LICENSE.txt
+Dockerfile
+**/Pipfile*
