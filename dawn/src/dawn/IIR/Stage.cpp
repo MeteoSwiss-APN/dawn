@@ -348,7 +348,8 @@ void Stage::setIterationSpace(const IterationSpace& value) { iterationSpace_ = v
 const Stage::IterationSpace& Stage::getIterationSpace() const { return iterationSpace_; }
 
 bool Stage::hasIterationSpace() const {
-  return iterationSpace_[0].has_value() || iterationSpace_[1].has_value();
+  return std::any_of(iterationSpace_.cbegin(), iterationSpace_.cend(),
+                     [](const auto& p) { return p.has_value(); })
 }
 
 bool Stage::iterationSpaceCompatible(const Stage& other) const {
@@ -356,7 +357,7 @@ bool Stage::iterationSpaceCompatible(const Stage& other) const {
 
   if((iterationSpace_[0].has_value() && !other.getIterationSpace()[0].has_value()) ||
      (iterationSpace_[1].has_value() && !other.getIterationSpace()[1].has_value())) {
-       return false;
+    return false;
   }
 
   if(iterationSpace_[0].has_value() && other.getIterationSpace()[0].has_value()) {

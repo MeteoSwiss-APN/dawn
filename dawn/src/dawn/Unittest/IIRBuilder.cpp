@@ -174,7 +174,7 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   return var.decl;
 }
 
-IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
+IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
   sir::FieldDimension dimensions(
@@ -183,7 +183,7 @@ IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType 
   return {id, name};
 }
 
-IIRBuilder::Field CartesianIIRBuilder::tmpField(std::string const& name, FieldType ft) {
+IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
   sir::FieldDimension dimensions(

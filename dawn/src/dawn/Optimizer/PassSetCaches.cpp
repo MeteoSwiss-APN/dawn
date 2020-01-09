@@ -227,7 +227,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
         const auto& fields = ms.getFields();
         for(const auto& AccessIDFieldPair : fields) {
           const iir::Field& field = AccessIDFieldPair.second;
-          // printf("%s: %d", ms.getMetadata().getNameFromAccessID(field.getAccessID()).c_str(), field.getIntend());
           bool mssProcessedField = mssProcessedFields.count(field.getAccessID());
           if(!mssProcessedField)
             mssProcessedFields.emplace(field.getAccessID());
@@ -253,25 +252,28 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           // it can in fact only be chached if all subsequent stages have compatible iteration
           // spaces
 
-          //find first stage in which the field is used
+          // find first stage in which the field is used
           int stageIter = 0;
-          for (const auto& stage : ms.getChildren()) {
-            if (stage->getFields().count(field.getAccessID()) && stage->hasIterationSpace()) {
+          for(const auto& stage : ms.getChildren()) {
+            if(stage->getFields().count(field.getAccessID()) && stage->hasIterationSpace()) {
               break;
             }
             stageIter++;
           }
 
-          //check if subsequent uses are compatible
+          // check if subsequent uses are compatible
           auto firstUsageWithGlobalIndex = ms.getChildren().begin();
           std::advance(firstUsageWithGlobalIndex, stageIter);
           bool incompatibleIterationSpaces = false;
-          for (auto it = firstUsageWithGlobalIndex; it != ms.getChildren().end(); it++) {
-            if (!firstUsageWithGlobalIndex->get()->iterationSpaceCompatible(*it->get())) {
+          for(auto it = firstUsageWithGlobalIndex; it != ms.getChildren().end(); it++) {
+            bool stageUsesField = it->get()->getFields().count(field.getAccessID());
+            if(stageUsesField &&
+               !firstUsageWithGlobalIndex->get()->iterationSpaceCompatible(*it->get())) {
               incompatibleIterationSpaces = true;
+              break;
             }
           }
-          if (incompatibleIterationSpaces) {
+          if(incompatibleIterationSpaces) {
             continue;
           }
 
