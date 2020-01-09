@@ -14,161 +14,182 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-      "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
-endif()
+cmake_minimum_required(VERSION 3.13)
 
-if(NOT BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries." FORCE)
-endif()
+file(STRINGS "version.txt" __GTCLANG_VERSION)
+string(REPLACE "." ";" __VERSION_LIST ${__GTCLANG_VERSION})
 
-if(NOT CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE STRING
-      "Install path prefix, prepended onto install directories." FORCE)
-endif()
+list(GET __VERSION_LIST 0 VERSION_MAJOR)
+list(GET __VERSION_LIST 1 VERSION_MINOR)
+list(GET __VERSION_LIST 2 VERSION_PATCH)
+unset(__VERSION_LIST)
 
-project(gtclang CXX)
-cmake_minimum_required(VERSION 3.3)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
-if(NOT(DEFINED YODA_ROOT))
-  message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
-endif()
-
-list(APPEND CMAKE_MODULE_PATH "${YODA_ROOT}/cmake")
-
-include(yodaAddExecutable)
-include(yodaAddLibrary)
-include(yodaAddTargetCleanAll)
-include(yodaAddTargetClangFormat)
-include(yodaCombineLibraries)
-include(yodaConfigureFile)
-include(yodaCreatePackageString)
-include(yodaEnableFullRPATH)
-include(yodaExportPackage)
-include(yodaGetGitHeadRevision)
-include(yodaSetCXXStandard)
-include(yodaAddCustomDummyTarget)
-include(yodaInit)
-
-yoda_init()
-
-# Include the GTClang specific options, definitions and macros
-include(GTClangOptions)
-include(GTClangDefinitions)
-include(GTClangMacros)
-
-if(GTCLANG_HAS_CUDA)
-  include(GTClangSetupCUDA)
-  gtclang_setup_CUDA()
-  find_package(SLURM)
-endif(GTCLANG_HAS_CUDA)
-
-# Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
-
-# Set C++ flags (Note that the LLVM/Clang package might add some other flags)
-gtclang_set_cxx_flags()
-
-# Add custom targets
-yoda_add_target_clean_all()
-
-# Output summary of the configuration
-macro(make_config_string FIRST SECOND)
-  yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
-  list(APPEND config_info ${out})
-endmacro()
-make_config_string("gtclang version" ${GTCLANG_FULL_VERSION})
-make_config_string("Platform" ${YODA_PLATFORM_STRING})
-make_config_string("Architecture" ${YODA_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${YODA_COMPILER_STRING})
-make_config_string("Build type" ${CMAKE_BUILD_TYPE})
-make_config_string("Asserts" ${GTCLANG_ASSERTS})
-yoda_report_result("Configuration summary" ${config_info})
-
-# Include the packages (and set the correct, libraries, includes etc.)
-foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads)
-  include("Add${package}")
-  yoda_create_package_string(${package} info)
-  list(APPEND package_info ${info})
-
-  string(TOUPPER ${package} PACKAGE)
-  if(${PACKAGE}_FOUND)
-    list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
-    list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
-    list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
-  endif()
-endforeach()
-
-if(GTCLANG_BUILD_GT_CPU_EXAMPLES OR GTCLANG_BUILD_GT_GPU_EXAMPLES OR GTCLANG_BUILD_CUDA_EXAMPLES)
-  include("AddGridTools")
-  if(GridTools_FOUND)
-    yoda_create_package_string(GridTools info)
-    list(APPEND package_info ${info})
-
-    string(TOUPPER GridTools PACKAGE)
-    list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
-    list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
-    list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
-  endif()
-endif()
-
-include_directories(SYSTEM ${GTCLANG_EXTERNAL_INCLUDE_DIRS})
-add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
-
-# Output summary of the packages
-yoda_report_result("Package summary" ${package_info})
-
-# Support of RPATH-exports of dawn
-if(NOT(DEFINED DAWN_RPATH_DIR))
-   message(FATAL_ERROR "DAWN_RPATH_DIR is not exported by DAWN")
-endif()
-yoda_enable_full_rpath("${DAWN_RPATH_DIR}")
-
-# Add clang-format target
-set(format_directories
-  "${CMAKE_SOURCE_DIR}/src"
-  "${CMAKE_SOURCE_DIR}/test/unit-test"
+project(GTClang
+  VERSION ${__GTCLANG_VERSION}
+  HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
+  LANGUAGES CXX C
 )
+unset(__GTCLANG_VERSION)
 
-yoda_add_target_clang_format(DIRECTORIES ${format_directories} EXTENSION ".h;.cpp")
+# Useful standard options:
+# - BUILD_TESTING<Bool>: Build test target (if only project, otherwise use GTCLANG_BUILD_TESTING to override).
+# - BUILD_SHARED_LIBS<Bool>: Build gtclang shared libraries instead of static. If true, requires dependencies to be built as position independent code
+# - CMAKE_PREFIX_PATH<String>: Semi-colon separated path to dependencies.
 
-# Build gtclang
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_BINARY_DIR}/src)
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
+# Other options
+include(CMakeDependentOption)
+option(BUILD_EXAMPLES "Build examples" ON)
+option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
+# By default unstructured integration tests are not built if atlas or eckit is not found.
+# GTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON will force an error if atlas or eckit are not found.
+option(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING "Require building tests for unstructured grids." OFF)
+
+### Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
+endif()
+
+# Path for Find*.cmake files
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+
+include(CTest)
+include(GNUInstallDirs)
+include(EnableCCache)
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON) # Do not attempt to update packages -- speeds up configure process
+
+include(GitVersionHash)
+get_git_version_hash(__GTClang_GIT_HASH)
+set(__compiler "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+set(GTCLANG_FULL_VERSION
+    "${GTClang_VERSION}-${__GTClang_GIT_HASH}-${CMAKE_SYSTEM_PROCESSOR}-${__compiler}"
+    CACHE INTERNAL "Full version string of gtclang")
+unset(__GTClang_GIT_HASH)
+unset(__compiler)
+
+# use, i.e. don't skip the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+endif()
+
+include(AddCXXCompilerFlagIfSuppported)
+add_cxx_compiler_flag_if_supported("-Wall" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wextra" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-pedantic" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" GTCLANG_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Wno-sign-compare" GTCLANG_CXX_FLAGS) # Would like to remove
+add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" GTCLANG_LINKER_FLAGS)
+
+# Target properties
+set(GTCLANG_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
+
+if (BUILD_SHARED_LIBS)
+  # Needed because we use object libraries
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# Add cxx standard, include directories, and properties
+function(target_add_gtclang_standard_props target)
+  target_include_directories(${target}
+    PUBLIC  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+  )
+  target_compile_features(${target} PUBLIC cxx_std_17)
+  target_compile_options(${target} PRIVATE ${GTCLANG_CXX_FLAGS})
+  set_target_properties(${target} PROPERTIES ${GTCLANG_TARGET_PROPERTIES})
+endfunction()
+
+# Project dependencies
+find_package(Clang 6.0.0 REQUIRED)
+
+# Only test if BUILD_TESTING and main project, or GTCLANG_BUILD_TESTING is on
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR GTCLANG_BUILD_TESTING) AND BUILD_TESTING)
+  set(${PROJECT_NAME}_TESTING ON)
+else()
+  set(${PROJECT_NAME}_TESTING OFF)
+endif()
+mark_as_advanced(${PROJECT_NAME}_TESTING)
+
+if(NOT TARGET Dawn::Dawn)
+  find_package(Dawn REQUIRED)
+endif()
+
+if(${PROJECT_NAME}_TESTING AND NOT TARGET gtest)
+  include(FetchGoogleTest)
+endif()
 
 add_subdirectory(src)
 
-if(GTCLANG_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
+if(${PROJECT_NAME}_TESTING)
+  # Optionally enable CUDA for integration tests
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    set(CUDA_ARCH "sm_60" CACHE STRING "CUDA architecture (e.g. sm_35, sm_60, sm_70)")
+  else()
+    message(STATUS "Could NOT find CUDA compiler. Disabling GPU integration tests.")
+  endif()
 
-if(GTCLANG_TESTING)
-  enable_testing()
+  cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_MC "Build integration tests with the GridTools MC backend" ON "BUILD_TESTING" OFF)
+  cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_CUDA "Build integration tests with the GridTools CUDA backend" ON "BUILD_TESTING;CMAKE_CUDA_COMPILER" OFF)
+  cmake_dependent_option(GTCLANG_BUILD_TESTING_PLAIN_CUDA "Build integration tests with the plain CUDA backend" ON "BUILD_TESTING;CMAKE_CUDA_COMPILER" OFF)
+
   add_subdirectory(test)
 endif()
 
-if(GTCLANG_DOCUMENTATION)
-  add_subdirectory(docs)
-endif()
+#TODO put this at the right place
+#TODO: REMOVE THIS, it's a workaround to add driver-includes from dawn, otherwise parsing fails.
+# set(GTCLANG_DSL_INCLUDES "${GTCLANG_DSL_INCLUDES}" "${DAWN_INCLUDE_DIRS}")
 
-gtclang_gen_install_config()
-
-# Install headers
-install(
-  DIRECTORY src/
-  DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR}
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/${PROJECT_NAME}Config.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
-find_path(DAWN_INSTALL_PATH
-    NAMES driver-includes
-    HINTS ${DAWN_INCLUDE_DIRS}
-    )
+
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
+  COMPATIBILITY SameMajorVersion
+)
+
 install(
-  DIRECTORY ${DAWN_INSTALL_PATH}/driver-includes
-  DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR}
+  EXPORT ${PROJECT_NAME}Targets
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+install(
+  FILES cmake/FindLLVM.cmake cmake/FindClang.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY ${DAWN_DRIVER_INCLUDEDIR}/driver-includes #TODO check location
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )

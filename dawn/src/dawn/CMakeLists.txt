@@ -12,31 +12,55 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
-add_subdirectory(AST)
-add_subdirectory(SIR)
-add_subdirectory(Compiler)
-add_subdirectory(Optimizer)
-add_subdirectory(IIR)
-add_subdirectory(CodeGen)
-add_subdirectory(Unittest)
-add_subdirectory(Serialization)
-
-include(yodaCombineLibraries)
-# Combine the relevant object libraries into libDawn.so/libDawn.a
-yoda_combine_libraries(
-  NAME Dawn
-  OBJECTS DawnSupportObjects
-          DawnASTObjects
-          DawnCompilerObjects
-          DawnOptimizerObjects
-          DawnCodeGenObjects
-          DawnUnittestObjects #TODO: we don't want it here but it is needed for some gtclang tests
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSerializerStatic
+add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-# Export the targets
-install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
-export(EXPORT DawnTargets NAMESPACE Dawn:: FILE ${PROJECT_BINARY_DIR}/DawnTargets.cmake)
+function(add_dawn_library)
+  foreach(_l IN LISTS ARGN)
+    target_link_libraries(${PROJECT_NAME} INTERFACE ${_l})
+    install(
+      TARGETS ${_l}
+      EXPORT ${PROJECT_NAME}Targets
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+  add_library(${PROJECT_NAME}::${_l} ALIAS ${_l})
+  endforeach()
+endfunction()
+
+add_subdirectory(Support)
+add_dawn_library(DawnSupport)
+
+# AST and SIR have a circular dependency, only building one library -- DawnSIR
+# {
+add_subdirectory(AST)
+add_dawn_library(DawnAST)
+
+add_subdirectory(SIR)
+add_dawn_library(DawnSIRProto DawnSIR)
+# }
+
+add_subdirectory(IIR)
+add_dawn_library(DawnIIRProto DawnIIR)
+
+add_subdirectory(Optimizer)
+add_dawn_library(DawnOptimizer)
+
+add_subdirectory(Serialization)
+add_dawn_library(DawnSerialization)
+
+add_subdirectory(CodeGen)
+add_dawn_library(DawnCodeGen)
+
+add_subdirectory(Compiler)
+add_dawn_library(DawnCompiler)
+
+if(${PROJECT_NAME}_TESTING)
+  add_subdirectory(Unittest)
+endif()

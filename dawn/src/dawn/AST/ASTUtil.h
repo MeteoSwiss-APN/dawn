@@ -78,7 +78,7 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 
 /// @brief Find all the different fields used in a given statement
 ///
-/// This method iterates trough the complete AST and returns a vector of all the fields used. This
+/// This method iterates through the complete AST and returns a vector of all the fields used. This
 /// can be used to determine if Stencils are legal and for auto generation of new stencils.
 ///
 /// @param ast              AST to evaluate

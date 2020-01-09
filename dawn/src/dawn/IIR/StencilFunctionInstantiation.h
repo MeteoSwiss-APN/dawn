@@ -45,7 +45,7 @@ inline std::string dim2str(int dim) {
   default:
     dawn_unreachable("invalid dimension");
   }
-};
+}
 
 /// @brief Specific instantiation of a stencil function
 ///

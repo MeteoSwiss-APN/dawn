@@ -229,10 +229,10 @@ void StencilInstantiation::jsonDump(std::string filename) const {
 template <int Level>
 struct PrintDescLine {
   PrintDescLine(const Twine& name) {
-    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
-              << MakeIndent<Level>::value << "{\n\e[0m";
+    std::cout << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name.str() << "\n"
+              << MakeIndent<Level>::value << "{\n\033[0m";
   }
-  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
+  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level); }
 };
 
 void StencilInstantiation::dump() const {
@@ -270,8 +270,8 @@ void StencilInstantiation::dump() const {
 
           const auto& stmts = doMethod->getAST().getStatements();
           for(std::size_t m = 0; m < stmts.size(); ++m) {
-            std::cout << "\e[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
-                      << "\e[0m";
+            std::cout << "\033[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
+                      << "\033[0m";
             std::cout << stmts[m]->getData<IIRStmtData>().CallerAccesses->toString(
                              [&](int AccessID) {
                                return getMetaData().getNameFromAccessID(AccessID);
@@ -281,9 +281,9 @@ void StencilInstantiation::dump() const {
           }
           l += 1;
         }
-        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+        std::cout << "\033[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
                   << "Extents: " << stage->getExtents() << std::endl
-                  << "\e[0m";
+                  << "\033[0m";
         k += 1;
       }
       j += 1;

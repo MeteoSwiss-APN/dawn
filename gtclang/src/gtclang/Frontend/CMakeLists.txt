@@ -14,37 +14,33 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(yodaAddLibrary)
-
-yoda_add_library(
-  NAME GTClangFrontend
-  SOURCES ClangASTExprResolver.h
-          ClangASTExprResolver.cpp
-          ClangASTStmtResolver.cpp
-          ClangASTStmtResolver.h
-          ClangFormat.cpp
-          ClangFormat.h
-          Diagnostics.cpp
-          Diagnostics.h
-          DiagnosticsKind.inc
-          GlobalVariableParser.cpp
-          GlobalVariableParser.h
-          GTClangASTAction.cpp
-          GTClangASTAction.h
-          GTClangASTConsumer.cpp
-          GTClangASTConsumer.h
-          GTClangASTVisitor.cpp
-          GTClangASTVisitor.h
-          GTClangContext.cpp
-          GTClangContext.h
-          GTClangPreprocessorAction.cpp
-          GTClangPreprocessorAction.h
-          StencilParser.cpp
-          StencilParser.h
-  OBJECT
+add_library(GTClangFrontend
+  ClangASTExprResolver.h
+  ClangASTExprResolver.cpp
+  ClangASTStmtResolver.cpp
+  ClangASTStmtResolver.h
+  ClangFormat.cpp
+  ClangFormat.h
+  Diagnostics.cpp
+  Diagnostics.h
+  DiagnosticsKind.inc
+  GlobalVariableParser.cpp
+  GlobalVariableParser.h
+  GTClangASTAction.cpp
+  GTClangASTAction.h
+  GTClangASTConsumer.cpp
+  GTClangASTConsumer.h
+  GTClangASTVisitor.cpp
+  GTClangASTVisitor.h
+  GTClangContext.cpp
+  GTClangContext.h
+  GTClangPreprocessorAction.cpp
+  GTClangPreprocessorAction.h
+  StencilParser.cpp
+  StencilParser.h
 )
 
-target_include_directories(GTClangFrontendObjects PRIVATE
-  $<TARGET_PROPERTY:Dawn::DawnShared,INTERFACE_INCLUDE_DIRECTORIES>
+target_add_gtclang_standard_props(GTClangFrontend)
+target_link_libraries(GTClangFrontend
+  PUBLIC GTClangSupport Dawn::Dawn Clang::Clang LLVM::LLVM
 )
-
