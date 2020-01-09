@@ -11,19 +11,18 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-add_executable(DawnIntegrationTest
+add_executable(${PROJECT_NAME}IntegrationTest
   TestMain.cpp
   TestIIRDeserializer.cpp
   GenerateInMemoryStencils.cpp
 )
-target_add_dawn_standard_props(DawnIntegrationTest)
-target_link_libraries(DawnIntegrationTest Dawn DawnUnittest gtest)
-set_target_properties(DawnIntegrationTest PROPERTIES
+target_add_dawn_standard_props(${PROJECT_NAME}IntegrationTest)
+target_link_libraries(${PROJECT_NAME}IntegrationTest Dawn DawnUnittest gtest)
+set_target_properties(${PROJECT_NAME}IntegrationTest PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-add_test(NAME DawnIntegrationTest
-  COMMAND $<TARGET_FILE:DawnIntegrationTest>
-)
+gtest_discover_tests(${PROJECT_NAME}IntegrationTest)
 
 add_executable(DawnUpdateIIRReferences
   RegenerateIIRMain.cpp

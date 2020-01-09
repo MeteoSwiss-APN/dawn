@@ -13,6 +13,7 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 set(test_name ${PROJECT_NAME}UnittestFrontend)
 add_executable(${test_name}
@@ -27,6 +28,4 @@ set_target_properties(${test_name} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
 )
 
-add_test(NAME ${test_name}
-  COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
-)
+gtest_discover_tests(${test_name} TEST_PREFIX "${test_name}::")
