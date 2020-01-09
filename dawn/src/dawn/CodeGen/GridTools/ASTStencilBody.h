@@ -49,6 +49,7 @@ protected:
 
 public:
   using Base = ASTCodeGenCXX;
+  using Base::visit;
 
   ASTStencilBody(const iir::StencilMetaInformation& metadata,
                  const std::unordered_set<iir::IntervalProperties>& intervalProperties);

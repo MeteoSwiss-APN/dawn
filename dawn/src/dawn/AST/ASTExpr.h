@@ -27,8 +27,15 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <array>
+#include <optional>
 
 namespace dawn {
+
+namespace sir {
+class Value;
+} // namespace sir
+
 namespace ast {
 class ASTVisitor;
 
@@ -629,6 +636,8 @@ private:
   enum OperandKind { Rhs = 0, Init };
 
   std::string op_ = "+";
+  std::optional<std::vector<sir::Value>> weights_;
+  ast::LocationType lhs_location_;
   ast::LocationType rhs_location_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
 
@@ -637,6 +646,12 @@ public:
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init,
+                            ast::LocationType lhs_location = ast::LocationType::Cells,
+                            ast::LocationType rhs_location = ast::LocationType::Cells,
+                            SourceLocation loc = SourceLocation());
+  ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
+                            std::shared_ptr<Expr> const& init, std::vector<sir::Value> weights,
+                            ast::LocationType lhs_location = ast::LocationType::Cells,
                             ast::LocationType rhs_location = ast::LocationType::Cells,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
@@ -648,14 +663,19 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  ast::LocationType getRhsLocation() const;
+  ast::LocationType getRhsLocation() const { return rhs_location_; };
+  ast::LocationType getLhsLocation() const { return lhs_location_; };
+  const std::optional<std::vector<sir::Value>>& getWeights() const { return weights_; };
 
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }
-  std::shared_ptr<Expr> clone() const override;
-  bool equals(const Expr* other) const override;
+
   static bool classof(const Expr* expr) {
     return expr->getKind() == Kind::ReductionOverNeighborExpr;
   }
+
+  std::shared_ptr<Expr> clone() const override;
+  bool equals(const Expr* other) const override;
+
   ACCEPTVISITOR(Expr, ReductionOverNeighborExpr)
 };
 

@@ -1,30 +1,30 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-yoda_add_unittest(
-  NAME DawnUnittestOptimizerPasses
-    SOURCES 
-          TestMain.cpp
-          TestPassComputeStageExtents.cpp
-          TestComputeMaxExtent.cpp
-          TestPassSetBoundaryCondition.cpp
-          TestFieldAccessIntervals.cpp
-          TestTemporaryToFunction.cpp
-    DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
-    OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
-    GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}" "--gtest_color=yes"
-  )
-
-target_include_directories(DawnUnittestOptimizerPasses PUBLIC "${CMAKE_SOURCE_DIR}")
-
+set(executable ${PROJECT_NAME}UnittestOptimizerPasses)
+add_executable(${executable}
+  TestMain.cpp
+  TestPassComputeStageExtents.cpp
+  TestComputeMaxExtent.cpp
+  TestPassSetBoundaryCondition.cpp
+  TestFieldAccessIntervals.cpp
+  TestTemporaryToFunction.cpp
+)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+target_include_directories(${executable}
+  PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+)
+gtest_discover_tests(${executable} TEST_PREFIX "${executable}::" EXTRA_ARGS ${CMAKE_CURRENT_LIST_DIR})

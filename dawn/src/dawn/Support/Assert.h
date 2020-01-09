@@ -26,11 +26,13 @@ extern void assertionFailedMsg(char const* expr, char const* msg, char const* fu
 } // namespace dawn
 
 #if defined(DAWN_DISABLE_ASSERTS) || defined(NDEBUG)
+#define DAWN_USING_ASSERTS 0
 
 #define DAWN_ASSERT(expr) ((void)0)
 #define DAWN_ASSERT_MSG(expr, msg) ((void)0)
 
 #else
+#define DAWN_USING_ASSERTS 1
 
 /// @macro DAWN_ASSERT
 /// @brief Assert macro

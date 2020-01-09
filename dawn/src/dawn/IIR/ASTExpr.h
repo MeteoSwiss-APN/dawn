@@ -17,6 +17,8 @@
 
 #include "dawn/AST/ASTExpr.h"
 
+#include <optional>
+
 namespace dawn {
 namespace iir {
 

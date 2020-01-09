@@ -40,6 +40,7 @@ protected:
 
 public:
   using Base = ASTCodeGenCXX;
+  using Base::visit;
 
   ASTStencilDesc(const iir::StencilMetaInformation& metadata,
                  const CodeGenProperties& CodeGenProperties);

@@ -38,20 +38,42 @@ done
 
 base_dir=$(pwd)
 build_dir=${base_dir}/bundle/build
+# Setup for the python tests:
+mkdir -p $build_dir
+cd $build_dir
+export TMPDIR=${build_dir}/temp
+mkdir -p $TMPDIR
+python -m venv dawn_venv
+source dawn_venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install wheel
+python -m pip install -e ${base_dir} -v
 
+cd ${base_dir}/examples/python
+bash run.sh
+python -m pytest -v ${base_dir}/test/unit-test/test_dawn4py/
+
+# clean up the build directory for the c++ tests
+deactivate
+rm -rf $build_dir
+rm -rf ${base_dir}/bundle/install
+rm -rf ${base_dir}/bundle/yoda
+
+# Test for the c++ side:
 mkdir -p $build_dir
 cd $build_dir
 
 if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIF needs to be set in the machine env"
 fi
-CMAKE_ARGS="-DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DDAWN_PYTHON_EXAMPLES=ON -DCMAKE_BUILD_TYPE=${build_type}  \
-        -DProtobuf_DIR=${PROTOBUFDIR} -DPROTOBUF_PYTHON_INSTALL=${PROTOBUFDIR}/../../../python"
+CMAKE_ARGS="-DDAWN_BUNDLE_JAVA=ON -DCMAKE_BUILD_TYPE=${build_type}  \
+        -DProtobuf_DIR=${PROTOBUFDIR} -DDAWN_TESTING=ON -DBUILD_TESTING=ON"
 
 if [ -n ${INSTALL_DIR} ]; then
   rm -rf ${INSTALL_DIR}
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 fi
+
 
 cmake ${CMAKE_ARGS} ../
 make -j8 install

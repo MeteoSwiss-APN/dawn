@@ -114,7 +114,7 @@ public:
     // We add all global variables which have constant values
     for(const auto& keyValuePair : globalVariableMap) {
       const std::string& key = keyValuePair.first;
-      const sir::Value& value = *keyValuePair.second;
+      const sir::Global& value = keyValuePair.second;
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
@@ -282,17 +282,17 @@ public:
         // just not inserting it into the statement list
         if(result) {
           BlockStmt* thenBody = dyn_cast<iir::BlockStmt>(stmt->getThenStmt().get());
-          DAWN_ASSERT_MSG(thenBody, "then-body of if-statment should be a BlockStmt!");
+          DAWN_ASSERT_MSG(thenBody, "then-body of if-statement should be a BlockStmt!");
           for(const auto& s : thenBody->getStatements())
             s->accept(*this);
         } else if(stmt->hasElse()) {
           BlockStmt* elseBody = dyn_cast<iir::BlockStmt>(stmt->getElseStmt().get());
-          DAWN_ASSERT_MSG(elseBody, "else-body of if-statment should be a BlockStmt!");
+          DAWN_ASSERT_MSG(elseBody, "else-body of if-statement should be a BlockStmt!");
           for(const auto& s : elseBody->getStatements())
             s->accept(*this);
         }
       } else {
-        // We are inside a nested statement and we need to remove this if-statment and replace it
+        // We are inside a nested statement and we need to remove this if-statement and replace it
         // with either the then-block or the else-block or in case we evaluted to `false` and
         // there
         // is no else-block we insert a `0` void statement.
@@ -433,15 +433,15 @@ public:
 
     // Prepare a new scope for the stencil call
     std::shared_ptr<Scope>& curScope = scope_.top();
-    std::shared_ptr<Scope> candiateScope = std::make_shared<Scope>(
+    std::shared_ptr<Scope> candidateScope = std::make_shared<Scope>(
         curScope->Name, curScope->controlFlowDescriptor_, curScope->StackTrace);
 
     // Variables are inherited from the parent scope (note that this *needs* to be a copy as we
     // cannot modify the parent scope)
-    candiateScope->VariableMap = curScope->VariableMap;
+    candidateScope->VariableMap = curScope->VariableMap;
 
     // Record the call
-    candiateScope->StackTrace.push_back(stencilCall);
+    candidateScope->StackTrace.push_back(stencilCall);
 
     // Get the sir::Stencil from the callee name
     auto stencilIt = std::find_if(
@@ -468,12 +468,12 @@ public:
         stencilCallArgIdx++;
       }
 
-      candiateScope->LocalFieldnameToAccessIDMap.emplace(stencil.Fields[stencilArgIdx]->Name,
-                                                         AccessID);
+      candidateScope->LocalFieldnameToAccessIDMap.emplace(stencil.Fields[stencilArgIdx]->Name,
+                                                          AccessID);
     }
 
     // Process the stencil description AST of the callee.
-    scope_.push(candiateScope);
+    scope_.push(candidateScope);
 
     // Convert the AST to have an AST with iir data and visit it
     convertToIIRAST(*stencil.StencilDescAst)->accept(*this);
@@ -696,7 +696,7 @@ void OptimizerContext::fillIIR() {
     if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
           stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType,
-                                                                     *getSIR()->GlobalVariableMap,
+                                                                     getSIR()->GlobalVariableMap,
                                                                      iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {

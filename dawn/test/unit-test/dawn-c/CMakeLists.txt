@@ -11,10 +11,15 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-dawn_add_unittest_impl(
-  NAME DawnCUnittest
-  SOURCES TestMain.cpp
-          TestOptions.cpp
-          TestCompiler.cpp
+set(executable ${PROJECT_NAME}CUnittest)
+add_executable(${executable}
+  TestMain.cpp
+  TestOptions.cpp
+  TestCompiler.cpp
 )
+
+target_add_dawn_standard_props(${executable})
+target_link_libraries(${executable} DawnC DawnUnittest gtest)
+gtest_discover_tests(${executable} TEST_PREFIX "${executable}::")

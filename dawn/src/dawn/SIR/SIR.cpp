@@ -147,14 +147,14 @@ CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
   return (*comparate1).comparison(*comparate2);
 }
 
-/// @brief Helperfunction to compare two maps of key and shared pointer
+/// @brief Helperfunction to compare two global maps
 ///
 /// the boolean is true if contents of the shared pointers match for every key (operator ==)
 /// the string returns a potential mismatch notification
 ///
 /// @return pair of boolean and string
-static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariableMap& map1,
-                                                         const sir::GlobalVariableMap& map2) {
+static std::pair<std::string, bool> globalMapComparison(const sir::GlobalVariableMap& map1,
+                                                        const sir::GlobalVariableMap& map2) {
   std::string output;
   if(map1.size() != map2.size()) {
     output += dawn::format("[GlobalVariableMap mismatch] Number of Global Variables do not match\n"
@@ -172,14 +172,14 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
         output +=
             dawn::format("[GlobalVariableMap mismatch] Global Variable '%s' not found\n", a.first);
         return std::make_pair(output, false);
-      } else if(!(*(finder->second.get()) == *(a.second.get()))) {
+      } else if(!(finder->second == a.second)) {
         output +=
             dawn::format("[GlobalVariableMap mismatch] Global Variables '%s' values are not equal\n"
                          "  Actual:\n"
                          "    %s\n"
                          "  Expected:\n"
                          "    %s",
-                         a.first, a.second->toString(), finder->second->toString());
+                         a.first, a.second.toString(), finder->second.toString());
         return std::make_pair(output, false);
       }
     }
@@ -234,8 +234,8 @@ CompareResult SIR::comparison(const SIR& rhs) const {
   if(GlobalVariableMap.get()->size() != rhs.GlobalVariableMap.get()->size())
     return CompareResult{"[SIR mismatch] number of Global Variables does not match\n", false};
 
-  if(!pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
-    auto comp = pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
+  if(!globalMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
+    auto comp = globalMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
     if(!comp.second)
       return CompareResult{comp.first, false};
   }
@@ -674,6 +674,8 @@ const char* sir::Value::typeToString(sir::Value::Kind type) {
     return "int";
   case Kind::Double:
     return "double";
+  case Kind::Float:
+    return "float";
   case Kind::String:
     return "std::string";
   }
@@ -687,6 +689,8 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
   case Kind::Integer:
     return BuiltinTypeID::Integer;
   case Kind::Double:
+    return BuiltinTypeID::Double;
+  case Kind::Float:
     return BuiltinTypeID::Float;
   default:
     dawn_unreachable("invalid type");
@@ -702,6 +706,8 @@ std::string sir::Value::toString() const {
     return std::to_string(std::get<int>(*value_));
   case Kind::Double:
     return std::to_string(std::get<double>(*value_));
+  case Kind::Float:
+    return std::to_string(std::get<float>(*value_));
   case Kind::String:
     return std::get<std::string>(*value_);
   default:

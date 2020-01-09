@@ -39,40 +39,6 @@ Array3i asArray(FieldType ft) {
   }
   dawn_unreachable("Unreachable");
 }
-std::string toStr(Op operation, std::vector<Op> const& valid_ops) {
-  DAWN_ASSERT(std::find(valid_ops.begin(), valid_ops.end(), operation) != valid_ops.end());
-  switch(operation) {
-  case Op::plus:
-    return "+";
-  case Op::minus:
-    return "-";
-  case Op::multiply:
-    return "*";
-  case Op::assign:
-    return "";
-  case Op::divide:
-    return "/";
-  case Op::equal:
-    return "==";
-  case Op::notEqual:
-    return "!=";
-  case Op::greater:
-    return ">";
-  case Op::less:
-    return "<";
-  case Op::greaterEqual:
-    return ">=";
-  case Op::lessEqual:
-    return "<=";
-  case Op::logicalAnd:
-    return "&&";
-  case Op::locigalOr:
-    return "||";
-  case Op::logicalNot:
-    return "!";
-  }
-  dawn_unreachable("Unreachable");
-}
 } // namespace
 
 dawn::codegen::stencilInstantiationContext
@@ -119,16 +85,17 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   return map;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
-                                                              std::shared_ptr<iir::Expr>&& rhs,
-                                                              std::shared_ptr<iir::Expr>&& init,
-                                                              ast::LocationType rhs_location) {
+
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+    ast::LocationType lhs_location, ast::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), rhs_location);
+      std::move(init), lhs_location, rhs_location);
   expr->setID(si_->nextUID());
   return expr;
 }
+
 std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                                   std::shared_ptr<iir::Expr>&& rhs, Op operation) {
   DAWN_ASSERT(si_);

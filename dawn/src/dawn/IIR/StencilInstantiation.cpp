@@ -48,7 +48,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(
-    ast::GridType const gridType, sir::GlobalVariableMap const& globalVariables,
+    ast::GridType const gridType, std::shared_ptr<sir::GlobalVariableMap> globalVariables,
     std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions)
     : metadata_(globalVariables),
       IIR_(std::make_unique<IIR>(gridType, globalVariables, stencilFunctions)) {}
@@ -58,14 +58,14 @@ StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; 
 std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   std::shared_ptr<StencilInstantiation> stencilInstantiation =
-      std::make_shared<StencilInstantiation>(IIR_->getGridType(), IIR_->getGlobalVariableMap(),
+      std::make_shared<StencilInstantiation>(IIR_->getGridType(), IIR_->getGlobalVariableMapPtr(),
                                              IIR_->getStencilFunctions());
 
   stencilInstantiation->metadata_.clone(metadata_);
 
   stencilInstantiation->IIR_ =
       std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGridType(),
-                                 stencilInstantiation->getIIR()->getGlobalVariableMap(),
+                                 stencilInstantiation->getIIR()->getGlobalVariableMapPtr(),
                                  stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
@@ -84,9 +84,9 @@ bool StencilInstantiation::insertBoundaryConditions(
   }
 }
 
-const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
+const sir::Global& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   DAWN_ASSERT(IIR_->getGlobalVariableMap().count(name));
-  return *(IIR_->getGlobalVariableMap().at(name));
+  return IIR_->getGlobalVariableMap().at(name);
 }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
@@ -229,10 +229,10 @@ void StencilInstantiation::jsonDump(std::string filename) const {
 template <int Level>
 struct PrintDescLine {
   PrintDescLine(const Twine& name) {
-    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
-              << MakeIndent<Level>::value << "{\n\e[0m";
+    std::cout << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name.str() << "\n"
+              << MakeIndent<Level>::value << "{\n\033[0m";
   }
-  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
+  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level); }
 };
 
 void StencilInstantiation::dump() const {
@@ -270,8 +270,8 @@ void StencilInstantiation::dump() const {
 
           const auto& stmts = doMethod->getAST().getStatements();
           for(std::size_t m = 0; m < stmts.size(); ++m) {
-            std::cout << "\e[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
-                      << "\e[0m";
+            std::cout << "\033[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
+                      << "\033[0m";
             std::cout << stmts[m]->getData<IIRStmtData>().CallerAccesses->toString(
                              [&](int AccessID) {
                                return getMetaData().getNameFromAccessID(AccessID);
@@ -281,9 +281,9 @@ void StencilInstantiation::dump() const {
           }
           l += 1;
         }
-        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+        std::cout << "\033[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
                   << "Extents: " << stage->getExtents() << std::endl
-                  << "\e[0m";
+                  << "\033[0m";
         k += 1;
       }
       j += 1;

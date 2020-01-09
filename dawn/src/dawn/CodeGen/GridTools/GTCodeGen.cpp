@@ -181,18 +181,18 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
   stencilWrapperClass.addComment("Globals API");
 
   for(const auto& globalProp : globalsMap) {
-    auto globalValue = globalProp.second;
-    if(globalValue->isConstexpr()) {
+    const auto& globalValue = globalProp.second;
+    if(globalValue.isConstexpr()) {
       continue;
     }
     auto getter = stencilWrapperClass.addMemberFunction(
-        sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
+        sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
     getter.finishArgs();
     getter.addStatement("return m_globals." + globalProp.first);
     getter.commit();
 
     auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
-    setter.addArg(std::string(sir::Value::typeToString(globalValue->getType())) + " " +
+    setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
                   globalProp.first);
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
@@ -476,6 +476,21 @@ void GTCodeGen::generateStencilClasses(
            << "', this would result in invalid gridtools code";
       diagEngine.report(diag);
       return;
+    }
+
+    // Check for horizontal iteration spaces
+    for(auto multiStageIt = stencil.getChildren().begin(),
+             multiStageEnd = stencil.getChildren().end();
+        multiStageIt != multiStageEnd; ++multiStageIt) {
+      for(auto stageIt = (*multiStageIt)->childrenBegin(),
+               stageEnd = (*multiStageIt)->childrenEnd();
+          stageIt != stageEnd; ++stageIt) {
+        if(std::any_of((*stageIt)->getIterationSpace().cbegin(),
+                       (*stageIt)->getIterationSpace().cend(),
+                       [](const auto& p) -> bool { return p.has_value(); })) {
+          throw std::runtime_error("GTCodeGen does not support horizontal iteration spaces");
+        }
+      }
     }
 
     Structure stencilClass = stencilWrapperClass.addStruct(
@@ -843,9 +858,8 @@ void GTCodeGen::generateStencilClasses(
         auto const& ext = fieldInfo.field.getExtentsRB();
         // ===-----------------------------------------------------------------------------------===
         // PRODUCTIONTODO: [BADSTATICASSERTS]
-        // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once it
-        // is resolved
-        // https://github.com/MeteoSwiss-APN/dawn/issues/110
+        // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once
+        // it is resolved https://github.com/MeteoSwiss-APN/dawn/issues/110
         // ===-----------------------------------------------------------------------------------===
         std::string parameterType = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
         auto searchIterator = parameterTypeToFullExtentsMap.find(parameterType);

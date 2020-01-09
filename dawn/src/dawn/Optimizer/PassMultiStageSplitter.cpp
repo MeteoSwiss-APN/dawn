@@ -59,7 +59,7 @@ multiStageSplitterOptimized() {
       // Check for read-before-write conflicts in the loop order and counter loop order.
       // Conflicts in the loop order will assure us that the multi-stage can't be
       // parallel. A conflict in the counter loop order is more severe and needs the current
-      // multistage be splitted!
+      // multistage be split!
       auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
       if(conflict.CounterLoopOrderConflict) {
 

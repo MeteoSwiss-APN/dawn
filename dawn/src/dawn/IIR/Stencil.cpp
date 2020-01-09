@@ -299,7 +299,7 @@ bool Stencil::compareDerivedInfo() const {
     }
     if(fieldsOnTheFly.at(accessID).getExtentsRB() != extentsRB) {
       dawn_unreachable(
-          std::string("ERROR: the redudant block extended Extents do not much in precomputed "
+          std::string("ERROR: the redundant block extended Extents do not match in precomputed "
                       "derived info and computed on the fly fields:"
                       " field id " +
                       std::to_string(accessID) + ", on the fly [" +
@@ -309,7 +309,7 @@ bool Stencil::compareDerivedInfo() const {
       return false;
     }
     if(fieldsOnTheFly.at(accessID).getExtents() != extents) {
-      dawn_unreachable(std::string("ERROR: the field Extents do not much in precomputed "
+      dawn_unreachable(std::string("ERROR: the field Extents do not match in precomputed "
                                    "derived info and computed on the fly fields:"
                                    " field id " +
                                    std::to_string(accessID) + ", on the fly [" +
