@@ -92,7 +92,6 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
   add_library(Clang INTERFACE IMPORTED GLOBAL)
   add_library(Clang::Clang ALIAS Clang)
   target_include_directories(Clang INTERFACE ${CLANG_INCLUDE_DIRS})
-  target_compile_features(Clang INTERFACE cxx_std_11)
   foreach(_lib ${clang_libnames})
     find_library(${_lib}_LIBRARY ${_lib}
       HINTS ${CLANG_LIBRARY_DIRS} ${LLVM_ROOT}

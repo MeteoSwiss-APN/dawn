@@ -15,7 +15,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT GTCLANG_BUILD_GRIDTOOLS)
-  find_package(GridTools 1.0.4 QUIET)
+  find_package(GridTools 1.1.2 QUIET)
 endif()
 if(NOT GridTools_FOUND)
   if(NOT GTCLANG_BUILD_GRIDTOOLS)
@@ -29,7 +29,7 @@ if(NOT GridTools_FOUND)
   set(GT_INSTALL_EXAMPLES OFF)
 
   FetchContent_Declare(GridTools
-    URL https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz
+    URL https://github.com/GridTools/gridtools/archive/v1.1.2.tar.gz
   )
 
   FetchContent_GetProperties(GridTools)

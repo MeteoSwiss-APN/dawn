@@ -47,7 +47,6 @@ if(ENABLE_PYTHON)
 endif()
 
 add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files} ${sir_proto_python_build_files})
-target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
 # Generated files need to be compiled with the protobuf headers

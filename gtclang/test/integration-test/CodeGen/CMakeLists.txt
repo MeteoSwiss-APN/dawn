@@ -30,7 +30,7 @@ function(generate_target)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
     set(config_str --config=${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
   endif()
-  
+
   # TODO this probably didn't work before CMAKE refactoring because of wrong matching
   # string(TOLOWER "${CMAKE_BUILD_TYPE}" LOWERCASE_CMAKE_BUILD_TYPE)
   # if(LOWERCASE_CMAKE_BUILD_TYPE MATCHES debug)
@@ -77,7 +77,7 @@ function(compile_target)
   endif()
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
-  target_compile_features(${executable} PRIVATE cxx_std_11)
+  target_compile_features(${executable} PRIVATE cxx_std_14)
   target_link_libraries(${executable} GridTools::gridtools)
   target_link_libraries(${executable} gtest)
   # TODO The following line must not be there!
