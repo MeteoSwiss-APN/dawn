@@ -11,6 +11,7 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestOptimizerPasses)
 add_executable(${executable}
@@ -26,6 +27,4 @@ target_add_dawn_standard_props(${executable})
 target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
-add_test(NAME ${executable}
-  COMMAND ${executable} "${CMAKE_CURRENT_LIST_DIR}"
-)
+gtest_discover_tests(${executable} TEST_PREFIX "${executable}::" EXTRA_ARGS ${CMAKE_CURRENT_LIST_DIR})
