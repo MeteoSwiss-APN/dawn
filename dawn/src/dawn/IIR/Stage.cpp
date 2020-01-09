@@ -349,7 +349,7 @@ const Stage::IterationSpace& Stage::getIterationSpace() const { return iteration
 
 bool Stage::hasIterationSpace() const {
   return std::any_of(iterationSpace_.cbegin(), iterationSpace_.cend(),
-                     [](const auto& p) { return p.has_value(); })
+                     [](const auto& p) { return p.has_value(); });
 }
 
 bool Stage::iterationSpaceCompatible(const Stage& other) const {
