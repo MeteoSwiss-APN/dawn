@@ -23,12 +23,12 @@
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
+#include <array>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <array>
-#include <optional>
 
 namespace dawn {
 

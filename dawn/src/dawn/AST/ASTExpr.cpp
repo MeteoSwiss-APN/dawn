@@ -471,8 +471,8 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr c
       rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
                                                       expr.getInit()->clone()} {}
 
-ReductionOverNeighborExpr&
-ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
+ReductionOverNeighborExpr& ReductionOverNeighborExpr::
+operator=(ReductionOverNeighborExpr const& expr) {
   assign(expr);
   op_ = expr.op_;
   operands_[Rhs] = expr.getRhs();

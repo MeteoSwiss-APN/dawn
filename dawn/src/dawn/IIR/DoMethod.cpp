@@ -253,7 +253,7 @@ void DoMethod::updateLevel() {
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
   for(const auto& stmt : getAST().getStatements()) {
-    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;                                                                         
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {

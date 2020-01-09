@@ -458,10 +458,9 @@ void CudaCodeGen::generateStencilRunMethod(
 
     // Check for horizontal iteration spaces
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
-      if(std::any_of(stage->getIterationSpace().cbegin(),
-                     stage->getIterationSpace().cend(),
+      if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
                      [](const auto& p) -> bool { return p.has_value(); })) {
-          throw std::runtime_error("CudaCodeGen does not support horizontal iteration spaces");
+        throw std::runtime_error("CudaCodeGen does not support horizontal iteration spaces");
       }
     }
 
