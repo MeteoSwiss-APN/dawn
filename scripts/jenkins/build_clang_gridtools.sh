@@ -87,7 +87,7 @@ cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 ret=$?
 set -e
 
-if [ $ret -neq 0 ]; then
+if [ $ret -ne 0 ]; then
   # building failed, try again with VERBOSE
   VERBOSE=1 cmake --build . --parallel 1
 fi
