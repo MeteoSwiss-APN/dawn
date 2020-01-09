@@ -25,11 +25,14 @@ int main(int argc, char* argv[]) {
   // Initialize gtest
   testing::InitGoogleTest(&argc, argv);
 
-  DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
+  if(argc > 1) {
+    DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
 
-  std::string path = argv[1];
+    std::string path = argv[1];
 
-  TestEnvironment::path_ = path;
-  ::testing::AddGlobalTestEnvironment(new TestEnvironment());
+    TestEnvironment::path_ = path;
+    ::testing::AddGlobalTestEnvironment(new TestEnvironment());
+  }
+
   return RUN_ALL_TESTS();
 }
