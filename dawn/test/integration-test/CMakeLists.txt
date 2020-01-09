@@ -29,6 +29,6 @@ add_executable(DawnUpdateIIRReferences
   RegenerateIIRMain.cpp
   GenerateInMemoryStencils.cpp
 )
-target_link_libraries(DawnUpdateIIRReferences Dawn gtest)
+target_link_libraries(DawnUpdateIIRReferences Dawn DawnUnittest gtest)
 target_add_dawn_standard_props(DawnUpdateIIRReferences)
 file(COPY reference_iir DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
