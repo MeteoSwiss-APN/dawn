@@ -350,7 +350,7 @@ class IterationSpaceResolver {
 
 public:
   IterationSpaceResolver(StencilParser* parser)
-      : parser_(parser), level_{{0, 0}}, offset_{{0, 0}}, curIndex_(0), verticalIndexName_("k") {}
+      : parser_(parser), level_(), offset_(), curIndex_(0), verticalIndexName_("k") {}
 
   /// @brief Resolve a range based for-loop
   ///
