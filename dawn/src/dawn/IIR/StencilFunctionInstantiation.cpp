@@ -593,8 +593,8 @@ void StencilFunctionInstantiation::dump() const {
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
-              << "\e[0m";
+    std::cout << "\033[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+              << "\033[0m";
     const auto& callerAccesses =
         doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)

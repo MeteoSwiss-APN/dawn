@@ -1,5 +1,5 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
+##                          _
 ##                         | |
 ##                       __| | __ ___      ___ ___
 ##                      / _` |/ _` \ \ /\ / / '_  |
@@ -7,46 +7,53 @@
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-yoda_add_library(
-  NAME DawnC
-  SOURCES Dawn.h
-          Compiler.cpp
-          Compiler.h
-          ErrorHandling.cpp
-          ErrorHandling.h
-          Options.cpp
-          Options.h
-          TranslationUnit.cpp
-          TranslationUnit.h
-          Types.h
-          util/Allocate.h
-          util/CompilerWrapper.h          
-          util/OptionsWrapper.cpp
-          util/OptionsWrapper.h
-          util/TranslationUnitWrapper.h
-  OBJECT
+add_library(${PROJECT_NAME}CObjects OBJECT
+  Dawn.h
+  Compiler.cpp
+  Compiler.h
+  ErrorHandling.cpp
+  ErrorHandling.h
+  Options.cpp
+  Options.h
+  TranslationUnit.cpp
+  TranslationUnit.h
+  Types.h
+  util/Allocate.h
+  util/CompilerWrapper.h
+  util/OptionsWrapper.cpp
+  util/OptionsWrapper.h
+  util/TranslationUnitWrapper.h
 )
+target_add_dawn_standard_props(${PROJECT_NAME}CObjects)
+target_link_libraries(${PROJECT_NAME}CObjects PUBLIC ${PROJECT_NAME})
 
-# Combine the relevant object libraries into libDawnC.so/libDawnC.a
-yoda_combine_libraries(
-  NAME DawnC
-  OBJECTS DawnCObjects
-          DawnSupportObjects
-          DawnCompilerObjects
-          DawnIIRObjects
-          DawnOptimizerObjects
-          DawnCodeGenObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSIRStatic DawnSerializerStatic
-  EXPORT_GROUP DawnTargets
+# build shared library unconditionally as needed for python
+add_library(${PROJECT_NAME}CShared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}CObjects>)
+set_target_properties(${PROJECT_NAME}CShared PROPERTIES OUTPUT_NAME ${PROJECT_NAME}C)
+target_link_libraries(${PROJECT_NAME}CShared PUBLIC ${PROJECT_NAME})
+
+set(DawnCLibs ${PROJECT_NAME}CShared)
+target_add_dawn_standard_props(${PROJECT_NAME}CShared)
+
+if(BUILD_SHARED_LIBS)
+  add_library(${PROJECT_NAME}C ALIAS ${PROJECT_NAME}CShared)
+else()
+  add_library(${PROJECT_NAME}CStatic STATIC $<TARGET_OBJECTS:${PROJECT_NAME}CObjects>)
+  set_target_properties(${PROJECT_NAME}CStatic PROPERTIES OUTPUT_NAME ${PROJECT_NAME}C)
+  target_link_libraries(${PROJECT_NAME}CStatic PUBLIC ${PROJECT_NAME})
+  add_library(${PROJECT_NAME}C ALIAS ${PROJECT_NAME}CStatic)
+  target_add_dawn_standard_props(${PROJECT_NAME}CStatic)
+  list(APPEND DawnCLibs ${PROJECT_NAME}CStatic)
+endif()
+
+install(
+  TARGETS ${DawnCLibs}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-
-# Export the targets
-install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
-export(EXPORT DawnTargets NAMESPACE Dawn:: FILE ${PROJECT_BINARY_DIR}/DawnTargets.cmake)

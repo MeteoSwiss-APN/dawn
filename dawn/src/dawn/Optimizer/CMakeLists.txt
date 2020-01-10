@@ -45,6 +45,8 @@ yoda_add_library(
           PassSetCaches.h
           PassSetDependencyGraph.cpp
           PassSetDependencyGraph.h
+          PassSetDependencyGraph.cpp
+          PassSetDependencyGraph.h
           PassSetNonTempCaches.cpp
           PassSetNonTempCaches.h
           PassSetStageGraph.cpp
@@ -97,3 +99,6 @@ yoda_combine_libraries(
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )
+
+target_add_dawn_standard_props(DawnOptimizer)
+target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR)

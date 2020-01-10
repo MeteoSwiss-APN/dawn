@@ -1,99 +1,77 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnProtobufGenerate)
+set(protos SIR/SIR.proto SIR/statements.proto SIR/enums.proto)
 
-# Genreate C++ proto files
+include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
+  PROTOS ${protos}
   PACKG SIR
   LANGUAGE cpp
 )
 
-yoda_add_library(
-  NAME DawnSIR
-  SOURCES AST.h
-          ASTExpr.h
-          ASTFwd.h
-          ASTStmt.h
-          ASTStmt.cpp
-          ASTStringifier.h
-          ASTUtil.h
-          ASTUtil.cpp
-          ASTVisitor.h
-          SIR.cpp
-          SIR.h
-          proto/SIR/SIR.proto
-          ${sir_proto_cpp_files}
-  OBJECT
-)
-
-yoda_combine_libraries(
-  NAME DawnSIR
-  OBJECTS DawnSIRObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSupportStatic DawnASTStatic protobuf::libprotobuf
-  VERSION ${DAWN_VERSION}
-  EXPORT_GROUP DawnTargets
-)
-
-# only include proto since protobuf uses relative path "statements.proto" -> export to dependent
-target_include_directories(DawnSIRObjects PUBLIC ${sir_proto_include_dirs}/../)
-
-target_include_directories(DawnSIRStatic PUBLIC $<BUILD_INTERFACE:${sir_proto_include_dirs}/../> $<INSTALL_INTERFACE:include/>)
-target_include_directories(DawnSIRShared PUBLIC $<BUILD_INTERFACE:${sir_proto_include_dirs}/../> $<INSTALL_INTERFACE:include/>)
-
-
-add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
-
-if(DAWN_PYTHON) 
+if(ENABLE_PYTHON)
   # Generate python proto files
+  include(DawnProtobufGenerate)
   dawn_protobuf_generate(
     OUT_FILES sir_proto_python_files
-    PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
+    PROTOS ${protos}
     WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
     PACKG SIR
     LANGUAGE python
   )
 
-  add_custom_target(DawnSIRPythonProto ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/python/dawn/
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_SOURCE_DIR}/src/dawn4py/serialization/SIR
+  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/SIR)
+
+  string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
+    sir_proto_python_build_files "${sir_proto_python_files}")
+
+  add_custom_command(OUTPUT ${sir_proto_python_build_files}
+    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
     DEPENDS ${sir_proto_python_files}
   )
-  install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/SIR)
-endif(DAWN_PYTHON)
+endif()
 
-if(DAWN_JAVA)
-  # Generate python proto files
-  dawn_protobuf_generate(
-    OUT_FILES sir_proto_java_files
-    OUT_DIRS sir_proto_java_dirs
-    PROTOS SIR/SIR.proto SIR/statements.proto SIR/enums.proto
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG SIR
-    LANGUAGE java
-  )
+add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files} ${sir_proto_python_build_files})
+target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
+set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
-  add_custom_target(DawnSIRJavaProto ALL
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
-    DEPENDS ${sir_proto_java_files}
-  )
+# Generated files need to be compiled with the protobuf headers
+target_include_directories(DawnSIRProto
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
 
-  install(DIRECTORY ${sir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
-endif(DAWN_JAVA)
+target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
+
+# Builds one library for both SIR and AST
+add_library(DawnSIR
+  AST.h
+  ASTExpr.h
+  ASTFwd.h
+  ASTStmt.h
+  ASTStmt.cpp
+  ASTStringifier.h
+  ASTUtil.h
+  ASTUtil.cpp
+  ASTVisitor.h
+  SIR.cpp
+  SIR.h
+)
+
+target_add_dawn_standard_props(DawnSIR)
+target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
