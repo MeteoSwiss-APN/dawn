@@ -36,6 +36,11 @@ struct interval {
  */
 static interval k_start;
 
+static interval i_start;
+static interval i_end;
+static interval j_start;
+static interval j_end;
+
 /**
  * Highest k-level
  * @ingroup gtclang_dsl
