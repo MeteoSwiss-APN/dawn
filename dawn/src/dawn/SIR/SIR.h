@@ -17,7 +17,6 @@
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
