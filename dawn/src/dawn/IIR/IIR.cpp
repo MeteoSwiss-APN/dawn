@@ -29,8 +29,6 @@ namespace dawn {
 namespace iir {
 namespace {
 
-static ast::GridType gridType_;
-
 void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields,
                  std::unordered_map<int, Stencil::FieldInfo>& destinationFields) {
 
@@ -99,8 +97,10 @@ json::json IIR::jsonDump() const {
 
 IIR::IIR(const ast::GridType gridType, std::shared_ptr<sir::GlobalVariableMap> sirGlobals,
          const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
-    : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {
-  gridType_ = gridType;
+    : gridType_(gridType), globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {
+  if(!ast::GlobalGridType::instance().valueSet()) {
+    ast::GlobalGridType::instance().setGridType(gridType);
+  }
 }
 
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
@@ -111,12 +111,13 @@ void IIR::clone(std::unique_ptr<IIR>& dest) const {
 }
 
 std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = std::make_unique<IIR>(gridType_, globalVariableMap_, stencilFunctions_);
+  auto cloneIIR = std::make_unique<IIR>(ast::GlobalGridType::instance().getGridType(),
+                                        globalVariableMap_, stencilFunctions_);
   clone(cloneIIR);
   return cloneIIR;
 }
 
-ast::GridType IIR::getGridType() { return gridType_; }
+ast::GridType IIR::getGridType() const { return gridType_; }
 
 } // namespace iir
 } // namespace dawn

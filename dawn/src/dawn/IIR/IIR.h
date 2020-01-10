@@ -28,6 +28,8 @@ namespace iir {
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
 
+  const ast::GridType gridType_;
+
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
 
@@ -48,8 +50,6 @@ public:
   static constexpr const char* name = "IIR";
 
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
-
-  static ast::GridType getGridType();
 
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
@@ -108,6 +108,8 @@ public:
   }
 
   const Stencil& getStencil(const int stencilID) const;
+
+  ast::GridType getGridType() const;
 };
 } // namespace iir
 } // namespace dawn

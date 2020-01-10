@@ -15,6 +15,7 @@
 #ifndef DAWN_AST_OFFSET_H
 #define DAWN_AST_OFFSET_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/Support/Unreachable.h"
 

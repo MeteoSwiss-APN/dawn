@@ -40,7 +40,7 @@ using namespace dawn;
 
 std::shared_ptr<iir::StencilInstantiation>
 createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
-  auto target = std::make_shared<iir::StencilInstantiation>(optimizer.getSIR()->GridType(),
+  auto target = std::make_shared<iir::StencilInstantiation>(optimizer.getSIR()->getGridType(),
                                                             optimizer.getSIR()->GlobalVariableMap,
                                                             optimizer.getSIR()->StencilFunctions);
 
@@ -138,7 +138,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
 
 std::shared_ptr<iir::StencilInstantiation>
 createLapStencilIIRInMemory(OptimizerContext& optimizer) {
-  auto target = std::make_shared<iir::StencilInstantiation>(optimizer.getSIR()->GridType(),
+  auto target = std::make_shared<iir::StencilInstantiation>(optimizer.getSIR()->getGridType(),
                                                             optimizer.getSIR()->GlobalVariableMap,
                                                             optimizer.getSIR()->StencilFunctions);
 

@@ -17,6 +17,7 @@
 
 #include "LoopOrder.h"
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 
 #include <array>

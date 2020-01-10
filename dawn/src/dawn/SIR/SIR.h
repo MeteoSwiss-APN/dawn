@@ -182,10 +182,8 @@ public:
   bool I() const { return maskI_; }
   bool J() const { return maskJ_; }
   bool K() const { return maskK_; }
-  explicit CartesianFieldDimension(std::array<bool, 3> mask)
-      : maskI_(mask[0]), maskJ_(mask[1]), maskK_(mask[2]) {}
-  explicit CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
-      : maskI_(dimi), maskJ_(dimj), maskK_(dimk) {}
+  explicit CartesianFieldDimension(std::array<bool, 3> mask);
+  explicit CartesianFieldDimension(bool dimi, bool dimj, bool dimk);
 };
 
 class FieldDimension {
@@ -488,7 +486,10 @@ using GlobalVariableMap = std::unordered_map<std::string, Global>;
 /// @brief Definition of the Stencil Intermediate Representation (SIR)
 /// @ingroup sir
 struct SIR : public dawn::NonCopyable {
+private:
+  ast::GridType gridType_;
 
+public:
   /// @brief Default Ctor that initializes all the shared pointers
   SIR(const ast::GridType gridType);
 
@@ -506,6 +507,8 @@ struct SIR : public dawn::NonCopyable {
   /// The `Filename` as well as the SourceLocations and Attributes are not taken into account.
   CompareResult comparison(const SIR& rhs) const;
 
+  ast::GridType getGridType() const;
+
   /// @brief Dump SIR to the given stream
   friend std::ostream& operator<<(std::ostream& os, const SIR& Sir);
 
@@ -513,8 +516,6 @@ struct SIR : public dawn::NonCopyable {
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
   std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
-
-  static ast::GridType GridType();
 };
 
 } // namespace dawn

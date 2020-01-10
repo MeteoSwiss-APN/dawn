@@ -163,20 +163,28 @@ HorizontalExtent::HorizontalExtent(ast::HorizontalOffset const& hOffset) {
                           []() { return HorizontalExtent(); });
 }
 HorizontalExtent::HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+  if(ast::GlobalGridType::instance().valueSet()) {
+    DAWN_ASSERT(ast::GlobalGridType::instance().getGridType() == ast::GridType::Cartesian);
+  }
 }
 HorizontalExtent::HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
     : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+  if(ast::GlobalGridType::instance().valueSet()) {
+    DAWN_ASSERT(ast::GlobalGridType::instance().getGridType() == ast::GridType::Cartesian);
+  }
 }
 
 HorizontalExtent::HorizontalExtent(ast::unstructured_)
     : impl_(std::make_unique<UnstructuredExtent>()) {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Triangular);
+  if(ast::GlobalGridType::instance().valueSet()) {
+    DAWN_ASSERT(ast::GlobalGridType::instance().getGridType() == ast::GridType::Triangular);
+  }
 }
 HorizontalExtent::HorizontalExtent(ast::unstructured_, bool hasExtent)
     : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Triangular);
+  if(ast::GlobalGridType::instance().valueSet()) {
+    DAWN_ASSERT(ast::GlobalGridType::instance().getGridType() == ast::GridType::Triangular);
+  }
 }
 
 HorizontalExtent::HorizontalExtent(HorizontalExtent const& other)
