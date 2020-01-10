@@ -18,7 +18,6 @@
 #include "Offsets.h"
 
 #include "dawn/AST/GridType.h"
-#include "dawn/IIR/IIR.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 
@@ -40,14 +39,14 @@ bool HorizontalOffsetImpl::isZero() const { return isZeroImpl(); }
 
 // CartesianOffset
 CartesianOffset::CartesianOffset() : horizontalOffset_({0, 0}) {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+  // DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
 }
 
 CartesianOffset::CartesianOffset(int iOffset, int jOffset) : horizontalOffset_{iOffset, jOffset} {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+  // DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
 }
 CartesianOffset::CartesianOffset(std::array<int, 2> const& offsets) : horizontalOffset_(offsets) {
-  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+  // DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
 }
 
 int CartesianOffset::offsetI() const { return horizontalOffset_[0]; }
