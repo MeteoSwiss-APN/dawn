@@ -36,6 +36,21 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
+namespace {
+std::string makeIntervalBoundExplicit(std::string dim, const iir::Interval& interval,
+                                      iir::Interval::Bound bound, std::string dom) {
+  if(interval.levelIsEnd(bound)) {
+    return dom + "." + dim + "size() - " + dom + "." + dim + "plus()  + " +
+           std::to_string(interval.offset(bound));
+  }
+  auto notEnd = interval.level(bound);
+  if(notEnd == 0) {
+    return dom + "." + dim + "minus() + " + std::to_string(interval.offset(bound));
+  }
+  return dom + "." + dim + "minus() + " + std::to_string(notEnd + interval.offset(bound));
+}
+} // namespace
+
 CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                          int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
     : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
@@ -49,7 +64,7 @@ void CudaCodeGen::generateAllCudaKernels(
     DAWN_ASSERT(cachePropertyMap_.count(ms->getID()));
 
     MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()),
-                        codeGenOptions);
+                        codeGenOptions, hasGlobalIndices(stencilInstantiation));
     msCodeGen.generateCudaKernelCode();
   }
 }
@@ -192,19 +207,20 @@ void CudaCodeGen::generateStencilClasses(
       paramNameToType.emplace(fieldPair.second.Name, c_dgt().str() + "storage_t");
     }
 
+    bool iterationSpaceSet = hasGlobalIndices(stencil);
     generateStencilClassMembers(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
-                                stencilProperties);
+                                stencilProperties, iterationSpaceSet);
 
     stencilClass.changeAccessibility("public");
 
     generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
-                            stencilProperties);
+                            stencilProperties, iterationSpaceSet);
 
     //
     // Run-Method
     //
     generateStencilRunMethod(stencilClass, stencil, stencilProperties, stencilInstantiation,
-                             paramNameToType, globalsMap);
+                             paramNameToType, globalsMap, iterationSpaceSet);
   }
 }
 
@@ -212,9 +228,13 @@ void CudaCodeGen::generateStencilClassMembers(
     Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-    std::shared_ptr<StencilProperties> stencilProperties) const {
+    std::shared_ptr<StencilProperties> stencilProperties, bool iterationSpaceSet) const {
 
   stencilClass.addComment("Members");
+  if(iterationSpaceSet) {
+    generateGlobalIndices(stencil, stencilClass);
+  }
+
   stencilClass.addComment("Temporary storage typedefs");
   addTempStorageTypedef(stencilClass, stencil);
 
@@ -229,11 +249,12 @@ void CudaCodeGen::generateStencilClassMembers(
     addTmpStorageDeclaration(stencilClass, tempFields);
   }
 }
+
 void CudaCodeGen::generateStencilClassCtr(
     Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-    std::shared_ptr<StencilProperties> stencilProperties) const {
+    std::shared_ptr<StencilProperties> stencilProperties, bool iterationSpaceSet) const {
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
@@ -241,12 +262,40 @@ void CudaCodeGen::generateStencilClassCtr(
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
+  stencilClassCtr.addArg("int rank");
+  stencilClassCtr.addArg("int xcols");
+  stencilClassCtr.addArg("int ycols");
 
   stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
   stencilClassCtr.addInit("m_dom(dom_)");
 
   if(!globalsMap.empty()) {
     stencilClassCtr.addInit("m_globals(globals_)");
+  }
+
+  for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+    if(stage->getIterationSpace()[0].has_value()) {
+      stencilClassCtr.addInit("stage" + std::to_string(stage->getStageID()) + "GlobalIIndices({" +
+                              makeIntervalBoundExplicit("i", stage->getIterationSpace()[0].value(),
+                                                        iir::Interval::Bound::lower, "dom_") +
+                              " , " +
+                              makeIntervalBoundExplicit("i", stage->getIterationSpace()[0].value(),
+                                                        iir::Interval::Bound::upper, "dom_") +
+                              "})");
+    }
+    if(stage->getIterationSpace()[1].has_value()) {
+      stencilClassCtr.addInit("stage" + std::to_string(stage->getStageID()) + "GlobalJIndices({" +
+                              makeIntervalBoundExplicit("j", stage->getIterationSpace()[1].value(),
+                                                        iir::Interval::Bound::lower, "dom_") +
+                              " , " +
+                              makeIntervalBoundExplicit("j", stage->getIterationSpace()[1].value(),
+                                                        iir::Interval::Bound::upper, "dom_") +
+                              "})");
+    }
+  }
+
+  if(iterationSpaceSet) {
+    stencilClassCtr.addInit("globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)})");
   }
 
   addTmpStorageInit(stencilClassCtr, stencil, tempFields);
@@ -264,6 +313,9 @@ void CudaCodeGen::generateStencilWrapperCtr(
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
+  StencilWrapperConstructor.addArg("int rank = 1");
+  StencilWrapperConstructor.addArg("int xcols = 1");
+  StencilWrapperConstructor.addArg("int ycols = 1");
 
   const auto& stencils = stencilInstantiation->getStencils();
 
@@ -284,6 +336,9 @@ void CudaCodeGen::generateStencilWrapperCtr(
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
+    initCtr += ", rank";
+    initCtr += ", xcols";
+    initCtr += ", ycols";
     initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
@@ -383,7 +438,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const std::shared_ptr<StencilProperties>& stencilProperties,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
-    const sir::GlobalVariableMap& globalsMap) const {
+    const sir::GlobalVariableMap& globalsMap, bool iterationSpaceSet) const {
   MemberFunction stencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
   const auto& metadata = stencilInstantiation->getMetaData();
 
@@ -543,7 +598,13 @@ void CudaCodeGen::generateStencilRunMethod(
 
     DAWN_ASSERT(!strides.empty());
 
-    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
+    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args;
+
+    if(iterationSpaceSet) {
+      // TODO: Add global index parameters here...
+    }
+
+    kernelCall += ")";
 
     stencilRunMethod.addStatement(kernelCall);
 

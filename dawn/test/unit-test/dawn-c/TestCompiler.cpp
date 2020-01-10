@@ -16,6 +16,7 @@
 #include "dawn-c/TranslationUnit.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
@@ -66,6 +67,30 @@ void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
     ss << s.second;
   os << ss.str();
 }
+
+template <>
+void dump<dawn::codegen::cuda::CudaCodeGen>(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
+  dawn::DiagnosticsEngine diagnostics;
+  using CG = dawn::codegen::cuda::CudaCodeGen;
+  CG generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
+  auto tu = generator.generateCode();
+
+  std::ostringstream ss;
+  for(auto const& macroDefine : tu->getPPDefines())
+    ss << macroDefine << "\n";
+
+  ss << tu->getGlobals();
+  for(auto const& s : tu->getStencils())
+    ss << s.second;
+  os << ss.str();
+}
+
+std::string read(const std::string& file) {
+    std::ifstream is(file);
+    std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    return str;
+}
+
 TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
 
@@ -83,7 +108,7 @@ TEST(CompilerTest, CompileCopyStencil) {
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
-TEST(CompilerTest, CompileGlobalIndexStencil) {
+TEST(CompilerTest, CompileGlobalIndexStencilNaive) {
   using namespace dawn::iir;
 
   CartesianIIRBuilder b;
@@ -98,8 +123,35 @@ TEST(CompilerTest, CompileGlobalIndexStencil) {
                        b.stage(1, {0, 2},
                                b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                          b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
-  std::ofstream of("prototype/generated/global_indexing.cpp");
-  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
+  std::ofstream ofs("prototype/generated/global_indexing_naive.cpp");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_instantiation);
+
+  std::string gen = read("prototype/generated/global_indexing_naive.cpp");
+  std::string ref = read("prototype/reference/global_indexing_naive.cpp");
+  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+}
+
+TEST(CompilerTest, CompileGlobalIndexStencilCuda) {
+  using namespace dawn::iir;
+
+  CartesianIIRBuilder b;
+  auto in_f = b.field("in_field", FieldType::ijk);
+  auto out_f = b.field("out_field", FieldType::ijk);
+
+  auto stencil_instantiation = b.build(
+      "generated", b.stencil(b.multistage(
+                       LoopOrderKind::Parallel,
+                       b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                       b.stage(1, {0, 2},
+                               b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+  std::ofstream ofs("prototype/generated/global_indexing_cuda.cpp");
+  dump<dawn::codegen::cuda::CudaCodeGen>(ofs, stencil_instantiation);
+
+  std::string gen = read("prototype/generated/global_indexing_cuda.cpp");
+  std::string ref = read("prototype/reference/global_indexing_cuda.cpp");
+  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
