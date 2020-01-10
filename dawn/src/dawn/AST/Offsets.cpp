@@ -17,6 +17,7 @@
 
 #include "Offsets.h"
 #include "dawn/AST/GridType.h"
+#include "dawn/SIR/IIR.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
