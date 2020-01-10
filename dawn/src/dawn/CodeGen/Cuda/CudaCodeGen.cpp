@@ -601,13 +601,19 @@ void CudaCodeGen::generateStencilRunMethod(
     kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args;
 
     if(iterationSpaceSet) {
-      // TODO: Add global index parameters here...
+      for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+        if(stage->getIterationSpace()[0].has_value()) {
+          kernelCall += ", stage" + std::to_string(stage->getStageID()) + "GlobalIIndices.data()";
+        }
+        if(stage->getIterationSpace()[1].has_value()) {
+          kernelCall += ", stage" + std::to_string(stage->getStageID()) + "GlobalJIndices.data()";
+        }
+      }
+      kernelCall += ", globalOffsets.data()";
     }
 
     kernelCall += ")";
-
     stencilRunMethod.addStatement(kernelCall);
-
     stencilRunMethod.addStatement("}");
   }
 

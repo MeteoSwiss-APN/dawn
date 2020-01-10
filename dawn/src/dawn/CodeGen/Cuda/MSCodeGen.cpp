@@ -1050,9 +1050,9 @@ void MSCodeGen::generateCudaKernelCode() {
                             " && jblock >= " + std::to_string(hExtent.jMinus()) +
                             " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus());
 
-        if(iterationSpaceSet_) {
-          // TODO: This is putting the guard around every statement, need to check NaiveCodeGen to
-          // figure out why...
+        if(std::any_of(stage.getIterationSpace().cbegin(),
+                       stage.getIterationSpace().cend(),
+                       [](const auto& p) -> bool { return p.has_value(); })) {
           for(const auto& stencil : stencilInstantiation_->getStencils()) {
             for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
               std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
