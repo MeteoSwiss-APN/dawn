@@ -32,6 +32,20 @@ namespace gtclang {
 
 namespace {
 
+template <char delimiter>
+class WordDelimitedBy : public std::string {};
+
+template <char delimiter>
+std::istream& operator>>(std::istream& is, WordDelimitedBy<delimiter>& output) {
+  std::getline(is, output, delimiter);
+  return is;
+}
+
+template <typename Iter, typename Cont>
+bool is_last(Iter iter, const Cont& cont) {
+  return (iter != cont.end()) && (next(iter) == cont.end());
+}
+
 /// @brief Lex the source file and generate replacements for the enhanced gridtools clang DSL
 class GTClangLexer {
   clang::CompilerInstance& compiler_;
@@ -295,48 +309,32 @@ private:
           continue;
         if(peekAndAccumulateUntil(tok::r_paren, peekedTokens, intervalBounds)) {
           // Split the comma separated string
-          llvm::SmallVector<StringRef, 6> curBounds;
-          if(intervalBounds.size())
-            StringRef(intervalBounds).split(curBounds, ',');
-          // sort them in pairs to have i - j - k ordering
-          std::vector<std::pair<std::string, std::string>> pairs;
-          for(int i = 0, size = curBounds.size(); i < size; i += 2) {
-            pairs.emplace_back(curBounds[i], curBounds[i + 1]);
-          }
-          std::sort(pairs.begin(), pairs.end());
-          std::vector<std::string> indexRange;
-          for(auto elem : pairs) {
-            indexRange.push_back(elem.first);
-            indexRange.push_back(elem.second);
-          }
-          // fill with standard intervals if nothing is specified
+          std::istringstream iss(intervalBounds);
+          std::vector<std::string> curBounds{std::istream_iterator<WordDelimitedBy<','>>(iss),
+                                             std::istream_iterator<WordDelimitedBy<','>>()};
           std::string replacement = "for(auto __k_indexrange__ : {";
-          int pos = 0;
-          for(int resolved = 0; resolved < 3; resolved++) {
-            if(pos < indexRange.size() && *indexRange[pos].begin() == (char)(resolved + 105)) {
-              replacement += indexRange[pos];
-              replacement += ",";
-              replacement += indexRange[pos + 1];
-              if(resolved != 2) {
-                replacement += ",";
-              }
-              pos += 2;
-            } else {
-              replacement += (char)(resolved + 105);
-              replacement += "_start, ";
-              replacement += (char)(resolved + 105);
-              replacement += "_end";
-              if(resolved != 2) {
-                replacement += ",";
-              }
+          auto boundIter = curBounds.cbegin();
+          const std::array<char, 3> coordChar{'i', 'j', 'k'};
+          for(char e : coordChar) {
+            const std::string& boundStart = *boundIter;
+            ++boundIter;
+            const std::string& boundEnd = *boundIter;
+            const std::string errMsg = std::string{"failed parsing iteration_space argument: "} +
+                                       "(" + boundStart + "," + boundEnd + ")";
+            if(e != boundStart[0]) {
+              if(!std::any_of(coordChar.begin(), coordChar.end(),
+                              [boundStart](const char& e) { return boundStart[0] == e; }))
+                reportError(token_.getLocation(), errMsg + "blah");
+            } else if(boundStart[0] != boundEnd[0]) {
+              reportError(token_.getLocation(), errMsg);
             }
+            replacement += boundStart + "," + boundEnd;
+            if(!is_last(boundIter, curBounds))
+              replacement += ", ";
+            else
+              break;
           }
           replacement += "})";
-          if(pos != indexRange.size()) {
-            reportError(token_.getLocation(),
-                        "failed parsing iterationspace arguments " + intervalBounds);
-            return;
-          }
           registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
                               replacement);
         }
