@@ -107,7 +107,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   sir::proto::SIR sirProto;
 
   // SIR.GridType
-  switch(sir->GridType) {
+  switch(sir->GridType()) {
   case ast::GridType::Cartesian:
     sirProto.set_gridtype(proto::enums::GridType::Cartesian);
     break;

@@ -112,7 +112,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
 
   // Create a compiler instance to handle the actual work.
   DAWN_LOG(INFO) << "Creating GTClang compiler instance ...";
-  CompilerInstance* GTClang = new CompilerInstance;
+  CompilerInstance* GTClang = new CompilerInstance();
   GTClang->setInvocation(CI);
 
   // Create the compilers actual diagnostics engine

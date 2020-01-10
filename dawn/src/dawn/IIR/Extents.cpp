@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Extents.h"
+#include "dawn/AST/GridType.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/StringUtil.h"
@@ -160,14 +162,22 @@ HorizontalExtent::HorizontalExtent(ast::HorizontalOffset const& hOffset) {
                           },
                           []() { return HorizontalExtent(); });
 }
-HorizontalExtent::HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
+HorizontalExtent::HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {
+  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+}
 HorizontalExtent::HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
-    : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {}
+    : impl_(std::make_unique<CartesianExtent>(iMinus, iPlus, jMinus, jPlus)) {
+  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Cartesian);
+}
 
 HorizontalExtent::HorizontalExtent(ast::unstructured_)
-    : impl_(std::make_unique<UnstructuredExtent>()) {}
+    : impl_(std::make_unique<UnstructuredExtent>()) {
+  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Triangular);
+}
 HorizontalExtent::HorizontalExtent(ast::unstructured_, bool hasExtent)
-    : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {}
+    : impl_(std::make_unique<UnstructuredExtent>(hasExtent)) {
+  DAWN_ASSERT(iir::IIR::getGridType() == ast::GridType::Triangular);
+}
 
 HorizontalExtent::HorizontalExtent(HorizontalExtent const& other)
     : impl_(other.impl_ ? other.impl_->clone() : nullptr) {}

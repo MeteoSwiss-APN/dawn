@@ -28,8 +28,6 @@ namespace iir {
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
 
-  const ast::GridType gridType_;
-
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
 
@@ -51,7 +49,7 @@ public:
 
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
 
-  ast::GridType getGridType() const { return gridType_; }
+  static ast::GridType getGridType();
 
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 

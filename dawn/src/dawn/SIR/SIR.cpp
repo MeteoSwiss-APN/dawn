@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -571,7 +572,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 
   os << "SIR : " << Sir.Filename << "\n{\n";
 
-  os << "Grid type : " << Sir.GridType << "\n";
+  os << "Grid type : " << Sir.GridType() << "\n";
 
   for(const auto& stencilFunction : Sir.StencilFunctions) {
     os << "\n"
@@ -613,10 +614,16 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   return os;
 }
 
+static ast::GridType gridType_;
+
 SIR::SIR(const ast::GridType gridType)
-    : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
+    : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()) {
+  gridType_ = gridType;
+}
 
 void SIR::dump() { std::cout << *this << std::endl; }
+
+ast::GridType SIR::GridType() { return gridType_; }
 
 const char* sir::Value::typeToString(sir::Value::Kind type) {
   switch(type) {
@@ -667,6 +674,8 @@ std::string sir::Value::toString() const {
   }
 }
 
+bool sir::Value::operator==(const sir::Value& rhs) const { return bool(comparison(rhs)); }
+
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
   auto retval =
       std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
@@ -687,7 +696,5 @@ bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
 bool sir::StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
   return bool(comparison(rhs));
 }
-
-bool sir::Value::operator==(const sir::Value& rhs) const { return bool(comparison(rhs)); }
 
 } // namespace dawn

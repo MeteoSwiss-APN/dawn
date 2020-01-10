@@ -695,7 +695,7 @@ void OptimizerContext::fillIIR() {
     DAWN_ASSERT(stencil);
     if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType,
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType(),
                                                                      getSIR()->GlobalVariableMap,
                                                                      iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);

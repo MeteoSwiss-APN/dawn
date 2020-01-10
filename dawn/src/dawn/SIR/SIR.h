@@ -17,6 +17,7 @@
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
@@ -152,6 +153,10 @@ struct StencilFunctionArg {
   bool operator==(const StencilFunctionArg& rhs) const;
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
+
+//===------------------------------------------------------------------------------------------===//
+//     FieldDimensionImpl (Cartesian and Triangular)
+//===------------------------------------------------------------------------------------------===//
 
 class FieldDimensionImpl {
 public:
@@ -509,7 +514,8 @@ struct SIR : public dawn::NonCopyable {
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
   std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
-  const ast::GridType GridType;
+
+  static ast::GridType GridType();
 };
 
 } // namespace dawn

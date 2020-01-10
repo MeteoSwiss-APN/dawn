@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/IIR.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Stencil.h"
@@ -27,6 +28,9 @@
 namespace dawn {
 namespace iir {
 namespace {
+
+static ast::GridType gridType_;
+
 void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields,
                  std::unordered_map<int, Stencil::FieldInfo>& destinationFields) {
 
@@ -95,7 +99,9 @@ json::json IIR::jsonDump() const {
 
 IIR::IIR(const ast::GridType gridType, std::shared_ptr<sir::GlobalVariableMap> sirGlobals,
          const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
-    : gridType_(gridType), globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
+    : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {
+  gridType_ = gridType;
+}
 
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
@@ -109,6 +115,8 @@ std::unique_ptr<IIR> IIR::clone() const {
   clone(cloneIIR);
   return cloneIIR;
 }
+
+ast::GridType IIR::getGridType() { return gridType_; }
 
 } // namespace iir
 } // namespace dawn
