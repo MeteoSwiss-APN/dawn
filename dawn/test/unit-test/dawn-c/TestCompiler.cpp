@@ -154,6 +154,74 @@ TEST(CompilerTest, CompileGlobalIndexStencilCuda) {
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
+TEST(CompilerTest, CompileLaplacian) {
+    using namespace dawn::iir;
+    using SInterval = dawn::sir::Interval;
+
+//    // Define stencil code
+//    std::ostringstream os;
+//    os << "globals {\n"
+//          "  double dx;\n"
+//          "};\n"
+//          "stencil laplacian {\n"
+//          "storage out;\n"
+//          "storage in;\n"
+//          "Do() {\n"
+//          "vertical_region(k_start, k_end) {\n"
+//          "    out[i,j] = (-4 * in[i,j] + in[i+1,j] + in[i-1,j] +\n"
+//          "        in[i,j-1] + in[i,j+1]) / (dx * dx);\n"
+//          "}\n}\n};\n";
+//    std::string code = os.str();
+//    ASSERT_TRUE(!code.empty());
+//
+//    // Add header info and write to temporary file
+//    std::string path = "/tmp/stencil.cpp";
+//    std::ofstream ofs(path);
+//    ASSERT_TRUE(ofs.is_open());
+//    ofs << "#include \"gtclang_dsl_defs/gtclang_dsl.hpp\"\n";
+//    ofs << "using namespace gtclang::dsl;\n\n";
+//    ofs << code;
+//    ofs.close();
+
+  CartesianIIRBuilder b;
+  auto in = b.field("in", FieldType::ijk);
+  auto out = b.field("out", FieldType::ijk);
+  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+
+  auto stencil_inst = b.build("generated",
+    b.stencil(
+      b.multistage(LoopOrderKind::Parallel,
+        b.stage(
+          b.vregion(SInterval::Start, SInterval::End, b.declareVar(dx),
+            b.block(
+              b.stmt(
+                b.assignExpr(b.at(out),
+                  b.binaryExpr(
+                    b.binaryExpr(b.lit(-4),
+                      b.binaryExpr(b.at(in),
+                        b.binaryExpr(b.at(in, {1, 0, 0}),
+                          b.binaryExpr(b.at(in, {-1, 0, 0}),
+                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
+                    ) ) ), Op::multiply),
+                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
+            ) ) ) )
+//        , b.stage(1, {0, 2},
+//          b.vregion(SInterval::Start, SInterval::End,
+//            b.block(
+//              b.stmt(
+//                b.assignExpr(b.at(out), b.lit(10))
+//  ) ) ) )
+    ) ) ) );
+
+
+  std::ofstream ofs("prototype/generated/laplacian_stencil.cpp");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_inst);
+//
+//    std::string gen = read("prototype/generated/global_indexing_naive.cpp");
+//    std::string ref = read("prototype/reference/global_indexing_naive.cpp");
+//    ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+}
+
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;

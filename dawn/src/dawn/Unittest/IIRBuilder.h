@@ -136,7 +136,8 @@ public:
                                                     ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                        std::shared_ptr<iir::Expr>&& rhs, Op operation);
+                                        std::shared_ptr<iir::Expr>&& rhs,
+                                        Op operation = Op::plus);
 
   std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs,
