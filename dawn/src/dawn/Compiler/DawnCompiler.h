@@ -37,14 +37,14 @@ public:
   /// @brief Initialize the compiler by setting up diagnostics
   DawnCompiler(Options* options = nullptr);
 
-  /// @brief Apply parallelizer, code optimization, and generate.
+  /// @brief Apply parallelizer, code optimization, and generate
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& stencilIR);
 
-  /// @brief Apply parallelizer to stencilIR creating set of valid IIRs, one for each stencil.
+  /// @brief Apply parallelizer to stencilIR creating set of valid IIRs, one for each stencil
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   parallelize(std::shared_ptr<SIR> const& stencilIR);
 
-  /// @brief Apply optimizer to a whole set of IIRs.
+  /// @brief Apply optimizer to a whole set of IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
