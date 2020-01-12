@@ -15,7 +15,6 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -50,7 +49,6 @@
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
-#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
