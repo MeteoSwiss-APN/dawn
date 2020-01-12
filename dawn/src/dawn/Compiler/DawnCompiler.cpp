@@ -134,7 +134,61 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<Dia
   options_ = options ? std::make_unique<Options>(*options) : std::make_unique<Options>();
 }
 
-std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+DawnCompiler::parallelize(std::shared_ptr<SIR> const& SIR) {
+  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
+  MultistageSplitStrategy mssSplitStrategy;
+  if(options_->MaxCutMSS) {
+    mssSplitStrategy = MultistageSplitStrategy::MaxCut;
+  } else {
+    mssSplitStrategy = MultistageSplitStrategy::Optimized;
+  }
+
+  // Initialize optimizer
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  if(options_) {
+    optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
+  }
+
+  auto optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
+  optimizer->fillIIR();
+
+  // required passes to have proper, parallelized IR
+  optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+  optimizer->checkAndPushBack<PassFieldVersioning>();
+  optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
+  optimizer->checkAndPushBack<PassStageSplitter>();
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+  optimizer->checkAndPushBack<PassComputeStageExtents>();
+  optimizer->checkAndPushBack<PassSetSyncStage>();
+
+  DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
+  for(const auto& a : optimizer->getPassManager().getPasses()) {
+    DAWN_LOG(INFO) << a->getName();
+  }
+
+  int i = 0;
+  for(auto& stencil : optimizer->getStencilInstantiationMap()) {
+    // Run optimization passes
+    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+
+    DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
+                   << "` ...";
+    if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
+      throw std::runtime_error("An error occurred.");
+
+    DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
+                   << "`";
+  }
+
+  return optimizer->getStencilInstantiationMap();
+}
+
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+                           stencilInstantiationMap,
+                       std::unique_ptr<OptimizerContext>& optimizer) {
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
@@ -146,19 +200,130 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   if(reorderStrategy == ReorderStrategyKind::Unknown) {
     diagnostics_->report(
         buildDiag("-reorder", options_->ReorderStrategy, "", {"none", "greedy", "scut"}));
-    return nullptr;
+    throw std::runtime_error("An error occurred.");
   }
 
-  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-  MultistageSplitStrategy mssSplitStrategy;
-  if(options_->MaxCutMSS) {
-    mssSplitStrategy = MultistageSplitStrategy::MaxCut;
-  } else {
-    mssSplitStrategy = MultistageSplitStrategy::Optimized;
+  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
+  if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
+    if(options_->IIRFormat == "json") {
+      serializationKind = IIRSerializer::Format::Json;
+    } else if(options_->IIRFormat == "byte") {
+      serializationKind = IIRSerializer::Format::Byte;
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
   }
 
-  // -max-fields
-  int maxFields = options_->MaxFieldsPerStencil;
+  // Initialize optimizer
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  if(options_) {
+    optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
+  }
+
+  optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions,
+                                                 stencilInstantiationMap);
+
+  // Optimization, step by step
+  //===-----------------------------------------------------------------------------------------
+  // broken but should run with no prerequesits
+  optimizer->checkAndPushBack<PassSSA>();
+  // rerun things we might have changed
+  // optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+  // todo: this does not work since it does not check if it was already run
+  //===-----------------------------------------------------------------------------------------
+  // Plain diagnostics, should not even be a pass but is independent
+  optimizer->checkAndPushBack<PassPrintStencilGraph>();
+  //===-----------------------------------------------------------------------------------------
+  // This is never used but if we want to reenable it, it is independent
+  optimizer->checkAndPushBack<PassSetStageName>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassSetStageGraph>();
+  optimizer->checkAndPushBack<PassSetDependencyGraph>();
+  optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
+  // moved stages around ...
+  optimizer->checkAndPushBack<PassSetSyncStage>();
+  // if we want this info around, we should probably run this also
+  // optimizer->checkAndPushBack<PassSetStageName>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassStageMerger>();
+  // since this can change the scope of temporaries ...
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+  // modify stages and their extents ...
+  optimizer->checkAndPushBack<PassComputeStageExtents>();
+  // and changes their dependencies
+  optimizer->checkAndPushBack<PassSetSyncStage>();
+  //===-----------------------------------------------------------------------------------------
+  // // should be irrelevant now
+  // optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+  // // but would require a lot
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassTemporaryMerger>();
+  // this should not affect the temporaries but since we're touching them it would probably be a
+  // safe idea
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassInlining>(
+      (getOptions().InlineSF || getOptions().PassTmpToFunction),
+      PassInlining::InlineStrategy::ComputationsOnTheFly);
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassIntervalPartitioner>();
+  // since this can change the scope of temporaries ...
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  optimizer->checkAndPushBack<PassFixVersionedInputFields>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassSetNonTempCaches>();
+  // this should not affect the temporaries but since we're touching them it would probably be a
+  // safe idea
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassSetCaches>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer->checkAndPushBack<PassSetBlockSize>();
+  //===-----------------------------------------------------------------------------------------
+  // Plain diagnostics, should not even be a pass but is independent
+  optimizer->checkAndPushBack<PassDataLocalityMetric>();
+  //===-----------------------------------------------------------------------------------------
+
+  DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
+  for(const auto& a : optimizer->getPassManager().getPasses()) {
+    DAWN_LOG(INFO) << a->getName();
+  }
+
+  int i = 0;
+  for(auto& stencil : optimizer->getStencilInstantiationMap()) {
+    // Run optimization passes
+    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+
+    DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
+                   << "` ...";
+    if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
+      throw std::runtime_error("An error occurred.");
+
+    DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
+                   << "`";
+
+    if(options_->SerializeIIR) {
+      const std::string originalFileName = remove_fileextension(
+          options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                       : options_->OutputFile,
+          ".cpp");
+      IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
+                               serializationKind);
+      i++;
+    }
+    if(options_->DumpStencilInstantiation) {
+      instantiation->dump();
+    }
+  }
+  return optimizer->getStencilInstantiationMap();
+}
+
+std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
+  // // -max-fields
+  // int maxFields = options_->MaxFieldsPerStencil;
 
   IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
   if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
@@ -174,160 +339,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   std::unique_ptr<OptimizerContext> optimizer;
 
   if(options_->DeserializeIIR == "") {
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilIM;
-    {
-      // Initialize optimizer
-      OptimizerContext::OptimizerContextOptions optimizerOptions;
-      if(options_) {
-        optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
-      }
-
-      optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
-      optimizer->fillIIR();
-
-      // required passes to have proper, parallelized IR
-      optimizer->checkAndPushBack<PassInlining>(true,
-                                                PassInlining::InlineStrategy::InlineProcedures);
-      optimizer->checkAndPushBack<PassFieldVersioning>();
-      optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-      optimizer->checkAndPushBack<PassStageSplitter>();
-      optimizer->checkAndPushBack<PassTemporaryType>();
-      optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-      optimizer->checkAndPushBack<PassComputeStageExtents>();
-      optimizer->checkAndPushBack<PassSetSyncStage>();
-
-      DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
-      for(const auto& a : optimizer->getPassManager().getPasses()) {
-        DAWN_LOG(INFO) << a->getName();
-      }
-
-      int i = 0;
-      for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-        // Run optimization passes
-        std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-
-        DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
-                       << instantiation->getName() << "` ...";
-        if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer,
-                                                                           instantiation))
-          return nullptr;
-
-        DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
-                       << instantiation->getName() << "`";
-      }
-
-      stencilIM = optimizer->getStencilInstantiationMap();
-    }
-
-    optimizer = nullptr;
-
+    auto SIM = parallelize(SIR);
     if(!options_->Debug) {
-      // Initialize optimizer
-      OptimizerContext::OptimizerContextOptions optimizerOptions;
-      if(options_) {
-        optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
-      }
-
-      optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, stencilIM);
-
-      // Optimization, step by step
-      //===-----------------------------------------------------------------------------------------
-      // broken but should run with no prerequesits
-      optimizer->checkAndPushBack<PassSSA>();
-      // rerun things we might have changed
-      // optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-      // todo: this does not work since it does not check if it was already run
-      //===-----------------------------------------------------------------------------------------
-      // Plain diagnostics, should not even be a pass but is independent
-      optimizer->checkAndPushBack<PassPrintStencilGraph>();
-      //===-----------------------------------------------------------------------------------------
-      // This is never used but if we want to reenable it, it is independent
-      optimizer->checkAndPushBack<PassSetStageName>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassSetStageGraph>();
-      optimizer->checkAndPushBack<PassSetDependencyGraph>();
-      optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
-      // moved stages around ...
-      optimizer->checkAndPushBack<PassSetSyncStage>();
-      // if we want this info around, we should probably run this also
-      // optimizer->checkAndPushBack<PassSetStageName>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassStageMerger>();
-      // since this can change the scope of temporaries ...
-      optimizer->checkAndPushBack<PassTemporaryType>();
-      optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-      // modify stages and their extents ...
-      optimizer->checkAndPushBack<PassComputeStageExtents>();
-      // and changes their dependencies
-      optimizer->checkAndPushBack<PassSetSyncStage>();
-      //===-----------------------------------------------------------------------------------------
-      // // should be irrelevant now
-      // optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
-      // // but would require a lot
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassTemporaryMerger>();
-      // this should not affect the temporaries but since we're touching them it would probably be a
-      // safe idea
-      optimizer->checkAndPushBack<PassTemporaryType>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassInlining>(
-          (getOptions().InlineSF || getOptions().PassTmpToFunction),
-          PassInlining::InlineStrategy::ComputationsOnTheFly);
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassIntervalPartitioner>();
-      // since this can change the scope of temporaries ...
-      optimizer->checkAndPushBack<PassTemporaryType>();
-      optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassSetNonTempCaches>();
-      // this should not affect the temporaries but since we're touching them it would probably be a
-      // safe idea
-      optimizer->checkAndPushBack<PassTemporaryType>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassSetCaches>();
-      //===-----------------------------------------------------------------------------------------
-      optimizer->checkAndPushBack<PassSetBlockSize>();
-      //===-----------------------------------------------------------------------------------------
-      // Plain diagnostics, should not even be a pass but is independent
-      optimizer->checkAndPushBack<PassDataLocalityMetric>();
-      //===-----------------------------------------------------------------------------------------
-
-      DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
-      for(const auto& a : optimizer->getPassManager().getPasses()) {
-        DAWN_LOG(INFO) << a->getName();
-      }
-
-      int i = 0;
-      for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-        // Run optimization passes
-        std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-
-        DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
-                       << instantiation->getName() << "` ...";
-        if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer,
-                                                                           instantiation))
-          return nullptr;
-
-        DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
-                       << instantiation->getName() << "`";
-
-        if(options_->SerializeIIR) {
-          const std::string originalFileName = remove_fileextension(
-              options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                           : options_->OutputFile,
-              ".cpp");
-          IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir",
-                                   instantiation, serializationKind);
-          i++;
-        }
-        if(options_->DumpStencilInstantiation) {
-          instantiation->dump();
-        }
-      }
+      auto optimizedSIM = optimize(SIM, optimizer);
     }
   } else {
+    // Initialize optimizer
     OptimizerContext::OptimizerContextOptions optimizerOptions;
     if(options_) {
       optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);

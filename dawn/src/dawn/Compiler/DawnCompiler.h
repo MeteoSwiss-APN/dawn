@@ -41,6 +41,14 @@ public:
   /// @returns compiled TranslationUnit on success, `nullptr` otherwise
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& SIR);
 
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+  parallelize(std::shared_ptr<SIR> const& SIR);
+
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+  optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+               stencilInstantiationMap,
+           std::unique_ptr<OptimizerContext>& optimizer);
+
   std::unique_ptr<OptimizerContext> runOptimizer(std::shared_ptr<SIR> const& SIR);
 
   /// @brief Get options
