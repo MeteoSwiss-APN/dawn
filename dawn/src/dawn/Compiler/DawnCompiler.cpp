@@ -135,7 +135,7 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<Dia
 }
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-DawnCompiler::parallelize(std::shared_ptr<SIR> const& SIR) {
+DawnCompiler::parallelize(std::shared_ptr<SIR> const& stencilIR) {
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
   if(options_->MaxCutMSS) {
@@ -150,7 +150,8 @@ DawnCompiler::parallelize(std::shared_ptr<SIR> const& SIR) {
     optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
   }
 
-  auto optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
+  auto optimizer =
+      std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, stencilIR);
 
   // required passes to have proper, parallelized IR
   optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
@@ -353,9 +354,10 @@ DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstant
   }
 }
 
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
+std::unique_ptr<codegen::TranslationUnit>
+DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
   diagnostics_->clear();
-  diagnostics_->setFilename(SIR->Filename);
+  diagnostics_->setFilename(stencilIR->Filename);
 
   IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
   if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
@@ -379,7 +381,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
   if(options_->DeserializeIIR == "") {
-    stencilInstantiationMap = parallelize(SIR);
+    stencilInstantiationMap = parallelize(stencilIR);
     if(!options_->Debug) {
       stencilInstantiationMap = optimize(stencilInstantiationMap);
     }
