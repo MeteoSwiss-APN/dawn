@@ -151,7 +151,6 @@ DawnCompiler::parallelize(std::shared_ptr<SIR> const& SIR) {
   }
 
   auto optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
-  optimizer->fillIIR();
 
   // required passes to have proper, parallelized IR
   optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
@@ -168,7 +167,6 @@ DawnCompiler::parallelize(std::shared_ptr<SIR> const& SIR) {
     DAWN_LOG(INFO) << a->getName();
   }
 
-  int i = 0;
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     // Run optimization passes
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
@@ -294,7 +292,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   int i = 0;
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     // Run optimization passes
-    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+    auto& instantiation = stencil.second;
 
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
@@ -385,6 +383,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
       stencilInstantiationMap = optimize(stencilInstantiationMap);
     }
   } else {
+    throw std::runtime_error("Trying to deserialize IIR.");
     // Initialize optimizer
     OptimizerContext::OptimizerContextOptions optimizerOptions;
     if(options_) {
