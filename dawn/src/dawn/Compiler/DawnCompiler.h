@@ -48,6 +48,10 @@ public:
   optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
 
+  // TODO Make this const
+  std::unique_ptr<codegen::TranslationUnit> generate(
+      std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& stencilInstantiationMap);
+
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   runOptimizer(std::shared_ptr<SIR> const& SIR);
 

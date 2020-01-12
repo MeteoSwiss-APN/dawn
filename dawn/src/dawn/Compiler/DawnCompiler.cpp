@@ -320,10 +320,43 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   return optimizer->getStencilInstantiationMap();
 }
 
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
-  // // -max-fields
-  // int maxFields = options_->MaxFieldsPerStencil;
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::generate(
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& stencilInstantiationMap) {
+
+  // Generate code
+  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
+    auto CG = std::make_unique<codegen::gt::GTCodeGen>(
+        stencilInstantiationMap, *diagnostics_, options_->UseParallelEP, options_->MaxHaloPoints);
+    return CG->generateCode();
+  } else if(options_->Backend == "c++-naive") {
+    auto CG = std::make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(
+        stencilInstantiationMap, *diagnostics_, options_->MaxHaloPoints);
+    return CG->generateCode();
+  } else if(options_->Backend == "c++-naive-ico") {
+    auto CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
+        stencilInstantiationMap, *diagnostics_, options_->MaxHaloPoints);
+    return CG->generateCode();
+  } else if(options_->Backend == "cuda") {
+    const Array3i domain_size{options_->domain_size_i, options_->domain_size_j,
+                              options_->domain_size_k};
+    auto CG = std::make_unique<codegen::cuda::CudaCodeGen>(stencilInstantiationMap, *diagnostics_,
+                                                           options_->MaxHaloPoints, options_->nsms,
+                                                           options_->maxBlocksPerSM, domain_size);
+    return CG->generateCode();
+  } else if(options_->Backend == "c++-opt") {
+    dawn_unreachable("GTClangOptCXX not supported yet");
+  } else {
+    diagnostics_->report(buildDiag("-backend", options_->Backend,
+                                   "backend options must be : " +
+                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
+    throw std::runtime_error("An error occurred.");
+  }
+}
+
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
+  diagnostics_->clear();
+  diagnostics_->setFilename(SIR->Filename);
 
   IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
   if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
@@ -336,12 +369,21 @@ DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
     }
   }
 
+  // Check if options are valid
+  // -max-halo
+  if(options_->MaxHaloPoints < 0) {
+    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
+                                   "maximum number of allowed halo points must be >= 0"));
+    throw std::runtime_error("An error occurred.");
+  }
+
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
+
   if(options_->DeserializeIIR == "") {
-    auto SIM = parallelize(SIR);
+    stencilInstantiationMap = parallelize(SIR);
     if(!options_->Debug) {
-      return optimize(SIM);
+      stencilInstantiationMap = optimize(stencilInstantiationMap);
     }
-    return SIM;
   } else {
     // Initialize optimizer
     OptimizerContext::OptimizerContextOptions optimizerOptions;
@@ -355,60 +397,15 @@ DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
         IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
     optimizer->restoreIIR("<restored>", instantiation);
 
-    return optimizer->getStencilInstantiationMap();
+    stencilInstantiationMap = optimizer->getStencilInstantiationMap();
   }
-}
-
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
-  diagnostics_->clear();
-  diagnostics_->setFilename(SIR->Filename);
-
-  // Check if options are valid
-
-  // -max-halo
-  if(options_->MaxHaloPoints < 0) {
-    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
-                                   "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
-  }
-
-  auto stencilInstantiationMap = runOptimizer(SIR);
 
   if(diagnostics_->hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
-    return nullptr;
-  }
-
-  // Generate code
-  std::unique_ptr<codegen::CodeGen> CG;
-
-  // TODO make a return in each branch
-  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
-    CG = std::make_unique<codegen::gt::GTCodeGen>(stencilInstantiationMap, *diagnostics_,
-                                                  options_->UseParallelEP, options_->MaxHaloPoints);
-  } else if(options_->Backend == "c++-naive") {
-    CG = std::make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(
-        stencilInstantiationMap, *diagnostics_, options_->MaxHaloPoints);
-  } else if(options_->Backend == "c++-naive-ico") {
-    CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
-        stencilInstantiationMap, *diagnostics_, options_->MaxHaloPoints);
-  } else if(options_->Backend == "cuda") {
-    const Array3i domain_size{options_->domain_size_i, options_->domain_size_j,
-                              options_->domain_size_k};
-    CG = std::make_unique<codegen::cuda::CudaCodeGen>(stencilInstantiationMap, *diagnostics_,
-                                                      options_->MaxHaloPoints, options_->nsms,
-                                                      options_->maxBlocksPerSM, domain_size);
-  } else if(options_->Backend == "c++-opt") {
-    dawn_unreachable("GTClangOptCXX not supported yet");
-  } else {
-    diagnostics_->report(buildDiag("-backend", options_->Backend,
-                                   "backend options must be : " +
-                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     throw std::runtime_error("An error occurred.");
   }
 
-  return CG->generateCode();
+  return generate(stencilInstantiationMap);
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return *diagnostics_.get(); }
