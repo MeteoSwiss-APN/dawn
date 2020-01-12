@@ -37,6 +37,8 @@ public:
   /// @brief Initialize the compiler by setting up diagnostics
   DawnCompiler(Options* options = nullptr);
 
+  // TODO Documentation
+
   /// @brief Compile the SIR using the provided code generation routine
   /// @returns compiled TranslationUnit on success, `nullptr` otherwise
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& SIR);
@@ -48,9 +50,9 @@ public:
   optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
 
-  // TODO Make this const
-  std::unique_ptr<codegen::TranslationUnit> generate(
-      std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& stencilInstantiationMap);
+  std::unique_ptr<codegen::TranslationUnit>
+  generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+               stencilInstantiationMap);
 
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   runOptimizer(std::shared_ptr<SIR> const& SIR);

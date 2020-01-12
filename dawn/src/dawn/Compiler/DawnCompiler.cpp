@@ -318,8 +318,9 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   return optimizer->getStencilInstantiationMap();
 }
 
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::generate(
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& stencilInstantiationMap) {
+std::unique_ptr<codegen::TranslationUnit>
+DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+                           stencilInstantiationMap) {
 
   // Generate code
   if(options_->Backend == "gt" || options_->Backend == "gridtools") {

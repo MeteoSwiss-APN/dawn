@@ -87,8 +87,8 @@ std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 }
 } // namespace
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                                       int maxHaloPoint)
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(stencilInstantiationContext const& ctx,
+                                       DiagnosticsEngine& engine, int maxHaloPoint)
     : CodeGen(ctx, engine, maxHaloPoint) {}
 
 CXXNaiveIcoCodeGen::~CXXNaiveIcoCodeGen() {}
