@@ -48,7 +48,7 @@ protected:
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
+    auto stencilInstantiationMap = compiler_.runOptimizer(sir);
     // Report diganostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
@@ -56,10 +56,10 @@ protected:
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count(stencilName)),
+    DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()[stencilName];
+    return stencilInstantiationMap[stencilName];
   }
 };
 

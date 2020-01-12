@@ -46,10 +46,10 @@ public:
 
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
-               stencilInstantiationMap,
-           std::unique_ptr<OptimizerContext>& optimizer);
+               stencilInstantiationMap);
 
-  std::unique_ptr<OptimizerContext> runOptimizer(std::shared_ptr<SIR> const& SIR);
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+  runOptimizer(std::shared_ptr<SIR> const& SIR);
 
   /// @brief Get options
   const Options& getOptions() const;

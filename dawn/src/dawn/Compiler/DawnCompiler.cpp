@@ -187,8 +187,7 @@ DawnCompiler::parallelize(std::shared_ptr<SIR> const& SIR) {
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
-                           stencilInstantiationMap,
-                       std::unique_ptr<OptimizerContext>& optimizer) {
+                           stencilInstantiationMap) {
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
@@ -220,8 +219,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
   }
 
-  optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions,
-                                                 stencilInstantiationMap);
+  auto optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions,
+                                                      stencilInstantiationMap);
 
   // Optimization, step by step
   //===-----------------------------------------------------------------------------------------
@@ -321,7 +320,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   return optimizer->getStencilInstantiationMap();
 }
 
-std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
   // // -max-fields
   // int maxFields = options_->MaxFieldsPerStencil;
 
@@ -336,13 +336,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     }
   }
 
-  std::unique_ptr<OptimizerContext> optimizer;
-
   if(options_->DeserializeIIR == "") {
     auto SIM = parallelize(SIR);
     if(!options_->Debug) {
-      auto optimizedSIM = optimize(SIM, optimizer);
+      return optimize(SIM);
     }
+    return SIM;
   } else {
     // Initialize optimizer
     OptimizerContext::OptimizerContextOptions optimizerOptions;
@@ -350,13 +349,14 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
     }
 
-    optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);
+    auto optimizer =
+        std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);
     auto instantiation =
         IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
     optimizer->restoreIIR("<restored>", instantiation);
-  }
 
-  return optimizer;
+    return optimizer->getStencilInstantiationMap();
+  }
 }
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
@@ -372,8 +372,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
     return nullptr;
   }
 
-  // Initialize optimizer
-  auto optimizer = runOptimizer(SIR);
+  auto stencilInstantiationMap = runOptimizer(SIR);
 
   if(diagnostics_->hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
@@ -383,22 +382,22 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   // Generate code
   std::unique_ptr<codegen::CodeGen> CG;
 
+  // TODO make a return in each branch
   if(options_->Backend == "gt" || options_->Backend == "gridtools") {
-    CG = std::make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(),
-                                                  *diagnostics_, options_->UseParallelEP,
-                                                  options_->MaxHaloPoints);
+    CG = std::make_unique<codegen::gt::GTCodeGen>(stencilInstantiationMap, *diagnostics_,
+                                                  options_->UseParallelEP, options_->MaxHaloPoints);
   } else if(options_->Backend == "c++-naive") {
     CG = std::make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
+        stencilInstantiationMap, *diagnostics_, options_->MaxHaloPoints);
   } else if(options_->Backend == "c++-naive-ico") {
     CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
+        stencilInstantiationMap, *diagnostics_, options_->MaxHaloPoints);
   } else if(options_->Backend == "cuda") {
     const Array3i domain_size{options_->domain_size_i, options_->domain_size_j,
                               options_->domain_size_k};
-    CG = std::make_unique<codegen::cuda::CudaCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
-        options_->nsms, options_->maxBlocksPerSM, domain_size);
+    CG = std::make_unique<codegen::cuda::CudaCodeGen>(stencilInstantiationMap, *diagnostics_,
+                                                      options_->MaxHaloPoints, options_->nsms,
+                                                      options_->maxBlocksPerSM, domain_size);
   } else if(options_->Backend == "c++-opt") {
     dawn_unreachable("GTClangOptCXX not supported yet");
   } else {
@@ -406,7 +405,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
                                    "backend options must be : " +
                                        dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                            "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-    return nullptr;
+    throw std::runtime_error("An error occurred.");
   }
 
   return CG->generateCode();
