@@ -38,26 +38,18 @@ public:
   DawnCompiler(Options* options = nullptr);
 
   /// @brief Apply parallelizer, code optimization, and generate.
-  /// @param stencilIR Stencil Intermediate Representation to use
-  /// @return Compiled TranslationUnit (throws if not unsuccessful)
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& stencilIR);
 
   /// @brief Apply parallelizer to stencilIR creating set of valid IIRs, one for each stencil.
-  /// @param stencilIR Stencil Intermediate Representation to use
-  /// @return Set of valid IIRs, one for each stencil
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   parallelize(std::shared_ptr<SIR> const& stencilIR);
 
   /// @brief Apply optimizer to a whole set of IIRs.
-  /// @param stencilInstantiationMap Stencil instantiations (containing IIRs) for each stencil
-  /// @return Optimized IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
 
   /// @brief Generate a translation unit from a set of Stencil Instantiations
-  /// @param stencilInstantiationMap Stencil instantiations (containing IIRs) for each stencil
-  /// @return Translation unit
   std::unique_ptr<codegen::TranslationUnit>
   generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
