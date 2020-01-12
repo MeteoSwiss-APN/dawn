@@ -21,7 +21,8 @@ namespace dawn {
 
 PassPrintStencilGraph::PassPrintStencilGraph(OptimizerContext& context)
     : Pass(context, "PassPrintStencilGraph") {
-  dependencies_.push_back("PassStageSplitter");
+  // TODO Figure out a way to re-enable this
+  // dependencies_.push_back("PassStageSplitter");
 }
 
 bool PassPrintStencilGraph::run(

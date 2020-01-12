@@ -66,6 +66,11 @@ public:
   OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
                    const std::shared_ptr<SIR>& SIR);
 
+  /// @brief Initialize the context with a stencil instantiation map
+  OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+                   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+                       stencilInstantiationMap);
+
   /// @brief Get StencilInstantiation map
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& getStencilInstantiationMap();
   const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&

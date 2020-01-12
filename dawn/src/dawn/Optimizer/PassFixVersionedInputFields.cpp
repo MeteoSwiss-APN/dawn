@@ -123,7 +123,8 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
 
 PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
     : Pass(context, "PassFixVersionedInputFields", true) {
-  dependencies_.push_back("PassFieldVersioning");
+  // TODO Find a way to re-enable this
+  // dependencies_.push_back("PassFieldVersioning");
 }
 
 bool PassFixVersionedInputFields::run(
