@@ -20,9 +20,12 @@ FetchContent_Declare(pybind11_fetch
 )
 FetchContent_GetProperties(pybind11_fetch)
 if(NOT pybind11_fetch_POPULATED)
-  message(STATUS "Fetch pybind11 for python-binding")
+  if(NOT DAWN_INCLUDE_PYBIND11)
+    message(STATUS "Fetching pybind11 for python bindings...")
+  endif()
   FetchContent_Populate(pybind11_fetch)
   add_subdirectory(${pybind11_fetch_SOURCE_DIR} ${pybind11_fetch_BINARY_DIR})
+  set(DAWN_INCLUDE_PYBIND11 ON CACHE BOOL "Include pybind11 when building Dawn python bindings.")
 endif()
 
 # Remove when updated past v2.4.3. See https://github.com/pybind/pybind11/issues/1604
@@ -36,4 +39,5 @@ target_compile_options(_dawn4py PUBLIC -Wno-shadow)
 
 # Depending on DawnSIRProto and DawnIIRProto ensures the python files are
 # generated and moved into the correct location
+# TODO Do we need to depend on Dawn or DawnC here?
 add_custom_target(python DEPENDS DawnSIRProto DawnIIRProto _dawn4py)
