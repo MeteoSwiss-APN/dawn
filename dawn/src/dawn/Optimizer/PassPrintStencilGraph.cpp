@@ -20,10 +20,7 @@
 namespace dawn {
 
 PassPrintStencilGraph::PassPrintStencilGraph(OptimizerContext& context)
-    : Pass(context, "PassPrintStencilGraph") {
-  // TODO Figure out a way to re-enable this
-  // dependencies_.push_back("PassStageSplitter");
-}
+    : Pass(context, "PassPrintStencilGraph") {}
 
 bool PassPrintStencilGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

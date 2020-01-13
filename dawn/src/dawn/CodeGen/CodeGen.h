@@ -33,7 +33,7 @@ using stencilInstantiationContext =
 /// @ingroup codegen
 class CodeGen {
 protected:
-  const stencilInstantiationContext context_;
+  const stencilInstantiationContext& context_;
   DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;

@@ -170,13 +170,12 @@ DawnCompiler::parallelize(std::shared_ptr<SIR> const& stencilIR) {
     // Run optimization passes
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
 
-    DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
+    DAWN_LOG(INFO) << "Starting parallelization passes for `" << instantiation->getName()
                    << "` ...";
     if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
       throw std::runtime_error("An error occurred.");
 
-    DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
-                   << "`";
+    DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
   }
 
   return optimizer->getStencilInstantiationMap();
@@ -293,12 +292,12 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // Run optimization passes
     auto& instantiation = stencil.second;
 
-    DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
+    DAWN_LOG(INFO) << "Starting optimization and analysis passes for `" << instantiation->getName()
                    << "` ...";
     if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
       throw std::runtime_error("An error occurred.");
 
-    DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
+    DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
                    << "`";
 
     if(options_->SerializeIIR) {

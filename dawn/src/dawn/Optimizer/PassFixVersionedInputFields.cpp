@@ -122,10 +122,7 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
 };
 
 PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {
-  // TODO Find a way to re-enable this
-  // dependencies_.push_back("PassFieldVersioning");
-}
+    : Pass(context, "PassFixVersionedInputFields", true) {}
 
 bool PassFixVersionedInputFields::run(
     std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
