@@ -80,6 +80,9 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
+  TypeChecker checker;
+  DAWN_ASSERT(checker.checkLocationTypeConsistency(*new_si->getIIR().get()));
+
   dawn::codegen::stencilInstantiationContext map;
   map[new_si->getName()] = std::move(new_si);
 

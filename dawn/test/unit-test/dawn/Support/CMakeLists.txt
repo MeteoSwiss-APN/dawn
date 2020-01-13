@@ -24,6 +24,7 @@ add_executable(${executable}
   TestRemoveIf.cpp
   TestRangeToString.cpp
   TestType.cpp
+  TestTypeChecker.cpp
 )
 target_link_libraries(${executable} DawnSupport DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})

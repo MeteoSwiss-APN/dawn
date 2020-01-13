@@ -112,6 +112,7 @@ public:
   ///
   /// The fields are computed during `DoMethod::update`.
   const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
+  const std::unordered_map<std::string, ast::Expr::LocationType> getFieldLocationsByName() const;
 
   bool hasField(int accessID) const { return derivedInfo_.fields_.count(accessID); }
 

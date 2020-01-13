@@ -25,6 +25,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/TypeChecker.h"
 
 namespace dawn {
 namespace iir {
