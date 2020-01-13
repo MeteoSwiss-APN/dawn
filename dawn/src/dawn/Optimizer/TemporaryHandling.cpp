@@ -19,6 +19,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 
 namespace dawn {
@@ -82,8 +83,10 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     instantiation->getMetaData().removeAccessID(accessID);
   }
   // Register the field
-  instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary, accessID,
-                                                  fieldname);
+  instantiation->getMetaData().addTmpField(
+      iir::FieldAccessType::StencilTemporary, fieldname,
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true),
+      accessID); // TODO: dimensions are arbitrary here. Should figure them out correctly.
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

@@ -18,6 +18,7 @@
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Printing.h"
@@ -392,9 +393,14 @@ void StencilFunctionInstantiation::update() {
          !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
-      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     std::optional<Extents>(), interval_,
-                                     metadata_.getFieldDimensions(AccessID));
+      AccessUtils::recordWriteAccess(
+          inputOutputFields, inputFields, outputFields, AccessID, std::optional<Extents>(),
+          interval_,
+          metadata_.isAccessType(FieldAccessType::Field, AccessID)
+              ? metadata_.getFieldDimensions(AccessID)
+              : sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                                     true)); // TODO: this is a hack. Ideally we don't want to
+                                             // create Field when the argument is a function call.
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -405,9 +411,14 @@ void StencilFunctionInstantiation::update() {
          !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
-      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                    std::optional<Extents>(), interval_,
-                                    metadata_.getFieldDimensions(AccessID));
+      AccessUtils::recordReadAccess(
+          inputOutputFields, inputFields, outputFields, AccessID, std::optional<Extents>(),
+          interval_,
+          metadata_.isAccessType(FieldAccessType::Field, AccessID)
+              ? metadata_.getFieldDimensions(AccessID)
+              : sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                                     true)); // TODO: this is a hack. Ideally we don't want to
+                                             // create Field when the argument is a function call.
     }
   }
 
@@ -416,8 +427,14 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{},
-                                          interval_, metadata_.getFieldDimensions(AccessID)));
+      inputFields.emplace(
+          AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{}, interval_,
+                          metadata_.isAccessType(FieldAccessType::Field, AccessID)
+                              ? metadata_.getFieldDimensions(AccessID)
+                              : sir::FieldDimensions(
+                                    sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                                    true))); // TODO: this is a hack. Ideally we don't want to
+                                             // create field when the argument is a function call.
       unusedFields_.insert(AccessID);
     }
   }

@@ -200,8 +200,6 @@ void StencilMetaInformation::finalizeStencilFunctionSetup(
     insertExprToStencilFunctionInstantiation(stencilFun);
   }
 
-  stencilFun->update();
-
   // we move the candidate to stencil function to a final stencil function
   markStencilFunctionInstantiationFinal(stencilFun);
 }
@@ -341,30 +339,36 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     const sir::FieldDimensions& fieldDimensions) {
-  int accessID = UIDGenerator::getInstance()->get();
+                                     const sir::FieldDimensions& fieldDimensions,
+                                     std::optional<int> accessID) {
+  if(!accessID.has_value()) {
+    accessID = UIDGenerator::getInstance()->get();
+  }
   DAWN_ASSERT(isFieldType(type));
-  insertAccessOfType(type, accessID, name);
+  insertAccessOfType(type, *accessID, name);
 
-  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
-  fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(*accessID));
+  fieldIDToInitializedDimensionsMap_.emplace(*accessID, fieldDimensions);
 
-  return accessID;
+  return *accessID;
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                        const sir::FieldDimensions& fieldDimensions) {
-  int accessID = UIDGenerator::getInstance()->get();
+                                        const sir::FieldDimensions& fieldDimensions,
+                                        std::optional<int> accessID) {
+  if(!accessID.has_value()) {
+    accessID = UIDGenerator::getInstance()->get();
+  }
 
-  std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, accessID);
+  std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, *accessID);
 
   DAWN_ASSERT(isFieldType(type));
-  insertAccessOfType(type, accessID, fname);
+  insertAccessOfType(type, *accessID, fname);
 
-  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
-  fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(*accessID));
+  fieldIDToInitializedDimensionsMap_.emplace(*accessID, fieldDimensions);
 
-  return accessID;
+  return *accessID;
 }
 // TODO: change the name to reflect that it referes to the dense part
 ast::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {

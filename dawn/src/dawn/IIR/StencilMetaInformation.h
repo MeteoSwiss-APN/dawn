@@ -152,10 +152,12 @@ public:
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
   int addField(FieldAccessType type, const std::string& name,
-               const sir::FieldDimensions& fieldDimensions);
+               const sir::FieldDimensions& fieldDimensions,
+               std::optional<int> accessID = std::nullopt);
 
   int addTmpField(FieldAccessType type, const std::string& basename,
-                  const sir::FieldDimensions& fieldDimensions);
+                  const sir::FieldDimensions& fieldDimensions,
+                  std::optional<int> accessID = std::nullopt);
 
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
