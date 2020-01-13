@@ -232,7 +232,9 @@ struct PrintDescLine {
     std::cout << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name.str() << "\n"
               << MakeIndent<Level>::value << "{\n\033[0m";
   }
-  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level); }
+  ~PrintDescLine() {
+    std::cout << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level);
+  }
 };
 
 void StencilInstantiation::dump() const {

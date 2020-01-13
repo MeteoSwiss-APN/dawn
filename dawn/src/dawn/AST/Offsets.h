@@ -18,9 +18,9 @@
 #include "dawn/AST/Tags.h"
 #include "dawn/Support/Unreachable.h"
 
+#include <array>
 #include <memory>
 #include <string>
-#include <array>
 
 namespace dawn::ast {
 

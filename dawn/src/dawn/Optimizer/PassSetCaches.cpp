@@ -248,6 +248,35 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
                field.getExtents().isPointwise())))
             continue;
 
+          // If the Field about to be cached is in a stage with a global index
+          // it can in fact only be chached if all subsequent stages have compatible iteration
+          // spaces
+
+          // find first stage in which the field is used
+          int stageIter = 0;
+          for(const auto& stage : ms.getChildren()) {
+            if(stage->getFields().count(field.getAccessID()) && stage->hasIterationSpace()) {
+              break;
+            }
+            stageIter++;
+          }
+
+          // check if subsequent uses are compatible
+          auto firstUsageWithGlobalIndex = ms.getChildren().begin();
+          std::advance(firstUsageWithGlobalIndex, stageIter);
+          bool incompatibleIterationSpaces = false;
+          for(auto it = firstUsageWithGlobalIndex; it != ms.getChildren().end(); it++) {
+            bool stageUsesField = it->get()->getFields().count(field.getAccessID());
+            if(stageUsesField &&
+               !firstUsageWithGlobalIndex->get()->iterationSpaceCompatible(*it->get())) {
+              incompatibleIterationSpaces = true;
+              break;
+            }
+          }
+          if(incompatibleIterationSpaces) {
+            continue;
+          }
+
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
               field,
