@@ -2,6 +2,7 @@
 
 #include "dawn/Support/Assert.h"
 #include <iosfwd>
+#include <optional>
 
 namespace dawn {
 namespace iir {
@@ -28,20 +29,19 @@ public:
     return gridType;
   }
 
-  bool valueSet() const { return GlobalGridType::instance().valueSet_; }
-  GridType getGridType() const { return GlobalGridType::instance().type_; }
+  bool valueSet() const { return GlobalGridType::instance().type_.has_value(); }
+  GridType getGridType() const {
+    DAWN_ASSERT(GlobalGridType::instance().valueSet());
+    return GlobalGridType::instance().type_.value();
+  }
   GlobalGridType(const GlobalGridType&) = delete;
   GlobalGridType& operator=(const GlobalGridType&) = delete;
   GlobalGridType(GlobalGridType&&) = delete;
   GlobalGridType& operator=(GlobalGridType&&) = delete;
 
 private:
-  bool valueSet_ = false;
-  GridType type_;
-  void setGridType(GridType type) {
-    GlobalGridType::instance().valueSet_ = true;
-    GlobalGridType::instance().type_ = type;
-  }
+  std::optional<GridType> type_;
+  void setGridType(GridType type) { GlobalGridType::instance().type_ = type; }
   GlobalGridType() {}
 };
 } // namespace ast
