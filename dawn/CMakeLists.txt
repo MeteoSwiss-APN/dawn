@@ -200,7 +200,7 @@ endif()
 set(DAWN_DRIVER_INCLUDEDIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE INTERNAL
   "Absolute path to driver includes in the source directory (used for super-builds) "
 )
-set(DAWN_INSTALL_DRIVER_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/driver-includes)
+set(DAWN_INSTALL_DRIVER_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
