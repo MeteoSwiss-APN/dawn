@@ -192,7 +192,8 @@ IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldTy
   sir::FieldDimension dimensions(
       ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
   int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name, dimensions);
-  return {id, name};
+  std::string newName = si_->getMetaData().getFieldNameFromAccessID(id);
+  return {id, newName};
 }
 
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {

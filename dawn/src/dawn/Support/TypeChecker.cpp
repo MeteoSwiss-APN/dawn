@@ -5,9 +5,13 @@ namespace dawn {
 
 bool TypeChecker::checkLocationTypeConsistency(const dawn::iir::IIR& iir) {
   bool consistent = true;
+  // std::unordered_map<std::string, ast::Expr::LocationType> allFieldNamesToLocation;
+  // for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
+  //   auto const& fieldNamesToLocation = doMethodPtr->getFieldLocationsByName();
+  //   allFieldNamesToLocation.insert(fieldNamesToLocation.begin(), fieldNamesToLocation.end());
+  // }
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    auto const& fieldNamesToLocation = doMethodPtr->getFieldLocationsByName();
-    TypeChecker::TypeCheckerImpl Impl(fieldNamesToLocation);
+    TypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationsByName());
     const std::shared_ptr<iir::BlockStmt>& ast =
         std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
     ast->accept(Impl);
@@ -16,6 +20,54 @@ bool TypeChecker::checkLocationTypeConsistency(const dawn::iir::IIR& iir) {
       break;
     }
   }
+  return consistent;
+}
+
+bool TypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
+  // check type consistency of stencil functions
+  bool consistent = true;
+  for(auto const& stenFunIt : SIR.StencilFunctions) {
+    std::unordered_map<std::string, ast::Expr::LocationType> argumentFieldLocs;
+    for(const auto& arg : stenFunIt->Args) {
+      if(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field) {
+        const auto* argField = static_cast<sir::Field*>(arg.get());
+        argumentFieldLocs.insert({argField->Name, argField->locationType});
+      }
+    }
+    for(const auto& astIt : stenFunIt->Asts) {
+      TypeChecker::TypeCheckerImpl Impl(argumentFieldLocs);
+      astIt->accept(Impl);
+      consistent &= Impl.isConsistent();
+      if(!consistent) {
+        break;
+      }
+    }
+    if(!consistent) {
+      break;
+    }
+  }
+
+  // do not continue to stencils if functions aren't type consistent
+  if(!consistent) {
+    return false;
+  }
+
+  // check type consistency of stencils
+  for(const auto& stencil : SIR.Stencils) {
+    DAWN_ASSERT(stencil);
+    std::unordered_map<std::string, ast::Expr::LocationType> stencilFieldLocs;
+    for(const auto& field : stencil->Fields) {
+      stencilFieldLocs.insert({field->Name, field->locationType});
+    }
+    const auto& stencilAst = stencil->StencilDescAst;
+    TypeChecker::TypeCheckerImpl Impl(stencilFieldLocs);
+    stencilAst->accept(Impl);
+    consistent &= Impl.isConsistent();
+    if(!consistent) {
+      break;
+    }
+  }
+
   return consistent;
 }
 
