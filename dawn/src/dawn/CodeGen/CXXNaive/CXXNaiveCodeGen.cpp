@@ -376,10 +376,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
     for(const auto& fieldPair : nonTempFields) {
       stencilRunMethod.addStatement(fieldPair.second.Name + "_" + ".sync()");
     }
+
     for(const auto& multiStagePtr : stencil.getChildren()) {
-
       stencilRunMethod.ss() << "{";
-
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
@@ -407,7 +406,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       for(auto interval : partitionIntervals) {
-
         // for each interval, we generate naive nested loops
         stencilRunMethod.addBlockStatement(
             makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval),
@@ -418,53 +416,60 @@ void CXXNaiveCodeGen::generateStencilClasses(
                 auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
 
-                auto doMethodGenerator = [&]() {
-                  // Check if we need to execute this statement:
+                // Check if we need to execute this statement:
+                bool hasBody = false;
+                for(const auto& doMethodPtr : stage.getChildren()) {
+                  hasBody = (doMethodPtr->getInterval().overlaps(interval));
+                }
 
-                  // Generate Do-Method
-                  for(const auto& doMethodPtr : stage.getChildren()) {
-                    const iir::DoMethod& doMethod = *doMethodPtr;
-                    if(!doMethod.getInterval().overlaps(interval))
-                      continue;
-                    for(const auto& stmt : doMethod.getAST().getStatements()) {
-                      stmt->accept(stencilBodyCXXVisitor);
-                      stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                if(hasBody) {
+                  auto doMethodGenerator = [&]() {
+                    // Generate Do-Method
+                    for(const auto& doMethodPtr : stage.getChildren()) {
+                      const iir::DoMethod& doMethod = *doMethodPtr;
+                      if(!doMethod.getInterval().overlaps(interval)) {
+                        continue;
+                      }
+                      for(const auto& stmt : doMethod.getAST().getStatements()) {
+                        stmt->accept(stencilBodyCXXVisitor);
+                        stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                      }
                     }
-                  }
-                };
+                  };
 
-                stencilRunMethod.addBlockStatement(
-                    makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
-                      stencilRunMethod.addBlockStatement(
-                          makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&] {
-                            if(std::any_of(stage.getIterationSpace().cbegin(),
-                                           stage.getIterationSpace().cend(),
-                                           [](const auto& p) -> bool { return p.has_value(); })) {
-                              std::string conditional = "if(";
-                              if(stage.getIterationSpace()[0]) {
-                                conditional += "checkOffset(stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalIIndices[0], stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalIIndices[1], globalOffsets[0] + i)";
-                              }
-                              if(stage.getIterationSpace()[1]) {
+                  stencilRunMethod.addBlockStatement(
+                      makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
+                        stencilRunMethod.addBlockStatement(
+                            makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&] {
+                              if(std::any_of(stage.getIterationSpace().cbegin(),
+                                             stage.getIterationSpace().cend(),
+                                             [](const auto& p) -> bool { return p.has_value(); })) {
+                                std::string conditional = "if(";
                                 if(stage.getIterationSpace()[0]) {
-                                  conditional += " && ";
+                                  conditional += "checkOffset(stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalIIndices[0], stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalIIndices[1], globalOffsets[0] + i)";
                                 }
-                                conditional += "checkOffset(stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalJIndices[0], stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalJIndices[1], globalOffsets[1] + j)";
+                                if(stage.getIterationSpace()[1]) {
+                                  if(stage.getIterationSpace()[0]) {
+                                    conditional += " && ";
+                                  }
+                                  conditional += "checkOffset(stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalJIndices[0], stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalJIndices[1], globalOffsets[1] + j)";
+                                }
+                                conditional += ")";
+                                stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
+                              } else {
+                                doMethodGenerator();
                               }
-                              conditional += ")";
-                              stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
-                            } else {
-                              doMethodGenerator();
-                            }
-                          });
-                    });
+                            });
+                      });
+                }
               }
             });
       }

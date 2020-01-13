@@ -155,33 +155,8 @@ TEST(CompilerTest, CompileGlobalIndexStencilCuda) {
 }
 
 TEST(CompilerTest, CompileLaplacian) {
-    using namespace dawn::iir;
-    using SInterval = dawn::sir::Interval;
-
-//    // Define stencil code
-//    std::ostringstream os;
-//    os << "globals {\n"
-//          "  double dx;\n"
-//          "};\n"
-//          "stencil laplacian {\n"
-//          "storage out;\n"
-//          "storage in;\n"
-//          "Do() {\n"
-//          "vertical_region(k_start, k_end) {\n"
-//          "    out[i,j] = (-4 * in[i,j] + in[i+1,j] + in[i-1,j] +\n"
-//          "        in[i,j-1] + in[i,j+1]) / (dx * dx);\n"
-//          "}\n}\n};\n";
-//    std::string code = os.str();
-//    ASSERT_TRUE(!code.empty());
-//
-//    // Add header info and write to temporary file
-//    std::string path = "/tmp/stencil.cpp";
-//    std::ofstream ofs(path);
-//    ASSERT_TRUE(ofs.is_open());
-//    ofs << "#include \"gtclang_dsl_defs/gtclang_dsl.hpp\"\n";
-//    ofs << "using namespace gtclang::dsl;\n\n";
-//    ofs << code;
-//    ofs.close();
+  using namespace dawn::iir;
+  using SInterval = dawn::sir::Interval;
 
   CartesianIIRBuilder b;
   auto in = b.field("in", FieldType::ijk);
@@ -243,13 +218,12 @@ TEST(CompilerTest, CompileNonOverlapping) {
                 b.assignExpr(b.at(out), b.lit(10))
   ) ) ) ) ) ) );
 
-
   std::ofstream ofs("prototype/generated/nonoverlapping_stencil.cpp");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_inst);
-//
-//    std::string gen = read("prototype/generated/global_indexing_naive.cpp");
-//    std::string ref = read("prototype/reference/global_indexing_naive.cpp");
-//    ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+
+  std::string gen = read("prototype/generated/nonoverlapping_stencil.cpp");
+  std::string ref = read("prototype/reference/nonoverlapping_stencil.cpp");
+  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
@@ -304,8 +278,7 @@ TEST(CompilerTest, DISABLED_SumVertical) {
   of.close();
 }
 
-//TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
-TEST(CompilerTest, CodeGenDiffusion) {
+TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
