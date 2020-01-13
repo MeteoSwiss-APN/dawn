@@ -90,7 +90,7 @@ struct ComputeEditDistance<std::string> {
 
 std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
   const std::size_t pos = fullName.find_last_of(extension);
-  return pos < std::string::npos ? fullName.substr(0, pos - 1) : fullName;
+  return pos < std::string::npos ? fullName.substr(0, pos - 3) : fullName;
 }
 
 } // anonymous namespace
