@@ -204,17 +204,47 @@ TEST(CompilerTest, CompileLaplacian) {
                             b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
                     ) ) ), Op::multiply),
                     b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) )
-//        , b.stage(1, {0, 2},
-//          b.vregion(SInterval::Start, SInterval::End,
-//            b.block(
-//              b.stmt(
-//                b.assignExpr(b.at(out), b.lit(10))
-//  ) ) ) )
-    ) ) ) );
-
+            ) ) ) ) )
+          ) ) );
 
   std::ofstream ofs("prototype/generated/laplacian_stencil.cpp");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_inst);
+}
+
+TEST(CompilerTest, CompileNonOverlapping) {
+  using namespace dawn::iir;
+  using SInterval = dawn::sir::Interval;
+
+  CartesianIIRBuilder b;
+  auto in = b.field("in", FieldType::ijk);
+  auto out = b.field("out", FieldType::ijk);
+  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+
+  auto stencil_inst = b.build("generated",
+    b.stencil(
+      b.multistage(LoopOrderKind::Parallel,
+        b.stage(
+          b.vregion(SInterval(SInterval::Start, 10), b.declareVar(dx),
+            b.block(
+              b.stmt(
+                b.assignExpr(b.at(out),
+                  b.binaryExpr(
+                    b.binaryExpr(b.lit(-4),
+                      b.binaryExpr(b.at(in),
+                        b.binaryExpr(b.at(in, {1, 0, 0}),
+                          b.binaryExpr(b.at(in, {-1, 0, 0}),
+                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
+                    ) ) ), Op::multiply),
+                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
+            ) ) ) ) )
+         , b.stage(b.vregion(SInterval(15, SInterval::End),
+            b.block(
+              b.stmt(
+                b.assignExpr(b.at(out), b.lit(10))
+  ) ) ) ) ) ) );
+
+
+  std::ofstream ofs("prototype/generated/nonoverlapping_stencil.cpp");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_inst);
 //
 //    std::string gen = read("prototype/generated/global_indexing_naive.cpp");
@@ -274,7 +304,8 @@ TEST(CompilerTest, DISABLED_SumVertical) {
   of.close();
 }
 
-TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
+//TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
+TEST(CompilerTest, CodeGenDiffusion) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
@@ -305,9 +336,9 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
                                                b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
                                                Op::plus))))))));
 
-  std::ofstream of("prototype/generated_Diffusion.hpp");
+  std::ofstream of("prototype/generated_diffusion.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
   of.close();
 }
 

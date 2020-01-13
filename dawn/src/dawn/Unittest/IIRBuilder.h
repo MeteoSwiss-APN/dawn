@@ -182,16 +182,21 @@ public:
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
-                                         Stmts&&... stmts) {
+  std::unique_ptr<iir::DoMethod> vregion(iir::Interval interval, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
+    auto ret = std::make_unique<iir::DoMethod>(interval, si_->getMetaData());
     ret->setID(si_->nextUID());
     [[maybe_unused]] int x[] = {
         (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
     computeAccesses(si_.get(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
+  }
+
+  template <typename... Stmts>
+  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                         Stmts&&... stmts) {
+    return vregion(iir::Interval(s, e), stmts ...);
   }
 
   template <typename... Stmts>
