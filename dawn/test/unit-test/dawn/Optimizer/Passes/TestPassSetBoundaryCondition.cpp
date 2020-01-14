@@ -54,7 +54,7 @@ protected:
       compiler_.getOptions().MaxFieldsPerStencil = maxfields;
 
     // Run the optimization
-    auto stencilInstantiationMap = compiler_.optimize(compiler_.parallelize(sir));
+    auto stencilInstantiationMap = compiler_.optimize(sir);
 
     // Report diganostics
     if(compiler_.getDiagnostics().hasDiags()) {
