@@ -41,10 +41,10 @@ namespace cxxnaive{
 class generated {
 private:
 
-  struct stencil_45 {
+  struct stencil_28 {
 
     // Members
-    std::array<int, 2> stage31GlobalJIndices;
+    std::array<int, 2> stage14GlobalJIndices;
     std::array<unsigned int, 2> globalOffsets;
 
     static std::array<unsigned int, 2> computeGlobalOffsets(int rank, const gridtools::dawn::domain& dom, int xcols, int ycols) {
@@ -67,7 +67,7 @@ private:
     // Input/Output storages
   public:
 
-    stencil_45(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : m_dom(dom_), stage31GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
+    stencil_28(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : m_dom(dom_), stage14GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
 
     void run(storage_ijk_t& in_field_, storage_ijk_t& out_field_) {
       int iMin = m_dom.iminus();
@@ -90,7 +90,7 @@ private:
 }
         }      }      for(int i = iMin+0; i  <=  iMax+0; ++i) {
         for(int j = jMin+0; j  <=  jMax+0; ++j) {
-          if(checkOffset(stage31GlobalJIndices[0], stage31GlobalJIndices[1], globalOffsets[1] + j)) {
+          if(checkOffset(stage14GlobalJIndices[0], stage14GlobalJIndices[1], globalOffsets[1] + j)) {
 {
   out_field(i+0, j+0, k+0) = (int) 10;
 }
@@ -99,12 +99,12 @@ private:
     }
   };
   static constexpr const char* s_name = "generated";
-  stencil_45 m_stencil_45;
+  stencil_28 m_stencil_28;
 public:
 
   generated(const generated&) = delete;
 
-  generated(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_45(dom, rank, xcols, ycols){
+  generated(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_28(dom, rank, xcols, ycols){
     assert(dom.isize() >= dom.iminus() + dom.iplus());
     assert(dom.jsize() >= dom.jminus() + dom.jplus());
     assert(dom.ksize() >= dom.kminus() + dom.kplus());
@@ -112,7 +112,7 @@ public:
   }
 
   void run(storage_ijk_t in_field, storage_ijk_t out_field) {
-    m_stencil_45.run(in_field,out_field);
+    m_stencil_28.run(in_field,out_field);
   }
 };
 } // namespace cxxnaive

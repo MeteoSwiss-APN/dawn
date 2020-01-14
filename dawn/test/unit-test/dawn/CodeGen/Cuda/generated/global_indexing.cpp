@@ -40,7 +40,7 @@ namespace cuda{
 __device__ bool checkOffset_(unsigned int min, unsigned int max, unsigned int val) {
   return (min <= val && val < max);
 }
-__global__ void __launch_bounds__(128)  generated_stencil74_ms73_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in_field, ::dawn::float_type * const out_field, int* const stage60GlobalJIndices, unsigned* const globalOffsets) {
+__global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in_field, ::dawn::float_type * const out_field, int* const stage14GlobalJIndices, unsigned* const globalOffsets) {
 
   // Start kernel
   const unsigned int nx = isize;
@@ -93,7 +93,7 @@ for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
 {
   out_field[idx111] = __ldg(&(in_field[idx111]));
 }
-  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset_(stage60GlobalJIndices[0], stage60GlobalJIndices[1], globalOffsets[1] + jblock)) {
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset_(stage14GlobalJIndices[0], stage14GlobalJIndices[1], globalOffsets[1] + jblock)) {
 {
   out_field[idx111] = (int) 10;
 }
@@ -116,10 +116,10 @@ public:
     }
   };
 
-  struct stencil_74 : public sbase {
+  struct stencil_28 : public sbase {
 
     // Members
-    std::array<int, 2> stage60GlobalJIndices;
+    std::array<int, 2> stage14GlobalJIndices;
     std::array<unsigned int, 2> globalOffsets;
 
     static std::array<unsigned int, 2> computeGlobalOffsets(int rank, const gridtools::dawn::domain& dom, int xcols, int ycols) {
@@ -140,7 +140,7 @@ public:
     const gridtools::dawn::domain m_dom;
   public:
 
-    stencil_74(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_74"), m_dom(dom_), stage60GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
+    stencil_28(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_28"), m_dom(dom_), stage14GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
 
     void run(storage_ijk_t in_field_ds, storage_ijk_t out_field_ds) {
 
@@ -157,7 +157,7 @@ public:
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      generated_stencil74_ms73_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )), stage60GlobalJIndices.data(), globalOffsets.data());
+      generated_stencil28_ms27_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )), stage14GlobalJIndices.data(), globalOffsets.data());
       };
 
       // stopping timers
@@ -165,7 +165,7 @@ public:
     }
   };
   static constexpr const char* s_name = "generated";
-  stencil_74 m_stencil_74;
+  stencil_28 m_stencil_28;
 public:
 
   generated(const generated&) = delete;
@@ -174,7 +174,7 @@ public:
 
   // Stencil-Data
 
-  generated(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_74(dom, rank, xcols, ycols){}
+  generated(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_28(dom, rank, xcols, ycols){}
 
   template<typename S>
   void sync_storages(S field) {
@@ -189,7 +189,7 @@ public:
 
   void run(storage_ijk_t in_field, storage_ijk_t out_field) {
     sync_storages(in_field,out_field);
-    m_stencil_74.run(in_field,out_field);
+    m_stencil_28.run(in_field,out_field);
 ;
     sync_storages(in_field,out_field);
   }
@@ -199,11 +199,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_74.reset();  }
+m_stencil_28.reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_74.get_time();
+    res +=m_stencil_28.get_time();
     return res;
   }
 };
