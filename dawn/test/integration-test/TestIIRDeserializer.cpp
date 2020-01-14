@@ -192,7 +192,7 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
 
 std::shared_ptr<iir::StencilInstantiation> readIIRFromFile(OptimizerContext& optimizer,
                                                            const std::string& fname) {
-  auto target = IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::Format::Json);
+  auto target = IIRSerializer::deserialize(fname, IIRSerializer::Format::Json);
 
   // this is whats actually to be tested.
   optimizer.restoreIIR("<restored>", target);

@@ -722,7 +722,8 @@ bool OptimizerContext::restoreIIR(std::string const& name,
                                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilName(stencilInstantiation->getName());
-  metadata.setFileName("<unknown>");
+  if(metadata.getFileName().empty())
+    metadata.setFileName("<unknown>");
 
   stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
 

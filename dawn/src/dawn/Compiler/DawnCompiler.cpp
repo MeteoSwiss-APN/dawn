@@ -134,6 +134,34 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<Dia
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::parallelize(std::shared_ptr<SIR> const& stencilIR) {
+  diagnostics_->clear();
+  diagnostics_->setFilename(stencilIR->Filename);
+
+  // -reorder
+  using ReorderStrategyKind = ReorderStrategy::Kind;
+  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
+                                            .Case("none", ReorderStrategyKind::None)
+                                            .Case("greedy", ReorderStrategyKind::Greedy)
+                                            .Case("scut", ReorderStrategyKind::Partitioning)
+                                            .Default(ReorderStrategyKind::Unknown);
+
+  if(reorderStrategy == ReorderStrategyKind::Unknown) {
+    diagnostics_->report(
+        buildDiag("-reorder", options_->ReorderStrategy, "", {"none", "greedy", "scut"}));
+    throw std::runtime_error("An error occurred.");
+  }
+
+  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
+  if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
+    if(options_->IIRFormat == "json") {
+      serializationKind = IIRSerializer::Format::Json;
+    } else if(options_->IIRFormat == "byte") {
+      serializationKind = IIRSerializer::Format::Byte;
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
+  }
+
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
   if(options_->MaxCutMSS) {
@@ -377,13 +405,11 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
 
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
-  if(options_->DeserializeIIR == "") {
+  // TODO Make this clearer
+  const bool inputIsSIR = options_->DeserializeIIR == "";
+  if(inputIsSIR) {
     stencilInstantiationMap = parallelize(stencilIR);
-    if(!options_->Debug) {
-      stencilInstantiationMap = optimize(stencilInstantiationMap);
-    }
   } else {
-    throw std::runtime_error("Trying to deserialize IIR.");
     // Initialize optimizer
     OptimizerContext::OptimizerContextOptions optimizerOptions;
     if(options_) {
@@ -392,15 +418,23 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
 
     auto optimizer =
         std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);
-    auto instantiation =
-        IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
+    auto instantiation = IIRSerializer::deserialize(options_->DeserializeIIR, serializationKind);
     optimizer->restoreIIR("<restored>", instantiation);
 
     stencilInstantiationMap = optimizer->getStencilInstantiationMap();
   }
 
   if(diagnostics_->hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
+    DAWN_LOG(INFO) << "Errors occurred in parallelize. Skipping code generation.";
+    throw std::runtime_error("An error occurred.");
+  }
+
+  if(!options_->Debug) {
+    stencilInstantiationMap = optimize(stencilInstantiationMap);
+  }
+
+  if(diagnostics_->hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred in optimize. Skipping code generation.";
     throw std::runtime_error("An error occurred.");
   }
 
