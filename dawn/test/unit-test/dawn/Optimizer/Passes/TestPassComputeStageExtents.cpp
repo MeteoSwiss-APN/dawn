@@ -28,12 +28,9 @@ using namespace dawn;
 namespace {
 
 class ComputeStageExtents : public ::testing::Test {
-  std::unique_ptr<dawn::Options> compileOptions_;
-
   dawn::DawnCompiler compiler_;
 
 protected:
-  ComputeStageExtents() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
   std::unique_ptr<iir::IIR> loadTest(std::string sirFilename) {

@@ -23,7 +23,7 @@ using namespace dawn;
 int main(int argc, char* argv[]) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 

@@ -215,7 +215,7 @@ void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
 TEST(IIRDeserializerTest, CopyStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -232,7 +232,7 @@ TEST(IIRDeserializerTest, CopyStencil) {
 TEST(IIRDeserializerTest, LapStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 

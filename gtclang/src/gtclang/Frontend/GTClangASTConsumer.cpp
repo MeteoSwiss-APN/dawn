@@ -63,10 +63,10 @@ static const std::string currentDateTime() {
 }
 
 /// @brief Extract the DAWN options from the GTClang options
-static std::unique_ptr<dawn::Options> makeDAWNOptions(const Options& options) {
-  auto DAWNOptions = std::make_unique<dawn::Options>();
+static dawn::Options makeDAWNOptions(const Options& options) {
+  dawn::Options DAWNOptions;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  DAWNOptions->NAME = options.NAME;
+  DAWNOptions.NAME = options.NAME;
 #include "dawn/Compiler/Options.inc"
 #undef OPT
   return DAWNOptions;
@@ -132,7 +132,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   parentAction_->setSIR(SIR);
 
   // Compile the SIR to GridTools
-  dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()).get());
+  dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
   std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit = Compiler.compile(SIR);
 
   // Report diagnostics from Dawn
