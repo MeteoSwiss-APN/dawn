@@ -449,15 +449,13 @@ void CXXNaiveCodeGen::generateStencilClasses(
                     stage.getExtents().horizontalExtent());
 
                 // Check if we need to execute this statement:
-                bool hasBody = false;
+                bool hasOverlappingInterval = false;
                 for(const auto& doMethodPtr : stage.getChildren()) {
-                  hasBody = (doMethodPtr->getInterval().overlaps(interval));
+                    hasOverlappingInterval = (doMethodPtr->getInterval().overlaps(interval));
                 }
 
-                if(hasBody) {
+                if(hasOverlappingInterval) {
                   auto doMethodGenerator = [&]() {
-                    // Check if we need to execute this statement:
-
                     // Generate Do-Method
                     for(const auto& doMethodPtr : stage.getChildren()) {
                       const iir::DoMethod& doMethod = *doMethodPtr;

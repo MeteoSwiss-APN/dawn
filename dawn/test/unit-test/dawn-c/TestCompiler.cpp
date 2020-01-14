@@ -16,7 +16,6 @@
 #include "dawn-c/TranslationUnit.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
@@ -67,30 +66,6 @@ void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
     ss << s.second;
   os << ss.str();
 }
-
-template <>
-void dump<dawn::codegen::cuda::CudaCodeGen>(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
-  dawn::DiagnosticsEngine diagnostics;
-  using CG = dawn::codegen::cuda::CudaCodeGen;
-  CG generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
-  auto tu = generator.generateCode();
-
-  std::ostringstream ss;
-  for(auto const& macroDefine : tu->getPPDefines())
-    ss << macroDefine << "\n";
-
-  ss << tu->getGlobals();
-  for(auto const& s : tu->getStencils())
-    ss << s.second;
-  os << ss.str();
-}
-
-std::string read(const std::string& file) {
-    std::ifstream is(file);
-    std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-    return str;
-}
-
 TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
 
@@ -108,122 +83,24 @@ TEST(CompilerTest, CompileCopyStencil) {
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
-TEST(CompilerTest, CompileGlobalIndexStencilNaive) {
+TEST(CompilerTest, CompileGlobalIndexStencil) {
   using namespace dawn::iir;
 
   CartesianIIRBuilder b;
   auto in_f = b.field("in_field", FieldType::ijk);
   auto out_f = b.field("out_field", FieldType::ijk);
 
-  auto stencil_instantiation = b.build(
-      "generated", b.stencil(b.multistage(
-                       LoopOrderKind::Parallel,
-                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
-                       b.stage(1, {0, 2},
-                               b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
-  std::ofstream ofs("prototype/generated/global_indexing_naive.cpp");
-  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_instantiation);
-
-  std::string gen = read("prototype/generated/global_indexing_naive.cpp");
-  std::string ref = read("prototype/reference/global_indexing_naive.cpp");
-  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
-}
-
-TEST(CompilerTest, CompileGlobalIndexStencilCuda) {
-  using namespace dawn::iir;
-
-  CartesianIIRBuilder b;
-  auto in_f = b.field("in_field", FieldType::ijk);
-  auto out_f = b.field("out_field", FieldType::ijk);
-
-  auto stencil_instantiation = b.build(
-      "generated", b.stencil(b.multistage(
-                       LoopOrderKind::Parallel,
-                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
-                       b.stage(1, {0, 2},
-                               b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
-  std::ofstream ofs("prototype/generated/global_indexing_cuda.cpp");
-  dump<dawn::codegen::cuda::CudaCodeGen>(ofs, stencil_instantiation);
-
-  std::string gen = read("prototype/generated/global_indexing_cuda.cpp");
-  std::string ref = read("prototype/reference/global_indexing_cuda.cpp");
-  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
-}
-
-TEST(CompilerTest, CompileLaplacian) {
-  using namespace dawn::iir;
-  using SInterval = dawn::sir::Interval;
-
-  CartesianIIRBuilder b;
-  auto in = b.field("in", FieldType::ijk);
-  auto out = b.field("out", FieldType::ijk);
-  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
-
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval::Start, SInterval::End, b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
-                  b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-          ) ) );
-
-  std::ofstream ofs("prototype/generated/laplacian_stencil.cpp");
-  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_inst);
-}
-
-TEST(CompilerTest, CompileNonOverlapping) {
-  using namespace dawn::iir;
-  using SInterval = dawn::sir::Interval;
-
-  CartesianIIRBuilder b;
-  auto in = b.field("in", FieldType::ijk);
-  auto out = b.field("out", FieldType::ijk);
-  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
-
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval(SInterval::Start, 10), b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
-                  b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-         , b.stage(b.doMethod(SInterval(15, SInterval::End),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out), b.lit(10))
-  ) ) ) ) ) ) );
-
-  std::ofstream ofs("prototype/generated/nonoverlapping_stencil.cpp");
-  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(ofs, stencil_inst);
-
-  std::string gen = read("prototype/generated/nonoverlapping_stencil.cpp");
-  std::string ref = read("prototype/reference/nonoverlapping_stencil.cpp");
-  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+  auto stencil_instantiation =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+  std::ofstream of("prototype/generated/global_indexing.cpp");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
@@ -309,9 +186,9 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
                                                b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
                                                Op::plus))))))));
 
-  std::ofstream of("prototype/generated_diffusion.hpp");
+  std::ofstream of("prototype/generated_Diffusion.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
   of.close();
 }
 

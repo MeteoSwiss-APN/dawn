@@ -74,7 +74,7 @@ private:
                            const std::shared_ptr<StencilProperties>& stencilProperties,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const std::unordered_map<std::string, std::string>& paramNameToType,
-                           const sir::GlobalVariableMap& globalsMap, bool iterationSpaceSet) const;
+                           const sir::GlobalVariableMap& globalsMap) const;
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -102,15 +102,14 @@ private:
                           const sir::GlobalVariableMap& globalsMap,
                           IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
                           IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-                          std::shared_ptr<StencilProperties> stencilProperties,
-                          bool iterationSpaceSet) const;
+                          std::shared_ptr<StencilProperties> stencilProperties) const;
 
   void generateStencilClassMembers(
       Structure& stencilClass, const iir::Stencil& stencil,
       const sir::GlobalVariableMap& globalsMap,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-      std::shared_ptr<StencilProperties> stencilProperties, bool iterationSpaceSet) const;
+      std::shared_ptr<StencilProperties> stencilProperties) const;
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
