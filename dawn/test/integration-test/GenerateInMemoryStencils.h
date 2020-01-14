@@ -25,5 +25,7 @@ std::shared_ptr<dawn::iir::StencilInstantiation>
 createCopyStencilIIRInMemory(dawn::OptimizerContext& optimizer);
 std::shared_ptr<dawn::iir::StencilInstantiation>
 createLapStencilIIRInMemory(dawn::OptimizerContext& optimizer);
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer);
 
 #endif

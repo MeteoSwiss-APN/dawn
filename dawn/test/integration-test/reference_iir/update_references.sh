@@ -25,17 +25,15 @@ repo_path=$(git rev-parse --show-toplevel)
 
 # find DawnUpdateIIRReferences
 if [[ "$dawn_path" == "" ]]; then
-    if [[ -f "$repo_path/dawn/build/bin/integrationtest/DawnUpdateIIRReferences" ]]; then
-        update_path="$repo_path/dawn/build/bin/integrationtest/DawnUpdateIIRReferences"
-    elif [[ -f "$repo_path/dawn/bundle/build/dawn-prefix/src/dawn-build/bin/integrationtest/" ]]; then
-        update_path="$repo_path/dawn/bundle/build/dawn-prefix/src/dawn-build/bin/integrationtest/DawnUpdateIIRReferences"
+    if [[ -f "$repo_path/build/dawn/test/integration-test/DawnUpdateIIRReferences" ]]; then
+        update_path="$repo_path/build/dawn/test/integration-test/DawnUpdateIIRReferences"
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1
     fi
 else
-    if [[ -f "$dawn_path/bin/integrationtest/DawnUpdateIIRReferences" ]]; then
-        update_path=$(readlink -f "$dawn_path/bin/integrationtest/DawnUpdateIIRReferences")
+    if [[ -f "$dawn_path/dawn/test/integration-test/DawnUpdateIIRReferences" ]]; then
+        update_path=$(readlink -f "$dawn_path/dawn/test/integration-test/DawnUpdateIIRReferences")
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1

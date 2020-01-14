@@ -64,6 +64,7 @@
   "stencilName": "generated"
  },
  "internalIR": {
+  "gridType": "Cartesian",
   "globalVariableToValue": {},
   "stencils": [
    {
