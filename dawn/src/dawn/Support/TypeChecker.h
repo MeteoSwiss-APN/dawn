@@ -14,10 +14,13 @@
 
 #pragma once
 
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilMetaInformation.h"
+#include <regex>
 
 namespace dawn {
 class TypeChecker {
@@ -25,7 +28,8 @@ class TypeChecker {
 private:
   class TypeCheckerImpl : public ast::ASTVisitorForwarding {
     std::optional<ast::Expr::LocationType> curType_;
-    const std::unordered_map<std::string, ast::Expr::LocationType>& nameToLocationType_;
+    const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationType_;
+    const std::unordered_map<int, std::string> idToNameMap_;
     bool typesConsistent_ = true;
 
   public:
@@ -39,11 +43,14 @@ private:
     ast::Expr::LocationType getType() const;
 
     TypeCheckerImpl(
-        const std::unordered_map<std::string, ast::Expr::LocationType>& nameToLocationMap);
+        const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap);
+    TypeCheckerImpl(
+        const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap,
+        const std::unordered_map<int, std::string> idToNameMap);
   };
 
 public:
   bool checkLocationTypeConsistency(const dawn::SIR&);
-  bool checkLocationTypeConsistency(const dawn::iir::IIR&);
+  bool checkLocationTypeConsistency(const dawn::iir::IIR&, const iir::StencilMetaInformation&);
 };
 } // namespace dawn

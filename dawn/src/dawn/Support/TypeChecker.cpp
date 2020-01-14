@@ -1,17 +1,17 @@
 #include "TypeChecker.h"
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTFwd.h"
 #include <memory>
 
 namespace dawn {
 
-bool TypeChecker::checkLocationTypeConsistency(const dawn::iir::IIR& iir) {
+bool TypeChecker::checkLocationTypeConsistency(const dawn::iir::IIR& iir,
+                                               const iir::StencilMetaInformation& metaData) {
   bool consistent = true;
-  // std::unordered_map<std::string, ast::Expr::LocationType> allFieldNamesToLocation;
-  // for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-  //   auto const& fieldNamesToLocation = doMethodPtr->getFieldLocationsByName();
-  //   allFieldNamesToLocation.insert(fieldNamesToLocation.begin(), fieldNamesToLocation.end());
-  // }
+
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    TypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationsByName());
+    TypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationsByName(),
+                                      metaData.getAccessIDToNameMap());
     const std::shared_ptr<iir::BlockStmt>& ast =
         std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
     ast->accept(Impl);
@@ -72,8 +72,13 @@ bool TypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
 }
 
 TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
-    const std::unordered_map<std::string, ast::Expr::LocationType>& nameToLocationMap)
+    const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap)
     : nameToLocationType_(nameToLocationMap) {}
+
+TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
+    const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap,
+    const std::unordered_map<int, std::string> idToNameMap)
+    : nameToLocationType_(nameToLocationMap), idToNameMap_(idToNameMap) {}
 
 ast::Expr::LocationType TypeChecker::TypeCheckerImpl::getType() const {
   DAWN_ASSERT(hasType());
@@ -85,16 +90,24 @@ void TypeChecker::TypeCheckerImpl::visit(
   if(!typesConsistent_) {
     return;
   }
-  DAWN_ASSERT(nameToLocationType_.count(fieldAccessExpr->getName()));
-  curType_ = nameToLocationType_.at(fieldAccessExpr->getName());
+
+  auto fieldName = fieldAccessExpr->getName();
+  // the name in the FieldAccessExpr may be stale if the there are nested stencils
+  auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
+  if(newAccessID.has_value()) {
+    DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
+    fieldName = idToNameMap_.at(newAccessID.value());
+  }
+  DAWN_ASSERT(nameToLocationType_.count(fieldName));
+  curType_ = nameToLocationType_.at(fieldName);
 }
 void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperator>& binOp) {
   if(!typesConsistent_) {
     return;
   }
 
-  TypeChecker::TypeCheckerImpl left(nameToLocationType_);
-  TypeChecker::TypeCheckerImpl right(nameToLocationType_);
+  TypeChecker::TypeCheckerImpl left(nameToLocationType_, idToNameMap_);
+  TypeChecker::TypeCheckerImpl right(nameToLocationType_, idToNameMap_);
 
   binOp->getLeft()->accept(left);
   binOp->getRight()->accept(right);
@@ -120,8 +133,8 @@ void TypeChecker::TypeCheckerImpl::visit(
   if(!typesConsistent_) {
     return;
   }
-  TypeChecker::TypeCheckerImpl left(nameToLocationType_);
-  TypeChecker::TypeCheckerImpl right(nameToLocationType_);
+  TypeChecker::TypeCheckerImpl left(nameToLocationType_, idToNameMap_);
+  TypeChecker::TypeCheckerImpl right(nameToLocationType_, idToNameMap_);
 
   assignemtExpr->getLeft()->accept(left);
   assignemtExpr->getRight()->accept(right);
@@ -148,8 +161,8 @@ void TypeChecker::TypeCheckerImpl::visit(
     return;
   }
 
-  TypeChecker::TypeCheckerImpl init(nameToLocationType_);
-  TypeChecker::TypeCheckerImpl ops(nameToLocationType_);
+  TypeChecker::TypeCheckerImpl init(nameToLocationType_, idToNameMap_);
+  TypeChecker::TypeCheckerImpl ops(nameToLocationType_, idToNameMap_);
 
   reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);
