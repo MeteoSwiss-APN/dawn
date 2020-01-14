@@ -87,6 +87,12 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
+
+std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
+  const std::size_t pos = fullName.rfind(extension);
+  return pos < std::string::npos ? fullName.substr(0, pos) : fullName;
+}
+
 } // anonymous namespace
 
 /// @brief Report a diagnostic concering an invalid Option
@@ -107,16 +113,6 @@ static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, s
       diag << ", possible values " << RangeToString()(possibleValues);
   }
   return diag;
-}
-
-static std::string remove_fileextension(std::string fullName, std::string extension) {
-  std::string truncation = "";
-  std::size_t pos = 0;
-  while((pos = fullName.find(extension)) != std::string::npos) {
-    truncation += fullName.substr(0, pos);
-    fullName.erase(0, pos + extension.length());
-  }
-  return truncation;
 }
 
 static OptimizerContext::OptimizerContextOptions
@@ -238,7 +234,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        const std::string originalFileName = remove_fileextension(
+        const std::string originalFileName = filenameSansExtension(
             options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
                                          : options_->OutputFile,
             ".cpp");

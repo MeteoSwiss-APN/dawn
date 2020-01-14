@@ -287,11 +287,41 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     stencilClass.addComment("Members");
-    bool iterationSpaceSet = hasGlobalIndices(stencil);
-    if(iterationSpaceSet) {
-      generateGlobalIndices(stencil, stencilClass);
+    bool iterationSpaceSet = false;
+    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+      if(stage->getIterationSpace()[0].has_value()) {
+        stencilClass.addMember("std::array<int, 2>",
+                               "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
+        iterationSpaceSet = true;
+      }
+      if(stage->getIterationSpace()[1].has_value()) {
+        stencilClass.addMember("std::array<int, 2>",
+                               "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
+        iterationSpaceSet = true;
+      }
     }
+    if(iterationSpaceSet) {
+      stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
+      auto globalOffsetFunc = stencilClass.addMemberFunction("static std::array<unsigned int, 2>",
+                                                             "computeGlobalOffsets");
+      globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
+      globalOffsetFunc.startBody();
+      globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
+      globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
+      globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
+      globalOffsetFunc.addStatement(
+          "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
 
+      globalOffsetFunc.commit();
+
+      auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
+      checkOffsetFunc.addArg("unsigned int min");
+      checkOffsetFunc.addArg("unsigned int max");
+      checkOffsetFunc.addArg("unsigned int val");
+      checkOffsetFunc.startBody();
+      checkOffsetFunc.addStatement("return (min <= val && val < max)");
+      checkOffsetFunc.commit();
+    }
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
@@ -376,9 +406,10 @@ void CXXNaiveCodeGen::generateStencilClasses(
     for(const auto& fieldPair : nonTempFields) {
       stencilRunMethod.addStatement(fieldPair.second.Name + "_" + ".sync()");
     }
-
     for(const auto& multiStagePtr : stencil.getChildren()) {
+
       stencilRunMethod.ss() << "{";
+
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
@@ -406,6 +437,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       for(auto interval : partitionIntervals) {
+
         // for each interval, we generate naive nested loops
         stencilRunMethod.addBlockStatement(
             makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval),
@@ -424,12 +456,13 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
                 if(hasBody) {
                   auto doMethodGenerator = [&]() {
+                    // Check if we need to execute this statement:
+
                     // Generate Do-Method
                     for(const auto& doMethodPtr : stage.getChildren()) {
                       const iir::DoMethod& doMethod = *doMethodPtr;
-                      if(!doMethod.getInterval().overlaps(interval)) {
+                      if(!doMethod.getInterval().overlaps(interval))
                         continue;
-                      }
                       for(const auto& stmt : doMethod.getAST().getStatements()) {
                         stmt->accept(stencilBodyCXXVisitor);
                         stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();

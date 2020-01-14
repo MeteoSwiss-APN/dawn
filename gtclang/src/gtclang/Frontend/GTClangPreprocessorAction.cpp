@@ -32,6 +32,20 @@ namespace gtclang {
 
 namespace {
 
+template <char delimiter>
+class WordDelimitedBy : public std::string {};
+
+template <char delimiter>
+std::istream& operator>>(std::istream& is, WordDelimitedBy<delimiter>& output) {
+  std::getline(is, output, delimiter);
+  return is;
+}
+
+template <typename Iter, typename Cont>
+bool is_last(Iter iter, const Cont& cont) {
+  return (iter != cont.end()) && (next(iter) == cont.end());
+}
+
 /// @brief Lex the source file and generate replacements for the enhanced gridtools clang DSL
 class GTClangLexer {
   clang::CompilerInstance& compiler_;
@@ -282,6 +296,48 @@ private:
         registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
                             dawn::format("for(auto __k_loopvar__ : {%s, %s})", Arg1, Arg2));
 
+        consumeTokens(peekedTokens);
+      }
+
+      // Replace `iteration_space(ARG_1, ARG_2, ARG_3, ARG_4, ARG_5, ARG_6)` with `for(auto k :
+      // {ARG_1, ARG_2, ARG_3, ARG_4, ARG_5, ARG_6})`
+      if(token_.is(tok::identifier) && token_.getIdentifierInfo()->getName() == "iteration_space") {
+        unsigned peekedTokens = 0;
+        std::string intervalBounds;
+        // Check for '('
+        if(!PP_.LookAhead(peekedTokens++).is(tok::l_paren))
+          continue;
+        if(peekAndAccumulateUntil(tok::r_paren, peekedTokens, intervalBounds)) {
+          // Split the comma separated string
+          std::istringstream iss(intervalBounds);
+          std::vector<std::string> curBounds{std::istream_iterator<WordDelimitedBy<','>>(iss),
+                                             std::istream_iterator<WordDelimitedBy<','>>()};
+          std::string replacement = "for(auto __k_indexrange__ : {";
+          auto boundIter = curBounds.cbegin();
+          const std::array<char, 3> coordChar{'i', 'j', 'k'};
+          for(char e : coordChar) {
+            const std::string& boundStart = *boundIter;
+            ++boundIter;
+            const std::string& boundEnd = *boundIter;
+            const std::string errMsg = std::string{"failed parsing iteration_space argument: "} +
+                                       "(" + boundStart + "," + boundEnd + ")";
+            if(e != boundStart[0]) {
+              if(!std::any_of(coordChar.begin(), coordChar.end(),
+                              [boundStart](const char& e) { return boundStart[0] == e; }))
+                reportError(token_.getLocation(), errMsg + "blah");
+            } else if(boundStart[0] != boundEnd[0]) {
+              reportError(token_.getLocation(), errMsg);
+            }
+            replacement += boundStart + "," + boundEnd;
+            if(!is_last(boundIter, curBounds))
+              replacement += ", ";
+            else
+              break;
+          }
+          replacement += "})";
+          registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
+                              replacement);
+        }
         consumeTokens(peekedTokens);
       }
 

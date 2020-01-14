@@ -147,9 +147,10 @@ if(Python3_FOUND)
     # we know where it will be after the build step
     set(PROTOBUF_PYTHON_DIR ${protobuf_BINARY_DIR}/python)
   else()
-    # we try to find it
+    # we try to find it -- CMake has poor path detection
     find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
-      PATHS ${Protobuf_INCLUDE_DIR}/../python ${PROTOBUF_PYTHON_MODULE_DIR}
+      HINTS ${Protobuf_DIR}/../../.. ${PROTOBUF_PYTHON_MODULE_DIR}
+      PATH_SUFFIXES python python3 lib lib/python lib/python3 include/python include/python3
       DOC "Path to protobuf python module"
     )
   endif()
@@ -200,7 +201,7 @@ endif()
 set(DAWN_DRIVER_INCLUDEDIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE INTERNAL
   "Absolute path to driver includes in the source directory (used for super-builds) "
 )
-set(DAWN_INSTALL_DRIVER_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/driver-includes)
+set(DAWN_INSTALL_DRIVER_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(

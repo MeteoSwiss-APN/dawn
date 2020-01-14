@@ -136,8 +136,7 @@ public:
                                                     ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                        std::shared_ptr<iir::Expr>&& rhs,
-                                        Op operation = Op::plus);
+                                        std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);
 
   std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs,
@@ -182,7 +181,7 @@ public:
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> vregion(iir::Interval interval, Stmts&&... stmts) {
+  std::unique_ptr<iir::DoMethod> doMethod(iir::Interval interval, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(interval, si_->getMetaData());
     ret->setID(si_->nextUID());
@@ -194,14 +193,14 @@ public:
   }
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
-                                         Stmts&&... stmts) {
-    return vregion(iir::Interval(s, e), stmts ...);
+  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                          Stmts&&... stmts) {
+    return doMethod(iir::Interval(s, e), stmts ...);
   }
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
-                                         int offsetLow, int offsetHigh, Stmts&&... stmts) {
+  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                          int offsetLow, int offsetHigh, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e, offsetLow, offsetHigh),
                                                si_->getMetaData());
@@ -219,7 +218,7 @@ public:
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     ret->setLocationType(type);
-    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
   }
@@ -232,7 +231,22 @@ public:
     iir::Stage::IterationSpace iterationSpace;
     iterationSpace[direction] = interval;
     ret->setIterationSpace(iterationSpace);
-    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
+    return ret;
+  }
+
+  // specialized builder for the stage that accepts a global index
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(Interval intervalI, Interval intervalJ,
+                                    DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    iir::Stage::IterationSpace iterationSpace;
+    iterationSpace[0] = intervalI;
+    iterationSpace[1] = intervalJ;
+    ret->setIterationSpace(iterationSpace);
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
   }
@@ -295,6 +309,7 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
   Field field(std::string const& name, FieldType ft = FieldType::ijk);
+  Field tmpField(std::string const& name, FieldType ft = FieldType::ijk);
 };
 } // namespace iir
 } // namespace dawn
