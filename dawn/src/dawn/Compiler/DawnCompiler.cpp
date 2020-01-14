@@ -202,7 +202,14 @@ DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
   }
 
-  return optimize(optimizer.getStencilInstantiationMap());
+  auto stencilInstantiationMap = optimizer.getStencilInstantiationMap();
+
+  // Continue with all other optimization passes
+  if(!options_.Debug) {
+    stencilInstantiationMap = optimize(stencilInstantiationMap);
+  }
+
+  return stencilInstantiationMap;
 }
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
@@ -395,25 +402,31 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
 
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
-  // TODO Make this clearer
-  const bool inputIsSIR = options_.DeserializeIIR == "";
-  if(inputIsSIR) {
-    stencilInstantiationMap = optimize(stencilIR);
-    if(diagnostics_.hasErrors())
-      throw std::runtime_error("An error occurred in the parallelizer.");
-  } else {
-    // Deserialize valid IIR
+  // Deserialize internal IR if passed as an option
+  if(!options_.DeserializeIIR.empty()) {
+    // A filename DeserializeIIR was specified
+    DAWN_ASSERT_MSG(!stencilIR.get(),
+                    "A stencilIR was passed to compile, but an IIR was specified in options!");
+
+    // Deserialize valid internal IR
     auto optimizerOptions = createOptimizerOptionsFromAllOptions(options_);
 
     OptimizerContext optimizer(getDiagnostics(), optimizerOptions, nullptr);
     auto instantiation = IIRSerializer::deserialize(options_.DeserializeIIR, serializationKind);
     optimizer.restoreIIR("<restored>", instantiation);
 
+    stencilInstantiationMap = optimizer.getStencilInstantiationMap();
+
     if(!options_.Debug) {
-      stencilInstantiationMap = optimize(optimizer.getStencilInstantiationMap());
+      stencilInstantiationMap = optimize(stencilInstantiationMap);
       if(diagnostics_.hasErrors())
         throw std::runtime_error("An error occurred in the optimizer.");
     }
+  } else {
+    // No filename was specified, so continue with the stencil IR
+    stencilInstantiationMap = optimize(stencilIR);
+    if(diagnostics_.hasErrors())
+      throw std::runtime_error("An error occurred in the optimization steps.");
   }
 
   return generate(stencilInstantiationMap);

@@ -751,6 +751,9 @@ bool OptimizerContext::restoreIIR(std::string const& name,
   if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
     return false;
 
+  // Clean up the passes just run
+  passManager_.getPasses().clear();
+
   return true;
 }
 
