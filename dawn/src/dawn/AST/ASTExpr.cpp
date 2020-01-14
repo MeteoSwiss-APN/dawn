@@ -505,7 +505,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other) const {
   }
 
   return otherPtr && *otherPtr->getInit() == *getInit() && otherPtr->getOp() == getOp() &&
-         *otherPtr->getRhs() == *getRhs();
+         *otherPtr->getRhs() == *getRhs() && otherPtr->getRhsLocation() == getRhsLocation();
 }
 
 } // namespace ast

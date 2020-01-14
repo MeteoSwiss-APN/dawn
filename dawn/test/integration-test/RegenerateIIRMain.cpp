@@ -27,16 +27,16 @@ int main(int argc, char* argv[]) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
-  {
-    UIDGenerator::getInstance()->reset();
-    auto copy_stencil = createCopyStencilIIRInMemory(optimizer);
-    IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil,
-                             IIRSerializer::Format::Json);
-  }
-  {
-    UIDGenerator::getInstance()->reset();
-    auto lap_stencil = createLapStencilIIRInMemory(optimizer);
-    IIRSerializer::serialize("reference_iir/lap_stencil.iir", lap_stencil,
-                             IIRSerializer::Format::Json);
-  }
+  UIDGenerator::getInstance()->reset();
+  IIRSerializer::serialize("reference_iir/copy_stencil.iir",
+                           createCopyStencilIIRInMemory(optimizer), IIRSerializer::Format::Json);
+
+  UIDGenerator::getInstance()->reset();
+  IIRSerializer::serialize("reference_iir/lap_stencil.iir", createLapStencilIIRInMemory(optimizer),
+                           IIRSerializer::Format::Json);
+
+  UIDGenerator::getInstance()->reset();
+  IIRSerializer::serialize("reference_iir/unstructured_sum_edge_to_cells.iir",
+                           createUnstructuredSumEdgeToCellsIIRInMemory(optimizer),
+                           IIRSerializer::Format::Json);
 }
