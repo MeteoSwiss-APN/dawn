@@ -46,6 +46,7 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_test(NAME GTClangIntegrationTestNoCodegen
   COMMAND ${Python3_EXECUTABLE}
   ${PROJECT_SOURCE_DIR}/test/utils/gtclang-tester/gtclang-tester.py
+  --ignore="--ignore=PassStageReordering/Test07.cpp,PassStageMerger/Test05.cpp,PassStageMerger/Test06.cpp,PassFieldVersioning/RaceCondition01.cpp,PassFieldVersioning/RaceCondition02.cpp,PassFieldVersioning/RaceCondition03.cpp,PassTemporaryMerger/MergeTest05.cpp,PassTemporaryMerger/MergeTest04.cpp,PassTemporaryMerger/MergeTest03.cpp"
   --gtclang=$<TARGET_FILE:gtclang>
   --cxx=${CMAKE_CXX_COMPILER}
   --gridtools_flags="${compiler_flags} ${include_flags} ${library_flags}"
