@@ -49,38 +49,6 @@ std::string read(const std::string& file) {
   return str;
 }
 
-TEST(CodeGenNaiveTest, LaplacianStencil) {
-  using namespace dawn::iir;
-  using SInterval = dawn::sir::Interval;
-
-  CartesianIIRBuilder b;
-  auto in = b.field("in", FieldType::ijk);
-  auto out = b.field("out", FieldType::ijk);
-  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
-
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval::Start, SInterval::End, b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
-                  b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-          ) ) );
-
-  std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
-  dump(ofs, stencil_inst);
-}
-
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   using namespace dawn::iir;
   using SInterval = dawn::sir::Interval;
@@ -121,15 +89,36 @@ TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
-} // anonymous namespace
+TEST(CodeGenNaiveTest, LaplacianStencil) {
+  using namespace dawn::iir;
+  using SInterval = dawn::sir::Interval;
 
-int main(int argc, char* argv[]) {
-    // Initialize gtest
-    testing::InitGoogleTest(&argc, argv);
+  CartesianIIRBuilder b;
+  auto in = b.field("in", FieldType::ijk);
+  auto out = b.field("out", FieldType::ijk);
+  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
 
-    // Initialize Unittest-Logger
-    auto logger = std::make_unique<dawn::UnittestLogger>();
-    dawn::Logger::getSingleton().registerLogger(logger.get());
+  auto stencil_inst = b.build("generated",
+    b.stencil(
+      b.multistage(LoopOrderKind::Parallel,
+        b.stage(
+          b.doMethod(SInterval::Start, SInterval::End, b.declareVar(dx),
+            b.block(
+              b.stmt(
+                b.assignExpr(b.at(out),
+                  b.binaryExpr(
+                    b.binaryExpr(b.lit(-4),
+                      b.binaryExpr(b.at(in),
+                        b.binaryExpr(b.at(in, {1, 0, 0}),
+                          b.binaryExpr(b.at(in, {-1, 0, 0}),
+                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
+                    ) ) ), Op::multiply),
+                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
+            ) ) ) ) )
+          ) ) );
 
-    return RUN_ALL_TESTS();
+  std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
+  dump(ofs, stencil_inst);
 }
+
+} // anonymous namespace

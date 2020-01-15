@@ -30,7 +30,7 @@ namespace cuda {
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties,
-                     CudaCodeGen::CudaCodeGenOptions options, bool iterationSpaceSet)
+                     CudaCodeGen::CudaCodeGenOptions options)
     : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
       metadata_(stencilInstantiation->getMetaData()), cacheProperties_(cacheProperties),
       useCodeGenTemporaries_(CodeGeneratorHelper::useTemporaries(
@@ -38,8 +38,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
                              ms->hasMemAccessTemporaries()),
       cudaKernelName_(CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_)),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
-      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)), options_(options),
-      iterationSpaceSet_(iterationSpaceSet) {}
+      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)), options_(options) {}
 
 void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
@@ -678,6 +677,7 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
 }
 
 void MSCodeGen::generateCudaKernelCode() {
+
   iir::Extents maxExtents(ast::cartesian);
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms_)) {
     maxExtents.merge(stage->getExtents());
@@ -699,16 +699,6 @@ void MSCodeGen::generateCudaKernelCode() {
     const int accessID = p.first;
     return ms_->isMemAccessTemporary(accessID);
   });
-
-  if(iterationSpaceSet_) {
-    MemberFunction offsetFunc("__device__ bool", "checkOffset_", ss_);
-    offsetFunc.addArg("unsigned int min");
-    offsetFunc.addArg("unsigned int max");
-    offsetFunc.addArg("unsigned int val");
-    offsetFunc.startBody();
-    offsetFunc.addStatement("return (min <= val && val < max)");
-    offsetFunc.commit();
-  }
 
   std::string fnDecl = "";
   if(useCodeGenTemporaries_)
@@ -771,21 +761,6 @@ void MSCodeGen::generateCudaKernelCode() {
       cudaKernel.addArg("::dawn::float_type * const " +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
-  }
-
-  if(iterationSpaceSet_) {
-    for(const auto& stencil : stencilInstantiation_->getStencils()) {
-      for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
-        std::string prefix = "int* const stage" + std::to_string(stage->getStageID()) + "Global";
-        if(stage->getIterationSpace()[0].has_value()) {
-          cudaKernel.addArg(prefix + "IIndices");
-        }
-        if(stage->getIterationSpace()[1].has_value()) {
-          cudaKernel.addArg(prefix + "JIndices");
-        }
-      }
-    }
-    cudaKernel.addArg("unsigned* const globalOffsets");
   }
 
   DAWN_ASSERT(fields.size() > 0);
@@ -1045,43 +1020,23 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addStatement("__syncthreads()");
         }
 
-        std::string guard = "if(iblock >= " + std::to_string(hExtent.iMinus()) +
-                            " && iblock <= block_size_i -1 + " + std::to_string(hExtent.iPlus()) +
-                            " && jblock >= " + std::to_string(hExtent.jMinus()) +
-                            " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus());
-
-        if(std::any_of(stage.getIterationSpace().cbegin(),
-                       stage.getIterationSpace().cend(),
-                       [](const auto& p) -> bool { return p.has_value(); })) {
-          for(const auto& stencil : stencilInstantiation_->getStencils()) {
-            for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
-              std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
-              if(stage->getIterationSpace()[0].has_value()) {
-                guard += " && checkOffset_(" + prefix + "IIndices[0], " + prefix +
-                         "IIndices[1], globalOffsets[0] + iblock)";
+        cudaKernel.addBlockStatement(
+            "if(iblock >= " + std::to_string(hExtent.iMinus()) +
+                " && iblock <= block_size_i -1 + " + std::to_string(hExtent.iPlus()) +
+                " && jblock >= " + std::to_string(hExtent.jMinus()) +
+                " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus()) + ")",
+            [&]() {
+              // Generate Do-Method
+              for(const auto& doMethodPtr : stage.getChildren()) {
+                const iir::DoMethod& doMethod = *doMethodPtr;
+                if(!doMethod.getInterval().overlaps(interval))
+                  continue;
+                for(const auto& stmt : doMethod.getAST().getStatements()) {
+                  stmt->accept(stencilBodyCXXVisitor);
+                  cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+                }
               }
-              if(stage->getIterationSpace()[1].has_value()) {
-                guard += " && checkOffset_(" + prefix + "JIndices[0], " + prefix +
-                         "JIndices[1], globalOffsets[1] + jblock)";
-              }
-            }
-          }
-        }
-
-        guard += ")";
-
-        cudaKernel.addBlockStatement(guard, [&]() {
-          // Generate Do-Method
-          for(const auto& doMethodPtr : stage.getChildren()) {
-            const iir::DoMethod& doMethod = *doMethodPtr;
-            if(!doMethod.getInterval().overlaps(interval))
-              continue;
-            for(const auto& stmt : doMethod.getAST().getStatements()) {
-              stmt->accept(stencilBodyCXXVisitor);
-              cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
-            }
-          }
-        });
+            });
         // only add sync if there are data dependencies
         if(intervalRequiresSync(interval, stage)) {
           cudaKernel.addStatement("__syncthreads()");

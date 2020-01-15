@@ -451,7 +451,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
                 // Check if we need to execute this statement:
                 bool hasOverlappingInterval = false;
                 for(const auto& doMethodPtr : stage.getChildren()) {
-                    hasOverlappingInterval = (doMethodPtr->getInterval().overlaps(interval));
+                    hasOverlappingInterval |= (doMethodPtr->getInterval().overlaps(interval));
                 }
 
                 if(hasOverlappingInterval) {
