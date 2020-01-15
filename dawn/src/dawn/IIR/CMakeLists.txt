@@ -127,9 +127,7 @@ add_library(DawnIIR
   StencilInstantiation.cpp
   StencilInstantiation.h
   StencilMetaInformation.cpp
-  StencilMetaInformation.h
-  TypeChecker.h
-  TypeChecker.cpp
+  StencilMetaInformation.h 
   )
 
 target_add_dawn_standard_props(DawnIIR)

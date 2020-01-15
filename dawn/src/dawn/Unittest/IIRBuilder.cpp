@@ -12,10 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
-#include "IIRBuilder.h"
+// TODO there are death tests which rely on the following code to die, needs refactoring
+#ifdef NDEBUG
+#undef NDEBUG
+#define HAD_NDEBUG
+#endif
+#include "dawn/Support/Assert.h"
+#ifdef HAD_NDEBUG
+#define NDEBUG
+#undef HAD_NDEBUG
+#endif
 
-#include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "IIRBuilder.h"
 
 namespace dawn {
 namespace iir {

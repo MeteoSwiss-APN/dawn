@@ -20,7 +20,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include <regex>
+#include <memory>
 
 namespace dawn {
 class TypeChecker {

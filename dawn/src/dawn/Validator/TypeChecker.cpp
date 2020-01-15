@@ -1,7 +1,4 @@
 #include "TypeChecker.h"
-#include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
-#include <memory>
 
 namespace dawn {
 

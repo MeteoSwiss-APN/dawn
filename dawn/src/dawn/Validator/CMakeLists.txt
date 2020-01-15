@@ -12,12 +12,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_library(DawnCompiler
-  DawnCompiler.h
-  DawnCompiler.cpp
-  Options.h
-  Options.inc
+add_library(DawnValidator
+    TypeChecker.h
+    TypeChecker.cpp
 )
 
-target_add_dawn_standard_props(DawnCompiler)
-target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnValidator DawnCodeGen DawnSerialization)
+target_add_dawn_standard_props(DawnValidator)
+target_link_libraries(DawnValidator PUBLIC DawnIIR DawnSIR)

@@ -11,13 +11,13 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-add_library(DawnCompiler
-  DawnCompiler.h
-  DawnCompiler.cpp
-  Options.h
-  Options.inc
+set(executable ${PROJECT_NAME}UnittestValidator)
+add_executable(${executable}
+  TestMain.cpp  
+  TestTypeChecker.cpp
 )
-
-target_add_dawn_standard_props(DawnCompiler)
-target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnValidator DawnCodeGen DawnSerialization)
+target_link_libraries(${executable} DawnValidator DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+gtest_discover_tests(${executable} TEST_PREFIX "${executable}::")

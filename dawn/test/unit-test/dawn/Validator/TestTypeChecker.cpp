@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/TypeChecker.h"
 #include "dawn/Unittest/IIRBuilder.h"
+#include "dawn/Validator/TypeChecker.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;

@@ -20,4 +20,4 @@ add_library(DawnUnittest
 )
 
 target_add_dawn_standard_props(DawnUnittest)
-target_link_libraries(DawnUnittest PUBLIC DawnSupport DawnIIR DawnOptimizer DawnCodeGen)
+target_link_libraries(DawnUnittest PUBLIC DawnSupport DawnIIR DawnOptimizer DawnValidator DawnCodeGen)

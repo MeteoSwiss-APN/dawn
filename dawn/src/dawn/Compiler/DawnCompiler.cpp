@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
-#include "dawn/IIR/TypeChecker.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -52,6 +51,7 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/Validator/TypeChecker.h"
 
 namespace dawn {
 

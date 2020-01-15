@@ -20,12 +20,14 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/TypeChecker.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Validator/TypeChecker.h"
 
 namespace dawn {
 namespace iir {
