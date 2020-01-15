@@ -12,8 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(EXEC_NAME ${PROJECT_NAME}UnittestCodeGenNaive)
-add_executable(${EXEC_NAME} TestCodeGenNaive.cpp)
-target_add_dawn_standard_props(${EXEC_NAME})
-target_link_libraries(${EXEC_NAME} DawnUnittest gtest)
-add_test(NAME ${EXEC_NAME} COMMAND ${EXEC_NAME})
+set(executable ${PROJECT_NAME}UnittestCodeGenNaive)
+add_executable(${executable}
+  TestCodeGenNaive.cpp
+  TestMain.cpp
+)
+target_add_dawn_standard_props(${executable})
+target_link_libraries(${executable} DawnUnittest gtest)
+add_test(NAME ${executable} COMMAND ${executable})
