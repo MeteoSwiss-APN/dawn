@@ -82,20 +82,17 @@ TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
   std::shared_ptr<SIR> sir = deserialize("test/unit-test/dawn/CodeGen/Naive/input/globals_opt_away.sir");
   auto stencil_inst = compile(sir);
   ASSERT_FALSE(stencil_inst.empty());
-  IntegrityChecker checker(stencil_inst.begin()->second.get());
 
-  dump(std::cout, stencil_inst);
+  IntegrityChecker checker(stencil_inst.begin()->second.get());
+  try {
+    checker.run();
+    FAIL() << "Semantic error not thrown";
+  } catch (SemanticError& error) {
+    SUCCEED();
+  }
+
+  std::ostringstream oss;
+  dump(oss, stencil_inst);
 }
 
 } // anonymous namespace
-
-int main(int argc, char* argv[]) {
-    // Initialize gtest
-    testing::InitGoogleTest(&argc, argv);
-
-    // Initialize Unittest-Logger
-    auto logger = std::make_unique<dawn::UnittestLogger>();
-    dawn::Logger::getSingleton().registerLogger(logger.get());
-
-    return RUN_ALL_TESTS();
-}

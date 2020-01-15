@@ -15,63 +15,76 @@
 #ifndef DAWN_OPTIMIZER_INTEGRITYCHECKER_H
 #define DAWN_OPTIMIZER_INTEGRITYCHECKER_H
 
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/Exception.h"
 
 namespace dawn {
 
 //===------------------------------------------------------------------------------------------===//
 //     IntegrityChecker
 //===------------------------------------------------------------------------------------------===//
-/// @brief Perform basic integrity checks on the AST (e.g., ensure constant expressions
-/// are not reassigned).
+/// @brief Perform basic integrity checks on the AST.
 class IntegrityChecker : public iir::ASTVisitor {
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
-  //OptimizerContext& context_;
 
 public:
-  IntegrityChecker(iir::StencilInstantiation* instantiation); //, OptimizerContext& context);
+  IntegrityChecker(iir::StencilInstantiation* instantiation);
 
-  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {}
+  void run();
 
-  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {}
+  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
+
+  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
 
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
 
-  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override {}
+  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
 
-  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override {}
+  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
 
-  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override {}
+  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
 
-  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override {}
+  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
 
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {}
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
 
-  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override {}
+  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
 
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {}
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
 
-  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {}
+  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
 
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {}
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {}
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
+
+private:
+  void iterate(iir::StencilInstantiation* instantiation);
+
+  void iterate(const std::unique_ptr<iir::Stencil>& stencil);
+
+  void iterate(const std::unique_ptr<iir::MultiStage>& multiStage);
+
+  void iterate(const std::unique_ptr<iir::Stage>& stage);
+
+  void iterate(const std::unique_ptr<iir::DoMethod>& doMethod);
 };
 
 } // namespace dawn
 
-#endif  // DAWN_OPTIMIZER_INTEGRITYCHECKER_H
+#endif // DAWN_OPTIMIZER_INTEGRITYCHECKER_H
