@@ -31,13 +31,41 @@ message SourceLocation {
   int32 Column = 2; // Column in the `Line`
 }
 
-message FieldDimensions {
-  int32 maskCartI = 1;                 // mask for cartesian dimension i
-  int32 maskCartJ = 2;                 // mask for cartesian dimension j
- 
-  repeated dawn.proto.enums.LocationType neighbor_chain = 3;   // dense + sparse parts condensed representation (neighbor chain)
+// @brief Cartesian horizontal dimension of a field
+//
+// For a cartesian grid we enable/disable the I and J components through their respective masks.
+// The dimension has a location type.
+// @ingroup sir_proto
+message CartesianDimension {
+  int32 mask_cart_i = 1;                 // mask for cartesian component i
+  int32 mask_cart_j = 2;                 // mask for cartesian component j
 
-  int32 maskK = 4;                        // mask for vertical dimension
+  dawn.proto.enums.LocationType dense_location_type = 3; // dense location type
+}
+
+// @brief Triangular horizontal dimension of a field
+//
+// For a triangular grid we need to specify the dense location type.
+// The dimension could be sparse. In such case the neighbor chain is set.
+// @ingroup sir_proto
+message TriangularDimension {
+  dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
+  repeated dawn.proto.enums.LocationType neighbor_chain = 2;   // neighbor chain encoding the dense + sparse parts when the field has a sparse component
+}
+
+// @brief Dimensions spanned by a field
+// 
+// This is a condensed representation of the dimensions of a field. 
+// A field has a vertical component iff maskK=1. 
+// On the horizontal we distinguish between cartesian and triangular grids. 
+// @ingroup sir_proto
+message FieldDimensions {
+  oneof horizontal_dimension {
+    CartesianDimension cartesian_horizontal_dimension = 1;
+    TriangularDimension triangular_horizontal_dimension = 2;
+  }
+
+  int32 mask_k = 3;                        // mask for vertical dimension
 }
 
 // @brief Description of a field argument of a Stencil or StencilFunction
@@ -46,7 +74,7 @@ message Field {
   string name = 1;                     // Name of the field
   SourceLocation loc = 2;              // Source location
   bool is_temporary = 3;               // Is the field a temporary?
-  FieldDimensions field_dimensions = 4;
+  FieldDimensions field_dimensions = 4; // Dimensions spanned by the field
 }
 
 // @brief Directional argument of a StencilFunction

@@ -5,8 +5,8 @@
    "20": "b"
   },
   "accessIDToType": {
-   "19": 6,
-   "20": 6
+   "20": 6,
+   "19": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -25,16 +25,20 @@
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
    "19": {
-    "maskCartI": 1,
-    "maskCartJ": 1,
-    "neighbor_chain": [],
-    "maskK": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1,
+     "dense_location_type": "Cell"
+    },
+    "mask_k": 1
    },
    "20": {
-    "maskCartI": 1,
-    "maskCartJ": 1,
-    "neighbor_chain": [],
-    "maskK": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1,
+     "dense_location_type": "Cell"
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {

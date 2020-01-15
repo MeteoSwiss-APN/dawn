@@ -211,62 +211,61 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
   offsetProto->set_name(offset->Name);
   setLocation(offsetProto->mutable_loc(), offset->Loc);
 }
+namespace {
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
+  proto::enums::LocationType protoLocationType;
+  switch(locationType) {
+  case ast::LocationType::Cells:
+    protoLocationType = proto::enums::LocationType::Cell;
+    break;
+  case ast::LocationType::Edges:
+    protoLocationType = proto::enums::LocationType::Edge;
+    break;
+  case ast::LocationType::Vertices:
+    protoLocationType = proto::enums::LocationType::Vertex;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  return protoLocationType;
+}
+} // namespace
 
 void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
                         const sir::FieldDimensions& fieldDimensions) {
-  // TODO use gridtpype
+  // TODO sparse_dim: use gridtype
   if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
          fieldDimensions.getHorizontalFieldDimension())) {
-    auto const& cartesianDimensions =
+    auto const& cartesianDimension =
         dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
             fieldDimensions.getHorizontalFieldDimension());
 
-    protoFieldDimensions->set_maskcarti(cartesianDimensions.I());
-    protoFieldDimensions->set_maskcartj(cartesianDimensions.J());
-    protoFieldDimensions->set_maskk(fieldDimensions.K());
+    dawn::proto::statements::CartesianDimension* protoCartesianDimension =
+        protoFieldDimensions->mutable_cartesian_horizontal_dimension();
+
+    protoCartesianDimension->set_dense_location_type(
+        getProtoLocationTypeFromLocationType(cartesianDimension.getLocationType()));
+    protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
+    protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
+
   } else {
-    auto const& triangularDimensions =
+    auto const& triangularDimension =
         dawn::sir::dimension_cast<dawn::sir::TriangularFieldDimension const&>(
             fieldDimensions.getHorizontalFieldDimension());
 
-    proto::enums::LocationType protoLocationType;
-    if(triangularDimensions.isSparse()) {
+    dawn::proto::statements::TriangularDimension* protoTriangularDimension =
+        protoFieldDimensions->mutable_triangular_horizontal_dimension();
 
-      for(int i = 0; i < triangularDimensions.getNeighborChain().size(); ++i) {
-        switch(triangularDimensions.getNeighborChain()[i]) {
-        case dawn::ast::LocationType::Cells:
-          protoLocationType = proto::enums::LocationType::Cell;
-          break;
-        case dawn::ast::LocationType::Edges:
-          protoLocationType = proto::enums::LocationType::Edge;
-          break;
-        case dawn::ast::LocationType::Vertices:
-          protoLocationType = proto::enums::LocationType::Vertex;
-          break;
-        default:
-          dawn_unreachable("unknown location type");
-        }
-        protoFieldDimensions->set_neighbor_chain(i, protoLocationType);
+    if(triangularDimension.isSparse()) {
+      for(int i = 0; i < triangularDimension.getNeighborChain().size(); ++i) {
+        protoTriangularDimension->set_neighbor_chain(
+            i, getProtoLocationTypeFromLocationType(triangularDimension.getNeighborChain()[i]));
       }
-    } else {
-      switch(triangularDimensions.getDenseLocation()) {
-      case dawn::ast::LocationType::Cells:
-        protoLocationType = proto::enums::LocationType::Cell;
-        break;
-      case dawn::ast::LocationType::Edges:
-        protoLocationType = proto::enums::LocationType::Edge;
-        break;
-      case dawn::ast::LocationType::Vertices:
-        protoLocationType = proto::enums::LocationType::Vertex;
-        break;
-      default:
-        dawn_unreachable("unknown location type");
-      }
-      protoFieldDimensions->set_neighbor_chain(0, protoLocationType);
     }
-
-    protoFieldDimensions->set_maskk(fieldDimensions.K());
+    protoTriangularDimension->set_dense_location_type(
+        getProtoLocationTypeFromLocationType(triangularDimension.getDenseLocation()));
   }
+  protoFieldDimensions->set_mask_k(fieldDimensions.K());
 }
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field) {
@@ -693,64 +692,72 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
 //===------------------------------------------------------------------------------------------===//
 // Deserialization
 //===------------------------------------------------------------------------------------------===//
+namespace {
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType) {
+  ast::LocationType loc;
+  switch(protoLocationType) {
+  case proto::enums::LocationType::Cell:
+    loc = ast::LocationType::Cells;
+    break;
+  case proto::enums::LocationType::Edge:
+    loc = ast::LocationType::Edges;
+    break;
+  case proto::enums::LocationType::Vertex:
+    loc = ast::LocationType::Vertices;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  return loc;
+}
+} // namespace
 
 sir::FieldDimensions
 makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions) {
-  // TODO use grid type
-  if(protoFieldDimensions.neighbor_chain().empty()) {
+
+  // TODO sparse_dim: use gridtype!!!
+  if(protoFieldDimensions.has_cartesian_horizontal_dimension()) {
+    const auto& protoCartesianDimension = protoFieldDimensions.cartesian_horizontal_dimension();
     return sir::FieldDimensions(
         sir::HorizontalFieldDimension(
-            dawn::ast::cartesian, std::array<bool, 2>({(bool)protoFieldDimensions.maskcarti(),
-                                                       (bool)protoFieldDimensions.maskcartj()})),
-        (bool)protoFieldDimensions.maskk());
-  } else {
-    if(protoFieldDimensions.neighbor_chain_size() > 1) {
+            dawn::ast::cartesian,
+            std::array<bool, 2>({(bool)protoCartesianDimension.mask_cart_i(),
+                                 (bool)protoCartesianDimension.mask_cart_j()}),
+            getLocationTypeFromProtoLocationType(protoCartesianDimension.dense_location_type())),
+        (bool)protoFieldDimensions.mask_k());
+  } else if(protoFieldDimensions.has_triangular_horizontal_dimension()) {
+
+    const auto& protoTriangularDimension = protoFieldDimensions.triangular_horizontal_dimension();
+
+    if(protoTriangularDimension.neighbor_chain_size() != 0) { // sparse
+
+      // Check that first element of neighbor chain corresponds to dense location type
+      DAWN_ASSERT_MSG(protoTriangularDimension.neighbor_chain(0) ==
+                          protoTriangularDimension.dense_location_type(),
+                      "First element of neighbor chain and dense location type don't match in "
+                      "serialized FieldDimensions message.");
 
       NeighborChain neighborChain;
-      for(int i = 0; i < protoFieldDimensions.neighbor_chain_size(); ++i) {
-        ast::LocationType loc;
-        switch(protoFieldDimensions.neighbor_chain(i)) {
-
-        case proto::enums::LocationType::Cell:
-          loc = ast::LocationType::Cells;
-          break;
-        case proto::enums::LocationType::Edge:
-          loc = ast::LocationType::Edges;
-          break;
-        case proto::enums::LocationType::Vertex:
-          loc = ast::LocationType::Vertices;
-          break;
-        default:
-          dawn_unreachable("unknown location type");
-        }
-        neighborChain.push_back(loc);
+      for(int i = 0; i < protoTriangularDimension.neighbor_chain_size(); ++i) {
+        neighborChain.push_back(
+            getLocationTypeFromProtoLocationType(protoTriangularDimension.neighbor_chain(i)));
       }
 
       return sir::FieldDimensions(
           sir::HorizontalFieldDimension(dawn::ast::triangular, neighborChain),
-          protoFieldDimensions.maskk());
+          protoFieldDimensions.mask_k());
 
-    } else {
+    } else { // dense
 
-      ast::LocationType loc;
-      switch(protoFieldDimensions.neighbor_chain(0)) {
-
-      case proto::enums::LocationType::Cell:
-        loc = ast::LocationType::Cells;
-        break;
-      case proto::enums::LocationType::Edge:
-        loc = ast::LocationType::Edges;
-        break;
-      case proto::enums::LocationType::Vertex:
-        loc = ast::LocationType::Vertices;
-        break;
-      default:
-        dawn_unreachable("unknown location type");
-      }
-
-      return sir::FieldDimensions(sir::HorizontalFieldDimension(dawn::ast::triangular, loc),
-                                  protoFieldDimensions.maskk());
+      return sir::FieldDimensions(
+          sir::HorizontalFieldDimension(
+              dawn::ast::triangular,
+              getLocationTypeFromProtoLocationType(protoTriangularDimension.dense_location_type())),
+          protoFieldDimensions.mask_k());
     }
+  } else {
+    dawn_unreachable("No horizontal dimension in serialized FieldDimensions message.");
   }
 }
 

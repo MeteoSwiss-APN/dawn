@@ -1,14 +1,14 @@
 {
  "metadata": {
   "accessIDToName": {
+   "31": "out_field",
    "29": "global",
-   "30": "in_field",
-   "31": "out_field"
+   "30": "in_field"
   },
   "accessIDToType": {
-   "29": 0,
    "30": 6,
-   "31": 6
+   "31": 6,
+   "29": 0
   },
   "literalIDToName": {
    "-61": "0",
@@ -32,37 +32,23 @@
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
    "30": {
-    "maskCartI": 1,
-    "maskCartJ": 1,
-    "neighbor_chain": [],
-    "maskK": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1,
+     "dense_location_type": "Cell"
+    },
+    "mask_k": 1
    },
    "31": {
-    "maskCartI": 1,
-    "maskCartJ": 1,
-    "neighbor_chain": [],
-    "maskK": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1,
+     "dense_location_type": "Cell"
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
-   "67": {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_67",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 68
-    }
-   },
    "62": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
@@ -79,6 +65,24 @@
      },
      "data": {},
      "ID": 63
+    }
+   },
+   "67": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_67",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 68
     }
    }
   },

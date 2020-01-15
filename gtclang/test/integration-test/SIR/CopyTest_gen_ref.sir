@@ -136,10 +136,12 @@
      },
      "is_temporary": false,
      "field_dimensions": {
-      "maskCartI": 1,
-      "maskCartJ": 1,
-      "neighbor_chain": [],
-      "maskK": 1
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1,
+       "dense_location_type": "Cell"
+      },
+      "mask_k": 1
      }
     },
     {
@@ -150,10 +152,12 @@
      },
      "is_temporary": false,
      "field_dimensions": {
-      "maskCartI": 1,
-      "maskCartJ": 1,
-      "neighbor_chain": [],
-      "maskK": 1
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1,
+       "dense_location_type": "Cell"
+      },
+      "mask_k": 1
      }
     }
    ]

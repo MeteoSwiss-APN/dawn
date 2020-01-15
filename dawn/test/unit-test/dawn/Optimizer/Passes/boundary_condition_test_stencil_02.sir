@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "boundary_condition_test_stencil_02.cpp",
  "stencils": [
   {
@@ -61,7 +62,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 11
                    }
                   },
                   "op": "=",
@@ -89,7 +90,7 @@
                      "Column": 22
                     },
                     "data": {},
-                    "ID": 11
+                    "ID": 10
                    }
                   },
                   "loc": {
@@ -132,7 +133,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 14
+                    "ID": 17
                    }
                   },
                   "op": "=",
@@ -175,14 +176,14 @@
                        "Column": 35
                       },
                       "data": {},
-                      "ID": 16
+                      "ID": 14
                      }
                     },
                     "loc": {
                      "Line": 39,
                      "Column": 13
                     },
-                    "ID": 17
+                    "ID": 16
                    }
                   },
                   "loc": {
@@ -245,11 +246,13 @@
      },
      "is_temporary": false,
      "field_dimensions": {
-      "maskCartI": 1,
-      "maskCartJ": 1,
-      "maskK": 1
-     },
-     "location_type": "Cell"
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1,
+       "dense_location_type": "Cell"
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -259,11 +262,13 @@
      },
      "is_temporary": false,
      "field_dimensions": {
-      "maskCartI": 1,
-      "maskCartJ": 1,
-      "maskK": 1
-     },
-     "location_type": "Cell"
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1,
+       "dense_location_type": "Cell"
+      },
+      "mask_k": 1
+     }
     }
    ]
   }
@@ -305,7 +310,7 @@
                "Column": 16
               },
               "data": {},
-              "ID": 2
+              "ID": 3
              }
             },
             "op": "=",
@@ -320,7 +325,7 @@
                "Column": 20
               },
               "data": {},
-              "ID": 3
+              "ID": 2
              }
             },
             "loc": {
@@ -360,11 +365,13 @@
       },
       "is_temporary": false,
       "field_dimensions": {
-       "maskCartI": 1,
-       "maskCartJ": 1,
-       "maskK": 1
-      },
-      "location_type": "Cell"
+       "cartesian_horizontal_dimension": {
+        "mask_cart_i": 1,
+        "mask_cart_j": 1,
+        "dense_location_type": "Cell"
+       },
+       "mask_k": 1
+      }
      }
     }
    ]
