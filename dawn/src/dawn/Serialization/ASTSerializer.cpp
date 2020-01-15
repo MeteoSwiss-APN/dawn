@@ -33,6 +33,44 @@ using namespace dawn;
 using namespace ast;
 
 namespace {
+
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
+  proto::enums::LocationType protoLocationType;
+  switch(locationType) {
+  case ast::LocationType::Cells:
+    protoLocationType = proto::enums::LocationType::Cell;
+    break;
+  case ast::LocationType::Edges:
+    protoLocationType = proto::enums::LocationType::Edge;
+    break;
+  case ast::LocationType::Vertices:
+    protoLocationType = proto::enums::LocationType::Vertex;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  return protoLocationType;
+}
+
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType) {
+  ast::LocationType loc;
+  switch(protoLocationType) {
+  case proto::enums::LocationType::Cell:
+    loc = ast::LocationType::Cells;
+    break;
+  case proto::enums::LocationType::Edge:
+    loc = ast::LocationType::Edges;
+    break;
+  case proto::enums::LocationType::Vertex:
+    loc = ast::LocationType::Vertices;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  return loc;
+}
+
 void fillData(iir::IIRStmtData& data, dawn::proto::statements::StmtData const& dataProto) {
   if(dataProto.has_accesses()) {
     iir::Accesses callerAccesses;
@@ -106,6 +144,7 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
     }
   }
 }
+
 } // namespace
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
@@ -211,25 +250,6 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
   offsetProto->set_name(offset->Name);
   setLocation(offsetProto->mutable_loc(), offset->Loc);
 }
-namespace {
-proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
-  proto::enums::LocationType protoLocationType;
-  switch(locationType) {
-  case ast::LocationType::Cells:
-    protoLocationType = proto::enums::LocationType::Cell;
-    break;
-  case ast::LocationType::Edges:
-    protoLocationType = proto::enums::LocationType::Edge;
-    break;
-  case ast::LocationType::Vertices:
-    protoLocationType = proto::enums::LocationType::Vertex;
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
-  return protoLocationType;
-}
-} // namespace
 
 void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
                         const sir::FieldDimensions& fieldDimensions) {
@@ -647,6 +667,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
+  protoExpr->set_rhs_location(getProtoLocationTypeFromLocationType(expr->getRhsLocation()));
+  protoExpr->set_lhs_location(getProtoLocationTypeFromLocationType(expr->getLhsLocation()));
+
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
   currentExprProto_.pop();
@@ -692,26 +715,6 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
 //===------------------------------------------------------------------------------------------===//
 // Deserialization
 //===------------------------------------------------------------------------------------------===//
-namespace {
-ast::LocationType
-getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType) {
-  ast::LocationType loc;
-  switch(protoLocationType) {
-  case proto::enums::LocationType::Cell:
-    loc = ast::LocationType::Cells;
-    break;
-  case proto::enums::LocationType::Edge:
-    loc = ast::LocationType::Edges;
-    break;
-  case proto::enums::LocationType::Vertex:
-    loc = ast::LocationType::Vertices;
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
-  return loc;
-}
-} // namespace
 
 sir::FieldDimensions
 makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions) {
@@ -974,6 +977,14 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());
+    return expr;
+  }
+  case proto::statements::Expr::kReductionOverNeighborExpr: {
+    const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
+    auto expr = std::make_shared<ReductionOverNeighborExpr>(
+        exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
+        getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+        getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
     return expr;
   }
   case proto::statements::Expr::EXPR_NOT_SET:

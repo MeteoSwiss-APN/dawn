@@ -334,6 +334,171 @@ private:
 };
 
 //===------------------------------------------------------------------------------------------===//
+//     IterationSpace Resolver
+//===------------------------------------------------------------------------------------------===//
+
+/// @brief Extract the interval bounds from a C++11 range based for-loop or from a stencil-function
+/// Do-Method argument list
+class IterationSpaceResolver {
+  StencilParser* parser_;
+
+  std::array<int, 6> level_;
+  std::array<int, 6> offset_;
+  int curIndex_;
+
+  std::string verticalIndexName_;
+
+public:
+  IterationSpaceResolver(StencilParser* parser)
+      : parser_(parser), level_(), offset_(), curIndex_(0), verticalIndexName_("k") {}
+
+  /// @brief Resolve a range based for-loop
+  ///
+  /// for(auto k : {k_start, k_end}) {
+  ///   ...
+  /// }
+  void resolve(clang::CXXForRangeStmt* verticalRegionDecl) {
+    DAWN_ASSERT(verticalRegionDecl->getRangeStmt()->isSingleDecl());
+
+    // Extract loop bounds
+    clang::VarDecl* initializerListDecl =
+        clang::dyn_cast<clang::VarDecl>(verticalRegionDecl->getRangeStmt()->getSingleDecl());
+    resolve(initializerListDecl->getInit());
+
+    // Extract loop variable
+    verticalIndexName_ = verticalRegionDecl->getLoopVariable()->getNameAsString();
+  }
+
+  /// @brief Get the SIRInterval
+  std::pair<std::shared_ptr<dawn::sir::Interval>, dawn::sir::VerticalRegion::LoopOrderKind>
+  getInterval(int dim) const {
+
+    // Note that intervals have the the invariant lowerBound <= upperBound. We thus encapsulate the
+    // loop order here.
+    if(dim < 3 && dim >= 0) {
+      if((level_[2 * dim] + offset_[2 * dim]) <= (level_[2 * dim + 1] + offset_[2 * dim + 1]))
+        return std::make_pair(
+            std::make_shared<dawn::sir::Interval>(level_[2 * dim], level_[2 * dim + 1],
+                                                  offset_[2 * dim], offset_[2 * dim + 1]),
+            dawn::sir::VerticalRegion::LoopOrderKind::Forward);
+      else
+        return std::make_pair(
+            std::make_shared<dawn::sir::Interval>(level_[2 * dim + 1], level_[2 * dim],
+                                                  offset_[2 * dim + 1], offset_[2 * dim]),
+            dawn::sir::VerticalRegion::LoopOrderKind::Backward);
+    } else {
+      dawn_unreachable("unknown dimension");
+    }
+  }
+
+  /// @brief Get vertical index name (i.e loop variable in the range-based for loop)
+  const std::string& getVerticalIndexName() const { return verticalIndexName_; }
+
+private:
+  void resolve(clang::CXXStdInitializerListExpr* expr) { resolve(expr->getSubExpr()); }
+
+  void resolve(clang::InitListExpr* expr) {
+    for(clang::Expr* e : expr->inits()) {
+      resolve(e);
+      curIndex_ += 1;
+    }
+  }
+
+  void resolve(clang::CXXOperatorCallExpr* expr) {
+    using namespace clang;
+
+    // Parse `k_start` in `k_start+1`
+    resolve(expr->getArg(0));
+
+    // Parse `1` in `k_start+1`
+    if(IntegerLiteral* integer = dyn_cast<clang::IntegerLiteral>(expr->getArg(1))) {
+      int offset = static_cast<int>(integer->getValue().signedRoundToDouble());
+      offset *= expr->getOperator() == clang::OO_Minus ? -1 : 1;
+      offset_[curIndex_] = offset;
+    } else {
+
+      // If it is not an integer literal, it may still be a constant integer expression
+      Expr* arg1 = skipAllImplicitNodes(expr->getArg(1));
+
+      DeclRefExpr* var = dyn_cast<DeclRefExpr>(arg1);
+      clang_compat::Expr::EvalResultInt res;
+
+      if(var && var->EvaluateAsInt(res, parser_->getContext()->getASTContext())) {
+        int offset = static_cast<int>(clang_compat::Expr::getInt(res));
+        offset *= expr->getOperator() == clang::OO_Minus ? -1 : 1;
+        offset_[curIndex_] = offset;
+      } else {
+        parser_->reportDiagnostic(clang_compat::getBeginLoc(*expr->getArg(1)),
+                                  Diagnostics::DiagKind::err_interval_not_constexpr)
+            << expr->getSourceRange();
+      }
+    }
+  }
+
+  void resolve(clang::CXXConstructExpr* expr) { resolve(expr->getArg(0)); }
+
+  void resolve(clang::DeclRefExpr* expr) {
+    std::string typeStr = expr->getType().getAsString();
+
+    // Type has to be intervalX
+    if(!clang::StringRef(typeStr).startswith("struct gtclang::dsl::interval")) {
+      parser_->reportDiagnostic(expr->getLocation(),
+                                Diagnostics::DiagKind::err_interval_invalid_type)
+          << typeStr;
+    }
+
+    llvm::StringRef name = expr->getDecl()->getName();
+    if(name == "k_start" || name == "i_start" || name == "j_start")
+      level_[curIndex_] = dawn::sir::Interval::Start;
+    else if(name == "k_end" || name == "i_end" || name == "j_end")
+      level_[curIndex_] = dawn::sir::Interval::End;
+    else {
+      // Not a builtin interval, parse it!
+      auto levelPair = parser_->getCustomIntervalLevel(name);
+      if(levelPair.first)
+        level_[curIndex_] = levelPair.second;
+      else {
+        IntervalLevelParser resolver(parser_);
+        resolver.resolveLevel(expr);
+        level_[curIndex_] = resolver.getLevel();
+        parser_->setCustomIntervalLevel(resolver.getName(), resolver.getLevel());
+      }
+    }
+  }
+
+  void resolve(clang::MemberExpr* expr) {
+    std::string typeStr = expr->getType().getAsString();
+    parser_->reportDiagnostic(clang_compat::getBeginLoc(*expr),
+                              Diagnostics::DiagKind::err_interval_invalid_type)
+        << typeStr;
+  }
+
+  void resolve(clang::Expr* expr) {
+    using namespace clang;
+    // ignore implicit nodes
+    expr = skipAllImplicitNodes(expr);
+
+    if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(expr))
+      return resolve(e);
+    else if(CXXStdInitializerListExpr* e = dyn_cast<CXXStdInitializerListExpr>(expr))
+      return resolve(e);
+    else if(CXXOperatorCallExpr* e = dyn_cast<CXXOperatorCallExpr>(expr))
+      return resolve(e);
+    else if(DeclRefExpr* e = dyn_cast<DeclRefExpr>(expr))
+      return resolve(e);
+    else if(InitListExpr* e = dyn_cast<InitListExpr>(expr))
+      return resolve(e);
+    else if(MemberExpr* e = dyn_cast<MemberExpr>(expr))
+      return resolve(e);
+    else {
+      expr->dumpColor();
+      DAWN_ASSERT_MSG(0, "unresolved expression in IntervalResolver");
+    }
+    llvm_unreachable("invalid expr");
+  }
+};
+
+//===------------------------------------------------------------------------------------------===//
 //     Boundary Condition Resolver
 //===------------------------------------------------------------------------------------------===//
 
@@ -780,7 +945,11 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
         if(CXXForRangeStmt* s = dyn_cast<CXXForRangeStmt>(stmt)) {
           // stmt is a range-based for loop which corresponds to a VerticalRegion
-          stencilDescAst->getRoot()->push_back(parseVerticalRegion(s));
+          if(s->getLoopVariable()->getName() == "__k_indexrange__") {
+            stencilDescAst->getRoot()->push_back(parseIterationSpace(s));
+          } else {
+            stencilDescAst->getRoot()->push_back(parseVerticalRegion(s));
+          }
 
         } else if(CXXConstructExpr* s = dyn_cast<CXXConstructExpr>(stmt)) {
 
@@ -970,6 +1139,73 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
       SIRAST, intervalPair.first, intervalPair.second, getLocation(verticalRegion));
 
   DAWN_LOG(INFO) << "Done parsing vertical region";
+  return dawn::sir::makeVerticalRegionDeclStmt(SIRVerticalRegion, SIRVerticalRegion->Loc);
+}
+
+std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
+StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
+  using namespace clang;
+  using namespace llvm;
+
+  DAWN_LOG(INFO) << "Parsing iteraion space at " << getLocation(iterationSpaceDecl);
+
+  // The idea is to translate each iteration space, given as a C++11 range-based for loop (i.e
+  // `for(auto __k_indexrange__ : {X,X,Y,Y,Z,Z})`) into a VerticalRegionDeclStmt with the set bounds
+
+  // Extract the Interval from the loop bounds
+  IterationSpaceResolver intervalResolver(this);
+  intervalResolver.resolve(iterationSpaceDecl);
+
+  // Extract the Do-Method body (AST) from the loop body
+  auto SIRBlockStmt = dawn::sir::makeBlockStmt(getLocation(iterationSpaceDecl));
+
+  // There is a difference between
+  //
+  // for(...)  and   for(...) {
+  //   XXX              XXX
+  //                 }
+  //
+  // In the former case we direclty get the one Stmt node, while in the latter we get a CompountStmt
+  if(iterationSpaceDecl->getBody()) {
+
+    ClangASTStmtResolver stmtResolver(context_, this);
+
+    if(CompoundStmt* compoundStmt = dyn_cast<CompoundStmt>(iterationSpaceDecl->getBody())) {
+      // Case for(...) { XXX }
+      for(Stmt* stmt : compoundStmt->body()) {
+        // ignore implicit nodes
+        stmt = skipAllImplicitNodes(stmt);
+
+        SIRBlockStmt->insert_back(
+            stmtResolver.resolveStmt(stmt, ClangASTStmtResolver::AK_StencilBody));
+      }
+
+    } else {
+      // Case for(...) XXX
+      SIRBlockStmt->insert_back(stmtResolver.resolveStmt(iterationSpaceDecl->getBody(),
+                                                         ClangASTStmtResolver::AK_StencilBody));
+    }
+  }
+
+  // Assemble the vertical region and register it within the current Stencil
+  auto SIRAST = std::make_shared<dawn::sir::AST>(std::move(SIRBlockStmt));
+
+  auto iInterval = intervalResolver.getInterval(0).first;
+  auto jInterval = intervalResolver.getInterval(1).first;
+  auto kIntervalPair = intervalResolver.getInterval(2);
+
+  auto SIRVerticalRegion = std::make_shared<dawn::sir::VerticalRegion>(
+      SIRAST, kIntervalPair.first, kIntervalPair.second, getLocation(iterationSpaceDecl));
+  if(iInterval->LowerLevel != dawn::sir::Interval::Start || iInterval->LowerOffset != 0 ||
+     iInterval->UpperLevel != dawn::sir::Interval::End || iInterval->UpperOffset != 0) {
+    SIRVerticalRegion->IterationSpace[0] = *iInterval;
+  }
+  if(jInterval->LowerLevel != dawn::sir::Interval::Start || jInterval->LowerOffset != 0 ||
+     jInterval->UpperLevel != dawn::sir::Interval::End || jInterval->UpperOffset != 0) {
+    SIRVerticalRegion->IterationSpace[1] = *jInterval;
+  }
+
+  DAWN_LOG(INFO) << "Done parsing iteration space";
   return dawn::sir::makeVerticalRegionDeclStmt(SIRVerticalRegion, SIRVerticalRegion->Loc);
 }
 

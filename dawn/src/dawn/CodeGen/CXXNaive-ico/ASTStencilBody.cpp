@@ -67,7 +67,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     case ast::LocationType::Edges:
       return "Edge";
     case ast::LocationType::Vertices:
-      return "Node";
+      return "Vertex";
     default:
       dawn_unreachable("unknown location type");
       return "";

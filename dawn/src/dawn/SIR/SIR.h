@@ -205,8 +205,8 @@ class TriangularFieldDimension : public FieldDimensionImpl {
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
     auto const& otherTriangular = dynamic_cast<TriangularFieldDimension const&>(other);
-    return std::equal(otherTriangular.getNeighborChain().begin(), neighborChain_.begin(),
-                      neighborChain_.end());
+    return std::equal(neighborChain_.begin(), neighborChain_.end(),
+                      otherTriangular.neighborChain_.begin());
   }
 
   const ast::NeighborChain neighborChain_;
@@ -391,6 +391,12 @@ struct VerticalRegion {
                  const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
                  SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
+  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
+                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
+                 std::optional<Interval> iterationSpaceI, std::optional<Interval> iterationSpaceJ,
+                 SourceLocation loc = SourceLocation())
+      : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder),
+        IterationSpace({iterationSpaceI, iterationSpaceJ}) {}
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;

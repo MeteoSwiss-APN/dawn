@@ -39,7 +39,7 @@ class Value;
 namespace ast {
 class ASTVisitor;
 
-// TODO move this to a new LocationType file
+// TODO sparse_dim: move this to a new LocationType file
 enum class LocationType { Cells, Edges, Vertices };
 using NeighborChain = std::vector<ast::LocationType>;
 
