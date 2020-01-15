@@ -67,8 +67,6 @@ add_library(DawnSupport
   Twine.h
   Type.cpp
   Type.h
-  TypeChecker.h
-  TypeChecker.cpp
   TypeTraits.h
   UIDGenerator.cpp
   UIDGenerator.h
