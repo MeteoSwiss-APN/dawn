@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/TypeChecker.h"
+#include "dawn/IIR/TypeChecker.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include <gtest/gtest.h>
 

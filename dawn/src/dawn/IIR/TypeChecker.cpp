@@ -93,14 +93,18 @@ void TypeChecker::TypeCheckerImpl::visit(
 
   auto fieldName = fieldAccessExpr->getName();
   // the name in the FieldAccessExpr may be stale if the there are nested stencils
-  auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
-  if(newAccessID.has_value()) {
-    DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
-    fieldName = idToNameMap_.at(newAccessID.value());
+  // in this case we need to look up the new AccessID in the data of the fieldAccessExpr
+  if(fieldAccessExpr->hasData()) {
+    auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
+    if(newAccessID.has_value()) {
+      DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
+      fieldName = idToNameMap_.at(newAccessID.value());
+    }
   }
+
   DAWN_ASSERT(nameToLocationType_.count(fieldName));
   curType_ = nameToLocationType_.at(fieldName);
-}
+} // namespace dawn
 void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperator>& binOp) {
   if(!typesConsistent_) {
     return;

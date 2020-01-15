@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
+#include "dawn/IIR/TypeChecker.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -50,7 +51,6 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
-#include "dawn/Support/TypeChecker.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -284,21 +284,21 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   // Initialize optimizer
   auto optimizer = runOptimizer(SIR);
 
+  if(diagnostics_->hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
+    return nullptr;
+  }
+
   // IIR produced should be type consistent too
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     // Run optimization passes
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
     const auto& IIR = instantiation->getIIR();
     if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
-      DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This points "
-                        "to a bug in the optimization passes ";
+      DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
+                        "points to a bug in the optimization passes ";
       return nullptr;
     }
-  }
-
-  if(diagnostics_->hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
-    return nullptr;
   }
 
   // Generate code
