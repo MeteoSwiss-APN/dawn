@@ -276,7 +276,7 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                    b.lit(0.), LocType::Cells, LocType::Edges,
-                                                   std::vector<double>({1., 2., 3., 4.})))))))));
+                                                   std::vector<float>({1., 2., 3., 4.})))))))));
 
   auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
       IIRSerializer::serializeToString(stencil_instantiation["accumulateEdgeToCell"]),
