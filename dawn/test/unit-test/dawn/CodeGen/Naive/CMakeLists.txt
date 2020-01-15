@@ -15,5 +15,5 @@
 set(EXEC_NAME ${PROJECT_NAME}UnittestCodeGenNaive)
 add_executable(${EXEC_NAME} TestCodeGenNaive.cpp)
 target_add_dawn_standard_props(${EXEC_NAME})
-target_link_libraries(${EXEC_NAME} DawnUnittest gtest)
+target_link_libraries(${EXEC_NAME} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
 add_test(NAME ${EXEC_NAME} COMMAND ${EXEC_NAME})

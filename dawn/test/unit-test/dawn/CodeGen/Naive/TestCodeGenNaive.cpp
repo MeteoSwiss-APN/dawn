@@ -12,10 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Options.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/IntegrityChecker.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/SIR.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
@@ -24,6 +28,11 @@
 
 #include <cstring>
 #include <fstream>
+
+using namespace dawn;
+
+using stencilInstantiationContext =
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 namespace {
 
@@ -49,76 +58,33 @@ std::string read(const std::string& file) {
   return str;
 }
 
-TEST(CodeGenNaiveTest, LaplacianStencil) {
-  using namespace dawn::iir;
-  using SInterval = dawn::sir::Interval;
-
-  CartesianIIRBuilder b;
-  auto in = b.field("in", FieldType::ijk);
-  auto out = b.field("out", FieldType::ijk);
-  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
-
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval::Start, SInterval::End, b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
-                  b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-          ) ) );
-
-  std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
-  dump(ofs, stencil_inst);
+std::shared_ptr<SIR> deserialize(const std::string& file) {
+  std::string json = read(file);
+  return SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
 }
 
-TEST(CodeGenNaiveTest, NonOverlappingInterval) {
-  using namespace dawn::iir;
-  using SInterval = dawn::sir::Interval;
+stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
+  std::unique_ptr<dawn::Options> options;
+  DawnCompiler compiler(options.get());
+  auto optimizer = compiler.runOptimizer(sir);
 
-  CartesianIIRBuilder b;
-  auto in = b.field("in", FieldType::ijk);
-  auto out = b.field("out", FieldType::ijk);
-  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+  if(compiler.getDiagnostics().hasDiags()) {
+    for (const auto &diag : compiler.getDiagnostics().getQueue()) {
+      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
+    }
+    throw std::runtime_error("Compilation failed");
+  }
 
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval(SInterval::Start, 10), b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
-                  b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-         , b.stage(b.doMethod(SInterval(15, SInterval::End),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out), b.lit(10))
-  ) ) ) ) ) ) );
+  return optimizer->getStencilInstantiationMap();
+}
 
-  std::ostringstream oss;
-  dump(oss, stencil_inst);
-  std::string gen = oss.str();
+TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
+  std::shared_ptr<SIR> sir = deserialize("test/unit-test/dawn/CodeGen/Naive/input/globals_opt_away.sir");
+  auto stencil_inst = compile(sir);
+  ASSERT_FALSE(stencil_inst.empty());
+  IntegrityChecker checker(stencil_inst.begin()->second.get());
 
-  std::string ref = read("test/unit-test/dawn/CodeGen/Naive/generated/nonoverlapping_stencil.cpp");
-  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+  dump(std::cout, stencil_inst);
 }
 
 } // anonymous namespace
