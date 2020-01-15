@@ -12,16 +12,21 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/STLExtras.h"
+#include "dawn/Support/Type.h"
+#include "dawn/Unittest/IIRBuilder.h"
 #include <gtest/gtest.h>
+#include <memory>
 #include <optional>
 
 using namespace dawn;
@@ -252,6 +257,32 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   bcstmt->getFields().push_back("field2");
   referenceInstantiaton->getMetaData().addFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+}
+
+TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
+
+  auto stencil_instantiation = b.build(
+      "accumulateEdgeToCell",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), LocType::Cells, LocType::Edges,
+                                                   std::vector<double>({1., 2., 3., 4.})))))))));
+
+  auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
+      IIRSerializer::serializeToString(stencil_instantiation["accumulateEdgeToCell"]),
+      context_.get());
+
+  IIR_EXPECT_EQ(stencil_instantiation["accumulateEdgeToCell"], deserializedAndSerialized);
 }
 
 TEST_F(IIRSerializerTest, IIRTests) {
