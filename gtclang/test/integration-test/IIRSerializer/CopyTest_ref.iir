@@ -5,8 +5,8 @@
    "10": "field_b"
   },
   "accessIDToType": {
-   "10": 6,
-   "9": 6
+   "9": 6,
+   "10": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -23,16 +23,18 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "9": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "maskCartI": 1,
+    "maskCartJ": 1,
+    "neighbor_chain": [],
+    "maskK": 1
    },
    "10": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "maskCartI": 1,
+    "maskCartJ": 1,
+    "neighbor_chain": [],
+    "maskK": 1
    }
   },
   "idToStencilCall": {

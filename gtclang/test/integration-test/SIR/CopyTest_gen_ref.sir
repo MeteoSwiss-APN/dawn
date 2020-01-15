@@ -135,12 +135,12 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "neighbor_chain": [],
+      "maskK": 1
+     }
     },
     {
      "name": "field_b",
@@ -149,12 +149,12 @@
       "Column": 20
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "maskCartI": 1,
+      "maskCartJ": 1,
+      "neighbor_chain": [],
+      "maskK": 1
+     }
     }
    ]
   }

@@ -23,16 +23,18 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "19": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "maskCartI": 1,
+    "maskCartJ": 1,
+    "neighbor_chain": [],
+    "maskK": 1
    },
    "20": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "maskCartI": 1,
+    "maskCartJ": 1,
+    "neighbor_chain": [],
+    "maskK": 1
    }
   },
   "idToStencilCall": {

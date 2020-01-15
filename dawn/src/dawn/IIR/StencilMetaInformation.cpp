@@ -317,6 +317,11 @@ sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) con
   return fieldIDToInitializedDimensionsMap_.find(fieldID)->second;
 }
 
+void StencilMetaInformation::setFieldDimensions(int fieldID,
+                                                sir::FieldDimensions&& fieldDimensions) {
+  fieldIDToInitializedDimensionsMap_.emplace(fieldID, std::move(fieldDimensions));
+}
+
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
   if(isAccessType(iir::FieldAccessType::Literal, accessID)) {
     return getNameFromLiteralAccessID(accessID);

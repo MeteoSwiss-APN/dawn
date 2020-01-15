@@ -130,10 +130,9 @@ public:
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
 
-  /// @brief this checks if the user specialized the field to a dimensionality. If not all
-  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
-  /// specialization, it is returned
+  /// @brief returns the dimensions (see sir::FieldDimensions) of field with id fieldID
   sir::FieldDimensions getFieldDimensions(int fieldID) const;
+  void setFieldDimensions(int fieldID, sir::FieldDimensions&& fieldDimensions);
 
   template <FieldAccessType TFieldAccessType>
   bool hasAccessesOfType() const {

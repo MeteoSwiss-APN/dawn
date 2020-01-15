@@ -13,21 +13,37 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
+#include <memory>
 
 namespace dawn {
+
 void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiation,
                                           iir::Stencil* stencil, int accessID,
                                           const iir::Stencil::Lifetime& lifetime,
                                           iir::TemporaryScope temporaryScope) {
   std::string varname = instantiation->getMetaData().getFieldNameFromAccessID(accessID);
+
+  // Figure out dimensions
+  // TODO sparse_dim: Should be supported: should use same code used for checks on correct
+  // dimensionality in statements.
+  if(instantiation->getIIR()->getGridType() != ast::GridType::Cartesian)
+    dawn_unreachable(
+        "Currently promotion to temporary field is not supported for triangular grids.");
+  sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true};
+
+  // Compute name of field
   std::string fieldname = iir::InstantiationHelper::makeTemporaryFieldname(
       iir::InstantiationHelper::extractLocalVariablename(varname), accessID);
 
@@ -82,11 +98,11 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
   }
-  // Register the field
-  instantiation->getMetaData().addTmpField(
-      iir::FieldAccessType::StencilTemporary, fieldname,
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true),
-      accessID); // TODO: dimensions are arbitrary here. Should figure them out correctly.
+
+  // Register the field in the metadata
+  instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary, accessID,
+                                                  fieldname);
+  instantiation->getMetaData().setFieldDimensions(accessID, std::move(fieldDims));
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
