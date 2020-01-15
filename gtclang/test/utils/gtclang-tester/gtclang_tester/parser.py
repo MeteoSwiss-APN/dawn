@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                         _       _                   
-##                        | |     | |                  
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                         _       _
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -69,7 +69,7 @@ class Parser(object):
         self.__test = Test(self.__file)
 
     def parse(self):
-        with open(self.__file, 'r') as f:
+        with open(self.__file, "r") as f:
             lines = f.readlines()
 
             for i in range(len(lines)):
@@ -79,14 +79,16 @@ class Parser(object):
     def __parse_line(self, line, linenumber):
         run_idx = line.find("RUN:")
         if run_idx >= 0:
-            line = line[run_idx + len("RUN:"):].rstrip()
-            report_info("Found RUN at %i: \"%s\"" % (linenumber, line))
+            line = line[run_idx + len("RUN:") :].rstrip()
+            report_info('Found RUN at %i: "%s"' % (linenumber, line))
 
             if self.__test.is_valid():
-                report_fatal_error("multiple \"RUN:\" arguments in file '%s'" % self.__file)
+                report_fatal_error(
+                    "multiple \"RUN:\" arguments in file '%s'" % self.__file
+                )
 
             run_command = self.__substitute_keywords(line, linenumber)
-            report_info("Parsed RUN as: \"%s\"" % run_command)
+            report_info('Parsed RUN as: "%s"' % run_command)
             self.__test.add_run_command(run_command)
 
         #
@@ -94,11 +96,11 @@ class Parser(object):
         #
         expected_idx = line.find("EXPECTED:")
         if expected_idx >= 0:
-            line = line[expected_idx + len("EXPECTED:"):].rstrip()
-            report_info("Found EXPECTED at %i: \"%s\"" % (linenumber, line))
+            line = line[expected_idx + len("EXPECTED:") :].rstrip()
+            report_info('Found EXPECTED at %i: "%s"' % (linenumber, line))
 
             expected_output = self.__substitute_keywords(line, linenumber)
-            report_info("Parsed EXPECTED as: \"%s\"" % expected_output)
+            report_info('Parsed EXPECTED as: "%s"' % expected_output)
             self.__test.add_expected_command(expected_output)
 
         #
@@ -106,11 +108,11 @@ class Parser(object):
         #
         expected_error_idx = line.find("EXPECTED_ERROR:")
         if expected_error_idx >= 0:
-            line = line[expected_error_idx + len("EXPECTED_ERROR:"):].rstrip()
-            report_info("Found EXPECTED_ERROR at %i: \"%s\"" % (linenumber, line))
+            line = line[expected_error_idx + len("EXPECTED_ERROR:") :].rstrip()
+            report_info('Found EXPECTED_ERROR at %i: "%s"' % (linenumber, line))
 
             expected_error_output = self.__substitute_keywords(line, linenumber)
-            report_info("Parsed EXPECTED_ERROR as: \"%s\"" % expected_error_output)
+            report_info('Parsed EXPECTED_ERROR as: "%s"' % expected_error_output)
             self.__test.add_expected_error_command(expected_error_output)
 
         #
@@ -118,41 +120,46 @@ class Parser(object):
         #
         expected_accesses_idx = line.find("EXPECTED_ACCESSES:")
         if expected_accesses_idx >= 0:
-            line = line[expected_accesses_idx + len("EXPECTED_ACCESSES:"):].rstrip()
-            report_info("Found EXPECTED_ACCESSES at %i: \"%s\"" % (linenumber, line))
+            line = line[expected_accesses_idx + len("EXPECTED_ACCESSES:") :].rstrip()
+            report_info('Found EXPECTED_ACCESSES at %i: "%s"' % (linenumber, line))
 
             expected_accesses = self.__substitute_keywords(line, linenumber)
 
-            parsed_expected_accesses = self.__test.add_expected_accesses_command(linenumber,
-                                                                                 expected_accesses)
-            report_info("Parsed EXPECTED_ACCESSES as: \"%s %s\"" % (
-                parsed_expected_accesses.get_prefix(),
-                parsed_expected_accesses.get_expected_output()))
+            parsed_expected_accesses = self.__test.add_expected_accesses_command(
+                linenumber, expected_accesses
+            )
+            report_info(
+                'Parsed EXPECTED_ACCESSES as: "%s %s"'
+                % (
+                    parsed_expected_accesses.get_prefix(),
+                    parsed_expected_accesses.get_expected_output(),
+                )
+            )
 
         #
         # EXPECTED_FILE
         #
         expected_file_idx = line.find("EXPECTED_FILE:")
         if expected_file_idx >= 0:
-            line = line[expected_file_idx + len("EXPECTED_FILE:"):].rstrip()
-            report_info("Found EXPECTED_FILE at %i: \"%s\"" % (linenumber, line))
+            line = line[expected_file_idx + len("EXPECTED_FILE:") :].rstrip()
+            report_info('Found EXPECTED_FILE at %i: "%s"' % (linenumber, line))
 
             expected_file = self.__substitute_keywords(line, linenumber)
 
-            report_info("Parsed EXPECTED_FILE as: \"%s\"" % expected_file)
-            self.__test.add_expected_file_command(expected_file, self.__dir, self.__file,
-                                                  linenumber)
-    
+            report_info('Parsed EXPECTED_FILE as: "%s"' % expected_file)
+            self.__test.add_expected_file_command(
+                expected_file, self.__dir, self.__file, linenumber
+            )
 
     def __parse_line_with_number(self, line, linenumber):
         found = line.find("%line")
         if found == -1:
             return line
         char = -1
-        words  = line.split()
+        words = line.split()
         for word in words:
             char += len(word)
-            if char >= found :
+            if char >= found:
                 match = word
                 break
         splits = match.split("+")
@@ -160,18 +167,17 @@ class Parser(object):
             splits = match.split("-")
         else:
             number = splits[1][:-2]
-            line = line.replace(match, str(linenumber+int(number))+":")
+            line = line.replace(match, str(linenumber + int(number)) + ":")
         if len(splits) == 1:
             found = line.find("%line%")
             if found == -1:
-                report_fatal_error("Bad line-stmt in " +line)
+                report_fatal_error("Bad line-stmt in " + line)
             line = line.replace("%line%", str(linenumber))
         else:
             number = splits[1][:-2]
-            line = line.replace(match, str(linenumber-int(number))+":")
+            line = line.replace(match, str(linenumber - int(number)) + ":")
 
         return line
-
 
     def __substitute_keywords(self, line, linenumber):
         """ Substitute keywords """
@@ -210,7 +216,6 @@ class Parser(object):
         return self.__test
 
 
-
 class ExpectedAccesses(object):
     """ Parsed access pattern """
 
@@ -221,7 +226,7 @@ class ExpectedAccesses(object):
         and_idx = line.find("%and%")
         while and_idx != -1:
             self.__expected_output.append(line[:and_idx].strip())
-            line = line[and_idx + len("%and%"):]
+            line = line[and_idx + len("%and%") :]
             and_idx = line.find("%and%")
         self.__expected_output.append(line.strip())
 
@@ -244,35 +249,37 @@ class ExpectedFile(object):
         self.__ignored_nodes = []
         self.__discarded_files = []
 
-        commands = command.split(' ')
+        commands = command.split(" ")
         for cmd in commands:
             output_idx = cmd.find("OUTPUT:")
             if output_idx >= 0:
-                output_cmd = cmd[output_idx + len("OUTPUT:"):].rstrip()
-                for output_file in output_cmd.split(','):
-                    self.__file_output.append(path.join(dir, output_file))
+                output_cmd = cmd[output_idx + len("OUTPUT:") :].rstrip()
+                for output_file in output_cmd.split(","):
+                    self.__file_output.append(output_file)
 
             reference_idx = cmd.find("REFERENCE:")
             if reference_idx >= 0:
-                reference_cmd = cmd[reference_idx + len("REFERENCE:"):].rstrip()
-                for ref_file in reference_cmd.split(','):
+                reference_cmd = cmd[reference_idx + len("REFERENCE:") :].rstrip()
+                for ref_file in reference_cmd.split(","):
                     self.__file_reference.append(path.join(dir, ref_file))
 
             ignore_idx = cmd.find("IGNORE:")
             if ignore_idx >= 0:
-                ignored_nodes = cmd[ignore_idx + len("IGNORE:"):].rstrip()
-                for node in ignored_nodes.split(','):
+                ignored_nodes = cmd[ignore_idx + len("IGNORE:") :].rstrip()
+                for node in ignored_nodes.split(","):
                     self.__ignored_nodes.append(node)
 
             delete_idx = cmd.find("DELETE:")
             if delete_idx >= 0:
-                discarded_files = cmd[delete_idx + len("DELETE:"):].rstrip()
-                for discarded_file in discarded_files.split(','):
+                discarded_files = cmd[delete_idx + len("DELETE:") :].rstrip()
+                for discarded_file in discarded_files.split(","):
                     self.__discarded_files.append(path.join(dir, discarded_file))
 
         if len(self.__file_output) != len(self.__file_reference):
             report_fatal_error(
-                "%s:%i: mismatch of number of output and reference files" % (file, linenumber))
+                "%s:%i: mismatch of number of output and reference files"
+                % (file, linenumber)
+            )
 
     def get_output_files(self):
         return self.__file_output
@@ -332,8 +339,8 @@ class Test(object):
     def get_run_command(self):
         """ Get the run command(s), pipes '|' will be split in sub commands """
         cmds = []
-        for cmd in self.__run_command.split('|'):
-            cmds += [cmd.strip().split(' ')]
+        for cmd in self.__run_command.split("|"):
+            cmds += [cmd.strip().split(" ")]
         return cmds
 
     def expected_exit_code(self):
@@ -361,13 +368,13 @@ class ConfigParser(object):
         self.__exclude_pattern = []
 
         if path.isfile(config_file):
-            with open(config_file, 'r') as cfg:
+            with open(config_file, "r") as cfg:
                 for line in cfg.readlines():
 
                     # Parse "EXCLUDE=" pattern
                     exclude_idx = line.find("EXCLUDE=")
                     if exclude_idx >= 0:
-                        line = line[exclude_idx + len("EXCLUDE="):].rstrip()
+                        line = line[exclude_idx + len("EXCLUDE=") :].rstrip()
 
                         # Remove '"'
                         if line.startswith('"'):
@@ -382,7 +389,7 @@ class ConfigParser(object):
         """ Check whether this file will be skipped """
 
         # We skip files matching *.~
-        if file.endswith('~'):
+        if file.endswith("~"):
             return True
 
         # We skip files which match the provided pattern

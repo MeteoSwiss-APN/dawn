@@ -88,6 +88,16 @@ struct ComputeEditDistance<std::string> {
   }
 };
 
+std::pair<std::string, std::string> dirnameBasename(const std::string& filename) {
+
+  const char sep = '/';
+
+  const auto i = filename.rfind(sep);
+  return (i != std::string::npos)
+             ? std::make_pair(filename.substr(0, i), filename.substr(i + 1, filename.length() - i))
+             : std::make_pair(filename, filename);
+}
+
 std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
   const std::size_t pos = fullName.rfind(extension);
   return pos < std::string::npos ? fullName.substr(0, pos) : fullName;
@@ -234,12 +244,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        const std::string originalFileName = filenameSansExtension(
+        const auto directoryAndFile = dirnameBasename(filenameSansExtension(
             options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
                                          : options_->OutputFile,
-            ".cpp");
-        IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
-                                 serializationKind);
+            ".cpp"));
+        IIRSerializer::serialize(std::get<1>(directoryAndFile) + "." + std::to_string(i) + ".iir",
+                                 instantiation, serializationKind);
         i++;
       }
       if(options_->DumpStencilInstantiation) {
