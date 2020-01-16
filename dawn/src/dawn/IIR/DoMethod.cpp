@@ -192,7 +192,7 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
 }
 
 const std::unordered_map<std::string, ast::Expr::LocationType>
-DoMethod::getFieldLocationsByName() const {
+DoMethod::getFieldLocationTypesByName() const {
   std::unordered_map<std::string, ast::Expr::LocationType> fieldsByName;
   for(const auto& it : getFields()) {
     fieldsByName.insert({metaData_.getFieldNameFromAccessID(it.first), it.second.getLocation()});
