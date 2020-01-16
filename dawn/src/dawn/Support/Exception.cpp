@@ -35,7 +35,9 @@ std::string CompileError::getFile() const { return file_; }
 
 unsigned CompileError::getLine() const { return line_; }
 
-// const char* CompileException::what() const throw() {}
+const char* CompileError::what() const throw() {
+  return getMessage().c_str();
+}
 
 SemanticError::SemanticError(const std::string& message, const std::string& file, unsigned line)
     : CompileError(message, file, line) {}

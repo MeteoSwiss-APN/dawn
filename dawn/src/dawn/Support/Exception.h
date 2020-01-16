@@ -36,7 +36,7 @@ public:
   std::string getMessage() const;
   std::string getFile() const;
   unsigned getLine() const;
-  // const char* what() const throw();
+  const char* what() const throw();
 };
 
 struct SemanticError : public CompileError {
