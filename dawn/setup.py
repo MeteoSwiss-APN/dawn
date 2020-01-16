@@ -34,13 +34,14 @@ BUILD_JOBS = 4
 
 # Select protobuf version
 # TODO: avoid parsing python files and adapt to new CMake
-# with open(os.path.join(DAWN_DIR, "cmake", "thirdparty", "DawnAddProtobuf.cmake"), "r") as f:
-#     text = f.read()
-#     m = re.search(r"set\(protobuf_version\s+\"([0-9\.]+)\s*\"\)", text)
-#     protobuf_version = m.group(1)
-protobuf_version = "3.10.0"
+with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
+    text = f.read()
+    m = re.search(r".*\/protocolbuffers\/protobuf\/archive\/v+([0-9\.]+)\s*\.tar\.gz", text)
+    protobuf_version = m.group(1)
+# print("derived ; " + protobuf_version)
+# protobuf_version = "3.10.0"
 
-install_requires = ["attrs>=19", "black>=19.3b0", f"protobuf=={protobuf_version}", "pytest>=4.3.0"]
+install_requires = ["attrs>=19", "black>=19.3b0", f"protobuf>={protobuf_version}", "pytest>=4.3.0"]
 
 
 # Based on:
@@ -126,17 +127,10 @@ class CMakeBuild(build_ext):
 
     def build_extension(self, ext):
         # Currently just copy the generated CPython extension to the package folder
-        print("A")
         filename = self.get_ext_filename(ext.name)
-        print("B")
         source_path = os.path.abspath(os.path.join(self.build_tmp, "src", filename))
-        print("C")
         dest_build_path = os.path.abspath(self.get_ext_fullpath(ext.name))
-        print("D")
-        print("sp ;" + source_path)
-        print("dp ;" + dest_build_path)
         self.copy_file(source_path, dest_build_path)
-        print("E")
 
 
 class InstallDawnIncludesCommand(Command):
