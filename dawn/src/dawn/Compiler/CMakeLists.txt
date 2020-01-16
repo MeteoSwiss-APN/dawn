@@ -20,4 +20,4 @@ add_library(DawnCompiler
 )
 
 target_add_dawn_standard_props(DawnCompiler)
-target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnCodeGen DawnSerialization)
+target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnValidator DawnCodeGen DawnSerialization)
