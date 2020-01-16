@@ -24,6 +24,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <filesystem>
 
 namespace {
 
@@ -85,7 +86,7 @@ TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   dump(oss, stencil_inst);
   std::string gen = oss.str();
 
-  std::string ref = read("test/unit-test/dawn/CodeGen/Naive/generated/nonoverlapping_stencil.cpp");
+  std::string ref = read("reference/nonoverlapping_stencil.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
