@@ -52,6 +52,9 @@ add_dawn_library(DawnIIRProto DawnIIR)
 add_subdirectory(Optimizer)
 add_dawn_library(DawnOptimizer)
 
+add_subdirectory(Validator)
+add_dawn_library(DawnValidator)
+
 add_subdirectory(Serialization)
 add_dawn_library(DawnSerialization)
 

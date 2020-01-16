@@ -183,17 +183,6 @@ if(${PROJECT_NAME}_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-# Docs only available if this is the main app
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  find_package(Doxygen)
-  find_package(Sphinx)
-  if(Doxygen_FOUND AND SPHINX_FOUND)
-	  add_subdirectory(docs)
-  else()
-	  message(STATUS "Doxygen or Sphinx not found, not building docs")
-  endif()
-endif()
-
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
