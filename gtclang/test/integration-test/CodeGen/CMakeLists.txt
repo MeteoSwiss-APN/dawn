@@ -147,7 +147,7 @@ function(add_codegen_test)
   if(GTCLANG_BUILD_TESTING_GT_MC OR GTCLANG_BUILD_TESTING_GT_CUDA)
     generate_target(TEST ${ARG_TEST} BACKEND gt FLAGS ${ARG_FLAGS})
   endif()
-  if(GTCLANG_BUILD_TESTING_PLAIN_CUDA AND NOT NO_CUDA)
+  if(GTCLANG_BUILD_TESTING_PLAIN_CUDA AND NOT ARG_NO_CUDA)
     generate_target(TEST ${ARG_TEST} BACKEND cuda FLAGS ${ARG_FLAGS})
   endif()
 
@@ -157,12 +157,12 @@ function(add_codegen_test)
   endif()
 
   # GridTools cuda backend
-  if(NOT ARG_PLAIN_CUDA_ONLY AND GTCLANG_BUILD_TESTING_GT_CUDA AND NOT NO_CUDA)
+  if(NOT ARG_PLAIN_CUDA_ONLY AND GTCLANG_BUILD_TESTING_GT_CUDA AND NOT ARG_NO_CUDA)
   compile_target_cuda(TEST ${ARG_TEST} BACKEND gt)
   endif()
 
   # plain cuda backend
-  if(GTCLANG_BUILD_TESTING_PLAIN_CUDA AND NOT NO_CUDA)
+  if(GTCLANG_BUILD_TESTING_PLAIN_CUDA AND NOT ARG_NO_CUDA)
     compile_target_cuda(TEST ${ARG_TEST} BACKEND cuda)
   endif()
 endfunction()
