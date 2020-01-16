@@ -12,20 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GENERATE_IN_MEMORY_STENCILS
-#define GENERATE_IN_MEMORY_STENCILS
+#include "dawn/Support/STLExtras.h"
+#include "dawn/Unittest/UnittestLogger.h"
+#include <gtest/gtest.h>
 
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+int main(int argc, char* argv[]) {
+  // Initialize gtest
+  testing::InitGoogleTest(&argc, argv);
 
-#include <memory>
+  // Initialize Unittest-Logger
+  auto logger = std::make_unique<dawn::UnittestLogger>();
+  dawn::Logger::getSingleton().registerLogger(logger.get());
 
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createCopyStencilIIRInMemory(dawn::OptimizerContext& optimizer);
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createLapStencilIIRInMemory(dawn::OptimizerContext& optimizer);
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer);
-
-#endif
+  return RUN_ALL_TESTS();
+}

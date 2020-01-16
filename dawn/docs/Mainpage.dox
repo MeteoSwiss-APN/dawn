@@ -1,9 +1,0 @@
-/**
-@mainpage Dawn
-
-## Introduction
-
-Welcome to Dawn.
-
-This documentation describes the internal software that makes up Dawn, not the external use of Dawn. There are no instructions here on how to use Dawn, only the APIs that make up the software. For usage instructions, please refer to the documentation <a href="../index.html">here</a>.
-*/

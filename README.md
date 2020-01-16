@@ -28,7 +28,7 @@ The following are required to build dawn and gtclang:
 
 A Python (>= 3.4) interpreter and setuptools are required to build and install the bindings.
 
-Sphinx and Doxygen are required to build the documentation and clang-format (version 6.0) is used to format new source code.
+Doxygen is required to build the documentation and clang-format (version 6.0) is used to format new source code.
 
 The following are required, but are automatically fetched and compiled if not found:
 
@@ -62,7 +62,7 @@ We introduce a new compiler framework, consisting of GTClang and Dawn, that deco
 
 * GTClang translates an easy to understand but expressive DSL that is capable of modelling Finite Difference stencils as well as spare solvers into a relatively simple SIR. See the [README.md](https://github.com/MeteoSwiss-APN/dawn/blob/master/gtclang/README.md) in the GTClang subdirectory for an illustrative example
 * Dawn allows the user to generate fast performing code for several back-ends from the SIR.
-* Dawn exposes several APIs in different languages (C++, Python, Java) to parse and process the SIR. 
+* Dawn exposes several APIs in different languages (C++, Python, Java) to parse and process the SIR.
 * Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
 * Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
 
