@@ -119,7 +119,7 @@ HorizontalOffset& HorizontalOffset::operator+=(HorizontalOffset const& other) {
 }
 bool HorizontalOffset::isZero() const { return !impl_ || impl_->isZero(); }
 
-bool HorizontalOffset::hasType() const { return !impl_; }
+bool HorizontalOffset::hasType() const { return impl_.get() != nullptr; }
 
 GridType HorizontalOffset::getGridType() const {
   DAWN_ASSERT(hasType());

@@ -51,6 +51,7 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
@@ -275,9 +276,15 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // SIR we received should be type consistent
-  LocationTypeChecker checker;
-  if(!checker.checkLocationTypeConsistency(*SIR.get())) {
+  LocationTypeChecker locationChecker;
+  if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
     DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+    return nullptr;
+  }
+
+  GridTypeChecker gridChecker;
+  if(!gridChecker.checkGridTypeConsistency(*SIR.get())) {
+    DAWN_LOG(INFO) << "Grid types in SIR are not consistent, no code generation";
     return nullptr;
   }
 
@@ -294,8 +301,13 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
     // Run optimization passes
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
     const auto& IIR = instantiation->getIIR();
-    if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
+    if(!locationChecker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
       DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
+                        "points to a bug in the optimization passes ";
+      return nullptr;
+    }
+    if(!gridChecker.checkGridTypeConsistency(*IIR.get())) {
+      DAWN_LOG(INFO) << "Grid types in IIR are not consistent, no code generation. This"
                         "points to a bug in the optimization passes ";
       return nullptr;
     }

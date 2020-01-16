@@ -27,6 +27,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {

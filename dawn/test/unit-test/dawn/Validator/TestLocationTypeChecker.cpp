@@ -20,7 +20,7 @@ using namespace dawn;
 
 namespace {
 
-TEST(TypeCheckerTest, UnstructuredCheck01) {
+TEST(LocationTypeCheckerTest, UnstructuredCheck01) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
@@ -35,7 +35,7 @@ TEST(TypeCheckerTest, UnstructuredCheck01) {
                                              b.stmt(b.assignExpr(b.at(cell_f), b.at(edge_f)))))))),
       ".*");
 }
-TEST(TypeCheckerTest, UnstructuredCheck02) {
+TEST(LocationTypeCheckerTest, UnstructuredCheck02) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
@@ -52,7 +52,7 @@ TEST(TypeCheckerTest, UnstructuredCheck02) {
                                  b.stmt(b.binaryExpr(b.at(cell_f), b.at(edge_f), Op::plus))))))),
       ".*");
 }
-TEST(TypeCheckerTest, UnstructuredCheck03) {
+TEST(LocationTypeCheckerTest, UnstructuredCheck03) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 
@@ -72,7 +72,7 @@ TEST(TypeCheckerTest, UnstructuredCheck03) {
                                              b.lit(0.), LocType::Edges, LocType::Cells)))))))),
       ".*");
 }
-TEST(TypeCheckerTest, UnstructuredCheck04) {
+TEST(LocationTypeCheckerTest, UnstructuredCheck04) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
 

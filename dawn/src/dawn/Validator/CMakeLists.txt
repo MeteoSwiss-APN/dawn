@@ -15,6 +15,8 @@
 add_library(DawnValidator
     LocationTypeChecker.h
     LocationTypeChecker.cpp
+    GridTypeChecker.h
+    GridTypeChecker.cpp
 )
 
 target_add_dawn_standard_props(DawnValidator)

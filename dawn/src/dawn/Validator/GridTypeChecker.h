@@ -31,6 +31,11 @@ private:
     bool typesConsistent_ = true;
 
   public:
+    // currently only the field access expression seems to be important since it uses the Offsets
+    // - The Extents are only used in the Accesses which are not part of the AST (but the meta data.
+    //   This is still checked, but not using this visitor)
+    // - The is currently no unstructured FieldDimensions, hence this is not checked. This will need
+    //   to be added as soon as the unstructured version is introduced
     void visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) override;
     bool isConsistent() const { return typesConsistent_; }
 
