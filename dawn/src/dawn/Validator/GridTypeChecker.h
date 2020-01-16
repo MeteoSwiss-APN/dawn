@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
@@ -23,34 +24,21 @@
 #include <memory>
 
 namespace dawn {
-class TypeChecker {
-
+class GridTypeChecker {
 private:
   class TypeCheckerImpl : public ast::ASTVisitorForwarding {
-    std::optional<ast::Expr::LocationType> curType_;
-    const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationType_;
-    const std::unordered_map<int, std::string> idToNameMap_;
+    ast::GridType prescribedType_;
     bool typesConsistent_ = true;
 
   public:
     void visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) override;
-    void visit(const std::shared_ptr<iir::BinaryOperator>& stmt) override;
-    void visit(const std::shared_ptr<iir::AssignmentExpr>& stmt) override;
-    void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override;
-
     bool isConsistent() const { return typesConsistent_; }
-    bool hasType() const { return curType_.has_value(); };
-    ast::Expr::LocationType getType() const;
 
-    TypeCheckerImpl(
-        const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap);
-    TypeCheckerImpl(
-        const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap,
-        const std::unordered_map<int, std::string> idToNameMap);
+    TypeCheckerImpl(ast::GridType prescribedType) : prescribedType_(prescribedType){};
   };
 
 public:
-  bool checkLocationTypeConsistency(const dawn::SIR&);
-  bool checkLocationTypeConsistency(const dawn::iir::IIR&, const iir::StencilMetaInformation&);
+  bool checkGridTypeConsistency(const dawn::SIR&);
+  bool checkGridTypeConsistency(const dawn::iir::IIR&);
 };
 } // namespace dawn

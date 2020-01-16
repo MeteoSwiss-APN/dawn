@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Unittest/IIRBuilder.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;

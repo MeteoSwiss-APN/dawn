@@ -51,7 +51,7 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
 
@@ -275,7 +275,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // SIR we received should be type consistent
-  TypeChecker checker;
+  LocationTypeChecker checker;
   if(!checker.checkLocationTypeConsistency(*SIR.get())) {
     DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
     return nullptr;

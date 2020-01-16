@@ -13,8 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnValidator
-    TypeChecker.h
-    TypeChecker.cpp
+    LocationTypeChecker.h
+    LocationTypeChecker.cpp
 )
 
 target_add_dawn_standard_props(DawnValidator)
