@@ -38,8 +38,6 @@ with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
     text = f.read()
     m = re.search(r".*\/protocolbuffers\/protobuf\/archive\/v+([0-9\.]+)\s*\.tar\.gz", text)
     protobuf_version = m.group(1)
-# print("derived ; " + protobuf_version)
-# protobuf_version = "3.10.0"
 
 install_requires = ["attrs>=19", "black>=19.3b0", f"protobuf>={protobuf_version}", "pytest>=4.3.0"]
 
@@ -73,7 +71,6 @@ class CMakeBuild(build_ext):
         # Installing in editable/develop mode builds the extension in the original build path,
         # but a regular `pip install` copies the full tree to a temporary folder
         # before building, which makes CMake fail if a CMake cache had been already generated.
-        # self.bundle_build_tmp = str(os.path.join(BUNDLE_ABS_DIR, "build"))
         self.build_tmp = str(os.path.join(DAWN_ABS_DIR, "build"))
         cmake_cache_file = os.path.join(self.build_tmp, "CMakeCache.txt")
         if os.path.exists(cmake_cache_file):
@@ -83,7 +80,7 @@ class CMakeBuild(build_ext):
                 cache_build_dir = m.group(1) if m else ""
                 if str(self.build_tmp) != cache_build_dir:
                     shutil.rmtree(self.build_tmp, ignore_errors=False)
-                    shutil.rmtree(os.path.join(DAWN_DIR, "install"), ignore_errors=True)
+                    shutil.rmtree(os.path.join(DAWN_ABS_DIR, "install"), ignore_errors=True)
                     assert not os.path.exists(cmake_cache_file)
         os.makedirs(self.build_tmp, exist_ok=True)
         os.makedirs(os.path.join(DAWN_DIR, "install"), exist_ok=True)
@@ -119,7 +116,6 @@ class CMakeBuild(build_ext):
 
         # Move from build temp to final position
         for ext in self.extensions:
-            print(ext)
             self.build_extension(ext)
 
         # Install included headers
