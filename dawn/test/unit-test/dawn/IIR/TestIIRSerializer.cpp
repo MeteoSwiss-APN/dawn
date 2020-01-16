@@ -259,6 +259,32 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 
+TEST_F(IIRSerializerTest, IIRTestsReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
+
+  std::string stencilName("testSerializationReduce");
+
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(out_f), b.reduceOverNeighborExpr(
+                                                  Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                  b.lit(0.), LocType::Cells, LocType::Edges))))))));
+
+  auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
+      IIRSerializer::serializeToString(stencil_instantiation[stencilName.c_str()]), context_.get());
+
+  IIR_EXPECT_EQ(stencil_instantiation[stencilName.c_str()], deserializedAndSerialized);
+}
+
 TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
   using namespace dawn::iir;
   using LocType = dawn::ast::Expr::LocationType;
@@ -267,8 +293,10 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
   auto in_f = b.field("in_field", LocType::Edges);
   auto out_f = b.field("out_field", LocType::Cells);
 
+  std::string stencilName("testSerializationReduceWeights");
+
   auto stencil_instantiation = b.build(
-      "accumulateEdgeToCell",
+      stencilName.c_str(),
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
@@ -276,13 +304,20 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                    b.lit(0.), LocType::Cells, LocType::Edges,
-                                                   std::vector<float>({1., 2., 3., 4.})))))))));
+                                                   std::vector<float>({1., 2., 3., 4.})))),
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), LocType::Cells, LocType::Edges,
+                                                   std::vector<double>({1., 2., 3., 4.})))),
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), LocType::Cells, LocType::Edges,
+                                                   std::vector<int>({1, 2, 3, 4})))))))));
 
   auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
-      IIRSerializer::serializeToString(stencil_instantiation["accumulateEdgeToCell"]),
-      context_.get());
+      IIRSerializer::serializeToString(stencil_instantiation[stencilName.c_str()]), context_.get());
 
-  IIR_EXPECT_EQ(stencil_instantiation["accumulateEdgeToCell"], deserializedAndSerialized);
+  IIR_EXPECT_EQ(stencil_instantiation[stencilName.c_str()], deserializedAndSerialized);
 }
 
 TEST_F(IIRSerializerTest, IIRTests) {
