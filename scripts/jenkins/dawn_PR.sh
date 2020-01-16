@@ -51,10 +51,16 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
 fi
 
 echo "Cleaning up"
-tests=`find . -name "unittest_gtest.xml"`
+gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml"`
 i=0
-for t in $tests; do
-  cp $t ${base_dir}/${t}_${i}
+for t in $gtclang_dawn_tests; do
+  cp $t ${base_dir}/gtest_${i}.xml
+  i=$((i+1))
+done
+cd clang-gridtools/build/benchmarks/
+clang_gridtools_tests=`find . -name "*.xml"`
+for t in $clang_gridtools_tests; do
+  cp $t ${base_dir}/gtest_${i}.xml
   i=$((i+1))
 done
 

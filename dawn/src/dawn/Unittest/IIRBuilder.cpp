@@ -25,6 +25,10 @@
 
 #include "IIRBuilder.h"
 
+#include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Validator/TypeChecker.h"
+
 namespace dawn {
 namespace iir {
 namespace {
