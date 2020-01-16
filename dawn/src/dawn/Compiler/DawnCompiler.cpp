@@ -291,7 +291,6 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
 
   // IIR produced should be type consistent too
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-    // Run optimization passes
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
     const auto& IIR = instantiation->getIIR();
     if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {

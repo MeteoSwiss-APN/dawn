@@ -42,8 +42,13 @@ private:
     bool hasType() const { return curType_.has_value(); };
     ast::Expr::LocationType getType() const;
 
+    // This constructor is used when the check is performed on the SIR. In this case, each
+    // Field is uniquely identified by its name
     TypeCheckerImpl(
         const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap);
+    // This constructor is used when the check is performed from IIR. In this case, the fields may
+    // have been renamed if stencils had to be merged. Hence, an additional map with key AccessID is
+    // needed
     TypeCheckerImpl(
         const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap,
         const std::unordered_map<int, std::string> idToNameMap);
