@@ -32,24 +32,21 @@
    "30": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
-     "mask_cart_j": 1,
-     "dense_location_type": "Cell"
+     "mask_cart_j": 1
     },
     "mask_k": 1
    },
    "31": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
-     "mask_cart_j": 1,
-     "dense_location_type": "Cell"
+     "mask_cart_j": 1
     },
     "mask_k": 1
    },
    "32": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
-     "mask_cart_j": 1,
-     "dense_location_type": "Cell"
+     "mask_cart_j": 1
     },
     "mask_k": 1
    }

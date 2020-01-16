@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "9": "field_a",
-   "10": "field_b"
+   "10": "field_b",
+   "9": "field_a"
   },
   "accessIDToType": {
    "9": 6,
@@ -27,16 +27,14 @@
    "9": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
-     "mask_cart_j": 1,
-     "dense_location_type": "Cell"
+     "mask_cart_j": 1
     },
     "mask_k": 1
    },
    "10": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
-     "mask_cart_j": 1,
-     "dense_location_type": "Cell"
+     "mask_cart_j": 1
     },
     "mask_k": 1
    }

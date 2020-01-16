@@ -828,8 +828,7 @@
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
-       "mask_cart_j": 1,
-       "dense_location_type": "Cell"
+       "mask_cart_j": 1
       },
       "mask_k": 1
      }
@@ -844,8 +843,7 @@
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
-       "mask_cart_j": 1,
-       "dense_location_type": "Cell"
+       "mask_cart_j": 1
       },
       "mask_k": 1
      }
@@ -860,8 +858,7 @@
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
-       "mask_cart_j": 1,
-       "dense_location_type": "Cell"
+       "mask_cart_j": 1
       },
       "mask_k": 1
      }
@@ -876,8 +873,7 @@
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
-       "mask_cart_j": 1,
-       "dense_location_type": "Cell"
+       "mask_cart_j": 1
       },
       "mask_k": 1
      }
@@ -892,8 +888,7 @@
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
-       "mask_cart_j": 1,
-       "dense_location_type": "Cell"
+       "mask_cart_j": 1
       },
       "mask_k": 1
      }

@@ -263,8 +263,6 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
     dawn::proto::statements::CartesianDimension* protoCartesianDimension =
         protoFieldDimensions->mutable_cartesian_horizontal_dimension();
 
-    protoCartesianDimension->set_dense_location_type(
-        getProtoLocationTypeFromLocationType(cartesianDimension.getLocationType()));
     protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
     protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
 
@@ -726,8 +724,7 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
         sir::HorizontalFieldDimension(
             dawn::ast::cartesian,
             std::array<bool, 2>({(bool)protoCartesianDimension.mask_cart_i(),
-                                 (bool)protoCartesianDimension.mask_cart_j()}),
-            getLocationTypeFromProtoLocationType(protoCartesianDimension.dense_location_type())),
+                                 (bool)protoCartesianDimension.mask_cart_j()})),
         (bool)protoFieldDimensions.mask_k());
   } else if(protoFieldDimensions.has_triangular_horizontal_dimension()) {
 

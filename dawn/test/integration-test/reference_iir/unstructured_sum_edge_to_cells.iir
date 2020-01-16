@@ -300,17 +300,17 @@
                   }
                  },
                  "readAccess": {
-                  "1": {
-                   "unstructured_extent": {
-                    "has_extent": true
-                   },
+                  "-5": {
+                   "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "-5": {
-                   "zero_extent": {},
+                  "1": {
+                   "unstructured_extent": {
+                    "has_extent": true
+                   },
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0

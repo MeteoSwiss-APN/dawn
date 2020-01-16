@@ -34,13 +34,10 @@ message SourceLocation {
 // @brief Cartesian horizontal dimension of a field
 //
 // For a cartesian grid we enable/disable the I and J components through their respective masks.
-// The dimension has a location type.
 // @ingroup sir_proto
 message CartesianDimension {
   int32 mask_cart_i = 1;                 // mask for cartesian component i
   int32 mask_cart_j = 2;                 // mask for cartesian component j
-
-  dawn.proto.enums.LocationType dense_location_type = 3; // dense location type
 }
 
 // @brief Triangular horizontal dimension of a field

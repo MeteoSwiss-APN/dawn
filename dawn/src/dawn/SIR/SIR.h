@@ -171,9 +171,8 @@ private:
 /// @ingroup sir
 class CartesianFieldDimension : public FieldDimensionImpl {
   const std::array<bool, 2> mask_;
-  const ast::LocationType locationType_;
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<CartesianFieldDimension>(mask_, locationType_);
+    return std::make_unique<CartesianFieldDimension>(mask_);
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
     auto const& otherCartesian = dynamic_cast<CartesianFieldDimension const&>(other);
@@ -183,10 +182,7 @@ class CartesianFieldDimension : public FieldDimensionImpl {
 public:
   bool I() const { return mask_[0]; }
   bool J() const { return mask_[1]; }
-  ast::LocationType getLocationType() const { return locationType_; }
-  explicit CartesianFieldDimension(std::array<bool, 2> mask,
-                                   ast::LocationType locationType = ast::LocationType::Cells)
-      : mask_(mask), locationType_(locationType) {}
+  explicit CartesianFieldDimension(std::array<bool, 2> mask) : mask_(mask) {}
 };
 
 /// @brief In the triangular case, the horizontal dimension can be either dense or sparse.
@@ -226,9 +222,8 @@ class HorizontalFieldDimension {
 
 public:
   // Construct a Cartesian horizontal field dimension with specified ij mask.
-  HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask,
-                           ast::LocationType locationType = ast::LocationType::Cells)
-      : impl_(std::make_unique<CartesianFieldDimension>(mask, locationType)) {}
+  HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
+      : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
   // Construct a Triangular horizontal field sparse dimension with specified neighbor chain (sparse
   // part). Dense part is the first element of the chain.
   HorizontalFieldDimension(dawn::ast::triangular_, ast::NeighborChain neighborChain)
