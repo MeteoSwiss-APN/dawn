@@ -68,13 +68,13 @@ We introduce a new compiler framework, consisting of GTClang and Dawn, that deco
 
 ## Developer Instructions
 
-If you wish to contribute to dawn or gtclang, please fork this repo into your own github user first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please make sure that:
+If you wish to contribute to dawn or gtclang, please fork this repo into your own GitHub user space first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please ensure that:
 
-* All tests are passing. This includes the dawn and GTClang unit tests and the tests performed in the dawn install step. In order that the full test suites are performed, gtclang needs to be built with [GridTools](https://github.com/GridTools/gridtools) enabled, and dawn needs to be built with python exampled enabled. Please see the `README.md` in the dawn and gtclang directories respectivley for information on how to do that.
+* All tests pass via `ctest`. In order to make sure all tests are built, add `-DBUILD_TESTING=ON -DDAWN_REQUIRE_PYTHON_TESTING=ON` to the CMake configure command.
 * The code is properly formatted according to the clang-format rules provided. This can be ensured automatically using the git hook located in scripts. To install it, simply put a symlink into your `.git` directory (usually located in the top level dawn folder, except if using git work trees) to the script as follows:
 
 ```bash
-$ ln -s $(pwd)/dawn/scripts/git_hooks/pre-commit $(pwd)/.git/hooks/
+$ ln -s $(pwd)/scripts/git_hooks/pre-commit $(pwd)/.git/hooks/
 ```
 
 If you want to call the script manually, simply run `scripts/clang_format_all.sh`.
