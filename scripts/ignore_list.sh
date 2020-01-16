@@ -5,5 +5,6 @@ ignore_regex_list=(
     "^(\./)?dawn/examples/python/data/"
     "^(\./)?dawn/test/unit-test/test_dawn4py/data"
     "^(\./)?gtclang/test/utils/googletest/"
+    "^(\./)?dawn/test/unit-test/dawn/CodeGen/Naive/reference"
     "/bundle/"
     )
