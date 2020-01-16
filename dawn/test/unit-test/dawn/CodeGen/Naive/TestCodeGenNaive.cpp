@@ -77,16 +77,6 @@ stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
   return optimizer->getStencilInstantiationMap();
 }
 
-TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
-  try {
-    compile(sir);
-    FAIL() << "Semantic error not thrown";
-  } catch(SemanticError& error) {
-    SUCCEED();
-  }
-}
-
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   using namespace dawn::iir;
   using SInterval = dawn::sir::Interval;
@@ -157,6 +147,16 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
   dump(ofs, stencil_inst);
+}
+
+TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
+  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
+  try {
+    compile(sir);
+    FAIL() << "Semantic error not thrown";
+  } catch(SemanticError& error) {
+    SUCCEED();
+  }
 }
 
 } // anonymous namespace
