@@ -136,7 +136,6 @@ class TestRunner(object):
                     ):
 
                         try:
-                            print("HERE ", outputfile, referencefile)
                             output_json = load(open(outputfile, "r"))
                             reference_json = load(open(referencefile, "r"))
                             # Json does not enforce sorting, so we sort the files by sorting here
