@@ -32,7 +32,7 @@ class CompileError : public std::exception {
   unsigned line_;
 
 public:
-    CompileError(const std::string& message, const std::string& file = "", unsigned line = 0);
+  CompileError(const std::string& message, const std::string& file = "", unsigned line = 0);
   std::string getMessage() const;
   std::string getFile() const;
   unsigned getLine() const;
