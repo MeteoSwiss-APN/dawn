@@ -31,7 +31,6 @@ struct SIR;
 class DawnCompiler : NonCopyable {
   Options options_;
   DiagnosticsEngine diagnostics_;
-  std::string filename_;
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics

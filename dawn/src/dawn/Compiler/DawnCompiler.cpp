@@ -124,10 +124,9 @@ createOptimizerOptionsFromAllOptions(const Options& options) {
   return retval;
 }
 
-DawnCompiler::DawnCompiler() : options_(), diagnostics_(), filename_() {}
+DawnCompiler::DawnCompiler() : options_(), diagnostics_() {}
 
-DawnCompiler::DawnCompiler(Options const& options)
-    : options_(options), diagnostics_(), filename_() {}
+DawnCompiler::DawnCompiler(Options const& options) : options_(options), diagnostics_() {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
