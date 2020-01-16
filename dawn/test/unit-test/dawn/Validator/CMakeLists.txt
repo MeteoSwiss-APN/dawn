@@ -11,11 +11,13 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-add_subdirectory(AST)
-add_subdirectory(Optimizer)
-add_subdirectory(IIR)
-add_subdirectory(SIR)
-add_subdirectory(Support)
-add_subdirectory(CodeGen)
-add_subdirectory(Validator)
+set(executable ${PROJECT_NAME}UnittestValidator)
+add_executable(${executable}
+  TestMain.cpp  
+  TestTypeChecker.cpp
+)
+target_link_libraries(${executable} DawnValidator DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+gtest_discover_tests(${executable} TEST_PREFIX "${executable}::")

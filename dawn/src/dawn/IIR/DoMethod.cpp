@@ -191,6 +191,15 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   return node;
 }
 
+const std::unordered_map<std::string, ast::Expr::LocationType>
+DoMethod::getFieldLocationTypesByName() const {
+  std::unordered_map<std::string, ast::Expr::LocationType> fieldsByName;
+  for(const auto& it : getFields()) {
+    fieldsByName.insert({metaData_.getFieldNameFromAccessID(it.first), it.second.getLocation()});
+  }
+  return fieldsByName;
+}
+
 void DoMethod::updateLevel() {
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
@@ -264,7 +273,7 @@ void DoMethod::updateLevel() {
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
   for(const auto& stmt : getAST().getStatements()) {
-    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;                                                                         
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
