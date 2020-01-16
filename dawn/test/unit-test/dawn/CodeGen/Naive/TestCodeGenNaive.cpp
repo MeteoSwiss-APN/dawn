@@ -12,14 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/IntegrityChecker.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/CodeGen/CodeGen.h"
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
@@ -32,7 +32,7 @@
 using namespace dawn;
 
 using stencilInstantiationContext =
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 namespace {
 
@@ -69,7 +69,7 @@ stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
   auto optimizer = compiler.runOptimizer(sir);
 
   if(compiler.getDiagnostics().hasDiags()) {
-    for (const auto &diag : compiler.getDiagnostics().getQueue()) {
+    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
       std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
     }
     throw std::runtime_error("Compilation failed");
@@ -80,19 +80,12 @@ stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
 
 TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
   std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
-  auto stencil_inst = compile(sir);
-  ASSERT_FALSE(stencil_inst.empty());
-
-  IntegrityChecker checker(stencil_inst.begin()->second.get());
   try {
-    checker.run();
+    compile(sir);
     FAIL() << "Semantic error not thrown";
-  } catch (SemanticError& error) {
+  } catch(SemanticError& error) {
     SUCCEED();
   }
-
-  std::ostringstream oss;
-  dump(oss, stencil_inst);
 }
 
 } // anonymous namespace
