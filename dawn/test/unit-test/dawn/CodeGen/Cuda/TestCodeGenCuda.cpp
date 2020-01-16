@@ -69,7 +69,7 @@ TEST(CodeGenCudaTest, GlobalIndexStencil) {
     dump(oss, stencil_instantiation);
     std::string gen = oss.str();
 
-    std::string ref = read("test/unit-test/dawn/CodeGen/Cuda/generated/global_indexing.cpp");
+    std::string ref = read("reference/global_indexing.cpp");
     ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
