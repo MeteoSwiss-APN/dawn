@@ -24,6 +24,7 @@ from setuptools.command.build_ext import build_ext
 
 
 DAWN_DIR = os.path.join(os.path.dirname(__file__))
+DAWN_ABS_DIR = os.path.abspath(DAWN_DIR)
 BUNDLE_PREFIX = "bundle"
 BUNDLE_DIR = os.path.join(DAWN_DIR, BUNDLE_PREFIX)
 BUNDLE_ABS_DIR = os.path.abspath(BUNDLE_DIR)
@@ -33,12 +34,12 @@ BUILD_JOBS = 4
 
 # Select protobuf version
 # TODO: avoid parsing python files and adapt to new CMake
-with open(os.path.join(DAWN_DIR, "cmake", "thirdparty", "DawnAddProtobuf.cmake"), "r") as f:
+with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
     text = f.read()
-    m = re.search(r"set\(protobuf_version\s+\"([0-9\.]+)\s*\"\)", text)
+    m = re.search(r".*\/protocolbuffers\/protobuf\/archive\/v+([0-9\.]+)\s*\.tar\.gz", text)
     protobuf_version = m.group(1)
 
-install_requires = ["attrs>=19", "black>=19.3b0", f"protobuf=={protobuf_version}", "pytest>=4.3.0"]
+install_requires = ["attrs>=19", "black>=19.3b0", f"protobuf>={protobuf_version}", "pytest>=4.3.0"]
 
 
 # Based on:
@@ -70,30 +71,29 @@ class CMakeBuild(build_ext):
         # Installing in editable/develop mode builds the extension in the original build path,
         # but a regular `pip install` copies the full tree to a temporary folder
         # before building, which makes CMake fail if a CMake cache had been already generated.
-        self.bundle_build_temp = str(os.path.join(BUNDLE_ABS_DIR, "build"))
-        cmake_cache_file = os.path.join(self.bundle_build_temp, "CMakeCache.txt")
+        self.build_tmp = str(os.path.join(DAWN_ABS_DIR, "build"))
+        cmake_cache_file = os.path.join(self.build_tmp, "CMakeCache.txt")
         if os.path.exists(cmake_cache_file):
             with open(cmake_cache_file, "r") as f:
                 text = f.read()
-                m = re.search(r"\s*dawn_BINARY_DIR\s*:\s*STATIC\s*=\s*([\w/\\]+)\s*", text)
+                m = re.search(r"\s*Dawn_BINARY_DIR\s*:\s*STATIC\s*=\s*([\w/\\]+)\s*", text)
                 cache_build_dir = m.group(1) if m else ""
-                if str(self.bundle_build_temp) != cache_build_dir:
-                    shutil.rmtree(self.bundle_build_temp, ignore_errors=False)
-                    shutil.rmtree(os.path.join(BUNDLE_ABS_DIR, "install"), ignore_errors=True)
+                if str(self.build_tmp) != cache_build_dir:
+                    shutil.rmtree(self.build_tmp, ignore_errors=False)
+                    shutil.rmtree(os.path.join(DAWN_ABS_DIR, "install"), ignore_errors=True)
                     assert not os.path.exists(cmake_cache_file)
-        os.makedirs(self.bundle_build_temp, exist_ok=True)
+        os.makedirs(self.build_tmp, exist_ok=True)
+        os.makedirs(os.path.join(DAWN_DIR, "install"), exist_ok=True)
 
         # Prepare cmake environment and args
         env = os.environ.copy()
-        env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get("CXXFLAGS", ""), self.distribution.get_version()
-        )
+        env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get("CXXFLAGS", ""), self.distribution.get_version())
 
         cmake_args = [
             "-DPYTHON_EXECUTABLE=" + sys.executable,
             "-DUSE_SYSTEM_DAWN=False",
             "-DUSE_SYSTEM_PROTOBUF=False",
-            "-DDAWN_BUNDLE_PYTHON=True",
+            "-DENABLE_PYTHON=True",
             "-DBUILD_TESTING=False",
         ]
 
@@ -102,17 +102,17 @@ class CMakeBuild(build_ext):
 
         # Run CMake configure
         print("-" * 10, "Running CMake prepare", "-" * 40)
-        cmake_cmd = ["cmake", BUNDLE_ABS_DIR] + cmake_args
-        print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
-        subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp, env=env)
+        cmake_cmd = ["cmake", DAWN_ABS_DIR] + cmake_args
+        print("{cwd} $ {cmd}".format(cwd=self.build_tmp, cmd=" ".join(cmake_cmd)))
+        subprocess.check_call(cmake_cmd, cwd=self.build_tmp, env=env)
 
         # Run CMake build
         # TODO: run build for the target with the extension name for each extension in self.extensions
         print("-" * 10, "Building extensions", "-" * 40)
-        build_args = ["--config", cfg, "-j", str(BUILD_JOBS), "--target", "dawn"]
+        build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
         cmake_cmd = ["cmake", "--build", "."] + build_args
-        print("{cwd} $ {cmd}".format(cwd=self.bundle_build_temp, cmd=" ".join(cmake_cmd)))
-        subprocess.check_call(cmake_cmd, cwd=self.bundle_build_temp)
+        print("{cwd} $ {cmd}".format(cwd=self.build_tmp, cmd=" ".join(cmake_cmd)))
+        subprocess.check_call(cmake_cmd, cwd=self.build_tmp)
 
         # Move from build temp to final position
         for ext in self.extensions:
@@ -124,11 +124,7 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         # Currently just copy the generated CPython extension to the package folder
         filename = self.get_ext_filename(ext.name)
-        source_path = os.path.abspath(
-            os.path.join(
-                self.bundle_build_temp, "dawn-prefix", "src", "dawn-build", "src", filename
-            )
-        )
+        source_path = os.path.abspath(os.path.join(self.build_tmp, "src", filename))
         dest_build_path = os.path.abspath(self.get_ext_fullpath(ext.name))
         self.copy_file(source_path, dest_build_path)
 

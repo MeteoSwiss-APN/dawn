@@ -6,7 +6,7 @@ BASEPATH_SCRIPT=$(dirname $(realpath -s $0))
 
 export PARALLEL_BUILD_JOBS=24
 srun --job-name=dawn_PR \
-     --time=00:20:00 \
+     --time=00:45:00 \
      --nodes=1 \
      --ntasks-per-node=1 \
      --ntasks-per-core=2 \
