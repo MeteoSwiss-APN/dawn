@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DiagnosticsEngine.h"
@@ -23,8 +23,8 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 
 namespace {
 
@@ -59,28 +59,27 @@ TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   auto out = b.field("out", FieldType::ijk);
   auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
 
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval(SInterval::Start, 10), b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
+  auto stencil_inst = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              SInterval(SInterval::Start, 10), b.declareVar(dx),
+              b.block(b.stmt(b.assignExpr(
+                  b.at(out),
                   b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-         , b.stage(b.doMethod(SInterval(15, SInterval::End),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out), b.lit(10))
-  ) ) ) ) ) ) );
+                      b.binaryExpr(
+                          b.lit(-4),
+                          b.binaryExpr(
+                              b.at(in),
+                              b.binaryExpr(b.at(in, {1, 0, 0}),
+                                           b.binaryExpr(b.at(in, {-1, 0, 0}),
+                                                        b.binaryExpr(b.at(in, {0, -1, 0}),
+                                                                     b.at(in, {0, 1, 0}))))),
+                          Op::multiply),
+                      b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)))))),
+          b.stage(b.doMethod(SInterval(15, SInterval::End),
+                             b.block(b.stmt(b.assignExpr(b.at(out), b.lit(10)))))))));
 
   std::ostringstream oss;
   dump(oss, stencil_inst);
@@ -99,24 +98,25 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
   auto out = b.field("out", FieldType::ijk);
   auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
 
-  auto stencil_inst = b.build("generated",
-    b.stencil(
-      b.multistage(LoopOrderKind::Parallel,
-        b.stage(
-          b.doMethod(SInterval::Start, SInterval::End, b.declareVar(dx),
-            b.block(
-              b.stmt(
-                b.assignExpr(b.at(out),
+  auto stencil_inst = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              SInterval::Start, SInterval::End, b.declareVar(dx),
+              b.block(b.stmt(b.assignExpr(
+                  b.at(out),
                   b.binaryExpr(
-                    b.binaryExpr(b.lit(-4),
-                      b.binaryExpr(b.at(in),
-                        b.binaryExpr(b.at(in, {1, 0, 0}),
-                          b.binaryExpr(b.at(in, {-1, 0, 0}),
-                            b.binaryExpr(b.at(in, {0, -1, 0}), b.at(in, {0, 1, 0}))
-                    ) ) ), Op::multiply),
-                    b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)
-            ) ) ) ) )
-          ) ) );
+                      b.binaryExpr(
+                          b.lit(-4),
+                          b.binaryExpr(
+                              b.at(in),
+                              b.binaryExpr(b.at(in, {1, 0, 0}),
+                                           b.binaryExpr(b.at(in, {-1, 0, 0}),
+                                                        b.binaryExpr(b.at(in, {0, -1, 0}),
+                                                                     b.at(in, {0, 1, 0}))))),
+                          Op::multiply),
+                      b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)))))))));
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
   dump(ofs, stencil_inst);

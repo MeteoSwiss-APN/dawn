@@ -195,7 +195,7 @@ public:
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
                                           Stmts&&... stmts) {
-    return doMethod(iir::Interval(s, e), stmts ...);
+    return doMethod(iir::Interval(s, e), stmts...);
   }
 
   template <typename... Stmts>
