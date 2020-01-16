@@ -91,7 +91,8 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   // Check whether literal expressions are being assigned
   if(iir::LiteralAccessExpr::classof(left.get())) {
     std::string value = dyn_cast<iir::LiteralAccessExpr>(left.get())->getValue();
-    throw SemanticError();
+    throw SemanticError("Attempt to assign constant expression " + value, metadata_.getFileName(),
+                        expr->getSourceLocation().Line);
   }
 }
 

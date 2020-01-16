@@ -79,7 +79,7 @@ stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
 }
 
 TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::shared_ptr<SIR> sir = deserialize("test/unit-test/dawn/CodeGen/Naive/input/globals_opt_away.sir");
+  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
   auto stencil_inst = compile(sir);
   ASSERT_FALSE(stencil_inst.empty());
 

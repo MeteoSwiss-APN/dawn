@@ -20,3 +20,5 @@ add_executable(${executable}
 target_add_dawn_standard_props(${executable})
 target_link_libraries(${executable} DawnOptimizer DawnCompiler DawnUnittest gtest)
 add_test(NAME ${executable} COMMAND ${executable})
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
