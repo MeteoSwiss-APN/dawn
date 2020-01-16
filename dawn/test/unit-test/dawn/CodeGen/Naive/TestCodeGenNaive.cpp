@@ -14,25 +14,18 @@
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-<<<<<<< HEAD
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/IntegrityChecker.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-=======
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/SIR.h"
->>>>>>> master
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
 
 #include <gtest/gtest.h>
 
-#include <cstring>
-<<<<<<< HEAD
 #include <fstream>
 
 using namespace dawn;
@@ -40,11 +33,6 @@ using namespace dawn;
 using stencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
-=======
-#include <filesystem>
-#include <fstream>
-
->>>>>>> master
 namespace {
 
 void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
@@ -69,7 +57,6 @@ std::string read(const std::string& file) {
   return str;
 }
 
-<<<<<<< HEAD
 std::shared_ptr<SIR> deserialize(const std::string& file) {
   std::string json = read(file);
   return SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
@@ -98,7 +85,8 @@ TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
   } catch(SemanticError& error) {
     SUCCEED();
   }
-=======
+}
+
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   using namespace dawn::iir;
   using SInterval = dawn::sir::Interval;
@@ -169,7 +157,6 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
   dump(ofs, stencil_inst);
->>>>>>> master
 }
 
 } // anonymous namespace
