@@ -1050,8 +1050,7 @@ void MSCodeGen::generateCudaKernelCode() {
                             " && jblock >= " + std::to_string(hExtent.jMinus()) +
                             " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus());
 
-        if(std::any_of(stage.getIterationSpace().cbegin(),
-                       stage.getIterationSpace().cend(),
+        if(std::any_of(stage.getIterationSpace().cbegin(), stage.getIterationSpace().cend(),
                        [](const auto& p) -> bool { return p.has_value(); })) {
           for(const auto& stencil : stencilInstantiation_->getStencils()) {
             for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
