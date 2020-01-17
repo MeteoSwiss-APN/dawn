@@ -21,24 +21,25 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
     }
   }
 
+  GridTypeChecker::TypeCheckerImpl typeChecker(iir.getGridType());
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    GridTypeChecker::TypeCheckerImpl Impl(iir.getGridType());
     const std::shared_ptr<iir::BlockStmt>& ast =
         std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
-    ast->accept(Impl);
-    if(!Impl.isConsistent()) {
+    ast->accept(typeChecker);
+    if(!typeChecker.isConsistent()) {
       return false;
     }
   }
   return true;
 }
 bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
+  GridTypeChecker::TypeCheckerImpl typeChecker(sir.GridType);
+
   // check type consistency of stencil functions
   for(auto const& stenFunIt : sir.StencilFunctions) {
     for(const auto& astIt : stenFunIt->Asts) {
-      GridTypeChecker::TypeCheckerImpl Impl(sir.GridType);
-      astIt->accept(Impl);
-      if(!Impl.isConsistent()) {
+      astIt->accept(typeChecker);
+      if(!typeChecker.isConsistent()) {
         return false;
       }
     }
@@ -48,9 +49,8 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
   for(const auto& stencil : sir.Stencils) {
     DAWN_ASSERT(stencil);
     const auto& stencilAst = stencil->StencilDescAst;
-    GridTypeChecker::TypeCheckerImpl Impl(sir.GridType);
-    stencilAst->accept(Impl);
-    if(!Impl.isConsistent()) {
+    stencilAst->accept(typeChecker);
+    if(!typeChecker.isConsistent()) {
       return false;
     }
   }

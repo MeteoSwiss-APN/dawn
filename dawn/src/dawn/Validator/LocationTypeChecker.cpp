@@ -4,25 +4,22 @@ namespace dawn {
 
 bool LocationTypeChecker::checkLocationTypeConsistency(
     const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
-  bool consistent = true;
 
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    LocationTypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationTypesByName(),
-                                              metaData.getAccessIDToNameMap());
+    LocationTypeChecker::TypeCheckerImpl typeChecker(doMethodPtr->getFieldLocationTypesByName(),
+                                                     metaData.getAccessIDToNameMap());
     const std::shared_ptr<iir::BlockStmt>& ast =
         std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
-    ast->accept(Impl);
-    consistent &= Impl.isConsistent();
-    if(!consistent) {
-      break;
+    ast->accept(typeChecker);
+    if(!typeChecker.isConsistent()) {
+      return false;
     }
   }
-  return consistent;
+  return true;
 }
 
 bool LocationTypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
   // check type consistency of stencil functions
-  bool consistent = true;
   for(auto const& stenFunIt : SIR.StencilFunctions) {
     std::unordered_map<std::string, ast::Expr::LocationType> argumentFieldLocs;
     for(const auto& arg : stenFunIt->Args) {
@@ -31,22 +28,13 @@ bool LocationTypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
         argumentFieldLocs.insert({argField->Name, argField->locationType});
       }
     }
+    LocationTypeChecker::TypeCheckerImpl typeChecker(argumentFieldLocs);
     for(const auto& astIt : stenFunIt->Asts) {
-      LocationTypeChecker::TypeCheckerImpl Impl(argumentFieldLocs);
-      astIt->accept(Impl);
-      consistent &= Impl.isConsistent();
-      if(!consistent) {
-        break;
+      astIt->accept(typeChecker);
+      if(!typeChecker.isConsistent()) {
+        return false;
       }
     }
-    if(!consistent) {
-      break;
-    }
-  }
-
-  // do not continue to stencils if functions aren't type consistent
-  if(!consistent) {
-    return false;
   }
 
   // check type consistency of stencils
@@ -57,15 +45,14 @@ bool LocationTypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
       stencilFieldLocs.insert({field->Name, field->locationType});
     }
     const auto& stencilAst = stencil->StencilDescAst;
-    LocationTypeChecker::TypeCheckerImpl Impl(stencilFieldLocs);
-    stencilAst->accept(Impl);
-    consistent &= Impl.isConsistent();
-    if(!consistent) {
-      break;
+    LocationTypeChecker::TypeCheckerImpl typeChecker(stencilFieldLocs);
+    stencilAst->accept(typeChecker);
+    if(!typeChecker.isConsistent()) {
+      return false;
     }
   }
 
-  return consistent;
+  return true;
 }
 
 LocationTypeChecker::TypeCheckerImpl::TypeCheckerImpl(
@@ -117,6 +104,7 @@ void LocationTypeChecker::TypeCheckerImpl::visit(
   // type check failed further down below
   if(!(left.isConsistent() && right.isConsistent())) {
     typesConsistent_ = false;
+    return;
   }
 
   // if both sides access unstructured fields, they need to be on the same location
@@ -172,6 +160,11 @@ void LocationTypeChecker::TypeCheckerImpl::visit(
   // initial value needs to be consistent with operations on right hand side
   if(init.hasType() && ops.hasType()) {
     typesConsistent_ = init.getType() == ops.getType();
+  }
+
+  // right hand side needs to be consistent with rhs imposed
+  if(ops.hasType()) {
+    typesConsistent_ &= ops.getType() == reductionExpr->getRhsLocation();
   }
 
   // the reduce over neighbor concept imposes a type on the left hand side;

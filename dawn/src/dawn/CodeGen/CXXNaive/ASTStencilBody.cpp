@@ -19,7 +19,6 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Support/Unreachable.h"
-#include <string>
 
 namespace dawn {
 namespace codegen {

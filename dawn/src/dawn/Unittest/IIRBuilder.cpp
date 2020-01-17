@@ -25,6 +25,8 @@
 
 #include "IIRBuilder.h"
 
+#include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Validator/GridTypeChecker.h"
