@@ -17,8 +17,6 @@ add_library(DawnOptimizer
   CreateVersionAndRename.h
   OptimizerContext.cpp
   OptimizerContext.h
-  IntegrityChecker.cpp
-  IntegrityChecker.h
   Pass.h
   PassComputeStageExtents.cpp
   PassComputeStageExtents.h
@@ -30,8 +28,6 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
-  PassIntegrityCheck.cpp
-  PassIntegrityCheck.h
   PassIntervalPartitioner.cpp
   PassIntervalPartitioner.h
   PassManager.cpp

@@ -39,8 +39,6 @@ add_library(DawnSupport
   DoubleSidedMap.h
   EditDistance.h
   FileUtil.cpp
-  Exception.h
-        Exception.cpp
   FileUtil.h
   Format.h
   HashCombine.h

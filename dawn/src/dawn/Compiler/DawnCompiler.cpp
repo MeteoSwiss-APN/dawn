@@ -24,7 +24,6 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntegrityCheck.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
@@ -216,8 +215,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
                                                   getOptions().SerializeIIR,
                                               PassInlining::InlineStrategy::ComputationsOnTheFly);
-    // Run AST integrity checker pass after other optimizations
-    optimizer->checkAndPushBack<PassIntegrityCheck>();
 
     DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
     for(const auto& a : optimizer->getPassManager().getPasses()) {

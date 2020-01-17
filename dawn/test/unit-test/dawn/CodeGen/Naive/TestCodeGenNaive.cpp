@@ -14,24 +14,17 @@
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
-#include "dawn/Optimizer/IntegrityChecker.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
 
 #include <gtest/gtest.h>
 
+#include <cstring>
+#include <filesystem>
 #include <fstream>
-
-using namespace dawn;
-
-using stencilInstantiationContext =
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 namespace {
 
@@ -55,26 +48,6 @@ std::string read(const std::string& file) {
   std::ifstream is(file);
   std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
   return str;
-}
-
-std::shared_ptr<SIR> deserialize(const std::string& file) {
-  std::string json = read(file);
-  return SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
-}
-
-stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
-  std::unique_ptr<dawn::Options> options;
-  DawnCompiler compiler(options.get());
-  auto optimizer = compiler.runOptimizer(sir);
-
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    }
-    throw std::runtime_error("Compilation failed");
-  }
-
-  return optimizer->getStencilInstantiationMap();
 }
 
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
@@ -147,16 +120,6 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
   dump(ofs, stencil_inst);
-}
-
-TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
-  try {
-    compile(sir);
-    FAIL() << "Semantic error not thrown";
-  } catch(SemanticError& error) {
-    SUCCEED();
-  }
 }
 
 } // anonymous namespace

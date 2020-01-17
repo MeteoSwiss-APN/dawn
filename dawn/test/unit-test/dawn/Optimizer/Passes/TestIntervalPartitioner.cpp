@@ -18,6 +18,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -34,7 +36,11 @@ protected:
   virtual void SetUp() {}
 
   const std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
-    std::string filename = sirFilename;
+    std::string filename = TestEnvironment::path_;
+    if(!filename.empty())
+      filename += "/";
+
+    filename += sirFilename;
     std::ifstream file(filename);
     DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
