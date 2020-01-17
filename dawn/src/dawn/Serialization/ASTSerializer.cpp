@@ -762,7 +762,7 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
 }
 
 std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto) {
-  // TODO use grid type
+  // TODO sparse_dim: use grid type
   auto field = std::make_shared<sir::Field>(fieldProto.name(),
                                             makeFieldDimensions(fieldProto.field_dimensions()));
   field->IsTemporary = fieldProto.is_temporary();

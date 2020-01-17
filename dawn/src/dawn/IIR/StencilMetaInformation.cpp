@@ -375,7 +375,7 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
 
   return *accessID;
 }
-// TODO: change the name to reflect that it referes to the dense part
+// TODO sparse_dim: change the name to reflect that it referes to the dense part
 ast::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
   const auto& dim = sir::dimension_cast<sir::TriangularFieldDimension const&>(
       fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension());

@@ -283,7 +283,7 @@ T dimension_cast(HorizontalFieldDimension const& dimension) {
   return dynamic_cast<T>(*dimension.impl_);
 }
 
-// TODO move this into HorizontalFieldDimension?
+// TODO sparse_dim: move this into HorizontalFieldDimension?
 template <typename T>
 bool dimension_isa(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;

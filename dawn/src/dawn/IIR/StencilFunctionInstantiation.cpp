@@ -398,9 +398,10 @@ void StencilFunctionInstantiation::update() {
           interval_,
           metadata_.isAccessType(FieldAccessType::Field, AccessID)
               ? metadata_.getFieldDimensions(AccessID)
-              : sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
-                                     true)); // TODO: this is a hack. Ideally we don't want to
-                                             // create Field when the argument is a function call.
+              : sir::FieldDimensions(
+                    sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                    true)); // TODO sparse_dim: this is a hack. Ideally we don't want to
+                            // create Field when the argument is a function call.
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -416,9 +417,10 @@ void StencilFunctionInstantiation::update() {
           interval_,
           metadata_.isAccessType(FieldAccessType::Field, AccessID)
               ? metadata_.getFieldDimensions(AccessID)
-              : sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
-                                     true)); // TODO: this is a hack. Ideally we don't want to
-                                             // create Field when the argument is a function call.
+              : sir::FieldDimensions(
+                    sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                    true)); // TODO sparse_dim: this is a hack. Ideally we don't want to
+                            // create Field when the argument is a function call.
     }
   }
 
@@ -428,13 +430,14 @@ void StencilFunctionInstantiation::update() {
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
       inputFields.emplace(
-          AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{}, interval_,
-                          metadata_.isAccessType(FieldAccessType::Field, AccessID)
-                              ? metadata_.getFieldDimensions(AccessID)
-                              : sir::FieldDimensions(
-                                    sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
-                                    true))); // TODO: this is a hack. Ideally we don't want to
-                                             // create field when the argument is a function call.
+          AccessID,
+          Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{}, interval_,
+                metadata_.isAccessType(FieldAccessType::Field, AccessID)
+                    ? metadata_.getFieldDimensions(AccessID)
+                    : sir::FieldDimensions(
+                          sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                          true))); // TODO sparse_dim: this is a hack. Ideally we don't want to
+                                   // create field when the argument is a function call.
       unusedFields_.insert(AccessID);
     }
   }
