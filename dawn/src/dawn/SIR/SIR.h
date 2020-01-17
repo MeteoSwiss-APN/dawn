@@ -209,9 +209,13 @@ class TriangularFieldDimension : public FieldDimensionImpl {
 
 public:
   explicit TriangularFieldDimension(const ast::NeighborChain neighborChain);
+  /// @brief Returns the neighbor chain encoding the sparse part (isSparse() must be true!).
   const ast::NeighborChain& getNeighborChain() const;
-  ast::LocationType getDenseLocation() const { return neighborChain_[0]; }
-  ast::LocationType getLastSparseLocation() const { return neighborChain_.back(); }
+  /// @brief Returns the dense location (always present)
+  ast::LocationType getDenseLocationType() const { return neighborChain_[0]; }
+  /// @brief Returns the last sparse location type if there is a sparse part, otherwise returns the
+  /// dense part.
+  ast::LocationType getLastSparseLocationType() const { return neighborChain_.back(); }
   bool isSparse() const { return neighborChain_.size() > 1; }
   bool isDense() const { return !isSparse(); }
   std::string toString() const;

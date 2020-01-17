@@ -272,10 +272,10 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
 
   // SIR we received should be type consistent
   TypeChecker checker;
-  if(!checker.checkLocationTypeConsistency(*SIR.get())) {
-    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
-    return nullptr;
-  }
+  if(!checker.checkDimensionsConsistencySIR.get())) {
+      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+      return nullptr;
+    }
 
   // Initialize optimizer
   auto optimizer = runOptimizer(SIR);
@@ -289,7 +289,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
     const auto& IIR = instantiation->getIIR();
-    if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
+    if(!checker.checkDimensionsConsistency(*IIR.get(), instantiation->getMetaData())) {
       DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
                         "points to a bug in the optimization passes ";
       return nullptr;

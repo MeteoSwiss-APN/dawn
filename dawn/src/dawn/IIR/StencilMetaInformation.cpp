@@ -380,7 +380,7 @@ ast::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int Access
   const auto& dim = sir::dimension_cast<sir::TriangularFieldDimension const&>(
       fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension());
   DAWN_ASSERT(dim.isDense());
-  return dim.getDenseLocation();
+  return dim.getDenseLocationType();
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {

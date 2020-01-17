@@ -304,7 +304,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       const auto& triangularDims = sir::dimension_cast<sir::TriangularFieldDimension const&>(
           info.field.getFieldDimensions().getHorizontalFieldDimension());
       DAWN_ASSERT(triangularDims.isDense());
-      switch(triangularDims.getDenseLocation()) {
+      switch(triangularDims.getDenseLocationType()) {
       case ast::LocationType::Cells:
         return std::string("dawn::cell_field_t<LibTag, double>");
       case ast::LocationType::Vertices:

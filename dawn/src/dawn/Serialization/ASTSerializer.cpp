@@ -281,7 +281,7 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
       }
     }
     protoTriangularDimension->set_dense_location_type(
-        getProtoLocationTypeFromLocationType(triangularDimension.getDenseLocation()));
+        getProtoLocationTypeFromLocationType(triangularDimension.getDenseLocationType()));
   }
   protoFieldDimensions->set_mask_k(fieldDimensions.K());
 }
