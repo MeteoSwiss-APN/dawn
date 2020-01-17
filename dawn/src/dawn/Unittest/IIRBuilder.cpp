@@ -27,7 +27,8 @@
 
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
 namespace iir {
