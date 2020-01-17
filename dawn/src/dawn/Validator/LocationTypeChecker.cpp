@@ -7,7 +7,7 @@ bool LocationTypeChecker::checkLocationTypeConsistency(
   bool consistent = true;
 
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    LocationTypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationsByName(),
+    LocationTypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationTypesByName(),
                                               metaData.getAccessIDToNameMap());
     const std::shared_ptr<iir::BlockStmt>& ast =
         std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
