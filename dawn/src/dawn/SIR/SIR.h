@@ -510,12 +510,6 @@ struct SIR : public dawn::NonCopyable {
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
   std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
   const ast::GridType GridType;
-
-  /// @brief check if location types are consistent
-  ///
-  /// this check is only meaningful if the grid type is triangular. (currently) the structured grid
-  /// does not use location types, hence, in this case, this check simply returns true
-  bool locationTypesConsistent() const;
 };
 
 } // namespace dawn
