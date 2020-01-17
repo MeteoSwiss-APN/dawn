@@ -18,10 +18,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>
-#include <streambuf>
 
 using namespace dawn;
 
@@ -36,7 +34,6 @@ protected:
   virtual void SetUp() {}
 
   const std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
-    // std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::string filename = sirFilename;
     std::ifstream file(filename);
     DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
@@ -46,6 +43,7 @@ protected:
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
+    compiler_.getOptions().PartitionIntervals = true;
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
     // Report diganostics
     if(compiler_.getDiagnostics().hasDiags()) {
@@ -64,18 +62,27 @@ protected:
 TEST_F(TestIntervalPartitioner, test_interval_partition) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
       loadTest("test_interval_partition.sir");
-  // const auto& metadata = instantiation->getMetaData();
-  const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
 
-  const auto& stencils = IIR->getChildren();
+  std::unordered_set<iir::Interval> expected;
+  expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
+  expected.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
+  expected.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
+  expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
+  expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
+
+  const auto& stencils = instantiation->getIIR()->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
+  ASSERT_TRUE(stencil->getChildren().size() > 0);
   ASSERT_TRUE(stencil->getNumStages() == 3);
 
-  auto multiStage = stencil->getChildren().begin()->get();
+  const auto& multiStage = stencil->getChildren().begin()->get();
   std::unordered_set<iir::Interval> intervals = multiStage->getIntervals();
-  // Actually think this should be 5, more work to do...
-  ASSERT_TRUE(intervals.size() == 4);
+
+  ASSERT_TRUE(intervals.size() == expected.size());
+  for(const auto& interval : expected) {
+    ASSERT_TRUE(intervals.find(interval) != intervals.end());
+  }
 }
 
 } // anonymous namespace
