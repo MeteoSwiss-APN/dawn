@@ -557,6 +557,8 @@ public:
     return dynamic_cast<DataType&>(*data_.get());
   }
 
+  bool hasData() const { return data_ != nullptr; }
+
   const std::string& getName() const { return name_; }
 
   void setName(std::string name) { name_ = name; }

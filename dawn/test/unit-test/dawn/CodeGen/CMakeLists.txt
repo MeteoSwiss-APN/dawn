@@ -12,10 +12,4 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(AST)
-add_subdirectory(Optimizer)
-add_subdirectory(IIR)
-add_subdirectory(SIR)
-add_subdirectory(Support)
-add_subdirectory(CodeGen)
-add_subdirectory(Validator)
+add_subdirectory(Naive)

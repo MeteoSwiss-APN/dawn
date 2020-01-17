@@ -12,10 +12,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(AST)
-add_subdirectory(Optimizer)
-add_subdirectory(IIR)
-add_subdirectory(SIR)
-add_subdirectory(Support)
-add_subdirectory(CodeGen)
-add_subdirectory(Validator)
+add_library(DawnValidator
+    TypeChecker.h
+    TypeChecker.cpp
+)
+
+target_add_dawn_standard_props(DawnValidator)
+target_link_libraries(DawnValidator PUBLIC DawnIIR DawnSIR)
