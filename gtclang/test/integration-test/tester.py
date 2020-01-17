@@ -43,6 +43,7 @@ def run_test(content, gtclang_exec, filename, verbose=False):
             m_runs[0]
             .replace(r"%gtclang%", gtclang_exec)
             .replace(r"%file%", filename)
+            .replace(r"%filename%", basename)
             .split(" ")
         )
 
