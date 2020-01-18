@@ -40,4 +40,4 @@ target_compile_options(_dawn4py PUBLIC -Wno-shadow)
 # Depending on DawnSIRProto and DawnIIRProto ensures the python files are
 # generated and moved into the correct location
 # TODO Do we need to depend on Dawn or DawnC here?
-add_custom_target(python DEPENDS DawnSIRProto DawnIIRProto _dawn4py)
+add_custom_target(python DEPENDS _dawn4py)
