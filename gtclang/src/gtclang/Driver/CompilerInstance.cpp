@@ -31,10 +31,10 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
-#include <iostream>
 
 namespace gtclang {
 

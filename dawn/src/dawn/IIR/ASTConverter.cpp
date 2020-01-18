@@ -66,6 +66,7 @@ void ASTConverter::visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stm
       std::make_shared<ast::AST>(std::dynamic_pointer_cast<iir::BlockStmt>(
           stmtMap_.at(stmt->getVerticalRegion()->Ast->getRoot()))),
       stmt->getVerticalRegion()->VerticalInterval, stmt->getVerticalRegion()->LoopOrder,
+      stmt->getVerticalRegion()->IterationSpace[0], stmt->getVerticalRegion()->IterationSpace[1],
       stmt->getVerticalRegion()->Loc);
   verticalRegion->IterationSpace = stmt->getVerticalRegion()->IterationSpace;
 

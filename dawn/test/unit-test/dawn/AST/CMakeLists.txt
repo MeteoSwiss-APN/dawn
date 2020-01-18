@@ -11,9 +11,10 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestAST)
 add_executable(${executable} TestMain.cpp TestOffset.cpp)
 target_link_libraries(${executable} PRIVATE DawnSIR DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
-add_test(NAME ${executable} COMMAND ${executable})
+gtest_discover_tests(${executable} TEST_PREFIX "${executable}::" DISCOVERY_TIMEOUT 30)

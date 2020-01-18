@@ -23,12 +23,12 @@
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
+#include <array>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <array>
-#include <optional>
 
 namespace dawn {
 
@@ -554,6 +554,8 @@ public:
       data_ = std::make_unique<DataType>();
     return dynamic_cast<DataType&>(*data_.get());
   }
+
+  bool hasData() const { return data_ != nullptr; }
 
   const std::string& getName() const { return name_; }
 

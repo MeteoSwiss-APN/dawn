@@ -51,8 +51,8 @@ int main() {
     auto stencil_instantiation = b.build(
         "copyCell", b.stencil(b.multistage(
                         LoopOrderKind::Parallel,
-                        b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                          b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                           b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyCell.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
@@ -71,8 +71,8 @@ int main() {
         "copyEdge",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                              b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyEdge.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
@@ -91,7 +91,7 @@ int main() {
         b.build("accumulateEdgeToCell",
                 b.stencil(b.multistage(
                     LoopOrderKind::Parallel,
-                    b.stage(b.vregion(
+                    b.stage(b.doMethod(
                         dawn::sir::Interval::Start, dawn::sir::Interval::End,
                         b.stmt(b.assignExpr(b.at(out_f),
                                             b.reduceOverNeighborExpr(
@@ -116,11 +116,11 @@ int main() {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
-                              b.stmt(b.assignExpr(
-                                  b.at(out_f), b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
-                                                            b.at(in_f, HOffsetType::noOffset, -1),
-                                                            Op::plus))))))));
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
+                               b.stmt(b.assignExpr(
+                                   b.at(out_f), b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
+                                                             b.at(in_f, HOffsetType::noOffset, -1),
+                                                             Op::plus))))))));
 
     std::ofstream of("generated/generated_verticalSum.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
@@ -144,12 +144,12 @@ int main() {
             b.multistage(
                 LoopOrderKind::Forward,
                 b.stage(LocType::Cells,
-                        b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::Start, 0, 0,
-                                  b.stmt(b.assignExpr(
-                                      b.at(c_f), b.binaryExpr(b.at(c_f), b.at(b_f), Op::divide))),
-                                  b.stmt(b.assignExpr(
-                                      b.at(d_f), b.binaryExpr(b.at(d_f), b.at(b_f), Op::divide)))),
-                        b.vregion(
+                        b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start, 0, 0,
+                                   b.stmt(b.assignExpr(
+                                       b.at(c_f), b.binaryExpr(b.at(c_f), b.at(b_f), Op::divide))),
+                                   b.stmt(b.assignExpr(
+                                       b.at(d_f), b.binaryExpr(b.at(d_f), b.at(b_f), Op::divide)))),
+                        b.doMethod(
                             dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                             b.declareVar(m_var),
                             b.stmt(b.assignExpr(
@@ -177,14 +177,14 @@ int main() {
                 LoopOrderKind::Backward,
                 b.stage(
                     LocType::Cells,
-                    b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0, -1,
-                              b.stmt(b.assignExpr(
-                                  b.at(d_f),
-                                  b.binaryExpr(b.at(d_f),
-                                               b.binaryExpr(b.at(c_f),
-                                                            b.at(d_f, HOffsetType::noOffset, +1),
-                                                            Op::multiply),
-                                               Op::minus))))))));
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0, -1,
+                               b.stmt(b.assignExpr(
+                                   b.at(d_f),
+                                   b.binaryExpr(b.at(d_f),
+                                                b.binaryExpr(b.at(c_f),
+                                                             b.at(d_f, HOffsetType::noOffset, +1),
+                                                             Op::multiply),
+                                                Op::minus))))))));
 
     std::ofstream of("generated/generated_verticalSolver.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
@@ -204,7 +204,7 @@ int main() {
         "diffusion",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
-            b.stage(b.vregion(
+            b.stage(b.doMethod(
                 dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
                 b.stmt(b.assignExpr(
                     b.at(cnt), b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
@@ -242,22 +242,22 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Edges,
-                b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                          b.stmt(b.assignExpr(
-                              b.at(edge_f), b.reduceOverNeighborExpr<float>(
-                                                Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                dawn::ast::Expr::LocationType::Cells,
-                                                std::vector<float>({1., -1.})))))),
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(edge_f), b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
+                                                 dawn::ast::Expr::LocationType::Cells,
+                                                 std::vector<float>({1., -1.})))))),
             b.stage(
                 LocType::Cells,
-                b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                          b.stmt(b.assignExpr(
-                              b.at(cell_f), b.reduceOverNeighborExpr<float>(
-                                                Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                dawn::ast::Expr::LocationType::Edges,
-                                                std::vector<float>({0.5, 0., 0., 0.5})))))))));
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(cell_f), b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
+                                                 dawn::ast::Expr::LocationType::Edges,
+                                                 std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
     std::ofstream of("generated/generated_gradient.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);

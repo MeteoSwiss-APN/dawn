@@ -51,6 +51,7 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/Validator/TypeChecker.h"
 
 namespace dawn {
 
@@ -87,6 +88,12 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
+
+std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
+  const std::size_t pos = fullName.rfind(extension);
+  return pos < std::string::npos ? fullName.substr(0, pos) : fullName;
+}
+
 } // anonymous namespace
 
 /// @brief Report a diagnostic concering an invalid Option
@@ -107,16 +114,6 @@ static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, s
       diag << ", possible values " << RangeToString()(possibleValues);
   }
   return diag;
-}
-
-static std::string remove_fileextension(std::string fullName, std::string extension) {
-  std::string truncation = "";
-  std::size_t pos = 0;
-  while((pos = fullName.find(extension)) != std::string::npos) {
-    truncation += fullName.substr(0, pos);
-    fullName.erase(0, pos + extension.length());
-  }
-  return truncation;
 }
 
 static OptimizerContext::OptimizerContextOptions
@@ -238,7 +235,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        const std::string originalFileName = remove_fileextension(
+        const std::string originalFileName = filenameSansExtension(
             options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
                                          : options_->OutputFile,
             ".cpp");
@@ -273,12 +270,30 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
     return nullptr;
   }
 
+  // SIR we received should be type consistent
+  TypeChecker checker;
+  if(!checker.checkLocationTypeConsistency(*SIR.get())) {
+    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+    return nullptr;
+  }
+
   // Initialize optimizer
   auto optimizer = runOptimizer(SIR);
 
   if(diagnostics_->hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
+  }
+
+  // IIR produced should be type consistent too
+  for(auto& stencil : optimizer->getStencilInstantiationMap()) {
+    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+    const auto& IIR = instantiation->getIIR();
+    if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
+      DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
+                        "points to a bug in the optimization passes ";
+      return nullptr;
+    }
   }
 
   // Generate code

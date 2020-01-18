@@ -59,10 +59,10 @@ TEST(CodeGenCudaTest, GlobalIndexStencil) {
     auto stencil_instantiation = b.build(
             "generated", b.stencil(b.multistage(
                     LoopOrderKind::Parallel,
-                    b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                       b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                     b.stage(1, {0, 2},
-                            b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                            b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                       b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
     std::ostringstream oss;

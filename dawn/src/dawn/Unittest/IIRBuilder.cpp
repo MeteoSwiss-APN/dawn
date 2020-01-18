@@ -12,10 +12,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
+// TODO there are death tests which rely on the following code to die, needs refactoring
+#ifdef NDEBUG
+#undef NDEBUG
+#define HAD_NDEBUG
+#endif
+#include "dawn/Support/Assert.h"
+#ifdef HAD_NDEBUG
+#define NDEBUG
+#undef HAD_NDEBUG
+#endif
+
 #include "IIRBuilder.h"
 
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Validator/TypeChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -42,12 +54,12 @@ Array3i asArray(FieldType ft) {
 } // namespace
 
 dawn::codegen::stencilInstantiationContext
-IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil) {
+IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencilIIR) {
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
-  auto stencil_id = stencil->getStencilID();
+  auto stencil_id = stencilIIR->getStencilID();
   si_->getMetaData().setStencilName(name);
-  si_->getIIR()->insertChild(std::move(stencil), si_->getIIR());
+  si_->getIIR()->insertChild(std::move(stencilIIR), si_->getIIR());
 
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencil_id));
@@ -63,11 +75,11 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   }
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
+    iir::Stage& stageIIR = *stagePtr;
+    for(const auto& doMethodIIR : stageIIR.getChildren()) {
+      doMethodIIR->update(iir::NodeUpdateType::level);
     }
-    stage.update(iir::NodeUpdateType::level);
+    stageIIR.update(iir::NodeUpdateType::level);
   }
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
     stagePtr->update(iir::NodeUpdateType::levelAndTreeAbove);
@@ -79,6 +91,9 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
       diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
+
+  TypeChecker checker;
+  DAWN_ASSERT(checker.checkLocationTypeConsistency(*new_si->getIIR().get(), new_si->getMetaData()));
 
   dawn::codegen::stencilInstantiationContext map;
   map[new_si->getName()] = std::move(new_si);
@@ -174,13 +189,23 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   return var.decl;
 }
 
-IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
+IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
   sir::FieldDimension dimensions(
       ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, dimensions);
   return {id, name};
+}
+
+IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldType ft) {
+  DAWN_ASSERT(si_);
+  auto fieldMaskArray = asArray(ft);
+  sir::FieldDimension dimensions(
+      ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
+  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name, dimensions);
+  std::string newName = si_->getMetaData().getFieldNameFromAccessID(id);
+  return {id, newName};
 }
 
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {

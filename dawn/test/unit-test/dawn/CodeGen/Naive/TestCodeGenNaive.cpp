@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DiagnosticsEngine.h"
@@ -59,10 +59,10 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
   auto stencil_instantiation = b.build(
       "generated", b.stencil(b.multistage(
                        LoopOrderKind::Parallel,
-                       b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                          b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                        b.stage(1, {0, 2},
-                               b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                          b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   std::ostringstream oss;
@@ -71,6 +71,78 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
 
   std::string ref = read("reference/global_indexing.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+}
+
+TEST(CodeGenNaiveTest, NonOverlappingInterval) {
+  using namespace dawn::iir;
+  using SInterval = dawn::sir::Interval;
+
+  CartesianIIRBuilder b;
+  auto in = b.field("in", FieldType::ijk);
+  auto out = b.field("out", FieldType::ijk);
+  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+
+  auto stencil_inst = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              SInterval(SInterval::Start, 10), b.declareVar(dx),
+              b.block(b.stmt(b.assignExpr(
+                  b.at(out),
+                  b.binaryExpr(
+                      b.binaryExpr(
+                          b.lit(-4),
+                          b.binaryExpr(
+                              b.at(in),
+                              b.binaryExpr(b.at(in, {1, 0, 0}),
+                                           b.binaryExpr(b.at(in, {-1, 0, 0}),
+                                                        b.binaryExpr(b.at(in, {0, -1, 0}),
+                                                                     b.at(in, {0, 1, 0}))))),
+                          Op::multiply),
+                      b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)))))),
+          b.stage(b.doMethod(SInterval(15, SInterval::End),
+                             b.block(b.stmt(b.assignExpr(b.at(out), b.lit(10)))))))));
+
+  std::ostringstream oss;
+  dump(oss, stencil_inst);
+  std::string gen = oss.str();
+
+  std::string ref = read("reference/nonoverlapping_stencil.cpp");
+  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+}
+
+TEST(CodeGenNaiveTest, LaplacianStencil) {
+  using namespace dawn::iir;
+  using SInterval = dawn::sir::Interval;
+
+  CartesianIIRBuilder b;
+  auto in = b.field("in", FieldType::ijk);
+  auto out = b.field("out", FieldType::ijk);
+  auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+
+  auto stencil_inst = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              SInterval::Start, SInterval::End, b.declareVar(dx),
+              b.block(b.stmt(b.assignExpr(
+                  b.at(out),
+                  b.binaryExpr(
+                      b.binaryExpr(
+                          b.lit(-4),
+                          b.binaryExpr(
+                              b.at(in),
+                              b.binaryExpr(b.at(in, {1, 0, 0}),
+                                           b.binaryExpr(b.at(in, {-1, 0, 0}),
+                                                        b.binaryExpr(b.at(in, {0, -1, 0}),
+                                                                     b.at(in, {0, 1, 0}))))),
+                          Op::multiply),
+                      b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)))))))));
+
+  std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
+  dump(ofs, stencil_inst);
 }
 
 } // anonymous namespace
