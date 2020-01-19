@@ -25,7 +25,7 @@ install(
 # Once that is no longer common we can remove this hack
 add_library(cpp_extra_libs INTERFACE)
 if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-    target_link_libraries(cpp_extra_libs PUBLIC stdc++fs)
+    target_link_libraries(cpp_extra_libs INTERFACE stdc++fs)
 endif()
 
 install(
