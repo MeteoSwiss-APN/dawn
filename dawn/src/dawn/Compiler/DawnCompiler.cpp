@@ -235,8 +235,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
         const std::filesystem::path p(options_->OutputFile.empty()
                                           ? instantiation->getMetaData().getFileName()
                                           : options_->OutputFile);
-        IIRSerializer::serialize(static_cast<std::string>(p.parent_path()) + "." +
-                                     std::to_string(i) + ".iir",
+        IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                     ".iir",
                                  instantiation, serializationKind);
         i++;
       }
