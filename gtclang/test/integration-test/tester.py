@@ -101,10 +101,12 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
         )
 
     # Run it!
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = (x.decode() for x in (proc.stdout, proc.stderr))
+    print(" ".join(cmd))
     if verbose:
-        print(" ".join(cmd))
-        print(proc.stdout.strip("\n"))
+        print(stdout.strip("\n"))
+        print(stderr.strip("\n"))
 
     # Begin tests
 
@@ -125,7 +127,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
             m = m.replace(line_match.group(), str(line))
         print_test("EXPECTED_LINE: " + m)
         # Look for line in stdout
-        if not re.search(m, proc.stdout):
+        if not re.search(m, stdout):
             print_error("Could not match: {}".format(m))
             error_happened = True
 
@@ -136,7 +138,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
         m = m.strip(" ")
         print_test("EXPECTED_ERROR: " + m)
         # Look for line in stdout
-        if re.search(m, proc.stderr) is None:
+        if re.search(m, stderr) is None:
             print_error("Could not find error in stdout: {}".format(m))
             error_happened = True
 
@@ -191,7 +193,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
     if not gtclang_success:
         print_error(
             "received return code {}{}".format(
-                proc.returncode, ":\n{}".format(proc.stderr) if proc.stderr else ""
+                proc.returncode, ":\n{}".format(stderr) if stderr else "",
             )
         )
         return 1
