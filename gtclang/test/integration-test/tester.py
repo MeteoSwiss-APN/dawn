@@ -1,3 +1,6 @@
+"""
+Run embedded integration tests from GTClang DSL code.
+"""
 import sys
 import os.path
 import re
@@ -6,6 +9,16 @@ import filecmp
 import argparse
 from json import loads as load_json
 from difflib import unified_diff
+
+patterns = {
+    "RUN": re.compile(r"//\s*RUN:\s*(?P<command>[^\n]+)"),
+    "EXPECTED_LINE": re.compile(r"//\s*EXPECTED\s*%line%:\s*(?P<output>[^\n]+)"),
+    "EXPECTED": re.compile(r"//\s*EXPECTED:\s*(?!%line%)(?P<output>[^\n]+)"),
+    "EXPECTED_FILE": re.compile(
+        r"//\s*EXPECTED_FILE:\s*OUTPUT:\s*(?P<output>[^\s]+)\s*REFERENCE:\s*(?P<reference>[^\s]+)(?P<remainder>[^\n]*)"
+    ),
+    "EXPECTED_ERROR": re.compile(r"//\s*EXPECTED_ERROR:\s*(?P<output>[^\n]+)"),
+}
 
 
 def print_error(message):
@@ -17,6 +30,8 @@ def print_test(message):
 
 
 def compare_json_files(output, reference, ignore_keys=[]):
+    """Compare JSON files, ignore certain keys"""
+
     def read_file(filename):
         if not os.path.exists(filename):
             raise ValueError("Could not find file: {}".format(filename))
@@ -66,6 +81,8 @@ def compare_json_files(output, reference, ignore_keys=[]):
 
 
 def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
+    """Main test function."""
+
     def get_line_number(content, m):
         return list(map(lambda x: m in x, content.split("\n"))).index(True) + 1
 
@@ -77,17 +94,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
     error_happened = False
     expect_error = False
 
-    patterns = {
-        "RUN": re.compile(r"//\s*RUN:\s*(?P<command>[^\n]+)"),
-        "EXPECTED_LINE": re.compile(r"//\s*EXPECTED\s*%line%:\s*(?P<output>[^\n]+)"),
-        "EXPECTED": re.compile(r"//\s*EXPECTED:\s*(?!%line%)(?P<output>[^\n]+)"),
-        "EXPECTED_FILE": re.compile(
-            r"//\s*EXPECTED_FILE:\s*OUTPUT:\s*(?P<output>[^\s]+)\s*REFERENCE:\s*(?P<reference>[^\s]+)(?P<remainder>[^\n]*)"
-        ),
-        "EXPECTED_ERROR": re.compile(r"//\s*EXPECTED_ERROR:\s*(?P<output>[^\n]+)"),
-    }
-
-    # RUN
+    # Look for RUN
     m_runs = patterns["RUN"].findall(content)
     if len(m_runs) != 1 or m_runs[0] is None:
         raise ValueError("Requires exactly one RUN statement somewhere in the file!")
@@ -110,7 +117,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
 
     # Begin tests
 
-    # EXPECTED_LINE and EXPECTED
+    # Look for EXPECTED_LINE and EXPECTED
     m_expected = patterns["EXPECTED_LINE"].findall(content) + patterns[
         "EXPECTED"
     ].findall(content)
@@ -131,7 +138,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
             print_error("Could not match: {}".format(m))
             error_happened = True
 
-    # EXPECTED_ERROR
+    # Look for EXPECTED_ERROR
     m_errors = patterns["EXPECTED_ERROR"].findall(content)
     for m in m_errors:
         # Replace all possible patterns with regex expressions
@@ -146,7 +153,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
     if len(m_errors) > 0:
         expect_error = True
 
-    # EXPECTED_FILE
+    # Look for EXPECTED_FILE
     m_expected_file = patterns["EXPECTED_FILE"].findall(content)
     for m in m_expected_file:
         files = (m[0], m[1])
@@ -190,6 +197,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
         else proc.returncode != successful_code
     )
 
+    # Return
     if not gtclang_success:
         print_error(
             "received return code {}{}".format(
@@ -220,9 +228,11 @@ if __name__ == "__main__":
     parser.add_argument("options", nargs="*")
     args = parser.parse_args()
 
-    content = ""
+    # Read file
     with open(args.source, mode="r") as f:
         content = f.read().rstrip("\n")
+
+    # Call test function
     ret_val = run_test(
         content,
         args.gtclang,
