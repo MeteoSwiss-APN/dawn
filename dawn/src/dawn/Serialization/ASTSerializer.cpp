@@ -253,7 +253,6 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
                         const sir::FieldDimensions& fieldDimensions) {
-  // TODO sparse_dim: use gridtype
   if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
          fieldDimensions.getHorizontalFieldDimension())) {
     auto const& cartesianDimension =
@@ -717,7 +716,6 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
 sir::FieldDimensions
 makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions) {
 
-  // TODO sparse_dim: use gridtype!!!
   if(protoFieldDimensions.has_cartesian_horizontal_dimension()) {
     const auto& protoCartesianDimension = protoFieldDimensions.cartesian_horizontal_dimension();
     return sir::FieldDimensions(
@@ -762,7 +760,6 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
 }
 
 std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto) {
-  // TODO sparse_dim: use grid type
   auto field = std::make_shared<sir::Field>(fieldProto.name(),
                                             makeFieldDimensions(fieldProto.field_dimensions()));
   field->IsTemporary = fieldProto.is_temporary();

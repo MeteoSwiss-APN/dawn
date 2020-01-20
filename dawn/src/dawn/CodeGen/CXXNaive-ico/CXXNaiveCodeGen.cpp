@@ -182,7 +182,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   };
   for(auto APIfieldID : APIFields) {
     std::string typeString =
-        getLocationTypeString(metadata.getLocationTypeFromAccessID(APIfieldID));
+        getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
 
     StencilWrapperConstructor.addArg("dawn::" + typeString + "field_t<LibTag, double>& " +
                                      metadata.getNameFromAccessID(APIfieldID));

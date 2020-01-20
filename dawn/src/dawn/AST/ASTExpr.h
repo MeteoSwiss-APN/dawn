@@ -16,6 +16,7 @@
 #define DAWN_AST_ASTEXPR_H
 
 #include "ASTVisitorHelpers.h"
+#include "LocationType.h"
 #include "Offsets.h"
 
 #include "dawn/Support/Array.h"
@@ -38,10 +39,6 @@ class Value;
 
 namespace ast {
 class ASTVisitor;
-
-// TODO sparse_dim: move this to a new LocationType file
-enum class LocationType { Cells, Edges, Vertices };
-using NeighborChain = std::vector<ast::LocationType>;
 
 /// @brief Abstract base class of all expressions
 /// @ingroup ast

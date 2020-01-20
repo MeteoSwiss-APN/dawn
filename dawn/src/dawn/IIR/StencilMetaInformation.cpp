@@ -375,11 +375,13 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
 
   return *accessID;
 }
-// TODO sparse_dim: change the name to reflect that it referes to the dense part
-ast::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
+ast::LocationType StencilMetaInformation::getDenseLocationTypeFromAccessID(int AccessID) const {
+  DAWN_ASSERT_MSG(
+      sir::dimension_isa<sir::TriangularFieldDimension>(
+          fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension()),
+      "Location type requested for Cartesian dimension");
   const auto& dim = sir::dimension_cast<sir::TriangularFieldDimension const&>(
       fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension());
-  DAWN_ASSERT(dim.isDense());
   return dim.getDenseLocationType();
 }
 

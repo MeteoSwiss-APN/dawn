@@ -349,7 +349,7 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-  dawn::ast::LocationType getLocationTypeFromAccessID(int ID) const;
+  dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
 
 private:
   //================================================================================================
