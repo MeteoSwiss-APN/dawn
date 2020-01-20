@@ -20,6 +20,7 @@
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
+#include "dawn/Support/Unreachable.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <iterator>
@@ -975,11 +976,43 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
   }
   case proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    auto expr = std::make_shared<ReductionOverNeighborExpr>(
-        exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
-        getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-        getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
-    return expr;
+    auto weights = exprProto.weights();
+    if(weights.empty()) {
+      auto expr = std::make_shared<ReductionOverNeighborExpr>(
+          exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
+          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+      return expr;
+    } else {
+      std::vector<sir::Value> deserializedWeights;
+      for(const auto weight : weights) {
+        switch(weight.Value_case()) {
+        case dawn::proto::statements::Weight::kBooleanValue:
+          dawn_unreachable("non arithmetic weight encountered in deserialization (boolean)");
+          break;
+        case dawn::proto::statements::Weight::kIntegerValue:
+          deserializedWeights.push_back(sir::Value(weight.integer_value()));
+          break;
+        case dawn::proto::statements::Weight::kDoubleValue:
+          deserializedWeights.push_back(sir::Value(weight.double_value()));
+          break;
+        case dawn::proto::statements::Weight::kFloatValue:
+          deserializedWeights.push_back(sir::Value(weight.float_value()));
+          break;
+        case dawn::proto::statements::Weight::kStringValue:
+          dawn_unreachable("non arithmetic weight encountered in deserialization (string)");
+          break;
+        case dawn::proto::statements::Weight::VALUE_NOT_SET:
+          dawn_unreachable("un-set weight encountered in deserialization");
+          break;
+        }
+      }
+      auto expr = std::make_shared<ReductionOverNeighborExpr>(
+          exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
+          deserializedWeights, getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+      return expr;
+    }
   }
   case proto::statements::Expr::EXPR_NOT_SET:
   default:
