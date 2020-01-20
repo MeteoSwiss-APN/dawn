@@ -210,10 +210,6 @@ int main() {
                                     b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
                                                              dawn::ast::LocationType::Cells,
                                                              dawn::ast::LocationType::Cells))),
-                b.stmt(b.assignExpr(b.at(cnt),
-                                    b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
-                                                             dawn::ast::LocationType::Cells,
-                                                             dawn::ast::LocationType::Cells))),
                 b.stmt(b.assignExpr(
                     b.at(out_f),
                     b.reduceOverNeighborExpr(

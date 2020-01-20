@@ -13,19 +13,14 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
-#include "dawn/AST/ASTExpr.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
-#include <memory>
 
 namespace dawn {
 
