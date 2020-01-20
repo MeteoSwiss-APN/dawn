@@ -53,7 +53,9 @@ def compare_json_files(output, reference, ignore_keys=[]):
                     print_error(msg)
                     return False
         elif isinstance(t1, dict):
-            for v1, v2 in zip(set(t1), set(t2)):
+            t1_keys = sorted(t1.keys())
+            t2_keys = sorted(t2.keys())
+            for v1, v2 in zip(t1_keys, t2_keys):
                 # Then v1 and v2 are _keys_
                 if any(isinstance(t1[v1], x) for x in (list, dict)):
                     if not compare_json_trees(t1[v1], t2[v2]):
