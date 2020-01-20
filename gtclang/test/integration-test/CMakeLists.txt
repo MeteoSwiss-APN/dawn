@@ -22,9 +22,11 @@ add_subdirectory(CodeGen)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 function(add_integration_test source)
-add_test(NAME GTClangIntegrationTest::${source}
+string(REGEX REPLACE "\\.[^.]*$" "" source_no_ext ${source})
+set(test_name GTClang::Integration::${source_no_ext})
+add_test(NAME ${test_name}
   COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/integration-test/tester.py $<TARGET_FILE:gtclang> ${CMAKE_CURRENT_LIST_DIR}/${source})
-set_property(TEST GTClangIntegrationTest::${source} APPEND PROPERTY DEPENDS gtclang)
+set_property(TEST ${test_name} APPEND PROPERTY DEPENDS gtclang)
 endfunction()
 
 add_integration_test(Accesses/Simple01.cpp)

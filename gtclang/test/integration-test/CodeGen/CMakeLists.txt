@@ -85,7 +85,7 @@ function(compile_target)
   # gtclang_dsl_defs.
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
-  add_test(NAME GTClang-${executable}
+  add_test(NAME GTClang::Integration::CodeGen::${executable}
     COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
   )
 endfunction()
