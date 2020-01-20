@@ -770,7 +770,7 @@ void IIRSerializer::serialize(const std::string& file,
                               dawn::IIRSerializer::Format kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
-    throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
+    throw std::runtime_error(format("cannot serialize IIR: failed to open file \"%s\"", file));
 
   auto str = serializeImpl(instantiation, kind);
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
