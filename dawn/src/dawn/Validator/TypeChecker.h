@@ -43,7 +43,7 @@ private:
 
     bool isConsistent() const { return dimensionsConsistent_; }
     bool hasDimensions() const { return curDimensions_.has_value(); };
-    sir::FieldDimensions getDimensions() const;
+    const sir::FieldDimensions& getDimensions() const;
 
     // This constructor is used when the check is performed on the SIR. In this case, each
     // Field is uniquely identified by its name

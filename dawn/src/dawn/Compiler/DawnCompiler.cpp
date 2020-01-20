@@ -272,10 +272,10 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
 
   // SIR we received should be type consistent
   TypeChecker checker;
-  if(!checker.checkDimensionsConsistencySIR.get())) {
-      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
-      return nullptr;
-    }
+  if(!checker.checkDimensionsConsistency(*SIR)) {
+    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+    return nullptr;
+  }
 
   // Initialize optimizer
   auto optimizer = runOptimizer(SIR);

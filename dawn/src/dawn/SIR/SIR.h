@@ -236,16 +236,19 @@ public:
   HorizontalFieldDimension(dawn::ast::triangular_, ast::LocationType locationType)
       : impl_(std::make_unique<TriangularFieldDimension>(ast::NeighborChain{locationType})) {}
 
+  HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
+  HorizontalFieldDimension(HorizontalFieldDimension&& other) { *this = other; };
+
   HorizontalFieldDimension& operator=(const HorizontalFieldDimension& other) {
     impl_ = other.impl_->clone();
     return *this;
   }
+  HorizontalFieldDimension& operator=(HorizontalFieldDimension&& other) {
+    impl_ = std::move(other.impl_);
+    return *this;
+  }
+
   bool operator==(const HorizontalFieldDimension& other) const { return *impl_ == *other.impl_; }
-
-  HorizontalFieldDimension& operator=(HorizontalFieldDimension&& other) = default;
-
-  HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
-  HorizontalFieldDimension(HorizontalFieldDimension&& other) = default;
 
   template <typename T>
   friend T dimension_cast(HorizontalFieldDimension const& dimension);
@@ -284,7 +287,7 @@ T dimension_cast(HorizontalFieldDimension const& dimension) {
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
                 "Can only be casted to a valid field dimension implementation");
   static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
-  return dynamic_cast<T>(*dimension.impl_);
+  return *dynamic_cast<std::add_pointer_t<T>>(dimension.impl_.get());
 }
 
 // TODO sparse_dim: move this into HorizontalFieldDimension?

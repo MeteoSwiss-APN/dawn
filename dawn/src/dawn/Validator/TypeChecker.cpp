@@ -62,7 +62,8 @@ bool isHorizontalTriangular(const sir::FieldDimensions& dims) {
 }
 
 const sir::TriangularFieldDimension& getTriangularDim(const sir::FieldDimensions& dims) {
-  return sir::dimension_cast<sir::TriangularFieldDimension>(dims.getHorizontalFieldDimension());
+  return sir::dimension_cast<const sir::TriangularFieldDimension&>(
+      dims.getHorizontalFieldDimension());
 }
 
 } // namespace
@@ -76,7 +77,7 @@ TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
     const std::unordered_map<int, std::string> idToNameMap)
     : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap) {}
 
-sir::FieldDimensions TypeChecker::TypeCheckerImpl::getDimensions() const {
+const sir::FieldDimensions& TypeChecker::TypeCheckerImpl::getDimensions() const {
   DAWN_ASSERT(hasDimensions());
   return curDimensions_.value();
 }
@@ -189,6 +190,25 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
     } else { // No other subcase is allowed.
       dimensionsConsistent_ = false;
     }
+  }
+  // Case 3: Both operands are dense. They must match.
+  // example:
+  // ```
+  // field(edges) denseL, denseR;
+  // ...
+  // expr = (denseL + denseR);
+  // ```
+  // Result of expression (= iteration space) is dense dimension edges
+  else if(triangularDimLeft.isDense() && triangularDimRight.isDense()) {
+
+    if(triangularDimLeft.getDenseLocationType() != triangularDimRight.getDenseLocationType()) {
+      dimensionsConsistent_ = false;
+      return;
+    }
+    curDimensions_ = left; // pick one, they are the same
+
+  } else {
+    dawn_unreachable("All cases should be covered.");
   }
 }
 
@@ -304,6 +324,22 @@ void TypeChecker::TypeCheckerImpl::visit(
         } else { // No other subcase is allowed.
           dimensionsConsistent_ = false;
         }
+      }
+      // Case 2: Both operands are dense. They must match.
+      // example:
+      // ```
+      // field(edges) denseL, denseR;
+      // ...
+      // denseL = denseR;
+      // ```
+      // Result of expression (= iteration space) is dense dimension edges
+      else if(triangularDimLeft.isDense() && triangularDimRight.isDense()) {
+
+        dimensionsConsistent_ =
+            triangularDimLeft.getDenseLocationType() == triangularDimRight.getDenseLocationType();
+
+      } else {
+        dawn_unreachable("All cases should be covered.");
       }
     }
 

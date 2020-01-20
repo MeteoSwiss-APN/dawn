@@ -33,7 +33,7 @@ TEST(TypeCheckerTest, UnstructuredCheck01) {
                           LoopOrderKind::Parallel,
                           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                              b.stmt(b.assignExpr(b.at(cell_f), b.at(edge_f)))))))),
-      ".*");
+      ".*checkDimensionsConsistency.*");
 }
 TEST(TypeCheckerTest, UnstructuredCheck02) {
   using namespace dawn::iir;
@@ -50,7 +50,7 @@ TEST(TypeCheckerTest, UnstructuredCheck02) {
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                  b.stmt(b.binaryExpr(b.at(cell_f), b.at(edge_f), Op::plus))))))),
-      ".*");
+      ".*checkDimensionsConsistency.*");
 }
 TEST(TypeCheckerTest, UnstructuredCheck03) {
   using namespace dawn::iir;
@@ -70,7 +70,7 @@ TEST(TypeCheckerTest, UnstructuredCheck03) {
                                          b.reduceOverNeighborExpr(
                                              Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
                                              b.lit(0.), LocType::Edges, LocType::Cells)))))))),
-      ".*");
+      ".*checkDimensionsConsistency.*");
 }
 TEST(TypeCheckerTest, UnstructuredCheck04) {
   using namespace dawn::iir;
@@ -90,6 +90,6 @@ TEST(TypeCheckerTest, UnstructuredCheck04) {
                                          b.reduceOverNeighborExpr(
                                              Op::plus, b.at(cell_field, HOffsetType::withOffset, 0),
                                              b.lit(0.), LocType::Cells, LocType::Edges)))))))),
-      ".*");
+      ".*checkDimensionsConsistency.*");
 }
 } // namespace

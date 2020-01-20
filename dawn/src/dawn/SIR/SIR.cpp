@@ -574,21 +574,24 @@ const ast::NeighborChain& TriangularFieldDimension::getNeighborChain() const {
 }
 
 std::string TriangularFieldDimension::toString() const {
-  auto getLocationTypeString = [](ast::LocationType type) {
+  auto getLocationTypeString = [](const ast::LocationType type) {
     switch(type) {
     case ast::LocationType::Cells:
-      return "cell";
+      return std::string("cell");
+      break;
     case ast::LocationType::Vertices:
-      return "vertex";
+      return std::string("vertex");
+      break;
     case ast::LocationType::Edges:
-      return "edge";
+      return std::string("edge");
+      break;
     default:
       dawn_unreachable("unexpected type");
     }
   };
 
-  std::string output, separator;
-  for(auto elem : neighborChain_) {
+  std::string output = "", separator = "";
+  for(const auto elem : neighborChain_) {
     output += separator + getLocationTypeString(elem);
     separator = "->";
   }

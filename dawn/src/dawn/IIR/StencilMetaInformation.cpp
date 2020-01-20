@@ -344,7 +344,7 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     const sir::FieldDimensions& fieldDimensions,
+                                     sir::FieldDimensions fieldDimensions,
                                      std::optional<int> accessID) {
   if(!accessID.has_value()) {
     accessID = UIDGenerator::getInstance()->get();
@@ -353,13 +353,13 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
   insertAccessOfType(type, *accessID, name);
 
   DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(*accessID));
-  fieldIDToInitializedDimensionsMap_.emplace(*accessID, fieldDimensions);
+  fieldIDToInitializedDimensionsMap_.emplace(*accessID, std::move(fieldDimensions));
 
   return *accessID;
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                        const sir::FieldDimensions& fieldDimensions,
+                                        sir::FieldDimensions fieldDimensions,
                                         std::optional<int> accessID) {
   if(!accessID.has_value()) {
     accessID = UIDGenerator::getInstance()->get();
@@ -371,7 +371,7 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
   insertAccessOfType(type, *accessID, fname);
 
   DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(*accessID));
-  fieldIDToInitializedDimensionsMap_.emplace(*accessID, fieldDimensions);
+  fieldIDToInitializedDimensionsMap_.emplace(*accessID, std::move(fieldDimensions));
 
   return *accessID;
 }
