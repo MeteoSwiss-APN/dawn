@@ -675,7 +675,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           auto ast = std::dynamic_pointer_cast<iir::BlockStmt>(
               makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE));
           DAWN_ASSERT(ast);
-          IIRDoMethod->setAST(std::move(*ast));
+          IIRDoMethod->setAST(ast);
         }
       }
     }

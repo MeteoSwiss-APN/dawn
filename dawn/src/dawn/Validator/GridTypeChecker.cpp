@@ -23,8 +23,7 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
 
   GridTypeChecker::TypeCheckerImpl typeChecker(iir.getGridType());
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    const std::shared_ptr<iir::BlockStmt>& ast =
-        std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
+    const auto& ast = doMethodPtr->getASTPtr();
     ast->accept(typeChecker);
     if(!typeChecker.isConsistent()) {
       return false;

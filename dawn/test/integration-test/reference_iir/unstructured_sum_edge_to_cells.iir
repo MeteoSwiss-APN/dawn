@@ -6,12 +6,12 @@
    "4": "cnt"
   },
   "accessIDToType": {
-   "2": 6,
-   "1": 6
+   "1": 6,
+   "2": 6
   },
   "literalIDToName": {
-   "-20": "10",
-   "-5": "0.000000"
+   "-5": "0.000000",
+   "-20": "10"
   },
   "fieldAccessIDs": [
    1,
@@ -268,7 +268,9 @@
                      "ID": 44
                     }
                    },
-                   "weights": []
+                   "weights": [],
+                   "lhs_location": "Cell",
+                   "rhs_location": "Edge"
                   }
                  },
                  "loc": {

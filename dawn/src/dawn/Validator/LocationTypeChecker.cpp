@@ -8,8 +8,7 @@ bool LocationTypeChecker::checkLocationTypeConsistency(
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
     LocationTypeChecker::TypeCheckerImpl typeChecker(doMethodPtr->getFieldLocationTypesByName(),
                                                      metaData.getAccessIDToNameMap());
-    const std::shared_ptr<iir::BlockStmt>& ast =
-        std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
+    const auto& ast = doMethodPtr->getASTPtr();
     ast->accept(typeChecker);
     if(!typeChecker.isConsistent()) {
       return false;
@@ -132,6 +131,7 @@ void LocationTypeChecker::TypeCheckerImpl::visit(
   // type check failed further down below
   if(!(left.isConsistent() && right.isConsistent())) {
     typesConsistent_ = false;
+    return;
   }
 
   // if both sides access unstructured fields, they need to be on the same location
