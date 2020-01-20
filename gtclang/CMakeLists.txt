@@ -149,7 +149,7 @@ if(${PROJECT_NAME}_TESTING)
 
   cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_MC
     "Build integration tests with the GridTools MC backend"
-    ON "BUILD_TESTING;NOT ENABLE_CUDA_IF_FOUND" OFF
+    ON "BUILD_TESTING" OFF
   )
   cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_CUDA
     "Build integration tests with the GridTools CUDA backend"
