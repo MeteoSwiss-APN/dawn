@@ -747,7 +747,6 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
 }
 
 std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
-                                                                      OptimizerContext* context,
                                                                       IIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())

@@ -57,7 +57,7 @@ TEST(TestCaching, test_global_iteration_space_01) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -104,7 +104,7 @@ TEST(TestCaching, test_global_iteration_space_02) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -152,7 +152,7 @@ TEST(TestCaching, test_global_iteration_space_03) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -196,7 +196,7 @@ TEST(TestCaching, test_global_iteration_space_04) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -240,7 +240,7 @@ TEST(TestCaching, test_global_iteration_space_05) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler(compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 

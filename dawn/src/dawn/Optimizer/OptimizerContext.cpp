@@ -599,7 +599,20 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
+  if(SIR)
+    fillIIR();
 }
+
+OptimizerContext::OptimizerContext(
+    DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+        stencilInstantiationMap)
+    : diagnostics_(diagnostics), options_(options), SIR_() {
+  DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
+  for(auto& [name, stencilInstantiation] : stencilInstantiationMap)
+    restoreIIR(name, stencilInstantiation);
+}
+
 bool OptimizerContext::fillIIRFromSIR(
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
@@ -709,7 +722,8 @@ bool OptimizerContext::restoreIIR(std::string const& name,
                                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilName(stencilInstantiation->getName());
-  metadata.setFileName("<unknown>");
+  if(metadata.getFileName().empty())
+    metadata.setFileName("<unknown>");
 
   stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
 
@@ -736,6 +750,9 @@ bool OptimizerContext::restoreIIR(std::string const& name,
   checkAndPushBack<PassComputeStageExtents>();
   if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
     return false;
+
+  // Clean up the passes just run
+  passManager_.getPasses().clear();
 
   return true;
 }

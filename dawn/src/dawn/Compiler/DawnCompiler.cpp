@@ -15,7 +15,6 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -31,6 +30,7 @@
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -49,7 +49,6 @@
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
-#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -125,194 +124,313 @@ createOptimizerOptionsFromAllOptions(const Options& options) {
   return retval;
 }
 
-DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<DiagnosticsEngine>()) {
-  options_ = options ? std::make_unique<Options>(*options) : std::make_unique<Options>();
-}
+DawnCompiler::DawnCompiler() : options_(), diagnostics_() {}
 
-std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
+DawnCompiler::DawnCompiler(Options const& options) : options_(options), diagnostics_() {}
+
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
+  diagnostics_.clear();
+  diagnostics_.setFilename(stencilIR->Filename);
+
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
-  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
+  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
                                             .Case("none", ReorderStrategyKind::None)
                                             .Case("greedy", ReorderStrategyKind::Greedy)
                                             .Case("scut", ReorderStrategyKind::Partitioning)
                                             .Default(ReorderStrategyKind::Unknown);
 
   if(reorderStrategy == ReorderStrategyKind::Unknown) {
-    diagnostics_->report(
-        buildDiag("-reorder", options_->ReorderStrategy, "", {"none", "greedy", "scut"}));
-    return nullptr;
+    diagnostics_.report(
+        buildDiag("-reorder", options_.ReorderStrategy, "", {"none", "greedy", "scut"}));
+    throw std::runtime_error("An error occurred.");
   }
-
-  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-  MultistageSplitStrategy mssSplitStrategy;
-  if(options_->MaxCutMSS) {
-    mssSplitStrategy = MultistageSplitStrategy::MaxCut;
-  } else {
-    mssSplitStrategy = MultistageSplitStrategy::Optimized;
-  }
-
-  // -max-fields
-  int maxFields = options_->MaxFieldsPerStencil;
 
   IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
-  if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
-    if(options_->IIRFormat == "json") {
+  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
+    if(options_.IIRFormat == "json") {
       serializationKind = IIRSerializer::Format::Json;
-    } else if(options_->IIRFormat == "byte") {
+    } else if(options_.IIRFormat == "byte") {
       serializationKind = IIRSerializer::Format::Byte;
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
-  // Initialize optimizer
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  if(options_) {
-    optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
-  }
-  std::unique_ptr<OptimizerContext> optimizer;
 
-  if(options_->DeserializeIIR == "") {
-    optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
-    optimizer->fillIIR();
-
-    // Setup pass interface
-    optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
-    // This pass is currently broken and needs to be redesigned before it can be enabled
-    //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
-    optimizer->checkAndPushBack<PassFieldVersioning>();
-    optimizer->checkAndPushBack<PassSSA>();
-    optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-    optimizer->checkAndPushBack<PassStageSplitter>();
-    optimizer->checkAndPushBack<PassPrintStencilGraph>();
-    optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassSetStageName>();
-    optimizer->checkAndPushBack<PassSetStageGraph>();
-    optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
-    optimizer->checkAndPushBack<PassStageMerger>();
-    optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
-    optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassTemporaryMerger>();
-    optimizer->checkAndPushBack<PassInlining>(
-        (getOptions().InlineSF || getOptions().PassTmpToFunction),
-        PassInlining::InlineStrategy::ComputationsOnTheFly);
-    optimizer->checkAndPushBack<PassIntervalPartitioner>();
-    optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-    optimizer->checkAndPushBack<PassSetNonTempCaches>();
-    optimizer->checkAndPushBack<PassSetCaches>();
-    optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-    optimizer->checkAndPushBack<PassComputeStageExtents>();
-    // This pass is disabled because the boundary conditions need to be fixed.
-    // optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-    if(getOptions().Backend == "cuda") {
-      optimizer->checkAndPushBack<PassSetBlockSize>();
-    }
-    optimizer->checkAndPushBack<PassDataLocalityMetric>();
-    optimizer->checkAndPushBack<PassSetSyncStage>();
-    // Since both cuda code generation as well as serialization do not support stencil-functions, we
-    // need to inline here as the last step
-    optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
-                                                  getOptions().SerializeIIR,
-                                              PassInlining::InlineStrategy::ComputationsOnTheFly);
-
-    DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
-    for(const auto& a : optimizer->getPassManager().getPasses()) {
-      DAWN_LOG(INFO) << a->getName();
-    }
-
-    int i = 0;
-    for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-      // Run optimization passes
-      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-
-      DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
-                     << instantiation->getName() << "` ...";
-      if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
-        return nullptr;
-
-      DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
-                     << instantiation->getName() << "`";
-
-      if(options_->SerializeIIR) {
-        const std::string originalFileName = filenameSansExtension(
-            options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                         : options_->OutputFile,
-            ".cpp");
-        IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
-                                 serializationKind);
-        i++;
-      }
-      if(options_->DumpStencilInstantiation) {
-        instantiation->dump();
-      }
-    }
+  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
+  MultistageSplitStrategy mssSplitStrategy;
+  if(options_.MaxCutMSS) {
+    mssSplitStrategy = MultistageSplitStrategy::MaxCut;
   } else {
-    optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);
-    auto instantiation =
-        IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
-    optimizer->restoreIIR("<restored>", instantiation);
-  }
-
-  return optimizer;
-} // namespace dawn
-
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
-  diagnostics_->clear();
-  diagnostics_->setFilename(SIR->Filename);
-
-  // Check if options are valid
-
-  // -max-halo
-  if(options_->MaxHaloPoints < 0) {
-    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
-                                   "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
+    mssSplitStrategy = MultistageSplitStrategy::Optimized;
   }
 
   // Initialize optimizer
-  auto optimizer = runOptimizer(SIR);
+  OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
+                             stencilIR);
 
-  if(diagnostics_->hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
-    return nullptr;
+  // required passes to have proper, parallelized IR
+  optimizer.checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+  optimizer.checkAndPushBack<PassFieldVersioning>();
+  optimizer.checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
+  optimizer.checkAndPushBack<PassStageSplitter>();
+  optimizer.checkAndPushBack<PassTemporaryType>();
+  optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  optimizer.checkAndPushBack<PassComputeStageExtents>();
+  optimizer.checkAndPushBack<PassSetSyncStage>();
+
+  DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
+  for(const auto& a : optimizer.getPassManager().getPasses()) {
+    DAWN_LOG(INFO) << a->getName();
   }
 
-  // Generate code
-  std::unique_ptr<codegen::CodeGen> CG;
+  for(auto& stencil : optimizer.getStencilInstantiationMap()) {
+    // Run optimization passes
+    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
 
-  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
-    CG = std::make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(),
-                                                  *diagnostics_, options_->UseParallelEP,
-                                                  options_->MaxHaloPoints);
-  } else if(options_->Backend == "c++-naive") {
-    CG = std::make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
-  } else if(options_->Backend == "c++-naive-ico") {
-    CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
-  } else if(options_->Backend == "cuda") {
-    const Array3i domain_size{options_->domain_size_i, options_->domain_size_j,
-                              options_->domain_size_k};
-    CG = std::make_unique<codegen::cuda::CudaCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
-        options_->nsms, options_->maxBlocksPerSM, domain_size);
-  } else if(options_->Backend == "c++-opt") {
-    dawn_unreachable("GTClangOptCXX not supported yet");
-  } else {
-    diagnostics_->report(buildDiag("-backend", options_->Backend,
-                                   "backend options must be : " +
-                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-    return nullptr;
+    DAWN_LOG(INFO) << "Starting parallelization passes for `" << instantiation->getName()
+                   << "` ...";
+    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
+      throw std::runtime_error("An error occurred.");
+
+    DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
   }
 
-  return CG->generateCode();
+  auto stencilInstantiationMap = optimizer.getStencilInstantiationMap();
+
+  // Continue with all other optimization passes
+  if(!options_.Debug) {
+    stencilInstantiationMap = optimize(stencilInstantiationMap);
+  }
+
+  return stencilInstantiationMap;
 }
 
-const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return *diagnostics_.get(); }
-DiagnosticsEngine& DawnCompiler::getDiagnostics() { return *diagnostics_.get(); }
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+                           stencilInstantiationMap) {
+  // -reorder
+  using ReorderStrategyKind = ReorderStrategy::Kind;
+  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
+                                            .Case("none", ReorderStrategyKind::None)
+                                            .Case("greedy", ReorderStrategyKind::Greedy)
+                                            .Case("scut", ReorderStrategyKind::Partitioning)
+                                            .Default(ReorderStrategyKind::Unknown);
 
-const Options& DawnCompiler::getOptions() const { return *options_.get(); }
-Options& DawnCompiler::getOptions() { return *options_.get(); }
+  if(reorderStrategy == ReorderStrategyKind::Unknown) {
+    diagnostics_.report(
+        buildDiag("-reorder", options_.ReorderStrategy, "", {"none", "greedy", "scut"}));
+    throw std::runtime_error("An error occurred.");
+  }
+
+  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
+  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
+    if(options_.IIRFormat == "json") {
+      serializationKind = IIRSerializer::Format::Json;
+    } else if(options_.IIRFormat == "byte") {
+      serializationKind = IIRSerializer::Format::Byte;
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
+  }
+
+  // Initialize optimizer
+  OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
+                             stencilInstantiationMap);
+
+  // Optimization, step by step
+  //===-----------------------------------------------------------------------------------------
+  // broken but should run with no prerequesits
+  optimizer.checkAndPushBack<PassSSA>();
+  // rerun things we might have changed
+  // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  // todo: this does not work since it does not check if it was already run
+  //===-----------------------------------------------------------------------------------------
+  // Plain diagnostics, should not even be a pass but is independent
+  optimizer.checkAndPushBack<PassPrintStencilGraph>();
+  //===-----------------------------------------------------------------------------------------
+  // This is never used but if we want to reenable it, it is independent
+  optimizer.checkAndPushBack<PassSetStageName>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassSetStageGraph>();
+  optimizer.checkAndPushBack<PassSetDependencyGraph>();
+  optimizer.checkAndPushBack<PassStageReordering>(reorderStrategy);
+  // moved stages around ...
+  optimizer.checkAndPushBack<PassSetSyncStage>();
+  // if we want this info around, we should probably run this also
+  // optimizer.checkAndPushBack<PassSetStageName>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassStageMerger>();
+  // since this can change the scope of temporaries ...
+  optimizer.checkAndPushBack<PassTemporaryType>();
+  optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  // modify stages and their extents ...
+  optimizer.checkAndPushBack<PassComputeStageExtents>();
+  // and changes their dependencies
+  optimizer.checkAndPushBack<PassSetSyncStage>();
+  //===-----------------------------------------------------------------------------------------
+  // // should be irrelevant now
+  // optimizer.checkAndPushBack<PassStencilSplitter>(maxFields);
+  // // but would require a lot
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassTemporaryMerger>();
+  // this should not affect the temporaries but since we're touching them it would probably be a
+  // safe idea
+  optimizer.checkAndPushBack<PassTemporaryType>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassInlining>(
+      (getOptions().InlineSF || getOptions().PassTmpToFunction),
+      PassInlining::InlineStrategy::ComputationsOnTheFly);
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassIntervalPartitioner>();
+  // since this can change the scope of temporaries ...
+  optimizer.checkAndPushBack<PassTemporaryType>();
+  optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassTemporaryToStencilFunction>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassSetNonTempCaches>();
+  // this should not affect the temporaries but since we're touching them it would probably be a
+  // safe idea
+  optimizer.checkAndPushBack<PassTemporaryType>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassSetCaches>();
+  //===-----------------------------------------------------------------------------------------
+  optimizer.checkAndPushBack<PassSetBlockSize>();
+  //===-----------------------------------------------------------------------------------------
+  // Plain diagnostics, should not even be a pass but is independent
+  optimizer.checkAndPushBack<PassDataLocalityMetric>();
+  //===-----------------------------------------------------------------------------------------
+
+  DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
+  for(const auto& a : optimizer.getPassManager().getPasses()) {
+    DAWN_LOG(INFO) << a->getName();
+  }
+
+  int i = 0;
+  for(auto& stencil : optimizer.getStencilInstantiationMap()) {
+    // Run optimization passes
+    auto& instantiation = stencil.second;
+
+    DAWN_LOG(INFO) << "Starting optimization and analysis passes for `" << instantiation->getName()
+                   << "` ...";
+    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
+      throw std::runtime_error("An error occurred.");
+
+    DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
+                   << "`";
+
+    if(options_.SerializeIIR) {
+      const std::string originalFileName = filenameSansExtension(
+          options_.OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                      : options_.OutputFile,
+          ".cpp");
+      IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
+                               serializationKind);
+      i++;
+    }
+    if(options_.DumpStencilInstantiation) {
+      instantiation->dump();
+    }
+  }
+  return optimizer.getStencilInstantiationMap();
+}
+
+std::unique_ptr<codegen::TranslationUnit>
+DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+                           stencilInstantiationMap) {
+
+  // Generate code
+  if(options_.Backend == "gt" || options_.Backend == "gridtools") {
+    codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
+                              options_.MaxHaloPoints);
+    return CG.generateCode();
+  } else if(options_.Backend == "c++-naive") {
+    codegen::cxxnaive::CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics_,
+                                          options_.MaxHaloPoints);
+    return CG.generateCode();
+  } else if(options_.Backend == "c++-naive-ico") {
+    codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics_,
+                                                options_.MaxHaloPoints);
+    return CG.generateCode();
+  } else if(options_.Backend == "cuda") {
+    const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
+                              options_.domain_size_k};
+    codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
+                                  options_.nsms, options_.maxBlocksPerSM, domain_size);
+    return CG.generateCode();
+  } else if(options_.Backend == "c++-opt") {
+    dawn_unreachable("GTClangOptCXX not supported yet");
+  } else {
+    diagnostics_.report(buildDiag("-backend", options_.Backend,
+                                  "backend options must be : " +
+                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
+    throw std::runtime_error("An error occurred.");
+  }
+}
+
+std::unique_ptr<codegen::TranslationUnit>
+DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
+  diagnostics_.clear();
+  diagnostics_.setFilename(stencilIR->Filename);
+
+  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
+  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
+    if(options_.IIRFormat == "json") {
+      serializationKind = IIRSerializer::Format::Json;
+    } else if(options_.IIRFormat == "byte") {
+      serializationKind = IIRSerializer::Format::Byte;
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
+  }
+
+  // Check if options are valid
+  // -max-halo
+  if(options_.MaxHaloPoints < 0) {
+    diagnostics_.report(buildDiag("-max-halo", options_.MaxHaloPoints,
+                                  "maximum number of allowed halo points must be >= 0"));
+    throw std::runtime_error("An error occurred.");
+  }
+
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
+
+  // Deserialize internal IR if passed as an option
+  if(!options_.DeserializeIIR.empty()) {
+    // A filename DeserializeIIR was specified
+    DAWN_ASSERT_MSG(!stencilIR.get(),
+                    "A stencilIR was passed to compile, but an IIR was specified in options!");
+
+    // Deserialize valid internal IR
+    auto optimizerOptions = createOptimizerOptionsFromAllOptions(options_);
+
+    OptimizerContext optimizer(getDiagnostics(), optimizerOptions, nullptr);
+    auto instantiation = IIRSerializer::deserialize(options_.DeserializeIIR, serializationKind);
+    optimizer.restoreIIR("<restored>", instantiation);
+
+    stencilInstantiationMap = optimizer.getStencilInstantiationMap();
+
+    if(!options_.Debug) {
+      stencilInstantiationMap = optimize(stencilInstantiationMap);
+      if(diagnostics_.hasErrors())
+        throw std::runtime_error("An error occurred in the optimizer.");
+    }
+  } else {
+    // No filename was specified, so continue with the stencil IR
+    stencilInstantiationMap = optimize(stencilIR);
+    if(diagnostics_.hasErrors())
+      throw std::runtime_error("An error occurred in the optimization steps.");
+  }
+
+  return generate(stencilInstantiationMap);
+}
+
+const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }
+DiagnosticsEngine& DawnCompiler::getDiagnostics() { return diagnostics_; }
+
+const Options& DawnCompiler::getOptions() const { return options_; }
+Options& DawnCompiler::getOptions() { return options_; }
 
 } // namespace dawn

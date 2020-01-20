@@ -36,7 +36,7 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+CudaCodeGen::CudaCodeGen(stencilInstantiationContext const& ctx, DiagnosticsEngine& engine,
                          int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
     : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
 

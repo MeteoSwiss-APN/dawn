@@ -5,6 +5,10 @@
 namespace dawn {
 namespace codegen {
 
+CodeGen::CodeGen(stencilInstantiationContext const& ctx, DiagnosticsEngine& engine,
+                 int maxHaloPoints)
+    : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
+
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
@@ -25,7 +29,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
   return fullIntervals ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
 }
 
-std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
+std::string CodeGen::generateGlobals(stencilInstantiationContext const& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
@@ -38,14 +42,15 @@ std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
   return ss.str();
 }
 
-std::string CodeGen::generateGlobals(stencilInstantiationContext& context, std::string namespace_) {
+std::string CodeGen::generateGlobals(stencilInstantiationContext const& context,
+                                     std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
     return generateGlobals(globalsMap, namespace_);
   }
   return "";
 }
-std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
+std::string CodeGen::generateGlobals(sir::GlobalVariableMap const& globalsMap,
                                      std::string namespace_) const {
 
   if(globalsMap.empty())

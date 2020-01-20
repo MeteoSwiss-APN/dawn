@@ -249,61 +249,62 @@ PYBIND11_MODULE(_dawn4py, m) {
       });
 
   py::class_<dawn::DawnCompiler>(m, "Compiler")
-      .def(py::init([](dawn::Options* options) {
+      .def(py::init([](const dawn::Options& options) {
              return std::make_unique<dawn::DawnCompiler>(options);
            }),
            py::arg("options") = nullptr)
       .def_property_readonly("options", (dawn::Options & (dawn::DawnCompiler::*)()) &
                                             dawn::DawnCompiler::getOptions)
-      .def("compile",
-           [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
-              py::object unit_info_obj) {
-             auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-             auto translationUnit = self.compile(inMemorySIR);
+      .def(
+          "compile",
+          [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
+             py::object unit_info_obj) {
+            auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
+            auto translationUnit = self.compile(inMemorySIR);
 
-             auto result = py::none();
-             auto export_info = false;
-             auto pp_defines_list = py::list();
-             auto stencils_dict = py::dict();
+            auto result = py::none();
+            auto export_info = false;
+            auto pp_defines_list = py::list();
+            auto stencils_dict = py::dict();
 
-             if(translationUnit) {
-               export_info = true;
-               if(!unit_info_obj.is_none()) {
-                 auto unit_info_dict = unit_info_obj.cast<py::dict>();
-                 export_info = true;
-                 unit_info_dict["filename"] = py::str(translationUnit->getFilename());
-                 unit_info_dict["pp_defines"] = pp_defines_list;
-                 unit_info_dict["stencils"] = stencils_dict;
-                 unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
-               }
+            if(translationUnit) {
+              export_info = true;
+              if(!unit_info_obj.is_none()) {
+                auto unit_info_dict = unit_info_obj.cast<py::dict>();
+                export_info = true;
+                unit_info_dict["filename"] = py::str(translationUnit->getFilename());
+                unit_info_dict["pp_defines"] = pp_defines_list;
+                unit_info_dict["stencils"] = stencils_dict;
+                unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
+              }
 
-               std::ostringstream ss;
-               ss << "//---- Preprocessor defines ----\n";
-               for(const auto& macroDefine : translationUnit->getPPDefines()) {
-                 ss << macroDefine << "\n";
-                 if(export_info)
-                   pp_defines_list.append(py::str(macroDefine));
-               }
-               ss << "\n//---- Includes ----\n"
-                  << "#include \"driver-includes/gridtools_includes.hpp\"\n"
-                  << "using namespace gridtools::dawn;\n";
-               ss << "\n//---- Globals ----\n";
-               ss << translationUnit->getGlobals();
-               ss << "\n//---- Stencils ----\n";
-               for(const auto& sItem : translationUnit->getStencils()) {
-                 ss << sItem.second;
-                 if(export_info)
-                   stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
-               }
-               result = py::str(ss.str());
-             }
+              std::ostringstream ss;
+              ss << "//---- Preprocessor defines ----\n";
+              for(const auto& macroDefine : translationUnit->getPPDefines()) {
+                ss << macroDefine << "\n";
+                if(export_info)
+                  pp_defines_list.append(py::str(macroDefine));
+              }
+              ss << "\n//---- Includes ----\n"
+                 << "#include \"driver-includes/gridtools_includes.hpp\"\n"
+                 << "using namespace gridtools::dawn;\n";
+              ss << "\n//---- Globals ----\n";
+              ss << translationUnit->getGlobals();
+              ss << "\n//---- Stencils ----\n";
+              for(const auto& sItem : translationUnit->getStencils()) {
+                ss << sItem.second;
+                if(export_info)
+                  stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
+              }
+              result = py::str(ss.str());
+            }
 
-             return result;
-           },
-           "Compile the provided SIR object.\n\n"
-           "Returns a `str` with the compiled source code` on success or `None` otherwise.",
-           "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
-           "members on it.",
-           py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
-           py::arg("unit_info") = nullptr);
+            return result;
+          },
+          "Compile the provided SIR object.\n\n"
+          "Returns a `str` with the compiled source code` on success or `None` otherwise.",
+          "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
+          "members on it.",
+          py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
+          py::arg("unit_info") = nullptr);
 };

@@ -61,10 +61,17 @@ private:
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
+  void fillIIR();
+
 public:
   /// @brief Initialize the context with a SIR
   OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
                    const std::shared_ptr<SIR>& SIR);
+
+  /// @brief Initialize the context with a stencil instantiation map
+  OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+                   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+                       stencilInstantiationMap);
 
   /// @brief Get StencilInstantiation map
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& getStencilInstantiationMap();
@@ -112,23 +119,22 @@ public:
                       const std::shared_ptr<SIR> fullSIR);
   bool restoreIIR(std::string const& name,
                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
-  void fillIIR();
 
   /// @brief this function check if a pass should be pushed back into the list of passes based on
   /// the options.
   ///
   /// Currently this is a placeholder for the final design once a more elaborate scheme of
-  /// grouping is in place that enables more paths. This should also eventaully replace the
-  /// option-checks that are currently hiden in the passes run-methods
+  /// grouping is in place that enables more paths. This should also eventually replace the
+  /// option-checks that are currently hidden in the passes run-methods
   template <typename T>
   bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
 
-    bool retval;
-    if(options_.Debug)
-      retval = p->isDebug();
-    else
-      retval = true;
-    return retval;
+    // bool retval;
+    // if(options_.Debug)
+    //   retval = p->isDebug();
+    // else
+    //   retval = true;
+    return true;
   }
 };
 

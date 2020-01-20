@@ -82,7 +82,7 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
       toConstOptionsWrapper(options)->setDawnOptions(compileOptions.get());
 
     // Run the compiler
-    dawn::DawnCompiler compiler(compileOptions.get());
+    dawn::DawnCompiler compiler(*compileOptions.get());
     auto TU = compiler.compile(inMemorySIR);
 
     // Report diganostics

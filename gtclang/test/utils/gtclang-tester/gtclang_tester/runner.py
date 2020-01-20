@@ -26,7 +26,12 @@ import re
 
 from .config import Config
 from .error import report_info
-from .progressbar import TerminalController, ProgressBar, SimpleProgressBar, EmptyProgressbar
+from .progressbar import (
+    TerminalController,
+    ProgressBar,
+    SimpleProgressBar,
+    EmptyProgressbar,
+)
 from .utility import executeCommand, levenshtein
 
 
@@ -74,6 +79,9 @@ class TestRunner(object):
             test = self.__tests[i]
             file = test.get_file()
 
+            if any(i in file for i in Config.ignore_list):
+                continue
+
             self.__progressbar.update(i / len(self.__tests), str(file))
 
             # Execute test
@@ -98,7 +106,8 @@ class TestRunner(object):
                         self.add_failure(
                             file,
                             "EXECUTION",
-                            "expected error code '%i', got '%i':\n%s" % (test.expected_exit_code(), exit_code, err),
+                            "expected error code '%i', got '%i':\n%s"
+                            % (test.expected_exit_code(), exit_code, err),
                         )
 
                         has_failure = True
@@ -107,7 +116,9 @@ class TestRunner(object):
                     # Generate reference files
                     if Config.generate_reference:
                         for files in test.get_expected_file():
-                            for outputfile, referencefile in zip(files.get_output_files(), files.get_reference_files()):
+                            for outputfile, referencefile in zip(
+                                files.get_output_files(), files.get_reference_files()
+                            ):
                                 rename(outputfile, referencefile)
 
                     stdout += out
@@ -123,14 +134,18 @@ class TestRunner(object):
             # Check expected files
             if test.get_expected_file() and not Config.generate_reference:
                 for files in test.get_expected_file():
-                    for outputfile, referencefile in zip(files.get_output_files(), files.get_reference_files()):
+                    for outputfile, referencefile in zip(
+                        files.get_output_files(), files.get_reference_files()
+                    ):
 
                         try:
                             output_json = load(open(outputfile, "r"))
                             reference_json = load(open(referencefile, "r"))
                             # Json does not enforce sorting, so we sort the files by sorting here
                             output_json = loads(dumps(output_json, sort_keys=True))
-                            reference_json = loads(dumps(reference_json, sort_keys=True))
+                            reference_json = loads(
+                                dumps(reference_json, sort_keys=True)
+                            )
                         except FileNotFoundError as e:
                             self.add_failure(file, "EXECUTION", "%s" % e)
                             break
@@ -141,13 +156,23 @@ class TestRunner(object):
                                 del output_json[node]
                                 del reference_json[node]
 
-                        output, reference = dumps(output_json, indent=2), dumps(reference_json, indent=2)
+                        output, reference = (
+                            dumps(output_json, indent=2),
+                            dumps(reference_json, indent=2),
+                        )
 
                         if output != reference:
                             output = list(map(lambda x: x + "\n", output.split("\n")))
-                            reference = list(map(lambda x: x + "\n", reference.split("\n")))
+                            reference = list(
+                                map(lambda x: x + "\n", reference.split("\n"))
+                            )
                             msg = "\n"
-                            for line in unified_diff(output, reference, fromfile=outputfile, tofile=referencefile):
+                            for line in unified_diff(
+                                output,
+                                reference,
+                                fromfile=outputfile,
+                                tofile=referencefile,
+                            ):
                                 msg += line
 
                             self.add_failure(file, "EXPECTED_FILE", msg)
@@ -181,7 +206,9 @@ class TestRunner(object):
 
                     if line_idx == -1:
                         msg = 'expected: "%s"' % prefix
-                        msg += self.__get_closest_match(expected_accesses.get_prefix(), out)
+                        msg += self.__get_closest_match(
+                            expected_accesses.get_prefix(), out
+                        )
                         self.add_failure(file, "EXPECTED_ACCESSES", msg)
                         has_failure = True
                         break
@@ -190,7 +217,10 @@ class TestRunner(object):
                     line = line[line.find(prefix) + len(prefix) :].strip().split(" ")
                     for access in expected_accesses.get_expected_output():
                         if access not in line:
-                            msg = 'expected in line %s \n"%s"' % (expected_accesses.get_line_number(), access)
+                            msg = 'expected in line %s \n"%s"' % (
+                                expected_accesses.get_line_number(),
+                                access,
+                            )
                             msg += self.__get_closest_match(access, line)
                             self.add_failure(file, "EXPECTED_ACCESSES", msg)
                             has_failure = True
@@ -200,7 +230,10 @@ class TestRunner(object):
             if test.get_expected_error_output():
                 for expected_error in test.get_expected_error_output():
                     if "error: " + expected_error not in stderr:
-                        msg = 'expected error message:\n"%s"\n\ngot:\n%s' % (expected_error, stderr)
+                        msg = 'expected error message:\n"%s"\n\ngot:\n%s' % (
+                            expected_error,
+                            stderr,
+                        )
 
                         self.add_failure(file, "EXPECTED_ERROR", msg)
                         has_failure = True
@@ -222,7 +255,11 @@ class TestRunner(object):
             + "[==========]"
             + t.NORMAL
             + " %i test%s ran. (%i ms total)"
-            % (self.__test_count, "s" if self.__test_count > 1 else "", self.__test_time)
+            % (
+                self.__test_count,
+                "s" if self.__test_count > 1 else "",
+                self.__test_time,
+            )
         )
 
         # Report passed test
@@ -232,7 +269,11 @@ class TestRunner(object):
                 + t.GREEN
                 + "[  PASSED  ] "
                 + t.NORMAL
-                + "%i test%s." % (self.__test_count_passed, "s" if self.__test_count_passed > 1 else "")
+                + "%i test%s."
+                % (
+                    self.__test_count_passed,
+                    "s" if self.__test_count_passed > 1 else "",
+                )
             )
 
         # Report failed tests
@@ -261,7 +302,9 @@ class TestRunner(object):
             print(t.BOLD + t.RED + "[----------] " + t.NORMAL)
             print(t.BOLD + t.RED + "[  FAILED  ] " + t.NORMAL + key)
 
-            report = lambda type, msg: print(self.__split_line(t.BOLD + type + ": " + t.NORMAL + value, 13, 160))
+            report = lambda type, msg: print(
+                self.__split_line(t.BOLD + type + ": " + t.NORMAL + value, 13, 160)
+            )
 
             for error_type, value in test_failaure_map.items():
                 if error_type is "EXECUTION":
@@ -303,6 +346,10 @@ class TestRunner(object):
             edit_distances += [levenshtein(output, o)]
 
         if min(edit_distances) < 10:
-            return '\nclosest match:\n"' + out[edit_distances.index(min(edit_distances))] + '"'
+            return (
+                '\nclosest match:\n"'
+                + out[edit_distances.index(min(edit_distances))]
+                + '"'
+            )
         else:
             return ""

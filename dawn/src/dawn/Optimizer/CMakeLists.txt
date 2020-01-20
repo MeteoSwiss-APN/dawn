@@ -42,6 +42,8 @@ add_library(DawnOptimizer
   PassSetBoundaryCondition.h
   PassSetCaches.cpp
   PassSetCaches.h
+  PassSetDependencyGraph.cpp
+  PassSetDependencyGraph.h
   PassSetNonTempCaches.cpp
   PassSetNonTempCaches.h
   PassSetStageGraph.cpp

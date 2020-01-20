@@ -37,7 +37,7 @@ namespace gt {
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, bool useParallelEP,
+  GTCodeGen(stencilInstantiationContext const& ctx, DiagnosticsEngine& engine, bool useParallelEP,
             int maxHaloPoints);
   virtual ~GTCodeGen();
 
