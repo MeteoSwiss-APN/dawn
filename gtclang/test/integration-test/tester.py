@@ -44,12 +44,12 @@ def compare_json_files(output, reference, ignore_keys=[]):
         # If entering here, t1 and t2 could be lists or dicts (of values, lists, or dicts)
         if isinstance(t1, list):
             for v1, v2 in zip(t1, t2):
-                msg = "Values " + str(v1) + " and " + str(v2) + " do not match"
                 # Then v1 and v2 are _values_
                 if any(isinstance(v1, x) for x in (list, dict)):
                     if not compare_json_trees(v1, v2):
                         return False
                 if v1 != v2:
+                    msg = "Values " + str(v1) + " and " + str(v2) + " do not match"
                     print_error(msg)
                     return False
         elif isinstance(t1, dict):
@@ -59,6 +59,7 @@ def compare_json_files(output, reference, ignore_keys=[]):
                     if not compare_json_trees(t1[v1], t2[v2]):
                         return False
                 if v1 != v2 and v1 not in ignore_keys:
+                    msg = "Values " + str(v1) + " and " + str(v2) + " do not match"
                     print_error(msg)
                     return False
                 if t1[v1] != t2[v2] and v1 not in ignore_keys:
