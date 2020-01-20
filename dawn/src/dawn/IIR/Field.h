@@ -136,7 +136,7 @@ public:
   ///
   void extendInterval(Interval const& interval) { interval_.merge(interval); }
 
-  ast::Expr::LocationType getLocation() { return location_; }
+  ast::Expr::LocationType getLocation() const { return location_; }
 
   bool isUnstructured() { return unstrucutred_; }
 };

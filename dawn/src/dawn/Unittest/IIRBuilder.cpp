@@ -12,10 +12,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
+// TODO there are death tests which rely on the following code to die, needs refactoring
+#ifdef NDEBUG
+#undef NDEBUG
+#define HAD_NDEBUG
+#endif
+#include "dawn/Support/Assert.h"
+#ifdef HAD_NDEBUG
+#define NDEBUG
+#undef HAD_NDEBUG
+#endif
+
 #include "IIRBuilder.h"
 
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Validator/TypeChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -79,6 +91,9 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
       diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
+
+  TypeChecker checker;
+  DAWN_ASSERT(checker.checkLocationTypeConsistency(*new_si->getIIR().get(), new_si->getMetaData()));
 
   dawn::codegen::stencilInstantiationContext map;
   map[new_si->getName()] = std::move(new_si);
@@ -189,7 +204,8 @@ IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldTy
   sir::FieldDimension dimensions(
       ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
   int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name, dimensions);
-  return {id, name};
+  std::string newName = si_->getMetaData().getFieldNameFromAccessID(id);
+  return {id, newName};
 }
 
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {

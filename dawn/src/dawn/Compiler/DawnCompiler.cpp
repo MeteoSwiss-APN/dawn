@@ -50,6 +50,9 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/Validator/TypeChecker.h"
+
+#include <filesystem>
 
 namespace dawn {
 
@@ -86,11 +89,6 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
-
-std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
-  const std::size_t pos = fullName.rfind(extension);
-  return pos < std::string::npos ? fullName.substr(0, pos) : fullName;
-}
 
 } // anonymous namespace
 
@@ -322,12 +320,12 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
                    << "`";
 
     if(options_.SerializeIIR) {
-      const std::string originalFileName = filenameSansExtension(
-          options_.OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                      : options_.OutputFile,
-          ".cpp");
-      IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
-                               serializationKind);
+      const auto p = std::filesystem::path(options_.OutputFile.empty()
+                                               ? instantiation->getMetaData().getFileName()
+                                               : options_.OutputFile);
+      IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                   ".iir",
+                               instantiation, serializationKind);
       i++;
     }
     if(options_.DumpStencilInstantiation) {
@@ -395,6 +393,13 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
     throw std::runtime_error("An error occurred.");
   }
 
+  // SIR we received should be type consistent
+  TypeChecker checker;
+  if(!checker.checkLocationTypeConsistency(*stencilIR.get())) {
+    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+    return nullptr;
+  }
+
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
   // Deserialize internal IR if passed as an option
@@ -409,6 +414,17 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
     OptimizerContext optimizer(getDiagnostics(), optimizerOptions, nullptr);
     auto instantiation = IIRSerializer::deserialize(options_.DeserializeIIR, serializationKind);
     optimizer.restoreIIR("<restored>", instantiation);
+
+    // IIR produced should be type consistent too
+    for(auto& stencil : optimizer.getStencilInstantiationMap()) {
+      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+      const auto& IIR = instantiation->getIIR();
+      if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
+        DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
+                          "points to a bug in the optimization passes ";
+        return nullptr;
+      }
+    }
 
     stencilInstantiationMap = optimizer.getStencilInstantiationMap();
 
