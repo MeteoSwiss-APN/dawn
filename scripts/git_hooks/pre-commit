@@ -102,7 +102,6 @@ check_modularization() {
 
   no_dependency "Serialization" "Compiler"
   no_dependency "Optimizer" "Compiler"
-  no_dependency "Optimizer" "Validator"
   no_dependency "CodeGen" "Compiler"
 
   no_dependency "Validator" "Compiler"

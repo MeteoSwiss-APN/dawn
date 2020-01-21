@@ -13,9 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassManager.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 #include <vector>
 
 namespace dawn {
@@ -59,6 +62,17 @@ bool PassManager::runPassOnStencilInstantiation(
 
   DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
                   std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
+
+  LocationTypeChecker locationChecker;
+  GridTypeChecker gridChecker;
+  const auto& IIR = instantiation->getIIR();
+  if(IIR->getGridType() == ast::GridType::Triangular) {
+    DAWN_ASSERT_MSG(
+        locationChecker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData()),
+        std::string("Location type consistency check failed for pass" + pass->getName()).c_str());
+  }
+  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*IIR.get()),
+                  std::string("Type consistency check failed for pass" + pass->getName()).c_str());
 
 #ifndef NDEBUG
   for(const auto& stencil : instantiation->getIIR()->getChildren()) {

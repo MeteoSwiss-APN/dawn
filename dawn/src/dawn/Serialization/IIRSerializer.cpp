@@ -188,6 +188,20 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoMetaData->add_globalvariableids(globalVariableID);
   }
 
+  // Filling Field: repeated int32 FieldAccessIDs = 4;
+  for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
+    protoMetaData->add_fieldaccessids(fieldAccessID);
+  }
+
+  auto& protoAccessIDToLocationMap = *protoMetaData->mutable_accessidtolocation();
+  for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
+    if(metaData.getIsUnstructuredFromAccessID(fieldAccessID)) {
+      protoAccessIDToLocationMap.insert(
+          {fieldAccessID,
+           convertLocationType(metaData.getLocationTypeFromAccessID(fieldAccessID))});
+    }
+  }
+
   // Filling Field: VariableVersions versionedFields = 8;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
@@ -507,6 +521,10 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
+  for(auto IDtoLocation : protoMetaData.accessidtolocation()) {
+    metadata.addAccessIDLocationPair(IDtoLocation.first, convertLocationType(IDtoLocation.second));
+  }
+
   struct DeclStmtFinder : public iir::ASTVisitorForwarding {
     void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
       stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
@@ -675,7 +693,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           auto ast = std::dynamic_pointer_cast<iir::BlockStmt>(
               makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE));
           DAWN_ASSERT(ast);
-          IIRDoMethod->setAST(std::move(*ast));
+          IIRDoMethod->setAST(ast);
         }
       }
     }

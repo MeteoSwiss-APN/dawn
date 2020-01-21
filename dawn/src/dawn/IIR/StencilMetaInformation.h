@@ -156,7 +156,7 @@ public:
 
   int addField(FieldAccessType type, const std::string& name,
                const sir::FieldDimension& fieldDimensions,
-               ast::Expr::LocationType = ast::Expr::LocationType::Cells);
+               std::optional<ast::Expr::LocationType> = std::nullopt);
 
   int addTmpField(FieldAccessType type, const std::string& basename,
                   const sir::FieldDimension& fieldDimensions);
