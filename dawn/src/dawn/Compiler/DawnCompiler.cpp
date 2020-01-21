@@ -54,6 +54,8 @@
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/LocationTypeChecker.h"
 
+#include <filesystem>
+
 namespace dawn {
 
 namespace {
@@ -89,11 +91,6 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
-
-std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
-  const std::size_t pos = fullName.rfind(extension);
-  return pos < std::string::npos ? fullName.substr(0, pos) : fullName;
-}
 
 } // anonymous namespace
 
@@ -236,12 +233,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        const std::string originalFileName = filenameSansExtension(
-            options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                         : options_->OutputFile,
-            ".cpp");
-        IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
-                                 serializationKind);
+        const std::filesystem::path p(options_->OutputFile.empty()
+                                          ? instantiation->getMetaData().getFileName()
+                                          : options_->OutputFile);
+        IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                     ".iir",
+                                 instantiation, serializationKind);
         i++;
       }
       if(options_->DumpStencilInstantiation) {

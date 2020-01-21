@@ -28,4 +28,4 @@ set_target_properties(${test_name} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
 )
 
-gtest_discover_tests(${test_name} TEST_PREFIX "${test_name}::" DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(${test_name} TEST_PREFIX "GTClang::Unit::Frontend::" DISCOVERY_TIMEOUT 30)

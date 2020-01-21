@@ -21,4 +21,4 @@ add_executable(${executable}
 )
 target_link_libraries(${executable} DawnValidator DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
-gtest_discover_tests(${executable} TEST_PREFIX "${executable}::")
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Validator::")

@@ -25,30 +25,7 @@ dawn_protobuf_generate(
   LANGUAGE cpp
 )
 
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES iir_proto_python_files
-    PROTOS ${protos}
-    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG IIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/IIR)
-
-  string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
-    iir_proto_python_build_files "${iir_proto_python_files}")
-
-  add_custom_command(OUTPUT ${iir_proto_python_build_files}
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
-    DEPENDS ${iir_proto_python_files}
-  )
-endif()
-
-add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files} ${iir_proto_python_build_files})
+add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -127,11 +104,42 @@ add_library(DawnIIR
   StencilInstantiation.cpp
   StencilInstantiation.h
   StencilMetaInformation.cpp
-  StencilMetaInformation.h 
+  StencilMetaInformation.h
   )
 
 target_add_dawn_standard_props(DawnIIR)
 target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
+
+if(ENABLE_PYTHON)
+  # Generate python proto files
+  include(DawnProtobufGenerate)
+  dawn_protobuf_generate(
+    OUT_FILES iir_proto_python_files
+    PROTOS ${protos}
+    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG IIR
+    LANGUAGE python
+  )
+
+  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/IIR)
+
+  list(TRANSFORM iir_proto_python_files
+    REPLACE ${CMAKE_CURRENT_BINARY_DIR}/IIR ${output_dir}
+    OUTPUT_VARIABLE iir_proto_python_dawn4py
+  )
+
+  # This add_custom_target + add_custom_command is ncessary because
+  # CMake Manual: Do not list the output in more than one independent target that
+  # may build in parallel or the two instances of the rule may conflict
+  # (instead use the add_custom_target() command to drive the command and make
+  # the other targets depend on that one).
+  add_custom_command(OUTPUT ${iir_proto_python_dawn4py}
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
+  )
+  add_custom_target(copy_iir_to_dawn4py_sourcedir DEPENDS ${iir_proto_python_dawn4py})
+  add_dependencies(DawnIIRProto copy_iir_to_dawn4py_sourcedir)
+endif()
 
 # TODO add this if CLAW needs it (-> Matthias)
 # if(DAWN_JAVA)

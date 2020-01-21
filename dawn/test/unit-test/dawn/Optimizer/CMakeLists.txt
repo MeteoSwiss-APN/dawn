@@ -25,7 +25,7 @@ add_executable(${executable}
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
-gtest_discover_tests(${executable} TEST_PREFIX "${executable}::" DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::" DISCOVERY_TIMEOUT 30)
 
 add_subdirectory(TestsFromSIR)
 add_subdirectory(Passes)
