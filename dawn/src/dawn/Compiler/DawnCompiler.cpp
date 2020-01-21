@@ -50,7 +50,8 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 
 #include <filesystem>
 
@@ -332,6 +333,18 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
       instantiation->dump();
     }
   }
+
+  LocationTypeChecker checker;
+  // IIR produced should be type consistent too
+  for(auto& stencil : optimizer.getStencilInstantiationMap()) {
+    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+    const auto& internalIR = instantiation->getIIR();
+    if(!checker.checkLocationTypeConsistency(*internalIR.get(), instantiation->getMetaData())) {
+      throw std::runtime_error("Location types in IIR are not consistent, no code generation. This"
+                               "points to a bug in the optimization passes ");
+    }
+  }
+
   return optimizer.getStencilInstantiationMap();
 }
 
@@ -393,13 +406,6 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
     throw std::runtime_error("An error occurred.");
   }
 
-  // SIR we received should be type consistent
-  TypeChecker checker;
-  if(!checker.checkLocationTypeConsistency(*stencilIR.get())) {
-    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
-    return nullptr;
-  }
-
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
   // Deserialize internal IR if passed as an option
@@ -414,17 +420,6 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
     OptimizerContext optimizer(getDiagnostics(), optimizerOptions, nullptr);
     auto instantiation = IIRSerializer::deserialize(options_.DeserializeIIR, serializationKind);
     optimizer.restoreIIR("<restored>", instantiation);
-
-    // IIR produced should be type consistent too
-    for(auto& stencil : optimizer.getStencilInstantiationMap()) {
-      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-      const auto& IIR = instantiation->getIIR();
-      if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
-        DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
-                          "points to a bug in the optimization passes ";
-        return nullptr;
-      }
-    }
 
     stencilInstantiationMap = optimizer.getStencilInstantiationMap();
 

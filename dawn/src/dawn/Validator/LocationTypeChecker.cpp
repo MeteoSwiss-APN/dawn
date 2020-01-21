@@ -1,36 +1,37 @@
-#include "TypeChecker.h"
+#include "LocationTypeChecker.h"
 
 namespace dawn {
 
-bool TypeChecker::checkLocationTypeConsistency(const dawn::iir::IIR& iir,
-                                               const iir::StencilMetaInformation& metaData) {
+bool LocationTypeChecker::checkLocationTypeConsistency(
+    const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
+
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    TypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldLocationTypesByName(),
-                                      metaData.getAccessIDToNameMap());
-    const std::shared_ptr<iir::BlockStmt>& ast =
-        std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
-    ast->accept(Impl);
-    if(!Impl.isConsistent()) {
+    LocationTypeChecker::TypeCheckerImpl typeChecker(doMethodPtr->getFieldLocationTypesByName(),
+                                                     metaData.getAccessIDToNameMap());
+    const auto& ast = doMethodPtr->getASTPtr();
+    ast->accept(typeChecker);
+    if(!typeChecker.isConsistent()) {
       return false;
     }
   }
   return true;
 }
 
-bool TypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
+bool LocationTypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
   // check type consistency of stencil functions
   for(auto const& stenFunIt : SIR.StencilFunctions) {
     std::unordered_map<std::string, ast::Expr::LocationType> argumentFieldLocs;
     for(const auto& arg : stenFunIt->Args) {
       if(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field) {
         const auto* argField = static_cast<sir::Field*>(arg.get());
-        argumentFieldLocs.insert({argField->Name, argField->locationType});
+        DAWN_ASSERT(argField->locationType.has_value());
+        argumentFieldLocs.insert({argField->Name, argField->locationType.value()});
       }
     }
+    LocationTypeChecker::TypeCheckerImpl typeChecker(argumentFieldLocs);
     for(const auto& astIt : stenFunIt->Asts) {
-      TypeChecker::TypeCheckerImpl Impl(argumentFieldLocs);
-      astIt->accept(Impl);
-      if(!Impl.isConsistent()) {
+      astIt->accept(typeChecker);
+      if(!typeChecker.isConsistent()) {
         return false;
       }
     }
@@ -41,12 +42,13 @@ bool TypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
     DAWN_ASSERT(stencil);
     std::unordered_map<std::string, ast::Expr::LocationType> stencilFieldLocs;
     for(const auto& field : stencil->Fields) {
-      stencilFieldLocs.insert({field->Name, field->locationType});
+      DAWN_ASSERT(field->locationType.has_value());
+      stencilFieldLocs.insert({field->Name, field->locationType.value()});
     }
     const auto& stencilAst = stencil->StencilDescAst;
-    TypeChecker::TypeCheckerImpl Impl(stencilFieldLocs);
-    stencilAst->accept(Impl);
-    if(!Impl.isConsistent()) {
+    LocationTypeChecker::TypeCheckerImpl typeChecker(stencilFieldLocs);
+    stencilAst->accept(typeChecker);
+    if(!typeChecker.isConsistent()) {
       return false;
     }
   }
@@ -54,21 +56,21 @@ bool TypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
   return true;
 }
 
-TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
+LocationTypeChecker::TypeCheckerImpl::TypeCheckerImpl(
     const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap)
     : nameToLocationType_(nameToLocationMap) {}
 
-TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
+LocationTypeChecker::TypeCheckerImpl::TypeCheckerImpl(
     const std::unordered_map<std::string, ast::Expr::LocationType> nameToLocationMap,
     const std::unordered_map<int, std::string> idToNameMap)
     : nameToLocationType_(nameToLocationMap), idToNameMap_(idToNameMap) {}
 
-ast::Expr::LocationType TypeChecker::TypeCheckerImpl::getType() const {
+ast::Expr::LocationType LocationTypeChecker::TypeCheckerImpl::getType() const {
   DAWN_ASSERT(hasType());
   return curType_.value();
 }
 
-void TypeChecker::TypeCheckerImpl::visit(
+void LocationTypeChecker::TypeCheckerImpl::visit(
     const std::shared_ptr<iir::FieldAccessExpr>& fieldAccessExpr) {
   if(!typesConsistent_) {
     return;
@@ -88,13 +90,14 @@ void TypeChecker::TypeCheckerImpl::visit(
   DAWN_ASSERT(nameToLocationType_.count(fieldName));
   curType_ = nameToLocationType_.at(fieldName);
 } // namespace dawn
-void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperator>& binOp) {
+void LocationTypeChecker::TypeCheckerImpl::visit(
+    const std::shared_ptr<iir::BinaryOperator>& binOp) {
   if(!typesConsistent_) {
     return;
   }
 
-  TypeChecker::TypeCheckerImpl left(nameToLocationType_, idToNameMap_);
-  TypeChecker::TypeCheckerImpl right(nameToLocationType_, idToNameMap_);
+  LocationTypeChecker::TypeCheckerImpl left(nameToLocationType_, idToNameMap_);
+  LocationTypeChecker::TypeCheckerImpl right(nameToLocationType_, idToNameMap_);
 
   binOp->getLeft()->accept(left);
   binOp->getRight()->accept(right);
@@ -102,6 +105,7 @@ void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperat
   // type check failed further down below
   if(!(left.isConsistent() && right.isConsistent())) {
     typesConsistent_ = false;
+    return;
   }
 
   // if both sides access unstructured fields, they need to be on the same location
@@ -115,16 +119,16 @@ void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperat
     curType_ = right.getType();
   }
 }
-void TypeChecker::TypeCheckerImpl::visit(
-    const std::shared_ptr<iir::AssignmentExpr>& assignmentExpr) {
+void LocationTypeChecker::TypeCheckerImpl::visit(
+    const std::shared_ptr<iir::AssignmentExpr>& assignemtExpr) {
   if(!typesConsistent_) {
     return;
   }
-  TypeChecker::TypeCheckerImpl left(nameToLocationType_, idToNameMap_);
-  TypeChecker::TypeCheckerImpl right(nameToLocationType_, idToNameMap_);
+  LocationTypeChecker::TypeCheckerImpl left(nameToLocationType_, idToNameMap_);
+  LocationTypeChecker::TypeCheckerImpl right(nameToLocationType_, idToNameMap_);
 
-  assignmentExpr->getLeft()->accept(left);
-  assignmentExpr->getRight()->accept(right);
+  assignemtExpr->getLeft()->accept(left);
+  assignemtExpr->getRight()->accept(right);
 
   // type check failed further down below
   if(!(left.isConsistent() && right.isConsistent())) {
@@ -143,14 +147,14 @@ void TypeChecker::TypeCheckerImpl::visit(
     curType_ = right.getType();
   }
 }
-void TypeChecker::TypeCheckerImpl::visit(
+void LocationTypeChecker::TypeCheckerImpl::visit(
     const std::shared_ptr<iir::ReductionOverNeighborExpr>& reductionExpr) {
   if(!typesConsistent_) {
     return;
   }
 
-  TypeChecker::TypeCheckerImpl init(nameToLocationType_, idToNameMap_);
-  TypeChecker::TypeCheckerImpl ops(nameToLocationType_, idToNameMap_);
+  LocationTypeChecker::TypeCheckerImpl init(nameToLocationType_, idToNameMap_);
+  LocationTypeChecker::TypeCheckerImpl ops(nameToLocationType_, idToNameMap_);
 
   reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);
@@ -160,7 +164,7 @@ void TypeChecker::TypeCheckerImpl::visit(
     typesConsistent_ = init.getType() == ops.getType();
   }
 
-  // if the rhs has a type, the subtree on the right hand side needs to be consistent with said type
+  // right hand side needs to be consistent with rhs imposed
   if(ops.hasType()) {
     typesConsistent_ &= ops.getType() == reductionExpr->getRhsLocation();
   }

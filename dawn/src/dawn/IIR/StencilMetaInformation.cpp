@@ -342,7 +342,7 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
                                      const sir::FieldDimension& fieldDimensions,
-                                     ast::Expr::LocationType locationType) {
+                                     std::optional<ast::Expr::LocationType> locationType) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
@@ -350,7 +350,9 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
   DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 
-  addAccessIDLocationPair(accessID, locationType);
+  if(locationType.has_value()) {
+    addAccessIDLocationPair(accessID, locationType.value());
+  }
 
   return accessID;
 }
