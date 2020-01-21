@@ -11,6 +11,8 @@
   "literalIDToName": {},
   "fieldAccessIDs": [
    16,
+   17,
+   16,
    17
   ],
   "APIFieldIDs": [
@@ -56,6 +58,7 @@
    }
   },
   "boundaryCallToExtent": {},
+  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 24,
@@ -224,5 +227,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }

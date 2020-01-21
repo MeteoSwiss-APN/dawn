@@ -24,7 +24,8 @@ bool LocationTypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
     for(const auto& arg : stenFunIt->Args) {
       if(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field) {
         const auto* argField = static_cast<sir::Field*>(arg.get());
-        argumentFieldLocs.insert({argField->Name, argField->locationType});
+        DAWN_ASSERT(argField->locationType.has_value());
+        argumentFieldLocs.insert({argField->Name, argField->locationType.value()});
       }
     }
     LocationTypeChecker::TypeCheckerImpl typeChecker(argumentFieldLocs);
@@ -41,7 +42,8 @@ bool LocationTypeChecker::checkLocationTypeConsistency(const dawn::SIR& SIR) {
     DAWN_ASSERT(stencil);
     std::unordered_map<std::string, ast::Expr::LocationType> stencilFieldLocs;
     for(const auto& field : stencil->Fields) {
-      stencilFieldLocs.insert({field->Name, field->locationType});
+      DAWN_ASSERT(field->locationType.has_value());
+      stencilFieldLocs.insert({field->Name, field->locationType.value()});
     }
     const auto& stencilAst = stencil->StencilDescAst;
     LocationTypeChecker::TypeCheckerImpl typeChecker(stencilFieldLocs);

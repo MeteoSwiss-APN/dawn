@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "36": "__local_fn_36",
    "16": "a",
-   "17": "b",
-   "36": "__local_fn_36"
+   "17": "b"
   },
   "accessIDToType": {
    "16": 6,
@@ -11,6 +11,8 @@
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
+   16,
+   17,
    16,
    17
   ],
@@ -57,6 +59,7 @@
    }
   },
   "boundaryCallToExtent": {},
+  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 29,
@@ -285,5 +288,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }

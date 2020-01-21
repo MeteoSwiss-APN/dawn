@@ -272,10 +272,12 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // SIR we received should be type consistent
-  LocationTypeChecker locationChecker;
-  if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
-    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
-    return nullptr;
+  if(SIR->GridType == ast::GridType::Triangular) {
+    LocationTypeChecker locationChecker;
+    if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
+      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+      return nullptr;
+    }
   }
 
   GridTypeChecker gridChecker;
