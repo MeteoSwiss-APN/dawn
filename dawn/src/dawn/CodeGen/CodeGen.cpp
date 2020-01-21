@@ -377,7 +377,8 @@ bool CodeGen::hasGlobalIndices(
 
 bool CodeGen::hasGlobalIndices(const iir::Stencil& stencil) const {
   for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-    if(stage->getIterationSpace()[0].has_value() || stage->getIterationSpace()[1].has_value()) {
+    if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
+       [](const auto& p) -> bool { return p.has_value(); })) {
       return true;
     }
   }

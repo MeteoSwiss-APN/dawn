@@ -53,7 +53,7 @@ std::string makeIntervalBoundExplicit(std::string dim, const iir::Interval& inte
 
 CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                          int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
-    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
+    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
@@ -64,7 +64,7 @@ void CudaCodeGen::generateAllCudaKernels(
     DAWN_ASSERT(cachePropertyMap_.count(ms->getID()));
 
     MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()),
-                        codeGenOptions, hasGlobalIndices(stencilInstantiation));
+                        codeGenOptions_, hasGlobalIndices(stencilInstantiation));
     msCodeGen.generateCudaKernelCode();
   }
 }
@@ -207,20 +207,20 @@ void CudaCodeGen::generateStencilClasses(
       paramNameToType.emplace(fieldPair.second.Name, c_dgt().str() + "storage_t");
     }
 
-    bool iterationSpaceSet = hasGlobalIndices(stencil);
+    iterationSpaceSet_ = hasGlobalIndices(stencil);
     generateStencilClassMembers(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
-                                stencilProperties, iterationSpaceSet);
+                                stencilProperties);
 
     stencilClass.changeAccessibility("public");
 
     generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
-                            stencilProperties, iterationSpaceSet);
+                            stencilProperties);
 
     //
     // Run-Method
     //
     generateStencilRunMethod(stencilClass, stencil, stencilProperties, stencilInstantiation,
-                             paramNameToType, globalsMap, iterationSpaceSet);
+                             paramNameToType, globalsMap);
   }
 }
 
@@ -228,10 +228,10 @@ void CudaCodeGen::generateStencilClassMembers(
     Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-    std::shared_ptr<StencilProperties> stencilProperties, bool iterationSpaceSet) const {
+    std::shared_ptr<StencilProperties> stencilProperties) const {
 
   stencilClass.addComment("Members");
-  if(iterationSpaceSet) {
+  if(iterationSpaceSet_) {
     generateGlobalIndices(stencil, stencilClass);
   }
 
@@ -254,7 +254,7 @@ void CudaCodeGen::generateStencilClassCtr(
     Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-    std::shared_ptr<StencilProperties> stencilProperties, bool iterationSpaceSet) const {
+    std::shared_ptr<StencilProperties> stencilProperties) const {
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
@@ -294,7 +294,7 @@ void CudaCodeGen::generateStencilClassCtr(
     }
   }
 
-  if(iterationSpaceSet) {
+  if(iterationSpaceSet_) {
     stencilClassCtr.addInit("globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)})");
   }
 
@@ -438,7 +438,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const std::shared_ptr<StencilProperties>& stencilProperties,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
-    const sir::GlobalVariableMap& globalsMap, bool iterationSpaceSet) const {
+    const sir::GlobalVariableMap& globalsMap) const {
   MemberFunction stencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
   const auto& metadata = stencilInstantiation->getMetaData();
 
@@ -608,7 +608,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
     kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args;
 
-    if(iterationSpaceSet) {
+    if(iterationSpaceSet_) {
       for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
         if(stage->getIterationSpace()[0].has_value()) {
           kernelCall += ", stage" + std::to_string(stage->getStageID()) + "GlobalIIndices.data()";

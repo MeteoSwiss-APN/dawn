@@ -774,18 +774,19 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   if(iterationSpaceSet_) {
+    std::string dims = "IJ";
     for(const auto& stencil : stencilInstantiation_->getStencils()) {
-      for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
-        std::string prefix = "int* const stage" + std::to_string(stage->getStageID()) + "Global";
-        if(stage->getIterationSpace()[0].has_value()) {
-          cudaKernel.addArg(prefix + "IIndices");
-        }
-        if(stage->getIterationSpace()[1].has_value()) {
-          cudaKernel.addArg(prefix + "JIndices");
+      for(const auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
+        std::string prefix = "const int* stage" + std::to_string(stage->getStageID()) + "Global";
+        const auto& iterationSpace = stage->getIterationSpace();
+        for (int i : iterationSpace.size()) {
+          if(iterationSpace[i].has_value()) {
+            cudaKernel.addArg(prefix + dims.at(i) + "Indices");
+          }
         }
       }
     }
-    cudaKernel.addArg("unsigned* const globalOffsets");
+    cudaKernel.addArg("const unsigned* globalOffsets");
   }
 
   DAWN_ASSERT(fields.size() > 0);
