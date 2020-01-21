@@ -63,15 +63,16 @@ public:
 } // namespace
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
-      metaData_(metaData), ast_{std::make_unique<iir::IIRStmtData>()} {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData),
+      ast_(std::make_shared<BlockStmt>(std::make_unique<iir::IIRStmtData>())) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
-  cloneMS->ast_ = iir::BlockStmt{ast_};
+  cloneMS->ast_ = std::make_shared<BlockStmt>(*ast_.get());
+
   return cloneMS;
 }
 

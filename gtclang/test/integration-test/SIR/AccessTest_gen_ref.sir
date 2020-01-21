@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "AccessTest.cpp",
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -325,7 +325,7 @@
       1,
       1
      ],
-     "location_type": "Cell"
+     "location_type": "Edge"
     },
     {
      "name": "b",
@@ -339,7 +339,7 @@
       1,
       1
      ],
-     "location_type": "Cell"
+     "location_type": "Edge"
     }
    ]
   }
