@@ -15,6 +15,7 @@
 #ifndef DAWN_AST_OFFSET_H
 #define DAWN_AST_OFFSET_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -108,6 +109,11 @@ public:
   template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
   friend auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
                               UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
+
+  // impl may be a null ptr, i.e. HorizontalOffset may be in a uninitialized state and not
+  // associated with a grid type
+  bool hasType() const;
+  GridType getGridType() const;
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;

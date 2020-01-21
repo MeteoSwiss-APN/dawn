@@ -51,7 +51,10 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
+
+#include <filesystem>
 
 namespace dawn {
 
@@ -88,11 +91,6 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
-
-std::string filenameSansExtension(const std::string& fullName, const std::string& extension) {
-  const std::size_t pos = fullName.rfind(extension);
-  return pos < std::string::npos ? fullName.substr(0, pos) : fullName;
-}
 
 } // anonymous namespace
 
@@ -235,12 +233,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        const std::string originalFileName = filenameSansExtension(
-            options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                         : options_->OutputFile,
-            ".cpp");
-        IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
-                                 serializationKind);
+        const std::filesystem::path p(options_->OutputFile.empty()
+                                          ? instantiation->getMetaData().getFileName()
+                                          : options_->OutputFile);
+        IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                     ".iir",
+                                 instantiation, serializationKind);
         i++;
       }
       if(options_->DumpStencilInstantiation) {
@@ -271,9 +269,17 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // SIR we received should be type consistent
-  TypeChecker checker;
-  if(!checker.checkLocationTypeConsistency(*SIR.get())) {
-    DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+  if(SIR->GridType == ast::GridType::Triangular) {
+    LocationTypeChecker locationChecker;
+    if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
+      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+      return nullptr;
+    }
+  }
+
+  GridTypeChecker gridChecker;
+  if(!gridChecker.checkGridTypeConsistency(*SIR.get())) {
+    DAWN_LOG(INFO) << "Grid types in SIR are not consistent, no code generation";
     return nullptr;
   }
 
@@ -283,17 +289,6 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   if(diagnostics_->hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
-  }
-
-  // IIR produced should be type consistent too
-  for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-    const auto& IIR = instantiation->getIIR();
-    if(!checker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData())) {
-      DAWN_LOG(INFO) << "Location types in IIR are not consistent, no code generation. This"
-                        "points to a bug in the optimization passes ";
-      return nullptr;
-    }
   }
 
   // Generate code

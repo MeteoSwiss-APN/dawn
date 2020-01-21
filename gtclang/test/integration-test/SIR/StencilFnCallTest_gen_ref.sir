@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "StencilFnCallTest.cpp",
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -152,7 +152,7 @@
       1,
       1
      ],
-     "location_type": "Cell"
+     "location_type": "Edge"
     },
     {
      "name": "b",
@@ -166,7 +166,7 @@
       1,
       1
      ],
-     "location_type": "Cell"
+     "location_type": "Edge"
     }
    ]
   }
@@ -243,7 +243,7 @@
        1,
        1
       ],
-      "location_type": "Cell"
+      "location_type": "Edge"
      }
     }
    ]

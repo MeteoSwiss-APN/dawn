@@ -17,6 +17,7 @@
 
 #include "LoopOrder.h"
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 
 #include <array>
@@ -172,6 +173,9 @@ public:
   void merge(ast::HorizontalOffset const& other);
   bool isPointwise() const;
   void limit(HorizontalExtent const& other);
+
+  bool hasType() const;
+  ast::GridType getType() const;
 
 private:
   std::unique_ptr<HorizontalExtentImpl> impl_;
