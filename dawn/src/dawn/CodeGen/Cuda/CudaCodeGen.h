@@ -77,7 +77,7 @@ private:
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const;
+                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
   void
   generateStencilWrapperCtr(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

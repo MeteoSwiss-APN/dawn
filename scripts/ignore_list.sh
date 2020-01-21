@@ -7,6 +7,5 @@ ignore_regex_list=(
     "^(\./)?dawn/test/unit-test/dawn/CodeGen/Cuda/reference"
     "^(\./)?dawn/test/unit-test/test_dawn4py/data"
     "^(\./)?gtclang/test/utils/googletest/"
-    "^(\./)?dawn/test/unit-test/dawn/CodeGen/Naive/reference"
     "/bundle/"
     )

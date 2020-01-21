@@ -27,4 +27,11 @@ StringRef getExtension(StringRef filename) {
   return filename.substr(filename.find_last_of(".") - 1);
 }
 
+std::string readFile(const std::string& file) {
+  std::ifstream is(file);
+  //std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+  //return str;
+  return std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+}
+
 } // namespace dawn

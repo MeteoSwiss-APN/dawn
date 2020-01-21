@@ -164,7 +164,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
 
 void CudaCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const {
+    Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
@@ -273,24 +273,23 @@ void CudaCodeGen::generateStencilClassCtr(
     stencilClassCtr.addInit("m_globals(globals_)");
   }
 
+  std::string iterators = "ij";
   for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-    if(stage->getIterationSpace()[0].has_value()) {
-      stencilClassCtr.addInit("stage" + std::to_string(stage->getStageID()) + "GlobalIIndices({" +
-                              makeIntervalBoundExplicit("i", stage->getIterationSpace()[0].value(),
-                                                        iir::Interval::Bound::lower, "dom_") +
-                              " , " +
-                              makeIntervalBoundExplicit("i", stage->getIterationSpace()[0].value(),
-                                                        iir::Interval::Bound::upper, "dom_") +
-                              "})");
-    }
-    if(stage->getIterationSpace()[1].has_value()) {
-      stencilClassCtr.addInit("stage" + std::to_string(stage->getStageID()) + "GlobalJIndices({" +
-                              makeIntervalBoundExplicit("j", stage->getIterationSpace()[1].value(),
-                                                        iir::Interval::Bound::lower, "dom_") +
-                              " , " +
-                              makeIntervalBoundExplicit("j", stage->getIterationSpace()[1].value(),
-                                                        iir::Interval::Bound::upper, "dom_") +
-                              "})");
+    int index = 0;
+    for(const auto& interval : stage->getIterationSpace()) {
+      if(interval.has_value()) {
+        std::string iterator = iterators.substr(index, 1);
+        std::string arrName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                              (char)std::toupper(iterator.at(0)) + "Indices";
+        stencilClassCtr.addInit(arrName + "({" +
+                                makeIntervalBoundExplicit(iterator, interval.value(),
+                                                          iir::Interval::Bound::lower, "dom_") +
+                                " , " +
+                                makeIntervalBoundExplicit(iterator, interval.value(),
+                                                          iir::Interval::Bound::upper, "dom_") +
+                                "})");
+      }
+      index += 1;
     }
   }
 
@@ -511,14 +510,6 @@ void CudaCodeGen::generateStencilRunMethod(
       maxExtents.merge(stage->getExtents());
     }
 
-    // Check for horizontal iteration spaces
-    for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
-      if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
-                     [](const auto& p) -> bool { return p.has_value(); })) {
-        throw std::runtime_error("CudaCodeGen does not support horizontal iteration spaces");
-      }
-    }
-
     stencilRunMethod.addStatement(
         "const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus()");
     stencilRunMethod.addStatement(
@@ -609,12 +600,15 @@ void CudaCodeGen::generateStencilRunMethod(
     kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args;
 
     if(iterationSpaceSet_) {
+      std::string iterators = "IJ";
       for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-        if(stage->getIterationSpace()[0].has_value()) {
-          kernelCall += ", stage" + std::to_string(stage->getStageID()) + "GlobalIIndices.data()";
-        }
-        if(stage->getIterationSpace()[1].has_value()) {
-          kernelCall += ", stage" + std::to_string(stage->getStageID()) + "GlobalJIndices.data()";
+        int index = 0;
+        for(const auto& interval : stage->getIterationSpace()) {
+          if(interval.has_value()) {
+            kernelCall += ", stage" + std::to_string(stage->getStageID()) + "Global" +
+                          iterators.at(index) + "Indices.data()";
+          }
+          index += 1;
         }
       }
       kernelCall += ", globalOffsets.data()";

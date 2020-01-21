@@ -396,7 +396,7 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
                              "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
     }
   }
-  // if(iterationSpaceSet) {
+
   stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
   auto globalOffsetFunc =
       stencilClass.addMemberFunction("static std::array<unsigned int, 2>", "computeGlobalOffsets");
@@ -407,7 +407,6 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
   globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
   globalOffsetFunc.addStatement(
       "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
-
   globalOffsetFunc.commit();
 
   auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");

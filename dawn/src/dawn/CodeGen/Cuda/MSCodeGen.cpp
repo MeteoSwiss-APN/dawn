@@ -758,7 +758,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // first we construct non temporary field arguments
   for(const auto& fieldPair : nonTempFields) {
-    cudaKernel.addArg("::dawn::float_type * const " +
+    cudaKernel.addArg("const ::dawn::float_type * " +
                       metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
   }
 
@@ -768,21 +768,22 @@ void MSCodeGen::generateCudaKernelCode() {
       cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg("::dawn::float_type * const " +
+      cudaKernel.addArg("const ::dawn::float_type * " +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
   }
 
   if(iterationSpaceSet_) {
-    std::string dims = "IJ";
+    std::string iterators = "IJ";
     for(const auto& stencil : stencilInstantiation_->getStencils()) {
       for(const auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
         std::string prefix = "const int* stage" + std::to_string(stage->getStageID()) + "Global";
-        const auto& iterationSpace = stage->getIterationSpace();
-        for (int i : iterationSpace.size()) {
-          if(iterationSpace[i].has_value()) {
-            cudaKernel.addArg(prefix + dims.at(i) + "Indices");
+        int index = 0;
+        for(const auto& interval : stage->getIterationSpace()) {
+          if(interval.has_value()) {
+            cudaKernel.addArg(prefix + iterators.at(index) + "Indices");
           }
+          index += 1;
         }
       }
     }
@@ -1053,16 +1054,19 @@ void MSCodeGen::generateCudaKernelCode() {
 
         if(std::any_of(stage.getIterationSpace().cbegin(), stage.getIterationSpace().cend(),
                        [](const auto& p) -> bool { return p.has_value(); })) {
+          std::string iterators = "IJ";
           for(const auto& stencil : stencilInstantiation_->getStencils()) {
             for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
               std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
-              if(stage->getIterationSpace()[0].has_value()) {
-                guard += " && checkOffset_(" + prefix + "IIndices[0], " + prefix +
-                         "IIndices[1], globalOffsets[0] + iblock)";
-              }
-              if(stage->getIterationSpace()[1].has_value()) {
-                guard += " && checkOffset_(" + prefix + "JIndices[0], " + prefix +
-                         "JIndices[1], globalOffsets[1] + jblock)";
+              int index = 0;
+              for(const auto& interval : stage->getIterationSpace()) {
+                if(interval.has_value()) {
+                  std::string arrName = prefix + iterators.at(index) + "Indices";
+                  guard += " && checkOffset_(" + arrName + "[0], " + arrName +
+                           "[1], globalOffsets[" + std::to_string(index) + "] + " +
+                           (char)std::tolower(iterators.at(index)) + "block)";
+                }
+                index += 1;
               }
             }
           }
