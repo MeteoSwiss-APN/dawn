@@ -91,6 +91,10 @@ struct ComputeEditDistance<std::string> {
   }
 };
 
+bool shouldRunPass(const Options& options, bool runSpecificPass) {
+  return !options.DefaultNone || runSpecificPass;
+}
+
 } // anonymous namespace
 
 /// @brief Report a diagnostic concering an invalid Option
@@ -169,15 +173,17 @@ DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilIR);
 
-  // required passes to have proper, parallelized IR
-  optimizer.checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
-  optimizer.checkAndPushBack<PassFieldVersioning>();
-  optimizer.checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-  optimizer.checkAndPushBack<PassStageSplitter>();
-  optimizer.checkAndPushBack<PassTemporaryType>();
-  optimizer.checkAndPushBack<PassFixVersionedInputFields>();
-  optimizer.checkAndPushBack<PassComputeStageExtents>();
-  optimizer.checkAndPushBack<PassSetSyncStage>();
+  if(shouldRunPass(options_, options_.Parallel)) {
+    // required passes to have proper, parallelized IR
+    optimizer.checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+    optimizer.checkAndPushBack<PassFieldVersioning>();
+    optimizer.checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
+    optimizer.checkAndPushBack<PassStageSplitter>();
+    optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+    optimizer.checkAndPushBack<PassComputeStageExtents>();
+    optimizer.checkAndPushBack<PassSetSyncStage>();
+  }
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
   for(const auto& a : optimizer.getPassManager().getPasses()) {
@@ -240,66 +246,93 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
 
   // Optimization, step by step
   //===-----------------------------------------------------------------------------------------
-  // broken but should run with no prerequesits
-  optimizer.checkAndPushBack<PassSSA>();
-  // rerun things we might have changed
-  // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
-  // todo: this does not work since it does not check if it was already run
+  if(shouldRunPass(options_, options_.SSA)) {
+    // broken but should run with no prerequesits
+    optimizer.checkAndPushBack<PassSSA>();
+    // rerun things we might have changed
+    // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+    // todo: this does not work since it does not check if it was already run
+  }
   //===-----------------------------------------------------------------------------------------
-  // Plain diagnostics, should not even be a pass but is independent
-  optimizer.checkAndPushBack<PassPrintStencilGraph>();
+  if(shouldRunPass(options_, options_.PrintStencilGraph)) {
+    // --print-stencil-graph
+    // Plain diagnostics, should not even be a pass but is independent
+    optimizer.checkAndPushBack<PassPrintStencilGraph>();
+  }
   //===-----------------------------------------------------------------------------------------
-  // This is never used but if we want to reenable it, it is independent
-  optimizer.checkAndPushBack<PassSetStageName>();
+  if(shouldRunPass(options_, options_.SetStageName)) {
+    // This is never used but if we want to reenable it, it is independent
+    optimizer.checkAndPushBack<PassSetStageName>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassSetStageGraph>();
-  optimizer.checkAndPushBack<PassSetDependencyGraph>();
-  optimizer.checkAndPushBack<PassStageReordering>(reorderStrategy);
-  // moved stages around ...
-  optimizer.checkAndPushBack<PassSetSyncStage>();
-  // if we want this info around, we should probably run this also
-  // optimizer.checkAndPushBack<PassSetStageName>();
+  if(shouldRunPass(options_, options_.ReorderStages)) {
+    optimizer.checkAndPushBack<PassSetStageGraph>();
+    optimizer.checkAndPushBack<PassSetDependencyGraph>();
+    optimizer.checkAndPushBack<PassStageReordering>(reorderStrategy);
+    // moved stages around ...
+    optimizer.checkAndPushBack<PassSetSyncStage>();
+    // if we want this info around, we should probably run this also
+    // optimizer.checkAndPushBack<PassSetStageName>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassStageMerger>();
-  // since this can change the scope of temporaries ...
-  optimizer.checkAndPushBack<PassTemporaryType>();
-  optimizer.checkAndPushBack<PassFixVersionedInputFields>();
-  // modify stages and their extents ...
-  optimizer.checkAndPushBack<PassComputeStageExtents>();
-  // and changes their dependencies
-  optimizer.checkAndPushBack<PassSetSyncStage>();
+  if(shouldRunPass(options_, options_.MergeStages)) {
+    optimizer.checkAndPushBack<PassStageMerger>();
+    // since this can change the scope of temporaries ...
+    optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+    // modify stages and their extents ...
+    optimizer.checkAndPushBack<PassComputeStageExtents>();
+    // and changes their dependencies
+    optimizer.checkAndPushBack<PassSetSyncStage>();
+  }
   //===-----------------------------------------------------------------------------------------
   // // should be irrelevant now
   // optimizer.checkAndPushBack<PassStencilSplitter>(maxFields);
   // // but would require a lot
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassTemporaryMerger>();
-  // this should not affect the temporaries but since we're touching them it would probably be a
-  // safe idea
-  optimizer.checkAndPushBack<PassTemporaryType>();
+  if(shouldRunPass(options_, options_.MergeTemporaries)) {
+    optimizer.checkAndPushBack<PassTemporaryMerger>();
+    // this should not affect the temporaries but since we're touching them it would probably be a
+    // safe idea
+    optimizer.checkAndPushBack<PassTemporaryType>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassInlining>(
-      (getOptions().InlineSF || getOptions().PassTmpToFunction),
-      PassInlining::InlineStrategy::ComputationsOnTheFly);
+  if(shouldRunPass(options_, options_.Inlining)) {
+    optimizer.checkAndPushBack<PassInlining>(
+        (getOptions().InlineSF || getOptions().PassTmpToFunction),
+        PassInlining::InlineStrategy::ComputationsOnTheFly);
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassIntervalPartitioner>();
-  // since this can change the scope of temporaries ...
-  optimizer.checkAndPushBack<PassTemporaryType>();
-  optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  if(shouldRunPass(options_, options_.PartitionIntervals)) {
+    optimizer.checkAndPushBack<PassIntervalPartitioner>();
+    // since this can change the scope of temporaries ...
+    optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassTemporaryToStencilFunction>();
+  if(shouldRunPass(options_, options_.PassTmpToFunction)) {
+    optimizer.checkAndPushBack<PassTemporaryToStencilFunction>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassSetNonTempCaches>();
-  // this should not affect the temporaries but since we're touching them it would probably be a
-  // safe idea
-  optimizer.checkAndPushBack<PassTemporaryType>();
+  if(shouldRunPass(options_, options_.SetNonTempCaches)) {
+    optimizer.checkAndPushBack<PassSetNonTempCaches>();
+    // this should not affect the temporaries but since we're touching them it would probably be a
+    // safe idea
+    optimizer.checkAndPushBack<PassTemporaryType>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassSetCaches>();
+  if(shouldRunPass(options_, options_.SetCaches)) {
+    optimizer.checkAndPushBack<PassSetCaches>();
+  }
   //===-----------------------------------------------------------------------------------------
-  optimizer.checkAndPushBack<PassSetBlockSize>();
+  if(shouldRunPass(options_, options_.SetBlockSize)) {
+    optimizer.checkAndPushBack<PassSetBlockSize>();
+  }
   //===-----------------------------------------------------------------------------------------
-  // Plain diagnostics, should not even be a pass but is independent
-  optimizer.checkAndPushBack<PassDataLocalityMetric>();
+  if(shouldRunPass(options_, options_.DataLocalityMetric)) {
+    // Plain diagnostics, should not even be a pass but is independent
+    optimizer.checkAndPushBack<PassDataLocalityMetric>();
+  }
   //===-----------------------------------------------------------------------------------------
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
