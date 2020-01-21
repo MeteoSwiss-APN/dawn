@@ -378,14 +378,15 @@ bool CodeGen::hasGlobalIndices(
 bool CodeGen::hasGlobalIndices(const iir::Stencil& stencil) const {
   for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
     if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
-       [](const auto& p) -> bool { return p.has_value(); })) {
+                   [](const auto& p) -> bool { return p.has_value(); })) {
       return true;
     }
   }
   return false;
 }
 
-void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass) const {
+void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass,
+                                    bool genCheckOffset) const {
   for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
     if(stage->getIterationSpace()[0].has_value()) {
       stencilClass.addMember("std::array<int, 2>",
@@ -409,14 +410,15 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
       "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
   globalOffsetFunc.commit();
 
-  auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
-  checkOffsetFunc.addArg("unsigned int min");
-  checkOffsetFunc.addArg("unsigned int max");
-  checkOffsetFunc.addArg("unsigned int val");
-  checkOffsetFunc.startBody();
-  checkOffsetFunc.addStatement("return (min <= val && val < max)");
-  checkOffsetFunc.commit();
-  //}
+  if(genCheckOffset) {
+    auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
+    checkOffsetFunc.addArg("unsigned int min");
+    checkOffsetFunc.addArg("unsigned int max");
+    checkOffsetFunc.addArg("unsigned int val");
+    checkOffsetFunc.startBody();
+    checkOffsetFunc.addStatement("return (min <= val && val < max)");
+    checkOffsetFunc.commit();
+  }
 }
 
 } // namespace codegen

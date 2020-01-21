@@ -232,7 +232,7 @@ void CudaCodeGen::generateStencilClassMembers(
 
   stencilClass.addComment("Members");
   if(iterationSpaceSet_) {
-    generateGlobalIndices(stencil, stencilClass);
+    generateGlobalIndices(stencil, stencilClass, false);
   }
 
   stencilClass.addComment("Temporary storage typedefs");

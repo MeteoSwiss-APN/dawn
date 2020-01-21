@@ -37,7 +37,7 @@
 using namespace gridtools::dawn;
 namespace dawn_generated{
 namespace cuda{
-__device__ bool checkOffset_(unsigned int min, unsigned int max, unsigned int val) {
+__device__ bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
   return (min <= val && val < max);
 }
 __global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, const ::dawn::float_type * in_field, const ::dawn::float_type * out_field, const int* stage14GlobalJIndices, const unsigned* globalOffsets) {
@@ -93,7 +93,7 @@ for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
 {
   out_field[idx111] = __ldg(&(in_field[idx111]));
 }
-  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset_(stage14GlobalJIndices[0], stage14GlobalJIndices[1], globalOffsets[1] + jblock)) {
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset(stage14GlobalJIndices[0], stage14GlobalJIndices[1], globalOffsets[1] + jblock)) {
 {
   out_field[idx111] = (int) 10;
 }
@@ -127,10 +127,6 @@ public:
       unsigned int row = rankOnDefaultFace / xcols;
       unsigned int col = rankOnDefaultFace % ycols;
       return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())};
-    }
-
-    static bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
-      return (min <= val && val < max);
     }
 
     // Temporary storage typedefs

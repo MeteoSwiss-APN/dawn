@@ -701,7 +701,7 @@ void MSCodeGen::generateCudaKernelCode() {
   });
 
   if(iterationSpaceSet_) {
-    MemberFunction offsetFunc("__device__ bool", "checkOffset_", ss_);
+    MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
     offsetFunc.addArg("unsigned int min");
     offsetFunc.addArg("unsigned int max");
     offsetFunc.addArg("unsigned int val");
@@ -1062,7 +1062,7 @@ void MSCodeGen::generateCudaKernelCode() {
               for(const auto& interval : stage->getIterationSpace()) {
                 if(interval.has_value()) {
                   std::string arrName = prefix + iterators.at(index) + "Indices";
-                  guard += " && checkOffset_(" + arrName + "[0], " + arrName +
+                  guard += " && checkOffset(" + arrName + "[0], " + arrName +
                            "[1], globalOffsets[" + std::to_string(index) + "] + " +
                            (char)std::tolower(iterators.at(index)) + "block)";
                 }
