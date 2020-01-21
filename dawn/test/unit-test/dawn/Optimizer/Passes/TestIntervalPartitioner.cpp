@@ -16,8 +16,10 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Serialization/SIRSerializer.h"
+//#include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/IIRSerializer.h"
+//#include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
@@ -28,46 +30,40 @@ using namespace dawn;
 namespace {
 
 class TestIntervalPartitioner : public ::testing::Test {
-  std::unique_ptr<dawn::Options> compileOptions_;
-  dawn::DawnCompiler compiler_;
+  std::unique_ptr<OptimizerContext> context_;
 
 protected:
-  TestIntervalPartitioner() : compiler_(compileOptions_.get()) {}
-  virtual void SetUp() {}
+  virtual void SetUp() {
+    dawn::DiagnosticsEngine diag;
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+    dawn::OptimizerContext::OptimizerContextOptions options;
+    options.PartitionIntervals = true;
+    context_ = std::make_unique<OptimizerContext>(diag, options, sir);
+  }
 
-  const std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
+  const std::unique_ptr<OptimizerContext>& getContext() { return context_; }
+
+  const std::shared_ptr<iir::StencilInstantiation> loadTest(std::string iirFilename) {
     std::string filename = TestEnvironment::path_;
     if(!filename.empty())
       filename += "/";
 
-    filename += sirFilename;
+    filename += iirFilename;
     std::ifstream file(filename);
-    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
+    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exist").c_str());
 
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantion =
+        IIRSerializer::deserializeFromString(jsonstr, context_.get());
 
-    std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
-
-    compiler_.getOptions().PartitionIntervals = true;
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
-    // Report diganostics
-    if(compiler_.getDiagnostics().hasDiags()) {
-      for(const auto& diag : compiler_.getDiagnostics().getQueue())
-        std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-      throw std::runtime_error("compilation failed");
-    }
-
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("interval_partition_test")),
-                    "interval_partition_test not found in sir");
-
-    return optimizer->getStencilInstantiationMap()["interval_partition_test"];
+    return stencilInstantion;
   }
 };
 
 TEST_F(TestIntervalPartitioner, test_interval_partition) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      loadTest("test_interval_partition.sir");
+      loadTest("test_interval_partition.iir");
+  const std::unique_ptr<OptimizerContext>& context = getContext();
 
   std::unordered_set<iir::Interval> expected;
   expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
@@ -75,6 +71,10 @@ TEST_F(TestIntervalPartitioner, test_interval_partition) {
   expected.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
   expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
   expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
+
+  PassIntervalPartitioner pass(*context);
+  bool result = pass.run(instantiation);
+  ASSERT_TRUE(result);
 
   const auto& stencils = instantiation->getIIR()->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
