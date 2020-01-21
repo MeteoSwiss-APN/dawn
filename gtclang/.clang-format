@@ -1,7 +1,0 @@
----
-BasedOnStyle:                                           LLVM
-ColumnLimit:                                            100
-PointerAlignment:                                       Left
-SpaceBeforeParens:                                      Never
-AlwaysBreakTemplateDeclarations:                        true
-...
