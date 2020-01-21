@@ -11,7 +11,7 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/Optimizer/IntegrityChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
 namespace dawn {
 IntegrityChecker::IntegrityChecker(iir::StencilInstantiation* instantiation)
@@ -80,12 +80,6 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     expr->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {}
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {}
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {}
-
 void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   std::shared_ptr<iir::Expr>& left = expr->getLeft();
   // Check whether literal expressions are being assigned
@@ -120,15 +114,5 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
 }
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {}
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {}
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {}
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {}
-
-void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {}
 
 } // namespace dawn

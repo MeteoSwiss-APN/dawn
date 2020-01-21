@@ -17,8 +17,6 @@ add_library(DawnOptimizer
   CreateVersionAndRename.h
   OptimizerContext.cpp
   OptimizerContext.h
-  IntegrityChecker.cpp
-  IntegrityChecker.h
   Pass.h
   PassComputeStageExtents.cpp
   PassComputeStageExtents.h

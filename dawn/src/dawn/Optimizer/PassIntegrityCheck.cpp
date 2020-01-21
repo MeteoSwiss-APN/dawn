@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassIntegrityCheck.h"
-#include "dawn/Optimizer/IntegrityChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
 namespace dawn {
 
