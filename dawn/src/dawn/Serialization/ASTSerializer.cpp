@@ -107,6 +107,7 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
     }
   }
 }
+} // namespace
 
 ast::Expr::LocationType convertLocationType(proto::statements::LocationType protoLocation) {
   switch(protoLocation) {
@@ -133,7 +134,6 @@ proto::statements::LocationType convertLocationType(ast::Expr::LocationType loca
     dawn_unreachable("unknown location type");
   }
 }
-} // namespace
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;

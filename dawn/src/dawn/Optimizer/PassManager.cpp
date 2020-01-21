@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassManager.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
@@ -65,9 +66,11 @@ bool PassManager::runPassOnStencilInstantiation(
   LocationTypeChecker locationChecker;
   GridTypeChecker gridChecker;
   const auto& IIR = instantiation->getIIR();
-  DAWN_ASSERT_MSG(
-      locationChecker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData()),
-      std::string("Location type consistency check failed for pass" + pass->getName()).c_str());
+  if(IIR->getGridType() == ast::GridType::Triangular) {
+    DAWN_ASSERT_MSG(
+        locationChecker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData()),
+        std::string("Location type consistency check failed for pass" + pass->getName()).c_str());
+  }
   DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*IIR.get()),
                   std::string("Type consistency check failed for pass" + pass->getName()).c_str());
 
@@ -80,6 +83,6 @@ bool PassManager::runPassOnStencilInstantiation(
   passCounter_[pass->getName()]++;
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
   return true;
-} // namespace dawn
+}
 
 } // namespace dawn
