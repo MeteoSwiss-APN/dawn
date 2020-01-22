@@ -61,11 +61,6 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
-std::shared_ptr<SIR> deserialize(const std::string& file) {
-  std::string json = read(file);
-  return SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
-}
-
 stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
   std::unique_ptr<dawn::Options> options;
   DawnCompiler compiler(options.get());
@@ -154,7 +149,9 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 }
 
 TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
+  std::string json = dawn::readFile("input/globals_opt_away.sir");
+  std::shared_ptr<SIR> sir =SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
+
   try {
     compile(sir);
     FAIL() << "Semantic error not thrown";
