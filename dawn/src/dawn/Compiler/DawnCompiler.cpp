@@ -48,14 +48,13 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/EditDistance.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/LocationTypeChecker.h"
-
-#include <filesystem>
 
 namespace dawn {
 
@@ -236,9 +235,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        const std::filesystem::path p(options_->OutputFile.empty()
-                                          ? instantiation->getMetaData().getFileName()
-                                          : options_->OutputFile);
+        const fs::path p(options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                                      : options_->OutputFile);
         IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
                                      ".iir",
                                  instantiation, serializationKind);
