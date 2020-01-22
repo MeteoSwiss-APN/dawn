@@ -93,12 +93,20 @@ struct ComputeEditDistance<std::string> {
   }
 };
 
-} // anonymous namespace
+OptimizerContext::OptimizerContextOptions
+createOptimizerOptionsFromAllOptions(const Options& options) {
+  OptimizerContext::OptimizerContextOptions retval;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  retval.NAME = options.NAME;
+#include "dawn/Optimizer/OptimizerOptions.inc"
+#undef OPT
+  return retval;
+}
 
 /// @brief Report a diagnostic concering an invalid Option
 template <class T>
-static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
-                                    std::vector<T> possibleValues = std::vector<T>{}) {
+DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
+                             std::vector<T> possibleValues = std::vector<T>{}) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
   diag << "invalid value '" << value << "' of option '" << option << "'";
 
@@ -115,15 +123,7 @@ static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, s
   return diag;
 }
 
-static OptimizerContext::OptimizerContextOptions
-createOptimizerOptionsFromAllOptions(const Options& options) {
-  OptimizerContext::OptimizerContextOptions retval;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  retval.NAME = options.NAME;
-#include "dawn/Optimizer/OptimizerOptions.inc"
-#undef OPT
-  return retval;
-}
+} // anonymous namespace
 
 DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<DiagnosticsEngine>()) {
   options_ = options ? std::make_unique<Options>(*options) : std::make_unique<Options>();
