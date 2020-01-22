@@ -23,7 +23,7 @@
 #include <memory>
 
 namespace dawn {
-class TypeChecker {
+class LocationTypeChecker {
 
 private:
   class TypeCheckerImpl : public ast::ASTVisitorForwarding {

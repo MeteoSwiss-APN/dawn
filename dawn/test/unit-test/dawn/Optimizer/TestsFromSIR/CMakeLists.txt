@@ -25,6 +25,6 @@ target_add_dawn_standard_props(${executable})
 target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
-gtest_discover_tests(${executable} TEST_PREFIX "${executable}::"
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::TestsFromSIR::"
   EXTRA_ARGS "${CMAKE_CURRENT_LIST_DIR}/../Passes"
   DISCOVERY_TIMEOUT 30)

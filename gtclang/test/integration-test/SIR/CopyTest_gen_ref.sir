@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "CopyTest.cpp",
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",

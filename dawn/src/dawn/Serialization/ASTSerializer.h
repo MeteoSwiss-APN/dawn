@@ -51,6 +51,9 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents);
 
+ast::Expr::LocationType convertLocationType(proto::statements::LocationType protoLocation);
+proto::statements::LocationType convertLocationType(ast::Expr::LocationType location);
+
 class ProtoStmtBuilder : public ast::ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;

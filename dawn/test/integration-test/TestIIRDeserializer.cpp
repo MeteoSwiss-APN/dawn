@@ -253,9 +253,10 @@ TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
   DawnCompiler compiler(&compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(dawn::ast::GridType::Triangular));
-
+  // read IIR from file
   auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
 
+  // generate IIR in memory
   UIDGenerator::getInstance()->reset();
   auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory(optimizer);
 

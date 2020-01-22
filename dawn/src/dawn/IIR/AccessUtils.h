@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/Field.h"
+#include <optional>
 #include <unordered_map>
 
 namespace dawn {

@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "AccessTest.cpp",
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",

@@ -11,6 +11,8 @@
   "literalIDToName": {},
   "fieldAccessIDs": [
    9,
+   10,
+   9,
    10
   ],
   "APIFieldIDs": [
@@ -60,6 +62,7 @@
    }
   },
   "boundaryCallToExtent": {},
+  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 24,
@@ -228,5 +231,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }

@@ -16,6 +16,8 @@
   },
   "fieldAccessIDs": [
    30,
+   31,
+   30,
    31
   ],
   "APIFieldIDs": [
@@ -47,24 +49,6 @@
    }
   },
   "idToStencilCall": {
-   "62": {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_62",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 63
-    }
-   },
    "67": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
@@ -82,9 +66,28 @@
      "data": {},
      "ID": 68
     }
+   },
+   "62": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_62",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 63
+    }
    }
   },
   "boundaryCallToExtent": {},
+  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 26,
@@ -595,5 +598,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }

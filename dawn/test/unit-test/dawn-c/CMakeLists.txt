@@ -22,4 +22,4 @@ add_executable(${executable}
 
 target_add_dawn_standard_props(${executable})
 target_link_libraries(${executable} DawnC DawnUnittest gtest)
-gtest_discover_tests(${executable} TEST_PREFIX "${executable}::" DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(${executable} TEST_PREFIX "DawnC::Unit::" DISCOVERY_TIMEOUT 30)

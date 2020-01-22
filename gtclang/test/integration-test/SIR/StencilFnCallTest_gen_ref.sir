@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "StencilFnCallTest.cpp",
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",

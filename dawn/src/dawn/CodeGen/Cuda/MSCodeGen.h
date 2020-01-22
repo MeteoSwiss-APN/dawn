@@ -56,11 +56,13 @@ private:
   Array3ui blockSize_;
   const bool solveKLoopInParallel_;
   CudaCodeGen::CudaCodeGenOptions options_;
+  bool iterationSpaceSet_;
 
 public:
   MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-            const CacheProperties& cacheProperties, CudaCodeGen::CudaCodeGenOptions options);
+            const CacheProperties& cacheProperties, CudaCodeGen::CudaCodeGenOptions options,
+            bool iterationSpaceSet = false);
 
   void generateCudaKernelCode();
 

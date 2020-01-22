@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "11": "in_field",
-   "12": "out_field"
+   "12": "out_field",
+   "11": "in_field"
   },
   "accessIDToType": {
    "11": 6,
@@ -10,6 +10,8 @@
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
+   11,
+   12,
    11,
    12
   ],
@@ -60,6 +62,10 @@
    }
   },
   "boundaryCallToExtent": {},
+  "accessIDToLocation": {
+   "11": "Cell",
+   "12": "Cell"
+  },
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": -1,
