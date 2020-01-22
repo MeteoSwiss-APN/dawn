@@ -43,11 +43,13 @@ message CartesianDimension {
 // @brief Triangular horizontal dimension of a field
 //
 // For a triangular grid we need to specify the dense location type.
-// The dimension could be sparse. In such case the neighbor chain is set.
+// It could also have a sparse dimension. In such case the sparse part is non-empty.
 // @ingroup sir_proto
 message TriangularDimension {
-  dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-  repeated dawn.proto.enums.LocationType neighbor_chain = 2;   // neighbor chain encoding the dense + sparse parts when the field has a sparse component
+  
+    dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
+    repeated dawn.proto.enums.LocationType sparse_part = 2;   // neighbor chain encoding sparse part when the field has a sparse dimension
+  
 }
 
 // @brief Dimensions spanned by a field

@@ -87,9 +87,7 @@ int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
 }
 
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::string& name) const {
-  if(fType == FieldAccessType::Literal) {
-    throw std::runtime_error("Literal can not be queried by name");
-  }
+  DAWN_ASSERT_MSG(fType != FieldAccessType::Literal, "Literal can not be queried by name");
   if(!hasNameToAccessID(name))
     return false;
 
@@ -311,9 +309,8 @@ sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) con
   if(isAccessIDAVersion(fieldID)) {
     fieldID = getOriginalVersionOfAccessID(fieldID);
   }
-  if(fieldIDToInitializedDimensionsMap_.count(fieldID) == 0) {
-    throw std::runtime_error("Field id does not exist");
-  }
+  DAWN_ASSERT_MSG(fieldIDToInitializedDimensionsMap_.count(fieldID) != 0,
+                  "Field id does not exist");
   return fieldIDToInitializedDimensionsMap_.find(fieldID)->second;
 }
 
@@ -344,7 +341,7 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     sir::FieldDimensions fieldDimensions,
+                                     sir::FieldDimensions&& fieldDimensions,
                                      std::optional<int> accessID) {
   if(!accessID.has_value()) {
     accessID = UIDGenerator::getInstance()->get();
@@ -359,7 +356,7 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                        sir::FieldDimensions fieldDimensions,
+                                        sir::FieldDimensions&& fieldDimensions,
                                         std::optional<int> accessID) {
   if(!accessID.has_value()) {
     accessID = UIDGenerator::getInstance()->get();

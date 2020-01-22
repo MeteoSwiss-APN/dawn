@@ -181,6 +181,11 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     }
   };
   for(auto APIfieldID : APIFields) {
+    // TODO add codegen support for sparse fields
+    DAWN_ASSERT_MSG(sir::dimension_cast<const sir::TriangularFieldDimension&>(
+                        metadata.getFieldDimensions(APIfieldID).getHorizontalFieldDimension())
+                        .isDense(),
+                    "Sparse fields currently not supported in codegen.");
     std::string typeString =
         getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
 

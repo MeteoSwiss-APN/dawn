@@ -85,9 +85,9 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   rhs->setID(target->nextUID());
 
   int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
-                                                  sirInField->Dimensions);
-  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField,
-                                                   sirOutField->Name, sirOutField->Dimensions);
+                                                  std::move(sirInField->Dimensions));
+  int out_fieldID = target->getMetaData().addField(
+      iir::FieldAccessType::APIField, sirOutField->Name, std::move(sirOutField->Dimensions));
 
   lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
   rhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(in_fieldID);
@@ -227,11 +227,12 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   rhsTmpT4->setID(target->nextUID());
 
   int inFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
-                                                 sirInField->Dimensions);
-  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::StencilTemporary,
-                                                  sirTmpField->Name, sirTmpField->Dimensions);
+                                                 std::move(sirInField->Dimensions));
+  int tmpFieldID =
+      target->getMetaData().addField(iir::FieldAccessType::StencilTemporary, sirTmpField->Name,
+                                     std::move(sirTmpField->Dimensions));
   int outFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirOutField->Name,
-                                                  sirOutField->Dimensions);
+                                                  std::move(sirOutField->Dimensions));
 
   lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
   rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);

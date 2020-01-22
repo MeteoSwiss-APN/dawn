@@ -276,7 +276,7 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
 
     if(triangularDimension.isSparse()) {
       for(int i = 0; i < triangularDimension.getNeighborChain().size(); ++i) {
-        protoTriangularDimension->set_neighbor_chain(
+        protoTriangularDimension->set_sparse_part(
             i, getProtoLocationTypeFromLocationType(triangularDimension.getNeighborChain()[i]));
       }
     }
@@ -729,18 +729,18 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
 
     const auto& protoTriangularDimension = protoFieldDimensions.triangular_horizontal_dimension();
 
-    if(protoTriangularDimension.neighbor_chain_size() != 0) { // sparse
+    if(protoTriangularDimension.sparse_part_size() != 0) { // sparse
 
       // Check that first element of neighbor chain corresponds to dense location type
-      DAWN_ASSERT_MSG(protoTriangularDimension.neighbor_chain(0) ==
+      DAWN_ASSERT_MSG(protoTriangularDimension.sparse_part(0) ==
                           protoTriangularDimension.dense_location_type(),
                       "First element of neighbor chain and dense location type don't match in "
                       "serialized FieldDimensions message.");
 
       NeighborChain neighborChain;
-      for(int i = 0; i < protoTriangularDimension.neighbor_chain_size(); ++i) {
+      for(int i = 0; i < protoTriangularDimension.sparse_part_size(); ++i) {
         neighborChain.push_back(
-            getLocationTypeFromProtoLocationType(protoTriangularDimension.neighbor_chain(i)));
+            getLocationTypeFromProtoLocationType(protoTriangularDimension.sparse_part(i)));
       }
 
       return sir::FieldDimensions(

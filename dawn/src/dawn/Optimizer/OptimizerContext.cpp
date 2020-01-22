@@ -460,9 +460,9 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = metadata_.addTmpField(iir::FieldAccessType::StencilTemporary,
-                                         stencil.Fields[stencilArgIdx]->Name,
-                                         stencil.Fields[stencilArgIdx]->Dimensions);
+        AccessID = metadata_.addTmpField(
+            iir::FieldAccessType::StencilTemporary, stencil.Fields[stencilArgIdx]->Name,
+            sir::FieldDimensions(stencil.Fields[stencilArgIdx]->Dimensions));
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
@@ -615,7 +615,7 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
                                           : iir::FieldAccessType::APIField),
-                      field->Name, field->Dimensions);
+                      field->Name, sir::FieldDimensions(field->Dimensions));
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),

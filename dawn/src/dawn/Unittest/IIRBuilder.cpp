@@ -198,7 +198,7 @@ IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType 
       sir::HorizontalFieldDimension{ast::cartesian,
                                     {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
       fieldMaskArray[2] == 1);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, dimensions);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, std::move(dimensions));
   return {id, name};
 }
 
@@ -209,7 +209,8 @@ IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldTy
       sir::HorizontalFieldDimension{ast::cartesian,
                                     {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
       fieldMaskArray[2] == 1);
-  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name, dimensions);
+  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name,
+                                          std::move(dimensions));
   std::string newName = si_->getMetaData().getFieldNameFromAccessID(id);
   return {id, newName};
 }

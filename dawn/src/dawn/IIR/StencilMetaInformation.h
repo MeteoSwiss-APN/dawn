@@ -150,11 +150,12 @@ public:
 
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
-  int addField(FieldAccessType type, const std::string& name, sir::FieldDimensions fieldDimensions,
-               std::optional<int> accessID = std::nullopt);
+  int addField(FieldAccessType type, const std::string& name,
+               sir::FieldDimensions&& fieldDimensions, std::optional<int> accessID = std::nullopt);
 
   int addTmpField(FieldAccessType type, const std::string& basename,
-                  sir::FieldDimensions fieldDimensions, std::optional<int> accessID = std::nullopt);
+                  sir::FieldDimensions&& fieldDimensions,
+                  std::optional<int> accessID = std::nullopt);
 
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
@@ -358,7 +359,7 @@ private:
 
   FieldAccessMetadata fieldAccessMetadata_;
 
-  /// Map of AccessIDs and to< the name of the variable/field. Note that only for fields of the
+  /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the
   /// "main stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
