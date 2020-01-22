@@ -150,7 +150,8 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 
 TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
   std::string json = dawn::readFile("input/globals_opt_away.sir");
-  std::shared_ptr<SIR> sir =SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
+  std::shared_ptr<SIR> sir = SIRSerializer::deserializeFromString(json,
+                                                                  SIRSerializer::Format::Json);
 
   try {
     compile(sir);
