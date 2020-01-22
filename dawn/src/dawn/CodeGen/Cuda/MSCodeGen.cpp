@@ -774,7 +774,6 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   if(iterationSpaceSet_) {
-<<<<<<< HEAD
     std::string iterators = "IJ";
     for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
       std::string prefix = "int* const stage" + std::to_string(stage->getStageID()) + "Global";
@@ -784,17 +783,6 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addArg(prefix + iterators.at(index) + "Indices");
         }
         index += 1;
-=======
-    for(const auto& stencil : stencilInstantiation_->getStencils()) {
-      for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
-        std::string prefix = "int* const stage" + std::to_string(stage->getStageID()) + "Global";
-        if(stage->getIterationSpace()[0].has_value()) {
-          cudaKernel.addArg(prefix + "IIndices");
-        }
-        if(stage->getIterationSpace()[1].has_value()) {
-          cudaKernel.addArg(prefix + "JIndices");
-        }
->>>>>>> master
       }
     }
     cudaKernel.addArg("unsigned* const globalOffsets");
@@ -1064,7 +1052,6 @@ void MSCodeGen::generateCudaKernelCode() {
 
         if(std::any_of(stage.getIterationSpace().cbegin(), stage.getIterationSpace().cend(),
                        [](const auto& p) -> bool { return p.has_value(); })) {
-<<<<<<< HEAD
           std::string iterators = "IJ";
           for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
             std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
@@ -1077,19 +1064,6 @@ void MSCodeGen::generateCudaKernelCode() {
                          "block)";
               }
               index += 1;
-=======
-          for(const auto& stencil : stencilInstantiation_->getStencils()) {
-            for(auto& stage : iterateIIROver<iir::Stage>(*stencil)) {
-              std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
-              if(stage->getIterationSpace()[0].has_value()) {
-                guard += " && checkOffset_(" + prefix + "IIndices[0], " + prefix +
-                         "IIndices[1], globalOffsets[0] + iblock)";
-              }
-              if(stage->getIterationSpace()[1].has_value()) {
-                guard += " && checkOffset_(" + prefix + "JIndices[0], " + prefix +
-                         "JIndices[1], globalOffsets[1] + jblock)";
-              }
->>>>>>> master
             }
           }
         }
