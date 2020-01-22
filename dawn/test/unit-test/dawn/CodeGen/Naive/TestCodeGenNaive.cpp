@@ -13,15 +13,26 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CodeDumper.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
 #include <gtest/gtest.h>
+
+#include <fstream>
+
+using namespace dawn;
+
+using stencilInstantiationContext =
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 namespace {
 
@@ -32,14 +43,15 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
   auto in_f = b.field("in_field", FieldType::ijk);
   auto out_f = b.field("out_field", FieldType::ijk);
 
-  auto stencil_instantiation = b.build(
-      "generated", b.stencil(b.multistage(
-                       LoopOrderKind::Parallel,
-                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
-                       b.stage(1, {0, 2},
-                               b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                         b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+  auto stencil_instantiation =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   std::ostringstream oss;
   dawn::CodeDumper::dumpNaive(oss, stencil_instantiation);
@@ -47,6 +59,26 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
 
   std::string ref = dawn::readFile("reference/global_indexing.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+}
+
+std::shared_ptr<SIR> deserialize(const std::string& file) {
+  std::string json = read(file);
+  return SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
+}
+
+stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
+  std::unique_ptr<dawn::Options> options;
+  DawnCompiler compiler(options.get());
+  auto optimizer = compiler.runOptimizer(sir);
+
+  if(compiler.getDiagnostics().hasDiags()) {
+    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
+      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
+    }
+    throw std::runtime_error("Compilation failed");
+  }
+
+  return optimizer->getStencilInstantiationMap();
 }
 
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
@@ -119,6 +151,16 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
   dawn::CodeDumper::dumpNaive(ofs, stencil_inst);
+}
+
+TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
+  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
+  try {
+    compile(sir);
+    FAIL() << "Semantic error not thrown";
+  } catch(SemanticError& error) {
+    SUCCEED();
+  }
 }
 
 } // anonymous namespace

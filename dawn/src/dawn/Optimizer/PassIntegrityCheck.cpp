@@ -12,22 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Assert.h"
-#include "dawn/Support/STLExtras.h"
-#include "dawn/Unittest/UnittestLogger.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
-#include <gtest/gtest.h>
+#include "dawn/Optimizer/PassIntegrityCheck.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
-std::string TestEnvironment::path_ = "";
+namespace dawn {
 
-int main(int argc, char* argv[]) {
-  // Initialize gtest
-  testing::InitGoogleTest(&argc, argv);
+PassIntegrityCheck::PassIntegrityCheck(OptimizerContext& context)
+    : Pass(context, "PassIntegrityCheck") {}
 
-  if(argc > 1) {
-    DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
-    TestEnvironment::path_ = argv[1];
-    ::testing::AddGlobalTestEnvironment(new TestEnvironment());
-  }
-  return RUN_ALL_TESTS();
+bool PassIntegrityCheck::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+  IntegrityChecker checker(instantiation.get());
+  checker.run();
+  return true;
 }
+
+} // namespace dawn
