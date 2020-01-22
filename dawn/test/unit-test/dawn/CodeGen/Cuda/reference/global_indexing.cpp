@@ -40,7 +40,7 @@ namespace cuda{
 __device__ bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
   return (min <= val && val < max);
 }
-__global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, const ::dawn::float_type * in_field, const ::dawn::float_type * out_field, const int* stage14GlobalJIndices, const unsigned* globalOffsets) {
+__global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in_field, ::dawn::float_type * const out_field, int* const stage14GlobalJIndices, unsigned* const globalOffsets) {
 
   // Start kernel
   const unsigned int nx = isize;

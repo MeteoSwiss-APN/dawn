@@ -758,7 +758,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // first we construct non temporary field arguments
   for(const auto& fieldPair : nonTempFields) {
-    cudaKernel.addArg("const ::dawn::float_type * " +
+    cudaKernel.addArg("::dawn::float_type * const " +
                       metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
   }
 
@@ -768,7 +768,7 @@ void MSCodeGen::generateCudaKernelCode() {
       cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg("const ::dawn::float_type * " +
+      cudaKernel.addArg("::dawn::float_type * const " +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
   }
@@ -776,7 +776,7 @@ void MSCodeGen::generateCudaKernelCode() {
   if(iterationSpaceSet_) {
     std::string iterators = "IJ";
     for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
-      std::string prefix = "const int* stage" + std::to_string(stage->getStageID()) + "Global";
+      std::string prefix = "int* const stage" + std::to_string(stage->getStageID()) + "Global";
       int index = 0;
       for(const auto& interval : stage->getIterationSpace()) {
         if(interval.has_value()) {
@@ -785,7 +785,7 @@ void MSCodeGen::generateCudaKernelCode() {
         index += 1;
       }
     }
-    cudaKernel.addArg("const unsigned* globalOffsets");
+    cudaKernel.addArg("unsigned* const globalOffsets");
   }
 
   DAWN_ASSERT(fields.size() > 0);
