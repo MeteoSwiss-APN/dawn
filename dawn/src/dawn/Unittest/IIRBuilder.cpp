@@ -29,7 +29,7 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/TypeChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -94,10 +94,10 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
-  LocationTypeChecker locationTypeChecker;
+  TypeChecker dimensionsChecker;
   GridTypeChecker gridTypeChecker;
-  DAWN_ASSERT(locationTypeChecker.checkLocationTypeConsistency(*new_si->getIIR().get(),
-                                                               new_si->getMetaData()));
+  DAWN_ASSERT(
+      dimensionsChecker.checkDimensionsConsistency(*new_si->getIIR().get(), new_si->getMetaData()));
   DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;

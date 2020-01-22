@@ -5,12 +5,11 @@ namespace dawn {
 bool TypeChecker::checkDimensionsConsistency(const dawn::iir::IIR& iir,
                                              const iir::StencilMetaInformation& metaData) {
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    TypeChecker::TypeCheckerImpl Impl(doMethodPtr->getFieldDimensionsByName(),
-                                      metaData.getAccessIDToNameMap());
-    const std::shared_ptr<iir::BlockStmt>& ast =
-        std::make_shared<iir::BlockStmt>(doMethodPtr->getAST());
-    ast->accept(Impl);
-    if(!Impl.isConsistent()) {
+    TypeChecker::TypeCheckerImpl checker(doMethodPtr->getFieldDimensionsByName(),
+                                         metaData.getAccessIDToNameMap());
+    const auto& ast = doMethodPtr->getASTPtr();
+    ast->accept(checker);
+    if(!checker.isConsistent()) {
       return false;
     }
   }
@@ -28,9 +27,9 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
       }
     }
     for(const auto& astIt : stenFunIt->Asts) {
-      TypeChecker::TypeCheckerImpl Impl(argumentFieldDimensions);
-      astIt->accept(Impl);
-      if(!Impl.isConsistent()) {
+      TypeChecker::TypeCheckerImpl checker(argumentFieldDimensions);
+      astIt->accept(checker);
+      if(!checker.isConsistent()) {
         return false;
       }
     }
@@ -44,9 +43,9 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
       stencilFieldDims.insert({field->Name, field->Dimensions});
     }
     const auto& stencilAst = stencil->StencilDescAst;
-    TypeChecker::TypeCheckerImpl Impl(stencilFieldDims);
-    stencilAst->accept(Impl);
-    if(!Impl.isConsistent()) {
+    TypeChecker::TypeCheckerImpl checker(stencilFieldDims);
+    stencilAst->accept(checker);
+    if(!checker.isConsistent()) {
       return false;
     }
   }

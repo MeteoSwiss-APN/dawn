@@ -193,15 +193,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoMetaData->add_fieldaccessids(fieldAccessID);
   }
 
-  auto& protoAccessIDToLocationMap = *protoMetaData->mutable_accessidtolocation();
-  for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
-    if(metaData.getIsUnstructuredFromAccessID(fieldAccessID)) {
-      protoAccessIDToLocationMap.insert(
-          {fieldAccessID,
-           convertLocationType(metaData.getLocationTypeFromAccessID(fieldAccessID))});
-    }
-  }
-
   // Filling Field: VariableVersions versionedFields = 8;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
@@ -515,10 +506,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     for(auto versionedID : variableVersionMap.second.allids()) {
       metadata.addFieldVersionIDPair(variableVersionMap.first, versionedID);
     }
-  }
-
-  for(auto IDtoLocation : protoMetaData.accessidtolocation()) {
-    metadata.addAccessIDLocationPair(IDtoLocation.first, convertLocationType(IDtoLocation.second));
   }
 
   struct DeclStmtFinder : public iir::ASTVisitorForwarding {
