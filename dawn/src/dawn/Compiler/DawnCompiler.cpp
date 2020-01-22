@@ -61,6 +61,23 @@ namespace dawn {
 
 namespace {
 
+// CodeGen backends
+enum class BackendType { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+
+BackendType parseBackendString(const std::string& backendStr) {
+  if(backendStr == "gt" || backendStr == "gridtools") {
+    return BackendType::GridTools;
+  } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
+    return BackendType::CXXNaive;
+  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
+    return BackendType::CXXNaiveIco;
+  } else if(backendStr == "cuda" || backendStr == "CUDA") {
+    return BackendType::CUDA;
+  } else {
+    throw CompileError("Backend not supported");
+  }
+}
+
 /// @brief Make a suggestion to the user if there is a small typo (only works with string options)
 template <class T>
 struct ComputeEditDistance {
@@ -123,7 +140,7 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 
-} // anonymous namespace
+} // namespace
 
 DawnCompiler::DawnCompiler() : diagnostics_(), options_() {}
 DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
@@ -291,35 +308,43 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // Generate code
-  std::unique_ptr<codegen::CodeGen> CG;
+  try {
+    BackendType backend = parseBackendString(options_.Backend);
+    switch(backend) {
+    case BackendType::GridTools: {
+      codegen::gt::GTCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
+                                options_.UseParallelEP, options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaive: {
+      codegen::cxxnaive::CXXNaiveCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
+                                            options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CUDA: {
+      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
+                                options_.domain_size_k};
+      codegen::cuda::CudaCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
+                                    options_.MaxHaloPoints, options_.nsms, options_.maxBlocksPerSM,
+                                    domain_size);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaiveIco: {
+      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(optimizer->getStencilInstantiationMap(),
+                                                  diagnostics_, options_.MaxHaloPoints);
 
-  if(options_.Backend == "gt" || options_.Backend == "gridtools") {
-    CG = std::make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(),
-                                                  diagnostics_, options_.UseParallelEP,
-                                                  options_.MaxHaloPoints);
-  } else if(options_.Backend == "c++-naive") {
-    CG = std::make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(
-        optimizer->getStencilInstantiationMap(), diagnostics_, options_.MaxHaloPoints);
-  } else if(options_.Backend == "c++-naive-ico") {
-    CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
-        optimizer->getStencilInstantiationMap(), diagnostics_, options_.MaxHaloPoints);
-  } else if(options_.Backend == "cuda") {
-    const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
-                              options_.domain_size_k};
-    CG = std::make_unique<codegen::cuda::CudaCodeGen>(
-        optimizer->getStencilInstantiationMap(), diagnostics_, options_.MaxHaloPoints,
-        options_.nsms, options_.maxBlocksPerSM, domain_size);
-  } else if(options_.Backend == "c++-opt") {
-    dawn_unreachable("GTClangOptCXX not supported yet");
-  } else {
+      return CG.generateCode();
+    }
+    case BackendType::CXXOpt:
+      dawn_unreachable("GTClangOptCXX not supported yet");
+    }
+  } catch(...) {
     diagnostics_.report(buildDiag("-backend", options_.Backend,
                                   "backend options must be : " +
                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
-
-  return CG->generateCode();
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }
