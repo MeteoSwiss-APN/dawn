@@ -256,7 +256,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   }
 
   return optimizer;
-} // namespace dawn
+}
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
   diagnostics_->clear();
