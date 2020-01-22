@@ -236,10 +236,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     }
 
     int i = 0;
-    for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-      // Run optimization passes
-      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-
+    for(auto& [_name, instantiation] : optimizer->getStencilInstantiationMap()) {
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
       if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
