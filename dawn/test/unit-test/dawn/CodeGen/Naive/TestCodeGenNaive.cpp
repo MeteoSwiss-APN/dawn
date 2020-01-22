@@ -12,17 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/FileUtil.h"
+#include "dawn/Unittest/CodeDumper.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
 #include <gtest/gtest.h>
 
@@ -35,31 +36,29 @@ using stencilInstantiationContext =
 
 namespace {
 
-void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
-  using CG = dawn::codegen::cxxnaive::CXXNaiveCodeGen;
-  dawn::DiagnosticsEngine diagnostics;
-  CG generator(ctx, diagnostics, 0);
-  auto tu = generator.generateCode();
+TEST(CodeGenNaiveTest, GlobalIndexStencil) {
+  using namespace dawn::iir;
 
-  std::ostringstream ss;
-  for(auto const& macroDefine : tu->getPPDefines())
-    ss << macroDefine << "\n";
+  CartesianIIRBuilder b;
+  auto in_f = b.field("in_field", FieldType::ijk);
+  auto out_f = b.field("out_field", FieldType::ijk);
 
-  ss << tu->getGlobals();
-  for(auto const& s : tu->getStencils())
-    ss << s.second;
-  os << ss.str();
-}
+  auto stencil_instantiation =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
-std::string read(const std::string& file) {
-  std::ifstream is(file);
-  std::string str((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-  return str;
-}
+  std::ostringstream oss;
+  dawn::CodeDumper::dumpNaive(oss, stencil_instantiation);
+  std::string gen = oss.str();
 
-std::shared_ptr<SIR> deserialize(const std::string& file) {
-  std::string json = read(file);
-  return SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
+  std::string ref = dawn::readFile("reference/global_indexing.cpp");
+  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
 stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
@@ -109,10 +108,10 @@ TEST(CodeGenNaiveTest, NonOverlappingInterval) {
                              b.block(b.stmt(b.assignExpr(b.at(out), b.lit(10)))))))));
 
   std::ostringstream oss;
-  dump(oss, stencil_inst);
+  dawn::CodeDumper().dumpNaive(oss, stencil_inst);
   std::string gen = oss.str();
 
-  std::string ref = read("reference/nonoverlapping_stencil.cpp");
+  std::string ref = dawn::readFile("reference/nonoverlapping_stencil.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
@@ -146,11 +145,14 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
                       b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)))))))));
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
-  dump(ofs, stencil_inst);
+  dawn::CodeDumper::dumpNaive(ofs, stencil_inst);
 }
 
 TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::shared_ptr<SIR> sir = deserialize("input/globals_opt_away.sir");
+  std::string json = dawn::readFile("input/globals_opt_away.sir");
+  std::shared_ptr<SIR> sir =
+      SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
+
   try {
     compile(sir);
     FAIL() << "Semantic error not thrown";

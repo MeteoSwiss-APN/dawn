@@ -15,6 +15,7 @@
 #ifndef DAWN_SUPPORT_FILEUTIL_H
 #define DAWN_SUPPORT_FILEUTIL_H
 
+#include <fstream>
 #include "dawn/Support/StringRef.h"
 
 namespace dawn {
@@ -33,6 +34,10 @@ extern StringRef getExtension(StringRef filename);
 /// @brief Extract the filename without extension from `path`
 /// @ingroup support
 extern StringRef getFilenameWithoutExtension(StringRef path);
+
+/// @brief Read the contents of a file into a string
+/// @ingroup support
+std::string readFile(const std::string& file);
 
 } // namespace dawn
 
