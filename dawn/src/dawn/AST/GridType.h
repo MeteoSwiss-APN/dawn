@@ -18,7 +18,7 @@
 
 namespace dawn {
 namespace ast {
-enum class GridType { Cartesian, Triangular };
+enum class GridType { Cartesian, Unstructured };
 }
 std::ostream& operator<<(std::ostream& os, const ast::GridType& gridType);
 } // namespace dawn

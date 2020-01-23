@@ -18,7 +18,7 @@
 
 namespace dawn::ast {
 
-struct triangular_ {};
+struct unstructured_ {};
 struct cartesian_ {};
 
 } // namespace dawn::ast

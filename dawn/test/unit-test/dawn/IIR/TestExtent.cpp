@@ -39,7 +39,7 @@ TEST(ExtentsTest, CartesianConstruction) {
   EXPECT_EQ(extents5, expected);
 }
 TEST(ExtentsTest, UnstructuredConstruction) {
-  Extents expected(ast::triangular, true, Extent(1, 1));
+  Extents expected(ast::unstructured, true, Extent(1, 1));
 
   Extents extents = expected;
   EXPECT_EQ(extents, expected);
@@ -54,8 +54,8 @@ TEST(ExtentsTest, UnstructuredConstruction) {
   Extents extents4{std::move(extents3)};
   EXPECT_EQ(extents4, expected);
 
-  EXPECT_EQ(Extents(ast::Offsets{ast::triangular, true, 1}),
-            Extents(ast::triangular, true, Extent{1, 1}));
+  EXPECT_EQ(Extents(ast::Offsets{ast::unstructured, true, 1}),
+            Extents(ast::unstructured, true, Extent{1, 1}));
 }
 
 TEST(ExtentsTest, EmptyConstruction) {
@@ -83,7 +83,7 @@ TEST(ExtentsTest, ExtentCast) {
   EXPECT_EQ(cExtent.jPlus(), 2);
   EXPECT_THROW(extent_cast<UnstructuredExtent const&>(extent1.horizontalExtent()), std::bad_cast);
 
-  Extents extent2{ast::triangular, true, Extent{-3, 3}};
+  Extents extent2{ast::unstructured, true, Extent{-3, 3}};
   auto const& uExtent2 = extent_cast<UnstructuredExtent const&>(extent2.horizontalExtent());
   EXPECT_TRUE(uExtent2.hasExtent());
   EXPECT_THROW(extent_cast<CartesianExtent const&>(extent2.horizontalExtent()), std::bad_cast);
@@ -111,8 +111,8 @@ TEST(ExtentsTest, PointWise) {
   EXPECT_TRUE(extents3.isHorizontalPointwise());
   EXPECT_FALSE(extents3.isVerticalPointwise());
 
-  EXPECT_TRUE(Extents(ast::triangular, false, Extent{0, 0}).isHorizontalPointwise());
-  EXPECT_FALSE(Extents(ast::triangular, true, Extent{0, 0}).isHorizontalPointwise());
+  EXPECT_TRUE(Extents(ast::unstructured, false, Extent{0, 0}).isHorizontalPointwise());
+  EXPECT_FALSE(Extents(ast::unstructured, true, Extent{0, 0}).isHorizontalPointwise());
 
   EXPECT_TRUE(Extents().isPointwise());
 }
@@ -129,15 +129,15 @@ TEST(ExtentsTest, MergeWithExtent) {
                   Extents(ast::cartesian, -2, 1, -1, 2, 0, 0)),
             Extents(ast::cartesian, -2, 2, -2, 2, 0, 0));
 
-  EXPECT_EQ(merge(Extents(ast::triangular, false, Extent(0, 1)), Extents()),
-            Extents(ast::triangular, false, Extent(0, 1)));
-  EXPECT_EQ(merge(Extents(ast::triangular, true, Extent(0, 1)), Extents()),
-            Extents(ast::triangular, true, Extent(0, 1)));
-  EXPECT_EQ(merge(Extents(ast::triangular, false, Extent(0, 1)),
-                  Extents(ast::triangular, true, Extent(-1, 0))),
-            Extents(ast::triangular, true, Extent(-1, 1)));
+  EXPECT_EQ(merge(Extents(ast::unstructured, false, Extent(0, 1)), Extents()),
+            Extents(ast::unstructured, false, Extent(0, 1)));
+  EXPECT_EQ(merge(Extents(ast::unstructured, true, Extent(0, 1)), Extents()),
+            Extents(ast::unstructured, true, Extent(0, 1)));
+  EXPECT_EQ(merge(Extents(ast::unstructured, false, Extent(0, 1)),
+                  Extents(ast::unstructured, true, Extent(-1, 0))),
+            Extents(ast::unstructured, true, Extent(-1, 1)));
 
-  EXPECT_THROW(merge(Extents(ast::triangular), Extents(ast::cartesian)), std::bad_cast);
+  EXPECT_THROW(merge(Extents(ast::unstructured), Extents(ast::cartesian)), std::bad_cast);
 }
 
 TEST(ExtentsTest, MergeWithOffset) {
@@ -164,11 +164,11 @@ TEST(ExtentsTest, Limit) {
   EXPECT_EQ(limit(Extents{}, Extents{ast::cartesian, -2, 1, -1, 2, 0, 0}), Extents());
   EXPECT_EQ(limit(Extents{}, Extents{}), Extents());
 
-  EXPECT_EQ(limit(Extents{ast::triangular, true, Extent{-3, 5}},
-                  Extents{ast::triangular, false, Extent{-1, 8}}),
-            Extents(ast::triangular, false, Extent{-1, 5}));
+  EXPECT_EQ(limit(Extents{ast::unstructured, true, Extent{-3, 5}},
+                  Extents{ast::unstructured, false, Extent{-1, 8}}),
+            Extents(ast::unstructured, false, Extent{-1, 5}));
 
-  EXPECT_THROW(limit(Extents{ast::triangular}, Extents{ast::cartesian}), std::bad_cast);
+  EXPECT_THROW(limit(Extents{ast::unstructured}, Extents{ast::cartesian}), std::bad_cast);
 }
 
 TEST(ExtentsTest, Add) {
@@ -182,15 +182,15 @@ TEST(ExtentsTest, Add) {
   EXPECT_EQ(extents + emptyExtent, extents);
   EXPECT_EQ(emptyExtent + emptyExtent, emptyExtent);
 
-  EXPECT_EQ(Extents(ast::triangular, false, Extent(0, 3)) +
-                Extents(ast::triangular, false, Extent(1, 2)),
-            Extents(ast::triangular, false, Extent(1, 5)));
-  EXPECT_EQ(Extents(ast::triangular, true, Extent(0, 3)) +
-                Extents(ast::triangular, false, Extent(-1, 2)),
-            Extents(ast::triangular, true, Extent(-1, 5)));
-  EXPECT_EQ(Extents(ast::triangular, false, Extent(0, 3)) +
-                Extents(ast::triangular, false, Extent(-1, 2)),
-            Extents(ast::triangular, false, Extent(-1, 5)));
+  EXPECT_EQ(Extents(ast::unstructured, false, Extent(0, 3)) +
+                Extents(ast::unstructured, false, Extent(1, 2)),
+            Extents(ast::unstructured, false, Extent(1, 5)));
+  EXPECT_EQ(Extents(ast::unstructured, true, Extent(0, 3)) +
+                Extents(ast::unstructured, false, Extent(-1, 2)),
+            Extents(ast::unstructured, true, Extent(-1, 5)));
+  EXPECT_EQ(Extents(ast::unstructured, false, Extent(0, 3)) +
+                Extents(ast::unstructured, false, Extent(-1, 2)),
+            Extents(ast::unstructured, false, Extent(-1, 5)));
 }
 
 TEST(ExtentsTest, Stringify) {
@@ -201,10 +201,10 @@ TEST(ExtentsTest, Stringify) {
             "[<no_horizontal_extent>,(-1,1)]");
   EXPECT_EQ(to_string(Extents(ast::cartesian, -1, 1, -2, 2, -3, 3)), "[(-1,1),(-2,2),(-3,3)]");
 
-  EXPECT_EQ(to_string(Extents(ast::triangular)), "[<no_horizontal_extent>,(0,0)]");
-  EXPECT_EQ(to_string(Extents(ast::triangular, false, Extent(-1, 3))),
+  EXPECT_EQ(to_string(Extents(ast::unstructured)), "[<no_horizontal_extent>,(0,0)]");
+  EXPECT_EQ(to_string(Extents(ast::unstructured, false, Extent(-1, 3))),
             "[<no_horizontal_extent>,(-1,3)]");
-  EXPECT_EQ(to_string(Extents(ast::triangular, true, Extent(0, 0))),
+  EXPECT_EQ(to_string(Extents(ast::unstructured, true, Extent(0, 0))),
             "[<has_horizontal_extent>,(0,0)]");
 }
 

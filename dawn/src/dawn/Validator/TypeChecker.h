@@ -32,8 +32,8 @@ private:
     const std::unordered_map<int, std::string> idToNameMap_;
     bool dimensionsConsistent_ = true;
 
-    void checkBinaryOpTriangular(const sir::FieldDimensions& left,
-                                 const sir::FieldDimensions& right);
+    void checkBinaryOpUnstructured(const sir::FieldDimensions& left,
+                                   const sir::FieldDimensions& right);
 
   public:
     void visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) override;

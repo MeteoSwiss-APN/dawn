@@ -262,8 +262,8 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   case ast::GridType::Cartesian:
     protoIIR->set_gridtype(proto::enums::GridType::Cartesian);
     break;
-  case ast::GridType::Triangular:
-    protoIIR->set_gridtype(proto::enums::GridType::Triangular);
+  case ast::GridType::Unstructured:
+    protoIIR->set_gridtype(proto::enums::GridType::Unstructured);
     break;
   default:
     dawn_unreachable("invalid grid type");
@@ -729,8 +729,8 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   case dawn::proto::enums::GridType::Cartesian:
     target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
     break;
-  case dawn::proto::enums::GridType::Triangular:
-    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Triangular);
+  case dawn::proto::enums::GridType::Unstructured:
+    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Unstructured);
     break;
   default:
     dawn_unreachable("unknown grid type");

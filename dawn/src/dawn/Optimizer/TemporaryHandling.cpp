@@ -35,7 +35,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   // dimensionality in statements.
   if(instantiation->getIIR()->getGridType() != ast::GridType::Cartesian)
     dawn_unreachable(
-        "Currently promotion to temporary field is not supported for triangular grids.");
+        "Currently promotion to temporary field is not supported for unstructured grids.");
   sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true};
 
   // Compute name of field

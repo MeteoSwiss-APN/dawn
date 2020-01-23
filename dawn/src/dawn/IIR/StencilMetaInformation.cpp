@@ -374,10 +374,10 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
 }
 ast::LocationType StencilMetaInformation::getDenseLocationTypeFromAccessID(int AccessID) const {
   DAWN_ASSERT_MSG(
-      sir::dimension_isa<sir::TriangularFieldDimension>(
+      sir::dimension_isa<sir::UnstructuredFieldDimension>(
           fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension()),
       "Location type requested for Cartesian dimension");
-  const auto& dim = sir::dimension_cast<sir::TriangularFieldDimension const&>(
+  const auto& dim = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
       fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension());
   return dim.getDenseLocationType();
 }

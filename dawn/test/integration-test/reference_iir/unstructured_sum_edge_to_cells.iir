@@ -31,14 +31,14 @@
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
    "1": {
-    "triangular_horizontal_dimension": {
+    "unstructured_horizontal_dimension": {
      "dense_location_type": "Edge",
      "neighbor_chain": []
     },
     "mask_k": 1
    },
    "2": {
-    "triangular_horizontal_dimension": {
+    "unstructured_horizontal_dimension": {
      "dense_location_type": "Cell",
      "neighbor_chain": []
     },
@@ -78,7 +78,7 @@
   "stencilName": "generated"
  },
  "internalIR": {
-  "gridType": "Triangular",
+  "gridType": "Unstructured",
   "globalVariableToValue": {},
   "stencils": [
    {

@@ -182,7 +182,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   };
   for(auto APIfieldID : APIFields) {
     // TODO add codegen support for sparse fields
-    DAWN_ASSERT_MSG(sir::dimension_cast<const sir::TriangularFieldDimension&>(
+    DAWN_ASSERT_MSG(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
                         metadata.getFieldDimensions(APIfieldID).getHorizontalFieldDimension())
                         .isDense(),
                     "Sparse fields currently not supported in codegen.");
@@ -306,10 +306,10 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
-      const auto& triangularDims = sir::dimension_cast<sir::TriangularFieldDimension const&>(
+      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           info.field.getFieldDimensions().getHorizontalFieldDimension());
-      DAWN_ASSERT(triangularDims.isDense());
-      switch(triangularDims.getDenseLocationType()) {
+      DAWN_ASSERT(unstructuredDims.isDense());
+      switch(unstructuredDims.getDenseLocationType()) {
       case ast::LocationType::Cells:
         return std::string("dawn::cell_field_t<LibTag, double>");
       case ast::LocationType::Vertices:

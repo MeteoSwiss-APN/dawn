@@ -111,8 +111,8 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   case ast::GridType::Cartesian:
     sirProto.set_gridtype(proto::enums::GridType::Cartesian);
     break;
-  case ast::GridType::Triangular:
-    sirProto.set_gridtype(proto::enums::GridType::Triangular);
+  case ast::GridType::Unstructured:
+    sirProto.set_gridtype(proto::enums::GridType::Unstructured);
     break;
   default:
     dawn_unreachable("invalid grid type");
@@ -462,7 +462,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
-      offset = ast::Offsets{ast::triangular, hOffset.has_offset(), exprProto.vertical_offset()};
+      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:
@@ -651,8 +651,8 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     case dawn::proto::enums::GridType::Cartesian:
       sir = std::make_shared<SIR>(ast::GridType::Cartesian);
       break;
-    case dawn::proto::enums::GridType::Triangular:
-      sir = std::make_shared<SIR>(ast::GridType::Triangular);
+    case dawn::proto::enums::GridType::Unstructured:
+      sir = std::make_shared<SIR>(ast::GridType::Unstructured);
       break;
     default:
       dawn_unreachable("unknown grid type");

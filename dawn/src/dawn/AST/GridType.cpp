@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& os, const ast::GridType& gridType) {
   case ast::GridType::Cartesian:
     os << "structured";
     break;
-  case ast::GridType::Triangular:
+  case ast::GridType::Unstructured:
     os << "unstructured";
     break;
   }

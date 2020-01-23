@@ -115,10 +115,10 @@ class TestMakeField(unittest.TestCase):
         self.assertEqual(field.field_dimensions.maskCartJ, 1)
         self.assertEqual(field.field_dimensions.maskK, 1)
 
-    def test_make_field_triangular(self):
-        field = make_field("foo", make_field_dimensions_triangular([LocationType.Value('Edge')], 1))
+    def test_make_field_unstructured(self):
+        field = make_field("foo", make_field_dimensions_unstructured([LocationType.Value('Edge')], 1))
         self.assertEqual(field.name, "foo")
-        self.assertEqual(field.field_dimensions.neighbor_chain, [LocationType.Value('Edge')])
+        self.assertEqual(field.field_dimensions.sparse_part, [LocationType.Value('Edge')])
         self.assertEqual(field.field_dimensions.maskK, 1)
 
     def test_make_field_temporary(self):

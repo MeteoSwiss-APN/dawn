@@ -272,7 +272,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // SIR we received should be type consistent
-  if(SIR->GridType == ast::GridType::Triangular) {
+  if(SIR->GridType == ast::GridType::Unstructured) {
     TypeChecker dimensionsChecker;
     if(!dimensionsChecker.checkDimensionsConsistency(*SIR.get())) {
       DAWN_LOG(INFO) << "Dimensions in SIR are not consistent, no code generation";

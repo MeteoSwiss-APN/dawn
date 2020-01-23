@@ -185,7 +185,7 @@ public:
   explicit CartesianFieldDimension(std::array<bool, 2> mask) : mask_(mask) {}
 };
 
-/// @brief In the triangular case, the horizontal dimension can be either dense or sparse.
+/// @brief In the unstructured case, the horizontal dimension can be either dense or sparse.
 /// A field on dense corresponds to 1 value for each location of type defined by the "dense location
 /// type". A field on sparse corresponds to as many values as indirect neighbors defined through a
 /// neighbor chain.
@@ -195,20 +195,20 @@ public:
 /// first element of the chain).
 ///
 /// @ingroup sir
-class TriangularFieldDimension : public FieldDimensionImpl {
+class UnstructuredFieldDimension : public FieldDimensionImpl {
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<TriangularFieldDimension>(neighborChain_);
+    return std::make_unique<UnstructuredFieldDimension>(neighborChain_);
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
-    auto const& otherTriangular = dynamic_cast<TriangularFieldDimension const&>(other);
+    auto const& otherUnstructured = dynamic_cast<UnstructuredFieldDimension const&>(other);
     return std::equal(neighborChain_.begin(), neighborChain_.end(),
-                      otherTriangular.neighborChain_.begin());
+                      otherUnstructured.neighborChain_.begin());
   }
 
   const ast::NeighborChain neighborChain_;
 
 public:
-  explicit TriangularFieldDimension(const ast::NeighborChain neighborChain);
+  explicit UnstructuredFieldDimension(const ast::NeighborChain neighborChain);
   /// @brief Returns the neighbor chain encoding the sparse part (isSparse() must be true!).
   const ast::NeighborChain& getNeighborChain() const;
   /// @brief Returns the dense location (always present)
@@ -228,13 +228,13 @@ public:
   // Construct a Cartesian horizontal field dimension with specified ij mask.
   HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
-  // Construct a Triangular horizontal field sparse dimension with specified neighbor chain (sparse
-  // part). Dense part is the first element of the chain.
-  HorizontalFieldDimension(dawn::ast::triangular_, ast::NeighborChain neighborChain)
-      : impl_(std::make_unique<TriangularFieldDimension>(neighborChain)) {}
-  // Construct a Triangular horizontal field dense dimension with specified (dense) location type.
-  HorizontalFieldDimension(dawn::ast::triangular_, ast::LocationType locationType)
-      : impl_(std::make_unique<TriangularFieldDimension>(ast::NeighborChain{locationType})) {}
+  // Construct a Unstructured horizontal field sparse dimension with specified neighbor chain
+  // (sparse part). Dense part is the first element of the chain.
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(neighborChain)) {}
+  // Construct a Unstructured horizontal field dense dimension with specified (dense) location type.
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::LocationType locationType)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(ast::NeighborChain{locationType})) {}
 
   HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
   HorizontalFieldDimension(HorizontalFieldDimension&& other) { *this = other; };
@@ -290,7 +290,6 @@ T dimension_cast(HorizontalFieldDimension const& dimension) {
   return *dynamic_cast<std::add_pointer_t<T>>(dimension.impl_.get());
 }
 
-// TODO sparse_dim: move this into HorizontalFieldDimension?
 template <typename T>
 bool dimension_isa(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;

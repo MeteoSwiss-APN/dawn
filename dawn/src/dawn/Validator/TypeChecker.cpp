@@ -56,12 +56,12 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
 ///@brief Helper functions
 namespace {
 
-bool isHorizontalTriangular(const sir::FieldDimensions& dims) {
-  return sir::dimension_isa<sir::TriangularFieldDimension>(dims.getHorizontalFieldDimension());
+bool isHorizontalUnstructured(const sir::FieldDimensions& dims) {
+  return sir::dimension_isa<sir::UnstructuredFieldDimension>(dims.getHorizontalFieldDimension());
 }
 
-const sir::TriangularFieldDimension& getTriangularDim(const sir::FieldDimensions& dims) {
-  return sir::dimension_cast<const sir::TriangularFieldDimension&>(
+const sir::UnstructuredFieldDimension& getUnstructuredDim(const sir::FieldDimensions& dims) {
+  return sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       dims.getHorizontalFieldDimension());
 }
 
@@ -102,10 +102,10 @@ void TypeChecker::TypeCheckerImpl::visit(
   curDimensions_ = nameToDimensions_.at(fieldName);
 }
 
-void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimensions& left,
-                                                           const sir::FieldDimensions& right) {
-  const auto& triangularDimLeft = getTriangularDim(left);
-  const auto& triangularDimRight = getTriangularDim(right);
+void TypeChecker::TypeCheckerImpl::checkBinaryOpUnstructured(const sir::FieldDimensions& left,
+                                                             const sir::FieldDimensions& right) {
+  const auto& unstructuredDimLeft = getUnstructuredDim(left);
+  const auto& unstructuredDimRight = getUnstructuredDim(right);
 
   // Case 0: Both operands are sparse. Their dense + sparse parts must match.
   // example:
@@ -115,14 +115,14 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
   // expr = (sparseL + sparseR);
   // ```
   // Result of expression (= iteration space) is sparse dimension e->c->v
-  if(triangularDimLeft.isSparse() && triangularDimRight.isSparse()) {
+  if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isSparse()) {
     // Check that neighbor chains match
-    if(triangularDimLeft.getNeighborChain() != triangularDimRight.getNeighborChain()) {
+    if(unstructuredDimLeft.getNeighborChain() != unstructuredDimRight.getNeighborChain()) {
       dimensionsConsistent_ = false;
       return;
     }
     curDimensions_ = left; // pick one, they are the same
-  } else if(triangularDimLeft.isDense() && triangularDimRight.isSparse()) {
+  } else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isSparse()) {
 
     // Case 1.a: Left is dense, right is sparse, left's location type matches right's target
     // location type (last of chain).
@@ -134,7 +134,8 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
     // expr = (denseL + sparseR);
     // ```
     // Result of expression (= iteration space) is sparse dimension: e->c->v
-    if(triangularDimLeft.getDenseLocationType() == triangularDimRight.getLastSparseLocationType()) {
+    if(unstructuredDimLeft.getDenseLocationType() ==
+       unstructuredDimRight.getLastSparseLocationType()) {
       // Propagate sparse
       curDimensions_ = right;
     }
@@ -148,7 +149,8 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
     // expr = (denseL + sparseR);
     // ```
     // Result of expression (= iteration space) is sparse dimension: e->c->v
-    else if(triangularDimLeft.getDenseLocationType() == triangularDimRight.getDenseLocationType()) {
+    else if(unstructuredDimLeft.getDenseLocationType() ==
+            unstructuredDimRight.getDenseLocationType()) {
       // Propagate sparse
       curDimensions_ = right;
 
@@ -156,7 +158,7 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
       dimensionsConsistent_ = false;
     }
 
-  } else if(triangularDimLeft.isSparse() && triangularDimRight.isDense()) {
+  } else if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isDense()) {
 
     // Case 2.a: Left is sparse, right is dense, right's location type matches left's target
     // location type (last of chain).
@@ -168,7 +170,8 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
     // expr = (sparseL + denseR);
     // ```
     // Result of expression (= iteration space) is sparse dimension: e->c->v
-    if(triangularDimLeft.getLastSparseLocationType() == triangularDimRight.getDenseLocationType()) {
+    if(unstructuredDimLeft.getLastSparseLocationType() ==
+       unstructuredDimRight.getDenseLocationType()) {
       // Propagate sparse
       curDimensions_ = left;
     }
@@ -182,7 +185,8 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
     // expr = (sparseL + denseR);
     // ```
     // Result of expression (= iteration space) is sparse dimension: e->c->v
-    else if(triangularDimLeft.getDenseLocationType() == triangularDimRight.getDenseLocationType()) {
+    else if(unstructuredDimLeft.getDenseLocationType() ==
+            unstructuredDimRight.getDenseLocationType()) {
       // Propagate sparse
       curDimensions_ = left;
 
@@ -198,9 +202,9 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpTriangular(const sir::FieldDimen
   // expr = (denseL + denseR);
   // ```
   // Result of expression (= iteration space) is dense dimension edges
-  else if(triangularDimLeft.isDense() && triangularDimRight.isDense()) {
+  else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isDense()) {
 
-    if(triangularDimLeft.getDenseLocationType() != triangularDimRight.getDenseLocationType()) {
+    if(unstructuredDimLeft.getDenseLocationType() != unstructuredDimRight.getDenseLocationType()) {
       dimensionsConsistent_ = false;
       return;
     }
@@ -231,11 +235,11 @@ void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperat
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
   if(left.hasDimensions() && right.hasDimensions()) {
-    if(isHorizontalTriangular(
+    if(isHorizontalUnstructured(
            left.getDimensions())) { // Assuming previous checks on gridtype consistency (right must
-                                    // also be triangular)
+                                    // also be unstructured)
 
-      checkBinaryOpTriangular(left.getDimensions(), right.getDimensions());
+      checkBinaryOpUnstructured(left.getDimensions(), right.getDimensions());
 
     } else { // Cartesian
       curDimensions_ = left.getDimensions();
@@ -266,11 +270,11 @@ void TypeChecker::TypeCheckerImpl::visit(
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
   if(left.hasDimensions() && right.hasDimensions()) {
-    if(isHorizontalTriangular(
+    if(isHorizontalUnstructured(
            left.getDimensions())) { // Assuming previous checks on gridtype consistency (right must
-      // also be triangular)
-      const auto& triangularDimLeft = getTriangularDim(left.getDimensions());
-      const auto& triangularDimRight = getTriangularDim(right.getDimensions());
+      // also be unstructured)
+      const auto& unstructuredDimLeft = getUnstructuredDim(left.getDimensions());
+      const auto& unstructuredDimRight = getUnstructuredDim(right.getDimensions());
 
       // Case 0: Both lhs and rhs are sparse. Their dense + sparse parts must match.
       // example:
@@ -280,17 +284,17 @@ void TypeChecker::TypeCheckerImpl::visit(
       // sparseL = sparseR;
       // ```
       // Result of assignment (= iteration space) is sparse dimension e->c->v
-      if(triangularDimLeft.isSparse() && triangularDimRight.isSparse()) {
+      if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isSparse()) {
         // Check that neighbor chains match
         dimensionsConsistent_ =
-            triangularDimLeft.getNeighborChain() == triangularDimRight.getNeighborChain();
+            unstructuredDimLeft.getNeighborChain() == unstructuredDimRight.getNeighborChain();
 
       }
       // Lhs dense and rhs sparse is not possible, because there would be multiple values to write
       // on the same location.
-      else if(triangularDimLeft.isDense() && triangularDimRight.isSparse()) {
+      else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isSparse()) {
         dimensionsConsistent_ = false;
-      } else if(triangularDimLeft.isSparse() && triangularDimRight.isDense()) {
+      } else if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isDense()) {
 
         // Case 1.a: Lhs is sparse, rhs is dense, rhs's location type matches lhs's target
         // location type (last of chain).
@@ -302,8 +306,8 @@ void TypeChecker::TypeCheckerImpl::visit(
         // sparseL = denseR;
         // ```
         // Result of expression (= iteration space) is sparse dimension: e->c->v
-        if(triangularDimLeft.getLastSparseLocationType() ==
-           triangularDimRight.getDenseLocationType()) {
+        if(unstructuredDimLeft.getLastSparseLocationType() ==
+           unstructuredDimRight.getDenseLocationType()) {
           // Nothing to do here
         }
         // Case 1.b: Lhs is sparse, rhs is dense, rhs's location type matches lhs's dense
@@ -316,8 +320,8 @@ void TypeChecker::TypeCheckerImpl::visit(
         // sparseL = denseR;
         // ```
         // Result of expression (= iteration space) is sparse dimension: e->c->v
-        else if(triangularDimLeft.getDenseLocationType() ==
-                triangularDimRight.getDenseLocationType()) {
+        else if(unstructuredDimLeft.getDenseLocationType() ==
+                unstructuredDimRight.getDenseLocationType()) {
           // Nothing to do here
 
         } else { // No other subcase is allowed.
@@ -332,10 +336,10 @@ void TypeChecker::TypeCheckerImpl::visit(
       // denseL = denseR;
       // ```
       // Result of expression (= iteration space) is dense dimension edges
-      else if(triangularDimLeft.isDense() && triangularDimRight.isDense()) {
+      else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isDense()) {
 
-        dimensionsConsistent_ =
-            triangularDimLeft.getDenseLocationType() == triangularDimRight.getDenseLocationType();
+        dimensionsConsistent_ = unstructuredDimLeft.getDenseLocationType() ==
+                                unstructuredDimRight.getDenseLocationType();
 
       } else {
         dawn_unreachable("All cases should be covered.");
@@ -370,7 +374,7 @@ void TypeChecker::TypeCheckerImpl::visit(
   // initial value needs to be consistent with operations on right hand side
   if(init.hasDimensions() && ops.hasDimensions()) {
     // As init and rhs get combined through a binary operation, let's reuse the same code
-    checkBinaryOpTriangular(init.getDimensions(), ops.getDimensions());
+    checkBinaryOpUnstructured(init.getDimensions(), ops.getDimensions());
   }
 
   if(!dimensionsConsistent_) {
@@ -380,12 +384,12 @@ void TypeChecker::TypeCheckerImpl::visit(
   // if the rhs subtree has dimensions, we must check that such dimensions are consistent with the
   // declared rhs and lhs location types
   if(ops.hasDimensions()) {
-    const auto& rhsTriangularDim = getTriangularDim(ops.getDimensions());
+    const auto& rhsUnstructuredDim = getUnstructuredDim(ops.getDimensions());
     dimensionsConsistent_ =
-        rhsTriangularDim.isSparse()
-            ? (rhsTriangularDim.getLastSparseLocationType() == reductionExpr->getRhsLocation() &&
-               rhsTriangularDim.getDenseLocationType() == reductionExpr->getLhsLocation())
-            : (rhsTriangularDim.getDenseLocationType() == reductionExpr->getRhsLocation());
+        rhsUnstructuredDim.isSparse()
+            ? (rhsUnstructuredDim.getLastSparseLocationType() == reductionExpr->getRhsLocation() &&
+               rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation())
+            : (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getRhsLocation());
   }
 
   if(!dimensionsConsistent_) {
@@ -394,7 +398,7 @@ void TypeChecker::TypeCheckerImpl::visit(
 
   // the reduce over neighbors concept imposes a type on the left hand side
   curDimensions_ = sir::FieldDimensions(
-      sir::HorizontalFieldDimension(ast::triangular, reductionExpr->getLhsLocation()),
+      sir::HorizontalFieldDimension(ast::unstructured, reductionExpr->getLhsLocation()),
       ops.hasDimensions() ? ops.getDimensions().K() : false);
 }
 

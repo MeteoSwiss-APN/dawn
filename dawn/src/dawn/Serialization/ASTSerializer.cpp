@@ -199,7 +199,7 @@ iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
   }
   case ProtoExtents::kUnstructuredExtent: {
     auto const& hExtent = protoExtents->unstructured_extent();
-    return {iir::HorizontalExtent{ast::triangular, hExtent.has_extent()}, vExtent};
+    return {iir::HorizontalExtent{ast::unstructured, hExtent.has_extent()}, vExtent};
   }
   case ProtoExtents::kZeroExtent:
     return iir::Extents{iir::HorizontalExtent{}, vExtent};
@@ -266,21 +266,21 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
     protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
 
   } else {
-    auto const& triangularDimension =
-        dawn::sir::dimension_cast<dawn::sir::TriangularFieldDimension const&>(
+    auto const& unstructuredDimension =
+        dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
             fieldDimensions.getHorizontalFieldDimension());
 
-    dawn::proto::statements::TriangularDimension* protoTriangularDimension =
-        protoFieldDimensions->mutable_triangular_horizontal_dimension();
+    dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
+        protoFieldDimensions->mutable_unstructured_horizontal_dimension();
 
-    if(triangularDimension.isSparse()) {
-      for(int i = 0; i < triangularDimension.getNeighborChain().size(); ++i) {
-        protoTriangularDimension->set_sparse_part(
-            i, getProtoLocationTypeFromLocationType(triangularDimension.getNeighborChain()[i]));
+    if(unstructuredDimension.isSparse()) {
+      for(int i = 0; i < unstructuredDimension.getNeighborChain().size(); ++i) {
+        protoUnstructuredDimension->set_sparse_part(
+            i, getProtoLocationTypeFromLocationType(unstructuredDimension.getNeighborChain()[i]));
       }
     }
-    protoTriangularDimension->set_dense_location_type(
-        getProtoLocationTypeFromLocationType(triangularDimension.getDenseLocationType()));
+    protoUnstructuredDimension->set_dense_location_type(
+        getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
   }
   protoFieldDimensions->set_mask_k(fieldDimensions.K());
 }
@@ -724,34 +724,35 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
             std::array<bool, 2>({(bool)protoCartesianDimension.mask_cart_i(),
                                  (bool)protoCartesianDimension.mask_cart_j()})),
         (bool)protoFieldDimensions.mask_k());
-  } else if(protoFieldDimensions.has_triangular_horizontal_dimension()) {
+  } else if(protoFieldDimensions.has_unstructured_horizontal_dimension()) {
 
-    const auto& protoTriangularDimension = protoFieldDimensions.triangular_horizontal_dimension();
+    const auto& protoUnstructuredDimension =
+        protoFieldDimensions.unstructured_horizontal_dimension();
 
-    if(protoTriangularDimension.sparse_part_size() != 0) { // sparse
+    if(protoUnstructuredDimension.sparse_part_size() != 0) { // sparse
 
       // Check that first element of neighbor chain corresponds to dense location type
-      DAWN_ASSERT_MSG(protoTriangularDimension.sparse_part(0) ==
-                          protoTriangularDimension.dense_location_type(),
+      DAWN_ASSERT_MSG(protoUnstructuredDimension.sparse_part(0) ==
+                          protoUnstructuredDimension.dense_location_type(),
                       "First element of neighbor chain and dense location type don't match in "
                       "serialized FieldDimensions message.");
 
       NeighborChain neighborChain;
-      for(int i = 0; i < protoTriangularDimension.sparse_part_size(); ++i) {
+      for(int i = 0; i < protoUnstructuredDimension.sparse_part_size(); ++i) {
         neighborChain.push_back(
-            getLocationTypeFromProtoLocationType(protoTriangularDimension.sparse_part(i)));
+            getLocationTypeFromProtoLocationType(protoUnstructuredDimension.sparse_part(i)));
       }
 
       return sir::FieldDimensions(
-          sir::HorizontalFieldDimension(dawn::ast::triangular, neighborChain),
+          sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain),
           protoFieldDimensions.mask_k());
 
     } else { // dense
 
       return sir::FieldDimensions(
-          sir::HorizontalFieldDimension(
-              dawn::ast::triangular,
-              getLocationTypeFromProtoLocationType(protoTriangularDimension.dense_location_type())),
+          sir::HorizontalFieldDimension(dawn::ast::unstructured,
+                                        getLocationTypeFromProtoLocationType(
+                                            protoUnstructuredDimension.dense_location_type())),
           protoFieldDimensions.mask_k());
     }
   } else {
@@ -929,7 +930,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
-      offset = ast::Offsets{ast::triangular, hOffset.has_offset(), exprProto.vertical_offset()};
+      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:

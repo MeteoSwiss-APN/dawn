@@ -28,7 +28,7 @@ namespace dawn::ast {
 class Offsets;
 
 static constexpr cartesian_ cartesian;
-static constexpr triangular_ triangular;
+static constexpr unstructured_ unstructured;
 
 class HorizontalOffsetImpl {
 public:
@@ -90,8 +90,8 @@ public:
   explicit HorizontalOffset(cartesian_);
   HorizontalOffset(cartesian_, int iOffset, int jOffset);
 
-  HorizontalOffset(triangular_);
-  HorizontalOffset(triangular_, bool hasOffset);
+  HorizontalOffset(unstructured_);
+  HorizontalOffset(unstructured_, bool hasOffset);
 
   HorizontalOffset(HorizontalOffset const& other);
   HorizontalOffset(HorizontalOffset&& other) = default;
@@ -171,8 +171,8 @@ public:
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets);
   explicit Offsets(cartesian_);
 
-  Offsets(triangular_, bool hasOffset, int k);
-  explicit Offsets(triangular_);
+  Offsets(unstructured_, bool hasOffset, int k);
+  explicit Offsets(unstructured_);
 
   int verticalOffset() const;
   HorizontalOffset const& horizontalOffset() const;
@@ -214,7 +214,7 @@ std::string to_string(cartesian_, Offsets const& offset, std::string const& sep,
 }
 std::string to_string(cartesian_, Offsets const& offset, std::string const& sep = ",");
 
-std::string to_string(triangular_, Offsets const& offset);
+std::string to_string(unstructured_, Offsets const& offset);
 
 std::string to_string(Offsets const& offset);
 

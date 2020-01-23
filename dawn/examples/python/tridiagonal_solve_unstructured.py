@@ -167,7 +167,7 @@ def create_vertical_region_stmt3():
 def main(args: argparse.Namespace):
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value('Triangular'), [
+        SIR.GridType.Value('Unstructured'), [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([

@@ -237,7 +237,7 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::triangular, location}, true));
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, true));
   return {id, name};
 }
 
@@ -246,12 +246,12 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::triangular, sparseChain}, true));
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, true));
   return {id, name};
 }
 
 std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(Field const& field, AccessType access) {
-  return at(field, access, ast::Offsets{ast::triangular});
+  return at(field, access, ast::Offsets{ast::unstructured});
 }
 
 std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
@@ -263,7 +263,7 @@ std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& f
                                                       AccessType access, HOffsetType hOffset,
                                                       int vOffset) {
   return at(field, AccessType::r,
-            ast::Offsets{ast::triangular, hOffset == HOffsetType::withOffset, vOffset});
+            ast::Offsets{ast::unstructured, hOffset == HOffsetType::withOffset, vOffset});
 }
 } // namespace iir
 } // namespace dawn

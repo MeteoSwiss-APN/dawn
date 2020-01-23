@@ -290,7 +290,7 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
-  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Triangular) {}
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Unstructured) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);

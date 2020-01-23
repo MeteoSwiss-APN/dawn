@@ -85,8 +85,8 @@ HorizontalOffset::HorizontalOffset(cartesian_) : impl_(std::make_unique<Cartesia
 HorizontalOffset::HorizontalOffset(cartesian_, int iOffset, int jOffset)
     : impl_(std::make_unique<CartesianOffset>(iOffset, jOffset)) {}
 
-HorizontalOffset::HorizontalOffset(triangular_) : impl_(std::make_unique<UnstructuredOffset>()) {}
-HorizontalOffset::HorizontalOffset(triangular_, bool hasOffset)
+HorizontalOffset::HorizontalOffset(unstructured_) : impl_(std::make_unique<UnstructuredOffset>()) {}
+HorizontalOffset::HorizontalOffset(unstructured_, bool hasOffset)
     : impl_(std::make_unique<UnstructuredOffset>(hasOffset)) {}
 
 HorizontalOffset::HorizontalOffset(HorizontalOffset const& other) { *this = other; }
@@ -126,7 +126,7 @@ GridType HorizontalOffset::getGridType() const {
   if(dynamic_cast<CartesianOffset*>(impl_.get())) {
     return GridType::Cartesian;
   } else {
-    return GridType::Triangular;
+    return GridType::Unstructured;
   }
 }
 
@@ -141,9 +141,9 @@ Offsets::Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
     : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
 Offsets::Offsets(cartesian_) : horizontalOffset_(cartesian) {}
 
-Offsets::Offsets(triangular_, bool hasOffset, int k)
-    : horizontalOffset_(triangular, hasOffset), verticalOffset_(k) {}
-Offsets::Offsets(triangular_) : horizontalOffset_(triangular) {}
+Offsets::Offsets(unstructured_, bool hasOffset, int k)
+    : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k) {}
+Offsets::Offsets(unstructured_) : horizontalOffset_(unstructured) {}
 
 int Offsets::verticalOffset() const { return verticalOffset_; }
 HorizontalOffset const& Offsets::horizontalOffset() const { return horizontalOffset_; }
@@ -161,7 +161,7 @@ Offsets& Offsets::operator+=(Offsets const& other) {
 
 bool Offsets::isZero() const { return verticalOffset_ == 0 && horizontalOffset_.isZero(); }
 
-std::string to_string(triangular_, Offsets const& offset) {
+std::string to_string(unstructured_, Offsets const& offset) {
   auto const& hoffset = offset_cast<UnstructuredOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
 
@@ -178,7 +178,7 @@ std::string to_string(cartesian_, Offsets const& offsets, std::string const& sep
 std::string to_string(Offsets const& offset) {
   return offset_dispatch(offset.horizontalOffset(),
                          [&](CartesianOffset const&) { return to_string(cartesian, offset); },
-                         [&](UnstructuredOffset const&) { return to_string(triangular, offset); },
+                         [&](UnstructuredOffset const&) { return to_string(unstructured, offset); },
                          [&]() {
                            using namespace std::string_literals;
                            return "<no_horizontal_offset>,"s +

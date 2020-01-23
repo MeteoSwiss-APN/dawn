@@ -40,12 +40,12 @@ message CartesianDimension {
   int32 mask_cart_j = 2;                 // mask for cartesian component j
 }
 
-// @brief Triangular horizontal dimension of a field
+// @brief Unstructured horizontal dimension of a field
 //
-// For a triangular grid we need to specify the dense location type.
+// For a unstructured grid we need to specify the dense location type.
 // It could also have a sparse dimension. In such case the sparse part is non-empty.
 // @ingroup sir_proto
-message TriangularDimension {
+message UnstructuredDimension {
   
     dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
     repeated dawn.proto.enums.LocationType sparse_part = 2;   // neighbor chain encoding sparse part when the field has a sparse dimension
@@ -56,12 +56,12 @@ message TriangularDimension {
 // 
 // This is a condensed representation of the dimensions of a field. 
 // A field has a vertical component iff maskK=1. 
-// On the horizontal we distinguish between cartesian and triangular grids. 
+// On the horizontal we distinguish between cartesian and unstructured grids. 
 // @ingroup sir_proto
 message FieldDimensions {
   oneof horizontal_dimension {
     CartesianDimension cartesian_horizontal_dimension = 1;
-    TriangularDimension triangular_horizontal_dimension = 2;
+    UnstructuredDimension unstructured_horizontal_dimension = 2;
   }
 
   int32 mask_k = 3;                        // mask for vertical dimension

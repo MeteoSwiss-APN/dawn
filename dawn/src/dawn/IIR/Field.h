@@ -48,7 +48,7 @@ private:
   Interval interval_;                    ///< Enclosing Interval from the iteration space
                                          ///  from where the Field has been accessed
   sir::FieldDimensions fieldDimensions_; ///< Field dimensions: horizontal (either Cartesian or
-                                         ///  Triangular) + vertical
+                                         ///  Unstructured) + vertical
 
 public:
   Field(Field&& f) = default;

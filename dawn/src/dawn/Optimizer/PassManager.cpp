@@ -66,7 +66,7 @@ bool PassManager::runPassOnStencilInstantiation(
   TypeChecker dimensionsChecker;
   GridTypeChecker gridChecker;
   const auto& IIR = instantiation->getIIR();
-  if(IIR->getGridType() == ast::GridType::Triangular) {
+  if(IIR->getGridType() == ast::GridType::Unstructured) {
     DAWN_ASSERT_MSG(
         dimensionsChecker.checkDimensionsConsistency(*IIR.get(), instantiation->getMetaData()),
         std::string("Dimensions consistency check failed for pass" + pass->getName()).c_str());

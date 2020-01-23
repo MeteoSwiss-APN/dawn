@@ -55,12 +55,12 @@ def main(args: argparse.Namespace):
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Triangular"),
+        SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in", make_field_dimensions_triangular([LocationType.Value('Cell')], 1)), sir_utils.make_field("out", make_field_dimensions_triangular([LocationType.Value('Edge')], 1))],
+                [sir_utils.make_field("in", make_field_dimensions_unstructured([LocationType.Value('Cell')], 1)), sir_utils.make_field("out", make_field_dimensions_unstructured([LocationType.Value('Edge')], 1))],
             ),
         ],
     )

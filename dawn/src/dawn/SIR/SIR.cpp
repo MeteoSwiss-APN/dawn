@@ -565,17 +565,17 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
-TriangularFieldDimension::TriangularFieldDimension(const ast::NeighborChain neighborChain)
+UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain)
     : neighborChain_(neighborChain) {
   DAWN_ASSERT(neighborChain.size() > 0);
 }
 
-const ast::NeighborChain& TriangularFieldDimension::getNeighborChain() const {
+const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
   DAWN_ASSERT(isSparse());
   return neighborChain_;
 }
 
-std::string TriangularFieldDimension::toString() const {
+std::string UnstructuredFieldDimension::toString() const {
   auto getLocationTypeString = [](const ast::LocationType type) {
     switch(type) {
     case ast::LocationType::Cells:
@@ -606,10 +606,10 @@ std::string FieldDimensions::toString() const {
         sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
     return format("[%i,%i,%i]", cartesianDimensions.I(), cartesianDimensions.J(), K());
 
-  } else if(sir::dimension_isa<sir::TriangularFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& triangularDimensions =
-        sir::dimension_cast<sir::TriangularFieldDimension const&>(getHorizontalFieldDimension());
-    return format("[%s,%i]", triangularDimensions.toString(), K());
+  } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
+    const auto& unstructuredDimension =
+        sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension());
+    return format("[%s,%i]", unstructuredDimension.toString(), K());
 
   } else {
     dawn_unreachable("Invalid horizontal field dimension");

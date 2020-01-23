@@ -173,8 +173,8 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   int idx = 0;
   std::unordered_set<std::string> generatedStencilFun;
 
-  // TODO not supported for triangular
-  if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Triangular) {
+  // TODO not supported for unstructured
+  if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
     for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
       std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
 
@@ -206,8 +206,8 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     std::string stencilName = "stencil_" + std::to_string(stencil->getStencilID());
     auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
                                                              stencil->getStencilID(), stencilName);
-    // TODO not supported for triangular
-    if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Triangular) {
+    // TODO not supported for unstructured
+    if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
       auto& paramNameToType = stencilProperties->paramNameToType_;
 
       // fields used in the stencil
@@ -233,8 +233,8 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
   }
 
-  // TODO not supported for triangular
-  if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Triangular) {
+  // TODO not supported for unstructured
+  if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
     int i = 0;
     for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
       codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),

@@ -136,7 +136,7 @@ private:
       // dimensionality in statements.
       if(instantiation_->getIIR()->getGridType() != ast::GridType::Cartesian)
         dawn_unreachable(
-            "Currently creating a new temporary field is not supported for triangular grids.");
+            "Currently creating a new temporary field is not supported for unstructured grids.");
       sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
                                      true};
       // Register the new temporary in the metadata
