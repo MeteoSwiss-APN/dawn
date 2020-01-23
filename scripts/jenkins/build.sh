@@ -51,7 +51,10 @@ pip install -e ${base_dir}/dawn/ -v
 
 cd ${base_dir}/dawn/examples/python
 bash run.sh
+echo "PYTHON RUN TESTS SUCCESFUL!"
+
 python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py/
+echo "PYTHON PYTEST SUCCESFUL!"
 
 base_dir=$(pwd)
 rm -rf $build_dir
