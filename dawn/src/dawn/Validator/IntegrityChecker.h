@@ -36,36 +36,22 @@ public:
   void run();
 
   void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-
   void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
-
   void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-
   void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
-
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
-
   void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
-
   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
-
   void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
-
   void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
-
   void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
 
 private:
   void iterate(iir::StencilInstantiation* instantiation);
-
   void iterate(const std::unique_ptr<iir::Stencil>& stencil);
-
   void iterate(const std::unique_ptr<iir::MultiStage>& multiStage);
-
   void iterate(const std::unique_ptr<iir::Stage>& stage);
-
   void iterate(const std::unique_ptr<iir::DoMethod>& doMethod);
 };
 

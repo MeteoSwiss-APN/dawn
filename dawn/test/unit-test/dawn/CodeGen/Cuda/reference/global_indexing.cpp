@@ -1,4 +1,3 @@
-//---- Preprocessor defines ----
 #define DAWN_GENERATED 1
 #define DAWN_BACKEND_T CUDA
 #ifndef BOOST_RESULT_OF_USE_TR1
@@ -8,7 +7,7 @@
  #define BOOST_NO_CXX11_DECLTYPE 1
 #endif
 #ifndef GRIDTOOLS_DAWN_HALO_EXTENT
- #define GRIDTOOLS_DAWN_HALO_EXTENT 3
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 0
 #endif
 #ifndef BOOST_PP_VARIADICS
  #define BOOST_PP_VARIADICS 1
@@ -36,23 +35,18 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
-
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
-
-//---- Globals ----
-
-//---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
+__device__ bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
+  return (min <= val && val < max);
+}
+__global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in_field, ::dawn::float_type * const out_field, int* const stage14GlobalJIndices, unsigned* const globalOffsets) {
 
   // Start kernel
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
-  const int block_size_j = (blockIdx.y + 1) * 1 < ny ? 1 : ny - blockIdx.y * 1;
+  const int block_size_j = (blockIdx.y + 1) * 4 < ny ? 4 : ny - blockIdx.y * 4;
 
   // computing the global position in the physical domain
 
@@ -83,12 +77,12 @@ __global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const 
   // Regions (a,h,e) and (c,i,g) are executed by two specialized warp
   int iblock = 0 - 1;
   int jblock = 0 - 1;
-if(threadIdx.y < +1) {
+if(threadIdx.y < +4) {
     iblock = threadIdx.x;
     jblock = (int)threadIdx.y + 0;
 }
   // initialized iterators
-  int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*1+jblock)*stride_111_1;
+  int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
   // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
@@ -96,7 +90,13 @@ if(threadIdx.y < +1) {
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
 for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
   if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-out[idx111] = __ldg(&(in[idx111+1*1]));
+{
+  out_field[idx111] = __ldg(&(in_field[idx111]));
+}
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset(stage14GlobalJIndices[0], stage14GlobalJIndices[1], globalOffsets[1] + jblock)) {
+{
+  out_field[idx111] = (int) 10;
+}
   }
     // Slide kcaches
 
@@ -104,7 +104,7 @@ out[idx111] = __ldg(&(in[idx111+1*1]));
     idx111+=stride_111_2;
 }}
 
-class copy_stencil {
+class generated {
 public:
 
   struct sbase : public timer_cuda {
@@ -116,9 +116,18 @@ public:
     }
   };
 
-  struct stencil_11 : public sbase {
+  struct stencil_28 : public sbase {
 
     // Members
+    std::array<int, 2> stage14GlobalJIndices;
+    std::array<unsigned int, 2> globalOffsets;
+
+    static std::array<unsigned int, 2> computeGlobalOffsets(int rank, const gridtools::dawn::domain& dom, int xcols, int ycols) {
+      unsigned int rankOnDefaultFace = rank % (xcols * ycols);
+      unsigned int row = rankOnDefaultFace / xcols;
+      unsigned int col = rankOnDefaultFace % ycols;
+      return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())};
+    }
 
     // Temporary storage typedefs
     using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
@@ -127,41 +136,41 @@ public:
     const gridtools::dawn::domain m_dom;
   public:
 
-    stencil_11(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_11"), m_dom(dom_){}
+    stencil_28(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_28"), m_dom(dom_), stage14GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
 
-    void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
+    void run(storage_ijk_t in_field_ds, storage_ijk_t out_field_ds) {
 
       // starting timers
       start();
       {;
-      gridtools::data_view<storage_ijk_t> in= gridtools::make_device_view(in_ds);
-      gridtools::data_view<storage_ijk_t> out= gridtools::make_device_view(out_ds);
+      gridtools::data_view<storage_ijk_t> in_field= gridtools::make_device_view(in_field_ds);
+      gridtools::data_view<storage_ijk_t> out_field= gridtools::make_device_view(out_field_ds);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
-      dim3 threads(32,1+0,1);
+      dim3 threads(32,4+0,1);
       const unsigned int nbx = (nx + 32 - 1) / 32;
-      const unsigned int nby = (ny + 1 - 1) / 1;
+      const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      copy_stencil_stencil11_ms23_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
+      generated_stencil28_ms27_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )), stage14GlobalJIndices.data(), globalOffsets.data());
       };
 
       // stopping timers
       pause();
     }
   };
-  static constexpr const char* s_name = "copy_stencil";
-  stencil_11 m_stencil_11;
+  static constexpr const char* s_name = "generated";
+  stencil_28 m_stencil_28;
 public:
 
-  copy_stencil(const copy_stencil&) = delete;
+  generated(const generated&) = delete;
 
   // Members
 
   // Stencil-Data
 
-  copy_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_11(dom, rank, xcols, ycols){}
+  generated(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_28(dom, rank, xcols, ycols){}
 
   template<typename S>
   void sync_storages(S field) {
@@ -174,11 +183,11 @@ public:
     sync_storages(fields...);
   }
 
-  void run(storage_ijk_t in, storage_ijk_t out) {
-    sync_storages(in,out);
-    m_stencil_11.run(in,out);
+  void run(storage_ijk_t in_field, storage_ijk_t out_field) {
+    sync_storages(in_field,out_field);
+    m_stencil_28.run(in_field,out_field);
 ;
-    sync_storages(in,out);
+    sync_storages(in_field,out_field);
   }
 
   std::string get_name()  const {
@@ -186,11 +195,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_11.reset();  }
+m_stencil_28.reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_11.get_time();
+    res +=m_stencil_28.get_time();
     return res;
   }
 };

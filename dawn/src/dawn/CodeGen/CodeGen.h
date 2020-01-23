@@ -58,6 +58,13 @@ protected:
 
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize) const;
 
+  bool
+  hasGlobalIndices(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  bool hasGlobalIndices(const iir::Stencil& stencil) const;
+
+  void generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass,
+                             bool genCheckOffset = true) const;
+
   const std::string tmpStorageTypename_ = "tmp_storage_t";
   const std::string tmpMetadataTypename_ = "tmp_meta_data_t";
   const std::string tmpMetadataName_ = "m_tmp_meta_data";
