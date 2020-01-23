@@ -19,6 +19,7 @@
 #include "gtclang/Driver/OptionsParser.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangContext.h"
+#include "gtclang/Frontend/GTClangIncludeChecker.h"
 #include "gtclang/Frontend/GTClangPreprocessorAction.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -60,6 +61,8 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   auto* oldLogger = dawn::Logger::getSingleton().getLogger();
   if(context->getOptions().Verbose)
     dawn::Logger::getSingleton().registerLogger(logger.get());
+
+  clangArgs[1] = GTClangIncludeChecker::UpdateHeader(clangArgs[1]).c_str();
 
   // Create GTClang
   std::unique_ptr<clang::CompilerInstance> GTClang(createCompilerInstance(clangArgs));
