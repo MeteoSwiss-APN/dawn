@@ -437,6 +437,8 @@ CompareResult sir::Value::comparison(const sir::Value& rhs) const {
     return isEqualImpl<int>(*this, rhs, rhs.toString());
   case sir::Value::Kind::Double:
     return isEqualImpl<double>(*this, rhs, rhs.toString());
+  case sir::Value::Kind::Float:
+    return isEqualImpl<float>(*this, rhs, rhs.toString());
   case sir::Value::Kind::String:
     return isEqualImpl<std::string>(*this, rhs, rhs.toString());
   default:

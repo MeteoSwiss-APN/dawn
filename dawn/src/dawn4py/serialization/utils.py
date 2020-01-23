@@ -103,12 +103,6 @@ StmtType = TypeVar(
 )
 
 
-class LocationType(Enum):
-    Cell = 0
-    Edge = 1
-    Vertex = 2
-
-
 def make_sir(
     filename: str,
     grid_type: GridType,
@@ -184,6 +178,7 @@ def make_field(
     dimensions: List[int] = [1, 1, 1],
     location_type: LocationType = LocationType.Cell,
 ) -> Field:
+
     """ Create a Field
 
     :param name:         Name of the field
@@ -195,11 +190,11 @@ def make_field(
     field.is_temporary = is_temporary
     field.field_dimensions.extend(dimensions)
     if location_type == LocationType.Cell:
-        field.location_type = Field.Cell
+        field.location_type = LocationType.Cell
     elif location_type == LocationType.Edge:
-        field.location_type = Field.Edge
+        field.location_type = LocationType.Edge
     elif location_type == LocationType.Vertex:
-        field.location_type = Field.Vertex
+        field.location_type = LocationType.Vertex
     return field
 
 

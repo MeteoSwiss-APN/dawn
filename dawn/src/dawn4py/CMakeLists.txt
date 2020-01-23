@@ -34,10 +34,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 pybind11_add_module(_dawn4py MODULE _dawn4py.cpp)
+target_compile_features(_dawn4py PUBLIC cxx_std_17)
 target_link_libraries(_dawn4py PUBLIC pybind11::pybind11 Dawn)
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)
 
 # Depending on DawnSIRProto and DawnIIRProto ensures the python files are
 # generated and moved into the correct location
 # TODO Do we need to depend on Dawn or DawnC here?
-add_custom_target(python DEPENDS DawnSIRProto DawnIIRProto _dawn4py)
+add_custom_target(python DEPENDS _dawn4py)

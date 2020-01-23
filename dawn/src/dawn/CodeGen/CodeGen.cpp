@@ -4,7 +4,6 @@
 
 namespace dawn {
 namespace codegen {
-
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
@@ -364,6 +363,62 @@ std::string CodeGen::generateFileName(const stencilInstantiationContext& context
     return context_.begin()->second->getMetaData().getFileName();
   }
   return "";
+}
+
+bool CodeGen::hasGlobalIndices(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  for(auto& stencil : stencilInstantiation->getStencils()) {
+    if(hasGlobalIndices(*stencil)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CodeGen::hasGlobalIndices(const iir::Stencil& stencil) const {
+  for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+    if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
+                   [](const auto& p) -> bool { return p.has_value(); })) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass,
+                                    bool genCheckOffset) const {
+  for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+    if(stage->getIterationSpace()[0].has_value()) {
+      stencilClass.addMember("std::array<int, 2>",
+                             "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
+    }
+    if(stage->getIterationSpace()[1].has_value()) {
+      stencilClass.addMember("std::array<int, 2>",
+                             "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
+    }
+  }
+
+  stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
+  auto globalOffsetFunc =
+      stencilClass.addMemberFunction("static std::array<unsigned int, 2>", "computeGlobalOffsets");
+  globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
+  globalOffsetFunc.startBody();
+  globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
+  globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
+  globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
+  globalOffsetFunc.addStatement(
+      "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
+  globalOffsetFunc.commit();
+
+  if(genCheckOffset) {
+    auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
+    checkOffsetFunc.addArg("unsigned int min");
+    checkOffsetFunc.addArg("unsigned int max");
+    checkOffsetFunc.addArg("unsigned int val");
+    checkOffsetFunc.startBody();
+    checkOffsetFunc.addStatement("return (min <= val && val < max)");
+    checkOffsetFunc.commit();
+  }
 }
 
 } // namespace codegen

@@ -28,6 +28,8 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
+  PassIntegrityCheck.cpp
+  PassIntegrityCheck.h
   PassIntervalPartitioner.cpp
   PassIntervalPartitioner.h
   PassManager.cpp
@@ -86,4 +88,4 @@ add_library(DawnOptimizer
 )
 
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR)
+target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)

@@ -25,9 +25,11 @@
 
 #include "IIRBuilder.h"
 
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -92,8 +94,11 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
-  TypeChecker checker;
-  DAWN_ASSERT(checker.checkLocationTypeConsistency(*new_si->getIIR().get(), new_si->getMetaData()));
+  LocationTypeChecker locationTypeChecker;
+  GridTypeChecker gridTypeChecker;
+  DAWN_ASSERT(locationTypeChecker.checkLocationTypeConsistency(*new_si->getIIR().get(),
+                                                               new_si->getMetaData()));
+  DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;
   map[new_si->getName()] = std::move(new_si);
