@@ -370,11 +370,13 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
       optimizer.pushBackPass<PassValidation>();
     }
   }
+
   if(options_.Backend == "cuda" || options_.SerializeIIR) {
     optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::ComputationsOnTheFly);
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
+
   //===-----------------------------------------------------------------------------------------
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
