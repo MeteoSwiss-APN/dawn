@@ -87,8 +87,10 @@ cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
 
-
-if [ -z ${NO_PERFTETS+x} ]; then
+RUN_PERFTETS=true
+if [ -z ${RUN_PERFTETS+x} ]; then
+  echo "do not run performance tests"
+else
  cd $source_dir
  bash scripts/jenkins/run_perftests.sh -b $build_dir
 fi
