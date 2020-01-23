@@ -243,9 +243,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
                      << instantiation->getName() << "`";
 
-      if(options_->SerializeIIR) {
-        const fs::path p(options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                                      : options_->OutputFile);
+      if(options_.SerializeIIR) {
+        const fs::path p(options_.OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                                     : options_.OutputFile);
         IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
                                      ".iir",
                                  instantiation, serializationKind);
