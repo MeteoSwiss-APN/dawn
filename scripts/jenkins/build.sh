@@ -53,6 +53,8 @@ cd ${base_dir}/dawn/examples/python
 bash run.sh
 python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py/
 
+exit 0
+
 base_dir=$(pwd)
 rm -rf $build_dir
 
