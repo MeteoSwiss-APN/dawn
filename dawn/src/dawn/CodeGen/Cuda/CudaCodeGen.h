@@ -33,7 +33,6 @@ namespace cuda {
 /// @brief CUDA code generation for cartesian grids
 /// @ingroup cxxnaive cartesian
 class CudaCodeGen : public CodeGen {
-
   std::unordered_map<int, CacheProperties> cachePropertyMap_;
 
 public:
@@ -78,7 +77,7 @@ private:
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const;
+                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
   void
   generateStencilWrapperCtr(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -114,7 +113,8 @@ private:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
-  CudaCodeGenOptions codeGenOptions;
+  CudaCodeGenOptions codeGenOptions_;
+  bool iterationSpaceSet_;
 };
 } // namespace cuda
 } // namespace codegen

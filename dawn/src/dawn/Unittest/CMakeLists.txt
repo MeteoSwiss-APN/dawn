@@ -13,6 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnUnittest
+  CodeDumper.cpp
+  CodeDumper.h
   IIRBuilder.h
   IIRBuilder.cpp
   UnittestLogger.cpp
