@@ -4,7 +4,6 @@ WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
 FormatStyle:     none
-User:
 CheckOptions:
   - key:             cert-dcl16-c.NewSuffixes
     value:           'L;LL;LU;LLU'
