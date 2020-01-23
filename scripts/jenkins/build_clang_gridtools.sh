@@ -91,6 +91,7 @@ RUN_PERFTETS=true
 if [ -z ${RUN_PERFTETS+x} ]; then
   echo "do not run performance tests"
 else
+ export ENABLE_CUDA_GPU=true
  cd $source_dir
- bash scripts/jenkins/run_perftests.sh -b $build_dir
+ bash scripts/jenkins/run_perftests.sh -b $build_dir 
 fi
