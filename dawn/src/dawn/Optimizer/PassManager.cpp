@@ -18,7 +18,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <vector>
 
 namespace dawn {
@@ -63,7 +63,7 @@ bool PassManager::runPassOnStencilInstantiation(
   DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
                   std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
 
-  TypeChecker dimensionsChecker;
+  UnstructuredDimensionChecker dimensionsChecker;
   GridTypeChecker gridChecker;
   const auto& IIR = instantiation->getIIR();
   if(IIR->getGridType() == ast::GridType::Unstructured) {

@@ -1,12 +1,12 @@
-#include "TypeChecker.h"
+#include "UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
-bool TypeChecker::checkDimensionsConsistency(const dawn::iir::IIR& iir,
-                                             const iir::StencilMetaInformation& metaData) {
+bool UnstructuredDimensionChecker::checkDimensionsConsistency(
+    const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
   for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    TypeChecker::TypeCheckerImpl checker(doMethodPtr->getFieldDimensionsByName(),
-                                         metaData.getAccessIDToNameMap());
+    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
+        doMethodPtr->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
     const auto& ast = doMethodPtr->getASTPtr();
     ast->accept(checker);
     if(!checker.isConsistent()) {
@@ -16,7 +16,7 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::iir::IIR& iir,
   return true;
 }
 
-bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
+bool UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
   // check type consistency of stencil functions
   for(auto const& stenFunIt : SIR.StencilFunctions) {
     std::unordered_map<std::string, sir::FieldDimensions> argumentFieldDimensions;
@@ -27,7 +27,8 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
       }
     }
     for(const auto& astIt : stenFunIt->Asts) {
-      TypeChecker::TypeCheckerImpl checker(argumentFieldDimensions);
+      UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
+          argumentFieldDimensions);
       astIt->accept(checker);
       if(!checker.isConsistent()) {
         return false;
@@ -43,7 +44,7 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
       stencilFieldDims.insert({field->Name, field->Dimensions});
     }
     const auto& stencilAst = stencil->StencilDescAst;
-    TypeChecker::TypeCheckerImpl checker(stencilFieldDims);
+    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(stencilFieldDims);
     stencilAst->accept(checker);
     if(!checker.isConsistent()) {
       return false;
@@ -56,10 +57,6 @@ bool TypeChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
 ///@brief Helper functions
 namespace {
 
-bool isHorizontalUnstructured(const sir::FieldDimensions& dims) {
-  return sir::dimension_isa<sir::UnstructuredFieldDimension>(dims.getHorizontalFieldDimension());
-}
-
 const sir::UnstructuredFieldDimension& getUnstructuredDim(const sir::FieldDimensions& dims) {
   return sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       dims.getHorizontalFieldDimension());
@@ -67,21 +64,22 @@ const sir::UnstructuredFieldDimension& getUnstructuredDim(const sir::FieldDimens
 
 } // namespace
 
-TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
+UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap)
     : nameToDimensions_(nameToDimensionsMap) {}
 
-TypeChecker::TypeCheckerImpl::TypeCheckerImpl(
+UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
     const std::unordered_map<int, std::string> idToNameMap)
     : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap) {}
 
-const sir::FieldDimensions& TypeChecker::TypeCheckerImpl::getDimensions() const {
+const sir::FieldDimensions&
+UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() const {
   DAWN_ASSERT(hasDimensions());
   return curDimensions_.value();
 }
 
-void TypeChecker::TypeCheckerImpl::visit(
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::FieldAccessExpr>& fieldAccessExpr) {
   if(!dimensionsConsistent_) {
     return;
@@ -102,8 +100,8 @@ void TypeChecker::TypeCheckerImpl::visit(
   curDimensions_ = nameToDimensions_.at(fieldName);
 }
 
-void TypeChecker::TypeCheckerImpl::checkBinaryOpUnstructured(const sir::FieldDimensions& left,
-                                                             const sir::FieldDimensions& right) {
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinaryOpUnstructured(
+    const sir::FieldDimensions& left, const sir::FieldDimensions& right) {
   const auto& unstructuredDimLeft = getUnstructuredDim(left);
   const auto& unstructuredDimRight = getUnstructuredDim(right);
 
@@ -215,13 +213,16 @@ void TypeChecker::TypeCheckerImpl::checkBinaryOpUnstructured(const sir::FieldDim
   }
 }
 
-void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperator>& binOp) {
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::BinaryOperator>& binOp) {
   if(!dimensionsConsistent_) {
     return;
   }
 
-  TypeChecker::TypeCheckerImpl left(nameToDimensions_, idToNameMap_);
-  TypeChecker::TypeCheckerImpl right(nameToDimensions_, idToNameMap_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
+                                                                      idToNameMap_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
+                                                                       idToNameMap_);
 
   binOp->getLeft()->accept(left);
   binOp->getRight()->accept(right);
@@ -235,28 +236,24 @@ void TypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::BinaryOperat
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
   if(left.hasDimensions() && right.hasDimensions()) {
-    if(isHorizontalUnstructured(
-           left.getDimensions())) { // Assuming previous checks on gridtype consistency (right must
-                                    // also be unstructured)
 
-      checkBinaryOpUnstructured(left.getDimensions(), right.getDimensions());
+    checkBinaryOpUnstructured(left.getDimensions(), right.getDimensions());
 
-    } else { // Cartesian
-      curDimensions_ = left.getDimensions();
-    }
   } else if(left.hasDimensions() && !right.hasDimensions()) {
     curDimensions_ = left.getDimensions();
   } else if(!left.hasDimensions() && right.hasDimensions()) {
     curDimensions_ = right.getDimensions();
   }
 }
-void TypeChecker::TypeCheckerImpl::visit(
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::AssignmentExpr>& assignmentExpr) {
   if(!dimensionsConsistent_) {
     return;
   }
-  TypeChecker::TypeCheckerImpl left(nameToDimensions_, idToNameMap_);
-  TypeChecker::TypeCheckerImpl right(nameToDimensions_, idToNameMap_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
+                                                                      idToNameMap_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
+                                                                       idToNameMap_);
 
   assignmentExpr->getLeft()->accept(left);
   assignmentExpr->getRight()->accept(right);
@@ -270,80 +267,77 @@ void TypeChecker::TypeCheckerImpl::visit(
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
   if(left.hasDimensions() && right.hasDimensions()) {
-    if(isHorizontalUnstructured(
-           left.getDimensions())) { // Assuming previous checks on gridtype consistency (right must
-      // also be unstructured)
-      const auto& unstructuredDimLeft = getUnstructuredDim(left.getDimensions());
-      const auto& unstructuredDimRight = getUnstructuredDim(right.getDimensions());
 
-      // Case 0: Both lhs and rhs are sparse. Their dense + sparse parts must match.
-      // example:
+    const auto& unstructuredDimLeft = getUnstructuredDim(left.getDimensions());
+    const auto& unstructuredDimRight = getUnstructuredDim(right.getDimensions());
+
+    // Case 0: Both lhs and rhs are sparse. Their dense + sparse parts must match.
+    // example:
+    // ```
+    // field(edges, e->c->v) sparseL, sparseR;
+    // ...
+    // sparseL = sparseR;
+    // ```
+    // Result of assignment (= iteration space) is sparse dimension e->c->v
+    if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isSparse()) {
+      // Check that neighbor chains match
+      dimensionsConsistent_ =
+          unstructuredDimLeft.getNeighborChain() == unstructuredDimRight.getNeighborChain();
+
+    }
+    // Lhs dense and rhs sparse is not possible, because there would be multiple values to write
+    // on the same location.
+    else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isSparse()) {
+      dimensionsConsistent_ = false;
+    } else if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isDense()) {
+
+      // Case 1.a: Lhs is sparse, rhs is dense, rhs's location type matches lhs's target
+      // location type (last of chain).
+      // Example:
       // ```
-      // field(edges, e->c->v) sparseL, sparseR;
+      // field(edges, e->c->v) sparseL;
+      // field(vertices) denseR;
       // ...
-      // sparseL = sparseR;
+      // sparseL = denseR;
       // ```
-      // Result of assignment (= iteration space) is sparse dimension e->c->v
-      if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isSparse()) {
-        // Check that neighbor chains match
-        dimensionsConsistent_ =
-            unstructuredDimLeft.getNeighborChain() == unstructuredDimRight.getNeighborChain();
-
+      // Result of expression (= iteration space) is sparse dimension: e->c->v
+      if(unstructuredDimLeft.getLastSparseLocationType() ==
+         unstructuredDimRight.getDenseLocationType()) {
+        // Nothing to do here
       }
-      // Lhs dense and rhs sparse is not possible, because there would be multiple values to write
-      // on the same location.
-      else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isSparse()) {
+      // Case 1.b: Lhs is sparse, rhs is dense, rhs's location type matches lhs's dense
+      // location type (first of chain).
+      // Example:
+      // ```
+      // field(edges, e->c->v) sparseL;
+      // field(edges) denseR;
+      // ...
+      // sparseL = denseR;
+      // ```
+      // Result of expression (= iteration space) is sparse dimension: e->c->v
+      else if(unstructuredDimLeft.getDenseLocationType() ==
+              unstructuredDimRight.getDenseLocationType()) {
+        // Nothing to do here
+
+      } else { // No other subcase is allowed.
         dimensionsConsistent_ = false;
-      } else if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isDense()) {
-
-        // Case 1.a: Lhs is sparse, rhs is dense, rhs's location type matches lhs's target
-        // location type (last of chain).
-        // Example:
-        // ```
-        // field(edges, e->c->v) sparseL;
-        // field(vertices) denseR;
-        // ...
-        // sparseL = denseR;
-        // ```
-        // Result of expression (= iteration space) is sparse dimension: e->c->v
-        if(unstructuredDimLeft.getLastSparseLocationType() ==
-           unstructuredDimRight.getDenseLocationType()) {
-          // Nothing to do here
-        }
-        // Case 1.b: Lhs is sparse, rhs is dense, rhs's location type matches lhs's dense
-        // location type (first of chain).
-        // Example:
-        // ```
-        // field(edges, e->c->v) sparseL;
-        // field(edges) denseR;
-        // ...
-        // sparseL = denseR;
-        // ```
-        // Result of expression (= iteration space) is sparse dimension: e->c->v
-        else if(unstructuredDimLeft.getDenseLocationType() ==
-                unstructuredDimRight.getDenseLocationType()) {
-          // Nothing to do here
-
-        } else { // No other subcase is allowed.
-          dimensionsConsistent_ = false;
-        }
       }
-      // Case 2: Both operands are dense. They must match.
-      // example:
-      // ```
-      // field(edges) denseL, denseR;
-      // ...
-      // denseL = denseR;
-      // ```
-      // Result of expression (= iteration space) is dense dimension edges
-      else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isDense()) {
+    }
+    // Case 2: Both operands are dense. They must match.
+    // example:
+    // ```
+    // field(edges) denseL, denseR;
+    // ...
+    // denseL = denseR;
+    // ```
+    // Result of expression (= iteration space) is dense dimension edges
+    else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isDense()) {
 
-        dimensionsConsistent_ = unstructuredDimLeft.getDenseLocationType() ==
-                                unstructuredDimRight.getDenseLocationType();
+      dimensionsConsistent_ =
+          unstructuredDimLeft.getDenseLocationType() == unstructuredDimRight.getDenseLocationType();
 
-      } else {
-        dawn_unreachable("All cases should be covered.");
-      }
+    } else {
+      dawn_unreachable("All cases should be covered.");
     }
 
     if(!dimensionsConsistent_) {
@@ -359,14 +353,16 @@ void TypeChecker::TypeCheckerImpl::visit(
     curDimensions_ = right.getDimensions();
   }
 }
-void TypeChecker::TypeCheckerImpl::visit(
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::ReductionOverNeighborExpr>& reductionExpr) {
   if(!dimensionsConsistent_) {
     return;
   }
 
-  TypeChecker::TypeCheckerImpl init(nameToDimensions_, idToNameMap_);
-  TypeChecker::TypeCheckerImpl ops(nameToDimensions_, idToNameMap_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(nameToDimensions_,
+                                                                      idToNameMap_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(nameToDimensions_,
+                                                                     idToNameMap_);
 
   reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);

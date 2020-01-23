@@ -23,10 +23,10 @@
 #include <memory>
 
 namespace dawn {
-class TypeChecker {
+class UnstructuredDimensionChecker {
 
 private:
-  class TypeCheckerImpl : public ast::ASTVisitorForwarding {
+  class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwarding {
     std::optional<sir::FieldDimensions> curDimensions_;
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
@@ -47,13 +47,14 @@ private:
 
     // This constructor is used when the check is performed on the SIR. In this case, each
     // Field is uniquely identified by its name
-    TypeCheckerImpl(
+    UnstructuredDimensionCheckerImpl(
         const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap);
     // This constructor is used when the check is performed from IIR. In this case, the fields may
     // have been renamed if stencils had to be merged. Hence, an additional map with key AccessID is
     // needed
-    TypeCheckerImpl(const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
-                    const std::unordered_map<int, std::string> idToNameMap);
+    UnstructuredDimensionCheckerImpl(
+        const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+        const std::unordered_map<int, std::string> idToNameMap);
   };
 
 public:

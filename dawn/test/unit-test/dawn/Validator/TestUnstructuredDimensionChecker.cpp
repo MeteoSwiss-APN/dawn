@@ -13,14 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Unittest/IIRBuilder.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
 
 namespace {
 
-TEST(TypeCheckerTest, AssignmentCase0_0) {
+TEST(UnstructuredDimensionCheckerTest, AssignmentCase0_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -37,7 +37,7 @@ TEST(TypeCheckerTest, AssignmentCase0_0) {
                               b.stmt(b.assignExpr(b.at(sparse_field1), b.at(sparse_field2)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, AssignmentCase0_1) {
+TEST(UnstructuredDimensionCheckerTest, AssignmentCase0_1) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -53,7 +53,7 @@ TEST(TypeCheckerTest, AssignmentCase0_1) {
                               b.stmt(b.assignExpr(b.at(sparse_field1), b.at(sparse_field2)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, AssignmentCase1_0) {
+TEST(UnstructuredDimensionCheckerTest, AssignmentCase1_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -70,7 +70,7 @@ TEST(TypeCheckerTest, AssignmentCase1_0) {
                                  b.stmt(b.assignExpr(b.at(sparse_field), b.at(dense_field)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, AssignmentCase2_0) {
+TEST(UnstructuredDimensionCheckerTest, AssignmentCase2_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -85,7 +85,7 @@ TEST(TypeCheckerTest, AssignmentCase2_0) {
                                              b.stmt(b.assignExpr(b.at(cell_f), b.at(edge_f)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, AssignmentNoCase_0) {
+TEST(UnstructuredDimensionCheckerTest, AssignmentNoCase_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -102,7 +102,7 @@ TEST(TypeCheckerTest, AssignmentNoCase_0) {
                                  b.stmt(b.assignExpr(b.at(dense_field), b.at(sparse_field)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, BinaryOpCase0_0) {
+TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -120,7 +120,7 @@ TEST(TypeCheckerTest, BinaryOpCase0_0) {
                       b.stmt(b.binaryExpr(b.at(sparse_field1), b.at(sparse_field2), Op::plus))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, BinaryOpCase0_1) {
+TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0_1) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -137,7 +137,7 @@ TEST(TypeCheckerTest, BinaryOpCase0_1) {
                       b.stmt(b.binaryExpr(b.at(sparse_field1), b.at(sparse_field2), Op::plus))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, BinaryOpCase1_0) {
+TEST(UnstructuredDimensionCheckerTest, BinaryOpCase1_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -154,7 +154,7 @@ TEST(TypeCheckerTest, BinaryOpCase1_0) {
                       b.stmt(b.binaryExpr(b.at(dense_field), b.at(sparse_field), Op::plus))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, BinaryOpCase2_0) {
+TEST(UnstructuredDimensionCheckerTest, BinaryOpCase2_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -170,7 +170,7 @@ TEST(TypeCheckerTest, BinaryOpCase2_0) {
                                                                  b.at(dense_field), Op::plus))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, BinaryOpCase3_0) {
+TEST(UnstructuredDimensionCheckerTest, BinaryOpCase3_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -187,7 +187,7 @@ TEST(TypeCheckerTest, BinaryOpCase3_0) {
                                  b.stmt(b.binaryExpr(b.at(cell_f), b.at(edge_f), Op::plus))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, ReduceDense_0) {
+TEST(UnstructuredDimensionCheckerTest, ReduceDense_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -207,7 +207,7 @@ TEST(TypeCheckerTest, ReduceDense_0) {
                                              b.lit(0.), LocType::Edges, LocType::Cells)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, ReduceDense_1) {
+TEST(UnstructuredDimensionCheckerTest, ReduceDense_1) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -227,7 +227,7 @@ TEST(TypeCheckerTest, ReduceDense_1) {
                                              b.lit(0.), LocType::Cells, LocType::Edges)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, ReduceSparse_0) {
+TEST(UnstructuredDimensionCheckerTest, ReduceSparse_0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -248,7 +248,7 @@ TEST(TypeCheckerTest, ReduceSparse_0) {
                                           b.lit(0.), LocType::Cells, LocType::Vertices)))))))),
       ".*checkDimensionsConsistency.*");
 }
-TEST(TypeCheckerTest, ReduceSparse_1) {
+TEST(UnstructuredDimensionCheckerTest, ReduceSparse_1) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 

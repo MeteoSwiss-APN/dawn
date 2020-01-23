@@ -16,7 +16,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/TypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <gtest/gtest.h>
 #include <memory>
 
