@@ -187,7 +187,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
   if(options_.DeserializeIIR == "") {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
-    optimizer->fillIIR();
 
     // Setup pass interface
     optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
