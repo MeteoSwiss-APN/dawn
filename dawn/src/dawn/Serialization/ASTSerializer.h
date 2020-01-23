@@ -25,6 +25,11 @@
 
 using namespace dawn;
 
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType);
+
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType);
+
 void setAST(dawn::proto::statements::AST* astProto, const ast::AST* ast);
 
 void setLocation(dawn::proto::statements::SourceLocation* locProto, const SourceLocation& loc);

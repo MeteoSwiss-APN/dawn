@@ -644,14 +644,11 @@ public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init,
-                            ast::LocationType lhs_location = ast::LocationType::Cells,
-                            ast::LocationType rhs_location = ast::LocationType::Cells,
-                            SourceLocation loc = SourceLocation());
+                            std::shared_ptr<Expr> const& init, ast::LocationType lhs_location,
+                            ast::LocationType rhs_location, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init, std::vector<sir::Value> weights,
-                            ast::LocationType lhs_location = ast::LocationType::Cells,
-                            ast::LocationType rhs_location = ast::LocationType::Cells,
+                            ast::LocationType lhs_location, ast::LocationType rhs_location,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);

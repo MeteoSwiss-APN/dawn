@@ -35,43 +35,6 @@ using namespace ast;
 
 namespace {
 
-proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
-  proto::enums::LocationType protoLocationType;
-  switch(locationType) {
-  case ast::LocationType::Cells:
-    protoLocationType = proto::enums::LocationType::Cell;
-    break;
-  case ast::LocationType::Edges:
-    protoLocationType = proto::enums::LocationType::Edge;
-    break;
-  case ast::LocationType::Vertices:
-    protoLocationType = proto::enums::LocationType::Vertex;
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
-  return protoLocationType;
-}
-
-ast::LocationType
-getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType) {
-  ast::LocationType loc;
-  switch(protoLocationType) {
-  case proto::enums::LocationType::Cell:
-    loc = ast::LocationType::Cells;
-    break;
-  case proto::enums::LocationType::Edge:
-    loc = ast::LocationType::Edges;
-    break;
-  case proto::enums::LocationType::Vertex:
-    loc = ast::LocationType::Vertices;
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
-  return loc;
-}
-
 void fillData(iir::IIRStmtData& data, dawn::proto::statements::StmtData const& dataProto) {
   if(dataProto.has_accesses()) {
     iir::Accesses callerAccesses;
@@ -146,6 +109,43 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
   }
 }
 } // namespace
+
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
+  proto::enums::LocationType protoLocationType;
+  switch(locationType) {
+  case ast::LocationType::Cells:
+    protoLocationType = proto::enums::LocationType::Cell;
+    break;
+  case ast::LocationType::Edges:
+    protoLocationType = proto::enums::LocationType::Edge;
+    break;
+  case ast::LocationType::Vertices:
+    protoLocationType = proto::enums::LocationType::Vertex;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  return protoLocationType;
+}
+
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType) {
+  ast::LocationType loc;
+  switch(protoLocationType) {
+  case proto::enums::LocationType::Cell:
+    loc = ast::LocationType::Cells;
+    break;
+  case proto::enums::LocationType::Edge:
+    loc = ast::LocationType::Edges;
+    break;
+  case proto::enums::LocationType::Vertex:
+    loc = ast::LocationType::Vertices;
+    break;
+  default:
+    dawn_unreachable("unknown location type");
+  }
+  return loc;
+}
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
