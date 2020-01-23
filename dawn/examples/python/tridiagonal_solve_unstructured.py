@@ -34,8 +34,7 @@ from dawn4py.serialization import utils as sir_utils
 
 OUTPUT_NAME = "unstructured_vertical_solver"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
-OUTPUT_PATH = os.path.join(os.path.dirname(
-    __file__), "data", f"{OUTPUT_NAME}.cpp")
+OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def create_vertical_region_stmt1():
