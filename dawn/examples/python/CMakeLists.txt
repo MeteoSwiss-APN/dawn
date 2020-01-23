@@ -32,7 +32,6 @@ function(add_python_test)
   )
   add_test(NAME Dawn-python-test-${ARG_NAME}.sh
     COMMAND ${CMAKE_COMMAND} -E env
-    PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
     ${SH_PROGRAM} python-test-${ARG_NAME}.sh
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
   )
@@ -50,5 +49,5 @@ if(${PROJECT_NAME}_TESTING)
   add_python_test(NAME tridiagonal_solve_stencil VERIFY)
 #   add_python_test(NAME tridiagonal_solve_unstructured)
   add_python_test(NAME global_index_stencil)
-#   add_python_test(NAME unstructured_stencil)
+  add_python_test(NAME unstructured_stencil)
 endif()

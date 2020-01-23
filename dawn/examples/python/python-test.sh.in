@@ -1,3 +1,5 @@
+export PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
+
 @Python3_EXECUTABLE@ @CMAKE_CURRENT_SOURCE_DIR@/@example@.py || {
     echo 'SIR Python example @example@ did not run. TEST failed.' && exit 1
 }
