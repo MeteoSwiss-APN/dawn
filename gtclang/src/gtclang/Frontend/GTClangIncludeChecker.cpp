@@ -18,7 +18,7 @@
 
 namespace gtclang {
 
-std::string GTClangIncludeChecker::UpdateHeader(const std::string& sourceFile) {
+bool GTClangIncludeChecker::UpdateHeader(std::string& sourceFile) {
   using clang::StringRef;
 
   std::vector<std::string> includes = {"gtclang_dsl_defs/gtclang_dsl.hpp"};
@@ -58,10 +58,11 @@ std::string GTClangIncludeChecker::UpdateHeader(const std::string& sourceFile) {
     }
   }
 
-  std::string outputFile = sourceFile;
   if(includes.size() > 0 || namespaces.size() > 0) {
-    outputFile += "~";
-    std::ofstream ofs(outputFile);
+    size_t pos = sourceFile.rfind('.');
+    sourceFile = sourceFile.substr(0, pos) + "~" + sourceFile.substr(pos);
+
+    std::ofstream ofs(sourceFile);
     for(const std::string& include : includes)
       ofs << "#include \"" << include << "\"\n";
     for(const std::string& nspace : namespaces)
@@ -71,9 +72,11 @@ std::string GTClangIncludeChecker::UpdateHeader(const std::string& sourceFile) {
     for(int i = 0; i < PPCodeLines.size(); ++i)
       ofs << PPCodeLines[i].str() << "\n";
     ofs.close();
+
+    return true;
   }
 
-  return outputFile;
+  return false;
 }
 
 } // namespace gtclang

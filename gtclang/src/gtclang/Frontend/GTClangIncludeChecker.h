@@ -30,7 +30,7 @@ namespace gtclang {
 /// @ingroup frontend
 class GTClangIncludeChecker {
 public:
-  static std::string UpdateHeader(const std::string& sourceFile);
+  static bool UpdateHeader(std::string& sourceFile);
 };
 
 } // namespace gtclang

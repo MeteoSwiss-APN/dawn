@@ -14,8 +14,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/UIDGenerator.h"
 #include "gtclang/Unittest/GTClang.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
+
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -25,13 +28,23 @@ namespace {
 
 TEST(PreprocessingTest, Include) {
   auto flags = UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags();
+
   std::string filename = "test_stencil_w_include.cpp";
+  dawn::UIDGenerator::getInstance()->reset();
   auto pair1 = GTClang::run({filename, "-fno-codegen"}, flags);
   ASSERT_TRUE(pair1.first);
+  dawn::SIR* sir1 = pair1.second.get();
 
   filename = "test_stencil_no_include.cpp";
+  dawn::UIDGenerator::getInstance()->reset();
   auto pair2 = GTClang::run({filename, "-fno-codegen"}, flags);
   ASSERT_TRUE(pair2.first);
+  dawn::SIR* sir2 = pair2.second.get();
+
+  sir2->Filename = sir1->Filename;
+  std::string sirStr1 = dawn::SIRSerializer::serializeToString(sir1);
+  std::string sirStr2 = dawn::SIRSerializer::serializeToString(sir2);
+  ASSERT_EQ(sirStr1, sirStr2);
 }
 
 } // anonymous namespace
