@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ITERATORADAPTORS_H
-#define DAWN_SUPPORT_ITERATORADAPTORS_H
+#ifndef DAWN_SUPPORT_ITERATORADAPTERS_H
+#define DAWN_SUPPORT_ITERATORADAPTERS_H
 
 #include <iterator>
 #include <tuple>
@@ -64,4 +64,4 @@ reversion_wrapper<T> reverse(T&& iterable) {
 
 } // namespace dawn
 
-#endif // DAWN_SUPPORT_ITERATORADAPTORS_H
+#endif // DAWN_SUPPORT_ITERATORADAPTERS_H
