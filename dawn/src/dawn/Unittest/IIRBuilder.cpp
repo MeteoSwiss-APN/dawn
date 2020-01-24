@@ -96,8 +96,10 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   UnstructuredDimensionChecker dimensionsChecker;
   GridTypeChecker gridTypeChecker;
-  DAWN_ASSERT(
-      dimensionsChecker.checkDimensionsConsistency(*new_si->getIIR().get(), new_si->getMetaData()));
+  if(new_si->getIIR()->getGridType() == ast::GridType::Unstructured) {
+    DAWN_ASSERT(dimensionsChecker.checkDimensionsConsistency(*new_si->getIIR().get(),
+                                                             new_si->getMetaData()));
+  }
   DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;

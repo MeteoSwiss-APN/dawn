@@ -5,13 +5,11 @@
    "20": "b"
   },
   "accessIDToType": {
-   "20": 6,
-   "19": 6
+   "19": 6,
+   "20": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   19,
-   20,
    19,
    20
   ],
@@ -26,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "20": {
+   "19": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "19": {
+   "20": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -62,7 +60,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 24,
@@ -435,5 +432,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
+ "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
 }

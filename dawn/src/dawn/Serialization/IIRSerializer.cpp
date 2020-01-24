@@ -188,11 +188,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoMetaData->add_globalvariableids(globalVariableID);
   }
 
-  // Filling Field: repeated int32 FieldAccessIDs = 4;
-  for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
-    protoMetaData->add_fieldaccessids(fieldAccessID);
-  }
-
   // Filling Field: VariableVersions versionedFields = 8;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();

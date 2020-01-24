@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "2": "out_field",
    "4": "cnt",
-   "1": "in_field",
-   "2": "out_field"
+   "1": "in_field"
   },
   "accessIDToType": {
    "1": 6,
@@ -14,8 +14,6 @@
    "-20": "10"
   },
   "fieldAccessIDs": [
-   1,
-   2,
    1,
    2
   ],
@@ -33,14 +31,14 @@
    "1": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Edge",
-     "neighbor_chain": []
+     "sparse_part": []
     },
     "mask_k": 1
    },
    "2": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Cell",
-     "neighbor_chain": []
+     "sparse_part": []
     },
     "mask_k": 1
    }
@@ -66,10 +64,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {
-   "1": "Edge",
-   "2": "Cell"
-  },
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": -1,
@@ -306,17 +300,17 @@
                   }
                  },
                  "readAccess": {
-                  "-5": {
-                   "zero_extent": {},
+                  "1": {
+                   "unstructured_extent": {
+                    "has_extent": true
+                   },
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "1": {
-                   "unstructured_extent": {
-                    "has_extent": true
-                   },
+                  "-5": {
+                   "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0

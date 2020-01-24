@@ -14,9 +14,6 @@
   "fieldAccessIDs": [
    30,
    31,
-   32,
-   30,
-   31,
    32
   ],
   "APIFieldIDs": [
@@ -75,11 +72,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {
-   "31": "Cell",
-   "32": "Cell",
-   "30": "Cell"
-  },
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": -1,
