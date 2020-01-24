@@ -64,20 +64,23 @@ void GTClangIncludeChecker::Update() {
   }
 
   if(includes.size() > 0 || namespaces.size() > 0) {
-    updated_ = true;
+    std::error_code copyError;
     std::filesystem::copy(sourceFile_, sourceFile_ + "~",
-                          std::filesystem::copy_options::overwrite_existing);
+                          std::filesystem::copy_options::overwrite_existing, copyError);
+    updated_ = !copyError;
 
-    std::ofstream ofs(sourceFile_);
-    for(const std::string& include : includes)
-      ofs << "#include \"" << include << "\"\n";
-    for(const std::string& nspace : namespaces)
-      ofs << "using namespace " << nspace << ";\n";
+    if(updated_) {
+      std::ofstream ofs(sourceFile_);
+      for(const std::string& include : includes)
+        ofs << "#include \"" << include << "\"\n";
+      for(const std::string& nspace : namespaces)
+        ofs << "using namespace " << nspace << ";\n";
 
-    ofs << "\n";
-    for(int i = 0; i < PPCodeLines.size(); ++i)
-      ofs << PPCodeLines[i].str() << "\n";
-    ofs.close();
+      ofs << "\n";
+      for(int i = 0; i < PPCodeLines.size(); ++i)
+        ofs << PPCodeLines[i].str() << "\n";
+      ofs.close();
+    }
   }
 }
 
