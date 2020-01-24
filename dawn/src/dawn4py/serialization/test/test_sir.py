@@ -20,6 +20,9 @@ import unittest
 
 from dawn4py.serialization.error import SIRError
 from dawn4py.serialization.utils import *
+from dawn4py.serialization.SIR.SIR_pb2 import *
+from dawn4py.serialization.SIR.statements_pb2 import *
+from dawn4py.serialization.SIR.enums_pb2 import *
 
 
 class ExprTestBase(unittest.TestCase):
@@ -111,15 +114,45 @@ class TestMakeField(unittest.TestCase):
     def test_make_field_cartesian(self):
         field = make_field("foo", make_field_dimensions_cartesian())
         self.assertEqual(field.name, "foo")
-        self.assertEqual(field.field_dimensions.maskCartI, 1)
-        self.assertEqual(field.field_dimensions.maskCartJ, 1)
-        self.assertEqual(field.field_dimensions.maskK, 1)
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i, 1)
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j, 1)
+        self.assertEqual(field.field_dimensions.mask_k, 1)
+
+    def test_make_field_cartesian_mask(self):
+        field = make_field("foo", make_field_dimensions_cartesian([1, 0, 1]))
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i, 1)
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j, 0)
+        self.assertEqual(field.field_dimensions.mask_k, 1)
 
     def test_make_field_unstructured(self):
-        field = make_field("foo", make_field_dimensions_unstructured([LocationType.Value('Edge')], 1))
+        field = make_field("foo", make_field_dimensions_unstructured(LocationType.Value('Edge'), 1))
         self.assertEqual(field.name, "foo")
-        self.assertEqual(field.field_dimensions.sparse_part, [LocationType.Value('Edge')])
-        self.assertEqual(field.field_dimensions.maskK, 1)
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type, \
+                         LocationType.Value('Edge'))
+        self.assertEqual(field.field_dimensions.mask_k, 1)
+
+    def test_make_field_unstructured_sparse(self):
+        field = make_field( \
+                    "foo", \
+                    make_field_dimensions_unstructured( \
+                        LocationType.Value('Edge'), \
+                        0, \
+                        sparse_part=[ \
+                                        LocationType.Value('Edge'), \
+                                        LocationType.Value('Cell'), \
+                                        LocationType.Value('Vertex') \
+                                    ]))
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type, \
+                         LocationType.Value('Edge'))
+        self.assertEqual(field.field_dimensions.mask_k, 0)
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.sparse_part, \
+                         [ \
+                            LocationType.Value('Edge'), \
+                            LocationType.Value('Cell'), \
+                            LocationType.Value('Vertex') \
+                         ])
 
     def test_make_field_temporary(self):
         field = make_field("foo", make_field_dimensions_cartesian(), True)

@@ -46,10 +46,8 @@ message CartesianDimension {
 // It could also have a sparse dimension. In such case the sparse part is non-empty.
 // @ingroup sir_proto
 message UnstructuredDimension {
-  
-    dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-    repeated dawn.proto.enums.LocationType sparse_part = 2;   // neighbor chain encoding sparse part when the field has a sparse dimension
-  
+  dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
+  repeated dawn.proto.enums.LocationType sparse_part = 2;   // neighbor chain encoding sparse part when the field has a sparse dimension
 }
 
 // @brief Dimensions spanned by a field
