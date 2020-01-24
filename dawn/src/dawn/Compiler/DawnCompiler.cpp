@@ -184,8 +184,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
 
-    try {
-      for(auto [i, key_value] : enumerate(optimizer->getStencilInstantiationMap())) {
+    for(auto [i, key_value] : enumerate(optimizer->getStencilInstantiationMap())) {
+      try {
         auto instantiation = key_value.second;
         runPass<PassInlining>(*optimizer, instantiation, true,
                               PassInlining::InlineStrategy::InlineProcedures);
@@ -238,9 +238,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
         if(options_->DumpStencilInstantiation) {
           instantiation->dump();
         }
+      } catch(CompileError& e) {
+        return nullptr;
       }
-    } catch(CompileError& e) {
-      return nullptr;
     }
   } else {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);

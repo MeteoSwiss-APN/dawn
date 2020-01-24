@@ -15,8 +15,12 @@
 #ifndef DAWN_SUPPORT_ITERATORADAPTORS_H
 #define DAWN_SUPPORT_ITERATORADAPTORS_H
 
+#include <iterator>
 #include <tuple>
 
+namespace dawn {
+
+// enumerate on containers
 template <typename T, typename TIter = decltype(std::begin(std::declval<T>())),
           typename = decltype(std::end(std::declval<T>()))>
 constexpr auto enumerate(T&& iterable) {
@@ -57,5 +61,7 @@ template <typename T>
 reversion_wrapper<T> reverse(T&& iterable) {
   return {iterable};
 }
+
+} // namespace dawn
 
 #endif // DAWN_SUPPORT_ITERATORADAPTORS_H
