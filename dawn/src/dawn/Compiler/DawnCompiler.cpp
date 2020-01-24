@@ -96,6 +96,7 @@ struct ComputeEditDistance<std::string> {
 template <typename P, typename... Args>
 void runPass(OptimizerContext& optimizer, std::shared_ptr<iir::StencilInstantiation> instantiation,
              Args&&... args) {
+  // NOTE This temporary step before adding pass groups is not checking dependencies!
   P pass(optimizer, std::forward<Args>(args)...);
   if(!pass.run(instantiation))
     throw CompileError("An error occurred in a pass");
