@@ -148,7 +148,7 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
   dawn::CodeDumper::dumpNaive(ofs, stencil_inst);
 }
 
-TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
+TEST(CodeGenNaiveTest, DISABLED_GlobalsOptimizedAway) {
   std::string json = dawn::readFile("input/globals_opt_away.sir");
   std::shared_ptr<SIR> sir =
       SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);

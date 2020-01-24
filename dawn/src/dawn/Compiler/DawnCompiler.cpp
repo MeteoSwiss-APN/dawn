@@ -99,6 +99,15 @@ void runPass(OptimizerContext& optimizer, std::shared_ptr<iir::StencilInstantiat
   P pass(optimizer, std::forward<Args>(args)...);
   if(!pass.run(instantiation))
     throw CompileError("An error occurred in a pass");
+
+  // Run AST integrity checker pass after each pass
+  PassIntegrityCheck integ_check(optimizer);
+  try {
+    integ_check.run(instantiation);
+  } catch(CompileError& e) {
+    // Ignore exceptions... for now!
+    std::cerr << e.getMessage() << std::endl;
+  }
 }
 
 } // anonymous namespace
@@ -225,8 +234,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
         runPass<PassInlining>(*optimizer, instantiation,
                               getOptions().Backend == "cuda" || getOptions().SerializeIIR,
                               PassInlining::InlineStrategy::ComputationsOnTheFly);
-        // Run AST integrity checker pass after other optimizations
-        runPass<PassIntegrityCheck>(*optimizer, instantiation);
 
         if(options_->SerializeIIR) {
           const fs::path p(options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
