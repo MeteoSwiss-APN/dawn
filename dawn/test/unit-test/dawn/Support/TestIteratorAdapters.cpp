@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/IteratorAdaptors.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -20,7 +20,7 @@ using namespace dawn;
 
 namespace {
 
-TEST(TestIteratorAdaptor, reverse) {
+TEST(TestIteratorAdapter, reverse) {
   const std::vector<int> vec{0, 1, 2};
 
   int i = 0;
@@ -40,7 +40,7 @@ TEST(TestIteratorAdaptor, reverse) {
   }
 }
 
-TEST(TestIteratorAdaptor, enumerate) {
+TEST(TestIteratorAdapter, enumerate) {
   const std::vector<int> vec{0, 1, 2};
 
   for(auto [i, e] : enumerate(vec)) {

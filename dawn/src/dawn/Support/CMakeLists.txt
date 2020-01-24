@@ -47,7 +47,7 @@ add_library(DawnSupport
   IndexGenerator.cpp
   IndexGenerator.h
   IndexRange.h
-  IteratorAdaptors.h
+  IteratorAdapters.h
   Json.h
   Logging.cpp
   Logging.h

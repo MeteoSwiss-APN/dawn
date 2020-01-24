@@ -49,7 +49,7 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/FileSystem.h"
-#include "dawn/Support/IteratorAdaptors.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
