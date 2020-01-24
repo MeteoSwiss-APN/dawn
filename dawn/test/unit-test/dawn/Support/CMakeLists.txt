@@ -20,6 +20,7 @@ add_executable(${executable}
   TestStringRef.cpp
   TestArrayRef.cpp
   TestIndexRange.cpp
+  TestIteratorAdapters.cpp
   TestMain.cpp
   TestRemoveIf.cpp
   TestRangeToString.cpp
