@@ -12,18 +12,29 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/PassIntegrityCheck.h"
+#ifndef DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
+#define DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
+
+#include "dawn/Optimizer/Pass.h"
+#include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
 
-PassIntegrityCheck::PassIntegrityCheck(OptimizerContext& context)
-    : Pass(context, "PassIntegrityCheck") {}
+/// @brief Perform basic integrity checks
+///
+/// @ingroup optimizer
+///
+/// This pass is read-only and is hence not in the debug-group
+class PassValidation : public Pass {
+public:
+  PassValidation(OptimizerContext &context);
 
-bool PassIntegrityCheck::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  IntegrityChecker checker(instantiation.get());
-  checker.run();
-  return true;
-}
+  /// @brief Pass implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation> &stencilInstantiation) override;
+};
 
 } // namespace dawn
+
+#endif // DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
