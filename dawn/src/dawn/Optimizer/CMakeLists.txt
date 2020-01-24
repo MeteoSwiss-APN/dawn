@@ -32,8 +32,6 @@ add_library(DawnOptimizer
   PassIntegrityCheck.h
   PassIntervalPartitioner.cpp
   PassIntervalPartitioner.h
-  PassManager.cpp
-  PassManager.h
   PassMultiStageSplitter.cpp
   PassMultiStageSplitter.h
   PassPrintStencilGraph.cpp

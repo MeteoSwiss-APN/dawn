@@ -15,7 +15,6 @@
 #ifndef DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
 #define DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
 
-#include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
@@ -58,7 +57,6 @@ private:
 
   const std::shared_ptr<SIR> SIR_;
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
-  PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
 public:
@@ -74,10 +72,6 @@ public:
   /// @brief Check if there are errors
   bool hasErrors() const { return getDiagnostics().hasErrors(); }
 
-  /// @brief Get the PassManager
-  PassManager& getPassManager() { return passManager_; }
-  const PassManager& getPassManager() const { return passManager_; }
-
   /// @brief Get the SIR
   const std::shared_ptr<SIR>& getSIR() const { return SIR_; }
 
@@ -92,15 +86,6 @@ public:
   /// @brief Get the hardware configuration
   const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_; }
   HardwareConfig& getHardwareConfiguration() { return hardwareConfiguration_; }
-
-  /// @brief Create a new pass at the end of the pass list
-  template <class T, typename... Args>
-  void checkAndPushBack(Args&&... args) {
-    std::unique_ptr<T> pass = std::make_unique<T>(*this, std::forward<Args>(args)...);
-    if(compareOptionsToPassFlags<T>(pass)) {
-      passManager_.getPasses().push_back(std::move(pass));
-    }
-  }
 
   /// @brief fillIIRFromSIR
   /// @param stencilInstantation

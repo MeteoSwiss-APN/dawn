@@ -49,6 +49,7 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/FileSystem.h"
+#include "dawn/Support/IteratorAdaptors.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
@@ -91,6 +92,14 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
+
+template <typename P, typename... Args>
+void runPass(OptimizerContext& optimizer, std::shared_ptr<iir::StencilInstantiation> instantiation,
+             Args&&... args) {
+  P pass(optimizer, std::forward<Args>(args)...);
+  if(!pass.run(instantiation))
+    throw CompileError("An error occurred in a pass");
+}
 
 } // anonymous namespace
 
@@ -175,76 +184,63 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
 
-    // Setup pass interface
-    optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
-    // This pass is currently broken and needs to be redesigned before it can be enabled
-    //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
-    optimizer->checkAndPushBack<PassFieldVersioning>();
-    optimizer->checkAndPushBack<PassSSA>();
-    optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-    optimizer->checkAndPushBack<PassStageSplitter>();
-    optimizer->checkAndPushBack<PassPrintStencilGraph>();
-    optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassSetStageName>();
-    optimizer->checkAndPushBack<PassSetStageGraph>();
-    optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
-    optimizer->checkAndPushBack<PassStageMerger>();
-    optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
-    optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassTemporaryMerger>();
-    optimizer->checkAndPushBack<PassInlining>(
-        (getOptions().InlineSF || getOptions().PassTmpToFunction),
-        PassInlining::InlineStrategy::ComputationsOnTheFly);
-    optimizer->checkAndPushBack<PassIntervalPartitioner>();
-    optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-    optimizer->checkAndPushBack<PassSetNonTempCaches>();
-    optimizer->checkAndPushBack<PassSetCaches>();
-    optimizer->checkAndPushBack<PassFixVersionedInputFields>();
-    optimizer->checkAndPushBack<PassComputeStageExtents>();
-    // This pass is disabled because the boundary conditions need to be fixed.
-    // optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-    if(getOptions().Backend == "cuda") {
-      optimizer->checkAndPushBack<PassSetBlockSize>();
-    }
-    optimizer->checkAndPushBack<PassDataLocalityMetric>();
-    optimizer->checkAndPushBack<PassSetSyncStage>();
-    // Since both cuda code generation as well as serialization do not support stencil-functions, we
-    // need to inline here as the last step
-    optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
-                                                  getOptions().SerializeIIR,
-                                              PassInlining::InlineStrategy::ComputationsOnTheFly);
-    // Run AST integrity checker pass after other optimizations
-    optimizer->checkAndPushBack<PassIntegrityCheck>();
+    try {
+      for(auto [i, key_value] : enumerate(optimizer->getStencilInstantiationMap())) {
+        auto instantiation = key_value.second;
+        runPass<PassInlining>(*optimizer, instantiation, true,
+                              PassInlining::InlineStrategy::InlineProcedures);
+        // This pass is currently broken and needs to be redesigned before it can be enabled
+        //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
+        runPass<PassFieldVersioning>(*optimizer, instantiation);
+        runPass<PassSSA>(*optimizer, instantiation);
+        runPass<PassMultiStageSplitter>(*optimizer, instantiation, mssSplitStrategy);
+        runPass<PassStageSplitter>(*optimizer, instantiation);
+        runPass<PassPrintStencilGraph>(*optimizer, instantiation);
+        runPass<PassTemporaryType>(*optimizer, instantiation);
+        runPass<PassSetStageName>(*optimizer, instantiation);
+        runPass<PassSetStageGraph>(*optimizer, instantiation);
+        runPass<PassStageReordering>(*optimizer, instantiation, reorderStrategy);
+        runPass<PassStageMerger>(*optimizer, instantiation);
+        runPass<PassStencilSplitter>(*optimizer, instantiation, maxFields);
+        runPass<PassTemporaryType>(*optimizer, instantiation);
+        runPass<PassTemporaryMerger>(*optimizer, instantiation);
+        runPass<PassInlining>(*optimizer, instantiation,
+                              (getOptions().InlineSF || getOptions().PassTmpToFunction),
+                              PassInlining::InlineStrategy::ComputationsOnTheFly);
+        runPass<PassIntervalPartitioner>(*optimizer, instantiation);
+        runPass<PassTemporaryToStencilFunction>(*optimizer, instantiation);
+        runPass<PassSetNonTempCaches>(*optimizer, instantiation);
+        runPass<PassSetCaches>(*optimizer, instantiation);
+        runPass<PassFixVersionedInputFields>(*optimizer, instantiation);
+        runPass<PassComputeStageExtents>(*optimizer, instantiation);
+        // This pass is disabled because the boundary conditions need to be fixed.
+        // optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+        if(getOptions().Backend == "cuda") {
+          runPass<PassSetBlockSize>(*optimizer, instantiation);
+        }
+        runPass<PassDataLocalityMetric>(*optimizer, instantiation);
+        runPass<PassSetSyncStage>(*optimizer, instantiation);
+        // Since both cuda code generation as well as serialization do not support
+        // stencil-functions, we need to inline here as the last step
+        runPass<PassInlining>(*optimizer, instantiation,
+                              getOptions().Backend == "cuda" || getOptions().SerializeIIR,
+                              PassInlining::InlineStrategy::ComputationsOnTheFly);
+        // Run AST integrity checker pass after other optimizations
+        runPass<PassIntegrityCheck>(*optimizer, instantiation);
 
-    DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
-    for(const auto& a : optimizer->getPassManager().getPasses()) {
-      DAWN_LOG(INFO) << a->getName();
-    }
-
-    int i = 0;
-    for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-      // Run optimization passes
-      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-
-      DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
-                     << instantiation->getName() << "` ...";
-      if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
-        return nullptr;
-
-      DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
-                     << instantiation->getName() << "`";
-
-      if(options_->SerializeIIR) {
-        const fs::path p(options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                                      : options_->OutputFile);
-        IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
-                                     ".iir",
-                                 instantiation, serializationKind);
-        i++;
+        if(options_->SerializeIIR) {
+          const fs::path p(options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                                        : options_->OutputFile);
+          IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                       ".iir",
+                                   instantiation, serializationKind);
+        }
+        if(options_->DumpStencilInstantiation) {
+          instantiation->dump();
+        }
       }
-      if(options_->DumpStencilInstantiation) {
-        instantiation->dump();
-      }
+    } catch(CompileError& e) {
+      return nullptr;
     }
   } else {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);

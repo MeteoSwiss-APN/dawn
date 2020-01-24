@@ -732,10 +732,16 @@ bool OptimizerContext::restoreIIR(std::string const& name,
 
   // fix extents of stages since they are not stored in the iir but computed from the accesses
   // contained in the DoMethods
-  checkAndPushBack<PassSetStageName>();
-  checkAndPushBack<PassComputeStageExtents>();
-  if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
-    return false;
+  {
+    PassSetStageName pass(*this);
+    if(!pass.run(stencilInstantiation))
+      return false;
+  }
+  {
+    PassComputeStageExtents pass(*this);
+    if(!pass.run(stencilInstantiation))
+      return false;
+  }
 
   return true;
 }
