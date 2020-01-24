@@ -214,9 +214,8 @@ void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
 }
 
 TEST(IIRDeserializerTest, CopyStencil) {
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -231,9 +230,8 @@ TEST(IIRDeserializerTest, CopyStencil) {
 }
 
 TEST(IIRDeserializerTest, LapStencil) {
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -247,10 +245,9 @@ TEST(IIRDeserializerTest, LapStencil) {
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);
 }
 
-TEST(IIRDeserializerTest, DISABLED_UnstructuredSumEdgeToCells) {
-  Options compileOptions;
+TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(dawn::ast::GridType::Triangular));
   // read IIR from file

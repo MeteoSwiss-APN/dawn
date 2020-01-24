@@ -54,6 +54,8 @@
 
 namespace gtclang {
 
+namespace {
+
 /// @brief Get current time-stamp
 static const std::string currentDateTime() {
   std::time_t now = time(0);
@@ -71,6 +73,8 @@ static dawn::Options makeDAWNOptions(const Options& options) {
 #undef OPT
   return DAWNOptions;
 }
+
+} // anonymous namespace
 
 GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, const std::string& file,
                                        GTClangASTAction* parentAction)

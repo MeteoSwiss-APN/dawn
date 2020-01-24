@@ -17,6 +17,7 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
+#include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Format.h"
@@ -277,6 +278,20 @@ static std::shared_ptr<sir::Field> makeField(const dawn::proto::statements::Fiel
         dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
                                                    (bool)fieldProto.field_dimensions()[1],
                                                    (bool)fieldProto.field_dimensions()[2]}));
+
+    switch(fieldProto.location_type()) {
+    case dawn::proto::statements::LocationType::Cell:
+      field->locationType = ast::Expr::LocationType::Cells;
+      break;
+    case dawn::proto::statements::LocationType::Vertex:
+      field->locationType = ast::Expr::LocationType::Vertices;
+      break;
+    case dawn::proto::statements::LocationType::Edge:
+      field->locationType = ast::Expr::LocationType::Edges;
+      break;
+    default:
+      dawn_unreachable("unknown location type");
+    }
   }
   return field;
 }

@@ -12,22 +12,25 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Assert.h"
-#include "dawn/Support/STLExtras.h"
-#include "dawn/Unittest/UnittestLogger.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
-#include <gtest/gtest.h>
+#ifndef DAWN_UNITTEST_CODEDUMPER_H
+#define DAWN_UNITTEST_CODEDUMPER_H
 
-std::string TestEnvironment::path_ = "";
+#include <iostream>
 
-int main(int argc, char* argv[]) {
-  // Initialize gtest
-  testing::InitGoogleTest(&argc, argv);
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
 
-  if(argc > 1) {
-    DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
-    TestEnvironment::path_ = argv[1];
-    ::testing::AddGlobalTestEnvironment(new TestEnvironment());
-  }
-  return RUN_ALL_TESTS();
-}
+namespace dawn {
+
+/// @brief Code generation dumper for unit tests
+/// @ingroup unittest
+class CodeDumper {
+public:
+  static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
+  static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
+};
+
+} // namespace dawn
+
+#endif

@@ -34,8 +34,8 @@ class DawnCompiler : NonCopyable {
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics
-  DawnCompiler();
-  DawnCompiler(Options const& options);
+  DawnCompiler() = default;
+  DawnCompiler(const Options& options);
 
   /// @brief Apply parallelizer, code optimization, and generate
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& stencilIR);

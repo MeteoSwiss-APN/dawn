@@ -12,22 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Assert.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Unittest/UnittestLogger.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <gtest/gtest.h>
-
-std::string TestEnvironment::path_ = "";
 
 int main(int argc, char* argv[]) {
   // Initialize gtest
   testing::InitGoogleTest(&argc, argv);
 
-  if(argc > 1) {
-    DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
-    TestEnvironment::path_ = argv[1];
-    ::testing::AddGlobalTestEnvironment(new TestEnvironment());
-  }
+  // Initialize Unittest-Logger
+  auto logger = std::make_unique<dawn::UnittestLogger>();
+  dawn::Logger::getSingleton().registerLogger(logger.get());
+
   return RUN_ALL_TESTS();
 }

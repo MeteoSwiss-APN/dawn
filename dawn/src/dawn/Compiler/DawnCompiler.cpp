@@ -23,6 +23,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassIntegrityCheck.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
@@ -47,17 +48,33 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/EditDistance.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/LocationTypeChecker.h"
 
-#include <filesystem>
-
 namespace dawn {
 
 namespace {
+
+// CodeGen backends
+enum class BackendType { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+
+BackendType parseBackendString(const std::string& backendStr) {
+  if(backendStr == "gt" || backendStr == "gridtools") {
+    return BackendType::GridTools;
+  } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
+    return BackendType::CXXNaive;
+  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
+    return BackendType::CXXNaiveIco;
+  } else if(backendStr == "cuda" || backendStr == "CUDA") {
+    return BackendType::CUDA;
+  } else {
+    throw CompileError("Backend not supported");
+  }
+}
 
 /// @brief Make a suggestion to the user if there is a small typo (only works with string options)
 template <class T>
@@ -95,12 +112,20 @@ bool shouldRunPass(const Options& options, bool runSpecificPass) {
   return !options.DefaultNone || runSpecificPass;
 }
 
-} // anonymous namespace
+OptimizerContext::OptimizerContextOptions
+createOptimizerOptionsFromAllOptions(const Options& options) {
+  OptimizerContext::OptimizerContextOptions retval;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  retval.NAME = options.NAME;
+#include "dawn/Optimizer/OptimizerOptions.inc"
+#undef OPT
+  return retval;
+}
 
 /// @brief Report a diagnostic concering an invalid Option
 template <class T>
-static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
-                                    std::vector<T> possibleValues = std::vector<T>{}) {
+DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
+                             std::vector<T> possibleValues = std::vector<T>{}) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
   diag << "invalid value '" << value << "' of option '" << option << "'";
 
@@ -117,17 +142,7 @@ static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, s
   return diag;
 }
 
-static OptimizerContext::OptimizerContextOptions
-createOptimizerOptionsFromAllOptions(const Options& options) {
-  OptimizerContext::OptimizerContextOptions retval;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  retval.NAME = options.NAME;
-#include "dawn/Optimizer/OptimizerOptions.inc"
-#undef OPT
-  return retval;
-}
-
-DawnCompiler::DawnCompiler() : options_(), diagnostics_() {}
+} // namespace
 
 DawnCompiler::DawnCompiler(Options const& options) : options_(options), diagnostics_() {}
 
@@ -384,34 +399,42 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
 std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                            stencilInstantiationMap) {
-
   // Generate code
-  if(options_.Backend == "gt" || options_.Backend == "gridtools") {
-    codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
-                              options_.MaxHaloPoints);
-    return CG.generateCode();
-  } else if(options_.Backend == "c++-naive") {
-    codegen::cxxnaive::CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics_,
-                                          options_.MaxHaloPoints);
-    return CG.generateCode();
-  } else if(options_.Backend == "c++-naive-ico") {
-    codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics_,
-                                                options_.MaxHaloPoints);
-    return CG.generateCode();
-  } else if(options_.Backend == "cuda") {
-    const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
-                              options_.domain_size_k};
-    codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
-                                  options_.nsms, options_.maxBlocksPerSM, domain_size);
-    return CG.generateCode();
-  } else if(options_.Backend == "c++-opt") {
-    dawn_unreachable("GTClangOptCXX not supported yet");
-  } else {
+  try {
+    BackendType backend = parseBackendString(options_.Backend);
+    switch(backend) {
+    case BackendType::GridTools: {
+      codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
+                                options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaive: {
+      codegen::cxxnaive::CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics_,
+                                            options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CUDA: {
+      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
+                                options_.domain_size_k};
+      codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
+                                    options_.nsms, options_.maxBlocksPerSM, domain_size);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaiveIco: {
+      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics_,
+                                                  options_.MaxHaloPoints);
+
+      return CG.generateCode();
+    }
+    case BackendType::CXXOpt:
+      dawn_unreachable("GTClangOptCXX not supported yet");
+    }
+  } catch(...) {
     diagnostics_.report(buildDiag("-backend", options_.Backend,
                                   "backend options must be : " +
                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-    throw std::runtime_error("An error occurred.");
+    return nullptr;
   }
 }
 

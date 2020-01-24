@@ -287,41 +287,11 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     stencilClass.addComment("Members");
-    bool iterationSpaceSet = false;
-    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-      if(stage->getIterationSpace()[0].has_value()) {
-        stencilClass.addMember("std::array<int, 2>",
-                               "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
-        iterationSpaceSet = true;
-      }
-      if(stage->getIterationSpace()[1].has_value()) {
-        stencilClass.addMember("std::array<int, 2>",
-                               "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
-        iterationSpaceSet = true;
-      }
-    }
+    bool iterationSpaceSet = hasGlobalIndices(stencil);
     if(iterationSpaceSet) {
-      stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
-      auto globalOffsetFunc = stencilClass.addMemberFunction("static std::array<unsigned int, 2>",
-                                                             "computeGlobalOffsets");
-      globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
-      globalOffsetFunc.startBody();
-      globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
-      globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
-      globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
-      globalOffsetFunc.addStatement(
-          "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
-
-      globalOffsetFunc.commit();
-
-      auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
-      checkOffsetFunc.addArg("unsigned int min");
-      checkOffsetFunc.addArg("unsigned int max");
-      checkOffsetFunc.addArg("unsigned int val");
-      checkOffsetFunc.startBody();
-      checkOffsetFunc.addStatement("return (min <= val && val < max)");
-      checkOffsetFunc.commit();
+      generateGlobalIndices(stencil, stencilClass);
     }
+
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 

@@ -266,7 +266,7 @@ public:
     const gridtools::dawn::domain m_dom;
   public:
 
-    stencil_49(const gridtools::dawn::domain& dom_) : sbase("stencil_49"), m_dom(dom_){}
+    stencil_49(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_49"), m_dom(dom_){}
 
     void run(storage_ijk_t a_ds, storage_ijk_t b_ds, storage_ijk_t c_ds, storage_ijk_t d_ds) {
 
@@ -315,7 +315,7 @@ public:
 
   // Stencil-Data
 
-  tridiagonal_solve_stencil(const gridtools::dawn::domain& dom) : m_stencil_49(dom){}
+  tridiagonal_solve_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_49(dom, rank, xcols, ycols){}
 
   template<typename S>
   void sync_storages(S field) {
