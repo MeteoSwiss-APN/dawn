@@ -41,4 +41,19 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   return consistent;
 }
 
+bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
+  // SIR we received should be type consistent
+  if(sir->GridType == ast::GridType::Triangular) {
+    LocationTypeChecker locationChecker;
+    if(!locationChecker.checkLocationTypeConsistency(*sir))
+      throw SemanticError("Location types in SIR are not consistent");
+  }
+
+  GridTypeChecker gridChecker;
+  if(!gridChecker.checkGridTypeConsistency(*sir))
+    throw SemanticError("Grid types in SIR are not consistent");
+
+  return true;
+}
+
 } // namespace dawn

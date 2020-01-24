@@ -31,8 +31,11 @@ class PassValidation : public Pass {
 public:
   PassValidation(OptimizerContext &context);
 
-  /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation> &stencilInstantiation) override;
+  /// @brief Pass run implementation for IIR
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+
+  /// @brief SIR validation
+  bool run(const std::shared_ptr<dawn::SIR>& sir);
 };
 
 } // namespace dawn

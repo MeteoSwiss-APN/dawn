@@ -53,8 +53,6 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
 
@@ -171,6 +169,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   }
   std::unique_ptr<OptimizerContext> optimizer;
 
+  PassValidation validationPass(*optimizer);
+  validationPass.run(SIR);
+
   if(options_->DeserializeIIR == "") {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
@@ -266,21 +267,6 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   if(options_->MaxHaloPoints < 0) {
     diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
                                    "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
-  }
-
-  // SIR we received should be type consistent
-  if(SIR->GridType == ast::GridType::Triangular) {
-    LocationTypeChecker locationChecker;
-    if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
-      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
-      return nullptr;
-    }
-  }
-
-  GridTypeChecker gridChecker;
-  if(!gridChecker.checkGridTypeConsistency(*SIR.get())) {
-    DAWN_LOG(INFO) << "Grid types in SIR are not consistent, no code generation";
     return nullptr;
   }
 
