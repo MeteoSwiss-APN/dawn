@@ -19,6 +19,7 @@
 
 #include "clang/Frontend/FrontendActions.h"
 #include "llvm/ADT/StringRef.h"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -30,7 +31,13 @@ namespace gtclang {
 /// @ingroup frontend
 class GTClangIncludeChecker {
 public:
-  static bool UpdateHeader(std::string& sourceFile);
+  GTClangIncludeChecker(const std::string& sourceFile);
+  void Update();
+  void Restore();
+
+private:
+  bool updated_;
+  std::string sourceFile_;
 };
 
 } // namespace gtclang

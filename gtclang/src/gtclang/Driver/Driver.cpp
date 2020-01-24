@@ -62,10 +62,8 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(context->getOptions().Verbose)
     dawn::Logger::getSingleton().registerLogger(logger.get());
 
-  std::string sourceFile = std::string{clangArgs[1]};
-  bool addIncludes = GTClangIncludeChecker::UpdateHeader(sourceFile);
-  if(addIncludes)
-    clangArgs[1] = sourceFile.c_str();
+  GTClangIncludeChecker includeChecker(clangArgs[1]);
+  includeChecker.Update();
 
   // Create GTClang
   std::unique_ptr<clang::CompilerInstance> GTClang(createCompilerInstance(clangArgs));
@@ -87,8 +85,7 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(context->getOptions().Verbose)
     dawn::Logger::getSingleton().registerLogger(oldLogger);
 
-  if(addIncludes)
-    std::remove(sourceFile.c_str());
+  includeChecker.Restore();
 
   return ReturnValue{ret, returnSIR};
 }

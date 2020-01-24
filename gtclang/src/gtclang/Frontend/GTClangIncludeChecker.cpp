@@ -18,13 +18,18 @@
 
 namespace gtclang {
 
-bool GTClangIncludeChecker::UpdateHeader(std::string& sourceFile) {
+GTClangIncludeChecker::GTClangIncludeChecker(const std::string& sourceFile)
+    : sourceFile_(sourceFile) {
+  updated_ = false;
+}
+
+void GTClangIncludeChecker::Update() {
   using clang::StringRef;
 
   std::vector<std::string> includes = {"gtclang_dsl_defs/gtclang_dsl.hpp"};
   std::vector<std::string> namespaces = {"gtclang::dsl"};
 
-  std::ifstream ifs(sourceFile);
+  std::ifstream ifs(sourceFile_);
   std::string PPCode((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
   StringRef PPCodeRef(PPCode);
@@ -59,10 +64,11 @@ bool GTClangIncludeChecker::UpdateHeader(std::string& sourceFile) {
   }
 
   if(includes.size() > 0 || namespaces.size() > 0) {
-    size_t pos = sourceFile.rfind('.');
-    sourceFile = sourceFile.substr(0, pos) + "~" + sourceFile.substr(pos);
+    updated_ = true;
+    std::filesystem::copy(sourceFile_, sourceFile_ + "~",
+                          std::filesystem::copy_options::overwrite_existing);
 
-    std::ofstream ofs(sourceFile);
+    std::ofstream ofs(sourceFile_);
     for(const std::string& include : includes)
       ofs << "#include \"" << include << "\"\n";
     for(const std::string& nspace : namespaces)
@@ -72,11 +78,15 @@ bool GTClangIncludeChecker::UpdateHeader(std::string& sourceFile) {
     for(int i = 0; i < PPCodeLines.size(); ++i)
       ofs << PPCodeLines[i].str() << "\n";
     ofs.close();
-
-    return true;
   }
+}
 
-  return false;
+void GTClangIncludeChecker::Restore() {
+  if(updated_) {
+    std::filesystem::copy(sourceFile_ + "~", sourceFile_,
+                          std::filesystem::copy_options::overwrite_existing);
+    std::remove((sourceFile_ + "~").c_str());
+  }
 }
 
 } // namespace gtclang
