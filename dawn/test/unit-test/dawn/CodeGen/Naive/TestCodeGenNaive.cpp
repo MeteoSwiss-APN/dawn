@@ -62,8 +62,7 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
 }
 
 stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
-  std::unique_ptr<dawn::Options> options;
-  DawnCompiler compiler(options.get());
+  DawnCompiler compiler{};
   auto optimizer = compiler.runOptimizer(sir);
 
   if(compiler.getDiagnostics().hasDiags()) {
