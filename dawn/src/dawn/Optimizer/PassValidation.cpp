@@ -19,39 +19,48 @@ namespace dawn {
 PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassValidation") {}
 
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  bool consistent = true;
   IntegrityChecker checker(instantiation.get());
-  checker.run();
+  try {
+    checker.run();
+  } catch(CompileError& error) {
+    DAWN_LOG(WARNING) << error.getMessage();
+    return false;
+  }
 
   const auto& metaData = instantiation->getMetaData();
   const auto& iir = instantiation->getIIR();
 
   if(iir->getGridType() == ast::GridType::Triangular) {
     LocationTypeChecker locationChecker;
-    consistent = locationChecker.checkLocationTypeConsistency(*iir, metaData);
-    if(!consistent)
-      throw SemanticError("Location types in IIR are not consistent", metaData.getFileName());
+    if(!locationChecker.checkLocationTypeConsistency(*iir, metaData)) {
+      DAWN_LOG(WARNING) << "Location types in IIR are not consistent in '" << metaData.getFileName() << "'";
+      return false;
+    }
   }
 
   GridTypeChecker gridChecker;
-  consistent = gridChecker.checkGridTypeConsistency(*iir);
-  if(!consistent)
-    throw SemanticError("Grid types in IIR are not consistent");
+  if(!gridChecker.checkGridTypeConsistency(*iir)) {
+    DAWN_LOG(WARNING) << "Grid types in IIR are not consistent in '" << metaData.getFileName() << "'";
+    return false;
+  }
 
-  return consistent;
+  return true;
 }
 
 bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
-  // SIR we received should be type consistent
   if(sir->GridType == ast::GridType::Triangular) {
     LocationTypeChecker locationChecker;
-    if(!locationChecker.checkLocationTypeConsistency(*sir))
-      throw SemanticError("Location types in SIR are not consistent");
+    if(!locationChecker.checkLocationTypeConsistency(*sir)) {
+      DAWN_LOG(WARNING) << "Location types in SIR are not consistent";
+      return false;
+    }
   }
 
   GridTypeChecker gridChecker;
-  if(!gridChecker.checkGridTypeConsistency(*sir))
-    throw SemanticError("Grid types in SIR are not consistent");
+  if(!gridChecker.checkGridTypeConsistency(*sir)) {
+    DAWN_LOG(WARNING) << "Grid types in SIR are not consistent";
+    return false;
+  }
 
   return true;
 }

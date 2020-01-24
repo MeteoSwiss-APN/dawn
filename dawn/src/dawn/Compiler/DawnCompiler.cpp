@@ -170,7 +170,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   std::unique_ptr<OptimizerContext> optimizer;
 
   PassValidation validationPass(*optimizer);
-  validationPass.run(SIR);
+  if(!validationPass.run(SIR)) {
+    return nullptr;
+  }
 
   if(options_->DeserializeIIR == "") {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
