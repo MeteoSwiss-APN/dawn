@@ -17,6 +17,7 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
+#include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Format.h"
