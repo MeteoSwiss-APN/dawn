@@ -60,7 +60,7 @@ def main(args: argparse.Namespace):
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(LocationType.Value('Cell'), 1)), sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(LocationType.Value('Edge'), 1))],
+                [sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(SIR.LocationType.Value('Cell'), 1)), sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(SIR.LocationType.Value('Edge'), 1))],
             ),
         ],
     )
