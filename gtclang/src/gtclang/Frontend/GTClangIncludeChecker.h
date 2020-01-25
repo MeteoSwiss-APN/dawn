@@ -27,13 +27,19 @@
 
 namespace gtclang {
 
+using clang::StringRef;
+
 /// @brief Ensures that input file has necessary gtclang includes needed for stencil DSL
 /// @ingroup frontend
 class GTClangIncludeChecker {
 public:
-  GTClangIncludeChecker(const std::string& sourceFile);
-  void Update();
+  GTClangIncludeChecker();
+  void Update(const std::string& sourceFile);
   void Restore();
+
+protected:
+  void ScanHeader(const llvm::SmallVector<StringRef, 100>& PPCodeLines, std::vector<std::string>& includes, std::vector<std::string>& namespaces);
+  void WriteFile(const llvm::SmallVector<StringRef, 100>& PPCodeLines, std::vector<std::string>& includes, std::vector<std::string>& namespaces);
 
 private:
   bool updated_;
