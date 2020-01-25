@@ -20,12 +20,7 @@ PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassV
 
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   IntegrityChecker checker(instantiation.get());
-  try {
-    checker.run();
-  } catch(CompileError& error) {
-    DAWN_LOG(WARNING) << error.getMessage();
-    return false;
-  }
+  checker.run();
 
   const auto& metaData = instantiation->getMetaData();
   const auto& iir = instantiation->getIIR();

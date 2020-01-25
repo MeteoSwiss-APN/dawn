@@ -17,7 +17,6 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CodeDumper.h"
@@ -26,13 +25,9 @@
 #include "dawn/Validator/IntegrityChecker.h"
 
 #include <gtest/gtest.h>
-
 #include <fstream>
 
 using namespace dawn;
-
-using stencilInstantiationContext =
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 namespace {
 
@@ -59,21 +54,6 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
 
   std::string ref = dawn::readFile("reference/global_indexing.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
-}
-
-stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
-  std::unique_ptr<dawn::Options> options;
-  DawnCompiler compiler(options.get());
-  auto optimizer = compiler.runOptimizer(sir);
-
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    }
-    throw std::runtime_error("Compilation failed");
-  }
-
-  return optimizer->getStencilInstantiationMap();
 }
 
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
@@ -146,19 +126,6 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
   dawn::CodeDumper::dumpNaive(ofs, stencil_inst);
-}
-
-TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::string json = dawn::readFile("input/globals_opt_away.sir");
-  std::shared_ptr<SIR> sir =
-      SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
-
-  try {
-    compile(sir);
-    FAIL() << "Semantic error not thrown";
-  } catch(SemanticError& error) {
-    SUCCEED();
-  }
 }
 
 } // anonymous namespace
