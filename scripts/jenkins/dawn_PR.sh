@@ -20,7 +20,7 @@ repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
-workdir=/dev/shm/tmp_dawn
+workdir=$base_dir/temp
 rm -rf ${workdir}
 echo "Copying repository to ${workdir}"
 cp -r ${repo_root} ${workdir}
@@ -64,6 +64,6 @@ for t in $clang_gridtools_tests; do
   i=$((i+1))
 done
 
-rm -rf ${workdir}
+# rm -rf ${workdir}
 
 exit $ret
