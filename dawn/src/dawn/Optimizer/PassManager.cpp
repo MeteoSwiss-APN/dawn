@@ -60,19 +60,9 @@ bool PassManager::runPassOnStencilInstantiation(
                             "_Log.json");
   }
 
-  DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
-                  std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
-
-  LocationTypeChecker locationChecker;
-  GridTypeChecker gridChecker;
-  const auto& IIR = instantiation->getIIR();
-  if(IIR->getGridType() == ast::GridType::Triangular) {
-    DAWN_ASSERT_MSG(
-        locationChecker.checkLocationTypeConsistency(*IIR.get(), instantiation->getMetaData()),
-        std::string("Location type consistency check failed for pass" + pass->getName()).c_str());
-  }
-  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*IIR.get()),
-                  std::string("Type consistency check failed for pass" + pass->getName()).c_str());
+  // Run validation pass after each optimization pass
+  PassValidation validationPass(context);
+  DAWN_ASSERT(validationPass.run(instantiation, "for pass " + pass->getName()));
 
 #ifndef NDEBUG
   for(const auto& stencil : instantiation->getIIR()->getChildren()) {

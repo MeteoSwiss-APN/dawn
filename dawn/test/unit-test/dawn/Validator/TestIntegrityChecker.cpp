@@ -16,12 +16,10 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileUtil.h"
-//#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -41,7 +39,6 @@ protected:
     dawn::DiagnosticsEngine diag;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     dawn::OptimizerContext::OptimizerContextOptions options;
-    //options.PartitionIntervals = true;
     context_ = std::make_unique<OptimizerContext>(diag, options, sir);
   }
 

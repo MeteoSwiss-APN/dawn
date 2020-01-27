@@ -32,8 +32,12 @@ class PassValidation : public Pass {
 public:
   PassValidation(OptimizerContext &context);
 
-  /// @brief Pass run implementation for IIR
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  /// @brief Pass run implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) override;
+
+  /// @brief IIR validation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+           const std::string& description);
 
   /// @brief SIR validation
   bool run(const std::shared_ptr<dawn::SIR>& sir);
