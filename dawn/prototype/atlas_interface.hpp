@@ -88,8 +88,12 @@ Field<T> vertexFieldType(atlasTag);
 template <typename T>
 class SparseDimension {
 public:
-  T const& operator()(int f, int i, int j) const { return sparse_dimension_(f, i, j); }
-  T& operator()(int f, int i, int j) { return sparse_dimension_(f, i, j); }
+  T const& operator()(int elem_idx, int sparse_dim_idx, int level) const {
+    return sparse_dimension_(elem_idx, sparse_dim_idx, level);
+  }
+  T& operator()(int elem_idx, int sparse_dim_idx, int level) {
+    return sparse_dimension_(elem_idx, sparse_dim_idx, level);
+  }
 
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
       : sparse_dimension_(sparse_dimension) {}

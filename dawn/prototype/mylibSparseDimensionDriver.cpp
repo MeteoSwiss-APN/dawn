@@ -13,7 +13,7 @@ int main() {
   mylib::Grid mesh{w, w, true};
   mylib::FaceData<double> faces(mesh, k_size);
   mylib::EdgeData<double> edges(mesh, k_size);
-  mylib::SparseData<double> sparseCellData(edgesPerCell, mesh.faces().size(), k_size);
+  mylib::SparseData<double> sparseCellData(k_size, mesh.faces().size(), edgesPerCell);
 
   for(auto& f : mesh.faces()) {
     faces(f, level) = 0;
@@ -35,7 +35,7 @@ int main() {
 
       double xm = 0.5 * (x0 + x1);
       double ym = 0.5 * (y0 + y1);
-      sparseCellData(f.id(), level, eiter++) = xm * xm + ym * ym;
+      sparseCellData(level, f, eiter++) = xm * xm + ym * ym;
     }
   }
 

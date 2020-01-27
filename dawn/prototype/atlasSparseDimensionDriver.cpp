@@ -46,7 +46,7 @@ int main() {
 
   const int level = 0;
   for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
-    cells_v(level, iCell) = 0;
+    cells_v(iCell, level) = 0;
     for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
       int edgeIdx = mesh.cells().edge_connectivity()(iCell, jNbh);
       auto [x, y] = atlasToCartesianMapper.edgeMidpoint(mesh, edgeIdx);
@@ -55,7 +55,7 @@ int main() {
   }
 
   for(int iEdge = 0; iEdge < mesh.edges().size(); iEdge++) {
-    edges_v(level, iEdge) = 1;
+    edges_v(iEdge, level) = 1;
   }
 
   dawn_generated::cxxnaiveico::sparseDimension<atlasInterface::atlasTag>(mesh, nb_levels, cells_v,

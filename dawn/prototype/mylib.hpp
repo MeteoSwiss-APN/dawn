@@ -338,13 +338,25 @@ public:
 template <typename T>
 class SparseData {
 public:
-  SparseData(size_t sparse_size, size_t dense_size, size_t num_k_levels)
+  SparseData(size_t num_k_levels, size_t dense_size, size_t sparse_size)
       : data_(num_k_levels, std::vector<std::vector<T>>(dense_size, std::vector<T>(sparse_size))) {}
-  T& operator()(size_t f_id, size_t k_level, size_t sparse_idx) {
-    return data_[k_level][f_id][sparse_idx];
+  T& operator()(int k_level, const Face& f, size_t sparse_idx) {
+    return data_[k_level][f.id()][sparse_idx];
   }
-  T const& operator()(size_t f_id, size_t k_level, size_t sparse_idx) const {
-    return data_[k_level][f_id][sparse_idx];
+  T const& operator()(int k_level, const Face& f, size_t sparse_idx) const {
+    return data_[k_level][f.id()][sparse_idx];
+  }
+  T& operator()(int k_level, const Edge& e, size_t sparse_idx) {
+    return data_[k_level][e.id()][sparse_idx];
+  }
+  T const& operator()(int k_level, const Edge& e, size_t sparse_idx) const {
+    return data_[k_level][e.id()][sparse_idx];
+  }
+  T& operator()(int k_level, const Vertex& v, size_t sparse_idx) {
+    return data_[k_level][v.id()][sparse_idx];
+  }
+  T const& operator()(int k_level, const Vertex& v, size_t sparse_idx) const {
+    return data_[k_level][v.id()][sparse_idx];
   }
   int k_size() const { return data_.size(); }
 
