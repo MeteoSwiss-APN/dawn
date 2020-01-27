@@ -22,7 +22,6 @@
 #include "dawn/Unittest/CodeDumper.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
-#include "dawn/Validator/IntegrityChecker.h"
 
 #include <gtest/gtest.h>
 #include <fstream>

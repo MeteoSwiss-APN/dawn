@@ -21,7 +21,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileUtil.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+//#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -33,7 +33,7 @@ namespace {
 using stencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
-class TestValidation : public ::testing::Test {
+class TestIntegrityChecker : public ::testing::Test {
   std::unique_ptr<OptimizerContext> context_;
 
 protected:
@@ -41,7 +41,7 @@ protected:
     dawn::DiagnosticsEngine diag;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     dawn::OptimizerContext::OptimizerContextOptions options;
-    options.PartitionIntervals = true;
+    //options.PartitionIntervals = true;
     context_ = std::make_unique<OptimizerContext>(diag, options, sir);
   }
 
@@ -63,8 +63,8 @@ protected:
   }
 };
 
-TEST_F(TestValidation, GlobalsOptimizedAway) {
-  std::string json = dawn::readFile("globals_opt_away.sir");
+TEST_F(TestIntegrityChecker, GlobalsOptimizedAway) {
+  std::string json = dawn::readFile("input/globals_opt_away.sir");
   std::shared_ptr<SIR> sir =
       SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
 

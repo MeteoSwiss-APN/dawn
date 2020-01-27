@@ -23,7 +23,6 @@ add_executable(${executable}
   TestFieldAccessIntervals.cpp
   TestTemporaryToFunction.cpp
   TestIntervalPartitioner.cpp
-  TestValidation.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
