@@ -16,10 +16,13 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileUtil.h"
+#include "dawn/Unittest/CompilerUtil.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -28,45 +31,22 @@ using namespace dawn;
 
 namespace {
 
-using stencilInstantiationContext =
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
+TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
+  // Load IIR from file
+  std::unique_ptr<OptimizerContext> context;
+  dawn::OptimizerContext::OptimizerContextOptions options;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+      CompilerUtil::load("input/globals_opt_away.iir", options, context);
 
-class TestIntegrityChecker : public ::testing::Test {
-  std::unique_ptr<OptimizerContext> context_;
+  // Run inlining pass
+  PassInlining inliningPass(*context, true, PassInlining::InlineStrategy::InlineProcedures);
+  bool result = inliningPass.run(instantiation);
+  ASSERT_TRUE(result);
 
-protected:
-  virtual void SetUp() {
-    dawn::DiagnosticsEngine diag;
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-    dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = std::make_unique<OptimizerContext>(diag, options, sir);
-  }
-
-  const std::unique_ptr<OptimizerContext>& getContext() { return context_; }
-
-  stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
-    std::unique_ptr<dawn::Options> options;
-    DawnCompiler compiler(options.get());
-    auto optimizer = compiler.runOptimizer(sir);
-
-    if(compiler.getDiagnostics().hasDiags()) {
-      for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-        std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-      }
-      throw std::runtime_error("Compilation failed");
-    }
-
-    return optimizer->getStencilInstantiationMap();
-  }
-};
-
-TEST_F(TestIntegrityChecker, GlobalsOptimizedAway) {
-  std::string json = dawn::readFile("input/globals_opt_away.sir");
-  std::shared_ptr<SIR> sir =
-      SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
-
+  // Run validation pass and check for exception
+  PassValidation validationPass(*context);
   try {
-    compile(sir);
+    validationPass.run(instantiation, "for test TestIntegrityChecker::GlobalsOptimizedAway");
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();
