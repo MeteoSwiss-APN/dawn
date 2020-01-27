@@ -49,6 +49,10 @@ stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& si
   return optimizer->getStencilInstantiationMap();
 }
 
+stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
+  return compile(SIRSerializer::deserialize("input/globals_opt_away.sir"));
+}
+
 void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
   using CG = dawn::codegen::cxxnaive::CXXNaiveCodeGen;
   dawn::DiagnosticsEngine diagnostics;

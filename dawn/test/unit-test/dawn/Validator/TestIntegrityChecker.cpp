@@ -19,7 +19,6 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"

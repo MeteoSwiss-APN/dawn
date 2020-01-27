@@ -1,24 +1,22 @@
 {
  "metadata": {
   "accessIDToName": {
-   "23": "input",
    "24": "in",
-   "25": "out"
+   "25": "out",
+   "23": "input"
   },
   "accessIDToType": {
-   "23": 0,
    "24": 6,
-   "25": 6
+   "25": 6,
+   "23": 0
   },
   "literalIDToName": {
-   "-53": "12",
-   "-58": "11",
    "-57": "12",
-   "-63": "12"
+   "-63": "12",
+   "-53": "12",
+   "-58": "11"
   },
   "fieldAccessIDs": [
-   24,
-   25,
    24,
    25
   ],
@@ -34,16 +32,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "24": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "25": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -85,10 +87,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {
-   "25": "Cell",
-   "24": "Cell"
-  },
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 6,
@@ -222,14 +220,14 @@
                   }
                  },
                  "readAccess": {
-                  "24": {
+                  "-53": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "-53": {
+                  "24": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -533,5 +531,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "globals_opt_away.cpp"
+ "filename": "./globals_opt_away.cpp"
 }

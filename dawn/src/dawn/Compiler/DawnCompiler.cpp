@@ -323,8 +323,8 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
                                   "backend options must be : " +
                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-    return nullptr;
   }
+  return nullptr;
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }
