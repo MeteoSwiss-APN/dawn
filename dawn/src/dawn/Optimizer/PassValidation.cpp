@@ -27,27 +27,21 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   IntegrityChecker checker(instantiation.get());
   checker.run();
 
-  const auto& metaData = instantiation->getMetaData();
   const auto& iir = instantiation->getIIR();
 
-  if(!iir->checkTreeConsistency()) {
-    DAWN_LOG(WARNING) << "Tree consistency check failed " << description;
-    return false;
-  }
+  DAWN_ASSERT_MSG(iir->checkTreeConsistency(),
+                  (std::string("Tree consistency check failed ") + description).c_str());
 
   if(iir->getGridType() == ast::GridType::Unstructured) {
     UnstructuredDimensionChecker dimensionsChecker;
-    if(!dimensionsChecker.checkDimensionsConsistency(*iir, metaData)) {
-      DAWN_LOG(WARNING) << "Dimensions consistency check failed " << description;
-      return false;
-    }
+    DAWN_ASSERT_MSG(
+        dimensionsChecker.checkDimensionsConsistency(*iir, instantiation->getMetaData()),
+        (std::string("Dimensions consistency check failed ") + description).c_str());
   }
 
   GridTypeChecker gridChecker;
-  if(!gridChecker.checkGridTypeConsistency(*iir)) {
-    DAWN_LOG(WARNING) << "Type consistency check failed " << description;
-    return false;
-  }
+  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*iir),
+                  (std::string("Type consistency check failed ") + description).c_str());
 
   return true;
 }

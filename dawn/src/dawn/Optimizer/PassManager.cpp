@@ -62,7 +62,7 @@ bool PassManager::runPassOnStencilInstantiation(
 
   // Run validation pass after each optimization pass
   PassValidation validationPass(context);
-  DAWN_ASSERT(validationPass.run(instantiation, "for pass " + pass->getName()));
+  validationPass.run(instantiation, "for pass " + pass->getName());
 
 #ifndef NDEBUG
   for(const auto& stencil : instantiation->getIIR()->getChildren()) {
