@@ -133,25 +133,25 @@ class TestMakeField(unittest.TestCase):
         self.assertEqual(field.field_dimensions.mask_k, 1)
 
     def test_make_field_unstructured_sparse(self):
-        field = make_field( \
-                    "foo", \
-                    make_field_dimensions_unstructured( \
-                        LocationType.Value('Edge'), \
-                        0, \
-                        sparse_part=[ \
-                                        LocationType.Value('Edge'), \
-                                        LocationType.Value('Cell'), \
-                                        LocationType.Value('Vertex') \
+        field = make_field(
+                    "foo",
+                    make_field_dimensions_unstructured(
+                        LocationType.Value('Edge'),
+                        0,
+                        sparse_part=[
+                                        LocationType.Value('Edge'),
+                                        LocationType.Value('Cell'),
+                                        LocationType.Value('Vertex')
                                     ]))
         self.assertEqual(field.name, "foo")
-        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type, \
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type,
                          LocationType.Value('Edge'))
         self.assertEqual(field.field_dimensions.mask_k, 0)
-        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.sparse_part, \
-                         [ \
-                            LocationType.Value('Edge'), \
-                            LocationType.Value('Cell'), \
-                            LocationType.Value('Vertex') \
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.sparse_part,
+                         [
+                            LocationType.Value('Edge'),
+                            LocationType.Value('Cell'),
+                            LocationType.Value('Vertex')
                          ])
 
     def test_make_field_temporary(self):
