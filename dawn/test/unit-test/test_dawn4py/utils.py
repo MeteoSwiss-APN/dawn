@@ -283,6 +283,8 @@ def make_unstructured_stencil_sir(name=None):
                     "+",
                     sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
                     sir_utils.make_field_access_expr("in"),
+                    lhs_location = SIR.LocationType.Value('Edge'),
+                    rhs_location = SIR.LocationType.Value('Cell')
                 ),
                 "=",
             )
@@ -293,14 +295,14 @@ def make_unstructured_stencil_sir(name=None):
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        sir_utils.GridType.Value("Cartesian"),
+        sir_utils.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), 
-                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(SIR.LocationType.Value('Cell'), 1)), 
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(SIR.LocationType.Value('Edge'), 1))
                 ],
             )
         ],

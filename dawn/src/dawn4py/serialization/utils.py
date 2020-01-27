@@ -104,7 +104,7 @@ StmtType = TypeVar(
     IfStmt,
 )
 
-LocationType = NewType('LocationType', int)
+LocationTypeValue = NewType('LocationTypeValue', int)
 
 
 def make_sir(
@@ -197,9 +197,9 @@ def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
 
 def make_field_dimensions_unstructured(
-    dense_part: LocationType, 
+    dense_part: LocationTypeValue, 
     mask_k: int, 
-    sparse_part: List[LocationType] = None
+    sparse_part: List[LocationTypeValue] = None
 ) -> FieldDimensions:
 
     """ Create FieldDimensions of unstructured type
@@ -723,18 +723,24 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
 
 
 def make_reduction_over_neighbor_expr(
-    op: str, rhs: ExprType, init: ExprType
+    op: str, rhs: ExprType, init: ExprType, lhs_location: LocationTypeValue, rhs_location: LocationTypeValue
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
-    :param op:          Reduction operation performed for each neighbor
-    :param rhs:         Operation to be performed for each neighbor before reducing
-    :param init:        Initial value for reduction operation
+    :param op:              Reduction operation performed for each neighbor
+    :param rhs:             Operation to be performed for each neighbor before reducing
+    :param init:            Initial value for reduction operation
+    :param lhs_location:    Location type of left hand side
+    :param rhs_location:    Location type of right hand side
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
+    expr.lhs_location = lhs_location
+    expr.rhs_location = rhs_location
+    #TODO: weights are missing here
+
     return expr
 
 
@@ -1072,7 +1078,7 @@ class SIRPrinter:
         return str_
 
     def location_type_to_string(self, location_type):
-        return Name(location_type)
+        return LocationType.Name(location_type)
 
     def visit_unstructured_field(self, field):
         str_ = field.name + "("
