@@ -49,8 +49,8 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
-  /// Location type of the stage (which loop it represents)
-  ast::Expr::LocationType type_ = ast::Expr::LocationType::Cells;
+  // Location type of the stage (which loop it represents)
+  ast::LocationType type_ = ast::LocationType::Cells;
 
   /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
   /// is assumed. This is built on top of the DerivedInfo::Extents class and for a full compute
@@ -226,12 +226,11 @@ public:
   bool getRequiresSync() const;
   /// @}
 
-  /// @brief Get the location type
-  /// @{
-  void setLocationType(ast::Expr::LocationType type);
-  ast::Expr::LocationType getLocationType() const;
-  /// @}
+  /// @brief setter for the location type
+  void setLocationType(ast::LocationType type);
 
+  /// @brief returns the location type of a stage
+  ast::LocationType getLocationType() const;
   /// @brief Get the horizontal iteration space
   /// @{
   void setIterationSpace(const IterationSpace& value);

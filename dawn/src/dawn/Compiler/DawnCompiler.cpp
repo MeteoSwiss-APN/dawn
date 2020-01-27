@@ -54,11 +54,28 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
 namespace {
+
+// CodeGen backends
+enum class BackendType { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+
+BackendType parseBackendString(const std::string& backendStr) {
+  if(backendStr == "gt" || backendStr == "gridtools") {
+    return BackendType::GridTools;
+  } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
+    return BackendType::CXXNaive;
+  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
+    return BackendType::CXXNaiveIco;
+  } else if(backendStr == "cuda" || backendStr == "CUDA") {
+    return BackendType::CUDA;
+  } else {
+    throw CompileError("Backend not supported");
+  }
+}
 
 /// @brief Make a suggestion to the user if there is a small typo (only works with string options)
 template <class T>
@@ -92,12 +109,20 @@ struct ComputeEditDistance<std::string> {
   }
 };
 
-} // anonymous namespace
+OptimizerContext::OptimizerContextOptions
+createOptimizerOptionsFromAllOptions(const Options& options) {
+  OptimizerContext::OptimizerContextOptions retval;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  retval.NAME = options.NAME;
+#include "dawn/Optimizer/OptimizerOptions.inc"
+#undef OPT
+  return retval;
+}
 
 /// @brief Report a diagnostic concering an invalid Option
 template <class T>
-static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
-                                    std::vector<T> possibleValues = std::vector<T>{}) {
+DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
+                             std::vector<T> possibleValues = std::vector<T>{}) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
   diag << "invalid value '" << value << "' of option '" << option << "'";
 
@@ -114,66 +139,53 @@ static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, s
   return diag;
 }
 
-static OptimizerContext::OptimizerContextOptions
-createOptimizerOptionsFromAllOptions(const Options& options) {
-  OptimizerContext::OptimizerContextOptions retval;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  retval.NAME = options.NAME;
-#include "dawn/Optimizer/OptimizerOptions.inc"
-#undef OPT
-  return retval;
-}
+} // namespace
 
-DawnCompiler::DawnCompiler(Options* options) : diagnostics_(std::make_unique<DiagnosticsEngine>()) {
-  options_ = options ? std::make_unique<Options>(*options) : std::make_unique<Options>();
-}
+DawnCompiler::DawnCompiler() : diagnostics_(), options_() {}
+DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
 std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
-  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
+  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
                                             .Case("none", ReorderStrategyKind::None)
                                             .Case("greedy", ReorderStrategyKind::Greedy)
                                             .Case("scut", ReorderStrategyKind::Partitioning)
                                             .Default(ReorderStrategyKind::Unknown);
 
   if(reorderStrategy == ReorderStrategyKind::Unknown) {
-    diagnostics_->report(
-        buildDiag("-reorder", options_->ReorderStrategy, "", {"none", "greedy", "scut"}));
+    diagnostics_.report(
+        buildDiag("-reorder", options_.ReorderStrategy, "", {"none", "greedy", "scut"}));
     return nullptr;
   }
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
-  if(options_->MaxCutMSS) {
+  if(options_.MaxCutMSS) {
     mssSplitStrategy = MultistageSplitStrategy::MaxCut;
   } else {
     mssSplitStrategy = MultistageSplitStrategy::Optimized;
   }
 
   // -max-fields
-  int maxFields = options_->MaxFieldsPerStencil;
+  int maxFields = options_.MaxFieldsPerStencil;
 
   IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
-  if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
-    if(options_->IIRFormat == "json") {
+  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
+    if(options_.IIRFormat == "json") {
       serializationKind = IIRSerializer::Format::Json;
-    } else if(options_->IIRFormat == "byte") {
+    } else if(options_.IIRFormat == "byte") {
       serializationKind = IIRSerializer::Format::Byte;
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
   // Initialize optimizer
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  if(options_) {
-    optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
-  }
+  auto optimizerOptions = createOptimizerOptionsFromAllOptions(options_);
   std::unique_ptr<OptimizerContext> optimizer;
 
-  if(options_->DeserializeIIR == "") {
+  if(options_.DeserializeIIR == "") {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
-    optimizer->fillIIR();
 
     // Setup pass interface
     optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
@@ -222,10 +234,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     }
 
     int i = 0;
-    for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-      // Run optimization passes
-      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-
+    for(auto& [_name, instantiation] : optimizer->getStencilInstantiationMap()) {
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
       if(!optimizer->getPassManager().runAllPassesOnStencilInstantiation(*optimizer, instantiation))
@@ -234,46 +243,46 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
                      << instantiation->getName() << "`";
 
-      if(options_->SerializeIIR) {
-        const fs::path p(options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
-                                                      : options_->OutputFile);
+      if(options_.SerializeIIR) {
+        const fs::path p(options_.OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                                     : options_.OutputFile);
         IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
                                      ".iir",
                                  instantiation, serializationKind);
         i++;
       }
-      if(options_->DumpStencilInstantiation) {
+      if(options_.DumpStencilInstantiation) {
         instantiation->dump();
       }
     }
   } else {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);
     auto instantiation =
-        IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
+        IIRSerializer::deserialize(options_.DeserializeIIR, optimizer.get(), serializationKind);
     optimizer->restoreIIR("<restored>", instantiation);
   }
 
   return optimizer;
-} // namespace dawn
+}
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
-  diagnostics_->clear();
-  diagnostics_->setFilename(SIR->Filename);
+  diagnostics_.clear();
+  diagnostics_.setFilename(SIR->Filename);
 
   // Check if options are valid
 
   // -max-halo
-  if(options_->MaxHaloPoints < 0) {
-    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
-                                   "maximum number of allowed halo points must be >= 0"));
+  if(options_.MaxHaloPoints < 0) {
+    diagnostics_.report(buildDiag("-max-halo", options_.MaxHaloPoints,
+                                  "maximum number of allowed halo points must be >= 0"));
     return nullptr;
   }
 
   // SIR we received should be type consistent
-  if(SIR->GridType == ast::GridType::Triangular) {
-    LocationTypeChecker locationChecker;
-    if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
-      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+  if(SIR->GridType == ast::GridType::Unstructured) {
+    UnstructuredDimensionChecker dimensionsChecker;
+    if(!dimensionsChecker.checkDimensionsConsistency(*SIR.get())) {
+      DAWN_LOG(INFO) << "Dimensions in SIR are not consistent, no code generation";
       return nullptr;
     }
   }
@@ -287,47 +296,55 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   // Initialize optimizer
   auto optimizer = runOptimizer(SIR);
 
-  if(diagnostics_->hasErrors()) {
+  if(diagnostics_.hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
   }
 
   // Generate code
-  std::unique_ptr<codegen::CodeGen> CG;
+  try {
+    BackendType backend = parseBackendString(options_.Backend);
+    switch(backend) {
+    case BackendType::GridTools: {
+      codegen::gt::GTCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
+                                options_.UseParallelEP, options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaive: {
+      codegen::cxxnaive::CXXNaiveCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
+                                            options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CUDA: {
+      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
+                                options_.domain_size_k};
+      codegen::cuda::CudaCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
+                                    options_.MaxHaloPoints, options_.nsms, options_.maxBlocksPerSM,
+                                    domain_size);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaiveIco: {
+      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(optimizer->getStencilInstantiationMap(),
+                                                  diagnostics_, options_.MaxHaloPoints);
 
-  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
-    CG = std::make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(),
-                                                  *diagnostics_, options_->UseParallelEP,
-                                                  options_->MaxHaloPoints);
-  } else if(options_->Backend == "c++-naive") {
-    CG = std::make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
-  } else if(options_->Backend == "c++-naive-ico") {
-    CG = std::make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
-  } else if(options_->Backend == "cuda") {
-    const Array3i domain_size{options_->domain_size_i, options_->domain_size_j,
-                              options_->domain_size_k};
-    CG = std::make_unique<codegen::cuda::CudaCodeGen>(
-        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
-        options_->nsms, options_->maxBlocksPerSM, domain_size);
-  } else if(options_->Backend == "c++-opt") {
-    dawn_unreachable("GTClangOptCXX not supported yet");
-  } else {
-    diagnostics_->report(buildDiag("-backend", options_->Backend,
-                                   "backend options must be : " +
-                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
+      return CG.generateCode();
+    }
+    case BackendType::CXXOpt:
+      dawn_unreachable("GTClangOptCXX not supported yet");
+    }
+  } catch(...) {
+    diagnostics_.report(buildDiag("-backend", options_.Backend,
+                                  "backend options must be : " +
+                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
-
-  return CG->generateCode();
 }
 
-const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return *diagnostics_.get(); }
-DiagnosticsEngine& DawnCompiler::getDiagnostics() { return *diagnostics_.get(); }
+const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }
+DiagnosticsEngine& DawnCompiler::getDiagnostics() { return diagnostics_; }
 
-const Options& DawnCompiler::getOptions() const { return *options_.get(); }
-Options& DawnCompiler::getOptions() { return *options_.get(); }
+const Options& DawnCompiler::getOptions() const { return options_; }
+Options& DawnCompiler::getOptions() { return options_; }
 
 } // namespace dawn
