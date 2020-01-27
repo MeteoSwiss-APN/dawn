@@ -64,6 +64,6 @@ for t in $clang_gridtools_tests; do
   i=$((i+1))
 done
 
-rm -rf ${workdir}
+# rm -rf ${workdir}
 
 exit $ret
