@@ -20,11 +20,11 @@ repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
-workdir=$base_dir/temp
-rm -rf ${workdir}
-echo "Copying repository to ${workdir}"
-cp -r ${repo_root} ${workdir}
-echo "done"
+workdir=$base_dir
+# rm -rf ${workdir}
+# echo "Copying repository to ${workdir}"
+# cp -r ${repo_root} ${workdir}
+# echo "done"
 
 cd ${workdir}
 
