@@ -30,6 +30,7 @@ private:
       ;
       {
         for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size - 1)) + 0 + 0; ++k) {
+          int sparse_idx = 0;
           for(auto const& loc : getCells(LibTag{}, m_mesh)) {
             // m_cell_field(deref(LibTag{}, loc), k + 0) =
             //     reduceEdgeToCell(LibTag{}, m_mesh, loc, (::dawn::float_type)0.000000,
@@ -38,14 +39,25 @@ private:
             //                               weight * m_edge_field(deref(LibTag{}, red_loc), k + 0);
             //                      },
             //                      std::vector<double>({1.000000, 1.000000, 1.000000, 1.00000}));
-            m_cell_field(deref(LibTag{}, loc), k + 0) = reduceEdgeToCell(
-                LibTag{}, m_mesh, loc, k, (::dawn::float_type)0.000000,
-                [&](auto& lhs, auto const& red_loc, auto const& weight,
-                    auto const& sparse_dimension) {
-                  return lhs +=
-                         weight * sparse_dimension * m_edge_field(deref(LibTag{}, red_loc), k + 0);
-                },
-                std::vector<double>({1.000000, 1.000000, 1.000000, 1.00000}), m_sparse_dimension);
+
+            // m_cell_field(deref(LibTag{}, loc), k + 0) = reduceEdgeToCell(
+            //     LibTag{}, m_mesh, loc, k, (::dawn::float_type)0.000000,
+            //     [&](auto& lhs, auto const& red_loc, auto const& weight,
+            //         auto const& sparse_dimension) {
+            //       return lhs +=
+            //              weight * sparse_dimension * m_edge_field(deref(LibTag{}, red_loc), k +
+            //              0);
+            //     },
+            //     std::vector<double>({1.000000, 1.000000, 1.000000, 1.00000}),
+            //     m_sparse_dimension);
+
+            m_cell_field(deref(LibTag{}, loc), k + 0) =
+                reduceEdgeToCell(LibTag{}, m_mesh, loc, k, (::dawn::float_type)0.000000,
+                                 [&](auto& lhs, auto const& red_loc, auto const& weight) {
+                                   return lhs += weight * m_sparse_dimension(k, loc, sparse_idx++) *
+                                                 m_edge_field(deref(LibTag{}, red_loc), k + 0);
+                                 },
+                                 std::vector<double>({1.000000, 1.000000, 1.000000, 1.00000}));
           }
         }
       }

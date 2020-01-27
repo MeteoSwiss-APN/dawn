@@ -31,7 +31,7 @@ inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<mylib::Edge> co
 }
 
 //===------------------------------------------------------------------------------------------===//
-// unweighted, no sparse dimensions
+// unweighted versions
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Objs, typename Init, typename Op>
@@ -80,7 +80,7 @@ auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const
 }
 
 //===------------------------------------------------------------------------------------------===//
-// weighted, no sparse dimensions
+// weighted versions
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Objs, typename Init, typename Op, typename Weight>
@@ -130,124 +130,6 @@ template <typename Init, typename Op, typename Weight>
 auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
                           Op&& op, std::vector<Weight>&& weights) {
   return reduce(v.vertices(), init, op, std::move(weights));
-}
-
-//===------------------------------------------------------------------------------------------===//
-// unweighted, sparse dimensions
-//===------------------------------------------------------------------------------------------===//
-
-template <typename Objs, typename Init, typename Op, typename SparseDimT>
-auto reduce(Objs&& objs, int objIdx, Init init, Op&& op, int k_level,
-            const mylib::SparseData<SparseDimT>& sparseDimension) {
-  int i = 0;
-  for(auto&& obj : objs)
-    op(init, *obj, sparseDimension(objIdx, k_level, i++));
-  return init;
-}
-
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceCellToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, int k_level,
-                      Init init, Op&& op, const mylib::SparseData<SparseDimT>& sparseDimension) {
-  return reduce(f.faces(), f.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceEdgeToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, int k_level,
-                      Init init, Op&& op, const mylib::SparseData<SparseDimT>& sparseDimension) {
-  return reduce(f.edges(), f.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceVertexToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, int k_level,
-                        Init init, Op&& op, const mylib::SparseData<SparseDimT>& sparseDimension) {
-  return reduce(f.vertices(), f.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceCellToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, int k_level,
-                      Init init, Op&& op, mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(e.faces(), e.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceVertexToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, int k_level,
-                        Init init, Op&& op, mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(e.vertices(), e.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceCellToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, int k_level,
-                        Init init, Op&& op, mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(v.faces(), v.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceEdgeToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, int k_level,
-                        Init init, Op&& op, mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(v.edges(), v.id(), init, op, k_level, sparseDimension);
-}
-template <typename Init, typename Op, typename SparseDimT>
-auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, int k_level,
-                          Init init, Op&& op, mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(v.vertices(), v.id(), init, op, k_level, sparseDimension);
-}
-
-//===------------------------------------------------------------------------------------------===//
-// weighted, sparse dimensions
-//===------------------------------------------------------------------------------------------===//
-
-template <typename Objs, typename Init, typename Op, typename SparseDimT, typename WeightT>
-auto reduce(Objs&& objs, int objIdx, Init init, Op&& op, int k_level,
-            const mylib::SparseData<SparseDimT>& sparseDimension, std::vector<WeightT>&& weights) {
-  int i = 0;
-  for(auto&& obj : objs) {
-    op(init, *obj, sparseDimension(objIdx, k_level, i), weights[i]);
-    i++;
-  }
-  return init;
-}
-
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceCellToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, int k_level,
-                      Init init, Op&& op, std::vector<WeightT>&& weights,
-                      const mylib::SparseData<SparseDimT>& sparseDimension) {
-  return reduce(f.faces(), f.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceEdgeToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, int k_level,
-                      Init init, Op&& op, std::vector<WeightT>&& weights,
-                      const mylib::SparseData<SparseDimT>& sparseDimension) {
-  return reduce(f.edges(), f.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceVertexToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, int k_level,
-                        Init init, Op&& op, std::vector<WeightT>&& weights,
-                        const mylib::SparseData<SparseDimT>& sparseDimension) {
-  return reduce(f.vertices(), f.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceCellToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, int k_level,
-                      Init init, Op&& op, std::vector<WeightT>&& weights,
-                      mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(e.faces(), e.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceVertexToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, int k_level,
-                        Init init, Op&& op, std::vector<WeightT>&& weights,
-                        mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(e.vertices(), e.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceCellToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, int k_level,
-                        Init init, Op&& op, std::vector<WeightT>&& weights,
-                        mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(v.faces(), v.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceEdgeToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, int k_level,
-                        Init init, Op&& op, std::vector<WeightT>&& weights,
-                        mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(v.edges(), v.id(), init, op, k_level, sparseDimension, std::move(weights));
-}
-template <typename Init, typename Op, typename WeightT, typename SparseDimT>
-auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, int k_level,
-                          Init init, Op&& op, std::vector<WeightT>&& weights,
-                          mylib::SparseData<SparseDimT>&& sparseDimension) {
-  return reduce(v.vertices(), v.id(), init, op, k_level, sparseDimension, std::move(weights));
 }
 
 } // namespace mylibInterface
