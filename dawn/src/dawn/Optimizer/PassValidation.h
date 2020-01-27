@@ -17,9 +17,9 @@
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Support/Logging.h"
-#include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
@@ -30,7 +30,7 @@ namespace dawn {
 /// This pass is read-only and is hence not in the debug-group
 class PassValidation : public Pass {
 public:
-  PassValidation(OptimizerContext &context);
+  PassValidation(OptimizerContext& context);
 
   /// @brief Pass run implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) override;

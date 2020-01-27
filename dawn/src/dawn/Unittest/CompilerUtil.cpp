@@ -35,8 +35,8 @@ CompilerUtil::load(const std::string& iirFilename,
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
-  std::unique_ptr<dawn::Options> options;
-  DawnCompiler compiler(options.get());
+  dawn::Options options;
+  DawnCompiler compiler(options);
   auto optimizer = compiler.runOptimizer(sir);
 
   if(compiler.getDiagnostics().hasDiags()) {

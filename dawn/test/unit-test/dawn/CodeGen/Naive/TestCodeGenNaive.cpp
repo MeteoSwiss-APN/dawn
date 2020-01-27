@@ -23,8 +23,8 @@
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
 
-#include <gtest/gtest.h>
 #include <fstream>
+#include <gtest/gtest.h>
 
 using namespace dawn;
 

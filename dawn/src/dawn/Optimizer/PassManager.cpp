@@ -18,7 +18,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <vector>
 
 namespace dawn {

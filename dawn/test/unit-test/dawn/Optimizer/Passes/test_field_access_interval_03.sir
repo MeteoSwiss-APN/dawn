@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_field_access_interval_03.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 53
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 59
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 55
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 13
                    }
                   },
                   "op": "=",
@@ -204,14 +205,14 @@
                        "Column": 66
                       },
                       "data": {},
-                      "ID": 12
+                      "ID": 10
                      }
                     },
                     "loc": {
                      "Line": 26,
                      "Column": 62
                     },
-                    "ID": 13
+                    "ID": 12
                    }
                   },
                   "loc": {
@@ -291,7 +292,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 18
+                    "ID": 31
                    }
                   },
                   "op": "=",
@@ -329,7 +330,7 @@
                                "Column": 13
                               },
                               "data": {},
-                              "ID": 19
+                              "ID": 25
                              }
                             },
                             "op": "+",
@@ -357,14 +358,14 @@
                                "Column": 24
                               },
                               "data": {},
-                              "ID": 20
+                              "ID": 24
                              }
                             },
                             "loc": {
                              "Line": 28,
                              "Column": 13
                             },
-                            "ID": 21
+                            "ID": 26
                            }
                           },
                           "op": "+",
@@ -392,14 +393,14 @@
                              "Column": 35
                             },
                             "data": {},
-                            "ID": 22
+                            "ID": 23
                            }
                           },
                           "loc": {
                            "Line": 28,
                            "Column": 13
                           },
-                          "ID": 23
+                          "ID": 27
                          }
                         },
                         "op": "+",
@@ -427,14 +428,14 @@
                            "Column": 46
                           },
                           "data": {},
-                          "ID": 24
+                          "ID": 22
                          }
                         },
                         "loc": {
                          "Line": 28,
                          "Column": 13
                         },
-                        "ID": 25
+                        "ID": 28
                        }
                       },
                       "op": "-",
@@ -451,7 +452,7 @@
                            "Column": 57
                           },
                           "data": {},
-                          "ID": 26
+                          "ID": 20
                          }
                         },
                         "op": "*",
@@ -476,14 +477,14 @@
                            "Column": 63
                           },
                           "data": {},
-                          "ID": 27
+                          "ID": 19
                          }
                         },
                         "loc": {
                          "Line": 28,
                          "Column": 57
                         },
-                        "ID": 28
+                        "ID": 21
                        }
                       },
                       "loc": {
@@ -515,14 +516,14 @@
                        "Column": 67
                       },
                       "data": {},
-                      "ID": 30
+                      "ID": 18
                      }
                     },
                     "loc": {
                      "Line": 28,
                      "Column": 13
                     },
-                    "ID": 31
+                    "ID": 30
                    }
                   },
                   "loc": {
@@ -565,7 +566,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 34
+                    "ID": 45
                    }
                   },
                   "op": "=",
@@ -601,7 +602,7 @@
                              "Column": 13
                             },
                             "data": {},
-                            "ID": 35
+                            "ID": 40
                            }
                           },
                           "op": "+",
@@ -629,14 +630,14 @@
                              "Column": 26
                             },
                             "data": {},
-                            "ID": 36
+                            "ID": 39
                            }
                           },
                           "loc": {
                            "Line": 29,
                            "Column": 13
                           },
-                          "ID": 37
+                          "ID": 41
                          }
                         },
                         "op": "+",
@@ -671,7 +672,7 @@
                          "Line": 29,
                          "Column": 13
                         },
-                        "ID": 39
+                        "ID": 42
                        }
                       },
                       "op": "+",
@@ -699,14 +700,14 @@
                          "Column": 52
                         },
                         "data": {},
-                        "ID": 40
+                        "ID": 37
                        }
                       },
                       "loc": {
                        "Line": 29,
                        "Column": 13
                       },
-                      "ID": 41
+                      "ID": 43
                      }
                     },
                     "op": "-",
@@ -723,7 +724,7 @@
                          "Column": 65
                         },
                         "data": {},
-                        "ID": 42
+                        "ID": 35
                        }
                       },
                       "op": "*",
@@ -748,21 +749,21 @@
                          "Column": 71
                         },
                         "data": {},
-                        "ID": 43
+                        "ID": 34
                        }
                       },
                       "loc": {
                        "Line": 29,
                        "Column": 65
                       },
-                      "ID": 44
+                      "ID": 36
                      }
                     },
                     "loc": {
                      "Line": 29,
                      "Column": 13
                     },
-                    "ID": 45
+                    "ID": 44
                    }
                   },
                   "loc": {
@@ -824,12 +825,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -838,12 +840,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "coeff",
@@ -852,12 +855,13 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "lap",
@@ -866,12 +870,13 @@
       "Column": 26
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out2",
@@ -880,12 +885,13 @@
       "Column": 31
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

@@ -87,9 +87,7 @@ int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
 }
 
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::string& name) const {
-  if(fType == FieldAccessType::Literal) {
-    throw std::runtime_error("Literal can not be queried by name");
-  }
+  DAWN_ASSERT_MSG(fType != FieldAccessType::Literal, "Literal can not be queried by name");
   if(!hasNameToAccessID(name))
     return false;
 
@@ -200,8 +198,6 @@ void StencilMetaInformation::finalizeStencilFunctionSetup(
     insertExprToStencilFunctionInstantiation(stencilFun);
   }
 
-  stencilFun->update();
-
   // we move the candidate to stencil function to a final stencil function
   markStencilFunctionInstantiationFinal(stencilFun);
 }
@@ -309,14 +305,18 @@ bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
          accessType == FieldAccessType::InterStencilTemporary;
 }
 
-sir::FieldDimension StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
-  if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
-    return sir::FieldDimension(
-        ast::cartesian,
-        {true, true,
-         true}); // NOTE: return default unstructured in case of unstructured compilation here!
+sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) const {
+  if(isAccessIDAVersion(fieldID)) {
+    fieldID = getOriginalVersionOfAccessID(fieldID);
   }
-  return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+  DAWN_ASSERT_MSG(fieldIDToInitializedDimensionsMap_.count(fieldID) != 0,
+                  "Field id does not exist");
+  return fieldIDToInitializedDimensionsMap_.find(fieldID)->second;
+}
+
+void StencilMetaInformation::setFieldDimensions(int fieldID,
+                                                sir::FieldDimensions&& fieldDimensions) {
+  fieldIDToInitializedDimensionsMap_.emplace(fieldID, std::move(fieldDimensions));
 }
 
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
@@ -341,50 +341,45 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     const sir::FieldDimension& fieldDimensions,
-                                     std::optional<ast::Expr::LocationType> locationType) {
-  int accessID = UIDGenerator::getInstance()->get();
-  DAWN_ASSERT(isFieldType(type));
-  insertAccessOfType(type, accessID, name);
-
-  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
-  fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
-
-  if(locationType.has_value()) {
-    addAccessIDLocationPair(accessID, locationType.value());
+                                     sir::FieldDimensions&& fieldDimensions,
+                                     std::optional<int> accessID) {
+  if(!accessID.has_value()) {
+    accessID = UIDGenerator::getInstance()->get();
   }
+  DAWN_ASSERT(isFieldType(type));
+  insertAccessOfType(type, *accessID, name);
 
-  return accessID;
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(*accessID));
+  fieldIDToInitializedDimensionsMap_.emplace(*accessID, std::move(fieldDimensions));
+
+  return *accessID;
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                        const sir::FieldDimension& fieldDimensions) {
-  int accessID = UIDGenerator::getInstance()->get();
+                                        sir::FieldDimensions&& fieldDimensions,
+                                        std::optional<int> accessID) {
+  if(!accessID.has_value()) {
+    accessID = UIDGenerator::getInstance()->get();
+  }
 
-  std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, accessID);
+  std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, *accessID);
 
   DAWN_ASSERT(isFieldType(type));
-  insertAccessOfType(type, accessID, fname);
+  insertAccessOfType(type, *accessID, fname);
 
-  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
-  fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(*accessID));
+  fieldIDToInitializedDimensionsMap_.emplace(*accessID, std::move(fieldDimensions));
 
-  return accessID;
+  return *accessID;
 }
-
-bool StencilMetaInformation::getIsUnstructuredFromAccessID(int AccessID) const {
-  return FieldAccessIDToLocationTypeMap_.count(AccessID) != 0;
-}
-
-ast::Expr::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
-  DAWN_ASSERT(getIsUnstructuredFromAccessID(AccessID));
-  return FieldAccessIDToLocationTypeMap_.at(AccessID);
-}
-
-void StencilMetaInformation::addAccessIDLocationPair(int AccessID,
-                                                     ast::Expr::LocationType location) {
-  DAWN_ASSERT(!FieldAccessIDToLocationTypeMap_.count(AccessID));
-  FieldAccessIDToLocationTypeMap_.emplace(AccessID, location);
+ast::LocationType StencilMetaInformation::getDenseLocationTypeFromAccessID(int AccessID) const {
+  DAWN_ASSERT_MSG(
+      sir::dimension_isa<sir::UnstructuredFieldDimension>(
+          fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension()),
+      "Location type requested for Cartesian dimension");
+  const auto& dim = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension());
+  return dim.getDenseLocationType();
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {
@@ -457,9 +452,7 @@ json::json StencilMetaInformation::jsonDump() const {
   json::json fieldsMapJson;
   for(const auto& pair : fieldIDToInitializedDimensionsMap_) {
     auto dims = pair.second;
-    auto const& dimsCart = sir::dimension_cast<const sir::CartesianFieldDimension&>(dims);
-    fieldsMapJson[std::to_string(pair.first)] =
-        format("[%i,%i,%i]", (int)dimsCart.I(), (int)dimsCart.J(), (int)dimsCart.K());
+    fieldsMapJson[std::to_string(pair.first)] = dims.toString();
   }
   metaDataJson["FieldDims"] = fieldsMapJson;
 

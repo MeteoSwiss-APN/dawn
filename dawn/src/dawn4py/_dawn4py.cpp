@@ -249,10 +249,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       });
 
   py::class_<dawn::DawnCompiler>(m, "Compiler")
-      .def(py::init([](dawn::Options* options) {
-             return std::make_unique<dawn::DawnCompiler>(options);
-           }),
-           py::arg("options") = nullptr)
+      .def(py::init([](const dawn::Options& options) { return options; }), py::arg("options"))
       .def_property_readonly("options", (dawn::Options & (dawn::DawnCompiler::*)()) &
                                             dawn::DawnCompiler::getOptions)
       .def("compile",

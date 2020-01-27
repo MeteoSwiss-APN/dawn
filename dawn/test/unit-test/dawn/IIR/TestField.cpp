@@ -20,10 +20,18 @@ using namespace iir;
 
 namespace {
 
+auto fieldDimensions = []() -> sir::FieldDimensions {
+  return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+};
+
 TEST(TestField, Construction) {
 
-  Field f{1, Field::IntendKind::Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
-          Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
+  Field f{1,
+          Field::IntendKind::Input,
+          Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+          Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2),
+          Interval{0, 2, 1, -2},
+          fieldDimensions()};
 
   EXPECT_TRUE((f.getExtents() == Extents(dawn::ast::cartesian, -1, 1, -2, 2, -1, 3)));
   EXPECT_TRUE((f.getReadExtents() == Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3)));
@@ -36,16 +44,32 @@ TEST(TestField, Construction) {
 
 TEST(TestField, Equal) {
 
-  Field f1{1, Field::IntendKind::Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
-           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
+  Field f1{1,
+           Field::IntendKind::Input,
+           Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2),
+           Interval{0, 2, 1, -2},
+           fieldDimensions()};
 
-  Field f2{1, Field::IntendKind::Input, Extents(dawn::ast::cartesian, -1, 1, -1, 2, 0, 3),
-           Extents(dawn::ast::cartesian, 0, 0, 0, 1, -1, 2), Interval{0, 2, 1, 0}};
+  Field f2{1,
+           Field::IntendKind::Input,
+           Extents(dawn::ast::cartesian, -1, 1, -1, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 1, -1, 2),
+           Interval{0, 2, 1, 0},
+           fieldDimensions()};
 
-  Field f3{1, Field::IntendKind::InputOutput, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
-           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
-  Field f4{2, Field::IntendKind::Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
-           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
+  Field f3{1,
+           Field::IntendKind::InputOutput,
+           Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2),
+           Interval{0, 2, 1, -2},
+           fieldDimensions()};
+  Field f4{2,
+           Field::IntendKind::Input,
+           Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+           Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2),
+           Interval{0, 2, 1, -2},
+           fieldDimensions()};
 
   EXPECT_TRUE((f1 == f2));
   EXPECT_TRUE((f1 != f3));
@@ -54,8 +78,12 @@ TEST(TestField, Equal) {
 
 TEST(TestField, Merge) {
 
-  Field f{1, Field::IntendKind::Input, Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
-          Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2), Interval{0, 2, 1, -2}};
+  Field f{1,
+          Field::IntendKind::Input,
+          Extents(dawn::ast::cartesian, -1, 1, -2, 2, 0, 3),
+          Extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2),
+          Interval{0, 2, 1, -2},
+          fieldDimensions()};
 
   f.mergeReadExtents(Extents(dawn::ast::cartesian, -2, 1, -3, 0, 0, 0));
   EXPECT_TRUE((f.getReadExtents() == Extents(dawn::ast::cartesian, -2, 1, -3, 2, 0, 3)));

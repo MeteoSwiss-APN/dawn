@@ -35,10 +35,10 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     return false;
   }
 
-  if(iir->getGridType() == ast::GridType::Triangular) {
-    LocationTypeChecker locationChecker;
-    if(!locationChecker.checkLocationTypeConsistency(*iir, metaData)) {
-      DAWN_LOG(WARNING) << "Location type consistency check failed " << description;
+  if(iir->getGridType() == ast::GridType::Unstructured) {
+    UnstructuredDimensionChecker dimensionsChecker;
+    if(!dimensionsChecker.checkDimensionsConsistency(*iir, metaData)) {
+      DAWN_LOG(WARNING) << "Dimensions consistency check failed " << description;
       return false;
     }
   }
@@ -53,10 +53,10 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
 }
 
 bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
-  if(sir->GridType == ast::GridType::Triangular) {
-    LocationTypeChecker locationChecker;
-    if(!locationChecker.checkLocationTypeConsistency(*sir)) {
-      DAWN_LOG(WARNING) << "Location types in SIR are not consistent";
+  if(sir->GridType == ast::GridType::Unstructured) {
+    UnstructuredDimensionChecker dimensionsChecker;
+    if(!dimensionsChecker.checkDimensionsConsistency(*sir)) {
+      DAWN_LOG(WARNING) << "Dimension types in SIR are not consistent";
       return false;
     }
   }

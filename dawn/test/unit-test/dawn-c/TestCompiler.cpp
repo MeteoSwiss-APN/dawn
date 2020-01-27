@@ -86,7 +86,7 @@ TEST(CompilerTest, CompileCopyStencil) {
 
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);
@@ -113,7 +113,7 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
 
 TEST(CompilerTest, DISABLED_SumVertical) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Cells);
@@ -138,7 +138,7 @@ TEST(CompilerTest, DISABLED_SumVertical) {
 
 TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Cells);
@@ -153,15 +153,15 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
               dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
               b.stmt(b.assignExpr(b.at(cnt),
                                   b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
-                                                           dawn::ast::Expr::LocationType::Cells,
-                                                           dawn::ast::Expr::LocationType::Cells))),
+                                                           dawn::ast::LocationType::Cells,
+                                                           dawn::ast::LocationType::Cells))),
               b.stmt(b.assignExpr(
                   b.at(out_f),
                   b.reduceOverNeighborExpr(
                       Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                       b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
                                    b.at(in_f, HOffsetType::withOffset, 0), Op::multiply),
-                      dawn::ast::Expr::LocationType::Cells, dawn::ast::Expr::LocationType::Cells))),
+                      dawn::ast::LocationType::Cells, dawn::ast::LocationType::Cells))),
               b.stmt(b.assignExpr(b.at(out_f),
                                   b.binaryExpr(b.at(in_f),
                                                b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
@@ -175,7 +175,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
 
 TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
   UnstructuredIIRBuilder b;
 
   auto cell_f = b.field("cell_field", LocType::Cells);
@@ -191,8 +191,8 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
                          b.stmt(b.assignExpr(b.at(edge_f),
                                              b.reduceOverNeighborExpr<float>(
                                                  Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                 dawn::ast::Expr::LocationType::Cells,
+                                                 b.lit(0.), dawn::ast::LocationType::Edges,
+                                                 dawn::ast::LocationType::Cells,
                                                  std::vector<float>({1., -1.})))))),
           b.stage(
               LocType::Cells,
@@ -200,8 +200,8 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
                          b.stmt(b.assignExpr(b.at(cell_f),
                                              b.reduceOverNeighborExpr<float>(
                                                  Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                 dawn::ast::Expr::LocationType::Edges,
+                                                 b.lit(0.), dawn::ast::LocationType::Cells,
+                                                 dawn::ast::LocationType::Edges,
                                                  std::vector<float>({1., 0., 0.})))))))));
 
   std::ofstream of("prototype/generated_triGradient.hpp");
@@ -212,7 +212,7 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
 
 TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
   UnstructuredIIRBuilder b;
 
   auto cell_f = b.field("cell_field", LocType::Cells);
@@ -228,8 +228,8 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
                          b.stmt(b.assignExpr(b.at(edge_f),
                                              b.reduceOverNeighborExpr<float>(
                                                  Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                 dawn::ast::Expr::LocationType::Cells,
+                                                 b.lit(0.), dawn::ast::LocationType::Edges,
+                                                 dawn::ast::LocationType::Cells,
                                                  std::vector<float>({1., -1.})))))),
           b.stage(
               LocType::Cells,
@@ -237,8 +237,8 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
                          b.stmt(b.assignExpr(b.at(cell_f),
                                              b.reduceOverNeighborExpr<float>(
                                                  Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                 dawn::ast::Expr::LocationType::Edges,
+                                                 b.lit(0.), dawn::ast::LocationType::Cells,
+                                                 dawn::ast::LocationType::Edges,
                                                  std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
   std::ofstream of("prototype/generated_quadGradient.hpp");
