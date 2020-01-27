@@ -16,7 +16,7 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestValidator)
 add_executable(${executable}
   TestMain.cpp  
-  TestLocationTypeChecker.cpp
+  TestUnstructuredDimensionChecker.cpp
   TestGridTypeChecker.cpp
 )
 target_link_libraries(${executable} DawnValidator DawnUnittest gtest)

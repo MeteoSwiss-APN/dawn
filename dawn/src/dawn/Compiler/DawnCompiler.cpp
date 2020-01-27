@@ -54,7 +54,7 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
@@ -279,10 +279,10 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   }
 
   // SIR we received should be type consistent
-  if(SIR->GridType == ast::GridType::Triangular) {
-    LocationTypeChecker locationChecker;
-    if(!locationChecker.checkLocationTypeConsistency(*SIR.get())) {
-      DAWN_LOG(INFO) << "Location types in SIR are not consistent, no code generation";
+  if(SIR->GridType == ast::GridType::Unstructured) {
+    UnstructuredDimensionChecker dimensionsChecker;
+    if(!dimensionsChecker.checkDimensionsConsistency(*SIR.get())) {
+      DAWN_LOG(INFO) << "Dimensions in SIR are not consistent, no code generation";
       return nullptr;
     }
   }

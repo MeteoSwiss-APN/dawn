@@ -13,8 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnValidator
-    LocationTypeChecker.h
-    LocationTypeChecker.cpp
+    UnstructuredDimensionChecker.h
+    UnstructuredDimensionChecker.cpp
     GridTypeChecker.h
     GridTypeChecker.cpp
     IntegrityChecker.h

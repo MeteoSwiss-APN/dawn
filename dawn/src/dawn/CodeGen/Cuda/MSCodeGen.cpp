@@ -885,11 +885,15 @@ void MSCodeGen::generateCudaKernelCode() {
     Array3i dims{-1, -1, -1};
     for(const auto& fieldInfo : ms_->getParent()->getFields()) {
       if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
-        auto const& cartDim =
-            sir::dimension_cast<sir::CartesianFieldDimension const&>(fieldInfo.second.Dimensions);
+        DAWN_ASSERT_MSG(
+            dawn::sir::dimension_isa<dawn::sir::CartesianFieldDimension>(
+                fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension()),
+            "Field has non cartesian horizontal dimension");
+        auto const& cartDim = sir::dimension_cast<sir::CartesianFieldDimension const&>(
+            fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension());
         dims[0] = cartDim.I() == 1;
         dims[1] = cartDim.J() == 1;
-        dims[2] = cartDim.K() == 1;
+        dims[2] = fieldInfo.second.field.getFieldDimensions().K() == 1;
         break;
       }
     }

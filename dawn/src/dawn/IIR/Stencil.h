@@ -45,22 +45,17 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
 
 public:
   // FieldInfo desribes the properties of a given Field
-  // In the structured case, the dimensions is an array of numberes in x,y and z describing if the
-  // field is allowed to have extens in this dimension: [1,0,0] is a storage_i and cannot be
-  // accessed with field[j+1]
   struct FieldInfo {
-    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimension dim, const Field& f)
-        : Name(fieldName), Dimensions(dim), field(f), IsTemporary(t) {}
+    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimensions dim, const Field& f)
+        : Name(fieldName), field(f), IsTemporary(t) {}
 
     std::string Name;
-    dawn::sir::FieldDimension Dimensions;
     Field field;
     bool IsTemporary;
     json::json jsonDump() const;
 
     bool operator==(const FieldInfo& other) const {
-      return Name == other.Name && Dimensions == other.Dimensions && field == other.field &&
-             IsTemporary == other.IsTemporary;
+      return Name == other.Name && field == other.field && IsTemporary == other.IsTemporary;
     }
   };
 

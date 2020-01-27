@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_compute_maximum_extent_02.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -75,7 +76,7 @@
                      "Column": 13
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -118,7 +119,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 8
+                    "ID": 9
                    }
                   },
                   "op": "+=",
@@ -146,7 +147,7 @@
                      "Column": 14
                     },
                     "data": {},
-                    "ID": 9
+                    "ID": 8
                    }
                   },
                   "loc": {
@@ -191,7 +192,7 @@
                        "Column": 10
                       },
                       "data": {},
-                      "ID": 12
+                      "ID": 13
                      }
                     },
                     "op": "==",
@@ -206,7 +207,7 @@
                        "Column": 17
                       },
                       "data": {},
-                      "ID": 13
+                      "ID": 12
                      }
                     },
                     "loc": {
@@ -252,7 +253,7 @@
                           "Column": 9
                          },
                          "data": {},
-                         "ID": 17
+                         "ID": 18
                         }
                        },
                        "op": "=",
@@ -267,7 +268,7 @@
                           "Column": 15
                          },
                          "data": {},
-                         "ID": 18
+                         "ID": 17
                         }
                        },
                        "loc": {
@@ -346,12 +347,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -360,12 +362,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "boundary_condition_test_stencil_03.cpp",
  "stencils": [
   {
@@ -75,7 +76,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 11
+                    "ID": 12
                    }
                   },
                   "op": "=",
@@ -103,7 +104,7 @@
                      "Column": 22
                     },
                     "data": {},
-                    "ID": 12
+                    "ID": 11
                    }
                   },
                   "loc": {
@@ -146,7 +147,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 15
+                    "ID": 18
                    }
                   },
                   "op": "=",
@@ -189,14 +190,14 @@
                        "Column": 35
                       },
                       "data": {},
-                      "ID": 17
+                      "ID": 15
                      }
                     },
                     "loc": {
                      "Line": 41,
                      "Column": 13
                     },
-                    "ID": 18
+                    "ID": 17
                    }
                   },
                   "loc": {
@@ -258,12 +259,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -272,12 +274,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }
@@ -319,7 +322,7 @@
                "Column": 16
               },
               "data": {},
-              "ID": 2
+              "ID": 3
              }
             },
             "op": "=",
@@ -334,7 +337,7 @@
                "Column": 20
               },
               "data": {},
-              "ID": 3
+              "ID": 2
              }
             },
             "loc": {
@@ -373,12 +376,13 @@
        "Column": 11
       },
       "is_temporary": false,
-      "field_dimensions": [
-       1,
-       1,
-       1
-      ],
-      "location_type": "Cell"
+      "field_dimensions": {
+       "cartesian_horizontal_dimension": {
+        "mask_cart_i": 1,
+        "mask_cart_j": 1
+       },
+       "mask_k": 1
+      }
      }
     }
    ]

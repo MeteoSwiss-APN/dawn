@@ -23,7 +23,7 @@ import textwrap
 
 from enum import Enum
 from collections import Iterable
-from typing import List, TypeVar
+from typing import List, TypeVar, NewType
 
 from google.protobuf import json_format
 
@@ -38,6 +38,8 @@ __all__ = [
     "make_stencil",
     "make_stencil",
     "make_type",
+    "make_field_dimensions_cartesian",
+    "make_field_dimensions_unstructured",
     "make_field",
     "make_ast",
     "make_interval",
@@ -101,6 +103,8 @@ StmtType = TypeVar(
     BoundaryConditionDeclStmt,
     IfStmt,
 )
+
+LocationTypeValue = NewType('LocationTypeValue', int)
 
 
 def make_sir(
@@ -171,30 +175,67 @@ def make_type(builtin_type_or_name, is_const: bool = False, is_volatile: bool = 
         )
     return t
 
+def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
+
+    """ Create FieldDimensions of cartesian type
+
+    :param mask: mask to identify which cartesian dimensions are legal (default is [1, 1, 1])
+    """
+
+    if mask is None:
+        mask = [1, 1, 1]
+    assert len(mask) == 3
+
+    horizontal_dim = CartesianDimension()
+    horizontal_dim.mask_cart_i = mask[0]
+    horizontal_dim.mask_cart_j = mask[1]
+
+    dims = FieldDimensions()
+    dims.cartesian_horizontal_dimension.CopyFrom(horizontal_dim)
+    dims.mask_k = mask[2]
+    return dims
+
+
+def make_field_dimensions_unstructured(
+    dense_part: LocationTypeValue, 
+    mask_k: int, 
+    sparse_part: List[LocationTypeValue] = None
+) -> FieldDimensions:
+
+    """ Create FieldDimensions of unstructured type
+
+    :dense_part:   dense location type of the field
+    :mask_k:       mask to identify if the vertical dimension is legal
+    :sparse_part:  optional sparse part encoded by a neighbor chain
+    """
+
+    horizontal_dim = UnstructuredDimension()
+    horizontal_dim.dense_location_type = dense_part
+    if sparse_part is not None and len(sparse_part) != 0:
+        horizontal_dim.sparse_part.extend(sparse_part)
+
+    dims = FieldDimensions()
+    dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
+    dims.mask_k = mask_k
+    return dims
 
 def make_field(
     name: str,
-    is_temporary: bool = False,
-    dimensions: List[int] = [1, 1, 1],
-    location_type: LocationType = LocationType.Cell,
+    dimensions: FieldDimensions,
+    is_temporary: bool = False
 ) -> Field:
 
     """ Create a Field
 
     :param name:         Name of the field
     :param is_temporary: Is it a temporary field?
-    :param dimensions:   mask list to identify dimensions contained by the field
+    :param dimensions:   dimensions of the field (use make_field_dimensions_*)
     """
+
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
-    field.field_dimensions.extend(dimensions)
-    if location_type == LocationType.Cell:
-        field.location_type = LocationType.Cell
-    elif location_type == LocationType.Edge:
-        field.location_type = LocationType.Edge
-    elif location_type == LocationType.Vertex:
-        field.location_type = LocationType.Vertex
+    field.field_dimensions.CopyFrom(dimensions)
     return field
 
 
@@ -682,18 +723,24 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
 
 
 def make_reduction_over_neighbor_expr(
-    op: str, rhs: ExprType, init: ExprType
+    op: str, rhs: ExprType, init: ExprType, lhs_location: LocationTypeValue, rhs_location: LocationTypeValue
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
-    :param op:          Reduction operation performed for each neighbor
-    :param rhs:         Operation to be performed for each neighbor before reducing
-    :param init:        Initial value for reduction operation
+    :param op:              Reduction operation performed for each neighbor
+    :param rhs:             Operation to be performed for each neighbor before reducing
+    :param init:            Initial value for reduction operation
+    :param lhs_location:    Location type of left hand side
+    :param rhs_location:    Location type of right hand side
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
+    expr.lhs_location = lhs_location
+    expr.rhs_location = rhs_location
+    #TODO: weights are missing here
+
     return expr
 
 
@@ -1021,16 +1068,35 @@ class SIRPrinter:
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
 
+    def visit_cartesian_field(self, field):
+        str_ = field.name + "("
+        dims_ = []
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1: dims_.append("i") 
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1: dims_.append("j") 
+        if field.field_dimensions.mask_k == 1: dims_.append("k") 
+        str_ += str(dims_) + ")"
+        return str_
+
+    def location_type_to_string(self, location_type):
+        return LocationType.Name(location_type)
+
+    def visit_unstructured_field(self, field):
+        str_ = field.name + "("
+        str_ += self.location_type_to_string(
+            field.field_dimensions.unstructured_horizontal_dimension.dense_location_type)
+        str_ += ", "
+        for location_type in field.field_dimensions.unstructured_horizontal_dimension.sparse_part:
+            str_ += self.location_type_to_string(location_type) + "->"
+        str_ += ")"
+        return str_
+
     def visit_fields(self, fields):
         str_ = "field "
         for field in fields:
-            str_ += field.name
-            dims = ["i", "j", "k"]
-            dims_ = []
-            for i in range(0, 3):
-                if field.field_dimensions[i] != -1:
-                    dims_.append(dims[i])
-            str_ += str(dims_)
+            if field.field_dimensions.WhichOneof("horizontal_dimension") == "cartesian_horizontal_dimension":
+                str_ += self.visit_cartesian_field(field)
+            else:
+                str_ += self.visit_unstructured_field(field)
             str_ += ","
         print(self.wrapper.fill(str_), file=self.file)
 

@@ -126,7 +126,7 @@ GridType HorizontalOffset::getGridType() const {
   if(dynamic_cast<CartesianOffset*>(impl_.get())) {
     return GridType::Cartesian;
   } else {
-    return GridType::Triangular;
+    return GridType::Unstructured;
   }
 }
 

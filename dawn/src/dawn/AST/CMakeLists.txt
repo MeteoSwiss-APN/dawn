@@ -27,6 +27,7 @@ add_library(DawnAST OBJECT
   ASTVisitor.cpp
   ASTVisitor.h
   ASTVisitorHelpers.h
+  LocationType.h
   GridType.h
   GridType.cpp
   Offsets.h
