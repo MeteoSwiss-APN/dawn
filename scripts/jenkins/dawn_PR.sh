@@ -20,7 +20,7 @@ repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
-workdir=/project/c14/tobwi/temporary/temp
+workdir=//scratch/snx3000/jenkins/workspace/dawn_gtclang_clang-gridtools_PR/temp
 rm -rf ${workdir}
 echo "Copying repository to ${workdir}"
 cp -r ${repo_root} ${workdir}
