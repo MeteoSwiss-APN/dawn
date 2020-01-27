@@ -20,7 +20,7 @@ repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
-workdir=/dev/shm/tmp_dawn
+workdir=/project/c14/jenkins/temp
 rm -rf ${workdir}
 echo "Copying repository to ${workdir}"
 cp -r ${repo_root} ${workdir}
