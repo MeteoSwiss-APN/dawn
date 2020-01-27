@@ -265,7 +265,7 @@ auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, int level, Init i
                       const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfCell(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -279,7 +279,7 @@ auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, int level, Init i
                       const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : edgeNeighboursOfCell(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -293,7 +293,7 @@ auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, int level, Init
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfCell(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -308,7 +308,7 @@ auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, int level, Init i
                       const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfEdge(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -322,7 +322,7 @@ auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, int level, Init
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfEdge(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -337,7 +337,7 @@ auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, int level, Init
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfNode(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -352,7 +352,7 @@ auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, int level, Init
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : edgeNeighboursOfNode(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -367,7 +367,7 @@ auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, int level, In
                           const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfNode(m, idx)) {
     op(init, objIdx, weights[i], sparseDimension(level, idx, i));
@@ -439,7 +439,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                       const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfCell(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -451,7 +451,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                       const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : edgeNeighboursOfCell(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -463,7 +463,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfCell(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -476,7 +476,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                       const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfEdge(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -488,7 +488,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfEdge(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -501,7 +501,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfNode(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -514,7 +514,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                         const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : edgeNeighboursOfNode(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));
@@ -527,7 +527,7 @@ template <typename Init, typename Op, typename SparseDimensionT>
 auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, int level, Init init, Op&& op,
                           const SparseDimension<SparseDimensionT>& sparseDimension) {
   static_assert(std::is_arithmetic<SparseDimensionT>::value,
-                "weights need to be of arithmetic type!\n");
+                "sparse dimension needs to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfNode(m, idx)) {
     op(init, objIdx, sparseDimension(level, idx, i));

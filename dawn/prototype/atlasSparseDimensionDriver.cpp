@@ -11,15 +11,19 @@
 #include "atlas/output/Gmsh.h"
 #include "atlas_interface.hpp"
 
-#include "atlasSparseDimensions.hpp"
+#include "AtlasCartesianWrapper.h"
+#include "reference_SparseDimensions.hpp"
 
 int main() {
 
   atlas::StructuredGrid structuredGrid = atlas::Grid("L10x11");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
-  atlas::mesh::actions::build_edges(mesh);
+  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
   atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  AtlasToCartesian atlasToCartesianMapper(mesh);
 
   const int edgesPerCell = 4;
 
@@ -44,7 +48,9 @@ int main() {
   for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
     cells_v(level, iCell) = 0;
     for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
-      sparseDim_v(level, iCell, jNbh) = jNbh;
+      int edgeIdx = mesh.cells().edge_connectivity()(iCell, jNbh);
+      auto [x, y] = atlasToCartesianMapper.edgeMidpoint(mesh, edgeIdx);
+      sparseDim_v(level, iCell, jNbh) = x * x + y * y;
     }
   }
 
@@ -56,7 +62,10 @@ int main() {
                                                                          edges_v, sparseDim_v)
       .run();
 
+  FILE* fp = fopen("sparseDimAtlas.txt", "w+");
   for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
-    printf("%f\n", cells_v(level, iCell));
+    auto [x, y] = atlasToCartesianMapper.cellMidpoint(mesh, iCell);
+    fprintf(fp, "%f %f %f\n", x, y, cells_v(level, iCell));
   }
+  fclose(fp);
 }

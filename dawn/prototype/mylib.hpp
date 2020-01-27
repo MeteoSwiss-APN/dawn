@@ -318,6 +318,7 @@ public:
 private:
   std::vector<std::vector<T>> data_;
 };
+
 template <typename T>
 class FaceData : public Data<Face, T> {
 public:
@@ -332,6 +333,23 @@ template <typename T>
 class EdgeData : public Data<Edge, T> {
 public:
   EdgeData(Grid const& grid, int k_size) : Data<Edge, T>(grid.all_edges().size(), k_size) {}
+};
+
+template <typename T>
+class SparseData {
+public:
+  SparseData(size_t sparse_size, size_t dense_size, size_t num_k_levels)
+      : data_(num_k_levels, std::vector<std::vector<T>>(dense_size, std::vector<T>(sparse_size))) {}
+  T& operator()(size_t f_id, size_t k_level, size_t sparse_idx) {
+    return data_[k_level][f_id][sparse_idx];
+  }
+  T const& operator()(size_t f_id, size_t k_level, size_t sparse_idx) const {
+    return data_[k_level][f_id][sparse_idx];
+  }
+  int k_size() const { return data_.size(); }
+
+private:
+  std::vector<std::vector<std::vector<T>>> data_;
 };
 
 std::ostream& toVtk(Grid const& grid, int k_size, std::ostream& os = std::cout);
