@@ -62,7 +62,14 @@ bool PassManager::runPassOnStencilInstantiation(
 
   // Run validation pass after each optimization pass
   PassValidation validationPass(context);
-  validationPass.run(instantiation, "for pass " + pass->getName());
+
+  try {
+    validationPass.run(instantiation, "for pass " + pass->getName());
+  } catch(CompileError& error) {
+    DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation(error.getLine(), 0));
+    diag << error.getMessage();
+    context.getDiagnostics().report(diag);
+  }
 
 #ifndef NDEBUG
   for(const auto& stencil : instantiation->getIIR()->getChildren()) {
