@@ -21,6 +21,7 @@ function help {
   echo -e "-b clang gridtools branch to use"
   echo -e "-g gtclang install directory to use"
   echo -e "-p enabling performance checks"
+  echo -e "-h shows this help"
   exit 1
 }
 echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
