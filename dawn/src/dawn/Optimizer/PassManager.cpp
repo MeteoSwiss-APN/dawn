@@ -69,6 +69,7 @@ bool PassManager::runPassOnStencilInstantiation(
     DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation(error.getLine(), 0));
     diag << error.getMessage();
     context.getDiagnostics().report(diag);
+    return false;
   }
 
 #ifndef NDEBUG

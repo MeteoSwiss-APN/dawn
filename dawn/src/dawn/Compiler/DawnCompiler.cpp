@@ -183,7 +183,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   std::unique_ptr<OptimizerContext> optimizer;
 
   PassValidation validationPass(*optimizer);
-  if(!validationPass.run(SIR)) {
+  try {
+    validationPass.run(SIR);
+  } catch(CompileError& error) {
+    DiagnosticsBuilder diag(DiagnosticsKind::Error);
+    diag << error.getMessage();
+    optimizer->getDiagnostics().report(diag);
     return nullptr;
   }
 
