@@ -51,7 +51,7 @@ std::string makeIntervalBoundExplicit(std::string dim, const iir::Interval& inte
 }
 } // namespace
 
-CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+CudaCodeGen::CudaCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                          int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
     : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
 

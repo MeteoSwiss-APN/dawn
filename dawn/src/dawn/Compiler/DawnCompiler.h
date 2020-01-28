@@ -43,6 +43,10 @@ public:
 
   std::unique_ptr<OptimizerContext> runOptimizer(std::shared_ptr<SIR> const& SIR);
 
+  std::unique_ptr<codegen::TranslationUnit>
+  generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+               stencilInstantiationMap);
+
   /// @brief Get options
   const Options& getOptions() const;
   Options& getOptions();
