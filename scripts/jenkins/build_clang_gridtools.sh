@@ -21,7 +21,7 @@ function help {
   exit 1
 }
 echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
-while getopts b:r:g: flag; do
+while getopts b:r:g:p flag; do
   case $flag in
     r)
       CLANG_GRIDTOOLS_REPOSITORY=$OPTARG
@@ -31,6 +31,9 @@ while getopts b:r:g: flag; do
       ;;
     g)
       GTCLANG_INSTALL_DIR=$OPTARG
+      ;;
+    p)
+      RUN_PERFTETS=true
       ;;
     h)
       help
@@ -87,7 +90,6 @@ cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
 
-RUN_PERFTETS=true
 if [ -z ${RUN_PERFTETS+x} ]; then
   echo "do not run performance tests"
 else
