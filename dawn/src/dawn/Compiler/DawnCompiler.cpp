@@ -311,6 +311,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
+  return nullptr;
 }
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
