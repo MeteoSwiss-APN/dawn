@@ -70,10 +70,8 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
     clang_gridtools_args="${clang_gridtools_args} -b ${CLANG_GRIDTOOLS_BRANCH}"
   fi
   if [ -z ${ENABLE_PERFORMANCECHECKS+x} ]; then
-    echo "performance checks disabled"
     performance_checks=""
   else
-    echo "performance checks enabled"
     performance_checks="-p"
   fi
     ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir} ${performance_checks}
