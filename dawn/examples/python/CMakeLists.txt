@@ -13,7 +13,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-function(add_python_test)
+function(add_python_example)
   set(options VERIFY)
   set(oneValueArgs NAME)
   set(multiValueArgs)
@@ -30,7 +30,7 @@ function(add_python_test)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python-test.sh.in
     ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/python-test-${ARG_NAME}.sh
   )
-  add_test(NAME Dawn-python-test-${ARG_NAME}.sh
+  add_test(NAME dawn4py-example-${ARG_NAME}.sh
     COMMAND ${CMAKE_COMMAND} -E env
     ${SH_PROGRAM} python-test-${ARG_NAME}.sh
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
@@ -40,14 +40,14 @@ endfunction()
 if(${PROJECT_NAME}_TESTING)
   # configure dawn4py in the build directory for testing
   file(COPY ${PROJECT_SOURCE_DIR}/src/dawn4py/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py)
-  add_custom_target(link_dawn4py ALL
+  add_custom_target(link_dawn4py_examples ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:_dawn4py> ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py/$<TARGET_FILE_NAME:_dawn4py>
   )
 
-  add_python_test(NAME copy_stencil VERIFY)
-  add_python_test(NAME hori_diff_stencil VERIFY)
-  add_python_test(NAME tridiagonal_solve_stencil VERIFY)
-  add_python_test(NAME tridiagonal_solve_unstructured)
-  add_python_test(NAME global_index_stencil)
-  add_python_test(NAME unstructured_stencil)
+  add_python_example(NAME copy_stencil VERIFY)
+  add_python_example(NAME hori_diff_stencil VERIFY)
+  add_python_example(NAME tridiagonal_solve_stencil VERIFY)
+  add_python_example(NAME tridiagonal_solve_unstructured)
+  add_python_example(NAME global_index_stencil)
+  add_python_example(NAME unstructured_stencil)
 endif()

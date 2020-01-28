@@ -53,7 +53,7 @@ cd ${base_dir}/dawn/examples/python
 bash run.sh
 echo "PYTHON RUN TESTS SUCCESFUL!"
 
-python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py/
+python -m pytest -v ${base_dir}/dawn/test/unit-test/dawn4py/
 echo "PYTHON PYTEST SUCCESFUL!"
 
 base_dir=$(pwd)
