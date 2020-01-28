@@ -17,10 +17,23 @@
 #ifndef GTCLANG_UNITTEST_IRSPLITTER_H
 #define GTCLANG_UNITTEST_IRSPLITTER_H
 
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Pass.h"
+#include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassFixVersionedInputFields.h"
+#include "dawn/Optimizer/PassComputeStageExtents.h"
+#include "dawn/Optimizer/PassSetSyncStage.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 #include "gtclang/Unittest/GTClang.h"
+
 #include <string>
 #include <vector>
 

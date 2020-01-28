@@ -19,18 +19,59 @@
 namespace gtclang {
 
 void IRSplitter::split(const std::string& dslFile) {
-  std::vector<std::string> flags = {"-std=c++11"};
+  std::string fileStub = dslFile;
+  size_t pos = fileStub.rfind('.');
+  if(pos != std::string::npos) {
+    fileStub = fileStub.substr(0, pos);
+  }
+
+  std::vector<std::string> flags = {"-std=c++11", "-I./src"};
   dawn::UIDGenerator::getInstance()->reset();
   std::pair<bool, std::shared_ptr<dawn::SIR>> tuple =
-      GTClang::run({dslFile, "-fno-codegen"}, flags);
+    GTClang::run({dslFile, "-fno-codegen"}, flags);
+
   if(tuple.first) {
-    // We have the SIR!
+    // Serialize the SIR
     std::shared_ptr<dawn::SIR> sir = tuple.second;
+    dawn::SIRSerializer::serialize(fileStub + ".sir", sir.get());
 
-    // Serialize it...
-    dawn::SIRSerializer::serialize(dslFile + ".sir", sir.get());
+    // Now lower to IIR
+    dawn::DiagnosticsEngine diag;
+    dawn::OptimizerContext::OptimizerContextOptions options;
+    dawn::OptimizerContext context(diag, options, sir);
+    context.fillIIR();
 
-    // Now compile to IIR!
+    // Serialize unoptimized IIR
+    unsigned nstencils = 0;
+    for(auto& [name, instantiation] : context.getStencilInstantiationMap()) {
+      dawn::IIRSerializer::serialize(fileStub + ".unopt." + std::to_string(nstencils) + ".iir", instantiation);
+      nstencils += 1;
+    }
+
+    // Run parallelization passes
+      using MultistageSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy;
+      //MultistageSplitStrategy mssSplitStrategy =  (options.MaxCutMSS) ? MultistageSplitStrategy::MaxCut :
+      MultistageSplitStrategy mssSplitStrategy = MultistageSplitStrategy::Optimized;
+
+      nstencils = 0;
+      for(auto& [name, instantiation] : context.getStencilInstantiationMap()) {
+        dawn::PassInlining(context, true, dawn::PassInlining::InlineStrategy::InlineProcedures).run(instantiation);
+        dawn::PassFieldVersioning(context).run(instantiation);
+        dawn::PassMultiStageSplitter(context, mssSplitStrategy).run(instantiation);
+        dawn::PassStageSplitter(context).run(instantiation);
+        dawn::PassTemporaryType(context).run(instantiation);
+        dawn::PassFixVersionedInputFields(context).run(instantiation);
+        dawn::PassComputeStageExtents(context).run(instantiation);
+        dawn::PassSetSyncStage(context).run(instantiation);
+
+        // Serialize parallelized stencil
+        dawn::IIRSerializer::serialize(fileStub + ".par." + std::to_string(nstencils) + ".iir", instantiation);
+        nstencils += 1;
+      }
+
+      // Run remaining passes...
+
+      // Codegen...
   }
 }
 
