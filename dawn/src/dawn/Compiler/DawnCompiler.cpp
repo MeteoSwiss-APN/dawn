@@ -271,6 +271,48 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   return optimizer;
 }
 
+std::unique_ptr<codegen::TranslationUnit>
+DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+                           stencilInstantiationMap) {
+  // Generate code
+  try {
+    BackendType backend = parseBackendString(options_.Backend);
+    switch(backend) {
+    case BackendType::GridTools: {
+      codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
+                                options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaive: {
+      codegen::cxxnaive::CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics_,
+                                            options_.MaxHaloPoints);
+      return CG.generateCode();
+    }
+    case BackendType::CUDA: {
+      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
+                                options_.domain_size_k};
+      codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
+                                    options_.nsms, options_.maxBlocksPerSM, domain_size);
+      return CG.generateCode();
+    }
+    case BackendType::CXXNaiveIco: {
+      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics_,
+                                                  options_.MaxHaloPoints);
+
+      return CG.generateCode();
+    }
+    case BackendType::CXXOpt:
+      dawn_unreachable("GTClangOptCXX not supported yet");
+    }
+  } catch(...) {
+    diagnostics_.report(buildDiag("-backend", options_.Backend,
+                                  "backend options must be : " +
+                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
+    return nullptr;
+  }
+}
+
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
   diagnostics_.clear();
   diagnostics_.setFilename(SIR->Filename);
@@ -290,46 +332,11 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   if(diagnostics_.hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
+  } else {
+    DAWN_ASSERT_MSG(optimizer, "No errors, but optimizer context fails to exist!");
   }
 
-  // Generate code
-  try {
-    BackendType backend = parseBackendString(options_.Backend);
-    switch(backend) {
-    case BackendType::GridTools: {
-      codegen::gt::GTCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
-                                options_.UseParallelEP, options_.MaxHaloPoints);
-      return CG.generateCode();
-    }
-    case BackendType::CXXNaive: {
-      codegen::cxxnaive::CXXNaiveCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
-                                            options_.MaxHaloPoints);
-      return CG.generateCode();
-    }
-    case BackendType::CUDA: {
-      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
-                                options_.domain_size_k};
-      codegen::cuda::CudaCodeGen CG(optimizer->getStencilInstantiationMap(), diagnostics_,
-                                    options_.MaxHaloPoints, options_.nsms, options_.maxBlocksPerSM,
-                                    domain_size);
-      return CG.generateCode();
-    }
-    case BackendType::CXXNaiveIco: {
-      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(optimizer->getStencilInstantiationMap(),
-                                                  diagnostics_, options_.MaxHaloPoints);
-
-      return CG.generateCode();
-    }
-    case BackendType::CXXOpt:
-      dawn_unreachable("GTClangOptCXX not supported yet");
-    }
-  } catch(...) {
-    diagnostics_.report(buildDiag("-backend", options_.Backend,
-                                  "backend options must be : " +
-                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-  }
-  return nullptr;
+  return generate(optimizer->getStencilInstantiationMap());
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }
