@@ -68,10 +68,10 @@ done
 # cd -
 graphs=`find . -name "history*.png"`
 for g in $graphs; do
-  cp $g ${base_dir}/$g
+  cp $g ${base_dir}/`basename $g`
 done
 
 
-# rm -rf ${workdir}
+rm -rf ${workdir}
 
 exit $ret
