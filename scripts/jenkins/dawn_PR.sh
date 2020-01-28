@@ -16,7 +16,15 @@ if [ -z ${myhost+x} ]; then
   exit 1
 fi
 
-while getopts p flag; do
+function help {
+  echo -e "Basic usage:$SCRIPT "\\n
+  echo -e "The following switches are recognized. $OFF "
+  echo -e "-p enables clang-gridtools performance tests"
+  echo -e "-h Shows this help"
+  exit 1
+}
+
+while getopts ph flag; do
   case $flag in
     p)
       ENABLE_PERFORMANCECHECKS=true
@@ -72,7 +80,6 @@ fi
 
 echo "Cleaning up"
 cd ${workdir}
-echo `pwd`
 gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml" -print`
 i=0
 for t in $gtclang_dawn_tests; do

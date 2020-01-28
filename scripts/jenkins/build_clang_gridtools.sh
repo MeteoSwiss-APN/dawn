@@ -17,11 +17,14 @@ SCRIPT=`basename $0`
 function help {
   echo -e "Basic usage:$SCRIPT "\\n
   echo -e "The following switches are recognized. $OFF "
-  echo -e "-h Shows this help"
+  echo -e "-r clang gridtools repository to use"
+  echo -e "-b clang gridtools branch to use"
+  echo -e "-g gtclang install directory to use"
+  echo -e "-p enabling performance checks"
   exit 1
 }
 echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
-while getopts b:r:g:p flag; do
+while getopts b:r:g:ph flag; do
   case $flag in
     r)
       CLANG_GRIDTOOLS_REPOSITORY=$OPTARG
