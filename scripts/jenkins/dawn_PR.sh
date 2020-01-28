@@ -51,6 +51,7 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
 fi
 
 echo "Cleaning up"
+cd ${workdir}
 gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml"`
 i=0
 for t in $gtclang_dawn_tests; do
