@@ -281,8 +281,8 @@ def make_unstructured_stencil_sir(name=None):
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
-                    sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
-                    sir_utils.make_field_access_expr("in"),
+                    rhs = sir_utils.make_field_access_expr("in"),
+                    init = sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
                     lhs_location = SIR.LocationType.Value('Edge'),
                     rhs_location = SIR.LocationType.Value('Cell')
                 ),
