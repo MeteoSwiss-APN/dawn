@@ -43,7 +43,8 @@ repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
-workdir=`pwd`/../temp
+# workdir=`pwd`/../temp
+workdir=/dev/shm/tmp_dawn
 rm -rf ${workdir}
 echo "Copying repository to ${workdir}"
 cp -r ${repo_root} ${workdir}
