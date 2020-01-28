@@ -66,6 +66,7 @@ __all__ = [
     "make_var_access_expr",
     "make_field_access_expr",
     "make_literal_access_expr",
+    "make_weights",
     "make_reduction_over_neighbor_expr",
     "to_bytes",
     "from_bytes",
@@ -104,6 +105,7 @@ StmtType = TypeVar(
     IfStmt,
 )
 
+# Can't pass SIR.enums_pb2.LocationType as argument because it doesn't contain the value
 LocationTypeValue = NewType('LocationTypeValue', int)
 
 
@@ -722,8 +724,38 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     return expr
 
 
+def make_weights(weights) -> List[Weight]:
+    """ Create a weights vector
+
+    :param weights:         List of weights expressed with python primitive types
+    """
+    assert len(weights) != 0
+    proto_weights = []
+    for weight in weights:
+        proto_weight = Weight()
+        if type(weight) is int:
+            proto_weight.integer_value = weight
+        elif type(weight) is float: # float in python is 64 bits
+            proto_weight.double_value = weight
+        elif type(weight) is bool:
+            proto_weight.boolean_value = weight
+        elif type(weight) is str:
+            proto_weight.string_value = weight
+        #TODO: would also be nice to map numpy types
+        else:
+            raise SIRError("cannot create Weight from type {}".format(type(weight)))
+
+        proto_weights.append(proto_weight)
+        
+    return proto_weights
+
 def make_reduction_over_neighbor_expr(
-    op: str, rhs: ExprType, init: ExprType, lhs_location: LocationTypeValue, rhs_location: LocationTypeValue
+    op: str, 
+    rhs: ExprType, 
+    init: ExprType, 
+    lhs_location: LocationTypeValue, 
+    rhs_location: LocationTypeValue,
+    weights: List[Weight] = None
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
@@ -732,6 +764,7 @@ def make_reduction_over_neighbor_expr(
     :param init:            Initial value for reduction operation
     :param lhs_location:    Location type of left hand side
     :param rhs_location:    Location type of right hand side
+    :param weights:         Weights on neighbors (required to be of equal type)
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
@@ -739,7 +772,8 @@ def make_reduction_over_neighbor_expr(
     expr.init.CopyFrom(make_expr(init))
     expr.lhs_location = lhs_location
     expr.rhs_location = rhs_location
-    #TODO: weights are missing here
+    if weights is not None and len(weights)!=0:
+        expr.weights.extend(weights)
 
     return expr
 
