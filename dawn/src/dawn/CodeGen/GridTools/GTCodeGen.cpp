@@ -34,7 +34,7 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-GTCodeGen::GTCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+GTCodeGen::GTCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                      bool useParallelEP, int maxHaloPoints)
     : CodeGen(ctx, engine, maxHaloPoints),
       mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}

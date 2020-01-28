@@ -345,6 +345,23 @@ class TestExpr(ExprTestBase):
         self.assertEqual(expr.value, "1.235")
         self.assertEqual(expr.type.type_id, BuiltinType.Float)
 
+    def test_reduction_over_neighbor_expr(self):
+        expr = make_reduction_over_neighbor_expr(
+                    "+",
+                    rhs = make_field_access_expr("cell_field"),
+                    init = make_literal_access_expr("1.0", BuiltinType.Float),
+                    lhs_location = LocationType.Value('Edge'),
+                    rhs_location = LocationType.Value('Cell'),
+                    weights = make_weights([0.1, 0.2])
+                )
+        self.assertEqual(expr.op, "+")
+        self.assertEqual(expr.rhs, make_expr(make_field_access_expr("cell_field")))
+        self.assertEqual(expr.init, make_expr(make_literal_access_expr("1.0", BuiltinType.Float)))
+        self.assertEqual(expr.lhs_location, LocationType.Value('Edge'))
+        self.assertEqual(expr.rhs_location, LocationType.Value('Cell'))
+        for weight_a, weight_b in zip(expr.weights, make_weights([0.1, 0.2])):
+            self.assertEqual(weight_a, weight_b)
+
 
 class TestAST(StmtTestBase):
     def test_make_ast(self):
