@@ -29,7 +29,7 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -94,10 +94,12 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
-  LocationTypeChecker locationTypeChecker;
+  UnstructuredDimensionChecker dimensionsChecker;
   GridTypeChecker gridTypeChecker;
-  DAWN_ASSERT(locationTypeChecker.checkLocationTypeConsistency(*new_si->getIIR().get(),
-                                                               new_si->getMetaData()));
+  if(new_si->getIIR()->getGridType() == ast::GridType::Unstructured) {
+    DAWN_ASSERT(dimensionsChecker.checkDimensionsConsistency(*new_si->getIIR().get(),
+                                                             new_si->getMetaData()));
+  }
   DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;
@@ -106,9 +108,11 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return map;
 }
 
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
-    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
-    ast::Expr::LocationType lhs_location, ast::Expr::LocationType rhs_location) {
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
+                                                              std::shared_ptr<iir::Expr>&& rhs,
+                                                              std::shared_ptr<iir::Expr>&& init,
+                                                              ast::LocationType lhs_location,
+                                                              ast::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), lhs_location, rhs_location);
@@ -197,18 +201,23 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
 IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
-  sir::FieldDimension dimensions(
-      ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, dimensions);
+  sir::FieldDimensions dimensions(
+      sir::HorizontalFieldDimension{ast::cartesian,
+                                    {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
+      fieldMaskArray[2] == 1);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, std::move(dimensions));
   return {id, name};
 }
 
 IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
-  sir::FieldDimension dimensions(
-      ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
-  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name, dimensions);
+  sir::FieldDimensions dimensions(
+      sir::HorizontalFieldDimension{ast::cartesian,
+                                    {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
+      fieldMaskArray[2] == 1);
+  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name,
+                                          std::move(dimensions));
   std::string newName = si_->getMetaData().getFieldNameFromAccessID(id);
   return {id, newName};
 }
@@ -226,11 +235,20 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::Expr::LocationType location) {
+                                                ast::LocationType location) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
-                                       sir::FieldDimension(ast::cartesian, {true, true, true}),
-                                       location);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::APIField, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, true));
+  return {id, name};
+}
+
+IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
+                                                ast::NeighborChain sparseChain) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::APIField, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, true));
   return {id, name};
 }
 

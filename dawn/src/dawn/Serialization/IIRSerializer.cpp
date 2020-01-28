@@ -188,20 +188,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoMetaData->add_globalvariableids(globalVariableID);
   }
 
-  // Filling Field: repeated int32 FieldAccessIDs = 4;
-  for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
-    protoMetaData->add_fieldaccessids(fieldAccessID);
-  }
-
-  auto& protoAccessIDToLocationMap = *protoMetaData->mutable_accessidtolocation();
-  for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
-    if(metaData.getIsUnstructuredFromAccessID(fieldAccessID)) {
-      protoAccessIDToLocationMap.insert(
-          {fieldAccessID,
-           convertLocationType(metaData.getLocationTypeFromAccessID(fieldAccessID))});
-    }
-  }
-
   // Filling Field: VariableVersions versionedFields = 8;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
@@ -225,16 +211,12 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   }
 
   // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 10;
-  auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtolegaldimensions();
+  auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtodimensions();
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
-    auto const& cartDimensions =
-        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
-            IDToLegalDimension.second);
-    proto::iir::Array3i array;
-    array.set_int1(cartDimensions.I());
-    array.set_int2(cartDimensions.J());
-    array.set_int3(cartDimensions.K());
-    protoInitializedDimensionsMap.insert({IDToLegalDimension.first, array});
+    dawn::proto::statements::FieldDimensions protoFieldDimensions;
+    setFieldDimensions(&protoFieldDimensions, IDToLegalDimension.second);
+
+    protoInitializedDimensionsMap.insert({IDToLegalDimension.first, protoFieldDimensions});
   }
 
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
@@ -275,8 +257,8 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   case ast::GridType::Cartesian:
     protoIIR->set_gridtype(proto::enums::GridType::Cartesian);
     break;
-  case ast::GridType::Triangular:
-    protoIIR->set_gridtype(proto::enums::GridType::Triangular);
+  case ast::GridType::Unstructured:
+    protoIIR->set_gridtype(proto::enums::GridType::Unstructured);
     break;
   default:
     dawn_unreachable("invalid grid type");
@@ -521,10 +503,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
-  for(auto IDtoLocation : protoMetaData.accessidtolocation()) {
-    metadata.addAccessIDLocationPair(IDtoLocation.first, convertLocationType(IDtoLocation.second));
-  }
-
   struct DeclStmtFinder : public iir::ASTVisitorForwarding {
     void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
       stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
@@ -566,12 +544,9 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                   makeStmt(FieldnameToBC.second, ast::StmtData::IIR_DATA_TYPE));
   }
 
-  for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
+  for(auto fieldIDInitializedDims : protoMetaData.fieldidtodimensions()) {
     metadata.fieldIDToInitializedDimensionsMap_.emplace(
-        fieldIDInitializedDims.first,
-        sir::FieldDimension(ast::cartesian, {fieldIDInitializedDims.second.int1() == 1,
-                                             fieldIDInitializedDims.second.int2() == 1,
-                                             fieldIDInitializedDims.second.int3() == 1}));
+        fieldIDInitializedDims.first, makeFieldDimensions(fieldIDInitializedDims.second));
   }
 
   for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())
@@ -749,8 +724,8 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   case dawn::proto::enums::GridType::Cartesian:
     target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
     break;
-  case dawn::proto::enums::GridType::Triangular:
-    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Triangular);
+  case dawn::proto::enums::GridType::Unstructured:
+    target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Unstructured);
     break;
   default:
     dawn_unreachable("unknown grid type");

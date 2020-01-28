@@ -131,9 +131,18 @@ private:
     for(int i = 0; i < numVarsToBeCached; ++i) {
       int oldID = sortedAccesses_[i].accessID;
 
-      // Create new temporary field and register in the instantiation
+      // Create new temporary field, need to figure out dimensions
+      // TODO sparse_dim: Should be supported: should use same code used for checks on correct
+      // dimensionality in statements.
+      if(instantiation_->getIIR()->getGridType() != ast::GridType::Cartesian)
+        dawn_unreachable(
+            "Currently creating a new temporary field is not supported for unstructured grids.");
+      sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                                     true};
+      // Register the new temporary in the metadata
       int newID = metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary,
                                                "__tmp_cache_" + std::to_string(i));
+      metadata_.setFieldDimensions(newID, std::move(fieldDims));
 
       // Rename all the fields in this multistage
       renameAccessIDInMultiStage(multiStagePrt_.get(), oldID, newID);

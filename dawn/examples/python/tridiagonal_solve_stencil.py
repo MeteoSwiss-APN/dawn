@@ -144,10 +144,10 @@ def main(args: argparse.Namespace):
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]),
                 [
-                    sir_utils.make_field("a"),
-                    sir_utils.make_field("b"),
-                    sir_utils.make_field("c"),
-                    sir_utils.make_field("d"),
+                    sir_utils.make_field("a", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("b", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("c", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("d", sir_utils.make_field_dimensions_cartesian()),
                 ],
             )
         ],

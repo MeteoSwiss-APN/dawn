@@ -78,15 +78,6 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
                                   std::unordered_map<std::string, double>());
 /// @}
 
-/// @brief Find all the different fields used in a given statement
-///
-/// This method iterates trough the complete AST and returns a vector of all the fields used. This
-/// can be used to determine if Stencils are legal and for auto generation of new stencils.
-///
-/// @param ast              AST to evaluate
-/// @returns                a Vector of all the Fields used in the stencil
-/// @ingroup testing
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //

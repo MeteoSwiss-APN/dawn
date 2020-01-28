@@ -45,11 +45,10 @@ private:
   FieldAccessExtents
       extentsRB_; ///< Accumulated read and write extent of the field, extended by the
   /// redundant computation of a block
-  Interval interval_; ///< Enclosing Interval from the iteration space
-                      ///  from where the Field has been accessed
-
-  bool unstrucutred_;
-  ast::Expr::LocationType location_ = ast::Expr::LocationType::Cells;
+  Interval interval_;                    ///< Enclosing Interval from the iteration space
+                                         ///  from where the Field has been accessed
+  sir::FieldDimensions fieldDimensions_; ///< Field dimensions: horizontal (either Cartesian or
+                                         ///  Unstructured) + vertical
 
 public:
   Field(Field&& f) = default;
@@ -58,16 +57,11 @@ public:
   Field& operator=(const Field&) = default;
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
-        std::optional<Extents> const& writeExtents, Interval const& interval)
-      : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
-        extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(false) {}
-
-  Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval,
-        ast::Expr::LocationType location)
+        sir::FieldDimensions&& fieldDimensions)
       : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
-        extentsRB_(readExtents, writeExtents), interval_(interval), unstrucutred_(true),
-        location_(location) {}
+        extentsRB_(readExtents, writeExtents), interval_(interval),
+        fieldDimensions_(fieldDimensions) {}
 
   /// @name Operators
   /// @{
@@ -136,9 +130,12 @@ public:
   ///
   void extendInterval(Interval const& interval) { interval_.merge(interval); }
 
-  ast::Expr::LocationType getLocation() const { return location_; }
+  const sir::FieldDimensions& getFieldDimensions() const { return fieldDimensions_; }
 
-  bool isUnstructured() { return unstrucutred_; }
+  bool isUnstructured() {
+    return !sir::dimension_isa<sir::CartesianFieldDimension>(
+        fieldDimensions_.getHorizontalFieldDimension());
+  }
 };
 
 /// @brief merges all the fields from sourceFields into destinationFields

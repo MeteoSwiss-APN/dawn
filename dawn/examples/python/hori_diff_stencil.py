@@ -118,10 +118,10 @@ def main(args: argparse.Namespace):
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field("in"),
-                    sir_utils.make_field("out"),
-                    sir_utils.make_field("coeff"),
-                    sir_utils.make_field("lap", is_temporary=True),
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("coeff", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("lap", sir_utils.make_field_dimensions_cartesian(), is_temporary=True),
                 ],
             )
         ],

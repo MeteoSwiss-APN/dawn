@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_compute_read_access_interval.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 54
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 60
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 48
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 13
                    }
                   },
                   "op": "=",
@@ -204,14 +205,14 @@
                        "Column": 67
                       },
                       "data": {},
-                      "ID": 12
+                      "ID": 10
                      }
                     },
                     "loc": {
                      "Line": 27,
                      "Column": 54
                     },
-                    "ID": 13
+                    "ID": 12
                    }
                   },
                   "loc": {
@@ -273,12 +274,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "a",
@@ -287,12 +289,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp",
@@ -301,12 +304,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

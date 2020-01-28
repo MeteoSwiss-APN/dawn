@@ -83,10 +83,6 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 
 json::json Stencil::FieldInfo::jsonDump() const {
   json::json node;
-
-  auto const& cartDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(Dimensions);
-  node["dim"] = format("[%i,%i,%i]", cartDimensions.I(), cartDimensions.J(), cartDimensions.K());
   node["field"] = field.jsonDump();
   node["IsTemporary"] = IsTemporary;
   return node;
@@ -132,7 +128,7 @@ void Stencil::updateFromChildren() {
 
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
     bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
-    auto specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
+    auto specifiedDimension = metadata_.getFieldDimensions(accessID);
 
     derivedInfo_.fields_.emplace(
         std::make_pair(accessID, FieldInfo{isTemporary, fieldName, specifiedDimension, field}));

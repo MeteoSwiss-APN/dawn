@@ -121,7 +121,7 @@ def main(args: argparse.Namespace):
                         ),
                     ]
                 ),
-                [sir_utils.make_field("in"), sir_utils.make_field("out")],
+                [sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())],
             )
         ],
     )

@@ -16,6 +16,7 @@
 #define DAWN_AST_ASTEXPR_H
 
 #include "ASTVisitorHelpers.h"
+#include "LocationType.h"
 #include "Offsets.h"
 
 #include "dawn/Support/Array.h"
@@ -58,8 +59,6 @@ public:
     NOPExpr,
     ReductionOverNeighborExpr,
   };
-
-  enum class LocationType { Cells, Edges, Vertices };
 
   using ExprRangeType = ArrayRef<std::shared_ptr<Expr>>;
 
@@ -637,22 +636,19 @@ private:
 
   std::string op_ = "+";
   std::optional<std::vector<sir::Value>> weights_;
-  ast::Expr::LocationType lhs_location_;
-  ast::Expr::LocationType rhs_location_;
+  ast::LocationType lhs_location_;
+  ast::LocationType rhs_location_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init,
-                            ast::Expr::LocationType lhs_location = ast::Expr::LocationType::Cells,
-                            ast::Expr::LocationType rhs_location = ast::Expr::LocationType::Cells,
-                            SourceLocation loc = SourceLocation());
+                            std::shared_ptr<Expr> const& init, ast::LocationType lhs_location,
+                            ast::LocationType rhs_location, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init, std::vector<sir::Value> weights,
-                            ast::Expr::LocationType lhs_location = ast::Expr::LocationType::Cells,
-                            ast::Expr::LocationType rhs_location = ast::Expr::LocationType::Cells,
+                            ast::LocationType lhs_location, ast::LocationType rhs_location,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -663,8 +659,8 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  ast::Expr::LocationType getRhsLocation() const { return rhs_location_; };
-  ast::Expr::LocationType getLhsLocation() const { return lhs_location_; };
+  ast::LocationType getRhsLocation() const { return rhs_location_; };
+  ast::LocationType getLhsLocation() const { return lhs_location_; };
   const std::optional<std::vector<sir::Value>>& getWeights() const { return weights_; };
 
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }
