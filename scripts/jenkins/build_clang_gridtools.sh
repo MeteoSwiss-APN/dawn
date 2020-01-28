@@ -97,7 +97,12 @@ ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
 if [ -z ${RUN_PERFTETS+x} ]; then
   echo "do not run performance tests"
 else
- export ENABLE_CUDA_GPU=true
+  target=cuda
+  if [ "${target}" = "cuda" ]; then
+    export ENABLE_CUDA_GPU=true
+  else
+    export ENABLE_GT_GPU=true
+  fi
  cd $source_dir
  bash scripts/jenkins/run_perftests.sh -b $build_dir 
 fi
