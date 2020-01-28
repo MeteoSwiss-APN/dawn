@@ -52,19 +52,20 @@ fi
 
 echo "Cleaning up"
 cd ${workdir}
-gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml"`
+echo `pwd`
+gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml" -print`
 i=0
 for t in $gtclang_dawn_tests; do
   cp $t ${base_dir}/gtest_${i}.xml
   i=$((i+1))
 done
-cd clang-gridtools/build/benchmarks/
-clang_gridtools_tests=`find . -name "*.xml"`
-for t in $clang_gridtools_tests; do
-  cp $t ${base_dir}/gtest_${i}.xml
-  i=$((i+1))
-done
-cd -
+# cd clang-gridtools/build/benchmarks/
+# clang_gridtools_tests=`find . -name "*.xml"`
+# for t in $clang_gridtools_tests; do
+#   cp $t ${base_dir}/gtest_${i}.xml
+#   i=$((i+1))
+# done
+# cd -
 graphs=`find . -name "history*.png"`
 for g in $graphs; do
   cp $g ${base_dir}/$g
