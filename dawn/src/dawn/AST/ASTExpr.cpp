@@ -50,6 +50,8 @@ std::shared_ptr<Expr> UnaryOperator::clone() const {
 
 bool UnaryOperator::equals(const Expr* other) const {
   const UnaryOperator* otherPtr = dyn_cast<UnaryOperator>(other);
+  // TODO Make checks to ensure cast was successful, otherwise dereferencing below is going to
+  // segfault!
   return otherPtr && Expr::equals(other) && operand_->equals(otherPtr->operand_.get()) &&
          op_ == otherPtr->op_;
 }

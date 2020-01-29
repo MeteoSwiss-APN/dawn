@@ -30,14 +30,19 @@ class IIR : public IIRNode<void, IIR, Stencil> {
 
   const ast::GridType gridType_;
 
+  // TODO This should be a parameter to the backend
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
 
+  // TODO Why is there a shared ptr to this map?
   std::shared_ptr<sir::GlobalVariableMap> globalVariableMap_;
+
+  // TODO Why is this a vector?
   std::vector<std::shared_ptr<sir::StencilFunction>> stencilFunctions_;
 
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
+    // TODO Make this lowercase
     std::unordered_map<int, std::string> StageIDToNameMap_;
     /// field info properties
     std::unordered_map<int, Stencil::FieldInfo> fields_;
@@ -110,7 +115,11 @@ public:
   }
 
   const Stencil& getStencil(const int stencilID) const;
+
+  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  bool operator==(const IIR& other) const noexcept;
 };
+
 } // namespace iir
 } // namespace dawn
 

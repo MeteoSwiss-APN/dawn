@@ -46,6 +46,7 @@ using namespace dawn;
 
 namespace {
 
+// NOTE: There is another version in the serializer?
 void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
   EXPECT_TRUE(lhs->checkTreeConsistency());
   EXPECT_TRUE(rhs->checkTreeConsistency());

@@ -23,6 +23,7 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
 #include <iterator>
@@ -367,6 +368,55 @@ bool Stage::iterationSpaceCompatible(const Stage& other) const {
     compatible &= iterationSpace_[1]->contains(*other.getIterationSpace()[1]);
   }
   return compatible;
+}
+
+bool Stage::operator==(const Stage& other) const noexcept {
+  // For now we are not comparing the StencilMetaInformation...
+
+  // Skipping StageID
+
+  // LocationType
+  if(this->type_ != other.type_)
+    return false;
+
+  // IterationSpace
+  for(const auto& [i1, i2] : zip(this->iterationSpace_, other.iterationSpace_)) {
+    if(i1 != i2)
+      return false;
+  }
+
+  // DerivedInfo
+  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+    return false;
+
+  if(!compareMapValuesAsSet(this->derivedInfo_.allGlobalVariables_,
+                            other.derivedInfo_.allGlobalVariables_))
+    return false;
+
+  if(!compareMapValuesAsSet(this->derivedInfo_.globalVariables_,
+                            other.derivedInfo_.globalVariables_))
+    return false;
+
+  if(!compareMapValuesAsSet(this->derivedInfo_.globalVariablesFromStencilFunctionCalls_,
+                            other.derivedInfo_.globalVariablesFromStencilFunctionCalls_))
+    return false;
+
+  if(this->derivedInfo_.extents_ != other.derivedInfo_.extents_)
+    return false;
+
+  if(this->derivedInfo_.requiresSync_ != other.derivedInfo_.requiresSync_)
+    return false;
+
+  // Traverse downward
+  if(this->getChildren().size() != other.getChildren().size())
+    return false;
+
+  for(const auto& [this_dm, other_dm] : zip(this->getChildren(), other.getChildren())) {
+    if(*this_dm != *other_dm)
+      return false;
+  }
+
+  return true;
 }
 
 } // namespace iir

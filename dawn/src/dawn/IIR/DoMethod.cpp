@@ -28,7 +28,9 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/IndexGenerator.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/Logging.h"
 #include <limits>
 #include <memory>
@@ -320,6 +322,36 @@ bool DoMethod::isEmptyOrNullStmt() const {
       return false;
     }
   }
+  return true;
+}
+
+bool DoMethod::operator==(const DoMethod& other) const noexcept {
+  // Interval
+  if(this->interval_ != other.interval_)
+    return false;
+
+  // Skipping ID
+
+  // For now we are not comparing the StencilMetaInformation...
+
+  // DerivedInfo
+  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+    return false;
+
+  // Skipping DependencyGraphAccesses
+
+  // AST
+  // TODO Clean this up
+  // checking each of the statements
+  for(int stmtidx = 0, stmtSize = this->getAST().getStatements().size(); stmtidx < stmtSize;
+      ++stmtidx) {
+    const auto& lhsStmt = this->getAST().getStatements()[stmtidx];
+    const auto& rhsStmt = other.getAST().getStatements()[stmtidx];
+    // check the statement (and its data)
+    if(!lhsStmt->equals(rhsStmt.get()))
+      return false;
+  }
+
   return true;
 }
 

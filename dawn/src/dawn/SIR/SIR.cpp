@@ -87,6 +87,7 @@ public:
   }
 
 private:
+  // Make this a list!
   std::vector<std::shared_ptr<sir::Stmt>> statements_;
 };
 

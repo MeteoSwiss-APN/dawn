@@ -18,6 +18,7 @@
 #include <iterator>
 #include <numeric>
 #include <tuple>
+#include <unordered_set>
 
 namespace dawn {
 
@@ -90,6 +91,21 @@ constexpr auto zip(T1&& iterable1, T2&& iterable2) {
   };
   return iterable_wrapper{std::forward<T1>(iterable1), std::forward<T2>(iterable2)};
 }
+
+template <typename Map>
+bool compareMapValuesAsSet(const Map& map1, const Map& map2) {
+  // TODO This only works when Map has a value_type. Could use enable_if and overload later.
+  if(map1.size() != map2.size())
+    return false;
+
+  std::unordered_set<typename Map::mapped_type> map1_values, map2_values;
+  for(auto& key_value : map1)
+    map1_values.insert(key_value.second);
+  for(auto& key_value : map2)
+    map2_values.insert(key_value.second);
+  return map1_values == map2_values;
+}
+
 } // namespace dawn
 
 #endif // DAWN_SUPPORT_ITERATORADAPTERS_H

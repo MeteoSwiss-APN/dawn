@@ -54,7 +54,7 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
   int id_;
 
   struct DerivedInfo {
-    ///@brrief filled by PassSetCaches and PassSetNonTempCaches
+    ///@brief filled by PassSetCaches and PassSetNonTempCaches
     std::unordered_map<int, iir::Cache> caches_;
 
     std::unordered_map<int, Field> fields_;
@@ -71,6 +71,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  // TODO metadata should at least be const... geez!
   MultiStage(StencilMetaInformation& metadata, LoopOrderKind loopOrder);
   MultiStage(MultiStage&&) = default;
   /// @}
@@ -199,6 +200,9 @@ public:
   MultiInterval computePartitionOfIntervals() const;
 
   StencilMetaInformation& getMetadata();
+
+  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  bool operator==(const MultiStage& other) const noexcept;
 };
 
 } // namespace iir

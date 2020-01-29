@@ -21,6 +21,7 @@
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/UIDGenerator.h"
 
@@ -455,6 +456,34 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
 }
 
 StencilMetaInformation& MultiStage::getMetadata() { return metadata_; }
+
+bool MultiStage::operator==(const MultiStage& other) const noexcept {
+  // For now we are not comparing the StencilMetaInformation...
+
+  // LoopOrder
+  if(this->loopOrder_ != other.loopOrder_)
+    return false;
+
+  // DerivedInfo
+  // Caches
+  if(!compareMapValuesAsSet(this->derivedInfo_.caches_, other.derivedInfo_.caches_))
+    return false;
+
+  // Fields
+  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+    return false;
+
+  // Traverse downward
+  if(this->getChildren().size() != other.getChildren().size())
+    return false;
+
+  for(const auto& [this_ms, other_ms] : zip(this->getChildren(), other.getChildren())) {
+    if(*this_ms != *other_ms)
+      return false;
+  }
+
+  return true;
+} // namespace iir
 
 } // namespace iir
 } // namespace dawn

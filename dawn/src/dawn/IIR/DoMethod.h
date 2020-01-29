@@ -140,6 +140,9 @@ public:
   iir::BlockStmt const& getAST() const { return *ast_; }
   iir::BlockStmt& getAST() { return *ast_; }
   std::shared_ptr<iir::BlockStmt> getASTPtr() { return ast_; }
+
+  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  bool operator==(const DoMethod& other) const noexcept;
 };
 
 } // namespace iir

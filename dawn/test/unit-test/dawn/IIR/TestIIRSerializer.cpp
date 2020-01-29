@@ -44,6 +44,7 @@ namespace {
 #define IIR_EXPECT_EQ(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), TRUE)
 #define IIR_EXPECT_NE(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), FALSE)
 
+// TODO Why is there another version in the deserializer test?
 bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   IIR_EARLY_EXIT((lhs->getGridType() == rhs->getGridType()));
   IIR_EARLY_EXIT(lhs->checkTreeConsistency());

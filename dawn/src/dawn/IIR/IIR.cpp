@@ -18,6 +18,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
@@ -108,6 +109,48 @@ std::unique_ptr<IIR> IIR::clone() const {
   auto cloneIIR = std::make_unique<IIR>(gridType_, globalVariableMap_, stencilFunctions_);
   clone(cloneIIR);
   return cloneIIR;
+}
+
+bool IIR::operator==(const IIR& other) const noexcept {
+  // AST GridType
+  if(this->gridType_ != other.gridType_)
+    return false;
+
+  // BlockSize
+  for(const auto& [bs1, bs2] : zip(this->blockSize_, other.blockSize_)) {
+    if(bs1 != bs2)
+      return false;
+  }
+
+  // Skipping ControlFlowDescriptor
+
+  // GlobalVariableMap
+  if(*this->globalVariableMap_ != *other.globalVariableMap_)
+    return false;
+
+  // StencilFunctions
+  if(!std::equal(this->stencilFunctions_.begin(), this->stencilFunctions_.end(),
+                 other.stencilFunctions_.begin()))
+    return false;
+
+  // DerivedInfo
+  if(!compareMapValuesAsSet(this->derivedInfo_.StageIDToNameMap_,
+                            other.derivedInfo_.StageIDToNameMap_))
+    return false;
+
+  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+    return false;
+
+  // Traverse downward
+  if(this->getChildren().size() != other.getChildren().size())
+    return false;
+
+  for(const auto& [this_s, other_s] : zip(this->getChildren(), other.getChildren())) {
+    if(*this_s != *other_s)
+      return false;
+  }
+
+  return true;
 }
 
 } // namespace iir

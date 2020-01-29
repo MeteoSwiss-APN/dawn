@@ -246,6 +246,9 @@ public:
   /// incompatible If neither stage or just the other stage contains an iteration space they are
   /// compatible
   bool iterationSpaceCompatible(const Stage& other) const;
+
+  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  bool operator==(const Stage& other) const noexcept;
 };
 
 } // namespace iir

@@ -443,6 +443,15 @@ public:
     }
   }
 
+  /// @brief Comparison function for IIRNode and below.
+  bool operator==(const NodeType& other) const noexcept {
+    return static_cast<NodeType*>(this)->operator==(other);
+  }
+
+  // TODO Move this to .cpp?
+  /// @brief Opposite of operator==.
+  inline bool operator!=(const IIRNode& other) const noexcept { !this->operator==(other); }
+
   virtual void updateLevel() {}
   virtual void clearDerivedInfo() {}
 
@@ -465,6 +474,7 @@ private:
       unsigned long pos,
       typename std::enable_if<
           std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
+    // TODO This is not safe!
     return children_[pos];
   }
 
@@ -475,6 +485,7 @@ private:
           !std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
 
     auto it = std::next(children_.begin(), pos);
+    // TODO This is also not safe!
     return *it;
   }
 

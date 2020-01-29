@@ -17,6 +17,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
@@ -542,6 +543,30 @@ void Stencil::accept(iir::ASTVisitor& visitor) {
   for(const auto& stmt : iterateIIROverStmt(*this)) {
     stmt->accept(visitor);
   }
+}
+
+bool Stencil::operator==(const Stencil& other) const noexcept {
+  // For now we are not comparing the StencilMetaInformation...
+
+  if(stencilAttributes_ != other.stencilAttributes_)
+    return false;
+
+  // Skipping stencilID
+
+  // Skipping StageDependencyGraph
+  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+    return false;
+
+  // Traverse downward
+  if(this->getChildren().size() != other.getChildren().size())
+    return false;
+
+  for(const auto& [this_ms, other_ms] : zip(this->getChildren(), other.getChildren())) {
+    if(*this_ms != *other_ms)
+      return false;
+  }
+
+  return true;
 }
 
 } // namespace iir

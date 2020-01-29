@@ -219,6 +219,7 @@ public:
   /// @brief removes all stmts from the block
   void clear() { statements_.clear(); }
 
+  // Make this a list!
   /// @brief returns a const reference to the container of the statements in the block
   const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }
 

@@ -301,6 +301,9 @@ public:
   ///@brief Get the Attributes of the Stencil as specified in the user-code
   sir::Attr& getStencilAttributes();
 
+  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  bool operator==(const Stencil& other) const noexcept;
+
 private:
   void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
                             int startStageIdx, int endStageIdx, bool updateFields);
