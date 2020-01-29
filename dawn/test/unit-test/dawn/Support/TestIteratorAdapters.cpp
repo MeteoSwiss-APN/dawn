@@ -14,6 +14,7 @@
 
 #include "dawn/Support/IteratorAdapters.h"
 #include <gtest/gtest.h>
+#include <list>
 #include <vector>
 
 using namespace dawn;
@@ -58,6 +59,30 @@ TEST(TestIteratorAdapters, enumerate) {
       ASSERT_EQ(i, 2);
       break;
     }
+  }
+}
+
+TEST(TestIteratorAdapters, zip) {
+  const std::vector<int> vec{0, 1, 2};
+  const std::list<int> list{3, 4, 5};
+
+  int i = 0;
+  for(auto [e1, e2] : zip(vec, list)) {
+    switch(i) {
+    case 0:
+      ASSERT_EQ(e1, 0);
+      ASSERT_EQ(e2, 3);
+      break;
+    case 1:
+      ASSERT_EQ(e1, 1);
+      ASSERT_EQ(e2, 4);
+      break;
+    case 2:
+      ASSERT_EQ(e1, 2);
+      ASSERT_EQ(e2, 5);
+      break;
+    }
+    ++i;
   }
 }
 

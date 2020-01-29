@@ -16,6 +16,7 @@
 #define DAWN_SUPPORT_ITERATORADAPTERS_H
 
 #include <iterator>
+#include <numeric>
 #include <tuple>
 
 namespace dawn {
@@ -42,6 +43,7 @@ constexpr auto enumerate(T&& iterable) {
   return iterable_wrapper{std::forward<T>(iterable)};
 }
 
+// reverse
 template <typename T>
 struct reversion_wrapper {
   T& iterable;
@@ -62,6 +64,32 @@ reversion_wrapper<T> reverse(T&& iterable) {
   return {iterable};
 }
 
+// zip
+template <typename T1, typename T2, typename T1Iter = decltype(std::begin(std::declval<T1>())),
+          typename T2Iter = decltype(std::begin(std::declval<T2>())),
+          typename = decltype(std::end(std::declval<T1>())),
+          typename = decltype(std::end(std::declval<T2>()))>
+constexpr auto zip(T1&& iterable1, T2&& iterable2) {
+  struct iterator {
+    T1Iter iter1;
+    T2Iter iter2;
+    bool operator!=(const iterator& other) const {
+      return (iter1 != other.iter1) && (iter2 != other.iter2);
+    }
+    void operator++() {
+      ++iter1;
+      ++iter2;
+    }
+    auto operator*() const { return std::tie(*iter1, *iter2); }
+  };
+  struct iterable_wrapper {
+    T1 iterable1;
+    T2 iterable2;
+    auto begin() { return iterator{std::begin(iterable1), std::begin(iterable2)}; }
+    auto end() { return iterator{std::begin(iterable1), std::end(iterable2)}; }
+  };
+  return iterable_wrapper{std::forward<T1>(iterable1), std::forward<T2>(iterable2)};
+}
 } // namespace dawn
 
 #endif // DAWN_SUPPORT_ITERATORADAPTERS_H
