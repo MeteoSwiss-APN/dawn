@@ -58,12 +58,10 @@ void IRSplitter::split(const std::string& dslFile) {
 
   std::vector<std::string> flags = {"-std=c++11",
                                     std::string{"-I"} + std::string{GTCLANG_UNITTEST_INCLUDES}};
-  std::pair<bool, std::shared_ptr<dawn::SIR>> tuple =
-      GTClang::run({dslFile, "-fno-codegen"}, flags);
+  auto [success, sir] =  GTClang::run({dslFile, "-fno-codegen"}, flags);
 
-  if(tuple.first) {
+  if(success) {
     // Use SIR to create context then serialize the SIR
-    std::shared_ptr<dawn::SIR> sir = tuple.second;
     createContext(sir);
     dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
 

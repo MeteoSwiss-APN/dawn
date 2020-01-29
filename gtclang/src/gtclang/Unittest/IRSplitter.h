@@ -35,10 +35,6 @@ class IRSplitter : dawn::NonCopyable {
 public:
   explicit IRSplitter();
 
-  /// @brief Run GTClang with given flags
-  ///
-  /// @return a pair of a shared pointer to the SIR and a boolean `true` on success, `false`
-  /// otherwise
   void split(const std::string& dslFile);
   void parallelize();
   void optimize();
