@@ -19,6 +19,7 @@ set(test_name ${PROJECT_NAME}UnittestFrontend)
 add_executable(${test_name}
   TestParsing.cpp
   TestPreprocessing.cpp
+  TestIRSplitting.cpp
   TestMain.cpp
 )
 

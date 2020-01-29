@@ -22,32 +22,35 @@
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
-#include "dawn/Optimizer/PassSetSyncStage.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
-#include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassSetStageName.h"
+#include "dawn/Optimizer/PassSetSyncStage.h"
 #include "dawn/Optimizer/PassStageMerger.h"
+#include "dawn/Optimizer/PassStageReordering.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "gtclang/Unittest/Config.h"
 #include "gtclang/Unittest/GTClang.h"
 #include <fstream>
 
 namespace gtclang {
 
+IRSplitter::IRSplitter() {}
+
 void IRSplitter::split(const std::string& dslFile) {
-  std::string filePrefix_ = dslFile;
+  filePrefix_ = dslFile;
   size_t pos = filePrefix_.rfind('.');
   if(pos != std::string::npos) {
     filePrefix_ = filePrefix_.substr(0, pos);
   }
 
-  std::vector<std::string> flags = {"-std=c++11", "-I./src"};
-  dawn::UIDGenerator::getInstance()->reset();
+  std::vector<std::string> flags = {"-std=c++11",
+                                    std::string{"-I"} + std::string{GTCLANG_UNITTEST_INCLUDES}};
   std::pair<bool, std::shared_ptr<dawn::SIR>> tuple =
       GTClang::run({dslFile, "-fno-codegen"}, flags);
 
@@ -58,7 +61,6 @@ void IRSplitter::split(const std::string& dslFile) {
     dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
 
     // Lower to unoptimized IIR and serialize
-    context_->fillIIR();
     unsigned level = 0;
     writeIIR(level);
 
@@ -170,9 +172,8 @@ bool IRSplitter::runPass(const std::string& name,
 void IRSplitter::writeIIR(const unsigned level) {
   unsigned nstencils = 0;
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    dawn::IIRSerializer::serialize(filePrefix_ + ".opt" + std::to_string(level) + "." +
-                                       std::to_string(nstencils) + "." + name + ".iir",
-                                   instantiation);
+    dawn::IIRSerializer::serialize(filePrefix_ + "." + name + std::to_string(nstencils) +
+                                   ".opt" + std::to_string(level) + ".iir", instantiation);
     nstencils += 1;
   }
 }
