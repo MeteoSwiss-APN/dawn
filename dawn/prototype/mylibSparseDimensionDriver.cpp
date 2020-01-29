@@ -1,8 +1,8 @@
 #include <fstream>
 #include <vector>
 
+#include "generated_sparseDimension.hpp"
 #include "mylib_interface.hpp"
-#include "reference_SparseDimensions.hpp"
 
 int main() {
 
@@ -39,8 +39,8 @@ int main() {
     }
   }
 
-  dawn_generated::cxxnaiveico::sparseDimension<mylibInterface::mylibTag>(mesh, k_size, faces, edges,
-                                                                         sparseCellData)
+  dawn_generated::cxxnaiveico::sparseDimensionDBG<mylibInterface::mylibTag>(mesh, k_size, faces,
+                                                                            edges, sparseCellData)
       .run();
 
   FILE* fp = fopen("sparseDimMylib.txt", "w+");

@@ -82,18 +82,22 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh, loc, ";
   expr->getInit()->accept(*this);
   if(hasWeights) {
-    ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) { return lhs "
-        << expr->getOp() << "= ";
+    ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) {\n";
+    ss_ << "lhs " << expr->getOp() << "= ";
     ss_ << "weight * ";
   } else {
-    ss_ << ", [&](auto& lhs, auto const& red_loc) { return lhs " << expr->getOp() << "= ";
+    ss_ << ", [&](auto& lhs, auto const& red_loc) { lhs " << expr->getOp() << "= ";
   }
 
-  auto argName = argName_;
-  argName_ = "red_loc";
+  auto argName = denseArgName_;
+  denseArgName_ = "red_loc";
+  sparseArgName_ = "loc";
   expr->getRhs()->accept(*this);
-  argName_ = argName;
-  ss_ << ";}";
+  denseArgName_ = argName;
+  ss_ << ";\n";
+  ss_ << "m_sparse_dimension_idx++;\n";
+  ss_ << "return lhs;\n";
+  ss_ << "}";
   if(hasWeights) {
     auto weights = expr->getWeights().value();
     bool first = true;
@@ -240,8 +244,17 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
-    ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << argName_ << "),"
-        << "k+" << expr->getOffset().verticalOffset() << ")";
+    if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+           metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())
+           .isDense()) {
+      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << denseArgName_ << "),"
+          << "k+" << expr->getOffset().verticalOffset() << ")";
+    } else {
+      ss_ << "m_" << getName(expr) << "("
+          << "k+" << expr->getOffset().verticalOffset() << ", deref(LibTag{}, " << sparseArgName_
+          << "),"
+          << "m_sparse_dimension_idx)";
+    }
   }
 }
 

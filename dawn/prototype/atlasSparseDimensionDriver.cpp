@@ -12,7 +12,7 @@
 #include "atlas_interface.hpp"
 
 #include "AtlasCartesianWrapper.h"
-#include "reference_SparseDimensions.hpp"
+#include "generated_sparseDimension.hpp"
 
 int main() {
 
@@ -58,8 +58,8 @@ int main() {
     edges_v(iEdge, level) = 1;
   }
 
-  dawn_generated::cxxnaiveico::sparseDimension<atlasInterface::atlasTag>(mesh, nb_levels, cells_v,
-                                                                         edges_v, sparseDim_v)
+  dawn_generated::cxxnaiveico::sparseDimensionDBG<atlasInterface::atlasTag>(
+      mesh, nb_levels, cells_v, edges_v, sparseDim_v)
       .run();
 
   FILE* fp = fopen("sparseDimAtlas.txt", "w+");
