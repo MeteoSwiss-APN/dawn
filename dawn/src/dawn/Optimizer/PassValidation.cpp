@@ -24,9 +24,6 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
 
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                          const std::string& description) {
-  IntegrityChecker checker(instantiation.get());
-  checker.run();
-
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
 
@@ -43,6 +40,12 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*iir),
                   ("Grid type consistency check failed " + description).c_str());
 
+  IntegrityChecker checker(instantiation.get());
+  try {
+    checker.run();
+  } catch(CompileError& error) {
+    DAWN_ASSERT_MSG(false, error.getMessage().c_str());
+  }
   return true;
 }
 

@@ -43,9 +43,9 @@ TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
   ASSERT_TRUE(result);
 
   // Run validation pass and check for exception
-  PassValidation validationPass(*context);
+  IntegrityChecker checker(instantiation.get());
   try {
-    validationPass.run(instantiation, "for test TestIntegrityChecker::GlobalsOptimizedAway");
+    checker.run();
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();
