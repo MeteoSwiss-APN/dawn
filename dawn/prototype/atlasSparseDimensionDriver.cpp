@@ -36,9 +36,6 @@ int main() {
   atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
   atlas::Field edgesField{fs_edges.createField<double>(atlas::option::name("edges"))};
 
-  atlas::output::Gmsh gmesh("mymesh.msh");
-  gmesh.write(mesh);
-
   atlasInterface::Field<double> cells_v = atlas::array::make_view<double, 2>(cellsField);
   atlasInterface::Field<double> edges_v = atlas::array::make_view<double, 2>(edgesField);
   atlasInterface::SparseDimension<double> sparseDim_v =
@@ -58,8 +55,8 @@ int main() {
     edges_v(iEdge, level) = 1;
   }
 
-  dawn_generated::cxxnaiveico::sparseDimensionDBG<atlasInterface::atlasTag>(
-      mesh, nb_levels, cells_v, edges_v, sparseDim_v)
+  dawn_generated::cxxnaiveico::sparseDimension<atlasInterface::atlasTag>(mesh, nb_levels, cells_v,
+                                                                         edges_v, sparseDim_v)
       .run();
 
   FILE* fp = fopen("sparseDimAtlas.txt", "w+");
@@ -68,4 +65,8 @@ int main() {
     fprintf(fp, "%f %f %f\n", x, y, cells_v(level, iCell));
   }
   fclose(fp);
+
+  // visualize in octave for a nice color gradient:
+  // p = load('sparseDimAtlas.txt')
+  // scatter(p(:,1),p(:,2),50,p(:,3),'filled');
 }

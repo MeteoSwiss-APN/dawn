@@ -73,13 +73,18 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       return "";
     }
   };
+
   std::string typeStringRHS = getLocationTypeString(expr->getRhsLocation());
   std::string typeStringLHS = getLocationTypeString(expr->getLhsLocation());
 
   bool hasWeights = expr->getWeights().has_value();
 
+  std::string sigArg =
+      (parendIsReduction_)
+          ? "red_loc"
+          : "loc"; // does stage or parent reduceOverNeighborExpr determine argname?
   ss_ << std::string(indent_, ' ')
-      << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh, loc, ";
+      << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh," << sigArg << ", ";
   expr->getInit()->accept(*this);
   if(hasWeights) {
     ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) {\n";
@@ -90,9 +95,14 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   }
 
   auto argName = denseArgName_;
+  // arg names for dense and sparse location
   denseArgName_ = "red_loc";
   sparseArgName_ = "loc";
+  // indicate if parent of subexpr is reduction
+  parendIsReduction_ = true;
   expr->getRhs()->accept(*this);
+  parendIsReduction_ = false;
+  // "pop" argName
   denseArgName_ = argName;
   ss_ << ";\n";
   ss_ << "m_sparse_dimension_idx++;\n";

@@ -303,6 +303,10 @@ private:
   int ny_;
 };
 
+//===------------------------------------------------------------------------------------------===//
+// dense fields
+//===------------------------------------------------------------------------------------------===//
+
 template <typename O, typename T>
 class Data {
 public:
@@ -335,33 +339,44 @@ public:
   EdgeData(Grid const& grid, int k_size) : Data<Edge, T>(grid.all_edges().size(), k_size) {}
 };
 
-template <typename T>
+//===------------------------------------------------------------------------------------------===//
+// sparse fields
+//===------------------------------------------------------------------------------------------===//
+
+template <typename O, typename T>
 class SparseData {
 public:
   SparseData(size_t num_k_levels, size_t dense_size, size_t sparse_size)
       : data_(num_k_levels, std::vector<std::vector<T>>(dense_size, std::vector<T>(sparse_size))) {}
-  T& operator()(int k_level, const Face& f, size_t sparse_idx) {
-    return data_[k_level][f.id()][sparse_idx];
+  T& operator()(int k_level, const O& elem, size_t sparse_idx) {
+    return data_[k_level][elem.id()][sparse_idx];
   }
-  T const& operator()(int k_level, const Face& f, size_t sparse_idx) const {
-    return data_[k_level][f.id()][sparse_idx];
-  }
-  T& operator()(int k_level, const Edge& e, size_t sparse_idx) {
-    return data_[k_level][e.id()][sparse_idx];
-  }
-  T const& operator()(int k_level, const Edge& e, size_t sparse_idx) const {
-    return data_[k_level][e.id()][sparse_idx];
-  }
-  T& operator()(int k_level, const Vertex& v, size_t sparse_idx) {
-    return data_[k_level][v.id()][sparse_idx];
-  }
-  T const& operator()(int k_level, const Vertex& v, size_t sparse_idx) const {
-    return data_[k_level][v.id()][sparse_idx];
+  T const& operator()(int k_level, const O& elem, size_t sparse_idx) const {
+    return data_[k_level][elem.id()][sparse_idx];
   }
   int k_size() const { return data_.size(); }
 
 private:
   std::vector<std::vector<std::vector<T>>> data_;
+};
+
+template <typename T>
+class SparseFaceData : public SparseData<Face, T> {
+public:
+  SparseFaceData(Grid const& grid, int k_size, int sparse_size)
+      : SparseData<Face, T>(k_size, grid.faces().size(), sparse_size) {}
+};
+template <typename T>
+class SparseVertexData : public SparseData<Vertex, T> {
+public:
+  SparseVertexData(Grid const& grid, int k_size, int sparse_size)
+      : SparseData<Vertex, T>(k_size, grid.vertices().size(), sparse_size) {}
+};
+template <typename T>
+class SparseEdgeData : public SparseData<Edge, T> {
+public:
+  SparseEdgeData(Grid const& grid, int k_size, int sparse_size)
+      : SparseData<Edge, T>(k_size, grid.all_edges().size(), sparse_size) {}
 };
 
 std::ostream& toVtk(Grid const& grid, int k_size, std::ostream& os = std::cout);

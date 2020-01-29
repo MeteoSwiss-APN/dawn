@@ -189,7 +189,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       StencilWrapperConstructor.addArg("dawn::" + typeString + "field_t<LibTag, double>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
     } else {
-      StencilWrapperConstructor.addArg("dawn::sparse_dimension_t<LibTag, double>& " +
+      std::string typeString =
+          getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
+      StencilWrapperConstructor.addArg("dawn::sparse_" + typeString + "field_t<LibTag, double>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
     }
   }
@@ -274,15 +276,19 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
 
 // quick visitor to check whether a statement contains a reduceOverNeighborExpr
 namespace {
-class FindReduveOverNeighborExpr : public ast::ASTVisitorForwarding {
-  bool found_ = false;
+class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
+  std::optional<std::shared_ptr<iir::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
 
 public:
   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override {
-    found_ = true;
+    foundReduction_ = stmt;
     return;
   }
-  bool hasReduceOverNeighborExpr() const { return found_; }
+  bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
+  const iir::ReductionOverNeighborExpr& foundReduceOverNeighborExpr() {
+    DAWN_ASSERT(foundReduction_.has_value());
+    return *foundReduction_.value();
+  }
 };
 } // namespace
 
@@ -315,6 +321,47 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
           return p.second.IsTemporary;
         });
 
+    // we currently want to reject stencils with sparse fields combined with nested reductions
+    // step 1) lets figure out if there are sparse fields
+    bool hasDenseField = false;
+    for(const auto& fieldIt : nonTempFields) {
+      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          fieldIt.second.field.getFieldDimensions().getHorizontalFieldDimension());
+      hasDenseField |= unstructuredDims.isSparse();
+    }
+    for(const auto& fieldIt : tempFields) {
+      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          fieldIt.second.field.getFieldDimensions().getHorizontalFieldDimension());
+      hasDenseField |= unstructuredDims.isSparse();
+    }
+    // step 2) lets figure out if there are (nested) reductions
+    bool hasNestedReductions = false;
+    for(const auto& multiStage : stencil->getChildren()) {
+      for(const auto& stage : multiStage->getChildren()) {
+        for(const auto& doMethodPtr : stage->getChildren()) {
+          const iir::DoMethod& doMethod = *doMethodPtr;
+          for(const auto& stmt : doMethod.getAST().getStatements()) {
+            FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+            stmt->accept(findReduceOverNeighborExpr);
+            if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+              FindReduceOverNeighborExpr findNestedReduceOverNeighborExpr;
+              findReduceOverNeighborExpr.foundReduceOverNeighborExpr().getRhs()->accept(
+                  findNestedReduceOverNeighborExpr);
+              if(findNestedReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+                hasNestedReductions = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if(hasNestedReductions && hasDenseField) {
+      dawn_unreachable("currently, nested reductions are only allowed if there are no sparse "
+                       "dimensions, and vice versa!\n");
+    }
+
     Structure StencilClass = stencilWrapperClass.addStruct(stencilName);
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
@@ -336,7 +383,17 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
           return std::string("");
         }
       } else {
-        return std::string("dawn::sparse_dimension_t<LibTag, double>");
+        switch(unstructuredDims.getDenseLocationType()) {
+        case ast::LocationType::Cells:
+          return std::string("dawn::sparse_cell_field_t<LibTag, double>");
+        case ast::LocationType::Vertices:
+          return std::string("dawn::sparse_vertex_field_t<LibTag, double>");
+        case ast::LocationType::Edges:
+          return std::string("dawn::sparse_edge_field_t<LibTag, double>");
+        default:
+          dawn_unreachable("invalid location");
+          return std::string("");
+        }
       }
     };
 
@@ -409,10 +466,12 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       for(const auto& usedField : usedFields) {
         auto field = stencilFields.at(usedField.first);
         // auto storageName = field.IsTemporary ? "tmp_storage_t" :
-        // StencilTemplates[usedField.first]; StencilRunMethod.addStatement(c_gt() + "data_view<" +
-        // storageName + "> " + field.Name +
-        //                               "= " + c_gt() + "make_host_view(m_" + field.Name + ")");
-        // StencilRunMethod.addStatement("std::array<int,3> " + field.Name + "_offsets{0,0,0}");
+        // StencilTemplates[usedField.first]; StencilRunMethod.addStatement(c_gt() +
+        // "data_view<" + storageName + "> " + field.Name +
+        //                               "= " + c_gt() + "make_host_view(m_" + field.Name +
+        //                               ")");
+        // StencilRunMethod.addStatement("std::array<int,3> " + field.Name +
+        // "_offsets{0,0,0}");
       }
       auto intervals_set = multiStage.getIntervals();
       std::vector<iir::Interval> intervals_v;
@@ -436,6 +495,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
           return "";
         }
       };
+
       for(auto interval : partitionIntervals) {
         StencilRunMethod.addBlockStatement(
             makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval), [&] {
@@ -453,13 +513,14 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
                     bool needsSparseDimIdx = false;
                     for(const auto& stmt : doMethod.getAST().getStatements()) {
-                      FindReduveOverNeighborExpr findReduceOverNeighborExpr;
+                      FindReduceOverNeighborExpr findReduceOverNeighborExpr;
                       stmt->accept(findReduceOverNeighborExpr);
                       if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
                         needsSparseDimIdx = true;
                         break;
                       }
                     }
+
                     if(needsSparseDimIdx) {
                       StencilRunMethod.ss() << "int m_sparse_dimension_idx = 0;\n";
                     }
@@ -467,9 +528,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                     bool firstReduceExpr = true;
                     for(const auto& stmt : doMethod.getAST().getStatements()) {
 
-                      // if this statement contains a ReduceOverNeighbrExpr but isnt the first one
-                      // we need to reset the neighborhood iterator
-                      FindReduveOverNeighborExpr findReduceOverNeighborExpr;
+                      // if this statement contains a ReduceOverNeighbrExpr but isnt the
+                      // first one we need to reset the neighborhood iterator
+                      FindReduceOverNeighborExpr findReduceOverNeighborExpr;
                       stmt->accept(findReduceOverNeighborExpr);
                       if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr() &&
                          !firstReduceExpr) {
@@ -496,7 +557,6 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
-
   // TODO: this method is broken, it's on cartesian
 
   const auto& metadata = stencilInstantiation->getMetaData();
@@ -550,12 +610,12 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
         // TODO: the following commented lines are broken (using gridtools::data_view)
         //        DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
         //        const std::string argType = stencilProp->paramNameToType_[argName];
-        // each parameter being passed to a stencil function, is wrapped around the param_wrapper
-        // that contains the storage and the offset, in order to resolve offset passed to the
-        // storage during the function call. For example:
+        // each parameter being passed to a stencil function, is wrapped around the
+        // param_wrapper that contains the storage and the offset, in order to resolve
+        // offset passed to the storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        //        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">>
-        //        pw_" +
+        //        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType
+        //        + ">> pw_" +
         //                                argName);
       }
 
@@ -573,9 +633,11 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
         // TODO: the following commented lines are broken (using gridtools::data_view)
-        //        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
+        //        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m)
+        //        + "> "
         //                         << paramName << " = pw_" << paramName << ".dview_;";
-        //        stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName <<
+        //        stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName
+        //        <<
         //        ".offsets_;";
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);

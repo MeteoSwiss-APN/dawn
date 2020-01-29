@@ -1,6 +1,7 @@
 #ifndef DAWN_PROTOTYPE_MYLIB_INTERFACE_H_
 #define DAWN_PROTOTYPE_MYLIB_INTERFACE_H_
 
+#include "driver-includes/unstructured_interface.hpp"
 #include "mylib.hpp"
 #include <functional>
 
@@ -17,7 +18,11 @@ template <typename T>
 mylib::VertexData<T> vertexFieldType(mylibTag);
 
 template <typename T>
-mylib::SparseData<T> sparseDimensionType(mylibTag);
+mylib::SparseEdgeData<T> sparseEdgeFieldType(mylibTag);
+template <typename T>
+mylib::SparseFaceData<T> sparseCellFieldType(mylibTag);
+template <typename T>
+mylib::SparseVertexData<T> sparseVertexFieldType(mylibTag);
 
 using Mesh = mylib::Grid;
 

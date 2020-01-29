@@ -12,7 +12,7 @@
 #include "atlas_interface.hpp"
 
 #include "AtlasCartesianWrapper.h"
-#include "generated_Nested.hpp"
+#include "generated_NestedWithField.hpp"
 
 int main() {
   // kept low for now to get easy debug-able output
@@ -47,11 +47,19 @@ int main() {
     v_vertices(i, 0) = 1;
   }
 
+  for(int i = 0; i < mesh.edges().size(); i++) {
+    v_edges(i, 0) = 200;
+  }
+
   dawn_generated::cxxnaiveico::nested<atlasInterface::atlasTag>(mesh, nb_levels, v_cells, v_edges,
                                                                 v_vertices)
       .run();
 
+  // each vertex stores value 1                 1
+  // vertices are reduced onto edges            2
+  // each edge stores 200                     202
+  // each face reduces its edges (4 per face) 808
   for(int i = 0; i < mesh.cells().size(); i++) {
-    printf("%f\n", v_cells(i, 0));
+    assert(fabs(v_cells(i, 0) - 808) < 1e-12);
   }
 }
