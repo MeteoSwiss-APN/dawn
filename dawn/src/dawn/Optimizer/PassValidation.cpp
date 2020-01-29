@@ -35,15 +35,13 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
 
   if(iir->getGridType() == ast::GridType::Unstructured) {
     UnstructuredDimensionChecker dimensionsChecker;
-    if(!dimensionsChecker.checkDimensionsConsistency(*iir, metadata))
-      throw SemanticError("Dimensions consistency check failed " + description,
-                          metadata.getFileName());
+    DAWN_ASSERT_MSG(dimensionsChecker.checkDimensionsConsistency(*iir, metadata),
+                    ("Dimensions consistency check failed " + description).c_str());
   }
 
   GridTypeChecker gridChecker;
-  if(!gridChecker.checkGridTypeConsistency(*iir))
-    throw SemanticError("Grid type consistency check failed " + description,
-                        metadata.getFileName());
+  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*iir),
+                  ("Grid type consistency check failed " + description).c_str());
 
   return true;
 }
@@ -51,13 +49,13 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
 bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
   if(sir->GridType == ast::GridType::Unstructured) {
     UnstructuredDimensionChecker dimensionsChecker;
-    if(!dimensionsChecker.checkDimensionsConsistency(*sir))
-      throw SemanticError("Dimension types in SIR are not consistent", sir->Filename);
+    DAWN_ASSERT_MSG(dimensionsChecker.checkDimensionsConsistency(*sir),
+                    "Dimensions in SIR are not consistent");
   }
 
   GridTypeChecker gridChecker;
-  if(!gridChecker.checkGridTypeConsistency(*sir))
-    throw SemanticError("Grid types in SIR are not consistent", sir->Filename);
+  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*sir),
+                  "Grid types in SIR are not consistent");
 
   return true;
 }
