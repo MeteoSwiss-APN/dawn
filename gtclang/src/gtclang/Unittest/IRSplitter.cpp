@@ -29,7 +29,14 @@
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
+#include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
+#include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
+#include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetBlockSize.h"
+#include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -61,27 +68,17 @@ void IRSplitter::split(const std::string& dslFile) {
     dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
 
     // Lower to unoptimized IIR and serialize
-    unsigned level = 0;
-    writeIIR(level);
+    writeIIR();
 
     // Run parallelization passes
     parallelize();
-    level += 1;
-    writeIIR(level);
+    writeIIR(1);
 
-    // Reorder stages
-    reorderStages();
-    level += 1;
-    writeIIR(level);
-
-    // Merge stages
-    mergeStages();
-    level += 1;
-    writeIIR(level);
+    optimize();
   }
 }
 
-void IRSplitter::codegen(const std::string& outFile) {
+void IRSplitter::generate(const std::string& outFile) {
   std::unique_ptr<dawn::codegen::TranslationUnit> tu;
   dawn::DiagnosticsEngine diagnostics;
   auto& ctx = context_->getStencilInstantiationMap();
@@ -120,8 +117,6 @@ void IRSplitter::parallelize() {
   dawn::PassInlining::InlineStrategy inlineStrategy =
       dawn::PassInlining::InlineStrategy::InlineProcedures;
   using MultistageSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy;
-  // MultistageSplitStrategy mssSplitStrategy =  (options.MaxCutMSS) ?
-  // MultistageSplitStrategy::MaxCut :
   MultistageSplitStrategy mssSplitStrategy = MultistageSplitStrategy::Optimized;
 
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
@@ -137,8 +132,62 @@ void IRSplitter::parallelize() {
   }
 }
 
+void IRSplitter::optimize() {
+  unsigned level = 1;
+
+  // Reorder stages
+  reorderStages();
+  level += 1;
+  writeIIR(level);
+
+  // Merge stages
+  mergeStages();
+  level += 1;
+  writeIIR(level);
+
+  // Merge temporaries
+  mergeTemporaries();
+  level += 1;
+  writeIIR(level);
+
+  // Next inlining step
+  inlining();
+  level += 1;
+  writeIIR(level);
+
+  // Interval partitioning...
+  partitionIntervals();
+  level += 1;
+  writeIIR(level);
+
+  // Pass temporaries to functions
+  // Unsure whether this is ON by default
+  passTmpToFunction();
+  level += 1;
+  writeIIR(level);
+
+  // Unsure whether this is ON by default
+  setNonTempCaches();
+  level += 1;
+  writeIIR(level);
+
+  // Unsure whether this is ON by default
+  setCaches();
+  level += 1;
+  writeIIR(level);
+
+  // Unsure whether this is ON by default -- probably only for CudaCodeGen
+  setBlockSize();
+  level += 1;
+  writeIIR(level);
+
+  // Unsure whether this is ON by default -- probably only for CudaCodeGen
+  dataLocalityMetric();
+  level += 1;
+  writeIIR(level);
+}
+
 void IRSplitter::reorderStages() {
-  // what is default?
   dawn::ReorderStrategy::Kind reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
     runPass<dawn::PassSetStageGraph>(name, instantiation);
@@ -161,6 +210,65 @@ void IRSplitter::mergeStages() {
   }
 }
 
+void IRSplitter::mergeTemporaries() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassTemporaryMerger>(name, instantiation);
+    // this should not affect the temporaries but since we're touching them it would probably be a
+    // safe idea
+    runPass<dawn::PassTemporaryType>(name, instantiation);
+  }
+}
+
+void IRSplitter::inlining() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassInlining>(name, instantiation, false,
+                                dawn::PassInlining::InlineStrategy::ComputationsOnTheFly);
+  }
+}
+
+void IRSplitter::partitionIntervals() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassIntervalPartitioner>(name, instantiation);
+    // since this can change the scope of temporaries ...
+    runPass<dawn::PassTemporaryType>(name, instantiation);
+    runPass<dawn::PassFixVersionedInputFields>(name, instantiation);
+  }
+}
+
+void IRSplitter::passTmpToFunction() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassTemporaryToStencilFunction>(name, instantiation);
+  }
+}
+
+void IRSplitter::setNonTempCaches() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassSetNonTempCaches>(name, instantiation);
+    // this should not affect the temporaries but since we're touching them it would probably be a
+    // safe idea
+    runPass<dawn::PassTemporaryType>(name, instantiation);
+  }
+}
+
+void IRSplitter::setCaches() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassSetCaches>(name, instantiation);
+  }
+}
+
+void IRSplitter::setBlockSize() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    runPass<dawn::PassSetBlockSize>(name, instantiation);
+  }
+}
+
+void IRSplitter::dataLocalityMetric() {
+  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
+    // Plain diagnostics, should not even be a pass but is independent
+    runPass<dawn::PassDataLocalityMetric>(name, instantiation);
+  }
+}
+
 template <class T, typename... Args>
 bool IRSplitter::runPass(const std::string& name,
                          std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
@@ -172,8 +280,9 @@ bool IRSplitter::runPass(const std::string& name,
 void IRSplitter::writeIIR(const unsigned level) {
   unsigned nstencils = 0;
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    dawn::IIRSerializer::serialize(filePrefix_ + "." + name + std::to_string(nstencils) +
-                                   ".opt" + std::to_string(level) + ".iir", instantiation);
+    dawn::IIRSerializer::serialize(filePrefix_ + "." + name + std::to_string(nstencils) + ".opt" +
+                                       std::to_string(level) + ".iir",
+                                   instantiation);
     nstencils += 1;
   }
 }

@@ -40,15 +40,25 @@ public:
   /// @return a pair of a shared pointer to the SIR and a boolean `true` on success, `false`
   /// otherwise
   void split(const std::string& dslFile);
-
-  void codegen(const std::string& outFile = "");
+  void parallelize();
+  void optimize();
+  void generate(const std::string& outFile = "");
 
 protected:
   void createContext(std::shared_ptr<dawn::SIR>& sir);
   void writeIIR(const unsigned level = 0);
-  void parallelize();
+
+  // Pass groups
   void reorderStages();
   void mergeStages();
+  void mergeTemporaries();
+  void inlining();
+  void partitionIntervals();
+  void passTmpToFunction();
+  void setNonTempCaches();
+  void setCaches();
+  void setBlockSize();
+  void dataLocalityMetric();
 
   template <class T, typename... Args>
   bool runPass(const std::string& name,
