@@ -134,11 +134,10 @@ bool IIR::operator==(const IIR& other) const noexcept {
     return false;
 
   // DerivedInfo
-  if(!compareMapValuesAsSet(this->derivedInfo_.StageIDToNameMap_,
-                            other.derivedInfo_.StageIDToNameMap_))
+  if(!compareMapValues(this->derivedInfo_.StageIDToNameMap_, other.derivedInfo_.StageIDToNameMap_))
     return false;
 
-  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
     return false;
 
   // Traverse downward
@@ -146,7 +145,7 @@ bool IIR::operator==(const IIR& other) const noexcept {
     return false;
 
   for(const auto& [this_s, other_s] : zip(this->getChildren(), other.getChildren())) {
-    if(*this_s != *other_s)
+    if(!(*this_s == *other_s))
       return false;
   }
 

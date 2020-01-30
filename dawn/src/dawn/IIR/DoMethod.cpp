@@ -335,7 +335,7 @@ bool DoMethod::operator==(const DoMethod& other) const noexcept {
   // For now we are not comparing the StencilMetaInformation...
 
   // DerivedInfo
-  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
     return false;
 
   // Skipping DependencyGraphAccesses

@@ -466,11 +466,11 @@ bool MultiStage::operator==(const MultiStage& other) const noexcept {
 
   // DerivedInfo
   // Caches
-  if(!compareMapValuesAsSet(this->derivedInfo_.caches_, other.derivedInfo_.caches_))
+  if(!compareMapValues(this->derivedInfo_.caches_, other.derivedInfo_.caches_))
     return false;
 
   // Fields
-  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
     return false;
 
   // Traverse downward
@@ -478,7 +478,7 @@ bool MultiStage::operator==(const MultiStage& other) const noexcept {
     return false;
 
   for(const auto& [this_ms, other_ms] : zip(this->getChildren(), other.getChildren())) {
-    if(*this_ms != *other_ms)
+    if(!(*this_ms == *other_ms))
       return false;
   }
 

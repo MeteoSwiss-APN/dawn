@@ -386,19 +386,17 @@ bool Stage::operator==(const Stage& other) const noexcept {
   }
 
   // DerivedInfo
-  if(!compareMapValuesAsSet(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
+  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
     return false;
 
-  if(!compareMapValuesAsSet(this->derivedInfo_.allGlobalVariables_,
-                            other.derivedInfo_.allGlobalVariables_))
+  if(this->derivedInfo_.allGlobalVariables_ != other.derivedInfo_.allGlobalVariables_)
     return false;
 
-  if(!compareMapValuesAsSet(this->derivedInfo_.globalVariables_,
-                            other.derivedInfo_.globalVariables_))
+  if(this->derivedInfo_.globalVariables_ != other.derivedInfo_.globalVariables_)
     return false;
 
-  if(!compareMapValuesAsSet(this->derivedInfo_.globalVariablesFromStencilFunctionCalls_,
-                            other.derivedInfo_.globalVariablesFromStencilFunctionCalls_))
+  if(this->derivedInfo_.globalVariablesFromStencilFunctionCalls_ !=
+     other.derivedInfo_.globalVariablesFromStencilFunctionCalls_)
     return false;
 
   if(this->derivedInfo_.extents_ != other.derivedInfo_.extents_)
@@ -412,7 +410,7 @@ bool Stage::operator==(const Stage& other) const noexcept {
     return false;
 
   for(const auto& [this_dm, other_dm] : zip(this->getChildren(), other.getChildren())) {
-    if(*this_dm != *other_dm)
+    if(!(*this_dm == *other_dm))
       return false;
   }
 
