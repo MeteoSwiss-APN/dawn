@@ -69,11 +69,11 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
   if [ -n "${CLANG_GRIDTOOLS_BRANCH}" ]; then
     clang_gridtools_args="${clang_gridtools_args} -b ${CLANG_GRIDTOOLS_BRANCH}"
   fi
-  # if [ -z ${ENABLE_PERFORMANCECHECKS+x} ]; then
-  #   performance_checks=""
-  # else
-  #   performance_checks="-p"
-  # fi
+  if [ -z ${ENABLE_PERFORMANCECHECKS+x} ]; then
+    performance_checks=""
+  else
+    performance_checks="-p"
+  fi
     ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir} ${performance_checks}
   ret=$((ret || $? ))
 fi
