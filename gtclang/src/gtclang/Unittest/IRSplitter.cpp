@@ -41,6 +41,7 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/UIDGenerator.h"
 #include "gtclang/Unittest/Config.h"
 #include "gtclang/Unittest/GTClang.h"
 #include <fstream>
@@ -49,7 +50,7 @@ namespace gtclang {
 
 IRSplitter::IRSplitter() {}
 
-void IRSplitter::split(const std::string& dslFile) {
+void IRSplitter::split(const std::string& dslFile, const std::vector<std::string>& args) {
   filePrefix_ = dslFile;
   size_t pos = filePrefix_.rfind('.');
   if(pos != std::string::npos) {
@@ -58,9 +59,15 @@ void IRSplitter::split(const std::string& dslFile) {
 
   std::vector<std::string> flags = {"-std=c++11",
                                     std::string{"-I"} + std::string{GTCLANG_UNITTEST_INCLUDES}};
+  for(const auto& arg : args) {
+    flags.emplace_back(arg);
+  }
   auto [success, sir] =  GTClang::run({dslFile, "-fno-codegen"}, flags);
 
-  if(success) {
+  //if(success) {
+    // Reset UIDs
+    dawn::UIDGenerator::getInstance()->reset();
+
     // Use SIR to create context then serialize the SIR
     createContext(sir);
     dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
@@ -73,7 +80,7 @@ void IRSplitter::split(const std::string& dslFile) {
     writeIIR(1);
 
     optimize();
-  }
+  //}
 }
 
 void IRSplitter::generate(const std::string& outFile) {
@@ -159,30 +166,30 @@ void IRSplitter::optimize() {
   writeIIR(level);
 
   // Pass temporaries to functions
-  // Unsure whether this is ON by default
-  passTmpToFunction();
-  level += 1;
-  writeIIR(level);
+  // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
+//  passTmpToFunction();
+//  level += 1;
+//  writeIIR(level);
 
-  // Unsure whether this is ON by default
-  setNonTempCaches();
-  level += 1;
-  writeIIR(level);
+  // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
+//  setNonTempCaches();
+//  level += 1;
+//  writeIIR(level);
 
-  // Unsure whether this is ON by default
-  setCaches();
-  level += 1;
-  writeIIR(level);
-
-  // Unsure whether this is ON by default -- probably only for CudaCodeGen
-  setBlockSize();
-  level += 1;
-  writeIIR(level);
+  // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
+//  setCaches();
+//  level += 1;
+//  writeIIR(level);
 
   // Unsure whether this is ON by default -- probably only for CudaCodeGen
-  dataLocalityMetric();
-  level += 1;
-  writeIIR(level);
+//  setBlockSize();
+//  level += 1;
+//  writeIIR(level);
+
+  // Unsure whether this is ON by default -- diagnostics only
+//  dataLocalityMetric();
+//  level += 1;
+//  writeIIR(level);
 }
 
 void IRSplitter::reorderStages() {
@@ -286,3 +293,20 @@ void IRSplitter::writeIIR(const unsigned level) {
 }
 
 } // namespace gtclang
+
+//#define MAIN_ENABLED 1
+#ifdef MAIN_ENABLED
+int main(int argc, char* argv[]) {
+  if(argc != 2) {
+    std::cerr << "usage: " << argv[0] << " <DSL file>" << std::endl;
+    return 1;
+  }
+
+  std::string filename{argv[1]};
+  dawn::UIDGenerator::getInstance()->reset();
+  gtclang::IRSplitter splitter;
+  splitter.split(filename);
+
+  return 0;
+}
+#endif

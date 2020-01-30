@@ -13,23 +13,32 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Unittest/CompilerUtil.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 
 namespace dawn {
 
 const std::shared_ptr<iir::StencilInstantiation>
 CompilerUtil::load(const std::string& iirFilename,
                    const dawn::OptimizerContext::OptimizerContextOptions& options,
-                   std::unique_ptr<OptimizerContext>& context) {
-  std::ifstream file(iirFilename.c_str());
-  DAWN_ASSERT_MSG((file.good()), std::string("File '" + iirFilename + "' does not exist").c_str());
+                   std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
+  std::string filename = envPath;
+  if(!filename.empty())
+    filename += "/";
+  filename += iirFilename;
+
+  std::ifstream file(filename.c_str());
+  DAWN_ASSERT_MSG((file.good()), std::string("File '" + filename + "' does not exist").c_str());
 
   dawn::DiagnosticsEngine diag;
+  diag.setFilename(iirFilename);
   std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
   context = std::make_unique<OptimizerContext>(diag, options, sir);
 
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  std::string jsonStr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> stencilInstantion =
-      IIRSerializer::deserializeFromString(jsonstr, context.get());
+      IIRSerializer::deserializeFromString(jsonStr, context.get());
 
   return stencilInstantion;
 }

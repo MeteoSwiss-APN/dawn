@@ -15,9 +15,7 @@
 #ifndef DAWN_UNITTEST_COMPILERUTIL_H
 #define DAWN_UNITTEST_COMPILERUTIL_H
 
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -40,7 +38,7 @@ public:
   static const std::shared_ptr<iir::StencilInstantiation>
   load(const std::string& iirFilename,
        const dawn::OptimizerContext::OptimizerContextOptions& options,
-       std::unique_ptr<OptimizerContext>& context);
+       std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
   static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
   static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
 };

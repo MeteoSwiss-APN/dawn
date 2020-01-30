@@ -35,7 +35,7 @@ class IRSplitter : dawn::NonCopyable {
 public:
   explicit IRSplitter();
 
-  void split(const std::string& dslFile);
+  void split(const std::string& dslFile, const std::vector<std::string>& args = {});
   void parallelize();
   void optimize();
   void generate(const std::string& outFile = "");
