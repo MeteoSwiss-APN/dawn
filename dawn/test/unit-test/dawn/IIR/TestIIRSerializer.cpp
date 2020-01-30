@@ -145,7 +145,9 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
 
 bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiation>& lhs,
                                   const std::shared_ptr<iir::StencilInstantiation>& rhs) {
-  IIR_EARLY_EXIT(compareIIRs(lhs->getIIR().get(), rhs->getIIR().get()));
+  if(*lhs->getIIR().get() != *rhs->getIIR().get())
+    return false;
+  //IIR_EARLY_EXIT(compareIIRs(lhs->getIIR().get(), rhs->getIIR().get()));
   IIR_EARLY_EXIT(compareMetaData(lhs->getMetaData(), rhs->getMetaData()));
   return true;
 }

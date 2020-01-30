@@ -444,13 +444,13 @@ public:
   }
 
   /// @brief Comparison function for IIRNode and below.
-  bool operator==(const IIRNode& other) const noexcept {
-    return this->operator==(other);
+  bool operator==(const NodeType& other) const noexcept {
+    return static_cast<const NodeType*>(this)->operator==(other);
   }
 
   // TODO Move this to .cpp?
   /// @brief Opposite of operator==.
-  inline bool operator!=(const IIRNode& other) const noexcept { return !this->operator==(other); }
+  inline bool operator!=(const NodeType& other) const noexcept { return !this->operator==(other); }
 
   virtual void updateLevel() {}
   virtual void clearDerivedInfo() {}

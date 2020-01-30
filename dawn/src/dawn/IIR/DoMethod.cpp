@@ -28,7 +28,6 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/SIR/SIR.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/IteratorAdapters.h"
 #include "dawn/Support/Logging.h"
