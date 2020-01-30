@@ -167,7 +167,7 @@ def create_vertical_region_stmt3():
 def main(args: argparse.Namespace):
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value('Triangular'), [
+        SIR.GridType.Value('Unstructured'), [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([
@@ -175,8 +175,10 @@ def main(args: argparse.Namespace):
                     create_vertical_region_stmt2(),
                     create_vertical_region_stmt3()
                 ]),
-                [sir_utils.make_field("a"), sir_utils.make_field("b"),
-                 sir_utils.make_field("c"), sir_utils.make_field("d")]
+                [sir_utils.make_field("a", sir_utils.make_field_dimensions_unstructured(LocationType.Value('Cell'), 1)), 
+                 sir_utils.make_field("b", sir_utils.make_field_dimensions_unstructured(LocationType.Value('Cell'), 1)),
+                 sir_utils.make_field("c", sir_utils.make_field_dimensions_unstructured(LocationType.Value('Cell'), 1)), 
+                 sir_utils.make_field("d", sir_utils.make_field_dimensions_unstructured(LocationType.Value('Cell'), 1))]
             )
 
         ])

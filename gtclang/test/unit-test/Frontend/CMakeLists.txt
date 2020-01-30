@@ -18,6 +18,7 @@ include(GoogleTest)
 set(test_name ${PROJECT_NAME}UnittestFrontend)
 add_executable(${test_name}
   TestParsing.cpp
+  TestPreprocessing.cpp
   TestMain.cpp
 )
 
@@ -28,4 +29,5 @@ set_target_properties(${test_name} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
 )
 
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(${test_name} TEST_PREFIX "GTClang::Unit::Frontend::" DISCOVERY_TIMEOUT 30)

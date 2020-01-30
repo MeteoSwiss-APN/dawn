@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "9": "field_a",
-   "10": "field_b"
+   "10": "field_b",
+   "9": "field_a"
   },
   "accessIDToType": {
    "9": 6,
@@ -10,8 +10,6 @@
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   9,
-   10,
    9,
    10
   ],
@@ -25,16 +23,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "9": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "10": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -58,7 +60,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 24,
@@ -227,5 +228,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }

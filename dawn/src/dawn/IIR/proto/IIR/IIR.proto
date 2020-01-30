@@ -216,7 +216,7 @@ message StencilMetaInfo {
     map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 9;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 10;
+    map<int32, dawn.proto.statements.FieldDimensions> fieldIDtoDimensions = 10;
 
     // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> idToStencilCall = 11;
@@ -224,18 +224,15 @@ message StencilMetaInfo {
     // Map of the BoundaryConditionCall to its extent
     map<int32, dawn.proto.statements.Extents> boundaryCallToExtent = 12;
 
-    // Map of the BoundaryConditionCall to its extent
-    map<int32, dawn.proto.statements.LocationType> accessIDToLocation = 13;
-
     // AccessIDs of allocated fields
-    repeated int32 allocatedFieldIDs = 14;
+    repeated int32 allocatedFieldIDs = 13;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 15;
+    dawn.proto.statements.SourceLocation stencilLocation = 14;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 16;
+    string stencilName = 15;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

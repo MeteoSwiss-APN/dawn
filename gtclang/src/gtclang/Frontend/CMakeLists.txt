@@ -34,6 +34,8 @@ add_library(GTClangFrontend
   GTClangASTVisitor.h
   GTClangContext.cpp
   GTClangContext.h
+  GTClangIncludeChecker.cpp
+  GTClangIncludeChecker.h
   GTClangPreprocessorAction.cpp
   GTClangPreprocessorAction.h
   StencilParser.cpp

@@ -25,6 +25,11 @@
 
 using namespace dawn;
 
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType);
+
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType);
+
 void setAST(dawn::proto::statements::AST* astProto, const ast::AST* ast);
 
 void setLocation(dawn::proto::statements::SourceLocation* locProto, const SourceLocation& loc);
@@ -39,6 +44,9 @@ void setDirection(dawn::proto::statements::Direction* directionProto,
 
 void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* offset);
 
+void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
+                        const sir::FieldDimensions& fieldDimensions);
+
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents);
@@ -47,9 +55,6 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
                  const std::optional<iir::Accesses>& accesses);
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents);
-
-ast::Expr::LocationType convertLocationType(proto::statements::LocationType protoLocation);
-proto::statements::LocationType convertLocationType(ast::Expr::LocationType location);
 
 class ProtoStmtBuilder : public ast::ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
@@ -116,6 +121,9 @@ SourceLocation makeLocation(const T& proto) {
   return proto.has_loc() ? SourceLocation(proto.loc().line(), proto.loc().column())
                          : SourceLocation{};
 }
+
+sir::FieldDimensions
+makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions);
 
 std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto);
 

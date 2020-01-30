@@ -50,7 +50,9 @@ def make_copy_stencil_sir(name=None):
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in"), sir_utils.make_field("out")],
+                [
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), 
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())],
             )
         ],
     )
@@ -138,10 +140,10 @@ def make_hori_diff_stencil_sir(name=None):
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field("in"),
-                    sir_utils.make_field("out"),
-                    sir_utils.make_field("coeff"),
-                    sir_utils.make_field("lap", is_temporary=True),
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("coeff", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("lap", sir_utils.make_field_dimensions_cartesian(), is_temporary=True),
                 ],
             )
         ],
@@ -254,10 +256,10 @@ def make_tridiagonal_solve_stencil_sir(name=None):
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]),
                 [
-                    sir_utils.make_field("a"),
-                    sir_utils.make_field("b"),
-                    sir_utils.make_field("c"),
-                    sir_utils.make_field("d"),
+                    sir_utils.make_field("a", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("b", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("c", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("d", sir_utils.make_field_dimensions_cartesian()),
                 ],
             )
         ],
@@ -279,8 +281,10 @@ def make_unstructured_stencil_sir(name=None):
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
-                    sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
-                    sir_utils.make_field_access_expr("in"),
+                    rhs = sir_utils.make_field_access_expr("in"),
+                    init = sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                    lhs_location = SIR.LocationType.Value('Edge'),
+                    rhs_location = SIR.LocationType.Value('Cell')
                 ),
                 "=",
             )
@@ -291,12 +295,15 @@ def make_unstructured_stencil_sir(name=None):
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        sir_utils.GridType.Value("Cartesian"),
+        sir_utils.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in"), sir_utils.make_field("out")],
+                [
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(SIR.LocationType.Value('Cell'), 1)), 
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(SIR.LocationType.Value('Edge'), 1))
+                ],
             )
         ],
     )

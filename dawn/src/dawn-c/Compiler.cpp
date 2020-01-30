@@ -77,12 +77,12 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
         dawn::SIRSerializer::deserializeFromString(sirStr, dawn::SIRSerializer::Format::Byte);
 
     // Prepare options
-    std::unique_ptr<dawn::Options> compileOptions = std::make_unique<dawn::Options>();
+    dawn::Options compileOptions;
     if(options)
-      toConstOptionsWrapper(options)->setDawnOptions(compileOptions.get());
+      toConstOptionsWrapper(options)->setDawnOptions(&compileOptions);
 
     // Run the compiler
-    dawn::DawnCompiler compiler(compileOptions.get());
+    dawn::DawnCompiler compiler(compileOptions);
     auto TU = compiler.compile(inMemorySIR);
 
     // Report diganostics

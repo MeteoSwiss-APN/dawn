@@ -60,13 +60,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  auto getLocationTypeString = [](ast::Expr::LocationType type) {
+  auto getLocationTypeString = [](ast::LocationType type) {
     switch(type) {
-    case ast::Expr::LocationType::Cells:
+    case ast::LocationType::Cells:
       return "Cell";
-    case ast::Expr::LocationType::Edges:
+    case ast::LocationType::Edges:
       return "Edge";
-    case ast::Expr::LocationType::Vertices:
+    case ast::LocationType::Vertices:
       return "Vertex";
     default:
       dawn_unreachable("unknown location type");

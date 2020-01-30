@@ -143,7 +143,7 @@ public:
     tmp_storage_t m_lap;
   public:
 
-    stencil_41(const gridtools::dawn::domain& dom_) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
+    stencil_41(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
 
@@ -178,7 +178,7 @@ public:
 
   // Stencil-Data
 
-  hori_diff_stencil(const gridtools::dawn::domain& dom) : m_stencil_41(dom){}
+  hori_diff_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_41(dom, rank, xcols, ycols){}
 
   template<typename S>
   void sync_storages(S field) {

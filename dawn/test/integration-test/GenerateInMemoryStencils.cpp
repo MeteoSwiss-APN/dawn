@@ -70,12 +70,14 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   IIRDoMethod->setID(target->nextUID());
 
   // create the statement
-  auto sirInField = std::make_shared<sir::Field>("in_field");
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  auto sirInField = std::make_shared<sir::Field>("in_field", makeFieldDimensions());
   sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
-  auto sirOutField = std::make_shared<sir::Field>("out_field");
+  auto sirOutField = std::make_shared<sir::Field>("out_field", makeFieldDimensions());
   sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
 
   auto lhs = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
   lhs->setID(target->nextUID());
@@ -83,9 +85,9 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   rhs->setID(target->nextUID());
 
   int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
-                                                  sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::APIField,
-                                                   sirOutField->Name, sirOutField->fieldDimensions);
+                                                  std::move(sirInField->Dimensions));
+  int out_fieldID = target->getMetaData().addField(
+      iir::FieldAccessType::APIField, sirOutField->Name, std::move(sirOutField->Dimensions));
 
   lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
   rhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(in_fieldID);
@@ -179,15 +181,16 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   IIRMSS->insertChild(std::move(IIRStage2));
 
   // create the statement
-  auto sirInField = std::make_shared<sir::Field>("in");
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  auto sirInField = std::make_shared<sir::Field>("in", makeFieldDimensions());
   sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
-  auto sirOutField = std::make_shared<sir::Field>("out");
+  auto sirOutField = std::make_shared<sir::Field>("out", makeFieldDimensions());
   sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
-  auto sirTmpField = std::make_shared<sir::Field>("tmp");
+  auto sirTmpField = std::make_shared<sir::Field>("tmp", makeFieldDimensions());
   sirOutField->IsTemporary = true;
-  sirOutField->fieldDimensions = sir::FieldDimension(ast::cartesian, {true, true, true});
 
   auto lhsTmp = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name);
   lhsTmp->setID(target->nextUID());
@@ -224,11 +227,12 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   rhsTmpT4->setID(target->nextUID());
 
   int inFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirInField->Name,
-                                                 sirInField->fieldDimensions);
-  int tmpFieldID = target->getMetaData().addField(iir::FieldAccessType::StencilTemporary,
-                                                  sirTmpField->Name, sirTmpField->fieldDimensions);
+                                                 std::move(sirInField->Dimensions));
+  int tmpFieldID =
+      target->getMetaData().addField(iir::FieldAccessType::StencilTemporary, sirTmpField->Name,
+                                     std::move(sirTmpField->Dimensions));
   int outFieldID = target->getMetaData().addField(iir::FieldAccessType::APIField, sirOutField->Name,
-                                                  sirOutField->fieldDimensions);
+                                                  std::move(sirOutField->Dimensions));
 
   lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
   rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
@@ -328,7 +332,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 std::shared_ptr<dawn::iir::StencilInstantiation>
 createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);

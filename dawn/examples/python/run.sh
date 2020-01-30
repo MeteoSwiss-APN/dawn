@@ -6,10 +6,10 @@ examples=("copy_stencil" "hori_diff_stencil" "tridiagonal_solve_stencil" "unstru
 verification=("copy_stencil" "hori_diff_stencil" "tridiagonal_solve_stencil")
 
 for file in "${examples[@]}"
-do : 
+do :
     python ${file}.py
     if [[ " ${verification[@]} " =~ " ${file} " ]]; then
-        diff data/${file}.cpp data/${file}_reference.cpp 
+        diff data/${file}.cpp data/${file}_reference.cpp
     fi
     rm data/${file}.cpp
 done
