@@ -94,28 +94,15 @@ constexpr auto zip(T1&& iterable1, T2&& iterable2) {
 
 template <typename Map>
 bool compareMapValues(const Map& map1, const Map& map2) {
-  // TODO Rename this
   // TODO This only works when Map has a value_type. Could use enable_if and overload later.
   if(map1.size() != map2.size())
     return false;
 
-  std::list<typename Map::mapped_type> map1_values, map2_values;
-  for(const auto& key_value : map1)
-    map1_values.push_back(key_value.second);
-  for(const auto& key_value : map2)
-    map2_values.push_back(key_value.second);
-
-  for(auto iter1 = map1_values.cbegin(); iter1 != map1_values.cend(); ++iter1) {
-    bool found = false;
-    for(auto iter2 = map2_values.cbegin(); iter2 != map2_values.cend(); ++iter2) {
-      if(*iter2 == *iter1) {
-        map2_values.erase(iter2);
-        found = true;
-        break;
-      }
-    }
-    if(!found)
+  for(auto& iter1 : map1) {
+    auto iter2 = map2.find(iter1.first);
+    if(iter2 == map2.end() || !(iter1.second == iter2->second)) {
       return false;
+    }
   }
 
   return true;
