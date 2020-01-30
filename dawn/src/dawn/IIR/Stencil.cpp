@@ -562,7 +562,7 @@ bool Stencil::operator==(const Stencil& other) const noexcept {
     return false;
 
   for(const auto& [this_ms, other_ms] : zip(this->getChildren(), other.getChildren())) {
-    if(*this_ms != *other_ms)
+    if(!(*this_ms == *other_ms))
       return false;
   }
 

@@ -18,7 +18,6 @@
 #include <iterator>
 #include <numeric>
 #include <tuple>
-#include <unordered_set>
 
 namespace dawn {
 
@@ -98,12 +97,14 @@ bool compareMapValuesAsSet(const Map& map1, const Map& map2) {
   if(map1.size() != map2.size())
     return false;
 
-  std::unordered_set<typename Map::mapped_type> map1_values, map2_values;
-  for(auto& key_value : map1)
-    map1_values.insert(key_value.second);
-  for(auto& key_value : map2)
-    map2_values.insert(key_value.second);
-  return map1_values == map2_values;
+  for(auto& iter1 : map1) {
+    auto iter2 = map2.find(iter1.first);
+    if(iter2 == map2.end() || !(iter1.second == iter2->second)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 } // namespace dawn
