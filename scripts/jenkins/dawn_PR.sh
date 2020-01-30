@@ -86,7 +86,7 @@ for t in $gtclang_dawn_tests; do
   cp $t ${base_dir}/gtest_${i}.xml
   i=$((i+1))
 done
-graphs=`find . -name "history*.png"`
+graphs=`find /scratch/snx3000/tobwi/history -name "history*.png"`
 for g in $graphs; do
   cp $g ${base_dir}/`basename $g`
 done
