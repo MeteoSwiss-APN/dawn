@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_compute_ordered_do_methods.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 52
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 58
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 54
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 11
                    }
                   },
                   "op": "=",
@@ -177,7 +178,7 @@
                      "Column": 60
                     },
                     "data": {},
-                    "ID": 11
+                    "ID": 10
                    }
                   },
                   "loc": {
@@ -257,7 +258,7 @@
                      "Column": 48
                     },
                     "data": {},
-                    "ID": 16
+                    "ID": 19
                    }
                   },
                   "op": "=",
@@ -309,14 +310,14 @@
                        "Column": 67
                       },
                       "data": {},
-                      "ID": 18
+                      "ID": 16
                      }
                     },
                     "loc": {
                      "Line": 28,
                      "Column": 54
                     },
-                    "ID": 19
+                    "ID": 18
                    }
                   },
                   "loc": {
@@ -396,7 +397,7 @@
                      "Column": 52
                     },
                     "data": {},
-                    "ID": 24
+                    "ID": 25
                    }
                   },
                   "op": "=",
@@ -421,7 +422,7 @@
                      "Column": 56
                     },
                     "data": {},
-                    "ID": 25
+                    "ID": 24
                    }
                   },
                   "loc": {
@@ -501,7 +502,7 @@
                      "Column": 54
                     },
                     "data": {},
-                    "ID": 30
+                    "ID": 31
                    }
                   },
                   "op": "=",
@@ -529,7 +530,7 @@
                      "Column": 58
                     },
                     "data": {},
-                    "ID": 31
+                    "ID": 30
                    }
                   },
                   "loc": {
@@ -609,7 +610,7 @@
                      "Column": 50
                     },
                     "data": {},
-                    "ID": 36
+                    "ID": 39
                    }
                   },
                   "op": "=",
@@ -664,14 +665,14 @@
                        "Column": 74
                       },
                       "data": {},
-                      "ID": 38
+                      "ID": 36
                      }
                     },
                     "loc": {
                      "Line": 32,
                      "Column": 54
                     },
-                    "ID": 39
+                    "ID": 38
                    }
                   },
                   "loc": {
@@ -733,12 +734,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "a",
@@ -747,12 +749,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp",
@@ -761,12 +764,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

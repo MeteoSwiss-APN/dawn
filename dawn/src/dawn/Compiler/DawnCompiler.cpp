@@ -53,7 +53,7 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
@@ -360,44 +360,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // Run optimization passes
     auto& instantiation = stencil.second;
 
-    DAWN_LOG(INFO) << "Starting optimization and analysis passes for `" << instantiation->getName()
-                   << "` ...";
-    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
-      throw std::runtime_error("An error occurred.");
-
-    DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
-                   << "`";
-
-    if(options_.SerializeIIR) {
-      const auto p = std::filesystem::path(options_.OutputFile.empty()
-                                               ? instantiation->getMetaData().getFileName()
-                                               : options_.OutputFile);
-      IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
-                                   ".iir",
-                               instantiation, serializationKind);
-      i++;
-    }
-    if(options_.DumpStencilInstantiation) {
-      instantiation->dump();
-    }
-  }
-
-  LocationTypeChecker checker;
-  // IIR produced should be type consistent too
-  for(auto& stencil : optimizer.getStencilInstantiationMap()) {
-    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-    const auto& internalIR = instantiation->getIIR();
-    if(!checker.checkLocationTypeConsistency(*internalIR.get(), instantiation->getMetaData())) {
-      throw std::runtime_error("Location types in IIR are not consistent, no code generation. This"
-                               "points to a bug in the optimization passes ");
-    }
-  }
-
-  return optimizer.getStencilInstantiationMap();
-}
-
 std::unique_ptr<codegen::TranslationUnit>
-DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
   // Generate code
   try {
@@ -436,6 +400,52 @@ DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstant
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
+}
+
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
+  diagnostics_.clear();
+  diagnostics_.setFilename(SIR->Filename);
+
+    DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
+                   << "`";
+
+    if(options_.SerializeIIR) {
+      const auto p = std::filesystem::path(options_.OutputFile.empty()
+                                               ? instantiation->getMetaData().getFileName()
+                                               : options_.OutputFile);
+      IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                   ".iir",
+                               instantiation, serializationKind);
+      i++;
+    }
+    if(options_.DumpStencilInstantiation) {
+      instantiation->dump();
+    }
+  }
+
+  // SIR we received should be type consistent
+  if(SIR->GridType == ast::GridType::Unstructured) {
+    UnstructuredDimensionChecker dimensionsChecker;
+    if(!dimensionsChecker.checkDimensionsConsistency(*SIR.get())) {
+      DAWN_LOG(INFO) << "Dimensions in SIR are not consistent, no code generation";
+      return nullptr;
+    }
+  }
+
+  return optimizer.getStencilInstantiationMap();
+}
+
+  // Initialize optimizer
+  auto optimizer = runOptimizer(SIR);
+
+  if(diagnostics_.hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
+    return nullptr;
+  } else {
+    DAWN_ASSERT_MSG(optimizer, "No errors, but optimizer context fails to exist!");
+  }
+
+  return generate(optimizer->getStencilInstantiationMap());
 }
 
 std::unique_ptr<codegen::TranslationUnit>

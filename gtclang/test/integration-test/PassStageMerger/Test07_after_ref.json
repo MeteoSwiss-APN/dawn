@@ -3,9 +3,9 @@
     "Fields": {
       "in": {
         "IsTemporary": false,
-        "dim": "[1,1,1]",
         "field": {
           "accessID": 15,
+          "dim": "[1,1,1]",
           "extents": {
             "read_access": "[<no_horizontal_extent>,(0,0)]",
             "write_access": "null"
@@ -20,9 +20,9 @@
       },
       "out": {
         "IsTemporary": false,
-        "dim": "[1,1,1]",
         "field": {
           "accessID": 16,
+          "dim": "[1,1,1]",
           "extents": {
             "read_access": "null",
             "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -40,9 +40,9 @@
       "Fields": {
         "in": {
           "IsTemporary": false,
-          "dim": "[1,1,1]",
           "field": {
             "accessID": 15,
+            "dim": "[1,1,1]",
             "extents": {
               "read_access": "[<no_horizontal_extent>,(0,0)]",
               "write_access": "null"
@@ -57,9 +57,9 @@
         },
         "out": {
           "IsTemporary": false,
-          "dim": "[1,1,1]",
           "field": {
             "accessID": 16,
+            "dim": "[1,1,1]",
             "extents": {
               "read_access": "null",
               "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -80,6 +80,7 @@
           "Fields": {
             "in": {
               "accessID": 15,
+              "dim": "[1,1,1]",
               "extents": {
                 "read_access": "[<no_horizontal_extent>,(0,0)]",
                 "write_access": "null"
@@ -93,6 +94,7 @@
             },
             "out": {
               "accessID": 16,
+              "dim": "[1,1,1]",
               "extents": {
                 "read_access": "null",
                 "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -114,6 +116,7 @@
                   "Fields": {
                     "in": {
                       "accessID": 15,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
@@ -127,6 +130,7 @@
                     },
                     "out": {
                       "accessID": 16,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "null",
                         "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -177,6 +181,7 @@
               "Fields": {
                 "in": {
                   "accessID": 15,
+                  "dim": "[1,1,1]",
                   "extents": {
                     "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
@@ -190,6 +195,7 @@
                 },
                 "out": {
                   "accessID": 16,
+                  "dim": "[1,1,1]",
                   "extents": {
                     "read_access": "null",
                     "write_access": "[<no_horizontal_extent>,(0,0)]"

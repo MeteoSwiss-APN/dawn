@@ -261,7 +261,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
 
 TEST_F(IIRSerializerTest, IIRTestsReduce) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);
@@ -287,7 +287,7 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
 
 TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);

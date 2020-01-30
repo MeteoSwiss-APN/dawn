@@ -1,21 +1,19 @@
 {
  "metadata": {
   "accessIDToName": {
+   "2": "out_field",
    "4": "cnt",
-   "1": "in_field",
-   "2": "out_field"
+   "1": "in_field"
   },
   "accessIDToType": {
-   "2": 6,
-   "1": 6
+   "1": 6,
+   "2": 6
   },
   "literalIDToName": {
    "-5": "0.000000",
    "-20": "10"
   },
   "fieldAccessIDs": [
-   1,
-   2,
    1,
    2
   ],
@@ -29,16 +27,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "1": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
    },
    "2": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Cell",
+     "sparse_part": []
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -62,10 +64,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {
-   "1": "Edge",
-   "2": "Cell"
-  },
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": -1,
@@ -74,7 +72,7 @@
   "stencilName": "generated"
  },
  "internalIR": {
-  "gridType": "Triangular",
+  "gridType": "Unstructured",
   "globalVariableToValue": {},
   "stencils": [
    {
@@ -302,17 +300,17 @@
                   }
                  },
                  "readAccess": {
-                  "-5": {
-                   "zero_extent": {},
+                  "1": {
+                   "unstructured_extent": {
+                    "has_extent": true
+                   },
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "1": {
-                   "unstructured_extent": {
-                    "has_extent": true
-                   },
+                  "-5": {
+                   "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0

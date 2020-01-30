@@ -17,11 +17,15 @@ SCRIPT=`basename $0`
 function help {
   echo -e "Basic usage:$SCRIPT "\\n
   echo -e "The following switches are recognized. $OFF "
-  echo -e "-h Shows this help"
+  echo -e "-r clang gridtools repository to use"
+  echo -e "-b clang gridtools branch to use"
+  echo -e "-g gtclang install directory to use"
+  echo -e "-p enabling performance checks"
+  echo -e "-h shows this help"
   exit 1
 }
 echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
-while getopts b:r:g: flag; do
+while getopts b:r:g:ph flag; do
   case $flag in
     r)
       CLANG_GRIDTOOLS_REPOSITORY=$OPTARG
@@ -31,6 +35,9 @@ while getopts b:r:g: flag; do
       ;;
     g)
       GTCLANG_INSTALL_DIR=$OPTARG
+      ;;
+    p)
+      RUN_PERFTETS=true
       ;;
     h)
       help
@@ -86,3 +93,15 @@ cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
+
+if [ -z ${RUN_PERFTETS+x} ]; then
+  echo "do not run performance tests"
+else
+  if [ "${target}" = "cuda" ]; then
+    export ENABLE_CUDA_GPU=true
+  else
+    export ENABLE_GT_GPU=true
+  fi
+ cd $source_dir
+ bash scripts/jenkins/run_perftests.sh -b $build_dir 
+fi

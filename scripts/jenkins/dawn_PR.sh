@@ -16,10 +16,34 @@ if [ -z ${myhost+x} ]; then
   exit 1
 fi
 
+function help {
+  echo -e "Basic usage:$SCRIPT "\\n
+  echo -e "The following switches are recognized. $OFF "
+  echo -e "-p enables clang-gridtools performance tests"
+  echo -e "-h Shows this help"
+  exit 1
+}
+
+while getopts ph flag; do
+  case $flag in
+    p)
+      ENABLE_PERFORMANCECHECKS=true
+      ;;
+    h)
+      help
+      ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option -${BOLD}$OPTARG${OFF} not allowed."
+      help
+      ;;
+  esac
+done
+
 repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
+# workdir=`pwd`/../temp
 workdir=/dev/shm/tmp_dawn
 rm -rf ${workdir}
 echo "Copying repository to ${workdir}"
@@ -45,24 +69,28 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
   if [ -n "${CLANG_GRIDTOOLS_BRANCH}" ]; then
     clang_gridtools_args="${clang_gridtools_args} -b ${CLANG_GRIDTOOLS_BRANCH}"
   fi
-
-  ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir}
+  # if [ -z ${ENABLE_PERFORMANCECHECKS+x} ]; then
+  #   performance_checks=""
+  # else
+  #   performance_checks="-p"
+  # fi
+    ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir} ${performance_checks}
   ret=$((ret || $? ))
 fi
 
 echo "Cleaning up"
-gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml"`
+cd ${workdir}
+gtclang_dawn_tests=`find . -path "*/_deps" -prune -o -name "*.xml" -print`
 i=0
 for t in $gtclang_dawn_tests; do
   cp $t ${base_dir}/gtest_${i}.xml
   i=$((i+1))
 done
-cd clang-gridtools/build/benchmarks/
-clang_gridtools_tests=`find . -name "*.xml"`
-for t in $clang_gridtools_tests; do
-  cp $t ${base_dir}/gtest_${i}.xml
-  i=$((i+1))
+graphs=`find /scratch/snx3000/tobwi/history -name "history*.png"`
+for g in $graphs; do
+  cp $g ${base_dir}/`basename $g`
 done
+
 
 rm -rf ${workdir}
 

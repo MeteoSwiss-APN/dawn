@@ -16,7 +16,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -26,7 +26,7 @@ namespace {
 
 TEST(GridTypeCheckerTest, MixedGridTypes) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   std::string stencilName("MixedTypes");
 

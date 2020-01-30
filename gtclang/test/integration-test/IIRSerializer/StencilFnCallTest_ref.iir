@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
-   "36": "__local_fn_36",
    "16": "a",
-   "17": "b"
+   "17": "b",
+   "36": "__local_fn_36"
   },
   "accessIDToType": {
    "16": 6,
@@ -11,8 +11,6 @@
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   16,
-   17,
    16,
    17
   ],
@@ -26,16 +24,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "16": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "17": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -59,7 +61,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 29,
@@ -288,5 +289,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }

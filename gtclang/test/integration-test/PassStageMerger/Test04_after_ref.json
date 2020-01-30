@@ -3,9 +3,9 @@
     "Fields": {
       "field_a0": {
         "IsTemporary": false,
-        "dim": "[1,1,1]",
         "field": {
           "accessID": 21,
+          "dim": "[1,1,1]",
           "extents": {
             "read_access": "[<no_horizontal_extent>,(0,0)]",
             "write_access": "null"
@@ -20,9 +20,9 @@
       },
       "field_a1": {
         "IsTemporary": false,
-        "dim": "[1,1,1]",
         "field": {
           "accessID": 22,
+          "dim": "[1,1,1]",
           "extents": {
             "read_access": "null",
             "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -40,9 +40,9 @@
       "Fields": {
         "field_a0": {
           "IsTemporary": false,
-          "dim": "[1,1,1]",
           "field": {
             "accessID": 21,
+            "dim": "[1,1,1]",
             "extents": {
               "read_access": "[<no_horizontal_extent>,(0,0)]",
               "write_access": "null"
@@ -57,9 +57,9 @@
         },
         "field_a1": {
           "IsTemporary": false,
-          "dim": "[1,1,1]",
           "field": {
             "accessID": 22,
+            "dim": "[1,1,1]",
             "extents": {
               "read_access": "null",
               "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -80,6 +80,7 @@
           "Fields": {
             "field_a0": {
               "accessID": 21,
+              "dim": "[1,1,1]",
               "extents": {
                 "read_access": "[<no_horizontal_extent>,(0,0)]",
                 "write_access": "null"
@@ -93,6 +94,7 @@
             },
             "field_a1": {
               "accessID": 22,
+              "dim": "[1,1,1]",
               "extents": {
                 "read_access": "null",
                 "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -114,6 +116,7 @@
                   "Fields": {
                     "field_a0": {
                       "accessID": 21,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
@@ -127,6 +130,7 @@
                     },
                     "field_a1": {
                       "accessID": 22,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "null",
                         "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -165,6 +169,7 @@
                   "Fields": {
                     "field_a0": {
                       "accessID": 21,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
@@ -178,6 +183,7 @@
                     },
                     "field_a1": {
                       "accessID": 22,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "null",
                         "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -216,6 +222,7 @@
                   "Fields": {
                     "field_a0": {
                       "accessID": 21,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "[<no_horizontal_extent>,(0,0)]",
                         "write_access": "null"
@@ -229,6 +236,7 @@
                     },
                     "field_a1": {
                       "accessID": 22,
+                      "dim": "[1,1,1]",
                       "extents": {
                         "read_access": "null",
                         "write_access": "[<no_horizontal_extent>,(0,0)]"
@@ -268,6 +276,7 @@
               "Fields": {
                 "field_a0": {
                   "accessID": 21,
+                  "dim": "[1,1,1]",
                   "extents": {
                     "read_access": "[<no_horizontal_extent>,(0,0)]",
                     "write_access": "null"
@@ -281,6 +290,7 @@
                 },
                 "field_a1": {
                   "accessID": 22,
+                  "dim": "[1,1,1]",
                   "extents": {
                     "read_access": "null",
                     "write_access": "[<no_horizontal_extent>,(0,0)]"

@@ -37,7 +37,7 @@ namespace cxxnaiveico {
 class CXXNaiveIcoCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveIcoCodeGen(stencilInstantiationContext const& ctx, DiagnosticsEngine& engine,
+  CXXNaiveIcoCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                      int maxHaloPoint);
   virtual ~CXXNaiveIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;

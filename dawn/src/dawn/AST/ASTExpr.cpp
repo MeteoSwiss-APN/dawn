@@ -452,14 +452,14 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(
     std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    ast::Expr::LocationType lhs_location, ast::Expr::LocationType rhs_location, SourceLocation loc)
+    ast::LocationType lhs_location, ast::LocationType rhs_location, SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), lhs_location_(lhs_location),
       rhs_location_(rhs_location), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(
     std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    std::vector<sir::Value> weights, ast::Expr::LocationType lhs_location,
-    ast::Expr::LocationType rhs_location, SourceLocation loc)
+    std::vector<sir::Value> weights, ast::LocationType lhs_location, ast::LocationType rhs_location,
+    SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
       lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");

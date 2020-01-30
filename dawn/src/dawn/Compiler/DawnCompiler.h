@@ -54,6 +54,10 @@ public:
   generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
 
+  std::unique_ptr<codegen::TranslationUnit>
+  generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+               stencilInstantiationMap);
+
   /// @brief Get options
   const Options& getOptions() const;
   Options& getOptions();
