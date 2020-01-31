@@ -31,6 +31,7 @@
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -137,9 +138,13 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 
+static bool shouldRunPass(const Options& options, bool runSpecificPass) {
+  return !options.DefaultNone || runSpecificPass;
+}
+
 } // namespace
 
-DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
+DawnCompiler::DawnCompiler(const Options& options) : options_(options), diagnostics_() {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
@@ -160,7 +165,7 @@ DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
     throw std::runtime_error("An error occurred.");
   }
 
-  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
+  IIRSerializer::Format serializationKind;
   if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
     if(options_.IIRFormat == "json") {
       serializationKind = IIRSerializer::Format::Json;
