@@ -30,6 +30,7 @@ namespace gtclang {
 /// @ingroup unittest
 class IRSplitter : dawn::NonCopyable {
   std::unique_ptr<dawn::OptimizerContext> context_;
+  dawn::DiagnosticsEngine diag_;
   std::string filePrefix_;
 
 public:
@@ -41,7 +42,7 @@ public:
   void generate(const std::string& outFile = "");
 
 protected:
-  void createContext(std::shared_ptr<dawn::SIR>& sir);
+  void createContext(const std::shared_ptr<dawn::SIR>& sir);
   void writeIIR(const unsigned level = 0);
 
   // Pass groups

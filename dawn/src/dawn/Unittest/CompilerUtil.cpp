@@ -21,10 +21,15 @@ namespace dawn {
 
 dawn::DiagnosticsEngine CompilerUtil::diag_;
 
-const std::shared_ptr<iir::StencilInstantiation>
-CompilerUtil::load(const std::string& iirFilename,
-                   const dawn::OptimizerContext::OptimizerContextOptions& options,
-                   std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
+void CompilerUtil::load(const std::string& sirFilename, std::shared_ptr<SIR>& sir) {
+  sir = SIRSerializer::deserialize(sirFilename);
+}
+
+void CompilerUtil::load(const std::string& iirFilename,
+                        const dawn::OptimizerContext::OptimizerContextOptions& options,
+                        std::unique_ptr<OptimizerContext>& context,
+                        std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                        const std::string& envPath) {
   std::string filename = envPath;
   if(!filename.empty())
     filename += "/";
@@ -32,8 +37,31 @@ CompilerUtil::load(const std::string& iirFilename,
 
   std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
   context = std::make_unique<OptimizerContext>(diag_, options, sir);
+  instantiation = IIRSerializer::deserialize(iirFilename);
+}
 
-  return IIRSerializer::deserialize(iirFilename);
+void CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
+                         std::unique_ptr<OptimizerContext>& context,
+                         std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+  dawn::OptimizerContext::OptimizerContextOptions options;
+  context = std::make_unique<OptimizerContext>(diag_, options, sir);
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& map =
+      context->getStencilInstantiationMap();
+  instantiation = map.begin()->second;
+}
+
+void CompilerUtil::lower(const std::string& sirFilename,
+                         std::unique_ptr<OptimizerContext>& context,
+                         std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const std::string& envPath) {
+  std::string filename = envPath;
+  if(!filename.empty())
+    filename += "/";
+  filename += sirFilename;
+
+  std::shared_ptr<dawn::SIR> sir;
+  load(filename, sir);
+  lower(sir, context, instantiation);
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
@@ -52,7 +80,9 @@ stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& si
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
-  return compile(SIRSerializer::deserialize("input/globals_opt_away.sir"));
+  std::shared_ptr<SIR> sir;
+  load(sirFile, sir);
+  return compile(sir);
 }
 
 void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {

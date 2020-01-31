@@ -18,11 +18,16 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
+#include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassSSA.h"
+#include "dawn/Optimizer/PassSetBlockSize.h"
+#include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassSetSyncStage.h"
@@ -30,13 +35,8 @@
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
-#include "dawn/Optimizer/PassSetNonTempCaches.h"
-#include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/Optimizer/PassSetBlockSize.h"
-#include "dawn/Optimizer/PassDataLocalityMetric.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -63,14 +63,16 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
     flags.emplace_back(arg);
   }
 
-  auto [success, sir] =  GTClang::run({dslFile, "-fno-codegen"}, flags);
+  auto [success, sir] = GTClang::run({dslFile, "-fno-codegen"}, flags);
 
   // Reset UIDs
   dawn::UIDGenerator::getInstance()->reset();
 
-  // Use SIR to create context then serialize the SIR
-  createContext(sir);
+  // Serialize the SIR
   dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
+
+  // Use SIR to create context
+  createContext(sir);
 
   // Lower to unoptimized IIR and serialize
   writeIIR();
@@ -114,20 +116,18 @@ void IRSplitter::generate(const std::string& outFile) {
   }
 }
 
-void IRSplitter::createContext(std::shared_ptr<dawn::SIR>& sir) {
-  dawn::DiagnosticsEngine diag;
+void IRSplitter::createContext(const std::shared_ptr<dawn::SIR>& sir) {
   dawn::OptimizerContext::OptimizerContextOptions options;
-  context_ = std::make_unique<dawn::OptimizerContext>(diag, options, sir);
+  context_ = std::make_unique<dawn::OptimizerContext>(diag_, options, sir);
 }
 
 void IRSplitter::parallelize() {
-  dawn::PassInlining::InlineStrategy inlineStrategy =
-      dawn::PassInlining::InlineStrategy::InlineProcedures;
   using MultistageSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy = MultistageSplitStrategy::Optimized;
 
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassInlining>(name, instantiation, true, inlineStrategy);
+    runPass<dawn::PassInlining>(name, instantiation, true,
+                                dawn::PassInlining::InlineStrategy::InlineProcedures);
     runPass<dawn::PassFieldVersioning>(name, instantiation);
     runPass<dawn::PassSSA>(name, instantiation);
     runPass<dawn::PassMultiStageSplitter>(name, instantiation, mssSplitStrategy);
@@ -169,29 +169,29 @@ void IRSplitter::optimize() {
 
   // Pass temporaries to functions
   // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
-//  passTmpToFunction();
-//  level += 1;
-//  writeIIR(level);
+  //  passTmpToFunction();
+  //  level += 1;
+  //  writeIIR(level);
 
   // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
-//  setNonTempCaches();
-//  level += 1;
-//  writeIIR(level);
+  //  setNonTempCaches();
+  //  level += 1;
+  //  writeIIR(level);
 
   // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
-//  setCaches();
-//  level += 1;
-//  writeIIR(level);
+  //  setCaches();
+  //  level += 1;
+  //  writeIIR(level);
 
   // Unsure whether this is ON by default -- probably only for CudaCodeGen
-//  setBlockSize();
-//  level += 1;
-//  writeIIR(level);
+  //  setBlockSize();
+  //  level += 1;
+  //  writeIIR(level);
 
   // Unsure whether this is ON by default -- diagnostics only
-//  dataLocalityMetric();
-//  level += 1;
-//  writeIIR(level);
+  //  dataLocalityMetric();
+  //  level += 1;
+  //  writeIIR(level);
 }
 
 void IRSplitter::reorderStages() {

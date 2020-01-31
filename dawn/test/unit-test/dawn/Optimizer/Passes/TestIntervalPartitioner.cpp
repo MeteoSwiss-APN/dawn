@@ -37,8 +37,9 @@ protected:
 };
 
 TEST_F(TestIntervalPartitioner, test_interval_partition) {
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      CompilerUtil::load("test_interval_partition.iir", options_, context_, TestEnvironment::path_);
+  std::shared_ptr<iir::StencilInstantiation> instantiation;
+  CompilerUtil::load("test_interval_partition.iir", options_, context_, instantiation,
+                     TestEnvironment::path_);
 
   std::unordered_set<iir::Interval> expected;
   expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});

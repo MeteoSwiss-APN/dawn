@@ -33,12 +33,21 @@ using stencilInstantiationContext =
 /// @ingroup unittest
 class CompilerUtil {
 public:
+  static void load(const std::string& sirFilename, std::shared_ptr<SIR>& sir);
+  static void load(const std::string& iirFilename,
+                   const dawn::OptimizerContext::OptimizerContextOptions& options,
+                   std::unique_ptr<OptimizerContext>& context,
+                   std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                   const std::string& envPath = "");
+  static void lower(const std::shared_ptr<dawn::SIR>& sir,
+                    std::unique_ptr<OptimizerContext>& context,
+                    std::shared_ptr<iir::StencilInstantiation>& instantiation);
+  static void lower(const std::string& sirFilename,
+                    std::unique_ptr<OptimizerContext>& context,
+                    std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                    const std::string& envPath = "");
   static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
   static stencilInstantiationContext compile(const std::string& sirFile);
-  static const std::shared_ptr<iir::StencilInstantiation>
-  load(const std::string& iirFilename,
-       const dawn::OptimizerContext::OptimizerContextOptions& options,
-       std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
   static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
   static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
 
