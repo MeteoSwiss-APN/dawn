@@ -41,6 +41,9 @@ public:
        std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
   static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
   static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
+
+private:
+  static dawn::DiagnosticsEngine diag_;
 };
 
 } // namespace dawn

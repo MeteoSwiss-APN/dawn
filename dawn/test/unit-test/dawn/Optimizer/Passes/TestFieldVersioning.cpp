@@ -40,13 +40,13 @@ TEST_F(TestFieldVersioning, RaceCondition1) {
 
   PassFieldVersioning pass(*context_);
   bool result = pass.run(instantiation);
-  ASSERT_TRUE(result);
+  ASSERT_FALSE(result);                   // Expect pass to fail...
 
-  const auto& stencils = instantiation->getIIR()->getChildren();
-  ASSERT_TRUE((stencils.size() == 1));
-  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
-  ASSERT_TRUE(stencil->getChildren().size() > 0);
-  ASSERT_TRUE(stencil->getNumStages() == 3);
+  DiagnosticsEngine& diag = context_->getDiagnostics();
+  ASSERT_TRUE(diag.hasErrors());
+
+  const std::string& msg = (*diag.getQueue().begin())->getMessage();
+  ASSERT_TRUE(msg.find("race-condition") != std::string::npos);
 }
 
 } // anonymous namespace

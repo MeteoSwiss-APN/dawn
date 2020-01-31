@@ -19,6 +19,8 @@
 
 namespace dawn {
 
+dawn::DiagnosticsEngine CompilerUtil::diag_;
+
 const std::shared_ptr<iir::StencilInstantiation>
 CompilerUtil::load(const std::string& iirFilename,
                    const dawn::OptimizerContext::OptimizerContextOptions& options,
@@ -28,9 +30,8 @@ CompilerUtil::load(const std::string& iirFilename,
     filename += "/";
   filename += iirFilename;
 
-  dawn::DiagnosticsEngine diag;
   std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-  context = std::make_unique<OptimizerContext>(diag, options, sir);
+  context = std::make_unique<OptimizerContext>(diag_, options, sir);
 
   std::shared_ptr<iir::StencilInstantiation> stencilInstantion =
       IIRSerializer::deserialize(iirFilename);
