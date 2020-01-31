@@ -28,8 +28,6 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
-  PassIntegrityCheck.cpp
-  PassIntegrityCheck.h
   PassIntervalPartitioner.cpp
   PassIntervalPartitioner.h
   PassManager.cpp
@@ -72,6 +70,8 @@ add_library(DawnOptimizer
   PassTemporaryType.h
   PassTemporaryToStencilFunction.cpp
   PassTemporaryToStencilFunction.h
+  PassValidation.cpp
+  PassValidation.h
   ReadBeforeWriteConflict.cpp
   ReadBeforeWriteConflict.h
   Renaming.cpp

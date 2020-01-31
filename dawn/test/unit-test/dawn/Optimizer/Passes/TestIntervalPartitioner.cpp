@@ -16,9 +16,7 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-//#include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
-//#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
