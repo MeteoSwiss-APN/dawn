@@ -63,7 +63,7 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
 
 stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
   DawnCompiler compiler{};
-  return compiler.optimize(sir);
+  return compiler.optimize(compiler.lowerToIIR(sir));
 }
 
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {

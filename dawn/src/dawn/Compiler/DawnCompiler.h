@@ -40,20 +40,16 @@ public:
   /// @brief Apply parallelizer, code optimization, and generate
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& stencilIR);
 
-  /// @brief Lower to IIRs and run optimization passes
+  /// @brief Lower to IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-  optimize(std::shared_ptr<SIR> const& stencilIR);
+  lowerToIIR(std::shared_ptr<SIR> const& stencilIR);
 
-  /// @brief Run optimization passes on ste of IIRs
+  /// @brief Run optimization passes on the IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                stencilInstantiationMap);
 
   /// @brief Generate a translation unit from a set of Stencil Instantiations
-  std::unique_ptr<codegen::TranslationUnit>
-  generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
-               stencilInstantiationMap);
-
   std::unique_ptr<codegen::TranslationUnit>
   generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);

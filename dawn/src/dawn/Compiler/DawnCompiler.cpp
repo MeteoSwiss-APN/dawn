@@ -15,6 +15,7 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -23,7 +24,6 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntegrityCheck.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
@@ -31,7 +31,6 @@
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -44,6 +43,7 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Array.h"
@@ -51,9 +51,8 @@
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
@@ -108,10 +107,6 @@ struct ComputeEditDistance<std::string> {
   }
 };
 
-bool shouldRunPass(const Options& options, bool runSpecificPass) {
-  return !options.DefaultNone || runSpecificPass;
-}
-
 OptimizerContext::OptimizerContextOptions
 createOptimizerOptionsFromAllOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
@@ -144,10 +139,10 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
 
 } // namespace
 
-DawnCompiler::DawnCompiler(Options const& options) : options_(options), diagnostics_() {}
+DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
+DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
 
@@ -218,12 +213,6 @@ DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
   }
 
   auto stencilInstantiationMap = optimizer.getStencilInstantiationMap();
-
-  // Continue with all other optimization passes
-  if(!options_.Debug) {
-    stencilInstantiationMap = optimize(stencilInstantiationMap);
-  }
-
   return stencilInstantiationMap;
 }
 
@@ -360,6 +349,31 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // Run optimization passes
     auto& instantiation = stencil.second;
 
+    DAWN_LOG(INFO) << "Starting optimization and analysis passes for `" << instantiation->getName()
+                   << "` ...";
+    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
+      throw std::runtime_error("An error occurred.");
+
+    DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
+                   << "`";
+
+    if(options_.SerializeIIR) {
+      const auto p = std::filesystem::path(options_.OutputFile.empty()
+                                               ? instantiation->getMetaData().getFileName()
+                                               : options_.OutputFile);
+      IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
+                                   ".iir",
+                               instantiation, serializationKind);
+      i++;
+    }
+    if(options_.DumpStencilInstantiation) {
+      instantiation->dump();
+    }
+  }
+
+  return optimizer.getStencilInstantiationMap();
+}
+
 std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
@@ -400,108 +414,39 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
+  return nullptr;
 }
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
   diagnostics_.clear();
   diagnostics_.setFilename(SIR->Filename);
 
-    DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
-                   << "`";
-
-    if(options_.SerializeIIR) {
-      const auto p = std::filesystem::path(options_.OutputFile.empty()
-                                               ? instantiation->getMetaData().getFileName()
-                                               : options_.OutputFile);
-      IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
-                                   ".iir",
-                               instantiation, serializationKind);
-      i++;
-    }
-    if(options_.DumpStencilInstantiation) {
-      instantiation->dump();
-    }
-  }
-
-  // SIR we received should be type consistent
-  if(SIR->GridType == ast::GridType::Unstructured) {
-    UnstructuredDimensionChecker dimensionsChecker;
-    if(!dimensionsChecker.checkDimensionsConsistency(*SIR.get())) {
-      DAWN_LOG(INFO) << "Dimensions in SIR are not consistent, no code generation";
-      return nullptr;
-    }
-  }
-
-  return optimizer.getStencilInstantiationMap();
-}
-
-  // Initialize optimizer
-  auto optimizer = runOptimizer(SIR);
-
-  if(diagnostics_.hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
-    return nullptr;
-  } else {
-    DAWN_ASSERT_MSG(optimizer, "No errors, but optimizer context fails to exist!");
-  }
-
-  return generate(optimizer->getStencilInstantiationMap());
-}
-
-std::unique_ptr<codegen::TranslationUnit>
-DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
-  diagnostics_.clear();
-  diagnostics_.setFilename(stencilIR->Filename);
-
-  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
-  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
-    if(options_.IIRFormat == "json") {
-      serializationKind = IIRSerializer::Format::Json;
-    } else if(options_.IIRFormat == "byte") {
-      serializationKind = IIRSerializer::Format::Byte;
-    } else {
-      dawn_unreachable("Unknown SIRFormat option");
-    }
-  }
-
   // Check if options are valid
+
   // -max-halo
   if(options_.MaxHaloPoints < 0) {
     diagnostics_.report(buildDiag("-max-halo", options_.MaxHaloPoints,
                                   "maximum number of allowed halo points must be >= 0"));
-    throw std::runtime_error("An error occurred.");
+    return nullptr;
   }
 
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
+  // Parallelize the SIR
+  auto stencilInstantiation = lowerToIIR(SIR);
 
-  // Deserialize internal IR if passed as an option
-  if(!options_.DeserializeIIR.empty()) {
-    // A filename DeserializeIIR was specified
-    DAWN_ASSERT_MSG(!stencilIR.get(),
-                    "A stencilIR was passed to compile, but an IIR was specified in options!");
-
-    // Deserialize valid internal IR
-    auto optimizerOptions = createOptimizerOptionsFromAllOptions(options_);
-
-    OptimizerContext optimizer(getDiagnostics(), optimizerOptions, nullptr);
-    auto instantiation = IIRSerializer::deserialize(options_.DeserializeIIR, serializationKind);
-    optimizer.restoreIIR("<restored>", instantiation);
-
-    stencilInstantiationMap = optimizer.getStencilInstantiationMap();
-
-    if(!options_.Debug) {
-      stencilInstantiationMap = optimize(stencilInstantiationMap);
-      if(diagnostics_.hasErrors())
-        throw std::runtime_error("An error occurred in the optimizer.");
-    }
-  } else {
-    // No filename was specified, so continue with the stencil IR
-    stencilInstantiationMap = optimize(stencilIR);
-    if(diagnostics_.hasErrors())
-      throw std::runtime_error("An error occurred in the optimization steps.");
+  if(diagnostics_.hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
+    return nullptr;
   }
 
-  return generate(stencilInstantiationMap);
+  // Optimize the IIR
+  auto optimizedStencilInstantiation = optimize(stencilInstantiation);
+
+  if(diagnostics_.hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
+    return nullptr;
+  }
+  // Generate the Code
+  return generate(optimizedStencilInstantiation);
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }
