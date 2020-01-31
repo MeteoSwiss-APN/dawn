@@ -47,6 +47,18 @@ protected:
     const std::string& msg = (*diag.getQueue().begin())->getMessage();
     ASSERT_TRUE(msg.find("race-condition") != std::string::npos);
   }
+
+    void versioningTest(const std::string& filename) {
+        const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+                CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+
+        PassFieldVersioning pass(*context_);
+        bool result = pass.run(instantiation);
+        ASSERT_TRUE(result);                   // Expect pass to succeed...
+
+        // Assert the pass versions...
+        int stop = 1;
+    }
 };
 
 TEST_F(TestFieldVersioning, RaceCondition1) {
@@ -59,6 +71,10 @@ TEST_F(TestFieldVersioning, RaceCondition2) {
 
 TEST_F(TestFieldVersioning, RaceCondition3) {
   raceConditionTest("RaceCondition03.iir");
+}
+
+TEST_F(TestFieldVersioning, VersioningTest1) {
+  versioningTest("VersioningTest01.iir");
 }
 
 } // anonymous namespace
