@@ -15,13 +15,15 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GTClangIncludeChecker.h"
+#include "dawn/Support/FileSystem.h"
+#include <fstream>
 
 namespace gtclang {
 
 GTClangIncludeChecker::GTClangIncludeChecker() { updated_ = false; }
 
 void GTClangIncludeChecker::Update(const std::string& sourceFile) {
-  using clang::StringRef;
+  using llvm::StringRef;
 
   // Read the source file
   sourceFile_ = sourceFile;
@@ -46,15 +48,15 @@ void GTClangIncludeChecker::Update(const std::string& sourceFile) {
 
 void GTClangIncludeChecker::Restore() {
   if(updated_) {
-    std::filesystem::copy(sourceFile_ + "~", sourceFile_,
-                          std::filesystem::copy_options::overwrite_existing);
+    fs::copy(sourceFile_ + "~", sourceFile_, fs::copy_options::overwrite_existing);
     std::remove((sourceFile_ + "~").c_str());
   }
 }
 
-void GTClangIncludeChecker::ScanHeader(const llvm::SmallVector<StringRef, 100>& PPCodeLines,
+void GTClangIncludeChecker::ScanHeader(const llvm::SmallVector<llvm::StringRef, 100>& PPCodeLines,
                                        std::vector<std::string>& includes,
                                        std::vector<std::string>& namespaces) {
+  using llvm::StringRef;
   // Iterate over the file lines and remove includes and namespaces that already exist
   //   from the lists of required ones.
   int index;
@@ -81,14 +83,13 @@ void GTClangIncludeChecker::ScanHeader(const llvm::SmallVector<StringRef, 100>& 
   }
 }
 
-void GTClangIncludeChecker::WriteFile(const llvm::SmallVector<StringRef, 100>& PPCodeLines,
+void GTClangIncludeChecker::WriteFile(const llvm::SmallVector<llvm::StringRef, 100>& PPCodeLines,
                                       std::vector<std::string>& includes,
                                       std::vector<std::string>& namespaces) {
 
   // Create a backup of the source file
   std::error_code copyError;
-  std::filesystem::copy(sourceFile_, sourceFile_ + "~",
-                        std::filesystem::copy_options::overwrite_existing, copyError);
+  fs::copy(sourceFile_, sourceFile_ + "~", fs::copy_options::overwrite_existing, copyError);
   updated_ = !copyError;
 
   // Rewrite the source file with the missing includes and namespaces added

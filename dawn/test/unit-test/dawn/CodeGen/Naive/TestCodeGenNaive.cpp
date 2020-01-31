@@ -17,22 +17,16 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/FileUtil.h"
-#include "dawn/Unittest/CodeDumper.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
-#include "dawn/Validator/IntegrityChecker.h"
-
-#include <gtest/gtest.h>
 
 #include <fstream>
+#include <gtest/gtest.h>
 
 using namespace dawn;
-
-using stencilInstantiationContext =
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 namespace {
 
@@ -54,25 +48,11 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   std::ostringstream oss;
-  dawn::CodeDumper::dumpNaive(oss, stencil_instantiation);
+  dawn::CompilerUtil::dumpNaive(oss, stencil_instantiation);
   std::string gen = oss.str();
 
   std::string ref = dawn::readFile("reference/global_indexing.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
-}
-
-stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
-  DawnCompiler compiler{};
-  auto optimizer = compiler.runOptimizer(sir);
-
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    }
-    throw std::runtime_error("Compilation failed");
-  }
-
-  return optimizer->getStencilInstantiationMap();
 }
 
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
@@ -107,7 +87,7 @@ TEST(CodeGenNaiveTest, NonOverlappingInterval) {
                              b.block(b.stmt(b.assignExpr(b.at(out), b.lit(10)))))))));
 
   std::ostringstream oss;
-  dawn::CodeDumper().dumpNaive(oss, stencil_inst);
+  dawn::CompilerUtil().dumpNaive(oss, stencil_inst);
   std::string gen = oss.str();
 
   std::string ref = dawn::readFile("reference/nonoverlapping_stencil.cpp");
@@ -144,20 +124,7 @@ TEST(CodeGenNaiveTest, LaplacianStencil) {
                       b.binaryExpr(b.at(dx), b.at(dx), Op::multiply), Op::divide)))))))));
 
   std::ofstream ofs("test/unit-test/dawn/CodeGen/Naive/generated/laplacian_stencil.cpp");
-  dawn::CodeDumper::dumpNaive(ofs, stencil_inst);
-}
-
-TEST(CodeGenNaiveTest, GlobalsOptimizedAway) {
-  std::string json = dawn::readFile("input/globals_opt_away.sir");
-  std::shared_ptr<SIR> sir =
-      SIRSerializer::deserializeFromString(json, SIRSerializer::Format::Json);
-
-  try {
-    compile(sir);
-    FAIL() << "Semantic error not thrown";
-  } catch(SemanticError& error) {
-    SUCCEED();
-  }
+  dawn::CompilerUtil::dumpNaive(ofs, stencil_inst);
 }
 
 } // anonymous namespace

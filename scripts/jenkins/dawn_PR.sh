@@ -43,8 +43,8 @@ repo_root=${BASEPATH_SCRIPT}/../..
 echo "Compiling on $(hostname)"
 
 base_dir=`pwd`
-workdir=`pwd`/../temp
-# workdir=/dev/shm/tmp_dawn
+# workdir=`pwd`/../temp
+workdir=/dev/shm/tmp_dawn
 rm -rf ${workdir}
 echo "Copying repository to ${workdir}"
 cp -r ${repo_root} ${workdir}
@@ -69,11 +69,11 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
   if [ -n "${CLANG_GRIDTOOLS_BRANCH}" ]; then
     clang_gridtools_args="${clang_gridtools_args} -b ${CLANG_GRIDTOOLS_BRANCH}"
   fi
-  if [ -z ${ENABLE_PERFORMANCECHECKS+x} ]; then
-    performance_checks=""
-  else
-    performance_checks="-p"
-  fi
+  # if [ -z ${ENABLE_PERFORMANCECHECKS+x} ]; then
+  #   performance_checks=""
+  # else
+  #   performance_checks="-p"
+  # fi
     ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir} ${performance_checks}
   ret=$((ret || $? ))
 fi
@@ -86,7 +86,7 @@ for t in $gtclang_dawn_tests; do
   cp $t ${base_dir}/gtest_${i}.xml
   i=$((i+1))
 done
-graphs=`find . -name "history*.png"`
+graphs=`find /scratch/snx3000/tobwi/history -name "history*.png"`
 for g in $graphs; do
   cp $g ${base_dir}/`basename $g`
 done

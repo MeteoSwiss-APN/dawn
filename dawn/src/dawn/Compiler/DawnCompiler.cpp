@@ -24,7 +24,6 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntegrityCheck.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
@@ -44,6 +43,7 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Array.h"
@@ -53,8 +53,6 @@
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
@@ -184,6 +182,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   auto optimizerOptions = createOptimizerOptionsFromAllOptions(options_);
   std::unique_ptr<OptimizerContext> optimizer;
 
+  PassValidation validationPass(*optimizer);
+  validationPass.run(SIR);
+
   if(options_.DeserializeIIR == "") {
     optimizer = std::make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
 
@@ -225,8 +226,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
                                                   getOptions().SerializeIIR,
                                               PassInlining::InlineStrategy::ComputationsOnTheFly);
-    // Run AST integrity checker pass after other optimizations
-    optimizer->checkAndPushBack<PassIntegrityCheck>();
 
     DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
     for(const auto& a : optimizer->getPassManager().getPasses()) {
@@ -305,6 +304,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
+  return nullptr;
 }
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
@@ -317,21 +317,6 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   if(options_.MaxHaloPoints < 0) {
     diagnostics_.report(buildDiag("-max-halo", options_.MaxHaloPoints,
                                   "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
-  }
-
-  // SIR we received should be type consistent
-  if(SIR->GridType == ast::GridType::Unstructured) {
-    UnstructuredDimensionChecker dimensionsChecker;
-    if(!dimensionsChecker.checkDimensionsConsistency(*SIR.get())) {
-      DAWN_LOG(INFO) << "Dimensions in SIR are not consistent, no code generation";
-      return nullptr;
-    }
-  }
-
-  GridTypeChecker gridChecker;
-  if(!gridChecker.checkGridTypeConsistency(*SIR.get())) {
-    DAWN_LOG(INFO) << "Grid types in SIR are not consistent, no code generation";
     return nullptr;
   }
 
