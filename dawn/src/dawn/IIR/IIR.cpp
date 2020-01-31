@@ -112,40 +112,54 @@ std::unique_ptr<IIR> IIR::clone() const {
 }
 
 bool IIR::operator==(const IIR& other) const noexcept {
-  // AST GridType
-  if(this->gridType_ != other.gridType_)
+  // Check tree consistency
+  if(!this->checkTreeConsistency())
     return false;
 
-  // BlockSize
-  for(const auto& [bs1, bs2] : zip(this->blockSize_, other.blockSize_)) {
+  if(!other.checkTreeConsistency())
+    return false;
+
+  // gridType_
+  if(gridType_ != other.gridType_)
+    return false;
+
+  // blockSize_
+  for(const auto& [bs1, bs2] : zip(blockSize_, other.blockSize_)) {
     if(bs1 != bs2)
       return false;
   }
 
-  // Skipping ControlFlowDescriptor
-
-  // GlobalVariableMap
-  if(*this->globalVariableMap_ != *other.globalVariableMap_)
+  // globalVariableMap_
+  if(*globalVariableMap_ != *other.globalVariableMap_)
     return false;
 
-  // StencilFunctions
-  if(!std::equal(this->stencilFunctions_.begin(), this->stencilFunctions_.end(),
+  // stencilFunctions_
+  if(!std::equal(stencilFunctions_.begin(), stencilFunctions_.end(),
                  other.stencilFunctions_.begin()))
     return false;
 
-  // DerivedInfo
-  if(!compareMapValues(this->derivedInfo_.StageIDToNameMap_, other.derivedInfo_.StageIDToNameMap_))
-    return false;
-
-  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
-    return false;
+  // derivedInfo_
+  // Skip
 
   // Traverse downward
-  if(this->getChildren().size() != other.getChildren().size())
-    return false;
+  const auto& stencils = getChildren();
+  const auto& otherStencils = other.getChildren();
 
-  for(const auto& [this_s, other_s] : zip(this->getChildren(), other.getChildren())) {
-    if(!(*this_s == *other_s))
+  if(stencils.size() != otherStencils.size())
+    return false;
+  for(const auto& [stencil, otherStencil] : zip(stencils, otherStencils)) {
+    if(*stencil != *otherStencil)
+      return false;
+  }
+
+  // controlFlowDescriptor_
+  const auto stmts = getControlFlowDescriptor().getStatements();
+  const auto otherStmts = other.getControlFlowDescriptor().getStatements();
+
+  if(stmts.size() != otherStmts.size())
+    return false;
+  for(const auto& [stmt, otherStmt] : zip(stmts, otherStmts)) {
+    if(*stmt != *otherStmt)
       return false;
   }
 

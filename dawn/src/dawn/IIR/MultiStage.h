@@ -201,7 +201,7 @@ public:
 
   StencilMetaInformation& getMetadata();
 
-  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  /// @brief Implementation of equality operator from IIRNode<>
   bool operator==(const MultiStage& other) const noexcept;
 };
 

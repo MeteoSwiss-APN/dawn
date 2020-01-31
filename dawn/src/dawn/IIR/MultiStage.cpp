@@ -458,27 +458,32 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
 StencilMetaInformation& MultiStage::getMetadata() { return metadata_; }
 
 bool MultiStage::operator==(const MultiStage& other) const noexcept {
-  // For now we are not comparing the StencilMetaInformation...
+  // metadata_
+  // Skip
 
   // LoopOrder
-  if(this->loopOrder_ != other.loopOrder_)
+  if(loopOrder_ != other.loopOrder_)
     return false;
+
+  // id_
+  // Skip
 
   // DerivedInfo
-  // Caches
-  if(!compareMapValues(this->derivedInfo_.caches_, other.derivedInfo_.caches_))
+  // caches_
+  if(!compareMapValues(derivedInfo_.caches_, other.derivedInfo_.caches_))
     return false;
 
-  // Fields
-  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
-    return false;
+  // fields_
+  // Skip
 
   // Traverse downward
-  if(this->getChildren().size() != other.getChildren().size())
-    return false;
+  const auto& stages = getChildren();
+  const auto& otherStages = other.getChildren();
 
-  for(const auto& [this_ms, other_ms] : zip(this->getChildren(), other.getChildren())) {
-    if(!(*this_ms == *other_ms))
+  if(stages.size() != otherStages.size())
+    return false;
+  for(const auto& [stage, otherStage] : zip(stages, otherStages)) {
+    if(*stage != *otherStage)
       return false;
   }
 

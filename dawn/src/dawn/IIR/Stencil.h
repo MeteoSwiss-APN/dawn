@@ -301,7 +301,7 @@ public:
   ///@brief Get the Attributes of the Stencil as specified in the user-code
   sir::Attr& getStencilAttributes();
 
-  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  /// @brief Implementation of equality operator from IIRNode<>
   bool operator==(const Stencil& other) const noexcept;
 
 private:

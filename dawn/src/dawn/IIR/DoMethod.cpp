@@ -325,31 +325,31 @@ bool DoMethod::isEmptyOrNullStmt() const {
 }
 
 bool DoMethod::operator==(const DoMethod& other) const noexcept {
-  // Interval
-  if(this->interval_ != other.interval_)
+  // interval_
+  if(interval_ != other.interval_)
     return false;
 
-  // Skipping ID
+  // // id_
+  // // Skip
 
-  // For now we are not comparing the StencilMetaInformation...
+  // // metaData_
+  // // Skip
 
-  // DerivedInfo
-  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
-    return false;
+  // // derivedInfo_
+  // // Skip
 
-  // Skipping DependencyGraphAccesses
-
-  // AST
+  // ast_
   // TODO Clean this up
   // checking each of the statements
-  for(int stmtidx = 0, stmtSize = this->getAST().getStatements().size(); stmtidx < stmtSize;
-      ++stmtidx) {
-    const auto& lhsStmt = this->getAST().getStatements()[stmtidx];
-    const auto& rhsStmt = other.getAST().getStatements()[stmtidx];
+  for(int stmtidx = 0, stmtSize = getAST().getStatements().size(); stmtidx < stmtSize; ++stmtidx) {
+    const auto& stmt = getAST().getStatements()[stmtidx];
+    const auto& otherStmt = other.getAST().getStatements()[stmtidx];
     // check the statement (and its data)
-    if(!lhsStmt->equals(rhsStmt.get()))
+    if(*stmt != *otherStmt)
       return false;
   }
+
+  // ast_ is the bottom of the IIR
 
   return true;
 }

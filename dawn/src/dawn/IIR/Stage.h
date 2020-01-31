@@ -44,8 +44,10 @@ class MultiStage;
 /// @ingroup optimizer
 class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
+  // TODO This is not consistently named
   const StencilMetaInformation& metaData_;
 
+  // TODO Lowercase this
   /// Unique identifier of the stage
   int StageID_;
 
@@ -247,7 +249,7 @@ public:
   /// compatible
   bool iterationSpaceCompatible(const Stage& other) const;
 
-  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  /// @brief Implementation of equality operator from IIRNode<>
   bool operator==(const Stage& other) const noexcept;
 };
 

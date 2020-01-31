@@ -116,7 +116,7 @@ public:
 
   const Stencil& getStencil(const int stencilID) const;
 
-  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  /// @brief Implementation of equality operator from IIRNode<>
   bool operator==(const IIR& other) const noexcept;
 };
 

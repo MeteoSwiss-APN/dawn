@@ -76,7 +76,7 @@ constexpr auto zip(T1&& iterable1, T2&& iterable2) {
     T1Iter iter1;
     T2Iter iter2;
     bool operator!=(const iterator& other) const {
-      return (iter1 != other.iter1) && (iter2 != other.iter2);
+      return (iter1 != other.iter1) || (iter2 != other.iter2);
     }
     void operator++() {
       ++iter1;
@@ -88,7 +88,7 @@ constexpr auto zip(T1&& iterable1, T2&& iterable2) {
     T1 iterable1;
     T2 iterable2;
     auto begin() { return iterator{std::begin(iterable1), std::begin(iterable2)}; }
-    auto end() { return iterator{std::begin(iterable1), std::end(iterable2)}; }
+    auto end() { return iterator{std::end(iterable1), std::end(iterable2)}; }
   };
   return iterable_wrapper{std::forward<T1>(iterable1), std::forward<T2>(iterable2)};
 }

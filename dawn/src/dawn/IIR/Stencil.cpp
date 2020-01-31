@@ -546,23 +546,31 @@ void Stencil::accept(iir::ASTVisitor& visitor) {
 }
 
 bool Stencil::operator==(const Stencil& other) const noexcept {
-  // For now we are not comparing the StencilMetaInformation...
+  // metadata_
+  // Skip
 
+  // stencilAttributes_
   if(stencilAttributes_ != other.stencilAttributes_)
     return false;
 
-  // Skipping stencilID
+  // stencilID_
+  // Skip
 
-  // Skipping StageDependencyGraph
-  if(!compareMapValues(this->derivedInfo_.fields_, other.derivedInfo_.fields_))
-    return false;
+  // stageDependencyGraph_
+  // Skip
+
+  // derivedInfo_
+  // Skip
 
   // Traverse downward
-  if(this->getChildren().size() != other.getChildren().size())
+  const auto& multiStages = getChildren();
+  const auto& otherMultiStages = other.getChildren();
+
+  if(multiStages.size() != otherMultiStages.size())
     return false;
 
-  for(const auto& [this_ms, other_ms] : zip(this->getChildren(), other.getChildren())) {
-    if(!(*this_ms == *other_ms))
+  for(const auto& [ms, otherMS] : zip(multiStages, otherMultiStages)) {
+    if(*ms != *otherMS)
       return false;
   }
 

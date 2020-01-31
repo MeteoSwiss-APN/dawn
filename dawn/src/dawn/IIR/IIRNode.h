@@ -443,14 +443,15 @@ public:
     }
   }
 
-  /// @brief Comparison function for IIRNode and below.
+  /// @brief Comparison function for IIRNode and below
   bool operator==(const NodeType& other) const noexcept {
+    // Requires that this operator is defined in each NodeType
     return static_cast<const NodeType*>(this)->operator==(other);
   }
 
   // TODO Move this to .cpp?
   /// @brief Opposite of operator==.
-  inline bool operator!=(const NodeType& other) const noexcept { return !this->operator==(other); }
+  bool operator!=(const NodeType& other) const noexcept { return !this->operator==(other); }
 
   virtual void updateLevel() {}
   virtual void clearDerivedInfo() {}

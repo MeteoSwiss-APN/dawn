@@ -44,70 +44,6 @@ namespace {
 #define IIR_EXPECT_EQ(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), TRUE)
 #define IIR_EXPECT_NE(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), FALSE)
 
-// TODO Why is there another version in the deserializer test?
-bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
-  IIR_EARLY_EXIT((lhs->getGridType() == rhs->getGridType()));
-  IIR_EARLY_EXIT(lhs->checkTreeConsistency());
-  IIR_EARLY_EXIT(rhs->checkTreeConsistency());
-  // checking the stencils
-  for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
-    const auto& lhsStencil = lhs->getChild(stencils);
-    const auto& rhsStencil = rhs->getChild(stencils);
-    IIR_EARLY_EXIT((lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes()));
-    IIR_EARLY_EXIT((lhsStencil->getStencilID() == rhsStencil->getStencilID()));
-
-    // checking each of the multistages
-    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
-      const auto& lhsMSS = lhsStencil->getChild(mssidx);
-      const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      IIR_EARLY_EXIT((lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder()));
-      IIR_EARLY_EXIT((lhsMSS->getID() == rhsMSS->getID()));
-      IIR_EARLY_EXIT((lhsMSS->getCaches().size() == rhsMSS->getCaches().size()));
-      for(const auto& lhsPair : lhsMSS->getCaches()) {
-        IIR_EARLY_EXIT(rhsMSS->getCaches().count(lhsPair.first));
-        auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
-        IIR_EARLY_EXIT((rhsValue == lhsPair.second));
-      }
-      // checking each of the stages
-      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
-          ++stageidx) {
-        const auto& lhsStage = lhsMSS->getChild(stageidx);
-        const auto& rhsStage = rhsMSS->getChild(stageidx);
-        IIR_EARLY_EXIT((lhsStage->getStageID() == rhsStage->getStageID()));
-
-        // checking each of the doMethods
-        for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodidx < doMethodSize; ++doMethodidx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
-          IIR_EARLY_EXIT((lhsDoMethod->getID() == rhsDoMethod->getID()));
-          IIR_EARLY_EXIT((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
-
-          // checking each of the statements
-          for(int stmtidx = 0, stmtSize = lhsDoMethod->getAST().getStatements().size();
-              stmtidx < stmtSize; ++stmtidx) {
-            const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
-            const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
-            // check the statement (and its data)
-            IIR_EARLY_EXIT((lhsStmt->equals(rhsStmt.get())));
-          }
-        }
-      }
-    }
-  }
-  const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
-  const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
-
-  IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
-  for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    // check the statement (and its data)
-    if(!lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()))
-      return false;
-  }
-
-  return true;
-}
-
 bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::Literal>() ==
                   rhs.getAccessesOfType<iir::FieldAccessType::Literal>()));
@@ -145,9 +81,7 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
 
 bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiation>& lhs,
                                   const std::shared_ptr<iir::StencilInstantiation>& rhs) {
-  if(*lhs->getIIR().get() != *rhs->getIIR().get())
-    return false;
-  //IIR_EARLY_EXIT(compareIIRs(lhs->getIIR().get(), rhs->getIIR().get()));
+  IIR_EARLY_EXIT((*lhs->getIIR().get() == *rhs->getIIR().get()));
   IIR_EARLY_EXIT(compareMetaData(lhs->getMetaData(), rhs->getMetaData()));
   return true;
 }
@@ -168,98 +102,98 @@ class IIRSerializerTest : public createEmptyOptimizerContext {
 protected:
   virtual void SetUp() override {
     createEmptyOptimizerContext::SetUp();
-    referenceInstantiaton = std::make_shared<iir::StencilInstantiation>(
+    referenceInstantiation = std::make_shared<iir::StencilInstantiation>(
         context_->getSIR()->GridType, context_->getSIR()->GlobalVariableMap,
         context_->getSIR()->StencilFunctions);
   }
-  virtual void TearDown() override { referenceInstantiaton.reset(); }
+  virtual void TearDown() override { referenceInstantiation.reset(); }
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
     return IIRSerializer::deserializeFromString(
-        IIRSerializer::serializeToString(referenceInstantiaton), context_.get());
+        IIRSerializer::serializeToString(referenceInstantiation), context_.get());
   }
 
-  std::shared_ptr<iir::StencilInstantiation> referenceInstantiaton;
+  std::shared_ptr<iir::StencilInstantiation> referenceInstantiation;
 };
 
 TEST_F(IIRSerializerTest, EmptySetup) {
   auto desired = serializeAndDeserializeRef();
-  IIR_EXPECT_EQ(desired, referenceInstantiaton);
+  IIR_EXPECT_EQ(desired, referenceInstantiation);
   desired->getMetaData().insertAccessOfType(iir::FieldAccessType::InterStencilTemporary, 10,
                                             "name");
-  IIR_EXPECT_NE(desired, referenceInstantiaton);
+  IIR_EXPECT_NE(desired, referenceInstantiation);
 }
 TEST_F(IIRSerializerTest, SimpleDataStructures) {
   //===------------------------------------------------------------------------------------------===
   // Checking inserts into the various maps
   //===------------------------------------------------------------------------------------------===
-  referenceInstantiaton->getMetaData().addAccessIDNamePair(1, "test");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  referenceInstantiation->getMetaData().addAccessIDNamePair(1, "test");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, -5,
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, -5,
                                                           "test");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::Field, 712,
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::Field, 712,
                                                           "field0");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
                                                           "field1");
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
                                                           "field2");
   auto deserializedStencilInstantiaion = serializeAndDeserializeRef();
-  IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiaton);
+  IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiation);
 
   // check that ordering is preserved
-  referenceInstantiaton->getMetaData().removeAccessID(12);
-  referenceInstantiaton->getMetaData().removeAccessID(10);
+  referenceInstantiation->getMetaData().removeAccessID(12);
+  referenceInstantiation->getMetaData().removeAccessID(10);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
                                                           "field1");
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
                                                           "field2");
 
-  IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
+  IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiation);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(
+  referenceInstantiation->getMetaData().insertAccessOfType(
       iir::FieldAccessType::StencilTemporary, 713,
       "field3"); // access ids should be globally unique, not only per type
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   // This would fail, since 712 is already present
-  // referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable,
+  // referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable,
   //                                                         712, "field4");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 6);
-  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 7);
-  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 8);
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 6);
+  referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 7);
+  referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 8);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  referenceInstantiaton->getMetaData().setFileName("fileName");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-  referenceInstantiaton->getMetaData().setStencilName("stencilName");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-  referenceInstantiaton->getMetaData().setStencilLocation(SourceLocation{1, 2});
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  referenceInstantiation->getMetaData().setFileName("fileName");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+  referenceInstantiation->getMetaData().setStencilName("stencilName");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+  referenceInstantiation->getMetaData().setStencilLocation(SourceLocation{1, 2});
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 }
 
 TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto scStmt = iir::makeStencilCallDeclStmt(std::make_shared<ast::StencilCall>("me"));
   scStmt->getSourceLocation().Line = 10;
   scStmt->getSourceLocation().Column = 12;
-  referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(scStmt);
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  referenceInstantiation->getIIR()->getControlFlowDescriptor().insertStmt(scStmt);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   auto stmt = iir::makeStencilCallDeclStmt(std::make_shared<ast::StencilCall>("test"));
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   auto bcstmt = iir::makeBoundaryConditionDeclStmt("callee");
   bcstmt->getFields().push_back("field1");
   bcstmt->getFields().push_back("field2");
-  referenceInstantiaton->getMetaData().addFieldBC("bc", bcstmt);
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  referenceInstantiation->getMetaData().addFieldBC("bc", bcstmt);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 }
 
 TEST_F(IIRSerializerTest, IIRTestsReduce) {
@@ -326,33 +260,34 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
 TEST_F(IIRSerializerTest, IIRTests) {
   sir::Attr attributes;
   attributes.set(sir::Attr::Kind::MergeStages);
-  referenceInstantiaton->getIIR()->insertChild(
-      std::make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
-      referenceInstantiaton->getIIR());
-  const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
+  referenceInstantiation->getIIR()->insertChild(
+      std::make_unique<iir::Stencil>(referenceInstantiation->getMetaData(), attributes, 10),
+      referenceInstantiation->getIIR());
+  const auto& IIRStencil = referenceInstantiation->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
-  IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
+  IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
-  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  std::cout << "In test function " << deserialized->getIIR()->getChild(0)->getStencilAttributes().getBits() << " " << referenceInstantiation->getIIR()->getChild(0)->getStencilAttributes().getBits() << std::endl;
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
 
   (IIRStencil)
-      ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
+      ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiation->getMetaData(),
                                                       iir::LoopOrderKind::Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->getCaches().emplace(10, iir::Cache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::fill,
                                              10, std::nullopt, std::nullopt, std::nullopt));
   deserialized = serializeAndDeserializeRef();
-  IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
+  IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   IIRMSS->setLoopOrder(iir::LoopOrderKind::Forward);
-  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
 
-  IIRMSS->insertChild(std::make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
+  IIRMSS->insertChild(std::make_unique<iir::Stage>(referenceInstantiation->getMetaData(), 12));
   const auto& IIRStage = IIRMSS->getChild(0);
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   (IIRStage)->insertChild(std::make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1),
-                                                          referenceInstantiaton->getMetaData()));
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+                                                          referenceInstantiation->getMetaData()));
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
   auto expr = std::make_shared<iir::VarAccessExpr>("name");
@@ -387,22 +322,22 @@ TEST_F(IIRSerializerTest, IIRTests) {
   };
 
   deserialized = serializeAndDeserializeRef();
-  IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
+  IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   auto deserializedExprStmt =
       std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0));
   deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
-  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
       std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0))->getExpr());
   deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
       std::make_optional<int>(50);
-  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarDeclStmt =
       std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthChild(deserialized, 1));
   deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
-  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
 }
 
 } // anonymous namespace

@@ -26,7 +26,7 @@ struct CompareResult {
   bool match;
 
   operator bool() { return match; }
-  const std::string& why() { return message; }
+  const std::string& why() const { return message; }
 };
 
 } // namespace dawn

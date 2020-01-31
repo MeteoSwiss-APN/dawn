@@ -55,6 +55,7 @@ class DoMethod : public IIRNode<Stage, DoMethod, void> {
     std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
   };
 
+  // TODO This is not consistently named
   const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
   std::shared_ptr<iir::BlockStmt> ast_;
@@ -141,7 +142,7 @@ public:
   iir::BlockStmt& getAST() { return *ast_; }
   std::shared_ptr<iir::BlockStmt> getASTPtr() { return ast_; }
 
-  /// @brief Implementation of the pure virtual operator== in IIRNode<>
+  /// @brief Implementation of equality operator from IIRNode<>
   bool operator==(const DoMethod& other) const noexcept;
 };
 

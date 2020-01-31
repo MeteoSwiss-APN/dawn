@@ -46,66 +46,6 @@ using namespace dawn;
 
 namespace {
 
-// NOTE: There is another version in the serializer?
-void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
-  EXPECT_TRUE(lhs->checkTreeConsistency());
-  EXPECT_TRUE(rhs->checkTreeConsistency());
-  // checking the stencils
-  ASSERT_EQ(lhs->getChildren().size(), rhs->getChildren().size());
-  for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
-    const auto& lhsStencil = lhs->getChild(stencils);
-    const auto& rhsStencil = rhs->getChild(stencils);
-    EXPECT_EQ(lhsStencil->getStencilAttributes(), rhsStencil->getStencilAttributes());
-    EXPECT_EQ(lhsStencil->getStencilID(), rhsStencil->getStencilID());
-
-    // checking each of the multistages
-    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
-    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
-      const auto& lhsMSS = lhsStencil->getChild(mssidx);
-      const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      EXPECT_EQ(lhsMSS->getLoopOrder(), rhsMSS->getLoopOrder());
-      EXPECT_EQ(lhsMSS->getID(), rhsMSS->getID());
-
-      // checking each of the stages
-      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
-      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
-          ++stageidx) {
-        const auto& lhsStage = lhsMSS->getChild(stageidx);
-        const auto& rhsStage = rhsMSS->getChild(stageidx);
-        EXPECT_EQ(lhsStage->getStageID(), rhsStage->getStageID());
-
-        // checking each of the doMethods
-        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
-        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodIdx < doMethodSize; ++doMethodIdx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
-          EXPECT_EQ(lhsDoMethod->getID(), rhsDoMethod->getID());
-          EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
-
-          // checking each of the statements
-          ASSERT_EQ(lhsDoMethod->getAST().getStatements().size(),
-                    rhsDoMethod->getAST().getStatements().size());
-          for(int stmtidx = 0, stmtSize = lhsDoMethod->getAST().getStatements().size();
-              stmtidx < stmtSize; ++stmtidx) {
-            const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
-            const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
-            // check the statement (and its data)
-            EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
-          }
-        }
-      }
-    }
-  }
-  const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
-  const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
-
-  ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
-  for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    EXPECT_TRUE(lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()));
-  }
-}
-
 void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
   EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Literal>(),
             rhs.getAccessesOfType<iir::FieldAccessType::Literal>());
@@ -203,9 +143,10 @@ std::shared_ptr<iir::StencilInstantiation> readIIRFromFile(OptimizerContext& opt
 
 void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
                  std::shared_ptr<iir::StencilInstantiation> rhs) {
-  // first compare the (structure of the) iirs, this is a precondition before we can actually check
+  // first compare the (structure of the) iirs, this is a precondition before we can actually
+  // check
   // the metadata / derived info
-  compareIIRstructures(lhs->getIIR().get(), rhs->getIIR().get());
+  ASSERT_EQ(*lhs->getIIR().get(), *rhs->getIIR().get());
 
   // then we compare the meta data
   compareMetaData(lhs->getMetaData(), rhs->getMetaData());
