@@ -35,8 +35,8 @@ TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
   // Load IIR from file
   std::unique_ptr<OptimizerContext> context;
   dawn::OptimizerContext::OptimizerContextOptions options;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      CompilerUtil::load("input/globals_opt_away.iir", options, context);
+  std::shared_ptr<iir::StencilInstantiation> instantiation;
+  CompilerUtil::load("input/globals_opt_away.iir", options, context, instantiation);
 
   // Run inlining pass
   PassInlining inliningPass(*context, true, PassInlining::InlineStrategy::InlineProcedures);
