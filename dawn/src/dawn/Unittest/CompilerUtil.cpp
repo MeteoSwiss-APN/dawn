@@ -20,16 +20,12 @@ const std::shared_ptr<iir::StencilInstantiation>
 CompilerUtil::load(const std::string& iirFilename,
                    const dawn::OptimizerContext::OptimizerContextOptions& options,
                    std::unique_ptr<OptimizerContext>& context) {
-  std::ifstream file(iirFilename.c_str());
-  DAWN_ASSERT_MSG((file.good()), std::string("File '" + iirFilename + "' does not exist").c_str());
-
   dawn::DiagnosticsEngine diag;
   std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
   context = std::make_unique<OptimizerContext>(diag, options, sir);
 
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> stencilInstantion =
-      IIRSerializer::deserializeFromString(jsonstr, context.get());
+      IIRSerializer::deserialize(iirFilename);
 
   return stencilInstantion;
 }

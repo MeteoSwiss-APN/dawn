@@ -49,6 +49,15 @@ public:
   static std::shared_ptr<iir::StencilInstantiation>
   deserialize(const std::string& file, dawn::OptimizerContext* context, Format kind = Format::Json);
 
+  /// @brief Deserialize the StencilInstantiaion from `file`
+  ///
+  /// @param file    Path the file
+  /// @param kind    The kind of serialization used in `file` (Json or Byte)
+  /// @throws std::excetpion    Failed to deserialize
+  /// @returns newly allocated IIR on success or `NULL`
+  static std::shared_ptr<iir::StencilInstantiation>
+  deserialize(const std::string& file, Format kind = Format::Json);
+
   /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
   ///
   /// @param str    Byte or JSON string to deserializee
@@ -59,6 +68,15 @@ public:
   static std::shared_ptr<iir::StencilInstantiation>
   deserializeFromString(const std::string& str, dawn::OptimizerContext* context,
                         Format kind = Format::Json);
+
+  /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
+  ///
+  /// @param str    Byte or JSON string to deserializee
+  /// @param kind   The kind of serialization used in `str` (Json or Byte)
+  /// @throws std::excetpion    Failed to deserialize
+  /// @returns newly allocated IIR on success or `NULL`
+  static std::shared_ptr<iir::StencilInstantiation>
+  deserializeFromString(const std::string& str, Format kind = Format::Json);
 
   /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string to `file`
   ///
