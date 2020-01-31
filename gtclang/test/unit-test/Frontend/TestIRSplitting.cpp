@@ -32,8 +32,8 @@ TEST(IRSplittingTest, Interval) {
 
 TEST(IRSplittingTest, RaceCondition) {
   gtclang::IRSplitter().split(
-      "/home/eddied/Work/dawn/gtclang/test/integration-test/PassFieldVersioning/RaceCondition01.cpp",
-      {"-freport-pass-field-versioning"});
+      "/home/eddied/Work/dawn/gtclang/test/integration-test/PassFieldVersioning/RaceCondition03.cpp",
+      {"-freport-pass-field-versioning", "-inline=none"});
 }
 
 } // anonymous namespace

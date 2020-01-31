@@ -62,25 +62,27 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
   for(const auto& arg : args) {
     flags.emplace_back(arg);
   }
+
   auto [success, sir] =  GTClang::run({dslFile, "-fno-codegen"}, flags);
 
-  //if(success) {
-    // Reset UIDs
-    dawn::UIDGenerator::getInstance()->reset();
+  // Reset UIDs
+  dawn::UIDGenerator::getInstance()->reset();
 
-    // Use SIR to create context then serialize the SIR
-    createContext(sir);
-    dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
+  // Use SIR to create context then serialize the SIR
+  createContext(sir);
+  dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
 
-    // Lower to unoptimized IIR and serialize
-    writeIIR();
+  // Lower to unoptimized IIR and serialize
+  writeIIR();
 
+  if(success) {
     // Run parallelization passes
     parallelize();
     writeIIR(1);
 
+    // Run optimization passes
     optimize();
-  //}
+  }
 }
 
 void IRSplitter::generate(const std::string& outFile) {

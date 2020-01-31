@@ -32,21 +32,33 @@ class TestFieldVersioning : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
+
+  void raceConditionTest(const std::string& filename) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation =
+        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+
+    PassFieldVersioning pass(*context_);
+    bool result = pass.run(instantiation);
+    ASSERT_FALSE(result);                   // Expect pass to fail...
+
+    DiagnosticsEngine& diag = context_->getDiagnostics();
+    ASSERT_TRUE(diag.hasErrors());
+
+    const std::string& msg = (*diag.getQueue().begin())->getMessage();
+    ASSERT_TRUE(msg.find("race-condition") != std::string::npos);
+  }
 };
 
 TEST_F(TestFieldVersioning, RaceCondition1) {
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      CompilerUtil::load("RaceCondition01.iir", options_, context_, TestEnvironment::path_);
+  raceConditionTest("RaceCondition01.iir");
+}
 
-  PassFieldVersioning pass(*context_);
-  bool result = pass.run(instantiation);
-  ASSERT_FALSE(result);                   // Expect pass to fail...
+TEST_F(TestFieldVersioning, RaceCondition2) {
+  raceConditionTest("RaceCondition02.iir");
+}
 
-  DiagnosticsEngine& diag = context_->getDiagnostics();
-  ASSERT_TRUE(diag.hasErrors());
-
-  const std::string& msg = (*diag.getQueue().begin())->getMessage();
-  ASSERT_TRUE(msg.find("race-condition") != std::string::npos);
+TEST_F(TestFieldVersioning, RaceCondition3) {
+  raceConditionTest("RaceCondition03.iir");
 }
 
 } // anonymous namespace

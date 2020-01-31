@@ -33,10 +33,7 @@ CompilerUtil::load(const std::string& iirFilename,
   std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
   context = std::make_unique<OptimizerContext>(diag_, options, sir);
 
-  std::shared_ptr<iir::StencilInstantiation> stencilInstantion =
-      IIRSerializer::deserialize(iirFilename);
-
-  return stencilInstantion;
+  return IIRSerializer::deserialize(iirFilename);
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
