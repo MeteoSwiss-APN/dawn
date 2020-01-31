@@ -35,7 +35,9 @@ protected:
 
   const std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
-    std::string filename = TestEnvironment::path_ + "/" + sirFilename;
+    std::string filename = sirFilename;
+    if(!TestEnvironment::path_.empty())
+      filename = TestEnvironment::path_ + "/" + filename;
     std::ifstream file(filename);
     DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 

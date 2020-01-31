@@ -35,9 +35,13 @@ void CompilerUtil::load(const std::string& iirFilename,
     filename += "/";
   filename += iirFilename;
 
-  std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-  context = std::make_unique<OptimizerContext>(diag_, options, sir);
-  instantiation = IIRSerializer::deserialize(iirFilename);
+  if(filename.find(".sir") != std::string::npos) {
+    lower(filename, context, instantiation, envPath);
+  } else {
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+    context = std::make_unique<OptimizerContext>(diag_, options, sir);
+    instantiation = IIRSerializer::deserialize(iirFilename);
+  }
 }
 
 void CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,

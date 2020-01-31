@@ -35,11 +35,7 @@ protected:
 
   void raceConditionTest(const std::string& filename) {
     std::shared_ptr<iir::StencilInstantiation> instantiation;
-    if(filename.find(".sir") != std::string::npos) {
-      CompilerUtil::lower(filename, context_, instantiation, TestEnvironment::path_);
-    } else {
-      CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
-    }
+    CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
 
     PassFieldVersioning pass(*context_);
     bool result = pass.run(instantiation);
@@ -47,9 +43,6 @@ protected:
 
     DiagnosticsEngine& diag = context_->getDiagnostics();
     ASSERT_TRUE(diag.hasErrors());
-
-    //    const std::string& msg = (*diag.getQueue().begin())->getMessage();
-    //    ASSERT_TRUE(msg.find("race-condition") != std::string::npos);
   }
 
   void versioningTest(const std::string& filename) {
@@ -59,9 +52,6 @@ protected:
     PassFieldVersioning pass(*context_);
     bool result = pass.run(instantiation);
     ASSERT_TRUE(result); // Expect pass to succeed...
-
-    // Assert the pass versions...
-    //        int stop = 1;
   }
 };
 
