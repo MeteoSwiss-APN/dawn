@@ -22,6 +22,7 @@
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
