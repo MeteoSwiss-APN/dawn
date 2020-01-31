@@ -32,9 +32,10 @@ class IRSplitter : dawn::NonCopyable {
   std::unique_ptr<dawn::OptimizerContext> context_;
   dawn::DiagnosticsEngine diag_;
   std::string filePrefix_;
+  unsigned maxLevel_;
 
 public:
-  explicit IRSplitter();
+  explicit IRSplitter(const std::string& destDir = "", unsigned maxLevel = 1000);
 
   void split(const std::string& dslFile, const std::vector<std::string>& args = {});
   void parallelize();
@@ -43,6 +44,7 @@ public:
 
 protected:
   void createContext(const std::shared_ptr<dawn::SIR>& sir);
+  void writeSIR(const std::shared_ptr<dawn::SIR>& sir);
   void writeIIR(const unsigned level = 0);
 
   // Pass groups

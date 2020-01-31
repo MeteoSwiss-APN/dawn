@@ -41,6 +41,7 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/UIDGenerator.h"
 #include "gtclang/Unittest/Config.h"
 #include "gtclang/Unittest/GTClang.h"
@@ -48,14 +49,14 @@
 
 namespace gtclang {
 
-IRSplitter::IRSplitter() {}
+IRSplitter::IRSplitter(const std::string& destDir, unsigned maxLevel)
+    : filePrefix_(destDir), maxLevel_(maxLevel) {}
 
 void IRSplitter::split(const std::string& dslFile, const std::vector<std::string>& args) {
-  filePrefix_ = dslFile;
-  size_t pos = filePrefix_.rfind('.');
-  if(pos != std::string::npos) {
-    filePrefix_ = filePrefix_.substr(0, pos);
-  }
+  fs::path filePath(dslFile);
+  if(filePrefix_.empty())
+    filePrefix_ = filePath.root_directory().string();
+  filePrefix_ += "/" + filePath.stem().string();
 
   std::vector<std::string> flags = {"-std=c++11",
                                     std::string{"-I"} + std::string{GTCLANG_UNITTEST_INCLUDES}};
@@ -65,11 +66,8 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
 
   auto [success, sir] = GTClang::run({dslFile, "-fno-codegen"}, flags);
 
-  // Reset UIDs
-  dawn::UIDGenerator::getInstance()->reset();
-
   // Serialize the SIR
-  dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
+  writeSIR(sir);
 
   // Use SIR to create context
   createContext(sir);
@@ -77,7 +75,7 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
   // Lower to unoptimized IIR and serialize
   writeIIR();
 
-  if(success) {
+  if(success && maxLevel_ > 0) {
     // Run parallelization passes
     parallelize();
     writeIIR(1);
@@ -284,13 +282,27 @@ bool IRSplitter::runPass(const std::string& name,
   return pass.run(instantiation);
 }
 
+void IRSplitter::writeSIR(const std::shared_ptr<dawn::SIR>& sir) {
+  dawn::UIDGenerator::getInstance()->reset();
+  dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
+}
+
 void IRSplitter::writeIIR(const unsigned level) {
-  unsigned nstencils = 0;
+  if(level > maxLevel_)
+    return;
+
+  unsigned nstencils = context_->getStencilInstantiationMap().size();
+  unsigned stencil_id = 0;
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    dawn::IIRSerializer::serialize(filePrefix_ + "." + name + std::to_string(nstencils) + ".opt" +
-                                       std::to_string(level) + ".iir",
-                                   instantiation);
-    nstencils += 1;
+    std::string iirFile = filePrefix_;
+    if(nstencils > 1)
+      iirFile += "." + std::to_string(stencil_id);
+    if(maxLevel_ > 0)
+      iirFile += ".O" + std::to_string(level);
+    iirFile += ".iir";
+
+    dawn::IIRSerializer::serialize(iirFile, instantiation);
+    stencil_id += 1;
   }
 }
 

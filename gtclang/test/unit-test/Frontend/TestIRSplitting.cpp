@@ -30,10 +30,9 @@ TEST(IRSplittingTest, Interval) {
   gtclang::IRSplitter().split(filename);
 }
 
-TEST(IRSplittingTest, RaceCondition) {
-  gtclang::IRSplitter().split(
-      "/home/eddied/Work/dawn/gtclang/test/integration-test/PassFieldVersioning/RaceCondition03.cpp",
-      {"-freport-pass-field-versioning", "-inline=none"});
+TEST(IRSplittingTest, FieldVersioning) {
+  gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes", 0).split(
+      "VersioningTest07.cpp", {"-freport-pass-field-versioning"}); //, "-inline=none"});
 }
 
 } // anonymous namespace
