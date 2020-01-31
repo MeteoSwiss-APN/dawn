@@ -28,17 +28,12 @@ CompilerUtil::load(const std::string& iirFilename,
     filename += "/";
   filename += iirFilename;
 
-  std::ifstream file(filename.c_str());
-  DAWN_ASSERT_MSG((file.good()), std::string("File '" + filename + "' does not exist").c_str());
-
   dawn::DiagnosticsEngine diag;
-  diag.setFilename(iirFilename);
   std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
   context = std::make_unique<OptimizerContext>(diag, options, sir);
 
-  std::string jsonStr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> stencilInstantion =
-      IIRSerializer::deserializeFromString(jsonStr, context.get());
+      IIRSerializer::deserialize(iirFilename);
 
   return stencilInstantion;
 }
