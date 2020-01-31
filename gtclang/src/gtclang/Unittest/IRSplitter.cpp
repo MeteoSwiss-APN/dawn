@@ -284,6 +284,7 @@ bool IRSplitter::runPass(const std::string& name,
 
 void IRSplitter::writeSIR(const std::shared_ptr<dawn::SIR>& sir) {
   dawn::UIDGenerator::getInstance()->reset();
+  std::cerr << "Writing SIR file '" << filePrefix_ << ".sir'" << std::endl;
   dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
 }
 
@@ -301,6 +302,7 @@ void IRSplitter::writeIIR(const unsigned level) {
       iirFile += ".O" + std::to_string(level);
     iirFile += ".iir";
 
+    std::cerr << "Writing IIR file '" << iirFile << "'" << std::endl;
     dawn::IIRSerializer::serialize(iirFile, instantiation);
     stencil_id += 1;
   }
@@ -308,17 +310,23 @@ void IRSplitter::writeIIR(const unsigned level) {
 
 } // namespace gtclang
 
-//#define MAIN_ENABLED 1
+// TODO: Refactor this before PR!!!
 #ifdef MAIN_ENABLED
 int main(int argc, char* argv[]) {
-  if(argc != 2) {
-    std::cerr << "usage: " << argv[0] << " <DSL file>" << std::endl;
+  if(argc < 2) {
+    std::cerr << "usage: " << argv[0] << " <DSL File> [Dest Dir] [Max Opt. Level]" << std::endl;
     return 1;
   }
 
   std::string filename{argv[1]};
-  dawn::UIDGenerator::getInstance()->reset();
-  gtclang::IRSplitter splitter;
+  std::string dest_dir;
+  if(argc > 2)
+    dest_dir = std::string{argv[2]};
+  unsigned max_level = 1000;
+  if(argc > 3)
+    max_level = atoi(argv[3]);
+
+  gtclang::IRSplitter splitter(dest_dir, max_level);
   splitter.split(filename);
 
   return 0;
