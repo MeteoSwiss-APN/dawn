@@ -305,24 +305,21 @@ int main() {
     auto vertex_f = b.field("vertex_field", LocType::Vertices);
 
     // a nested reduction v->e->c
-    auto stencil_instantiation =
-        b.build("nested",
-                b.stencil(b.multistage(
-                    dawn::iir::LoopOrderKind::Parallel,
-                    b.stage(LocType::Cells,
-                            b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                       b.stmt(b.assignExpr(
-                                           b.at(cell_f),
-                                           b.reduceOverNeighborExpr(
-                                               Op::plus,
-                                               b.binaryExpr(b.at(edge_f),
-                                                            b.reduceOverNeighborExpr(
-                                                                Op::plus, b.at(vertex_f), b.lit(0.),
+    auto stencil_instantiation = b.build(
+        "nestedSimple",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(LocType::Cells,
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(
+                                   b.at(cell_f),
+                                   b.reduceOverNeighborExpr(
+                                       Op::plus,
+                                       b.reduceOverNeighborExpr(Op::plus, b.at(vertex_f), b.lit(0.),
                                                                 dawn::ast::LocationType::Edges,
                                                                 dawn::ast::LocationType::Vertices),
-                                                            Op::plus),
-                                               b.lit(0.), dawn::ast::LocationType::Cells,
-                                               dawn::ast::LocationType::Edges))))))));
+                                       b.lit(0.), dawn::ast::LocationType::Cells,
+                                       dawn::ast::LocationType::Edges))))))));
 
     std::ofstream of("generated/generated_NestedSimple.hpp");
     dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
@@ -340,7 +337,7 @@ int main() {
 
     // a nested reduction v->e->c, the edge field is also consumed "along the way"
     auto stencil_instantiation =
-        b.build("nested",
+        b.build("nestedWithField",
                 b.stencil(b.multistage(
                     dawn::iir::LoopOrderKind::Parallel,
                     b.stage(LocType::Cells,
@@ -386,27 +383,27 @@ int main() {
     //      - this IIR is not ok. The stage fixes the dense part of the sparse dimension, the
     //      correct type of the inner sparse dimension is {C, E->V}
     auto stencil_instantiation = b.build(
-        "nested",
+        "nestedWithSparse",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                           b.stmt(b.assignExpr(
-                               b.at(cell_f),
-                               b.reduceOverNeighborExpr(
-                                   Op::plus,
-                                   b.binaryExpr(
-                                       b.binaryExpr(b.at(edge_f), b.at(sparse_ce_f), Op::multiply),
-                                       b.reduceOverNeighborExpr(
-                                           Op::plus,
-                                           b.binaryExpr(b.at(vertex_f), b.at(sparse_ev_f),
-                                                        Op::multiply),
-                                           b.lit(0.), dawn::ast::LocationType::Edges,
-                                           dawn::ast::LocationType::Vertices),
-                                       Op::plus),
-                                   b.lit(0.), dawn::ast::LocationType::Cells,
-                                   dawn::ast::LocationType::Edges))))))));
+                b.doMethod(
+                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.stmt(b.assignExpr(
+                        b.at(cell_f),
+                        b.reduceOverNeighborExpr(
+                            Op::plus,
+                            b.binaryExpr(
+                                b.binaryExpr(b.at(edge_f), b.at(sparse_ce_f), Op::multiply),
+                                b.reduceOverNeighborExpr(
+                                    Op::plus,
+                                    b.binaryExpr(b.at(vertex_f), b.at(sparse_ev_f), Op::multiply),
+                                    b.lit(0.), dawn::ast::LocationType::Edges,
+                                    dawn::ast::LocationType::Vertices),
+                                Op::plus),
+                            b.lit(0.), dawn::ast::LocationType::Cells,
+                            dawn::ast::LocationType::Edges))))))));
 
     // Code generation deactivated for the reasons stated above
     // std::ofstream of("generated/generated_NestedSparse.hpp");

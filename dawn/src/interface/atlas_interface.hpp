@@ -103,7 +103,11 @@ private:
 };
 
 template <typename T>
-SparseDimension<T> sparseDimensionType(atlasTag);
+SparseDimension<T> sparseCellFieldType(atlasTag);
+template <typename T>
+SparseDimension<T> sparseEdgeFieldType(atlasTag);
+template <typename T>
+SparseDimension<T> sparseVertexFieldType(atlasTag);
 
 atlas::Mesh meshType(atlasTag);
 

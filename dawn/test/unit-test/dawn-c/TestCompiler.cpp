@@ -280,8 +280,7 @@ TEST(CompilerTest, DISABLED_NestedReduce) {
   using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
-  auto cell_f = b.field("cell_field", LocType::Cells);
-  auto edge_f = b.field("edge_field", LocType::Edges);
+  auto cell_f = b.field("cell_field", LocType::Cells);  
   auto vertex_f = b.field("vertex_field", LocType::Vertices);
 
   // a nested reduction v->e->c
