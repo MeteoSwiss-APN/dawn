@@ -66,22 +66,24 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
 
   auto [success, sir] = GTClang::run({dslFile, "-fno-codegen"}, flags);
 
-  // Serialize the SIR
-  writeSIR(sir);
+  if(sir.get()) {
+    // Serialize the SIR
+    writeSIR(sir);
 
-  // Use SIR to create context
-  createContext(sir);
+    // Use SIR to create context
+    createContext(sir);
 
-  // Lower to unoptimized IIR and serialize
-  writeIIR();
+    // Lower to unoptimized IIR and serialize
+    writeIIR();
 
-  if(success && maxLevel_ > 0) {
-    // Run parallelization passes
-    parallelize();
-    writeIIR(1);
+    if(success && maxLevel_ > 0) {
+      // Run parallelization passes
+      parallelize();
+      writeIIR(1);
 
-    // Run optimization passes
-    optimize();
+      // Run optimization passes
+      optimize();
+    }
   }
 }
 
