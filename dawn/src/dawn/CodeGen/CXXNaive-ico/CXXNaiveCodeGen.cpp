@@ -323,16 +323,16 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     // we currently want to reject stencils with sparse fields combined with nested reductions
     // step 1) lets figure out if there are sparse fields
-    bool hasDenseField = false;
+    bool hasSparseField = false;
     for(const auto& fieldIt : nonTempFields) {
       const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           fieldIt.second.field.getFieldDimensions().getHorizontalFieldDimension());
-      hasDenseField |= unstructuredDims.isSparse();
+      hasSparseField |= unstructuredDims.isSparse();
     }
     for(const auto& fieldIt : tempFields) {
       const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           fieldIt.second.field.getFieldDimensions().getHorizontalFieldDimension());
-      hasDenseField |= unstructuredDims.isSparse();
+      hasSparseField |= unstructuredDims.isSparse();
     }
     // step 2) lets figure out if there are (nested) reductions
     bool hasNestedReductions = false;
@@ -357,7 +357,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       }
     }
 
-    if(hasNestedReductions && hasDenseField) {
+    if(hasNestedReductions && hasSparseField) {
       dawn_unreachable("currently, nested reductions are only allowed if there are no sparse "
                        "dimensions, and vice versa!\n");
     }
