@@ -33,12 +33,14 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runIJTest(const std::string& filename, int nStencils, const std::vector<int>& fieldIDs) {
+  void runTest(const std::string& filename, int nStencils,
+               const std::vector<std::string>& fieldNames,
+               const std::vector<iir::Cache::CacheType>& cacheTypes,
+               const std::vector<iir::Cache::IOPolicy>& ioPolicies) {
     if(nStencils < 1)
       nStencils = 1;
 
     std::shared_ptr<iir::StencilInstantiation> instantiation;
-    //options_.ReportPassSetCaches = true;
     CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
 
     PassSetCaches pass(*context_);
@@ -48,20 +50,54 @@ protected:
     auto& stencils = instantiation->getStencils();
     ASSERT_EQ(stencils.size(), nStencils);
 
+    unsigned nMultiStages = fieldNames.size();
     for(int i = 0; i < nStencils; i++) {
       auto& multiStages = stencils[i]->getChildren();
-      unsigned field_id = fieldIDs[i];
+      ASSERT_EQ(multiStages.size(), nMultiStages);
+
+      int j = 0;
       for(const auto& multiStage : multiStages) {
-        ASSERT_TRUE(multiStage->isCached(field_id));
-        ASSERT_TRUE(multiStage->getCache(field_id).getType() == iir::Cache::CacheType::IJ);
-        ASSERT_TRUE(multiStage->getCache(field_id).getIOPolicy() == iir::Cache::IOPolicy::local);
+        int accessID = stencils[i]->getMetadata().getAccessIDFromName(fieldNames[j]);
+        ASSERT_TRUE(multiStage->isCached(accessID));
+        ASSERT_TRUE(multiStage->getCache(accessID).getType() == cacheTypes[j]);
+        ASSERT_TRUE(multiStage->getCache(accessID).getIOPolicy() == ioPolicies[j]);
+        j += 1;
       }
     }
   }
 };
 
-TEST_F(TestPassSetCaches, IJCacheTest1) { runIJTest("IJCacheTest01.iir", 1, {3}); }
+TEST_F(TestPassSetCaches, IJCacheTest1) {
+  runTest("IJCacheTest01.iir", 1, {"tmp"}, {iir::Cache::CacheType::IJ},
+          {iir::Cache::IOPolicy::local});
+}
 
-TEST_F(TestPassSetCaches, IJCacheTest2) { runIJTest("IJCacheTest02.iir", 1, {3}); }
+TEST_F(TestPassSetCaches, IJCacheTest2) {
+  runTest("IJCacheTest02.iir", 1, {"tmp"}, {iir::Cache::CacheType::IJ},
+          {iir::Cache::IOPolicy::local});
+}
+
+TEST_F(TestPassSetCaches, KCacheTest1) {
+  runTest("KCacheTest01.iir", 1, {"tmp"}, {iir::Cache::CacheType::K}, {iir::Cache::IOPolicy::fill});
+}
+
+TEST_F(TestPassSetCaches, KCacheTest1b) {
+  runTest("KCacheTest01b.iir", 1, {"tmp"}, {iir::Cache::CacheType::K},
+          {iir::Cache::IOPolicy::local});
+}
+
+TEST_F(TestPassSetCaches, KCacheTest2) {
+  runTest("KCacheTest02.iir", 1, {"tmp", "tmp"},
+          {iir::Cache::CacheType::K, iir::Cache::CacheType::K},
+          {iir::Cache::IOPolicy::fill_and_flush, iir::Cache::IOPolicy::fill});
+}
+
+// TODO: Refactor runTest to handle multiple fields per multistage...
+TEST_F(TestPassSetCaches, KCacheTest2b) {
+  runTest("KCacheTest02b.iir", 1, {"tmp", "b"},
+          {iir::Cache::CacheType::K, iir::Cache::CacheType::K},
+          {iir::Cache::IOPolicy::fill_and_flush, iir::Cache::IOPolicy::fill});
+}
+
 
 } // anonymous namespace
