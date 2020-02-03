@@ -47,7 +47,7 @@ int main() {
     for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
       int edgeIdx = mesh.cells().edge_connectivity()(iCell, jNbh);
       auto [x, y] = atlasToCartesianMapper.edgeMidpoint(mesh, edgeIdx);
-      sparseDim_v(level, iCell, jNbh) = x * x + y * y;
+      sparseDim_v(iCell, jNbh, level) = x * x + y * y;
     }
   }
 

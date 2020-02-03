@@ -582,7 +582,7 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
   for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
     cells_v(iCell, level) = 0;
     for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
-      sparseDim_v(level, iCell, jNbh) = 200;
+      sparseDim_v(iCell, jNbh, level) = 200;
     }
   }
 

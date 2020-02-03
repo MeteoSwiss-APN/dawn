@@ -89,10 +89,10 @@ template <typename T>
 class SparseDimension {
 public:
   T const& operator()(int elem_idx, int sparse_dim_idx, int level) const {
-    return sparse_dimension_(elem_idx, sparse_dim_idx, level);
+    return sparse_dimension_(elem_idx, level, sparse_dim_idx);
   }
   T& operator()(int elem_idx, int sparse_dim_idx, int level) {
-    return sparse_dimension_(elem_idx, sparse_dim_idx, level);
+    return sparse_dimension_(elem_idx, level, sparse_dim_idx);
   }
 
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)

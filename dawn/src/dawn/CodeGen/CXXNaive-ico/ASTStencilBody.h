@@ -40,7 +40,7 @@ protected:
   RangeToString offsetPrinter_;
   std::string denseArgName_ = "loc";
   std::string sparseArgName_ = "loc";
-  bool parendIsReduction_ = false;
+  bool parentIsReduction_ = false;
 
   /// The stencil function we are currently generating or NULL
   std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;

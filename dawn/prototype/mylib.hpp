@@ -348,10 +348,10 @@ class SparseData {
 public:
   SparseData(size_t num_k_levels, size_t dense_size, size_t sparse_size)
       : data_(num_k_levels, std::vector<std::vector<T>>(dense_size, std::vector<T>(sparse_size))) {}
-  T& operator()(int k_level, const O& elem, size_t sparse_idx) {
+  T& operator()(const O& elem, size_t sparse_idx, size_t k_level) {
     return data_[k_level][elem.id()][sparse_idx];
   }
-  T const& operator()(int k_level, const O& elem, size_t sparse_idx) const {
+  T const& operator()(const O& elem, size_t sparse_idx, size_t k_level) const {
     return data_[k_level][elem.id()][sparse_idx];
   }
   int k_size() const { return data_.size(); }

@@ -80,7 +80,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   bool hasWeights = expr->getWeights().has_value();
 
   std::string sigArg =
-      (parendIsReduction_)
+      (parentIsReduction_)
           ? "red_loc"
           : "loc"; // does stage or parent reduceOverNeighborExpr determine argname?
   ss_ << std::string(indent_, ' ')
@@ -99,9 +99,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   denseArgName_ = "red_loc";
   sparseArgName_ = "loc";
   // indicate if parent of subexpr is reduction
-  parendIsReduction_ = true;
+  parentIsReduction_ = true;
   expr->getRhs()->accept(*this);
-  parendIsReduction_ = false;
+  parentIsReduction_ = false;
   // "pop" argName
   denseArgName_ = argName;
   ss_ << ";\n";
@@ -261,9 +261,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
           << "k+" << expr->getOffset().verticalOffset() << ")";
     } else {
       ss_ << "m_" << getName(expr) << "("
-          << "k+" << expr->getOffset().verticalOffset() << ", deref(LibTag{}, " << sparseArgName_
-          << "),"
-          << "m_sparse_dimension_idx)";
+          << "deref(LibTag{}, " << sparseArgName_ << "),"
+          << "m_sparse_dimension_idx, "
+          << "k+" << expr->getOffset().verticalOffset() << ")";
     }
   }
 }

@@ -18,10 +18,6 @@ int main() {
     faces(f, level) = 0;
   }
 
-  for(auto& e : mesh.edges()) {
-    edges(e, level) = 300.;
-  }
-
   for(auto& n : mesh.vertices()) {
     nodes(n, level) = 1.;
   }

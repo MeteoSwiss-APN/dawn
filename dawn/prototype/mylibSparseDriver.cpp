@@ -25,7 +25,7 @@ int main() {
     edges(e, level) = 1.;
   }
 
-  // init sparse simensions
+  // init sparse dimensions
   for(auto& f : mesh.faces()) {
     int jNbh = 0;
     for(auto& e : f.edges()) {
@@ -35,7 +35,7 @@ int main() {
       double y1 = e->vertex(1).y();
       double xm = 0.5 * (x0 + x1);
       double ym = 0.5 * (y0 + y1);
-      facesSparse(level, f, jNbh++) = xm * xm + ym * ym;
+      facesSparse(f, jNbh++, level) = xm * xm + ym * ym;
     }
   }
 

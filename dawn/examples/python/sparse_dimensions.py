@@ -36,7 +36,7 @@ def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
         SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    # create the out = in[i+1] statement
+    # create the out = reduce(sparse_CE * in) statement
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
@@ -67,11 +67,11 @@ def main(args: argparse.Namespace):
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(
-                        SIR.LocationType.Value('Edge'), 1)),
+                        [SIR.LocationType.Value('Edge')], 1)),
                     sir_utils.make_field("sparse_CE", sir_utils.make_field_dimensions_unstructured(
-                        SIR.LocationType.Value('Cell'), 1, [SIR.LocationType.Value('Edge')])),
+                        [SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')], 1)),
                     sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(
-                        SIR.LocationType.Value('Cell'), 1))
+                        [SIR.LocationType.Value('Cell')], 1))
                 ],
             ),
         ],
