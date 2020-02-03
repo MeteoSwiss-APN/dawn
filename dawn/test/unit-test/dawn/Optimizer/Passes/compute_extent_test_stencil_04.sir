@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "compute_extent_test_stencil_04.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 50
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 7
                    }
                   },
                   "op": "=",
@@ -105,14 +106,14 @@
                        "Column": 68
                       },
                       "data": {},
-                      "ID": 6
+                      "ID": 4
                      }
                     },
                     "loc": {
                      "Line": 28,
                      "Column": 57
                     },
-                    "ID": 7
+                    "ID": 6
                    }
                   },
                   "loc": {
@@ -192,7 +193,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 12
+                    "ID": 15
                    }
                   },
                   "op": "=",
@@ -250,14 +251,14 @@
                        "Column": 28
                       },
                       "data": {},
-                      "ID": 14
+                      "ID": 12
                      }
                     },
                     "loc": {
                      "Line": 30,
                      "Column": 14
                     },
-                    "ID": 15
+                    "ID": 14
                    }
                   },
                   "loc": {
@@ -300,7 +301,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 18
+                    "ID": 21
                    }
                   },
                   "op": "=",
@@ -358,14 +359,14 @@
                        "Column": 28
                       },
                       "data": {},
-                      "ID": 20
+                      "ID": 18
                      }
                     },
                     "loc": {
                      "Line": 31,
                      "Column": 14
                     },
-                    "ID": 21
+                    "ID": 20
                    }
                   },
                   "loc": {
@@ -445,7 +446,7 @@
                      "Column": 51
                     },
                     "data": {},
-                    "ID": 26
+                    "ID": 29
                    }
                   },
                   "op": "=",
@@ -503,14 +504,14 @@
                        "Column": 72
                       },
                       "data": {},
-                      "ID": 28
+                      "ID": 26
                      }
                     },
                     "loc": {
                      "Line": 33,
                      "Column": 58
                     },
-                    "ID": 29
+                    "ID": 28
                    }
                   },
                   "loc": {
@@ -590,7 +591,7 @@
                      "Column": 50
                     },
                     "data": {},
-                    "ID": 34
+                    "ID": 37
                    }
                   },
                   "op": "=",
@@ -648,14 +649,14 @@
                        "Column": 70
                       },
                       "data": {},
-                      "ID": 36
+                      "ID": 34
                      }
                     },
                     "loc": {
                      "Line": 34,
                      "Column": 56
                     },
-                    "ID": 37
+                    "ID": 36
                    }
                   },
                   "loc": {
@@ -717,12 +718,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -731,12 +733,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp0",
@@ -745,12 +748,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp1",
@@ -759,12 +763,13 @@
       "Column": 13
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp2",
@@ -773,12 +778,13 @@
       "Column": 19
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp3",
@@ -787,12 +793,13 @@
       "Column": 25
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

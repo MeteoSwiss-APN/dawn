@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_field_access_interval_02.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 53
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 59
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 23
                    }
                   },
                   "op": "=",
@@ -190,7 +191,7 @@
                                "Column": 13
                               },
                               "data": {},
-                              "ID": 11
+                              "ID": 17
                              }
                             },
                             "op": "+",
@@ -218,14 +219,14 @@
                                "Column": 24
                               },
                               "data": {},
-                              "ID": 12
+                              "ID": 16
                              }
                             },
                             "loc": {
                              "Line": 27,
                              "Column": 13
                             },
-                            "ID": 13
+                            "ID": 18
                            }
                           },
                           "op": "+",
@@ -253,14 +254,14 @@
                              "Column": 35
                             },
                             "data": {},
-                            "ID": 14
+                            "ID": 15
                            }
                           },
                           "loc": {
                            "Line": 27,
                            "Column": 13
                           },
-                          "ID": 15
+                          "ID": 19
                          }
                         },
                         "op": "+",
@@ -288,14 +289,14 @@
                            "Column": 46
                           },
                           "data": {},
-                          "ID": 16
+                          "ID": 14
                          }
                         },
                         "loc": {
                          "Line": 27,
                          "Column": 13
                         },
-                        "ID": 17
+                        "ID": 20
                        }
                       },
                       "op": "-",
@@ -312,7 +313,7 @@
                            "Column": 57
                           },
                           "data": {},
-                          "ID": 18
+                          "ID": 12
                          }
                         },
                         "op": "*",
@@ -337,14 +338,14 @@
                            "Column": 63
                           },
                           "data": {},
-                          "ID": 19
+                          "ID": 11
                          }
                         },
                         "loc": {
                          "Line": 27,
                          "Column": 57
                         },
-                        "ID": 20
+                        "ID": 13
                        }
                       },
                       "loc": {
@@ -376,14 +377,14 @@
                        "Column": 67
                       },
                       "data": {},
-                      "ID": 22
+                      "ID": 10
                      }
                     },
                     "loc": {
                      "Line": 27,
                      "Column": 13
                     },
-                    "ID": 23
+                    "ID": 22
                    }
                   },
                   "loc": {
@@ -426,7 +427,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 26
+                    "ID": 37
                    }
                   },
                   "op": "=",
@@ -462,7 +463,7 @@
                              "Column": 13
                             },
                             "data": {},
-                            "ID": 27
+                            "ID": 32
                            }
                           },
                           "op": "+",
@@ -490,14 +491,14 @@
                              "Column": 26
                             },
                             "data": {},
-                            "ID": 28
+                            "ID": 31
                            }
                           },
                           "loc": {
                            "Line": 28,
                            "Column": 13
                           },
-                          "ID": 29
+                          "ID": 33
                          }
                         },
                         "op": "+",
@@ -532,7 +533,7 @@
                          "Line": 28,
                          "Column": 13
                         },
-                        "ID": 31
+                        "ID": 34
                        }
                       },
                       "op": "+",
@@ -560,14 +561,14 @@
                          "Column": 52
                         },
                         "data": {},
-                        "ID": 32
+                        "ID": 29
                        }
                       },
                       "loc": {
                        "Line": 28,
                        "Column": 13
                       },
-                      "ID": 33
+                      "ID": 35
                      }
                     },
                     "op": "-",
@@ -584,7 +585,7 @@
                          "Column": 65
                         },
                         "data": {},
-                        "ID": 34
+                        "ID": 27
                        }
                       },
                       "op": "*",
@@ -609,21 +610,21 @@
                          "Column": 71
                         },
                         "data": {},
-                        "ID": 35
+                        "ID": 26
                        }
                       },
                       "loc": {
                        "Line": 28,
                        "Column": 65
                       },
-                      "ID": 36
+                      "ID": 28
                      }
                     },
                     "loc": {
                      "Line": 28,
                      "Column": 13
                     },
-                    "ID": 37
+                    "ID": 36
                    }
                   },
                   "loc": {
@@ -685,12 +686,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -699,12 +701,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "coeff",
@@ -713,12 +716,13 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "lap",
@@ -727,12 +731,13 @@
       "Column": 26
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

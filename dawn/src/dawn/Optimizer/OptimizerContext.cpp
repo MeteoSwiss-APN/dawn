@@ -460,9 +460,9 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = metadata_.addTmpField(iir::FieldAccessType::StencilTemporary,
-                                         stencil.Fields[stencilArgIdx]->Name,
-                                         sir::FieldDimension(ast::cartesian, {true, true, true}));
+        AccessID = metadata_.addTmpField(
+            iir::FieldAccessType::StencilTemporary, stencil.Fields[stencilArgIdx]->Name,
+            sir::FieldDimensions(stencil.Fields[stencilArgIdx]->Dimensions));
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
@@ -599,6 +599,8 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
+  if(SIR)
+    fillIIR();
 }
 bool OptimizerContext::fillIIRFromSIR(
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
@@ -615,7 +617,7 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
                                           : iir::FieldAccessType::APIField),
-                      field->Name, field->fieldDimensions, field->locationType);
+                      field->Name, sir::FieldDimensions(field->Dimensions));
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),

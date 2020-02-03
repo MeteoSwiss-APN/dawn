@@ -20,6 +20,9 @@ import unittest
 
 from dawn4py.serialization.error import SIRError
 from dawn4py.serialization.utils import *
+from dawn4py.serialization.SIR.SIR_pb2 import *
+from dawn4py.serialization.SIR.statements_pb2 import *
+from dawn4py.serialization.SIR.enums_pb2 import *
 
 
 class ExprTestBase(unittest.TestCase):
@@ -108,12 +111,51 @@ class Testmake_type(unittest.TestCase):
 
 
 class TestMakeField(unittest.TestCase):
-    def test_make_field(self):
-        field = make_field("foo")
+    def test_make_field_cartesian(self):
+        field = make_field("foo", make_field_dimensions_cartesian())
         self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i, 1)
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j, 1)
+        self.assertEqual(field.field_dimensions.mask_k, 1)
+
+    def test_make_field_cartesian_mask(self):
+        field = make_field("foo", make_field_dimensions_cartesian([1, 0, 1]))
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i, 1)
+        self.assertEqual(field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j, 0)
+        self.assertEqual(field.field_dimensions.mask_k, 1)
+
+    def test_make_field_unstructured(self):
+        field = make_field("foo", make_field_dimensions_unstructured(LocationType.Value('Edge'), 1))
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type, \
+                         LocationType.Value('Edge'))
+        self.assertEqual(field.field_dimensions.mask_k, 1)
+
+    def test_make_field_unstructured_sparse(self):
+        field = make_field(
+                    "foo",
+                    make_field_dimensions_unstructured(
+                        LocationType.Value('Edge'),
+                        0,
+                        sparse_part=[
+                                        LocationType.Value('Edge'),
+                                        LocationType.Value('Cell'),
+                                        LocationType.Value('Vertex')
+                                    ]))
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type,
+                         LocationType.Value('Edge'))
+        self.assertEqual(field.field_dimensions.mask_k, 0)
+        self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.sparse_part,
+                         [
+                            LocationType.Value('Edge'),
+                            LocationType.Value('Cell'),
+                            LocationType.Value('Vertex')
+                         ])
 
     def test_make_field_temporary(self):
-        field = make_field("foo", True)
+        field = make_field("foo", make_field_dimensions_cartesian(), True)
         self.assertEqual(field.name, "foo")
         self.assertEqual(field.is_temporary, True)
 
@@ -302,6 +344,23 @@ class TestExpr(ExprTestBase):
         expr = make_literal_access_expr("1.235", BuiltinType.Float)
         self.assertEqual(expr.value, "1.235")
         self.assertEqual(expr.type.type_id, BuiltinType.Float)
+
+    def test_reduction_over_neighbor_expr(self):
+        expr = make_reduction_over_neighbor_expr(
+                    "+",
+                    rhs = make_field_access_expr("cell_field"),
+                    init = make_literal_access_expr("1.0", BuiltinType.Float),
+                    lhs_location = LocationType.Value('Edge'),
+                    rhs_location = LocationType.Value('Cell'),
+                    weights = make_weights([0.1, 0.2])
+                )
+        self.assertEqual(expr.op, "+")
+        self.assertEqual(expr.rhs, make_expr(make_field_access_expr("cell_field")))
+        self.assertEqual(expr.init, make_expr(make_literal_access_expr("1.0", BuiltinType.Float)))
+        self.assertEqual(expr.lhs_location, LocationType.Value('Edge'))
+        self.assertEqual(expr.rhs_location, LocationType.Value('Cell'))
+        for weight_a, weight_b in zip(expr.weights, make_weights([0.1, 0.2])):
+            self.assertEqual(weight_a, weight_b)
 
 
 class TestAST(StmtTestBase):

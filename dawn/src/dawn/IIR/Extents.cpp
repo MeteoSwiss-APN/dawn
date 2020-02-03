@@ -227,7 +227,7 @@ ast::GridType HorizontalExtent::getType() const {
   if(dynamic_cast<CartesianExtent*>(impl_.get())) {
     return ast::GridType::Cartesian;
   } else {
-    return ast::GridType::Triangular;
+    return ast::GridType::Unstructured;
   }
 }
 

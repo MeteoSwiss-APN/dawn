@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_field_access_interval_04.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 54
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 58
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 55
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 13
                    }
                   },
                   "op": "=",
@@ -204,14 +205,14 @@
                        "Column": 73
                       },
                       "data": {},
-                      "ID": 12
+                      "ID": 10
                      }
                     },
                     "loc": {
                      "Line": 27,
                      "Column": 62
                     },
-                    "ID": 13
+                    "ID": 12
                    }
                   },
                   "loc": {
@@ -291,7 +292,7 @@
                      "Column": 52
                     },
                     "data": {},
-                    "ID": 18
+                    "ID": 19
                    }
                   },
                   "op": "=",
@@ -316,7 +317,7 @@
                      "Column": 59
                     },
                     "data": {},
-                    "ID": 19
+                    "ID": 18
                    }
                   },
                   "loc": {
@@ -378,12 +379,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out1",
@@ -392,12 +394,13 @@
       "Column": 15
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out2",
@@ -406,12 +409,13 @@
       "Column": 21
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "u",
@@ -420,12 +424,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

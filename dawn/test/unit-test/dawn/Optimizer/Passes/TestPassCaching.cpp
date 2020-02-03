@@ -53,11 +53,10 @@ TEST(TestCaching, test_global_iteration_space_01) {
   auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -100,11 +99,10 @@ TEST(TestCaching, test_global_iteration_space_02) {
   auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -152,7 +150,7 @@ TEST(TestCaching, test_global_iteration_space_03) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -192,11 +190,10 @@ TEST(TestCaching, test_global_iteration_space_04) {
   auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -236,11 +233,10 @@ TEST(TestCaching, test_global_iteration_space_05) {
   auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 

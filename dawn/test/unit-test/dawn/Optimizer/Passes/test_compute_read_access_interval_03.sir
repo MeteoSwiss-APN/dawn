@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_compute_read_access_interval_03.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 50
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 56
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 50
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 11
                    }
                   },
                   "op": "=",
@@ -177,7 +178,7 @@
                      "Column": 54
                     },
                     "data": {},
-                    "ID": 11
+                    "ID": 10
                    }
                   },
                   "loc": {
@@ -257,7 +258,7 @@
                      "Column": 46
                     },
                     "data": {},
-                    "ID": 16
+                    "ID": 21
                    }
                   },
                   "op": "=",
@@ -286,7 +287,7 @@
                          "Column": 53
                         },
                         "data": {},
-                        "ID": 17
+                        "ID": 18
                        }
                       },
                       "op": "+",
@@ -311,7 +312,7 @@
                          "Column": 64
                         },
                         "data": {},
-                        "ID": 18
+                        "ID": 17
                        }
                       },
                       "loc": {
@@ -343,14 +344,14 @@
                        "Column": 69
                       },
                       "data": {},
-                      "ID": 20
+                      "ID": 16
                      }
                     },
                     "loc": {
                      "Line": 32,
                      "Column": 52
                     },
-                    "ID": 21
+                    "ID": 20
                    }
                   },
                   "loc": {
@@ -430,7 +431,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 26
+                    "ID": 29
                    }
                   },
                   "op": "=",
@@ -472,14 +473,14 @@
                        "Column": 17
                       },
                       "data": {},
-                      "ID": 28
+                      "ID": 26
                      }
                     },
                     "loc": {
                      "Line": 35,
                      "Column": 13
                     },
-                    "ID": 29
+                    "ID": 28
                    }
                   },
                   "loc": {
@@ -522,7 +523,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 32
+                    "ID": 33
                    }
                   },
                   "op": "=",
@@ -547,7 +548,7 @@
                      "Column": 11
                     },
                     "data": {},
-                    "ID": 33
+                    "ID": 32
                    }
                   },
                   "loc": {
@@ -609,12 +610,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "b",
@@ -623,12 +625,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "c",
@@ -637,12 +640,13 @@
       "Column": 17
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp",
@@ -651,12 +655,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

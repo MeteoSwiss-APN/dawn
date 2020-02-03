@@ -49,9 +49,5 @@ bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
   return ast::evalExprAsBoolean(expr, result, variableMap);
 }
 
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast) {
-  return ast::getFieldFromStencilAST(ast);
-}
-
 } // namespace iir
 } // namespace dawn

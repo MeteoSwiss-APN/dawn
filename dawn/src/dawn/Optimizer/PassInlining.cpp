@@ -147,8 +147,21 @@ public:
       appendNewStatement(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
+
+      // First figure out the dimensions
+      // TODO sparse_dim: Should be supported: should use same code used for checks on correct
+      // dimensionality in statements.
+      if(instantiation_->getIIR()->getGridType() != ast::GridType::Cartesian)
+        dawn_unreachable(
+            "Currently promotion to temporary field is not supported for unstructured grids.");
+      sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                                     true};
+      // Register the temporary in the metadata
       metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary, AccessIDOfCaller_,
                                    returnFieldName);
+      metadata_.setFieldDimensions(AccessIDOfCaller_, std::move(fieldDims));
+
+      // Update the access expression with the access id of the field
       std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
           ->getData<iir::IIRAccessExprData>()
           .AccessID = std::make_optional(AccessIDOfCaller_);

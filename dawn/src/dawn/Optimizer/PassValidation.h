@@ -15,8 +15,11 @@
 #ifndef DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
 #define DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
 
-#include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Optimizer/Pass.h"
+#include "dawn/Support/Logging.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 
@@ -25,12 +28,19 @@ namespace dawn {
 /// @ingroup optimizer
 ///
 /// This pass is read-only and is hence not in the debug-group
-class PassIntegrityCheck : public Pass {
+class PassValidation : public Pass {
 public:
-  PassIntegrityCheck(OptimizerContext &context);
+  PassValidation(OptimizerContext& context);
 
-  /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation> &stencilInstantiation) override;
+  /// @brief Pass run implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) override;
+
+  /// @brief IIR validation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+           const std::string& description);
+
+  /// @brief SIR validation
+  bool run(const std::shared_ptr<dawn::SIR>& sir);
 };
 
 } // namespace dawn

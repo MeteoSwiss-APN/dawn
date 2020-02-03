@@ -29,12 +29,9 @@ using namespace dawn;
 namespace {
 
 class TestComputeMaximumExtent : public ::testing::Test {
-  std::unique_ptr<dawn::Options> compileOptions_;
-
   dawn::DawnCompiler compiler_;
 
 protected:
-  TestComputeMaximumExtent() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
   std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
