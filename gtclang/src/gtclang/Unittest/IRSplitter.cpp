@@ -117,8 +117,7 @@ void IRSplitter::generate(const std::string& outFile) {
 }
 
 void IRSplitter::createContext(const std::shared_ptr<dawn::SIR>& sir) {
-  dawn::OptimizerContext::OptimizerContextOptions options;
-  context_ = std::make_unique<dawn::OptimizerContext>(diag_, options, sir);
+  context_ = std::make_unique<dawn::OptimizerContext>(diag_, options_, sir);
 }
 
 void IRSplitter::parallelize() {
@@ -179,9 +178,9 @@ void IRSplitter::optimize() {
   //  writeIIR(level);
 
   // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
-  //  setCaches();
-  //  level += 1;
-  //  writeIIR(level);
+    setCaches();
+    level += 1;
+    writeIIR(level);
 
   // Unsure whether this is ON by default -- probably only for CudaCodeGen
   //  setBlockSize();
@@ -258,6 +257,7 @@ void IRSplitter::setNonTempCaches() {
 }
 
 void IRSplitter::setCaches() {
+  options.ReportPassSetCaches = true;
   for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
     runPass<dawn::PassSetCaches>(name, instantiation);
   }

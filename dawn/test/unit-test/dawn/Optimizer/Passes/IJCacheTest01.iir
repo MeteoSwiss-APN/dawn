@@ -120,7 +120,7 @@
                    "data": {
                     "accessID": 3
                    },
-                   "ID": 23
+                   "ID": 87
                   }
                  },
                  "op": "=",
@@ -147,14 +147,14 @@
                    "data": {
                     "accessID": 1
                    },
-                   "ID": 22
+                   "ID": 86
                   }
                  },
                  "loc": {
                   "Line": 30,
                   "Column": 7
                  },
-                 "ID": 24
+                 "ID": 88
                 }
                },
                "loc": {
@@ -183,9 +183,35 @@
                  }
                 }
                },
-               "ID": 21
+               "ID": 85
               }
-             },
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 84
+           }
+          },
+          "doMethodID": 4,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 29
+       },
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
              {
               "expr_stmt": {
                "expr": {
@@ -213,7 +239,7 @@
                    "data": {
                     "accessID": 2
                    },
-                   "ID": 27
+                   "ID": 92
                   }
                  },
                  "op": "=",
@@ -243,14 +269,14 @@
                    "data": {
                     "accessID": 3
                    },
-                   "ID": 26
+                   "ID": 91
                   }
                  },
                  "loc": {
                   "Line": 31,
                   "Column": 7
                  },
-                 "ID": 28
+                 "ID": 93
                 }
                },
                "loc": {
@@ -288,7 +314,7 @@
                  }
                 }
                },
-               "ID": 25
+               "ID": 90
               }
              }
             ],
@@ -297,10 +323,10 @@
              "Column": -1
             },
             "data": {},
-            "ID": 20
+            "ID": 89
            }
           },
-          "doMethodID": 3,
+          "doMethodID": 5,
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -309,11 +335,11 @@
           }
          }
         ],
-        "stageID": 18
+        "stageID": 31
        }
       ],
-      "loopOrder": "Forward",
-      "multiStageID": 17,
+      "loopOrder": "Parallel",
+      "multiStageID": 43,
       "Caches": {}
      }
     ],
@@ -345,5 +371,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassSetCaches/IJCacheTest01.cpp"
+ "filename": "PassSetCaches/IJCacheTest01.cpp"
 }

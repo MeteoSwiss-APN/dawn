@@ -31,6 +31,7 @@ namespace gtclang {
 class IRSplitter : dawn::NonCopyable {
   std::unique_ptr<dawn::OptimizerContext> context_;
   dawn::DiagnosticsEngine diag_;
+  dawn::OptimizerContext::OptimizerContextOptions options_;
   std::string filePrefix_;
   unsigned maxLevel_;
 
