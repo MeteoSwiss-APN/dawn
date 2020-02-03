@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "globals_opt_away.cpp",
+ "filename": "./globals_opt_away.cpp",
  "stencils": [
   {
    "name": "Test",

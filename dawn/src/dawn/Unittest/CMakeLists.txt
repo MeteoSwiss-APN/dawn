@@ -13,8 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnUnittest
-  CodeDumper.cpp
-  CodeDumper.h
+  CompilerUtil.cpp
+  CompilerUtil.h
   IIRBuilder.h
   IIRBuilder.cpp
   UnittestLogger.cpp
@@ -22,4 +22,4 @@ add_library(DawnUnittest
 )
 
 target_add_dawn_standard_props(DawnUnittest)
-target_link_libraries(DawnUnittest PUBLIC DawnSupport DawnIIR DawnOptimizer DawnValidator DawnCodeGen)
+target_link_libraries(DawnUnittest PUBLIC DawnCompiler DawnSupport DawnIIR DawnOptimizer DawnValidator DawnCodeGen)
