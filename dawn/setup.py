@@ -62,7 +62,7 @@ class CMakeBuild(build_ext):
         if cmake_version < "3.13.0":
             raise RuntimeError("CMake >= 3.13.0 is required")
 
-        # Check if dawn was already installed
+        # Check if there is a build directory
         dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
         installed = False
         try:
