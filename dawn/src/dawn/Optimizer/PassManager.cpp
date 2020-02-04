@@ -60,15 +60,15 @@ bool PassManager::runPassOnStencilInstantiation(
                             "_Log.json");
   }
 
-  // Run validation pass after each optimization pass
-  PassValidation validationPass(context);
-  validationPass.run(instantiation, "for pass " + pass->getName());
+  //   // Run validation pass after each optimization pass
+  //   PassValidation validationPass(context);
+  //   validationPass.run(instantiation, "for pass " + pass->getName());
 
-#ifndef NDEBUG
-  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
-    DAWN_ASSERT(stencil->compareDerivedInfo());
-  }
-#endif
+  // #ifndef NDEBUG
+  //   for(const auto& stencil : instantiation->getIIR()->getChildren()) {
+  //     DAWN_ASSERT(stencil->compareDerivedInfo());
+  //   }
+  // #endif
 
   passCounter_[pass->getName()]++;
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
