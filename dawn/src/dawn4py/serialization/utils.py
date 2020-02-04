@@ -232,8 +232,8 @@ def make_field(
     """ Create a Field
 
     :param name:         Name of the field
-    :param is_temporary: Is it a temporary field?
     :param field_dimensions:   dimensions of the field (use make_field_dimensions_*)
+    :param is_temporary: Is it a temporary field?
     """
 
     field = Field()
