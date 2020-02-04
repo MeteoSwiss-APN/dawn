@@ -19,6 +19,7 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
+#include "dawn/IIR/LocalVariable.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
@@ -350,6 +351,10 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
+  void addAccessIDToLocalVariableDataPair(int accessID, LocalVariableData&& data);
+  iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID);
+  const iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID) const;
+
   dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
 
 private:
@@ -389,6 +394,9 @@ private:
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
       boundaryConditionToExtentsMap_;
+
+  /// Map from AccessID (of a local variable) to the data of such variable.
+  std::unordered_map<int, iir::LocalVariableData> accessIDToLocalVariableDataMap_;
 
   SourceLocation stencilLocation_;
   std::string stencilName_;

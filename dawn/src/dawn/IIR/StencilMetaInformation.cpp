@@ -292,6 +292,8 @@ int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<Var
   }
 
   addAccessIDNamePair(accessID, globalName);
+  // Add empty data object for local variable
+  addAccessIDToLocalVariableDataPair(accessID, LocalVariableData{});
 
   DAWN_ASSERT(!stmt->getData<iir::VarDeclStmtData>().AccessID);
   stmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
@@ -529,6 +531,25 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 void StencilMetaInformation::addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
                                                 int stencilID) {
   StencilIDToStencilCallMap_.add(stencilID, stmt);
+}
+
+void StencilMetaInformation::addAccessIDToLocalVariableDataPair(int accessID,
+                                                                LocalVariableData&& data) {
+  DAWN_ASSERT(isAccessType(FieldAccessType::LocalVariable, accessID));
+  accessIDToLocalVariableDataMap_.emplace(accessID, std::move(data));
+}
+
+iir::LocalVariableData& StencilMetaInformation::getLocalVariableDataFromAccessID(int accessID) {
+  DAWN_ASSERT(isAccessType(FieldAccessType::LocalVariable, accessID));
+  DAWN_ASSERT(accessIDToLocalVariableDataMap_.count(accessID));
+  return accessIDToLocalVariableDataMap_.at(accessID);
+}
+
+const iir::LocalVariableData&
+StencilMetaInformation::getLocalVariableDataFromAccessID(int accessID) const {
+  DAWN_ASSERT(isAccessType(FieldAccessType::LocalVariable, accessID));
+  DAWN_ASSERT(accessIDToLocalVariableDataMap_.count(accessID));
+  return accessIDToLocalVariableDataMap_.at(accessID);
 }
 
 } // namespace iir
