@@ -33,10 +33,10 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runTest(const std::string& filename, int nStencils,
-               const std::vector<std::string>& fieldNames,
-               const std::vector<iir::Cache::CacheType>& cacheTypes,
-               const std::vector<iir::Cache::IOPolicy>& ioPolicies) {
+  void runTest(const std::string& filename, int nStencils, int nMultiStages,
+               const std::vector<std::vector<std::string>>& fieldNames,
+               const std::vector<std::vector<iir::Cache::CacheType>>& cacheTypes,
+               const std::vector<std::vector<iir::Cache::IOPolicy>>& ioPolicies) {
     if(nStencils < 1)
       nStencils = 1;
 
@@ -50,17 +50,19 @@ protected:
     auto& stencils = instantiation->getStencils();
     ASSERT_EQ(stencils.size(), nStencils);
 
-    unsigned nMultiStages = fieldNames.size();
-    for(int i = 0; i < nStencils; i++) {
+    for(int i = 0; i < nStencils; ++i) {
       auto& multiStages = stencils[i]->getChildren();
       ASSERT_EQ(multiStages.size(), nMultiStages);
 
       int j = 0;
       for(const auto& multiStage : multiStages) {
-        int accessID = stencils[i]->getMetadata().getAccessIDFromName(fieldNames[j]);
-        ASSERT_TRUE(multiStage->isCached(accessID));
-        ASSERT_TRUE(multiStage->getCache(accessID).getType() == cacheTypes[j]);
-        ASSERT_TRUE(multiStage->getCache(accessID).getIOPolicy() == ioPolicies[j]);
+        unsigned nFields = fieldNames[j].size();
+        for(int k = 0; k < nFields; ++k) {
+            int accessID = stencils[i]->getMetadata().getAccessIDFromName(fieldNames[j][k]);
+            ASSERT_TRUE(multiStage->isCached(accessID));
+            ASSERT_TRUE(multiStage->getCache(accessID).getType() == cacheTypes[j][k]);
+            ASSERT_TRUE(multiStage->getCache(accessID).getIOPolicy() == ioPolicies[j][k]);
+        }
         j += 1;
       }
     }
@@ -68,35 +70,34 @@ protected:
 };
 
 TEST_F(TestPassSetCaches, IJCacheTest1) {
-  runTest("IJCacheTest01.iir", 1, {"tmp"}, {iir::Cache::CacheType::IJ},
-          {iir::Cache::IOPolicy::local});
+  runTest("IJCacheTest01.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
+          {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, IJCacheTest2) {
-  runTest("IJCacheTest02.iir", 1, {"tmp"}, {iir::Cache::CacheType::IJ},
-          {iir::Cache::IOPolicy::local});
+  runTest("IJCacheTest02.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
+          {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1) {
-  runTest("KCacheTest01.iir", 1, {"tmp"}, {iir::Cache::CacheType::K}, {iir::Cache::IOPolicy::fill});
+  runTest("KCacheTest01.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}}, {{iir::Cache::IOPolicy::fill}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1b) {
-  runTest("KCacheTest01b.iir", 1, {"tmp"}, {iir::Cache::CacheType::K},
-          {iir::Cache::IOPolicy::local});
+  runTest("KCacheTest01b.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
+          {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest2) {
-  runTest("KCacheTest02.iir", 1, {"tmp", "tmp"},
-          {iir::Cache::CacheType::K, iir::Cache::CacheType::K},
-          {iir::Cache::IOPolicy::fill_and_flush, iir::Cache::IOPolicy::fill});
+  runTest("KCacheTest02.iir", 1, 2, {{"tmp"}, {"tmp"}},
+          {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K}},
+          {{iir::Cache::IOPolicy::fill_and_flush}, {iir::Cache::IOPolicy::fill}});
 }
 
-// TODO: Refactor runTest to handle multiple fields per multistage...
 TEST_F(TestPassSetCaches, KCacheTest2b) {
-  runTest("KCacheTest02b.iir", 1, {"tmp", "b"},
-          {iir::Cache::CacheType::K, iir::Cache::CacheType::K},
-          {iir::Cache::IOPolicy::fill_and_flush, iir::Cache::IOPolicy::fill});
+  runTest("KCacheTest02b.iir", 1, 2, {{"tmp"}, {"b", "tmp"}},
+          {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K, iir::Cache::CacheType::K}},
+          {{iir::Cache::IOPolicy::fill_and_flush}, {iir::Cache::IOPolicy::fill, iir::Cache::IOPolicy::bpfill}});
 }
 
 
