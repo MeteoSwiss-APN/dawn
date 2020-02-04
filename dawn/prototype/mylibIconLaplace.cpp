@@ -121,7 +121,7 @@ int main() {
   int w = 10;
   int k_size = 1;
   const int level = 0;
-  mylib::Grid mesh{w, w, true};
+  mylib::Grid mesh{w, w, true, M_PI, M_PI};
 
   const int edgesPerVertex = 6;
   const int edgesPerCell = 3;
@@ -204,6 +204,7 @@ int main() {
   //===------------------------------------------------------------------------------------------===//
 
   // init zero and test function
+  FILE* fp = fopen("laplICONmylib_in.txt", "w+");
   for(const auto& e : mesh.edges()) {
     double x0 = e.get().vertex(0).x();
     double y0 = e.get().vertex(0).y();
@@ -213,7 +214,9 @@ int main() {
     double ym = 0.5 * (y0 + y1);
     vec(e.get(), level) = sin(xm) * sin(ym);
     nabla2_vec(e.get(), level) = 0;
+    fprintf(fp, "%f %f %f\n", xm, ym, sin(xm) * sin(ym));
   }
+  fclose(fp);
 
   for(const auto& v : mesh.vertices()) {
     rot_vec(v, level) = 0;
@@ -340,5 +343,5 @@ int main() {
   //===------------------------------------------------------------------------------------------===//
   // dumping a hopefully nice colorful laplacian
   //===------------------------------------------------------------------------------------------===//
-  dumpEdgeField("laplICONmylib.txt", mesh, nabla2_vec, level);
+  dumpEdgeField("laplICONmylib_out.txt", mesh, nabla2_vec, level);
 }

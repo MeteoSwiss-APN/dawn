@@ -22,10 +22,10 @@ enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 class Vertex {
 public:
   Vertex() = default;
-  Vertex(int x, int y, int id) : x_(x), y_(y), id_(id) {}
+  Vertex(double x, double y, int id) : x_(x), y_(y), id_(id) {}
 
-  int x() const { return x_; }
-  int y() const { return y_; }
+  double x() const { return x_; }
+  double y() const { return y_; }
   int id() const { return id_; }
 
   Edge const& edge(size_t i) const;
@@ -40,8 +40,8 @@ public:
 
 private:
   int id_;
-  int x_;
-  int y_;
+  double x_;
+  double y_;
 
   std::vector<Edge*> edges_;
   std::vector<Face*> faces_;
@@ -99,7 +99,7 @@ private:
 
 class Grid {
 public:
-  Grid(int nx, int ny, bool periodic = false)
+  Grid(int nx, int ny, bool periodic = false, double lx = 0., double ly = 0.)
       : faces_(2 * nx * ny), vertices_(periodic ? nx * ny : (nx + 1) * (ny + 1)),
         edges_(periodic ? 3 * nx * ny : 3 * (nx + 1) * (ny + 1)), nx_(nx), ny_(ny) {
     auto edge_at = [&](int i, int j, int c) -> Edge& {
@@ -130,7 +130,15 @@ public:
     for(int j = 0; j < (periodic ? ny : ny + 1); ++j)
       for(int i = 0; i < (periodic ? nx : nx + 1); ++i) {
         auto& v = vertex_at(i, j);
-        v = Vertex(i, j, &v - vertices_.data());
+        double px = i;
+        double py = j;
+        if(lx != 0.) {
+          px = double(i) / (nx - 1) * lx;
+        }
+        if(ly != 0.) {
+          py = double(j) / (nx - 1) * ly;
+        }
+        v = Vertex(px, py, &v - vertices_.data());
       }
 
     for(int j = 0; j < ny; ++j)
