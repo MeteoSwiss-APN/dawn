@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+dawn_dir=$1
+prefix=$dawn_dir/dawn/examples/python
+
+examples=("copy_stencil" "hori_diff_stencil" "tridiagonal_solve_stencil" "unstructured_stencil" "global_index_stencil")
+
+for ex in "${examples[@]}"; do
+    python $prefix/${ex}.py
+    if [ -r $prefix/data/${ex}_reference.cpp ]; then
+        diff $prefix/data/${ex}.cpp $prefix/data/${file}_reference.cpp
+    fi
+    rm $prefix/data/${ex}.cpp
+done
