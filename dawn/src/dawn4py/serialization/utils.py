@@ -199,22 +199,24 @@ def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
 
 def make_field_dimensions_unstructured(
-    dense_part: LocationTypeValue,
+    locations: List[LocationTypeValue],
     mask_k: int,
-    sparse_part: List[LocationTypeValue] = None
 ) -> FieldDimensions:
 
     """ Create FieldDimensions of unstructured type
 
-    :dense_part:   dense location type of the field
+    :locations:    a list of location types of the field. first entry is the dense part, additional entries are the (optional) sparse part
     :mask_k:       mask to identify if the vertical dimension is legal
     :sparse_part:  optional sparse part encoded by a neighbor chain
     """
 
+    assert(len(locations) >= 1)
+
     horizontal_dim = UnstructuredDimension()
-    horizontal_dim.dense_location_type = dense_part
-    if sparse_part is not None and len(sparse_part) != 0:
-        horizontal_dim.sparse_part.extend(sparse_part)
+    horizontal_dim.dense_location_type = locations[0]
+    sparse_part = len(locations) > 1
+    if sparse_part:
+        horizontal_dim.sparse_part.extend(locations)
 
     dims = FieldDimensions()
     dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
@@ -746,14 +748,14 @@ def make_weights(weights) -> List[Weight]:
             raise SIRError("cannot create Weight from type {}".format(type(weight)))
 
         proto_weights.append(proto_weight)
-        
+
     return proto_weights
 
 def make_reduction_over_neighbor_expr(
-    op: str, 
-    rhs: ExprType, 
-    init: ExprType, 
-    lhs_location: LocationTypeValue, 
+    op: str,
+    rhs: ExprType,
+    init: ExprType,
+    lhs_location: LocationTypeValue,
     rhs_location: LocationTypeValue,
     weights: List[Weight] = None
 ) -> ReductionOverNeighborExpr:

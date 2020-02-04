@@ -126,7 +126,7 @@ class TestMakeField(unittest.TestCase):
         self.assertEqual(field.field_dimensions.mask_k, 1)
 
     def test_make_field_unstructured(self):
-        field = make_field("foo", make_field_dimensions_unstructured(LocationType.Value('Edge'), 1))
+        field = make_field("foo", make_field_dimensions_unstructured([LocationType.Value('Edge')], 1))
         self.assertEqual(field.name, "foo")
         self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type, \
                          LocationType.Value('Edge'))
@@ -136,13 +136,8 @@ class TestMakeField(unittest.TestCase):
         field = make_field(
                     "foo",
                     make_field_dimensions_unstructured(
-                        LocationType.Value('Edge'),
-                        0,
-                        sparse_part=[
-                                        LocationType.Value('Edge'),
-                                        LocationType.Value('Cell'),
-                                        LocationType.Value('Vertex')
-                                    ]))
+                        [LocationType.Value('Edge'),LocationType.Value('Cell'),LocationType.Value('Vertex')],
+                        0))
         self.assertEqual(field.name, "foo")
         self.assertEqual(field.field_dimensions.unstructured_horizontal_dimension.dense_location_type,
                          LocationType.Value('Edge'))
