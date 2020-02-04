@@ -31,22 +31,23 @@ void resetVarTypes(iir::StencilMetaInformation& metadata) {
 }
 
 class VarTypeFinder : public ast::ASTVisitorForwarding {
-  iir::StencilMetaInformation& metadata_;
 
+  iir::StencilMetaInformation& metadata_;
   // AccessID of variable being processed.
   // Unset if visitor is not inside a `VarDeclStmt` or an `AssignmentExpr` to a local variable.
   std::optional<int> curVarID_;
-  // When assigning to or declaring variable A, each other variable that appears on the rhs is a
+  // When assigning to or declaring variable A, each (other) variable that appears on the rhs is a
   // dependence of A. This map is from a variable B to all variables that depend on B. A variable
   // cannot depend on itself.
-  std::unordered_map<int, std::vector<int>> dependencyMap_;
+  std::unordered_map<int, std::set<int>> dependencyMap_;
 
-  void updateVariableType(iir::LocalVariableType newType, SourceLocation sourceLocation) {
-    DAWN_ASSERT(curVarID_.has_value());
+  // Sets the type of variable with id `varID` to `newType` if the previous type was scalar or
+  // unset. Throws if non-scalar previous type is different from `newType` (mixing different
+  // location types).
+  void updateVariableType(int varID, iir::LocalVariableType newType,
+                          SourceLocation sourceLocation) {
 
-    // Set the variable type (could still be changed when visiting another assignment)
-    iir::LocalVariableData& data = metadata_.getLocalVariableDataFromAccessID(*curVarID_);
-
+    iir::LocalVariableData& data = metadata_.getLocalVariableDataFromAccessID(varID);
     if(data.isTypeSet()) {
       iir::LocalVariableType previouslyComputedType = data.getType();
 
@@ -62,6 +63,40 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
       data.setType(newType);
     }
   }
+  // Propagates the variable type of variable with id `accessID` to all variables that depend on it.
+  // `sourceLocation` is for reporting the line number in case an illegal assignment is detected.
+  void propagateVariableType(int accessID, SourceLocation sourceLocation) {
+    // Set of visited variables (to avoid loops)
+    std::set<int> visitedSet;
+    // Define a recursive lambda function to propagate the type through the dependency map
+    std::function<void(int)> recursivePropagate;
+    recursivePropagate = [&](int dependee) {
+      // Flag the variable as visited
+      visitedSet.insert(dependee);
+      // If no other variable depends on the dependee, return
+      if(!dependencyMap_.count(dependee)) {
+        return;
+      }
+      // Collect the type to propagate
+      const iir::LocalVariableData& dependeeData =
+          metadata_.getLocalVariableDataFromAccessID(dependee);
+      // If the dependee's type is not set yet, it has been accessed before being declared.
+      DAWN_ASSERT_MSG(dependeeData.isTypeSet(), "Variable accessed before being declared.");
+      // Loop through variables (dependers) which depend on the dependee
+      for(int depender : dependencyMap_.at(dependee)) {
+        // Make sure depender hasn't be already visited within the current call to
+        // `propagateVariableType()`
+        if(!visitedSet.count(depender)) {
+          // Update the type of depender with the dependee's type
+          updateVariableType(depender, dependeeData.getType(), sourceLocation);
+          // Call the recursive procedure on depender
+          recursivePropagate(depender);
+        }
+      }
+    };
+    // Call the recursive function
+    recursivePropagate(accessID);
+  }
 
 public:
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
@@ -73,7 +108,7 @@ public:
         // Cartesian case
         newType = iir::LocalVariableType::OnIJ;
       } else {
-        // Unstructured case
+        // Unstructured case, convert to location type
         switch(metadata_.getDenseLocationTypeFromAccessID(iir::getAccessID(expr))) {
         case ast::LocationType::Cells:
           newType = iir::LocalVariableType::OnCells;
@@ -86,23 +121,29 @@ public:
           break;
         }
       }
-
-      updateVariableType(newType, expr->getSourceLocation());
+      // Update the type of the current variable with `newType`
+      updateVariableType(*curVarID_, newType, expr->getSourceLocation());
     }
   }
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     if(curVarID_.has_value()) { // We are inside an assignment / variable declaration
+      int accessedVariableID = iir::getAccessID(expr);
+      // No self-dependencies
+      if(accessedVariableID != *curVarID_) {
 
-      // Need to map dependency between lhs variable and accessed variable
-      // TODO...
+        // Need to register a dependency. Pair to be added is from dependency (variable accessed in
+        // the rhs) to dependent (lhs).
+        dependencyMap_.at(accessedVariableID).insert(*curVarID_);
 
-      // Retrieve the type of the accessed variable
-      const iir::LocalVariableData& data =
-          metadata_.getLocalVariableDataFromAccessID(iir::getAccessID(expr));
-      DAWN_ASSERT_MSG(data.isTypeSet(), "Variable accessed before being declared.");
-      iir::LocalVariableType newType = data.getType();
+        // Retrieve the type of the accessed variable
+        const iir::LocalVariableData& data =
+            metadata_.getLocalVariableDataFromAccessID(accessedVariableID);
+        DAWN_ASSERT_MSG(data.isTypeSet(), "Variable accessed before being declared.");
+        iir::LocalVariableType newType = data.getType();
 
-      updateVariableType(newType, expr->getSourceLocation());
+        // Update the type of the current variable with `newType`
+        updateVariableType(*curVarID_, newType, expr->getSourceLocation());
+      }
     }
   }
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
@@ -113,27 +154,28 @@ public:
             "Variable assignment inside rhs of variable assignment is not supported. Line %d.",
             expr->getSourceLocation().Line));
       }
-
       // Assume scalar if nothing proves the opposite during the visit
       curVarID_ = iir::getAccessID(expr->getLeft());
-      updateVariableType(iir::LocalVariableType::Scalar, expr->getSourceLocation());
-
+      updateVariableType(*curVarID_, iir::LocalVariableType::Scalar, expr->getSourceLocation());
+      // If the set of dependers for this variable is not there, it means the variable hasn't been
+      // declared
+      DAWN_ASSERT_MSG(dependencyMap_.count(*curVarID_), "Variable accessed before being declared.");
       // Visit rhs
       expr->getRight()->accept(*this);
-
+      // Propagate the type information to variables that depend on this one
+      propagateVariableType(*curVarID_, expr->getSourceLocation());
       // Unset curVarID_ as we are exiting the AssignmentExpr's visit
       curVarID_ = std::nullopt;
     }
   }
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-
     // Assume scalar if nothing proves the opposite during the visit
     curVarID_ = iir::getAccessID(stmt);
-    updateVariableType(iir::LocalVariableType::Scalar, stmt->getSourceLocation());
-
+    updateVariableType(*curVarID_, iir::LocalVariableType::Scalar, stmt->getSourceLocation());
+    // Setup empty set of dependers for this variable
+    dependencyMap_.emplace(*curVarID_, std::set<int>{});
     // Visit rhs
     ast::ASTVisitorForwarding::visit(stmt);
-
     // Unset curVarID_ as we are exiting the VarDeclStmt's visit
     curVarID_ = std::nullopt;
   }
@@ -150,6 +192,7 @@ bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& ste
     resetVarTypes(stencilInstantiation->getMetaData());
 
     VarTypeFinder varTypeFinder(stencilInstantiation->getMetaData());
+    // TODO scope of varTypeFinder should be DoMethod's
     for(const auto& stmt : iterateIIROverStmt(*stencilPtr)) {
       stmt->accept(varTypeFinder);
     }
