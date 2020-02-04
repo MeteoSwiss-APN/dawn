@@ -123,7 +123,7 @@ endfunction()
 
 # Protobuf
 if(NOT DAWN_BUILD_PROTOBUF)
-  find_package(Protobuf 3.4.0 CONFIG)
+  find_package(Protobuf 3.4.0)
 endif()
 if(NOT Protobuf_FOUND)
   include(FetchProtobuf)
