@@ -452,4 +452,155 @@ TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
     }
   }
 }
+
+#include <generated_NestedSimple.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
+  const int numCell = 10;
+
+  // apparently, one needs to be added to the second dimension in order to get a
+  // square mesh, or we are mis-interpreting the output
+  atlas::StructuredGrid structuredGrid =
+      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+
+  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  int nb_levels = 1;
+  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
+  atlas::Field f_cells{fs_cells.createField<double>(atlas::option::name("cells"))};
+
+  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
+  atlas::Field f_edges{fs_edges.createField<double>(atlas::option::name("edges"))};
+
+  atlas::functionspace::EdgeColumns fs_vertices(mesh, atlas::option::levels(nb_levels));
+  atlas::Field f_vertices{fs_vertices.createField<double>(atlas::option::name("vertices"))};
+
+  atlasInterface::Field<double> v_cells = atlas::array::make_view<double, 2>(f_cells);
+  atlasInterface::Field<double> v_edges = atlas::array::make_view<double, 2>(f_edges);
+  atlasInterface::Field<double> v_vertices = atlas::array::make_view<double, 2>(f_vertices);
+
+  for(int i = 0; i < mesh.nodes().size(); i++) {
+    v_vertices(i, 0) = 1;
+  }
+
+  dawn_generated::cxxnaiveico::nestedSimple<atlasInterface::atlasTag>(mesh, nb_levels, v_cells,
+                                                                      v_edges, v_vertices)
+      .run();
+
+  // each vertex stores value 1                 1
+  // vertices are reduced onto edges            2
+  // each face reduces its edges (4 per face)   8
+  for(int i = 0; i < mesh.cells().size(); i++) {
+    EXPECT_TRUE(fabs(v_cells(i, 0) - 8) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+}
+} // namespace
+
+#include <generated_NestedWithField.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
+  const int numCell = 10;
+
+  // apparently, one needs to be added to the second dimension in order to get a
+  // square mesh, or we are mis-interpreting the output
+  atlas::StructuredGrid structuredGrid =
+      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+
+  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  int nb_levels = 1;
+  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
+  atlas::Field f_cells{fs_cells.createField<double>(atlas::option::name("cells"))};
+
+  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
+  atlas::Field f_edges{fs_edges.createField<double>(atlas::option::name("edges"))};
+
+  atlas::functionspace::EdgeColumns fs_vertices(mesh, atlas::option::levels(nb_levels));
+  atlas::Field f_vertices{fs_vertices.createField<double>(atlas::option::name("edges"))};
+
+  atlasInterface::Field<double> v_cells = atlas::array::make_view<double, 2>(f_cells);
+  atlasInterface::Field<double> v_edges = atlas::array::make_view<double, 2>(f_edges);
+  atlasInterface::Field<double> v_vertices = atlas::array::make_view<double, 2>(f_vertices);
+
+  for(int i = 0; i < mesh.nodes().size(); i++) {
+    v_vertices(i, 0) = 1;
+  }
+
+  for(int i = 0; i < mesh.edges().size(); i++) {
+    v_edges(i, 0) = 200;
+  }
+
+  dawn_generated::cxxnaiveico::nestedWithField<atlasInterface::atlasTag>(mesh, nb_levels, v_cells,
+                                                                         v_edges, v_vertices)
+      .run();
+
+  // each vertex stores value 1                 1
+  // vertices are reduced onto edges            2
+  // each edge stores 200                     202
+  // each face reduces its edges (4 per face) 808
+  for(int i = 0; i < mesh.cells().size(); i++) {
+    assert(fabs(v_cells(i, 0) - 808) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+}
+} // namespace
+
+#include <generated_sparseDimension.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
+  atlas::StructuredGrid structuredGrid = atlas::Grid("L10x11");
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  const int edgesPerCell = 4;
+
+  int nb_levels = 1;
+  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
+  atlas::Field cellsField{fs_cells.createField<double>(atlas::option::name("cells"))};
+  atlas::Field sparseDimension{fs_cells.createField<double>(
+      atlas::option::name("sparseDimension") | atlas::option::variables(edgesPerCell))};
+
+  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
+  atlas::Field edgesField{fs_edges.createField<double>(atlas::option::name("edges"))};
+
+  atlasInterface::Field<double> cells_v = atlas::array::make_view<double, 2>(cellsField);
+  atlasInterface::Field<double> edges_v = atlas::array::make_view<double, 2>(edgesField);
+  atlasInterface::SparseDimension<double> sparseDim_v =
+      atlas::array::make_view<double, 3>(sparseDimension);
+
+  const int level = 0;
+  for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
+    cells_v(iCell, level) = 0;
+    for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
+      sparseDim_v(iCell, jNbh, level) = 200;
+    }
+  }
+
+  for(int iEdge = 0; iEdge < mesh.edges().size(); iEdge++) {
+    edges_v(iEdge, level) = 1;
+  }
+
+  dawn_generated::cxxnaiveico::sparseDimension<atlasInterface::atlasTag>(mesh, nb_levels, cells_v,
+                                                                         edges_v, sparseDim_v)
+      .run();
+
+  // each edge stores 1                                         1
+  // this is multiplied by the sparse dim storing 200         200
+  // this is reduced by sum onto the cells at 4 eges p cell   800
+  for(int i = 0; i < mesh.cells().size(); i++) {
+    assert(fabs(cells_v(i, 0) - 800) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+}
+} // namespace
+
 } // namespace

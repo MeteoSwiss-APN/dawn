@@ -17,6 +17,8 @@ int main() {
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
+  atlas::mesh::actions::build_edges(mesh);
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
 
   int nb_levels = 5;
   atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
