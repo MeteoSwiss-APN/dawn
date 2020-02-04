@@ -191,10 +191,9 @@ bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& ste
     // to recompute them
     resetVarTypes(stencilInstantiation->getMetaData());
 
-    VarTypeFinder varTypeFinder(stencilInstantiation->getMetaData());
-    // TODO scope of varTypeFinder should be DoMethod's
-    for(const auto& stmt : iterateIIROverStmt(*stencilPtr)) {
-      stmt->accept(varTypeFinder);
+    for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilPtr)) {
+      VarTypeFinder varTypeFinder(stencilInstantiation->getMetaData());
+      doMethod->getAST().accept(varTypeFinder);
     }
   }
   return true;
