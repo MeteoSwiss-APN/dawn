@@ -32,8 +32,9 @@ LocalVariableType LocalVariableData::getType() const {
 
 ast::LocationType LocalVariableData::getLocationType() const {
   DAWN_ASSERT_MSG(type_.has_value(), "Must run PassLocalVarType first.");
-  DAWN_ASSERT_MSG(!type_->isScalar(), "Variable must not be scalar.");
-  DAWN_ASSERT_MSG(*type != LocalVariableType::OnIJ, "Variable is defined on cartesian dimensions.");
+  DAWN_ASSERT_MSG(!isScalar(), "Variable must not be scalar.");
+  DAWN_ASSERT_MSG(*type_ != LocalVariableType::OnIJ,
+                  "Variable is defined on cartesian dimensions.");
 
   switch(*type_) {
   case LocalVariableType::OnCells:

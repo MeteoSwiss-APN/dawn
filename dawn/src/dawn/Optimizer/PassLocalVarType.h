@@ -18,7 +18,7 @@
 
 namespace dawn {
 
-/// @brief PassLocalVarType will compute the type of the variable
+/// @brief PassLocalVarType will compute, for each variable, its type
 /// determining whether it is a scalar or it has an horizontal dimension and,
 /// in the latter case, which dimension it is.
 /// For unstructured grids this dimension (dense) can be either cells, vertices or edges.
