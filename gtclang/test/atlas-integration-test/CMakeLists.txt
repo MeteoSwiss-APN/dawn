@@ -36,6 +36,9 @@ if(eckit_FOUND AND atlas_FOUND)
     generated_diffusion.hpp
     generated_gradient.hpp
     generated_verticalSolver.hpp
+    generated_NestedSimple.hpp
+    generated_NestedWithField.hpp
+    generated_sparseDimension.hpp
   )
   set(reference_stencil_codes reference_diffusion.hpp
     reference_gradient.hpp

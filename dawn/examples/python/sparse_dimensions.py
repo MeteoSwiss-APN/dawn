@@ -14,7 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""Copy stencil HIR generator
+"""Sparse Dimensions stencil HIR generator
 
 This program creates the HIR corresponding to an unstructured stencil including sparse dimensions
 using the SIR serialization Python API."""
