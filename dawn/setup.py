@@ -50,7 +50,6 @@ class CMakeBuild(build_ext):
 
         # Check if a recent version of CMake is present
         cmake_executable = os.getenv("CMAKE_EXECUTABLE", default="cmake")
-        cmake_args = os.getenv("CMAKE_ARGS", default="").split(" ") or []
         try:
             out = subprocess.check_output([cmake_executable, "--version"])
         except OSError:
@@ -63,24 +62,45 @@ class CMakeBuild(build_ext):
         if cmake_version < "3.13.0":
             raise RuntimeError("CMake >= 3.13.0 is required")
 
-        # build here
-        self.build_temp = os.path.join(DAWN_DIR, "build")
+        # Check if dawn was already installed
+        dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
+        installed = False
+        try:
+            if dawn_build_dir:
+                for ext in self.extensions:
+                    self.install_extension(os.path.join(dawn_build_dir, "src"), ext)
+                installed = True
+        except FileNotFoundError:
+            self.build_temp = os.path.join(DAWN_DIR, "build")
+            self.compile_extension(self.build_temp)
+
+        if not installed:
+            # Move from build temp to final position
+            for ext in self.extensions:
+                self.install_extension(os.path.join(self.build_temp, "src"), ext)
+
+        # Install included headers
+        self.run_command("install_dawn_includes")
+
+    def compile_extension(self, build_dir):
+        cmake_args = os.getenv("CMAKE_ARGS", default="").split(" ") or []
+        # Build dawn here
 
         # Set build folder inside dawn and remove CMake cache if it contains wrong paths.
         # Installing in editable/develop mode builds the extension in the original build path,
         # but a regular `pip install` copies the full tree to a temporary folder
         # before building, which makes CMake fail if a CMake cache had been already generated.
-        cmake_cache_file = os.path.join(self.build_temp, "CMakeCache.txt")
+        cmake_cache_file = os.path.join(build_dir, "CMakeCache.txt")
         if os.path.exists(cmake_cache_file):
             with open(cmake_cache_file, "r") as f:
                 text = f.read()
                 m = re.search(r"\s*Dawn_BINARY_DIR\s*:\s*STATIC\s*=\s*([\w/\\]+)\s*", text)
                 cache_build_dir = m.group(1) if m else ""
-                if str(self.build_temp) != cache_build_dir:
-                    shutil.rmtree(self.build_temp, ignore_errors=False)
+                if str(build_dir) != cache_build_dir:
+                    shutil.rmtree(build_dir, ignore_errors=False)
                     shutil.rmtree(os.path.join(DAWN_DIR, "install"), ignore_errors=True)
                     assert not os.path.exists(cmake_cache_file)
-        os.makedirs(self.build_temp, exist_ok=True)
+        os.makedirs(build_dir, exist_ok=True)
         os.makedirs(os.path.join(DAWN_DIR, "install"), exist_ok=True)
 
         # Prepare CMake arguments
@@ -91,31 +111,28 @@ class CMakeBuild(build_ext):
 
         # Run CMake configure
         print("-" * 10, "Running CMake prepare", "-" * 40)
-        cmake_cmd = ["cmake", "-S", DAWN_ABS_DIR, "-B", self.build_temp] + cmake_args
-        print("{cwd} $ {cmd}".format(cwd=self.build_temp, cmd=" ".join(cmake_cmd)))
+        cmake_cmd = ["cmake", "-S", DAWN_ABS_DIR, "-B", build_dir] + cmake_args
+        print("{cwd} $ {cmd}".format(cwd=build_dir, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd)
 
         # Run CMake build
         # TODO: run build for the target with the extension name for each extension in self.extensions
         print("-" * 10, "Building extensions", "-" * 40)
         build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
-        cmake_cmd = ["cmake", "--build", self.build_temp, "--target", "python"] + build_args
-        print("{cwd} $ {cmd}".format(cwd=self.build_temp, cmd=" ".join(cmake_cmd)))
+        cmake_cmd = ["cmake", "--build", build_dir, "--target", "python"] + build_args
+        print("{cwd} $ {cmd}".format(cwd=build_dir, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd)
 
-        # Move from build temp to final position
-        for ext in self.extensions:
-            self.build_extension(ext)
-
-        # Install included headers
-        self.run_command("install_dawn_includes")
-
-    def build_extension(self, ext):
+    def install_extension(self, lib_dir, ext):
         # Currently just copy the generated CPython extension to the package folder
         filename = self.get_ext_filename(ext.name)
-        source_path = os.path.abspath(os.path.join(self.build_temp, "src", filename))
-        dest_build_path = os.path.abspath(self.get_ext_fullpath(ext.name))
-        self.copy_file(source_path, dest_build_path)
+        source_path = os.path.join(lib_dir, filename)
+        dest_build_path = self.get_ext_fullpath(ext.name)
+        print("HERE", source_path, dest_build_path)
+        if os.path.exists(source_path):
+            self.copy_file(os.path.abspath(source_path), os.path.abspath(dest_build_path))
+        else:
+            raise FileNotFoundError("Cannot find file")
 
 
 class InstallDawnIncludesCommand(Command):

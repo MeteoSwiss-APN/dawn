@@ -199,8 +199,8 @@ def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
 
 def make_field_dimensions_unstructured(
-    dense_part: LocationTypeValue, 
-    mask_k: int, 
+    dense_part: LocationTypeValue,
+    mask_k: int,
     sparse_part: List[LocationTypeValue] = None
 ) -> FieldDimensions:
 
@@ -223,7 +223,7 @@ def make_field_dimensions_unstructured(
 
 def make_field(
     name: str,
-    dimensions: FieldDimensions,
+    field_dimensions: FieldDimensions,
     is_temporary: bool = False
 ) -> Field:
 
@@ -231,13 +231,13 @@ def make_field(
 
     :param name:         Name of the field
     :param is_temporary: Is it a temporary field?
-    :param dimensions:   dimensions of the field (use make_field_dimensions_*)
+    :param field_dimensions:   dimensions of the field (use make_field_dimensions_*)
     """
 
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
-    field.field_dimensions.CopyFrom(dimensions)
+    field.field_dimensions.CopyFrom(field_dimensions)
     return field
 
 
@@ -632,7 +632,7 @@ def make_stencil_fun_arg_expr(
 
 def make_unstructured_field_access_expr(
     name: str,
-    horizontal_offset: UnstructuredOffset = None, 
+    horizontal_offset: UnstructuredOffset = None,
     vertical_offset: int = 0,
 ) -> FieldAccessExpr:
     expr = FieldAccessExpr()
@@ -1105,9 +1105,9 @@ class SIRPrinter:
     def visit_cartesian_field(self, field):
         str_ = field.name + "("
         dims_ = []
-        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1: dims_.append("i") 
-        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1: dims_.append("j") 
-        if field.field_dimensions.mask_k == 1: dims_.append("k") 
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1: dims_.append("i")
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1: dims_.append("j")
+        if field.field_dimensions.mask_k == 1: dims_.append("k")
         str_ += str(dims_) + ")"
         return str_
 
