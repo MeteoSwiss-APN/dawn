@@ -354,6 +354,9 @@ public:
   void addAccessIDToLocalVariableDataPair(int accessID, LocalVariableData&& data);
   iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID);
   const iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID) const;
+  const std::unordered_map<int, iir::LocalVariableData>& getAccessIDToLocalVariableDataMap() const {
+    return accessIDToLocalVariableDataMap_;
+  }
 
   dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
 
