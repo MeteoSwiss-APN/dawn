@@ -2,7 +2,7 @@ Compiling and running the prototype (until we have a proper setup)
 
 1. Compile Dawn and make sure to switch to the dawn/dawn directory
 
-2. cd <path/to/dawn> && ./bundle/build/dawn-prefix/src/dawn-build/bin/unittest/DawnCUnittest --gtest_also_run_disabled_tests && clang-format -i ./prototype/*.hpp
+2. cd <path/to/dawn> && ../build/dawn/test/unit-test/dawn-c/DawnCUnittest --gtest_also_run_disabled_tests && clang-format -i ./prototype/*.hpp
    --> This will run the disabled CodeGenPlayground tests that generated and outputs code
 
 3. For "lukas_lib": cd prototype && g++ mylib[TestCase]Driver.cpp mylib.cpp -o out -std=c++17 -I../../dawn/src; ./out
