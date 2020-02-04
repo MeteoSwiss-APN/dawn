@@ -293,10 +293,14 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.MergeStages)) {
+    // merging requires the stage graph
+    optimizer.checkAndPushBack<PassSetStageGraph>();
+    // running the actual pass
     optimizer.checkAndPushBack<PassStageMerger>();
     // since this can change the scope of temporaries ...
     optimizer.checkAndPushBack<PassTemporaryType>();
-    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+    // this pass is broken as hell... Johann please
+    // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
     // modify stages and their extents ...
     optimizer.checkAndPushBack<PassComputeStageExtents>();
     // and changes their dependencies
