@@ -265,6 +265,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PrintStencilGraph)) {
     // --print-stencil-graph
+    // wow
+    optimizer.checkAndPushBack<PassSetDependencyGraph>();
     // Plain diagnostics, should not even be a pass but is independent
     optimizer.checkAndPushBack<PassPrintStencilGraph>();
     // validation check
