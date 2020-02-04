@@ -73,27 +73,41 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       return "";
     }
   };
+
   std::string typeStringRHS = getLocationTypeString(expr->getRhsLocation());
   std::string typeStringLHS = getLocationTypeString(expr->getLhsLocation());
 
   bool hasWeights = expr->getWeights().has_value();
 
+  std::string sigArg =
+      (parentIsReduction_)
+          ? "red_loc"
+          : "loc"; // does stage or parent reduceOverNeighborExpr determine argname?
   ss_ << std::string(indent_, ' ')
-      << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh, loc, ";
+      << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh," << sigArg << ", ";
   expr->getInit()->accept(*this);
   if(hasWeights) {
-    ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) { return lhs "
-        << expr->getOp() << "= ";
+    ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) {\n";
+    ss_ << "lhs " << expr->getOp() << "= ";
     ss_ << "weight * ";
   } else {
-    ss_ << ", [&](auto& lhs, auto const& red_loc) { return lhs " << expr->getOp() << "= ";
+    ss_ << ", [&](auto& lhs, auto const& red_loc) { lhs " << expr->getOp() << "= ";
   }
 
-  auto argName = argName_;
-  argName_ = "red_loc";
+  auto argName = denseArgName_;
+  // arg names for dense and sparse location
+  denseArgName_ = "red_loc";
+  sparseArgName_ = "loc";
+  // indicate if parent of subexpr is reduction
+  parentIsReduction_ = true;
   expr->getRhs()->accept(*this);
-  argName_ = argName;
-  ss_ << ";}";
+  parentIsReduction_ = false;
+  // "pop" argName
+  denseArgName_ = argName;
+  ss_ << ";\n";
+  ss_ << "m_sparse_dimension_idx++;\n";
+  ss_ << "return lhs;\n";
+  ss_ << "}";
   if(hasWeights) {
     auto weights = expr->getWeights().value();
     bool first = true;
@@ -240,8 +254,17 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
-    ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << argName_ << "),"
-        << "k+" << expr->getOffset().verticalOffset() << ")";
+    if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+           metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())
+           .isDense()) {
+      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << denseArgName_ << "),"
+          << "k+" << expr->getOffset().verticalOffset() << ")";
+    } else {
+      ss_ << "m_" << getName(expr) << "("
+          << "deref(LibTag{}, " << sparseArgName_ << "),"
+          << "m_sparse_dimension_idx, "
+          << "k+" << expr->getOffset().verticalOffset() << ")";
+    }
   }
 }
 
