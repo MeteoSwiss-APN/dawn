@@ -532,9 +532,10 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                       // first one we need to reset the neighborhood iterator
                       FindReduceOverNeighborExpr findReduceOverNeighborExpr;
                       stmt->accept(findReduceOverNeighborExpr);
-                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr() &&
-                         !firstReduceExpr) {
-                        StencilRunMethod.ss() << "m_sparse_dimension_idx = 0;\n";
+                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+                        if(!firstReduceExpr) {
+                          StencilRunMethod.ss() << "m_sparse_dimension_idx = 0;\n";
+                        }
                         firstReduceExpr = false;
                       }
 

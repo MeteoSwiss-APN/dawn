@@ -302,6 +302,47 @@ int main() {
     UnstructuredIIRBuilder b;
     auto cell_f = b.field("cell_field", LocType::Cells);
     auto edge_f = b.field("edge_field", LocType::Edges);
+    auto sparse_f = b.field("sparse_dim", {LocType::Cells, LocType::Edges});
+
+    // stencil consuming a sparse dimension and a weight
+    auto stencil_instantiation = b.build(
+        "sparseDimensionTwice",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Cells,
+                b.doMethod(
+                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.stmt(b.assignExpr(
+                        b.at(cell_f),
+                        b.reduceOverNeighborExpr<float>(
+                            Op::plus,
+                            b.binaryExpr(b.at(edge_f, HOffsetType::withOffset, 0),
+                                         b.at(sparse_f, HOffsetType::withOffset, 0), Op::multiply),
+                            b.lit(0.), dawn::ast::LocationType::Cells,
+                            dawn::ast::LocationType::Edges, std::vector<float>({1., 1., 1., 1})))),
+                    b.stmt(b.assignExpr(
+                        b.at(cell_f),
+                        b.reduceOverNeighborExpr<float>(
+                            Op::plus,
+                            b.binaryExpr(b.at(edge_f, HOffsetType::withOffset, 0),
+                                         b.at(sparse_f, HOffsetType::withOffset, 0), Op::multiply),
+                            b.lit(0.), dawn::ast::LocationType::Cells,
+                            dawn::ast::LocationType::Edges,
+                            std::vector<float>({1., 1., 1., 1})))))))));
+
+    std::ofstream of("generated/generated_sparseDimensionTwice.hpp");
+    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    of.close();
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto cell_f = b.field("cell_field", LocType::Cells);
+    auto edge_f = b.field("edge_field", LocType::Edges);
     auto vertex_f = b.field("vertex_field", LocType::Vertices);
 
     // a nested reduction v->e->c
