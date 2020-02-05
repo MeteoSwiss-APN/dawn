@@ -40,7 +40,18 @@ double EdgeLength(const mylib::Edge& e) {
   double y1 = e.vertex(1).y();
   double dx = x1 - x0;
   double dy = y1 - y0;
+  if(sqrt(dx * dx + dy * dy) > 4.) {
+    printf("here!\n");
+  }
   return sqrt(dx * dx + dy * dy);
+}
+
+std::tuple<double, double> EdgeMidpoint(const mylib::Edge& e) {
+  double x0 = e.vertex(0).x();
+  double y0 = e.vertex(0).y();
+  double x1 = e.vertex(1).x();
+  double y1 = e.vertex(1).y();
+  return {0.5 * (x0 + x1), 0.5 * (y0 + y1)};
 }
 
 std::tuple<double, double> PrimalNormal(const mylib::Edge& e) {
@@ -206,12 +217,7 @@ int main() {
   // init zero and test function
   FILE* fp = fopen("laplICONmylib_in.txt", "w+");
   for(const auto& e : mesh.edges()) {
-    double x0 = e.get().vertex(0).x();
-    double y0 = e.get().vertex(0).y();
-    double x1 = e.get().vertex(1).x();
-    double y1 = e.get().vertex(1).y();
-    double xm = 0.5 * (x0 + x1);
-    double ym = 0.5 * (y0 + y1);
+    auto [xm, ym] = EdgeMidpoint(e);
     vec(e.get(), level) = sin(xm) * sin(ym);
     nabla2_vec(e.get(), level) = 0;
     fprintf(fp, "%f %f %f\n", xm, ym, sin(xm) * sin(ym));
@@ -227,18 +233,23 @@ int main() {
   }
 
   // init geometric info for edges
-  for(const auto& e : mesh.edges()) {
-    primal_edge_length(e, level) = EdgeLength(e);
-    dual_edge_length(e, level) = DualEdgeLength(e);
-    tangent_orientation(e, level) = TangentOrientation(e); // where exactly is that needed?
+  FILE* fpdual = fopen("laplICONmylib_dualEdgeLength.txt", "w+");
+  for(auto const& e : mesh.edges()) {
+    auto ee = mylibInterface::deref(mylibInterface::mylibTag{}, e);
+    primal_edge_length(ee, level) = EdgeLength(ee);
+    dual_edge_length(ee, level) = DualEdgeLength(ee);
+    tangent_orientation(ee, level) = TangentOrientation(ee);
+    auto [xm, ym] = EdgeMidpoint(ee);
+    fprintf(fpdual, "%f %f %f\n", xm, ym, primal_edge_length(ee, level));
     auto [nx, ny] = PrimalNormal(e);
-    primal_normal_x(e, level) = nx;
-    primal_normal_y(e, level) = ny;
+    primal_normal_x(ee, level) = nx;
+    primal_normal_y(ee, level) = ny;
     // The primal normal, dual normal
     // forms a left-handed coordinate system
-    dual_normal_x(e, level) = ny;
-    dual_normal_y(e, level) = -nx;
+    dual_normal_x(ee, level) = ny;
+    dual_normal_y(ee, level) = -nx;
   }
+  fclose(fpdual);
 
   // init geometric info for cells
   for(const auto& c : mesh.faces()) {
@@ -330,8 +341,38 @@ int main() {
     }
   }
 
+  // FD like test
+  for(const auto& c : mesh.faces()) {
+    auto [x, y] = CellMidPoint(c);
+    div_vec(c, level) = sin(x) * sin(y) * (c.color() == mylib::face_color::upward ? 1 : -1);
+  }
+
+  for(const auto& v : mesh.vertices()) {
+    rot_vec(v, level) = sin(v.x()) * sin(v.y());
+  }
+
+  FILE* fpdiv = fopen("laplICONmylib_div.txt", "w+");
+  FILE* fprot = fopen("laplICONmylib_rot.txt", "w+");
+
   // SUBROUTINE nabla2_vec
   for(const auto& e : mesh.edges()) {
+    auto [x, y] = EdgeMidpoint(e.get());
+
+    if(e.get().color() == mylib::edge_color::horizontal) {
+      fprintf(fpdiv, "%f %f %f\n", x, y,
+              (div_vec(e.get().face(1), level) - div_vec(e.get().face(0), level)) /
+                  dual_edge_length(e, level));
+
+      fprintf(fprot, "%f %f %f\n", x, y,
+              (tangent_orientation(e, level) *
+               (rot_vec(e.get().vertex(1), level) - rot_vec(e.get().vertex(0), level)) /
+               primal_edge_length(e.get(), level)));
+    }
+
+    // the second term here is conceptually quite surprising. there is no correction term w.r.t to
+    // the orientation of face(1) and face(0) w.r.t the edge, which implies that the faces are well
+    // ordered from the perspective of the edges in ICON or the cell values are pre-mutiplied with
+    // the appropriate sign. probably the latter!
     nabla2_vec(e, level) +=
         tangent_orientation(e, level) *
             (rot_vec(e.get().vertex(1), level) - rot_vec(e.get().vertex(0), level)) /
@@ -339,6 +380,8 @@ int main() {
         (div_vec(e.get().face(1), level) - div_vec(e.get().face(0), level)) /
             dual_edge_length(e, level);
   }
+  fclose(fpdiv);
+  fclose(fprot);
 
   //===------------------------------------------------------------------------------------------===//
   // dumping a hopefully nice colorful laplacian
