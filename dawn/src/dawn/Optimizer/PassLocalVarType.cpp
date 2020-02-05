@@ -192,6 +192,8 @@ bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& ste
     resetVarTypes(stencilInstantiation->getMetaData());
 
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilPtr)) {
+      // Local variables are local to a DoMethod. VarTypeFinder needs to be applied to each DoMethod
+      // separately.
       VarTypeFinder varTypeFinder(stencilInstantiation->getMetaData());
       doMethod->getAST().accept(varTypeFinder);
     }

@@ -24,7 +24,7 @@ namespace dawn {
 /// For unstructured grids this dimension (dense) can be either cells, vertices or edges.
 /// For cartesian grids it's IJ.
 /// @see LocalVariableType
-/// * Input: any IIR. Map from access id to LocalVariableData must be filled.
+/// * Input:  any IIR. Map from access id to LocalVariableData must be filled.
 /// * Output: same as input but types of all local variables computed (LocalVariableData::type_ !=
 ///           std::nullopt)
 /// @ingroup optimizer
