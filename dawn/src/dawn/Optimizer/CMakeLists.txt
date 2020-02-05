@@ -28,8 +28,8 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
-  PassIntervalPartitioner.cpp
-  PassIntervalPartitioner.h
+  PassIntervalPartitioning.cpp
+  PassIntervalPartitioning.h
   PassManager.cpp
   PassManager.h
   PassMultiStageSplitter.cpp

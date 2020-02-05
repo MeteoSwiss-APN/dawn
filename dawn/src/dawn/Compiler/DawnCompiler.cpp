@@ -24,7 +24,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -324,14 +324,14 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.Inlining)) {
     optimizer.checkAndPushBack<PassInlining>(
-        (getOptions().InlineSF || getOptions().PassTmpToFunction),
+        (getOptions().Inlining || getOptions().PassTmpToFunction),
         PassInlining::InlineStrategy::ComputationsOnTheFly);
     // validation check
     optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PartitionIntervals)) {
-    optimizer.checkAndPushBack<PassIntervalPartitioner>();
+    optimizer.checkAndPushBack<PassIntervalPartitioning>();
     // since this can change the scope of temporaries ...
     optimizer.checkAndPushBack<PassTemporaryType>();
     optimizer.checkAndPushBack<PassFixVersionedInputFields>();

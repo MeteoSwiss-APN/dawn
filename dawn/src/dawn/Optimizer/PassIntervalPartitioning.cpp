@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -20,7 +20,7 @@
 
 namespace dawn {
 
-bool PassIntervalPartitioner::run(
+bool PassIntervalPartitioning::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   if(!context_.getOptions().PartitionIntervals) {
     return true;
