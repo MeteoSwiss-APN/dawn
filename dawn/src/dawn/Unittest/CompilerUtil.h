@@ -52,18 +52,20 @@ class CompilerUtil {
 public:
   static bool Verbose;
 
-  static void load(const std::string& sirFilename, std::shared_ptr<SIR>& sir);
-  static void load(const std::string& iirFilename,
-                   const dawn::OptimizerContext::OptimizerContextOptions& options,
-                   std::unique_ptr<OptimizerContext>& context,
-                   std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                   const std::string& envPath = "");
-  static void lower(const std::shared_ptr<dawn::SIR>& sir,
-                    std::unique_ptr<OptimizerContext>& context,
-                    std::shared_ptr<iir::StencilInstantiation>& instantiation);
-  static void lower(const std::string& sirFilename, std::unique_ptr<OptimizerContext>& context,
-                    std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                    const std::string& envPath = "");
+  static std::shared_ptr<SIR> load(const std::string& sirFilename);
+  static std::shared_ptr<iir::StencilInstantiation>
+  load(const std::string& iirFilename,
+       const dawn::OptimizerContext::OptimizerContextOptions& options,
+       std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
+  static std::shared_ptr<iir::StencilInstantiation>
+  lower(const std::shared_ptr<dawn::SIR>& sir,
+        const dawn::OptimizerContext::OptimizerContextOptions& options,
+        std::unique_ptr<OptimizerContext>& context);
+  static std::shared_ptr<iir::StencilInstantiation>
+  lower(const std::string& sirFilename,
+        const dawn::OptimizerContext::OptimizerContextOptions& options,
+        std::unique_ptr<OptimizerContext>& context,
+        const std::string& envPath = "");
   static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
   static stencilInstantiationContext compile(const std::string& sirFile);
   static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);

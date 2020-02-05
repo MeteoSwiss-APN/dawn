@@ -43,50 +43,52 @@ bool CompilerUtil::Verbose;
 
 dawn::DiagnosticsEngine CompilerUtil::diag_;
 
-void CompilerUtil::load(const std::string& sirFilename, std::shared_ptr<SIR>& sir) {
-  sir = SIRSerializer::deserialize(sirFilename);
+std::shared_ptr<SIR> CompilerUtil::load(const std::string& sirFilename) {
+  return SIRSerializer::deserialize(sirFilename);
 }
 
-void CompilerUtil::load(const std::string& iirFilename,
-                        const dawn::OptimizerContext::OptimizerContextOptions& options,
-                        std::unique_ptr<OptimizerContext>& context,
-                        std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                        const std::string& envPath) {
+std::shared_ptr<iir::StencilInstantiation>
+CompilerUtil::load(const std::string& irFilename,
+                   const dawn::OptimizerContext::OptimizerContextOptions& options,
+                   std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
   std::string filename = envPath;
   if(!filename.empty())
     filename += "/";
-  filename += iirFilename;
+  filename += irFilename;
 
   if(filename.find(".sir") != std::string::npos) {
-    lower(filename, context, instantiation, envPath);
+    return lower(filename, options, context, envPath);
   } else {
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context = std::make_unique<OptimizerContext>(diag_, options, sir);
-    instantiation = IIRSerializer::deserialize(iirFilename);
+    return IIRSerializer::deserialize(filename);
   }
 }
 
-void CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
-                         std::unique_ptr<OptimizerContext>& context,
-                         std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  dawn::OptimizerContext::OptimizerContextOptions options;
+std::shared_ptr<iir::StencilInstantiation>
+CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
+                    const dawn::OptimizerContext::OptimizerContextOptions& options,
+                    std::unique_ptr<OptimizerContext>& context) {
+  //dawn::OptimizerContext::OptimizerContextOptions options;
   context = std::make_unique<OptimizerContext>(diag_, options, sir);
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& map =
       context->getStencilInstantiationMap();
-  instantiation = map.begin()->second;
+  return map.begin()->second;
 }
 
-void CompilerUtil::lower(const std::string& sirFilename, std::unique_ptr<OptimizerContext>& context,
-                         std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                         const std::string& envPath) {
+std::shared_ptr<iir::StencilInstantiation>
+CompilerUtil::lower(const std::string& sirFilename,
+                    const dawn::OptimizerContext::OptimizerContextOptions& options,
+                    std::unique_ptr<OptimizerContext>& context,
+                    const std::string& envPath) {
   std::string filename = envPath;
   if(!filename.empty())
     filename += "/";
   filename += sirFilename;
 
-  std::shared_ptr<dawn::SIR> sir;
-  load(filename, sir);
-  lower(sir, context, instantiation);
+  // std::shared_ptr<dawn::SIR> sir = nullptr;
+  std::shared_ptr<dawn::SIR> sir = load(filename);
+  return lower(sir, options, context);
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
@@ -105,8 +107,7 @@ stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& si
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
-  std::shared_ptr<SIR> sir;
-  load(sirFile, sir);
+  std::shared_ptr<SIR> sir = load(sirFile);
   return compile(sir);
 }
 
@@ -142,7 +143,8 @@ void CompilerUtil::dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiatio
   os << ss.str();
 }
 
-std::vector<std::shared_ptr<Pass>> CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context) {
+std::vector<std::shared_ptr<Pass>>
+CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
   auto inlineStrategy = dawn::PassInlining::InlineStrategy::InlineProcedures;
   auto reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
@@ -153,7 +155,7 @@ std::vector<std::shared_ptr<Pass>> CompilerUtil::createGroup(PassGroup group, st
   case PassGroup::Parallel:
     addPass<dawn::PassInlining>(context, passes, true, inlineStrategy);
     addPass<dawn::PassFieldVersioning>(context, passes);
-    addPass<dawn::PassSSA>(context, passes);            // Did I do this for a reason?
+    addPass<dawn::PassSSA>(context, passes); // Did I do this for a reason?
     addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
     addPass<dawn::PassStageSplitter>(context, passes);
     addPass<dawn::PassTemporaryType>(context, passes);
@@ -245,72 +247,72 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
   bool result = true;
 
   switch(group) {
-    case PassGroup::Parallel:
-      result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
-      result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
-      result &= runPass<dawn::PassSSA>(context, instantiation);            // Did I do this for a reason?
-      result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
-      result &= runPass<dawn::PassStageSplitter>(context, instantiation);
-      result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-      result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
-      result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
-      result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
-      break;
+  case PassGroup::Parallel:
+    result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
+    result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
+    result &= runPass<dawn::PassSSA>(context, instantiation); // Did I do this for a reason?
+    result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
+    result &= runPass<dawn::PassStageSplitter>(context, instantiation);
+    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
+    result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
+    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
+    result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
+    break;
 
-    case PassGroup::ReorderStages:
-      result &= runPass<dawn::PassSetStageGraph>(context, instantiation);
-      result &= runPass<dawn::PassStageReordering>(context, instantiation, reorderStrategy);
-      result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
-      result &= runPass<dawn::PassSetStageName>(context, instantiation);
-      break;
+  case PassGroup::ReorderStages:
+    result &= runPass<dawn::PassSetStageGraph>(context, instantiation);
+    result &= runPass<dawn::PassStageReordering>(context, instantiation, reorderStrategy);
+    result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
+    result &= runPass<dawn::PassSetStageName>(context, instantiation);
+    break;
 
-    case PassGroup::MergeStages:
-      result &= runPass<dawn::PassStageMerger>(context, instantiation);
-      result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-      result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
-      result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
-      result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
-      break;
+  case PassGroup::MergeStages:
+    result &= runPass<dawn::PassStageMerger>(context, instantiation);
+    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
+    result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
+    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
+    result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
+    break;
 
-    case PassGroup::MergeTemporaries:
-      result &= runPass<dawn::PassTemporaryMerger>(context, instantiation);
-      result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-      break;
+  case PassGroup::MergeTemporaries:
+    result &= runPass<dawn::PassTemporaryMerger>(context, instantiation);
+    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
+    break;
 
-    case PassGroup::Inlining:
-      result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
-      break;
+  case PassGroup::Inlining:
+    result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
+    break;
 
-    case PassGroup::PartitionIntervals:
-      result &= runPass<dawn::PassIntervalPartitioner>(context, instantiation);
-      result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-      result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
-      break;
+  case PassGroup::PartitionIntervals:
+    result &= runPass<dawn::PassIntervalPartitioner>(context, instantiation);
+    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
+    result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
+    break;
 
-    case PassGroup::PassTmpToFunction:
-      result &= runPass<dawn::PassTemporaryToStencilFunction>(context, instantiation);
-      break;
+  case PassGroup::PassTmpToFunction:
+    result &= runPass<dawn::PassTemporaryToStencilFunction>(context, instantiation);
+    break;
 
-    case PassGroup::SetNonTempCaches:
-      result &= runPass<dawn::PassSetNonTempCaches>(context, instantiation);
-      result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-      break;
+  case PassGroup::SetNonTempCaches:
+    result &= runPass<dawn::PassSetNonTempCaches>(context, instantiation);
+    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
+    break;
 
-    case PassGroup::SetCaches:
-      result &= runPass<dawn::PassSetCaches>(context, instantiation);
-      break;
+  case PassGroup::SetCaches:
+    result &= runPass<dawn::PassSetCaches>(context, instantiation);
+    break;
 
-    case PassGroup::SetBlockSize:
-      result &= runPass<dawn::PassSetBlockSize>(context, instantiation);
-      break;
+  case PassGroup::SetBlockSize:
+    result &= runPass<dawn::PassSetBlockSize>(context, instantiation);
+    break;
 
-    case PassGroup::DataLocalityMetric:
-      result &= runPass<dawn::PassDataLocalityMetric>(context, instantiation);
-      break;
+  case PassGroup::DataLocalityMetric:
+    result &= runPass<dawn::PassDataLocalityMetric>(context, instantiation);
+    break;
 
-    default:
-      result = false;
-      break;
+  default:
+    result = false;
+    break;
   }
   return result;
 }

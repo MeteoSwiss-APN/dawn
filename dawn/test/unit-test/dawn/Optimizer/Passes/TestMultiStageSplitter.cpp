@@ -37,8 +37,8 @@ protected:
     if(nStencils < 1)
       nStencils = 1;
 
-    std::shared_ptr<iir::StencilInstantiation> instantiation;
-    CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
+    std::shared_ptr<iir::StencilInstantiation> instantiation =
+        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
     PassMultiStageSplitter pass(*context_, mssSplitStrategy);

@@ -41,19 +41,12 @@ protected:
 };
 
 TEST_F(TestIntervalPartitioner, test_interval_partition) {
-  std::shared_ptr<iir::StencilInstantiation> instantiation;
-  CompilerUtil::load("test_interval_partition.sir", options_, context_, instantiation,
-  //CompilerUtil::load("dbg_interval_partition.O3.iir", options_, context_, instantiation,
-                     TestEnvironment::path_);
+  std::shared_ptr<iir::StencilInstantiation> instantiation = CompilerUtil::load(
+      "test_interval_partition.sir", options_, context_, TestEnvironment::path_);
 
-  CompilerUtil::Verbose = true;
-  //CompilerUtil::write(context_, 0, -1, "dbg_interval_partition");
   ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::Parallel, context_, instantiation));
-  //CompilerUtil::write(context_, 1, -1, "dbg_interval_partition");
   ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::ReorderStages, context_, instantiation));
-  //CompilerUtil::write(context_, 2, -1, "dbg_interval_partition");
   ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_, instantiation));
-  //CompilerUtil::write(context_, 3, -1, "dbg_interval_partition");
 
   std::unordered_set<iir::Interval> expected;
   expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});

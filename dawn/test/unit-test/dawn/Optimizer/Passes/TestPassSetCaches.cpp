@@ -40,8 +40,8 @@ protected:
     if(nStencils < 1)
       nStencils = 1;
 
-    std::shared_ptr<iir::StencilInstantiation> instantiation;
-    CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
+    std::shared_ptr<iir::StencilInstantiation> instantiation =
+        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     PassSetCaches pass(*context_);
     bool result = pass.run(instantiation);
@@ -58,10 +58,10 @@ protected:
       for(const auto& multiStage : multiStages) {
         unsigned nFields = fieldNames[j].size();
         for(int k = 0; k < nFields; ++k) {
-            int accessID = stencils[i]->getMetadata().getAccessIDFromName(fieldNames[j][k]);
-            ASSERT_TRUE(multiStage->isCached(accessID));
-            ASSERT_TRUE(multiStage->getCache(accessID).getType() == cacheTypes[j][k]);
-            ASSERT_TRUE(multiStage->getCache(accessID).getIOPolicy() == ioPolicies[j][k]);
+          int accessID = stencils[i]->getMetadata().getAccessIDFromName(fieldNames[j][k]);
+          ASSERT_TRUE(multiStage->isCached(accessID));
+          ASSERT_TRUE(multiStage->getCache(accessID).getType() == cacheTypes[j][k]);
+          ASSERT_TRUE(multiStage->getCache(accessID).getIOPolicy() == ioPolicies[j][k]);
         }
         j += 1;
       }
@@ -80,7 +80,8 @@ TEST_F(TestPassSetCaches, IJCacheTest2) {
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1) {
-  runTest("KCacheTest01.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}}, {{iir::Cache::IOPolicy::fill}});
+  runTest("KCacheTest01.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
+          {{iir::Cache::IOPolicy::fill}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1b) {
@@ -97,8 +98,8 @@ TEST_F(TestPassSetCaches, KCacheTest2) {
 TEST_F(TestPassSetCaches, KCacheTest2b) {
   runTest("KCacheTest02b.iir", 1, 2, {{"tmp"}, {"b", "tmp"}},
           {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K, iir::Cache::CacheType::K}},
-          {{iir::Cache::IOPolicy::fill_and_flush}, {iir::Cache::IOPolicy::fill, iir::Cache::IOPolicy::bpfill}});
+          {{iir::Cache::IOPolicy::fill_and_flush},
+           {iir::Cache::IOPolicy::fill, iir::Cache::IOPolicy::bpfill}});
 }
-
 
 } // anonymous namespace

@@ -34,8 +34,8 @@ protected:
   std::unique_ptr<OptimizerContext> context_;
 
   void raceConditionTest(const std::string& filename) {
-    std::shared_ptr<iir::StencilInstantiation> instantiation;
-    CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
+    std::shared_ptr<iir::StencilInstantiation> instantiation =
+        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     PassFieldVersioning pass(*context_);
     bool result = pass.run(instantiation);
@@ -46,8 +46,8 @@ protected:
   }
 
   void versioningTest(const std::string& filename) {
-    std::shared_ptr<iir::StencilInstantiation> instantiation;
-    CompilerUtil::load(filename, options_, context_, instantiation, TestEnvironment::path_);
+    std::shared_ptr<iir::StencilInstantiation> instantiation =
+        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     PassFieldVersioning pass(*context_);
     bool result = pass.run(instantiation);
