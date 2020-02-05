@@ -49,15 +49,16 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
 
     iir::LocalVariableData& data = metadata_.getLocalVariableDataFromAccessID(varID);
     if(data.isTypeSet()) {
-      iir::LocalVariableType previouslyComputedType = data.getType();
+      if(newType != iir::LocalVariableType::Scalar) {
+        iir::LocalVariableType previouslyComputedType = data.getType();
 
-      if(previouslyComputedType == iir::LocalVariableType::Scalar) {
-        data.setType(newType);
-      } else if(previouslyComputedType != newType) {
-
-        throw std::runtime_error(
-            dawn::format("Invalid assignment to variable at line %d: rhs differs in location type",
-                         sourceLocation.Line));
+        if(previouslyComputedType == iir::LocalVariableType::Scalar) {
+          data.setType(newType);
+        } else if(previouslyComputedType != newType) {
+          throw std::runtime_error(dawn::format(
+              "Invalid assignment to variable at line %d: rhs differs in location type",
+              sourceLocation.Line));
+        }
       }
     } else {
       data.setType(newType);

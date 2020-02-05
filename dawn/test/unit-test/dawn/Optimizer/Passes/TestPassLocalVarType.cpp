@@ -347,6 +347,54 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
               ast::LocationType::Cells);
 }
 
+TEST(TestLocalVarType, test_unstructured_propagation_02) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.at(f_e)});
+  auto varB = b.localvar("varB", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+  auto varC = b.localvar("varC", dawn::BuiltinTypeID::Double, {b.lit(3.0)});
+
+  /// field(edges) f_e;
+  /// double varA = f_e;
+  /// double varB = 2.0;
+  /// double varC = 3.0;
+  /// varA = varB;
+  /// varB = varC;
+
+  auto stencilInstantiationContext =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  dawn::iir::LoopOrderKind::Forward,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
+                                     b.stmt(b.assignExpr(b.at(varA), b.at(varB))),
+                                     b.stmt(b.assignExpr(b.at(varB), b.at(varC))))))));
+  auto stencil = stencilInstantiationContext.at("generated");
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType) and expect exception to be thrown
+  PassLocalVarType passLocalVarType(optimizer);
+  passLocalVarType.run(stencil);
+
+  int varAID = stencil->getMetaData().getAccessIDFromName("varA");
+  int varBID = stencil->getMetaData().getAccessIDFromName("varB");
+  int varCID = stencil->getMetaData().getAccessIDFromName("varC");
+  // Need to check that varA has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
+              ast::LocationType::Edges);
+  // Need to check that varB has been flagged as scalar
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).isScalar());
+  // Need to check that varC has been flagged as scalar
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).isScalar());
+}
+
 TEST(TestLocalVarType, test_throw_unstructured_01) {
   using namespace dawn::iir;
 

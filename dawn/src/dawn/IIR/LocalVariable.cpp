@@ -12,8 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
-
 #include "LocalVariable.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"

@@ -303,7 +303,7 @@ int StencilMetaInformation::addStmt(bool keepVarName, const std::shared_ptr<VarD
 
 std::shared_ptr<VarDeclStmt>
 StencilMetaInformation::declareVar(bool keepVarName, std::string varName, Type type, int accessID) {
-  declareVar(keepVarName, varName, type, nullptr, accessID);
+  return declareVar(keepVarName, varName, type, nullptr, accessID);
 }
 std::shared_ptr<VarDeclStmt> StencilMetaInformation::declareVar(bool keepVarName,
                                                                 std::string varName, Type type,
@@ -418,6 +418,10 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
   // literals
   DAWN_ASSERT(isAccessType(FieldAccessType::Field, AccessID) ||
               isAccessType(FieldAccessType::LocalVariable, AccessID));
+
+  if(isAccessType(FieldAccessType::LocalVariable, AccessID)) {
+    accessIDToLocalVariableDataMap_.erase(AccessID);
+  }
 
   fieldAccessMetadata_.FieldAccessIDSet_.erase(AccessID);
   if(isAccessType(FieldAccessType::InterStencilTemporary, AccessID)) {
