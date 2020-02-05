@@ -128,7 +128,6 @@ class CMakeBuild(build_ext):
         filename = self.get_ext_filename(ext.name)
         source_path = os.path.join(lib_dir, filename)
         dest_build_path = self.get_ext_fullpath(ext.name)
-        print("HERE", source_path, dest_build_path)
         if os.path.exists(source_path):
             self.copy_file(os.path.abspath(source_path), os.path.abspath(dest_build_path))
         else:
