@@ -225,21 +225,21 @@ def make_field_dimensions_unstructured(
 
 def make_field(
     name: str,
-    field_dimensions: FieldDimensions,
+    dimensions: FieldDimensions,
     is_temporary: bool = False
 ) -> Field:
 
     """ Create a Field
 
     :param name:         Name of the field
-    :param field_dimensions:   dimensions of the field (use make_field_dimensions_*)
+    :param dimensions:   dimensions of the field (use make_field_dimensions_*)
     :param is_temporary: Is it a temporary field?
     """
 
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
-    field.field_dimensions.CopyFrom(field_dimensions)
+    field.field_dimensions.CopyFrom(dimensions)
     return field
 
 
