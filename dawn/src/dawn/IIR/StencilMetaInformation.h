@@ -158,7 +158,27 @@ public:
                   sir::FieldDimensions&& fieldDimensions,
                   std::optional<int> accessID = std::nullopt);
 
-  int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
+  /// @brief Adds an existing variable declaration to the metadata: assigns an accessID to the
+  /// variable, fixes the ID to name map, the ID to LocalVariableData map and the AccessID in the
+  /// `VarDeclStmt`'s data.
+  /// @param keepVarName: whether to keep the current name or complete it with the accessID
+  /// @param stmt: the variable declaration statement
+  /// @returns the access id of the variable
+  int addStmt(bool keepVarName, const std::shared_ptr<VarDeclStmt>& stmt);
+
+  /// @brief Adds an new variable declaration to the metadata: constructs a `VarDeclStmt`, assigns
+  /// an accessID to the variable, fixes the ID to name map, the ID to LocalVariableData map and the
+  /// AccessID in the `VarDeclStmt`'s data.
+  /// @param keepVarName: whether to keep the provided name or complete it with the accessID
+  /// @param varName: the variable's name
+  /// @param type: the variable's type (double, const int, ...)
+  /// @param rhs: the expression to initialize the variable (optional)
+  /// @returns the variable declaration statement
+  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          int accessID = UIDGenerator::getInstance()->get());
+  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          std::shared_ptr<Expr> rhs,
+                                          int accessID = UIDGenerator::getInstance()->get());
 
   void eraseStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {

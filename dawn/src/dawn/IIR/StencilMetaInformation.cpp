@@ -281,11 +281,11 @@ void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int Access
   }
 }
 
-int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt) {
+int StencilMetaInformation::addStmt(bool keepVarName, const std::shared_ptr<VarDeclStmt>& stmt) {
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string globalName;
-  if(keepVarNames) {
+  if(keepVarName) {
     globalName = stmt->getName();
   } else {
     globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
@@ -299,6 +299,33 @@ int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<Var
   stmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
 
   return accessID;
+}
+
+std::shared_ptr<VarDeclStmt>
+StencilMetaInformation::declareVar(bool keepVarName, std::string varName, Type type, int accessID) {
+  declareVar(keepVarName, varName, type, nullptr, accessID);
+}
+std::shared_ptr<VarDeclStmt> StencilMetaInformation::declareVar(bool keepVarName,
+                                                                std::string varName, Type type,
+                                                                std::shared_ptr<Expr> rhs,
+                                                                int accessID) {
+  // TODO: find a way to reuse code from addStmt
+  std::string globalName =
+      keepVarName ? varName : InstantiationHelper::makeLocalVariablename(varName, accessID);
+  // Construct the variable declaration
+  std::vector<std::shared_ptr<iir::Expr>> initList;
+  if(rhs != nullptr) { // If nullptr, declaration without initialization (overload)
+    initList.push_back(rhs);
+  }
+  auto varDeclStmt = iir::makeVarDeclStmt(type, globalName, 0, "=", std::move(initList));
+  // Update id to name map
+  addAccessIDNamePair(accessID, globalName);
+  // Add empty data object for local variable
+  addAccessIDToLocalVariableDataPair(accessID, LocalVariableData{});
+  // Update varDeclStmt's data
+  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
+
+  return varDeclStmt;
 }
 
 bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
