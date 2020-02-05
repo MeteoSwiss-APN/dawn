@@ -18,7 +18,6 @@
 #define GTCLANG_UNITTEST_IRSPLITTER_H
 
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/Pass.h"
 #include "dawn/Support/NonCopyable.h"
 
 #include <string>
@@ -26,7 +25,7 @@
 
 namespace gtclang {
 
-/// @brief Emulate invocation of GTClang from command-line
+/// @brief Split SIR into various levels of IIR
 /// @ingroup unittest
 class IRSplitter : dawn::NonCopyable {
   std::unique_ptr<dawn::OptimizerContext> context_;
@@ -34,10 +33,10 @@ class IRSplitter : dawn::NonCopyable {
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::string filePrefix_;
   unsigned maxLevel_;
+  bool verbose_;
 
 public:
   explicit IRSplitter(const std::string& destDir = "", unsigned maxLevel = 1000);
-
   void split(const std::string& dslFile, const std::vector<std::string>& args = {});
   void parallelize();
   void optimize();
@@ -45,7 +44,6 @@ public:
 
 protected:
   void createContext(const std::shared_ptr<dawn::SIR>& sir);
-  void writeSIR(const std::shared_ptr<dawn::SIR>& sir);
   void writeIIR(const unsigned level = 0);
 
   // Pass groups
@@ -59,10 +57,6 @@ protected:
   void setCaches();
   void setBlockSize();
   void dataLocalityMetric();
-
-  template <class T, typename... Args>
-  bool runPass(const std::string& name,
-               std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation, Args&&... args);
 };
 
 } // namespace gtclang

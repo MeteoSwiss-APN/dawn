@@ -26,6 +26,23 @@
 
 namespace dawn {
 
+enum class PassGroup {
+  Parallel,
+  SSA,
+  PrintStencilGraph,
+  SetStageName,
+  ReorderStages,
+  MergeStages,
+  MergeTemporaries,
+  Inlining,
+  PartitionIntervals,
+  PassTmpToFunction,
+  SetNonTempCaches,
+  SetCaches,
+  SetBlockSize,
+  DataLocalityMetric
+};
+
 using stencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
@@ -33,6 +50,8 @@ using stencilInstantiationContext =
 /// @ingroup unittest
 class CompilerUtil {
 public:
+  static bool Verbose;
+
   static void load(const std::string& sirFilename, std::shared_ptr<SIR>& sir);
   static void load(const std::string& iirFilename,
                    const dawn::OptimizerContext::OptimizerContextOptions& options,
@@ -42,14 +61,42 @@ public:
   static void lower(const std::shared_ptr<dawn::SIR>& sir,
                     std::unique_ptr<OptimizerContext>& context,
                     std::shared_ptr<iir::StencilInstantiation>& instantiation);
-  static void lower(const std::string& sirFilename,
-                    std::unique_ptr<OptimizerContext>& context,
+  static void lower(const std::string& sirFilename, std::unique_ptr<OptimizerContext>& context,
                     std::shared_ptr<iir::StencilInstantiation>& instantiation,
                     const std::string& envPath = "");
   static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
   static stencilInstantiationContext compile(const std::string& sirFile);
   static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
   static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
+
+  template <class TPass, typename... Args>
+  static void addPass(std::unique_ptr<OptimizerContext>& context,
+                      std::vector<std::shared_ptr<Pass>>& passes, Args&&... args) {
+    std::shared_ptr<Pass> pass = std::make_shared<TPass>(*context, std::forward<Args>(args)...);
+    passes.emplace_back(pass);
+  }
+
+  template <class TPass, typename... Args>
+  static bool runPass(std::unique_ptr<OptimizerContext>& context,
+                      std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
+                      Args&&... args) {
+    TPass pass(*context, std::forward<Args>(args)...);
+    if(Verbose)
+      std::cerr << "Running pass: '" << pass.getName() << "' in stencil '"
+                << instantiation->getName() << "'\n";
+    return pass.run(instantiation);
+  }
+
+  static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
+                                                        std::unique_ptr<OptimizerContext>& context);
+  static bool runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context);
+  static bool runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context,
+                       std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
+
+  static void write(const std::shared_ptr<SIR>& sir, const std::string& filePrefix);
+
+  static void write(std::unique_ptr<OptimizerContext>& context, const unsigned level = 0,
+                    const unsigned maxLevel = 100, const std::string& filePrefix = "");
 
 private:
   static dawn::DiagnosticsEngine diag_;

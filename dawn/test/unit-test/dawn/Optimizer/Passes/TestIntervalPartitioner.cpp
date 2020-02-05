@@ -16,6 +16,7 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
@@ -33,13 +34,26 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  virtual void SetUp() { options_.PartitionIntervals = true; }
+  virtual void SetUp() {
+    options_.PartitionIntervals = true;
+    dawn::UIDGenerator::getInstance()->reset();
+  }
 };
 
 TEST_F(TestIntervalPartitioner, test_interval_partition) {
   std::shared_ptr<iir::StencilInstantiation> instantiation;
-  CompilerUtil::load("test_interval_partition.iir", options_, context_, instantiation,
+  CompilerUtil::load("test_interval_partition.sir", options_, context_, instantiation,
+  //CompilerUtil::load("dbg_interval_partition.O3.iir", options_, context_, instantiation,
                      TestEnvironment::path_);
+
+  CompilerUtil::Verbose = true;
+  //CompilerUtil::write(context_, 0, -1, "dbg_interval_partition");
+  ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::Parallel, context_, instantiation));
+  //CompilerUtil::write(context_, 1, -1, "dbg_interval_partition");
+  ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::ReorderStages, context_, instantiation));
+  //CompilerUtil::write(context_, 2, -1, "dbg_interval_partition");
+  ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_, instantiation));
+  //CompilerUtil::write(context_, 3, -1, "dbg_interval_partition");
 
   std::unordered_set<iir::Interval> expected;
   expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
@@ -48,8 +62,7 @@ TEST_F(TestIntervalPartitioner, test_interval_partition) {
   expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
   expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
 
-  PassIntervalPartitioner pass(*context_);
-  bool result = pass.run(instantiation);
+  bool result = CompilerUtil::runPass<dawn::PassIntervalPartitioner>(context_, instantiation);
   ASSERT_TRUE(result);
 
   const auto& stencils = instantiation->getIIR()->getChildren();

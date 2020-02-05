@@ -17,37 +17,19 @@
 #include "gtclang/Unittest/IRSplitter.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/PassDataLocalityMetric.h"
-#include "dawn/Optimizer/PassFieldVersioning.h"
-#include "dawn/Optimizer/PassFixVersionedInputFields.h"
-#include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
-#include "dawn/Optimizer/PassMultiStageSplitter.h"
-#include "dawn/Optimizer/PassSSA.h"
-#include "dawn/Optimizer/PassSetBlockSize.h"
-#include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/Optimizer/PassSetNonTempCaches.h"
-#include "dawn/Optimizer/PassSetStageGraph.h"
-#include "dawn/Optimizer/PassSetStageName.h"
-#include "dawn/Optimizer/PassSetSyncStage.h"
-#include "dawn/Optimizer/PassStageMerger.h"
-#include "dawn/Optimizer/PassStageReordering.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
-#include "dawn/Optimizer/PassTemporaryMerger.h"
-#include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/FileSystem.h"
-#include "dawn/Support/UIDGenerator.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "gtclang/Unittest/Config.h"
 #include "gtclang/Unittest/GTClang.h"
 #include <fstream>
 
 namespace gtclang {
+
+using CompilerUtil = dawn::CompilerUtil;
 
 IRSplitter::IRSplitter(const std::string& destDir, unsigned maxLevel)
     : filePrefix_(destDir), maxLevel_(maxLevel) {}
@@ -58,7 +40,7 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
     filePrefix_ = filePath.root_directory().string();
   filePrefix_ += "/" + filePath.stem().string();
 
-  std::vector<std::string> flags = {"-std=c++11",
+  std::vector<std::string> flags = {"-std=c++11", //"-verbose",
                                     std::string{"-I"} + std::string{GTCLANG_UNITTEST_INCLUDES}};
   for(const auto& arg : args) {
     flags.emplace_back(arg);
@@ -68,7 +50,7 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
 
   if(sir.get()) {
     // Serialize the SIR
-    writeSIR(sir);
+    CompilerUtil::write(sir, filePrefix_);
 
     // Use SIR to create context
     createContext(sir);
@@ -117,25 +99,12 @@ void IRSplitter::generate(const std::string& outFile) {
 }
 
 void IRSplitter::createContext(const std::shared_ptr<dawn::SIR>& sir) {
+  dawn::CompilerUtil::Verbose = true;
   context_ = std::make_unique<dawn::OptimizerContext>(diag_, options_, sir);
 }
 
 void IRSplitter::parallelize() {
-  using MultistageSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy;
-  MultistageSplitStrategy mssSplitStrategy = MultistageSplitStrategy::Optimized;
-
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassInlining>(name, instantiation, true,
-                                dawn::PassInlining::InlineStrategy::InlineProcedures);
-    runPass<dawn::PassFieldVersioning>(name, instantiation);
-    runPass<dawn::PassSSA>(name, instantiation);
-    runPass<dawn::PassMultiStageSplitter>(name, instantiation, mssSplitStrategy);
-    runPass<dawn::PassStageSplitter>(name, instantiation);
-    runPass<dawn::PassTemporaryType>(name, instantiation);
-    runPass<dawn::PassFixVersionedInputFields>(name, instantiation);
-    runPass<dawn::PassComputeStageExtents>(name, instantiation);
-    runPass<dawn::PassSetSyncStage>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::Parallel, context_);
 }
 
 void IRSplitter::optimize() {
@@ -194,120 +163,47 @@ void IRSplitter::optimize() {
 }
 
 void IRSplitter::reorderStages() {
-  dawn::ReorderStrategy::Kind reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassSetStageGraph>(name, instantiation);
-    runPass<dawn::PassStageReordering>(name, instantiation, reorderStrategy);
-    runPass<dawn::PassSetSyncStage>(name, instantiation);
-    runPass<dawn::PassSetStageName>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::ReorderStages, context_);
 }
 
 void IRSplitter::mergeStages() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassStageMerger>(name, instantiation);
-    // since this can change the scope of temporaries ...
-    runPass<dawn::PassTemporaryType>(name, instantiation);
-    runPass<dawn::PassFixVersionedInputFields>(name, instantiation);
-    // modify stages and their extents ...
-    runPass<dawn::PassComputeStageExtents>(name, instantiation);
-    // and changes their dependencies
-    runPass<dawn::PassSetSyncStage>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_);
 }
 
 void IRSplitter::mergeTemporaries() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassTemporaryMerger>(name, instantiation);
-    // this should not affect the temporaries but since we're touching them it would probably be a
-    // safe idea
-    runPass<dawn::PassTemporaryType>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::MergeTemporaries, context_);
 }
 
 void IRSplitter::inlining() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassInlining>(name, instantiation, false,
-                                dawn::PassInlining::InlineStrategy::ComputationsOnTheFly);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::Inlining, context_);
 }
 
 void IRSplitter::partitionIntervals() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassIntervalPartitioner>(name, instantiation);
-    // since this can change the scope of temporaries ...
-    runPass<dawn::PassTemporaryType>(name, instantiation);
-    runPass<dawn::PassFixVersionedInputFields>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::PartitionIntervals, context_);
 }
 
 void IRSplitter::passTmpToFunction() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassTemporaryToStencilFunction>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::PassTmpToFunction, context_);
 }
 
 void IRSplitter::setNonTempCaches() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassSetNonTempCaches>(name, instantiation);
-    // this should not affect the temporaries but since we're touching them it would probably be a
-    // safe idea
-    runPass<dawn::PassTemporaryType>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::SetNonTempCaches, context_);
 }
 
 void IRSplitter::setCaches() {
-  options.ReportPassSetCaches = true;
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassSetCaches>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::SetCaches, context_);
 }
 
 void IRSplitter::setBlockSize() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    runPass<dawn::PassSetBlockSize>(name, instantiation);
-  }
+  CompilerUtil::runGroup(dawn::PassGroup::SetBlockSize, context_);
 }
 
 void IRSplitter::dataLocalityMetric() {
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    // Plain diagnostics, should not even be a pass but is independent
-    runPass<dawn::PassDataLocalityMetric>(name, instantiation);
-  }
-}
-
-template <class T, typename... Args>
-bool IRSplitter::runPass(const std::string& name,
-                         std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
-                         Args&&... args) {
-  T pass(*context_, std::forward<Args>(args)...);
-  return pass.run(instantiation);
-}
-
-void IRSplitter::writeSIR(const std::shared_ptr<dawn::SIR>& sir) {
-  dawn::UIDGenerator::getInstance()->reset();
-  std::cerr << "Writing SIR file '" << filePrefix_ << ".sir'" << std::endl;
-  dawn::SIRSerializer::serialize(filePrefix_ + ".sir", sir.get());
+  CompilerUtil::runGroup(dawn::PassGroup::DataLocalityMetric, context_);
 }
 
 void IRSplitter::writeIIR(const unsigned level) {
-  if(level > maxLevel_)
-    return;
-
-  unsigned nstencils = context_->getStencilInstantiationMap().size();
-  unsigned stencil_id = 0;
-  for(auto& [name, instantiation] : context_->getStencilInstantiationMap()) {
-    std::string iirFile = filePrefix_;
-    if(nstencils > 1)
-      iirFile += "." + std::to_string(stencil_id);
-    if(maxLevel_ > 0)
-      iirFile += ".O" + std::to_string(level);
-    iirFile += ".iir";
-
-    std::cerr << "Writing IIR file '" << iirFile << "'" << std::endl;
-    dawn::IIRSerializer::serialize(iirFile, instantiation);
-    stencil_id += 1;
-  }
+  CompilerUtil::write(context_, level, maxLevel_, filePrefix_);
 }
 
 } // namespace gtclang
