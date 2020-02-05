@@ -39,6 +39,7 @@ if(eckit_FOUND AND atlas_FOUND)
     generated_NestedSimple.hpp
     generated_NestedWithField.hpp
     generated_sparseDimension.hpp
+    generated_sparseDimensionTwice.hpp
   )
   set(reference_stencil_codes reference_diffusion.hpp
     reference_gradient.hpp
