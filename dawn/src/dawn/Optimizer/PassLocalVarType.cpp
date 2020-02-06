@@ -132,6 +132,10 @@ public:
       // No self-dependencies
       if(accessedVariableID != *curVarID_) {
 
+        // If the set of dependers for this variable is not there, it means the variable hasn't been
+        // declared
+        DAWN_ASSERT_MSG(dependencyMap_.count(accessedVariableID),
+                        "Variable accessed before being declared.");
         // Need to register a dependency. Pair to be added is from dependency (variable accessed in
         // the rhs) to dependent (lhs).
         dependencyMap_.at(accessedVariableID).insert(*curVarID_);
