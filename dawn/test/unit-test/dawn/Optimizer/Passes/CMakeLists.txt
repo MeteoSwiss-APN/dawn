@@ -26,6 +26,7 @@ add_executable(${executable}
   TestFieldVersioning.cpp
   TestMultiStageSplitter.cpp
   TestPassSetCaches.cpp
+  TestSetNonTempCaches.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
