@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "./dawn/test/unit-test/dawn/Optimizer/Passes/samples/test_interval_partition.cpp",
+ "filename": "test_interval_partition.cpp",
  "stencils": [
   {
    "name": "interval_partition_test",

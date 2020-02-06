@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassSetNonTempCaches/NoCache_1.cpp",
+ "filename": "NoCache_1.cpp",
  "stencils": [
   {
    "name": "NotCorrectlyPointwise",

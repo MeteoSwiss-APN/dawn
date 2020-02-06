@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassMultiStageSplitter/SplitterTest03.cpp",
+ "filename": "SplitterTest03.cpp",
  "stencils": [
   {
    "name": "Test",

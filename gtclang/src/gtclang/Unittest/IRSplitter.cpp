@@ -220,6 +220,7 @@ int main(int argc, char* argv[]) {
   std::string filename{argv[1]};
   std::string dest_dir;
   std::vector<std::string> args;
+
   if(argc > 2)
     dest_dir = std::string{argv[2]};
   unsigned max_level = 1000;

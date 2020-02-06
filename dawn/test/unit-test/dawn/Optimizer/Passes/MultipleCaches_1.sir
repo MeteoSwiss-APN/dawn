@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassSetNonTempCaches/MultipleCaches_1.cpp",
+ "filename": "MultipleCaches_1.cpp",
  "stencils": [
   {
    "name": "Test01",

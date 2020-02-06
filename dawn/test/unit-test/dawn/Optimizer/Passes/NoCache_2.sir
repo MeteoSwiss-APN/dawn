@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassSetNonTempCaches/NoCache_2.cpp",
+ "filename": "NoCache_2.cpp",
  "stencils": [
   {
    "name": "NotEnoughReadsWithReadBeforeWrite",

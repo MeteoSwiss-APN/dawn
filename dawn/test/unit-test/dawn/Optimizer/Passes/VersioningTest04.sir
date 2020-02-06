@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassFieldVersioning/VersioningTest04.cpp",
+ "filename": "VersioningTest04.cpp",
  "stencils": [
   {
    "name": "Test",

@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassSetCaches/IJCacheTest01.cpp",
+ "filename": "IJCacheTest01.cpp",
  "stencils": [
   {
    "name": "Test",
