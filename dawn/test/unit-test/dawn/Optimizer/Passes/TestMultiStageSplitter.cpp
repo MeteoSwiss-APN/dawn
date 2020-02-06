@@ -40,10 +40,10 @@ protected:
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
+    // Expect pass to succeed...
     auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
-    PassMultiStageSplitter pass(*context_, mssSplitStrategy);
-    bool result = pass.run(instantiation);
-    ASSERT_TRUE(result); // Expect pass to succeed...
+    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassMultiStageSplitter>(context_, instantiation,
+                                                                    mssSplitStrategy));
 
     auto& stencils = instantiation->getStencils();
     ASSERT_EQ(stencils.size(), nStencils);
@@ -54,14 +54,14 @@ protected:
   }
 };
 
-TEST_F(TestMultiStageSplitter, SplitterTest1) { runTest("SplitterTest01.iir", 1, {1}); }
+TEST_F(TestMultiStageSplitter, SplitterTest1) { runTest("SplitterTest01.sir", 1, {1}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest2) { runTest("SplitterTest02.iir", 1, {2}); }
+TEST_F(TestMultiStageSplitter, SplitterTest2) { runTest("SplitterTest02.sir", 1, {2}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest3) { runTest("SplitterTest03.iir", 1, {2}); }
+TEST_F(TestMultiStageSplitter, SplitterTest3) { runTest("SplitterTest03.sir", 1, {2}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest4) { runTest("SplitterTest04.iir", 1, {4}); }
+TEST_F(TestMultiStageSplitter, SplitterTest4) { runTest("SplitterTest04.sir", 1, {4}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest5) { runTest("SplitterTest05.iir", 1, {2}); }
+TEST_F(TestMultiStageSplitter, SplitterTest5) { runTest("SplitterTest05.sir", 1, {2}); }
 
 } // anonymous namespace

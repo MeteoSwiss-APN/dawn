@@ -41,4 +41,13 @@ add_library(GTClangUnittest
 )
 
 target_add_gtclang_standard_props(GTClangUnittest)
-target_link_libraries(GTClangUnittest PUBLIC GTClangSupport GTClangDriver Dawn::Dawn LLVM::LLVM Clang gtest)
+target_link_libraries(GTClangUnittest PUBLIC GTClangSupport GTClangDriver DawnUnittest Dawn::Dawn LLVM::LLVM Clang gtest)
+
+set(GTCLANG_SPLIT "true")
+if(GTCLANG_SPLIT)
+  include_directories(../../../../build/gtclang/src)
+  add_executable(gtclang_split IRSplitter.cpp IRSplitter.h)
+  set_target_properties(gtclang_split PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  target_compile_definitions(gtclang_split PRIVATE MAIN_ENABLED=1)
+  target_link_libraries(gtclang_split GTClangUnittest)
+endif()

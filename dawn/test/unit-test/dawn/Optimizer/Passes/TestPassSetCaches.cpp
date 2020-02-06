@@ -46,9 +46,8 @@ protected:
     ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
     ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
 
-    PassSetCaches pass(*context_);
-    bool result = pass.run(instantiation);
-    ASSERT_TRUE(result); // Expect pass to succeed...
+    // Expect pass to succeed...
+    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSetCaches>(context_, instantiation));
 
     auto& stencils = instantiation->getStencils();
     ASSERT_EQ(stencils.size(), nStencils);

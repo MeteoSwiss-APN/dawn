@@ -37,9 +37,12 @@ protected:
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
-    PassFieldVersioning pass(*context_);
-    bool result = pass.run(instantiation);
-    ASSERT_FALSE(result); // Expect pass to fail...
+    if(filename.find(".sir") != std::string::npos) {
+      //ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
+    }
+
+    // Expect pass to fail...
+    ASSERT_FALSE(CompilerUtil::runPass<dawn::PassFieldVersioning>(context_, instantiation));
 
     DiagnosticsEngine& diag = context_->getDiagnostics();
     ASSERT_TRUE(diag.hasErrors());
@@ -49,15 +52,14 @@ protected:
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
-    PassFieldVersioning pass(*context_);
-    bool result = pass.run(instantiation);
-    ASSERT_TRUE(result); // Expect pass to succeed...
+    // Expect pass to succeed...
+    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassFieldVersioning>(context_, instantiation));
   }
 };
 
-TEST_F(TestFieldVersioning, RaceCondition1) { raceConditionTest("RaceCondition01.iir"); }
+TEST_F(TestFieldVersioning, RaceCondition1) { raceConditionTest("RaceCondition01.sir"); }
 
-TEST_F(TestFieldVersioning, RaceCondition2) { raceConditionTest("RaceCondition02.iir"); }
+TEST_F(TestFieldVersioning, RaceCondition2) { raceConditionTest("RaceCondition02.sir"); }
 
 TEST_F(TestFieldVersioning, RaceCondition3) { raceConditionTest("RaceCondition03.sir"); }
 
