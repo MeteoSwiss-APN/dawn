@@ -127,7 +127,9 @@ public:
     }
   }
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    if(curVarID_.has_value()) { // We are inside an assignment / variable declaration
+    // We are inside an assignment / variable declaration and the current variable accessed is not a
+    // global variable
+    if(curVarID_.has_value() && expr->isLocal()) {
       int accessedVariableID = iir::getAccessID(expr);
       // No self-dependencies
       if(accessedVariableID != *curVarID_) {
@@ -152,7 +154,9 @@ public:
     }
   }
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
-    if(expr->getLeft()->getKind() == ast::Expr::Kind::VarAccessExpr) {
+    // Run only when lhs is a local variable
+    if(expr->getLeft()->getKind() == ast::Expr::Kind::VarAccessExpr &&
+       std::dynamic_pointer_cast<iir::VarAccessExpr>(expr->getLeft())->isLocal()) {
 
       if(curVarID_.has_value()) { // Variable assignment inside variable assignment, not supported.
         throw std::runtime_error(dawn::format(
