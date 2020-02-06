@@ -43,6 +43,9 @@ protected:
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
+
     PassSetCaches pass(*context_);
     bool result = pass.run(instantiation);
     ASSERT_TRUE(result); // Expect pass to succeed...
@@ -70,33 +73,33 @@ protected:
 };
 
 TEST_F(TestPassSetCaches, IJCacheTest1) {
-  runTest("IJCacheTest01.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
+  runTest("IJCacheTest01.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
           {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, IJCacheTest2) {
-  runTest("IJCacheTest02.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
+  runTest("IJCacheTest02.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
           {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1) {
-  runTest("KCacheTest01.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
+  runTest("KCacheTest01.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::fill}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1b) {
-  runTest("KCacheTest01b.iir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
+  runTest("KCacheTest01b.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest2) {
-  runTest("KCacheTest02.iir", 1, 2, {{"tmp"}, {"tmp"}},
+  runTest("KCacheTest02.sir", 1, 2, {{"tmp"}, {"tmp"}},
           {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::fill_and_flush}, {iir::Cache::IOPolicy::fill}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest2b) {
-  runTest("KCacheTest02b.iir", 1, 2, {{"tmp"}, {"b", "tmp"}},
+  runTest("KCacheTest02b.sir", 1, 2, {{"tmp"}, {"b", "tmp"}},
           {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K, iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::fill_and_flush},
            {iir::Cache::IOPolicy::fill, iir::Cache::IOPolicy::bpfill}});

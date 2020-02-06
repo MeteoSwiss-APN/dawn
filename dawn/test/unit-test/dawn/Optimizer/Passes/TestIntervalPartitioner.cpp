@@ -44,9 +44,9 @@ TEST_F(TestIntervalPartitioner, test_interval_partition) {
   std::shared_ptr<iir::StencilInstantiation> instantiation = CompilerUtil::load(
       "test_interval_partition.sir", options_, context_, TestEnvironment::path_);
 
-  ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::Parallel, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::ReorderStages, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_, instantiation));
+  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
+  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
+  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
 
   std::unordered_set<iir::Interval> expected;
   expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});

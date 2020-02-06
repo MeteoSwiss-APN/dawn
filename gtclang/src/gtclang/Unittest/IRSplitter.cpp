@@ -49,6 +49,8 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
   auto [success, sir] = GTClang::run({dslFile, "-fno-codegen"}, flags);
 
   if(sir.get()) {
+    CompilerUtil::Verbose = true;
+
     // Serialize the SIR
     CompilerUtil::write(sir, filePrefix_);
 
@@ -99,7 +101,6 @@ void IRSplitter::generate(const std::string& outFile) {
 }
 
 void IRSplitter::createContext(const std::shared_ptr<dawn::SIR>& sir) {
-  dawn::CompilerUtil::Verbose = true;
   context_ = std::make_unique<dawn::OptimizerContext>(diag_, options_, sir);
 }
 
