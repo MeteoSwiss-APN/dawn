@@ -219,14 +219,17 @@ int main(int argc, char* argv[]) {
 
   std::string filename{argv[1]};
   std::string dest_dir;
+  std::vector<std::string> args;
   if(argc > 2)
     dest_dir = std::string{argv[2]};
   unsigned max_level = 1000;
   if(argc > 3)
     max_level = atoi(argv[3]);
+  if(argc > 4)
+    args = std::vector<std::string>(argv + 4, argv + (argc - 1));
 
   gtclang::IRSplitter splitter(dest_dir, max_level);
-  splitter.split(filename);
+  splitter.split(filename, args);
 
   return 0;
 }
