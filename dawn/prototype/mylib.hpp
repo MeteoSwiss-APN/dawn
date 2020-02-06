@@ -99,7 +99,7 @@ private:
 
 class Grid {
 public:
-  Grid(int nx, int ny, bool periodic = false, double lx = 0., double ly = 0.)
+  Grid(int nx, int ny, bool periodic = false, double lx = 0., double ly = 0., bool equilat = false)
       : faces_(2 * nx * ny), vertices_(periodic ? nx * ny : (nx + 1) * (ny + 1)),
         edges_(periodic ? 3 * nx * ny : 3 * (nx + 1) * (ny + 1)), nx_(nx), ny_(ny) {
     auto edge_at = [&](int i, int j, int c) -> Edge& {
@@ -133,10 +133,14 @@ public:
         double px = i;
         double py = j;
         if(lx != 0.) {
-          px = double(i) / (nx - 1) * lx;
+          px = double(i) / (nx)*lx;
         }
         if(ly != 0.) {
-          py = double(j) / (nx - 1) * ly;
+          py = double(j) / (ny)*ly;
+        }
+        if(equilat) {
+          px = px - 0.5 * py;
+          py = py * sqrt(3) / 2.;
         }
         v = Vertex(px, py, &v - vertices_.data());
       }

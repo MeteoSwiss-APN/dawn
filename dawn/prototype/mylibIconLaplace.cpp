@@ -90,6 +90,24 @@ std::tuple<double, double> CellMidPoint(const mylib::Face& c) {
   return {1. / 3. * (v0.x() + v1.x() + v2.x()), 1. / 3. * (v0.y() + v1.y() + v2.y())};
 }
 
+std::tuple<double, double> CellCircumcenter(const mylib::Face& c) {
+  double Ax = c.vertex(0).x();
+  double Ay = c.vertex(0).y();
+  double Bx = c.vertex(1).x();
+  double By = c.vertex(1).y();
+  double Cx = c.vertex(2).x();
+  double Cy = c.vertex(2).y();
+
+  double D = 2 * (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By));
+  double Ux = 1. / D *
+              ((Ax * Ax + Ay * Ay) * (By - Cy) + (Bx * Bx + By * By) * (Cy - Ay) +
+               (Cx * Cx + Cy * Cy) * (Ay - By));
+  double Uy = 1. / D *
+              ((Ax * Ax + Ay * Ay) * (Cx - Bx) + (Bx * Bx + By * By) * (Ax - Cx) +
+               (Cx * Cx + Cy * Cy) * (Bx - Ax));
+  return {Ux, Uy};
+}
+
 double TriangleArea(const mylib::Vertex& v0, const mylib::Vertex& v1, const mylib::Vertex& v2) {
   return fabs(
       (v0.x() * (v1.y() - v2.y()) + v1.x() * (v2.y() - v0.y()) + v2.x() * (v0.y() - v1.y())) * 0.5);
@@ -103,18 +121,16 @@ double CellArea(const mylib::Face& c) {
 }
 
 double DualCellArea(const mylib::Vertex& center) {
-  std::vector<const mylib::Vertex*> cyclicVertices = center.vertices();
-  cyclicVertices.push_back(&center.vertex(0));
   double totalArea = 0.;
-  for(int i = 0; i < cyclicVertices.size() - 1; i++) {
-    mylib::Vertex left = *cyclicVertices[i];
-    mylib::Vertex right = *cyclicVertices[i + 1];
-
-    mylib::Vertex leftHalf(center.x() + 0.5 * (left.x() - center.x()),
-                           center.y() + 0.5 * (left.y() - center.y()), -1);
-    mylib::Vertex rightHalf(center.x() + 0.5 * (right.x() - center.x()),
-                            center.y() + 0.5 * (right.y() - center.y()), -1);
-    totalArea += TriangleArea(center, leftHalf, rightHalf);
+  for(const auto& e : center.edges()) {
+    if(e->faces().size() != 2) {
+      return 0.;
+    }
+    auto [leftx, lefty] = CellCircumcenter(e->face(0));
+    auto [rightx, righty] = CellCircumcenter(e->face(1));
+    mylib::Vertex left(leftx, lefty, -1);
+    mylib::Vertex right(rightx, righty, -1);
+    totalArea += TriangleArea(center, left, right);
   }
   return totalArea;
 }
@@ -125,8 +141,8 @@ double DualEdgeLength(const mylib::Edge& e) {
   }
   auto c0 = e.face(0);
   auto c1 = e.face(1);
-  auto [x0, y0] = CellMidPoint(c0);
-  auto [x1, y1] = CellMidPoint(c1);
+  auto [x0, y0] = CellCircumcenter(c0);
+  auto [x1, y1] = CellCircumcenter(c1);
   double dx = x1 - x0;
   double dy = y1 - y0;
   return sqrt(dx * dx + dy * dy);
@@ -143,8 +159,8 @@ double TangentOrientation(const mylib::Edge& e) {
 
   auto c0 = e.face(0);
   auto c1 = e.face(1);
-  auto [x0, y0] = CellMidPoint(c0);
-  auto [x1, y1] = CellMidPoint(c1);
+  auto [x0, y0] = CellCircumcenter(c0);
+  auto [x1, y1] = CellCircumcenter(c1);
   double c2c1x = x1 - x0;
   double c2c1y = y1 - y0;
 
@@ -171,8 +187,8 @@ void dumpDualMesh(const mylib::Grid& m) {
     if(e.get().faces().size() != 2) {
       continue;
     }
-    auto [xm1, ym1] = CellMidPoint(e.get().face(0));
-    auto [xm2, ym2] = CellMidPoint(e.get().face(1));
+    auto [xm1, ym1] = CellCircumcenter(e.get().face(0));
+    auto [xm2, ym2] = CellCircumcenter(e.get().face(1));
     fprintf(fp, "%f %f %f %f\n", xm1, ym1, xm2, ym2);
   }
   fclose(fp);
@@ -199,7 +215,7 @@ void dumpSparseData(const mylib::Grid& mesh, const mylib::SparseFaceData<double>
   FILE* fp = fopen(fname.c_str(), "w+");
   for(const auto& c : mesh.faces()) {
     int sparse_idx = 0;
-    auto [cmx, cmy] = CellMidPoint(c);
+    auto [cmx, cmy] = CellCircumcenter(c);
     for(const auto& e : c.edges()) {
       double val = sparseData(c, sparse_idx, level);
       auto [emx, emy] = EdgeMidpoint(*e);
@@ -215,7 +231,9 @@ int main() {
   int w = 10;
   int k_size = 1;
   const int level = 0;
-  mylib::Grid mesh{w, w, false, M_PI, M_PI};
+  double lDomain = M_PI;
+  // double lDomain = 10.;
+  mylib::Grid mesh{w, w, false, lDomain, lDomain, true};
   dumpMesh(mesh);
   dumpDualMesh(mesh);
 
@@ -303,9 +321,14 @@ int main() {
   FILE* fp = fopen("laplICONmylib_in.txt", "w+");
   for(const auto& e : mesh.edges()) {
     auto [xm, ym] = EdgeMidpoint(e);
-    vec(e.get(), level) = sin(xm) * sin(ym);
+    // px = px - 0.5 * py;
+    // py = py * sqrt(3) / 2.;
+    double py = 2 / sqrt(3) * ym;
+    double px = xm + 0.5 * py;
+    double fun = sin(px) * sin(py);
+    vec(e.get(), level) = fun;
     nabla2_vec(e.get(), level) = 0;
-    fprintf(fp, "%f %f %f\n", xm, ym, sin(xm) * sin(ym));
+    fprintf(fp, "%f %f %f\n", xm, ym, fun);
   }
   fclose(fp);
 
@@ -322,6 +345,7 @@ int main() {
   FILE* fpdual = fopen("laplICONmylib_dualEdgeLength.txt", "w+");
   FILE* fpnormal = fopen("laplICONmylib_nrm.txt", "w+");
   FILE* fpdnormal = fopen("laplICONmylib_dnrm.txt", "w+");
+  FILE* fptangent = fopen("laplICONmylib_tangent.txt", "w+");
   for(auto const& e : mesh.edges()) {
     primal_edge_length(e, level) = EdgeLength(e);
     dual_edge_length(e, level) = DualEdgeLength(e);
@@ -329,6 +353,7 @@ int main() {
     auto [xm, ym] = EdgeMidpoint(e);
     fprintf(fpprimal, "%f %f %f\n", xm, ym, primal_edge_length(e, level));
     fprintf(fpdual, "%f %f %f\n", xm, ym, dual_edge_length(e, level));
+    fprintf(fptangent, "%f %f %f\n", xm, ym, tangent_orientation(e, level));
     auto [nx, ny] = PrimalNormal(e);
     primal_normal_x(e, level) = nx;
     primal_normal_y(e, level) = ny;
@@ -345,15 +370,22 @@ int main() {
   fclose(fpnormal);
   fclose(fpdnormal);
 
+  FILE* fpcella = fopen("laplICONmylib_area.txt", "w+");
   // init geometric info for cells
   for(const auto& c : mesh.faces()) {
     cell_area(c, level) = CellArea(c);
+    auto [xm, ym] = CellMidPoint(c);
+    fprintf(fpcella, "%f %f %f\n", xm, ym, cell_area(c, level));
   }
+  fclose(fpcella);
 
   // init geometric info for vertices
+  FILE* fpcellad = fopen("laplICONmylib_areaDual.txt", "w+");
   for(const auto& v : mesh.vertices()) {
     dual_cell_area(v, level) = DualCellArea(v);
+    fprintf(fpcellad, "%f %f %f\n", v.x(), v.y(), dual_cell_area(v, level));
   }
+  fclose(fpcellad);
 
   // init edge orientations for vertices and cells
   auto dot = [](const mylib::Vertex& v1, const mylib::Vertex& v2) {
@@ -452,7 +484,7 @@ int main() {
     int m_sparse = 0;
     for(const auto& e : v.edges()) {
       geofac_rot(v, m_sparse, level) = dual_edge_length(*e, level) *
-                                       edge_orientation_vertex(v, m_sparse, level) *
+                                       edge_orientation_vertex(v, m_sparse, level) /
                                        dual_cell_area(v, level);
 
       // ptr_int%geofac_rot(jv,je,jb) =                &
@@ -469,7 +501,7 @@ int main() {
     int m_sparse = 0;
     for(const auto& e : c.edges()) {
       geofac_div(c, m_sparse, level) = primal_edge_length(*e, level) *
-                                       edge_orientation_cell(c, m_sparse, level) *
+                                       edge_orientation_cell(c, m_sparse, level) /
                                        cell_area(c, level);
 
       //  ptr_int%geofac_div(jc,je,jb) = &
@@ -566,7 +598,8 @@ int main() {
 
     if(e.get().color() == mylib::edge_color::diagonal) {
       fprintf(fpdivD, "%f %f %f\n", x, y,
-              (div_vec(e.get().face(1), level) - div_vec(e.get().face(0), level)) /
+              (div_vec(e.get().face(0), level) -
+               div_vec(e.get().face(1), level)) / // DBG switched this around
                   dual_edge_length(e, level));
 
       fprintf(fprotD, "%f %f %f\n", x, y,
@@ -579,12 +612,21 @@ int main() {
     // the orientation of face(1) and face(0) w.r.t the edge, which implies that the faces are well
     // ordered from the perspective of the edges in ICON or the cell values are pre-mutiplied with
     // the appropriate sign. probably the latter! EDIT: this seems to be the case
-    nabla2_vec(e, level) +=
-        tangent_orientation(e, level) *
-            (rot_vec(e.get().vertex(1), level) - rot_vec(e.get().vertex(0), level)) /
-            primal_edge_length(e.get(), level) +
-        (div_vec(e.get().face(1), level) - div_vec(e.get().face(0), level)) /
-            dual_edge_length(e.get(), level);
+    if(e.get().color() != mylib::edge_color::diagonal) {
+      nabla2_vec(e, level) +=
+          tangent_orientation(e, level) *
+              (rot_vec(e.get().vertex(1), level) - rot_vec(e.get().vertex(0), level)) /
+              primal_edge_length(e.get(), level) -
+          (div_vec(e.get().face(1), level) - div_vec(e.get().face(0), level)) /
+              dual_edge_length(e.get(), level);
+    } else {
+      nabla2_vec(e, level) +=
+          tangent_orientation(e, level) *
+              (rot_vec(e.get().vertex(1), level) - rot_vec(e.get().vertex(0), level)) /
+              primal_edge_length(e.get(), level) -
+          (div_vec(e.get().face(0), level) - div_vec(e.get().face(1), level)) /
+              dual_edge_length(e.get(), level);
+    }
   }
   fclose(fpdiv);
   fclose(fprot);
