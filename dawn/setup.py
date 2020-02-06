@@ -95,7 +95,10 @@ class CMakeBuild(build_ext):
             self.compile_extension(self.build_temp, cmake=cmake_executable)
             # Move from build temp to final position
             for ext in self.extensions:
-                self.install_extension(os.path.join(self.build_temp, "src"), ext)
+                self.copy_file(
+                    os.path.join(self.build_temp, "src", self.get_ext_filename(ext.name)),
+                    self.get_ext_fullpath(ext.name),
+                )
 
         # Install included headers
         self.run_command("install_dawn_includes")
@@ -139,16 +142,6 @@ class CMakeBuild(build_ext):
         cmake_cmd = ["cmake", "--build", build_dir, "--target", "python"] + build_args
         print("{cwd} $ {cmd}".format(cwd=build_dir, cmd=" ".join(cmake_cmd)))
         subprocess.check_call(cmake_cmd)
-
-    def install_extension(self, lib_dir, ext):
-        # Currently just copy the generated CPython extension to the package folder
-        filename = self.get_ext_filename(ext.name)
-        source_path = os.path.join(lib_dir, filename)
-        dest_build_path = self.get_ext_fullpath(ext.name)
-        if os.path.exists(source_path):
-            self.copy_file(os.path.abspath(source_path), os.path.abspath(dest_build_path))
-        else:
-            raise FileNotFoundError("Cannot find file")
 
 
 class InstallDawnIncludesCommand(Command):
