@@ -69,8 +69,6 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        cmake_executable = validate_cmake_install()
-
         # Check if all extensions are already built in a build directory given by DAWN_BUILD_DIR
         built = False
         dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
@@ -92,6 +90,7 @@ class CMakeBuild(build_ext):
                 )
         else:
             self.build_temp = os.path.join(DAWN_DIR, "build")
+            cmake_executable = validate_cmake_install()
             self.compile_extension(self.build_temp, cmake=cmake_executable)
             # Move from build temp to final position
             for ext in self.extensions:
