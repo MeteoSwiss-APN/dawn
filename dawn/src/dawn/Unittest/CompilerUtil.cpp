@@ -111,6 +111,10 @@ stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
   return compile(sir);
 }
 
+void CompilerUtil::clearDiags() {
+  diag_.clear();
+}
+
 void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
   using CG = dawn::codegen::cxxnaive::CXXNaiveCodeGen;
   dawn::DiagnosticsEngine diagnostics;

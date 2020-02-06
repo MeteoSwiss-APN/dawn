@@ -17,6 +17,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -34,21 +35,21 @@ protected:
   std::unique_ptr<OptimizerContext> context_;
 
   void raceConditionTest(const std::string& filename) {
+    CompilerUtil::clearDiags();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
-    if(filename.find(".sir") != std::string::npos) {
-      //ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    }
+    // Inline pass is a prerequisite...
+    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassInlining>(
+        context_, instantiation, true, dawn::PassInlining::InlineStrategy::InlineProcedures));
 
     // Expect pass to fail...
     ASSERT_FALSE(CompilerUtil::runPass<dawn::PassFieldVersioning>(context_, instantiation));
-
-    DiagnosticsEngine& diag = context_->getDiagnostics();
-    ASSERT_TRUE(diag.hasErrors());
+    ASSERT_TRUE(context_->getDiagnostics().hasErrors());
   }
 
   void versioningTest(const std::string& filename) {
+    CompilerUtil::clearDiags();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
