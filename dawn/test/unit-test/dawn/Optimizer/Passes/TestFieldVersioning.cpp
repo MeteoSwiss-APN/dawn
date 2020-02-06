@@ -63,17 +63,17 @@ TEST_F(TestFieldVersioning, RaceCondition2) { raceConditionTest("RaceCondition02
 
 TEST_F(TestFieldVersioning, RaceCondition3) { raceConditionTest("RaceCondition03.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest1) { versioningTest("VersioningTest01.iir"); }
+TEST_F(TestFieldVersioning, VersioningTest1) { versioningTest("VersioningTest01.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest2) { versioningTest("VersioningTest02.iir"); }
+TEST_F(TestFieldVersioning, VersioningTest2) { versioningTest("VersioningTest02.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest3) { versioningTest("VersioningTest03.iir"); }
+TEST_F(TestFieldVersioning, VersioningTest3) { versioningTest("VersioningTest03.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest4) { versioningTest("VersioningTest04.iir"); }
+TEST_F(TestFieldVersioning, VersioningTest4) { versioningTest("VersioningTest04.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest5) { versioningTest("VersioningTest05.iir"); }
+TEST_F(TestFieldVersioning, VersioningTest5) { versioningTest("VersioningTest05.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest6) { versioningTest("VersioningTest06.iir"); }
+TEST_F(TestFieldVersioning, VersioningTest6) { versioningTest("VersioningTest06.sir"); }
 
 TEST_F(TestFieldVersioning, VersioningTest7) { versioningTest("VersioningTest07.sir"); }
 

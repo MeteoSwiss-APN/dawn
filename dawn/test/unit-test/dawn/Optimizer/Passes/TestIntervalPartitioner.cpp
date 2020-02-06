@@ -33,10 +33,16 @@ class TestIntervalPartitioner : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
+  std::unordered_set<iir::Interval> expected_;
 
   virtual void SetUp() {
     options_.PartitionIntervals = true;
     dawn::UIDGenerator::getInstance()->reset();
+    expected_.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
+    expected_.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
+    expected_.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
+    expected_.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
+    expected_.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
   }
 };
 
@@ -47,16 +53,7 @@ TEST_F(TestIntervalPartitioner, test_interval_partition) {
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
-
-  std::unordered_set<iir::Interval> expected;
-  expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
-  expected.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
-  expected.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
-  expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
-  expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
-
-  bool result = CompilerUtil::runPass<dawn::PassIntervalPartitioner>(context_, instantiation);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(CompilerUtil::runPass<dawn::PassIntervalPartitioner>(context_, instantiation));
 
   const auto& stencils = instantiation->getIIR()->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
@@ -67,8 +64,8 @@ TEST_F(TestIntervalPartitioner, test_interval_partition) {
   const auto& multiStage = stencil->getChildren().begin()->get();
   std::unordered_set<iir::Interval> intervals = multiStage->getIntervals();
 
-  ASSERT_TRUE(intervals.size() == expected.size());
-  for(const auto& interval : expected) {
+  ASSERT_TRUE(intervals.size() == expected_.size());
+  for(const auto& interval : expected_) {
     ASSERT_TRUE(intervals.find(interval) != intervals.end());
   }
 }
