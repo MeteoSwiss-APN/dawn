@@ -36,6 +36,27 @@ with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
 
 install_requires = ["attrs>=19", "black>=19.3b0", f"protobuf>={protobuf_version}", "pytest>=4.3.0"]
 
+
+def validate_cmake_install():
+    """Return a cmake executable or \"cmake\" after checking version.
+    Raises an exception if cmake is not found."""
+    # Check if a recent version of CMake is present
+    cmake_executable = os.getenv("CMAKE_EXECUTABLE", default="cmake")
+    try:
+        out = subprocess.check_output([cmake_executable, "--version"])
+    except OSError:
+        raise RuntimeError(
+            "CMake must be installed to build the following extensions: "
+            + ", ".join(e.name for e in self.extensions)
+        )
+
+    cmake_version = LooseVersion(re.search(r"version\s*([\d.]+)", out.decode()).group(1))
+    if cmake_version < "3.13.0":
+        raise RuntimeError("CMake >= 3.13.0 is required")
+
+    return cmake_executable
+
+
 # Based on:
 #   https://www.benjack.io/2018/02/02/python-cpp-revisited.html
 #   https://gist.github.com/hovren/5b62175731433c741d07ee6f482e2936
@@ -48,33 +69,30 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        # Check if a recent version of CMake is present
-        cmake_executable = os.getenv("CMAKE_EXECUTABLE", default="cmake")
-        try:
-            out = subprocess.check_output([cmake_executable, "--version"])
-        except OSError:
-            raise RuntimeError(
-                "CMake must be installed to build the following extensions: "
-                + ", ".join(e.name for e in self.extensions)
+        cmake_executable = validate_cmake_install()
+
+        # Check if all extensions are already built in a build directory given by DAWN_BUILD_DIR
+        built = False
+        dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
+        if dawn_build_dir:
+            built = all(
+                [
+                    os.path.exists(
+                        os.path.join(dawn_build_dir, "src", self.get_ext_filename(ext.name))
+                    )
+                    for ext in self.extensions
+                ]
             )
 
-        cmake_version = LooseVersion(re.search(r"version\s*([\d.]+)", out.decode()).group(1))
-        if cmake_version < "3.13.0":
-            raise RuntimeError("CMake >= 3.13.0 is required")
-
-        # Check if there is a build directory
-        dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
-        installed = False
-        try:
-            if dawn_build_dir:
-                for ext in self.extensions:
-                    self.install_extension(os.path.join(dawn_build_dir, "src"), ext)
-                installed = True
-        except FileNotFoundError:
+        if built:
+            for ext in self.extensions:
+                self.copy_file(
+                    os.path.join(dawn_build_dir, "src", self.get_ext_filename(ext.name)),
+                    self.get_ext_fullpath(ext.name),
+                )
+        else:
             self.build_temp = os.path.join(DAWN_DIR, "build")
-            self.compile_extension(self.build_temp)
-
-        if not installed:
+            self.compile_extension(self.build_temp, cmake=cmake_executable)
             # Move from build temp to final position
             for ext in self.extensions:
                 self.install_extension(os.path.join(self.build_temp, "src"), ext)
@@ -82,7 +100,7 @@ class CMakeBuild(build_ext):
         # Install included headers
         self.run_command("install_dawn_includes")
 
-    def compile_extension(self, build_dir):
+    def compile_extension(self, build_dir, cmake="cmake"):
         cmake_args = os.getenv("CMAKE_ARGS", default="").split(" ") or []
         # Build dawn here
 
@@ -116,7 +134,6 @@ class CMakeBuild(build_ext):
         subprocess.check_call(cmake_cmd)
 
         # Run CMake build
-        # TODO: run build for the target with the extension name for each extension in self.extensions
         print("-" * 10, "Building extensions", "-" * 40)
         build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
         cmake_cmd = ["cmake", "--build", build_dir, "--target", "python"] + build_args
