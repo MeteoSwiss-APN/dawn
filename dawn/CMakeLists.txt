@@ -54,7 +54,7 @@ if(EXISTS "${LOC_PATH}")
 endif()
 
 # Path for Find*.cmake files
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(CTest)
 include(GNUInstallDirs)
