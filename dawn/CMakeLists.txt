@@ -150,6 +150,7 @@ if(Python3_FOUND)
     # we try to find it -- CMake has poor path detection
     find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
       HINTS ${Protobuf_DIR}/../../.. ${PROTOBUF_PYTHON_MODULE_DIR}
+      PATHS /usr/lib/python3/dist-packages
       PATH_SUFFIXES python python3 lib lib/python lib/python3 include/python include/python3
       DOC "Path to protobuf python module"
     )
