@@ -254,7 +254,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
   case PassGroup::Parallel:
     result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
-    result &= runPass<dawn::PassSSA>(context, instantiation); // Did I do this for a reason?
+    result &= runPass<dawn::PassSSA>(context, instantiation);
     result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
     result &= runPass<dawn::PassStageSplitter>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);

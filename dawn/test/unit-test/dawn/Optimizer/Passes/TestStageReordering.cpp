@@ -16,6 +16,7 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
@@ -33,55 +34,63 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  virtual void SetUp() { options_.ReportPassStageReodering = true; }
-
-  void runTest(const std::string& filename, unsigned nStencils,
-               const std::vector<unsigned>& nMultiStages, const std::vector<unsigned>& nStages,
-               const std::vector<unsigned>& nDoMethods) {
+  void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {
     dawn::UIDGenerator::getInstance()->reset();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
+    // Run parallel group
     ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    // ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
+
+    // Collect pre-reordering stage IDs
+    std::vector<int> prevStageIDs;
+    for(const auto& stencil : instantiation->getStencils()) {
+      for(const auto& multiStage : stencil->getChildren()) {
+        for(const auto& stage : multiStage->getChildren()) {
+          prevStageIDs.push_back(stage->getStageID());
+        }
+      }
+    }
+
+    int nStages = stageOrders.size();
+    ASSERT_EQ(nStages, prevStageIDs.size());
+
+    // Run stage graph pass
+    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSetStageGraph>(context_, instantiation));
 
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageReordering>(
         context_, instantiation, dawn::ReorderStrategy::Kind::Greedy));
 
-    unsigned stencilIdx = 0;
-    unsigned msIdx = 0;
-    unsigned stageIdx = 0;
-
-    ASSERT_EQ(nStencils, instantiation->getStencils().size());
+    // Collect post-reordering stage IDs
+    std::vector<int> postStageIDs;
     for(const auto& stencil : instantiation->getStencils()) {
-      ASSERT_EQ(nMultiStages[stencilIdx], stencil->getChildren().size());
       for(const auto& multiStage : stencil->getChildren()) {
-        ASSERT_EQ(nStages[msIdx], multiStage->getChildren().size());
         for(const auto& stage : multiStage->getChildren()) {
-          ASSERT_EQ(nDoMethods[stageIdx], stage->getChildren().size());
-          stageIdx += 1;
+          postStageIDs.push_back(stage->getStageID());
         }
-        msIdx += 1;
       }
-      stencilIdx += 1;
+    }
+
+    ASSERT_EQ(nStages, postStageIDs.size());
+    for(int i = 0; i < nStages; i++) {
+      ASSERT_EQ(postStageIDs[i], prevStageIDs[stageOrders[i]]);
     }
   }
 };
 
-TEST_F(TestStageReordering, ReorderTest1) { runTest("Test01.sir", 1, {1}, {1}, {1}); }
+TEST_F(TestStageReordering, ReorderTest1) { runTest("ReorderTest01.sir", {0}); }
 
-TEST_F(TestStageReordering, ReorderTest2) { runTest("Test02.sir", 1, {1}, {4}, {1,1,1,1}); }
+TEST_F(TestStageReordering, ReorderTest2) { runTest("ReorderTest02.sir", {1, 3, 0, 2}); }
 
-// TEST_F(TestStageReordering, ReorderTest3) { runTest("StageMergerTest03.sir", 1, {1}, {1}, {2}); }
-//
-// TEST_F(TestStageReordering, ReorderTest4) { runTest("StageMergerTest04.sir", 1, {1}, {1}, {3}); }
-//
-// TEST_F(TestStageReordering, ReorderTest5) { runTest("StageMergerTest05.sir", 1, {1}, {2}, {1,
-// 1}); }
-//
-// TEST_F(TestStageReordering, ReorderTest6) { runTest("StageMergerTest06.sir", 1, {1}, {1}, {2}); }
-//
-// TEST_F(TestStageReordering, ReorderTest7) { runTest("StageMergerTest07.sir", 1, {1}, {1}, {1}); }
+TEST_F(TestStageReordering, ReorderTest3) { runTest("ReorderTest03.sir", {0, 1}); }
+
+TEST_F(TestStageReordering, ReorderTest4) { runTest("ReorderTest04.sir", {2, 0, 1, 3}); }
+
+TEST_F(TestStageReordering, ReorderTest5) { runTest("ReorderTest05.sir", {1, 0}); }
+
+TEST_F(TestStageReordering, ReorderTest6) { runTest("ReorderTest06.sir", {0, 1}); }
+
+TEST_F(TestStageReordering, ReorderTest7) { runTest("ReorderTest07.sir", {0, 1, 2, 3, 4, 5, 6}); }
 
 } // anonymous namespace
