@@ -40,6 +40,6 @@ RUN cmake --build /usr/src/dawn/build -j $(nproc) --target install
 ENV DAWN_BUILD_DIR /usr/src/dawn/build/dawn
 RUN python -m pip install /usr/src/dawn/dawn
 RUN cd /usr/src/dawn/build && ctest -j$(nproc) --progress
-RUN /usr/src/dawn/dawn/examples/python/generate_and_diff /usr/src/dawn
+RUN /usr/src/dawn/dawn/examples/python/generate_and_diff /usr/src/dawn/dawn
 RUN python -m pytest -v /usr/src/dawn/dawn/test/unit-test/test_dawn4py
 RUN rm -rf /usr/src/dawn/build

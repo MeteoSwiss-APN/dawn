@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 dawn_dir=$1
-prefix=$dawn_dir/dawn/examples/python
+prefix=$dawn_dir/examples/python
 
 examples=("copy_stencil" "hori_diff_stencil" "tridiagonal_solve_stencil" "unstructured_stencil" "global_index_stencil" "sparse_dimensions")
 
