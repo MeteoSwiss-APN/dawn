@@ -22,14 +22,6 @@
 namespace dawn {
 namespace {
 
-// Resets types of all variables to "not computed" (type_ = std::nullopt)
-void resetVarTypes(iir::StencilMetaInformation& metadata) {
-  for(const auto& pair : metadata.getAccessIDToLocalVariableDataMap()) {
-    auto& data = metadata.getLocalVariableDataFromAccessID(pair.first);
-    data = iir::LocalVariableData{};
-  }
-}
-
 class VarTypeFinder : public ast::ASTVisitorForwarding {
 
   iir::StencilMetaInformation& metadata_;
@@ -198,7 +190,7 @@ bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& ste
 
     // As this might not be the first run of this pass, need to clear the variables' types in order
     // to recompute them
-    resetVarTypes(stencilInstantiation->getMetaData());
+    stencilInstantiation->getMetaData().resetLocalVarTypes();
 
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilPtr)) {
       // Local variables are local to a DoMethod. VarTypeFinder needs to be applied to each DoMethod

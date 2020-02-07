@@ -119,7 +119,8 @@ public:
       // return value in a local variable.
 
       // Declare and register the variable
-      auto newStmt = metadata_.declareVar(false, curStencilFunctioninstantiation_->getName(),
+      const bool keepVarName = false; // We want the full name (completed with access ID)
+      auto newStmt = metadata_.declareVar(keepVarName, curStencilFunctioninstantiation_->getName(),
                                           dawn::Type(BuiltinTypeID::Float, CVQualifier::Const),
                                           stmt->getExpr());
       // Add it to the AST

@@ -377,6 +377,8 @@ public:
   const std::unordered_map<int, iir::LocalVariableData>& getAccessIDToLocalVariableDataMap() const {
     return accessIDToLocalVariableDataMap_;
   }
+  /// @brief Resets types of all variables to "not computed" (type_ = std::nullopt)
+  void resetLocalVarTypes();
 
   dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
 

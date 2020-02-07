@@ -583,5 +583,11 @@ StencilMetaInformation::getLocalVariableDataFromAccessID(int accessID) const {
   return accessIDToLocalVariableDataMap_.at(accessID);
 }
 
+void StencilMetaInformation::resetLocalVarTypes() {
+  for(auto& pair : accessIDToLocalVariableDataMap_) {
+    pair.second = iir::LocalVariableData{};
+  }
+}
+
 } // namespace iir
 } // namespace dawn
