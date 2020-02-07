@@ -35,7 +35,7 @@ if(ENABLE_PYTHON)
     LANGUAGE python
   )
 
-  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/SIR)
+  set(output_dir ${DAWN4PY_MODULE_DIR}/dawn4py/serialization/SIR)
 
   list(TRANSFORM sir_proto_python_files
     REPLACE ${CMAKE_CURRENT_BINARY_DIR}/SIR ${output_dir}

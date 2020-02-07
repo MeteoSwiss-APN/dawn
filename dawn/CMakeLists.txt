@@ -43,9 +43,10 @@ unset(__DAWN_VERSION)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
-option(DAWN_REQUIRE_PYTHON_TESTING "Require enabling python." OFF)
-set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
-mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR)
+option(DAWN_REQUIRE_PYTHON "Require enabling python." OFF)
+set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module. Use this if CMake is not finding the module.")
+set(DAWN4PY_MODULE_DIR "${PROJECT_SOURCE_DIR}/src" CACHE PATH "Path to dawn4py python module being built. Change this to self.build_lib for pip out-of-source builds.")
+mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR DAWN4PY_MODULE_DIR)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -53,7 +54,7 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-# Path for Find*.cmake files
+# Path for external CMake files
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(CTest)
@@ -165,8 +166,8 @@ if(Python3_FOUND)
 else()
   message(STATUS "Python3 not found, not installing python bindings")
 endif()
-if(NOT ENABLE_PYTHON AND DAWN_REQUIRE_PYTHON_TESTING)
-  message(FATAL_ERROR "Python testing was requested, but required dependencies are not found")
+if(NOT ENABLE_PYTHON AND DAWN_REQUIRE_PYTHON)
+  message(FATAL_ERROR "Python was requested, but required dependencies are not found")
 endif()
 
 add_subdirectory(src)

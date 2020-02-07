@@ -37,7 +37,7 @@ if(ENABLE_PYTHON)
     LANGUAGE python
   )
 
-  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/IIR)
+  set(output_dir ${DAWN4PY_MODULE_DIR}/dawn4py/serialization/IIR)
 
   list(TRANSFORM iir_proto_python_files
     REPLACE ${CMAKE_CURRENT_BINARY_DIR}/IIR ${output_dir}
