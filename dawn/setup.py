@@ -92,7 +92,7 @@ class CMakeBuild(build_ext):
         dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
         py_protos = [x + "_pb2.py" for x in ("IIR/IIR", "SIR/SIR", "SIR/statements", "SIR/enums")]
 
-        # Check if the extensions exist in the build dir
+        # Check if the extensions exist in the build dir and protos were copied over
         if (
             dawn_build_dir
             and all(
@@ -118,7 +118,7 @@ class CMakeBuild(build_ext):
                 )
 
         else:
-            # Otherwise, build the extension
+            # Otherwise, build extension, copying protos over in the process
             cmake_executable = validate_cmake_install(self.extensions)
             self.compile_extension(self.build_temp, cmake=cmake_executable)
             # Move from build_tmp to final position
