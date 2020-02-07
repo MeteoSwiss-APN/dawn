@@ -35,17 +35,51 @@ protected:
 
   virtual void SetUp() { options_.MergeStages = options_.MergeDoMethods = true; }
 
-  void runTest(const std::string& filename, const std::vector<std::string>& cacheNames) {
+  void runTest(const std::string& filename, unsigned nStencils,
+               const std::vector<unsigned>& nMultiStages, const std::vector<unsigned>& nStages,
+               const std::vector<unsigned>& nDoMethods) {
+    dawn::UIDGenerator::getInstance()->reset();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
 
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageMerger>(context_, instantiation));
 
-    //ASSERT_EQ(cacheNames, pass.getCachedFieldNames());
+    unsigned stencilIdx = 0;
+    unsigned msIdx = 0;
+    unsigned stageIdx = 0;
+
+    ASSERT_EQ(nStencils, instantiation->getStencils().size());
+    for(const auto& stencil : instantiation->getStencils()) {
+      ASSERT_EQ(nMultiStages[stencilIdx], stencil->getChildren().size());
+      for(const auto& multiStage : stencil->getChildren()) {
+        ASSERT_EQ(nStages[msIdx], multiStage->getChildren().size());
+        for(const auto& stage : multiStage->getChildren()) {
+          ASSERT_EQ(nDoMethods[stageIdx], stage->getChildren().size());
+          stageIdx += 1;
+        }
+        msIdx += 1;
+      }
+      stencilIdx += 1;
+    }
   }
 };
 
-TEST_F(TestStageMerger, Test1) { runTest("Test01.sir", {}); }
+TEST_F(TestStageMerger, MergerTest1) { runTest("StageMergerTest01.sir", 1, {1}, {1}, {1}); }
+
+TEST_F(TestStageMerger, MergerTest2) { runTest("StageMergerTest02.sir", 1, {1}, {2}, {1, 1}); }
+
+TEST_F(TestStageMerger, MergerTest3) { runTest("StageMergerTest03.sir", 1, {1}, {1}, {2}); }
+
+TEST_F(TestStageMerger, MergerTest4) { runTest("StageMergerTest04.sir", 1, {1}, {1}, {3}); }
+
+TEST_F(TestStageMerger, MergerTest5) { runTest("StageMergerTest05.sir", 1, {1}, {2}, {1, 1}); }
+
+TEST_F(TestStageMerger, MergerTest6) { runTest("StageMergerTest06.sir", 1, {1}, {1}, {2}); }
+
+TEST_F(TestStageMerger, MergerTest7) { runTest("StageMergerTest07.sir", 1, {1}, {1}, {1}); }
 
 } // anonymous namespace
