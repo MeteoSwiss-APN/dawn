@@ -89,6 +89,12 @@ public:
 
   operator bool() const { return id_ >= 0; }
 
+  void swap() {
+    if(faces_.size() != 2)
+      return;
+    std::swap(faces_[0], faces_[1]);
+  }
+
 private:
   int id_ = -1;
   edge_color color_;
@@ -294,6 +300,13 @@ public:
       if(e.id() != -1)
         valid_edges_.push_back(e);
     }
+
+    // ICON compat attempt
+    for(auto& e : edges_) {
+      if(e.color() == edge_color::diagonal) {
+        e.swap();
+      }
+    }
   }
 
   std::vector<Face> const& faces() const { return faces_; }
@@ -313,7 +326,7 @@ private:
 
   int nx_;
   int ny_;
-};
+}; // namespace mylib
 
 //===------------------------------------------------------------------------------------------===//
 // dense fields
