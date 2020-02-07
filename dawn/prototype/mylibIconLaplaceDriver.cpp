@@ -4,6 +4,8 @@
 #include <fstream>
 #include <optional>
 
+#include "generated_iconLaplace.hpp"
+
 // re-implemenation of the ICON nabla2_vec operator.
 //    see mo_math_divrot.f90 and mo_math_laplace.f90
 // names have been kept close to the FORTRAN code, but the "_Location" suffixes have been removed
@@ -158,7 +160,7 @@ void dumpField(const std::string& fname, const mylib::Grid& mesh,
                const mylib::VertexData<double>& field, int level);
 
 int main() {
-  int w = 33;
+  int w = 10;
   int k_size = 1;
   const int level = 0;
   double lDomain = M_PI;
@@ -299,7 +301,7 @@ int main() {
     // flows into the cell on two edges, and out on another (or vice versa). Divergence will hence
     // not be zero in this case!
     double fun = wave(px, py);
-    vec(e.get(), level) = fun * primal_normal_x(e.get(), level);
+    vec(e.get(), level) = fun;
 
     nabla2_vec(e.get(), level) = 0;
   }
@@ -385,6 +387,7 @@ int main() {
     for(const auto& e : c.edges()) {
       geofac_div(c, m_sparse, level) = primal_edge_length(*e, level) *
                                        edge_orientation_cell(c, m_sparse, level) /
+                                       //  ((c.color() == mylib::face_color::downward) ? 1 : -1) /
                                        cell_area(c, level);
 
       //  ptr_int%geofac_div(jc,je,jb) = &
@@ -406,52 +409,14 @@ int main() {
   // computation starts here
   //===------------------------------------------------------------------------------------------===//
 
-  // SUBROUTINE rot_vertex_atmos
-  for(const auto& v : mesh.vertices()) {
-    int m_sparse = 0;
-    for(const auto& e : v.edges()) {
-      rot_vec(v, level) += vec(*e, level) * geofac_rot(v, m_sparse++, level);
-    }
-    if(v.vertices().size() != 6) {
-      rot_vec(v, level) = 0.;
-    }
-  }
-
-  // SUBROUTINE div
-  for(const auto& c : mesh.faces()) {
-    int m_sparse = 0;
-    for(const auto& e : c.edges()) {
-      div_vec(c, level) += vec(*e, level) * geofac_div(c, m_sparse++, level);
-    }
-  }
+  dawn_generated::cxxnaiveico::icon<mylibInterface::mylibTag>(
+      mesh, k_size, vec, div_vec, rot_vec, nabla2t1_vec, nabla2t2_vec, nabla2_vec,
+      primal_edge_length, dual_edge_length, tangent_orientation, geofac_rot, geofac_div)
+      .run();
 
   if(dbg_out) {
     dumpField("laplICONmylib_div.txt", mesh, div_vec, level);
     dumpField("laplICONmylib_rot.txt", mesh, rot_vec, level);
-  }
-
-  // SUBROUTINE nabla2_vec
-  for(const auto& e : mesh.edges()) {
-    // ignore boundaries for now
-    if(e.get().faces().size() == 1) {
-      nabla2_vec(e, level) = 0.;
-      continue;
-    }
-
-    if(e.get().vertex(1).vertices().size() != 6 || e.get().vertex(0).vertices().size() != 6) {
-      nabla2_vec(e, level) = 0.;
-      continue;
-    }
-
-    nabla2t1_vec(e, level) =
-        tangent_orientation(e, level) *
-        (rot_vec(e.get().vertex(1), level) - rot_vec(e.get().vertex(0), level)) /
-        primal_edge_length(e.get(), level);
-
-    nabla2t2_vec(e, level) = (div_vec(e.get().face(1), level) - div_vec(e.get().face(0), level)) /
-                             dual_edge_length(e.get(), level);
-
-    nabla2_vec(e, level) = nabla2t1_vec(e, level) - nabla2t2_vec(e, level);
   }
 
   dumpField("laplICONmylib_rotH.txt", mesh, nabla2t1_vec, level, mylib::edge_color::horizontal);
