@@ -29,6 +29,7 @@ add_executable(${executable}
   TestSetNonTempCaches.cpp
   TestStageMerger.cpp
   TestStageReordering.cpp
+  TestPassTemporaryMerger.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})

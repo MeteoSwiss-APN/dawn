@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "ReorderTest01.cpp",
+ "filename": "MergeTest01.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,7 +29,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "field_a1",
+                    "name": "field_a",
                     "vertical_offset": 0,
                     "zero_offset": {},
                     "argument_map": [
@@ -45,7 +45,7 @@
                     "negate_offset": false,
                     "loc": {
                      "Line": 29,
-                     "Column": 9
+                     "Column": 7
                     },
                     "data": {},
                     "ID": 5
@@ -54,7 +54,7 @@
                   "op": "=",
                   "right": {
                    "field_access_expr": {
-                    "name": "field_a0",
+                    "name": "field_b",
                     "vertical_offset": 0,
                     "zero_offset": {},
                     "argument_map": [
@@ -70,7 +70,7 @@
                     "negate_offset": false,
                     "loc": {
                      "Line": 29,
-                     "Column": 20
+                     "Column": 17
                     },
                     "data": {},
                     "ID": 4
@@ -78,14 +78,14 @@
                   },
                   "loc": {
                    "Line": 29,
-                   "Column": 9
+                   "Column": 7
                   },
                   "ID": 6
                  }
                 },
                 "loc": {
                  "Line": 29,
-                 "Column": 9
+                 "Column": 7
                 },
                 "data": {},
                 "ID": 7
@@ -107,7 +107,7 @@
            "special_lower_level": "Start",
            "special_upper_level": "End"
           },
-          "loop_order": "Backward"
+          "loop_order": "Forward"
          },
          "loc": {
           "Line": 28,
@@ -129,7 +129,7 @@
    },
    "fields": [
     {
-     "name": "field_a0",
+     "name": "field_a",
      "loc": {
       "Line": 25,
       "Column": 11
@@ -144,10 +144,10 @@
      }
     },
     {
-     "name": "field_a1",
+     "name": "field_b",
      "loc": {
       "Line": 25,
-      "Column": 21
+      "Column": 20
      },
      "is_temporary": false,
      "field_dimensions": {

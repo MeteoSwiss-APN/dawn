@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/PassStageReordering/Test03.cpp",
+ "filename": "ReorderTest03.cpp",
  "stencils": [
   {
    "name": "Test",

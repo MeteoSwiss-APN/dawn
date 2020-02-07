@@ -90,6 +90,9 @@ public:
     return pass.run(instantiation);
   }
 
+  static bool runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
+                       std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
+
   static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
                                                         std::unique_ptr<OptimizerContext>& context);
   static bool runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context);

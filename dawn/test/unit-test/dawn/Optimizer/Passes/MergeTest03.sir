@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "ReorderTest07.cpp",
+ "filename": "PassTemporaryMerger/MergeTest03.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -16,7 +16,7 @@
         "vertical_region_decl_stmt": {
          "vertical_region": {
           "loc": {
-           "Line": 28,
+           "Line": 29,
            "Column": 5
           },
           "ast": {
@@ -29,7 +29,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "field_a1",
+                    "name": "tmp_a",
                     "vertical_offset": 0,
                     "zero_offset": {},
                     "argument_map": [
@@ -44,7 +44,7 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 29,
+                     "Line": 30,
                      "Column": 7
                     },
                     "data": {},
@@ -54,12 +54,9 @@
                   "op": "=",
                   "right": {
                    "field_access_expr": {
-                    "name": "field_a0",
+                    "name": "field_a",
                     "vertical_offset": 0,
-                    "cartesian_offset": {
-                     "i_offset": 1,
-                     "j_offset": 0
-                    },
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -72,22 +69,22 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 29,
-                     "Column": 18
+                     "Line": 30,
+                     "Column": 15
                     },
                     "data": {},
                     "ID": 4
                    }
                   },
                   "loc": {
-                   "Line": 29,
+                   "Line": 30,
                    "Column": 7
                   },
                   "ID": 6
                  }
                 },
                 "loc": {
-                 "Line": 29,
+                 "Line": 30,
                  "Column": 7
                 },
                 "data": {},
@@ -100,7 +97,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "field_a2",
+                    "name": "field_a",
                     "vertical_offset": 0,
                     "zero_offset": {},
                     "argument_map": [
@@ -115,7 +112,7 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 30,
+                     "Line": 31,
                      "Column": 7
                     },
                     "data": {},
@@ -125,7 +122,7 @@
                   "op": "=",
                   "right": {
                    "field_access_expr": {
-                    "name": "field_a1",
+                    "name": "tmp_a",
                     "vertical_offset": 0,
                     "cartesian_offset": {
                      "i_offset": 1,
@@ -143,22 +140,22 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 30,
-                     "Column": 18
+                     "Line": 31,
+                     "Column": 17
                     },
                     "data": {},
                     "ID": 8
                    }
                   },
                   "loc": {
-                   "Line": 30,
+                   "Line": 31,
                    "Column": 7
                   },
                   "ID": 10
                  }
                 },
                 "loc": {
-                 "Line": 30,
+                 "Line": 31,
                  "Column": 7
                 },
                 "data": {},
@@ -171,7 +168,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "field_a3",
+                    "name": "tmp_b",
                     "vertical_offset": 0,
                     "zero_offset": {},
                     "argument_map": [
@@ -186,7 +183,7 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 31,
+                     "Line": 33,
                      "Column": 7
                     },
                     "data": {},
@@ -196,12 +193,9 @@
                   "op": "=",
                   "right": {
                    "field_access_expr": {
-                    "name": "field_a2",
+                    "name": "field_b",
                     "vertical_offset": 0,
-                    "cartesian_offset": {
-                     "i_offset": 1,
-                     "j_offset": 0
-                    },
+                    "zero_offset": {},
                     "argument_map": [
                      -1,
                      -1,
@@ -214,22 +208,22 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 31,
-                     "Column": 18
+                     "Line": 33,
+                     "Column": 15
                     },
                     "data": {},
                     "ID": 12
                    }
                   },
                   "loc": {
-                   "Line": 31,
+                   "Line": 33,
                    "Column": 7
                   },
                   "ID": 14
                  }
                 },
                 "loc": {
-                 "Line": 31,
+                 "Line": 33,
                  "Column": 7
                 },
                 "data": {},
@@ -242,7 +236,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "field_a4",
+                    "name": "field_b",
                     "vertical_offset": 0,
                     "zero_offset": {},
                     "argument_map": [
@@ -257,7 +251,7 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 32,
+                     "Line": 34,
                      "Column": 7
                     },
                     "data": {},
@@ -267,7 +261,7 @@
                   "op": "=",
                   "right": {
                    "field_access_expr": {
-                    "name": "field_a3",
+                    "name": "tmp_b",
                     "vertical_offset": 0,
                     "cartesian_offset": {
                      "i_offset": 1,
@@ -285,160 +279,18 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 32,
-                     "Column": 18
+                     "Line": 34,
+                     "Column": 17
                     },
                     "data": {},
                     "ID": 16
                    }
                   },
                   "loc": {
-                   "Line": 32,
-                   "Column": 7
-                  },
-                  "ID": 18
-                 }
-                },
-                "loc": {
-                 "Line": 32,
-                 "Column": 7
-                },
-                "data": {},
-                "ID": 19
-               }
-              },
-              {
-               "expr_stmt": {
-                "expr": {
-                 "assignment_expr": {
-                  "left": {
-                   "field_access_expr": {
-                    "name": "field_a5",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 33,
-                     "Column": 7
-                    },
-                    "data": {},
-                    "ID": 21
-                   }
-                  },
-                  "op": "=",
-                  "right": {
-                   "field_access_expr": {
-                    "name": "field_a4",
-                    "vertical_offset": 0,
-                    "cartesian_offset": {
-                     "i_offset": 1,
-                     "j_offset": 0
-                    },
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 33,
-                     "Column": 18
-                    },
-                    "data": {},
-                    "ID": 20
-                   }
-                  },
-                  "loc": {
-                   "Line": 33,
-                   "Column": 7
-                  },
-                  "ID": 22
-                 }
-                },
-                "loc": {
-                 "Line": 33,
-                 "Column": 7
-                },
-                "data": {},
-                "ID": 23
-               }
-              },
-              {
-               "expr_stmt": {
-                "expr": {
-                 "assignment_expr": {
-                  "left": {
-                   "field_access_expr": {
-                    "name": "field_a6",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 34,
-                     "Column": 7
-                    },
-                    "data": {},
-                    "ID": 25
-                   }
-                  },
-                  "op": "=",
-                  "right": {
-                   "field_access_expr": {
-                    "name": "field_a5",
-                    "vertical_offset": 0,
-                    "cartesian_offset": {
-                     "i_offset": 1,
-                     "j_offset": 0
-                    },
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 34,
-                     "Column": 18
-                    },
-                    "data": {},
-                    "ID": 24
-                   }
-                  },
-                  "loc": {
                    "Line": 34,
                    "Column": 7
                   },
-                  "ID": 26
+                  "ID": 18
                  }
                 },
                 "loc": {
@@ -446,83 +298,12 @@
                  "Column": 7
                 },
                 "data": {},
-                "ID": 27
-               }
-              },
-              {
-               "expr_stmt": {
-                "expr": {
-                 "assignment_expr": {
-                  "left": {
-                   "field_access_expr": {
-                    "name": "field_a7",
-                    "vertical_offset": 0,
-                    "zero_offset": {},
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 35,
-                     "Column": 7
-                    },
-                    "data": {},
-                    "ID": 29
-                   }
-                  },
-                  "op": "=",
-                  "right": {
-                   "field_access_expr": {
-                    "name": "field_a6",
-                    "vertical_offset": 0,
-                    "cartesian_offset": {
-                     "i_offset": 1,
-                     "j_offset": 0
-                    },
-                    "argument_map": [
-                     -1,
-                     -1,
-                     -1
-                    ],
-                    "argument_offset": [
-                     0,
-                     0,
-                     0
-                    ],
-                    "negate_offset": false,
-                    "loc": {
-                     "Line": 35,
-                     "Column": 18
-                    },
-                    "data": {},
-                    "ID": 28
-                   }
-                  },
-                  "loc": {
-                   "Line": 35,
-                   "Column": 7
-                  },
-                  "ID": 30
-                 }
-                },
-                "loc": {
-                 "Line": 35,
-                 "Column": 7
-                },
-                "data": {},
-                "ID": 31
+                "ID": 19
                }
               }
              ],
              "loc": {
-              "Line": 28,
+              "Line": 29,
               "Column": 5
              },
              "data": {},
@@ -539,11 +320,11 @@
           "loop_order": "Forward"
          },
          "loc": {
-          "Line": 28,
+          "Line": 29,
           "Column": 5
          },
          "data": {},
-         "ID": 32
+         "ID": 20
         }
        }
       ],
@@ -558,7 +339,7 @@
    },
    "fields": [
     {
-     "name": "field_a0",
+     "name": "field_a",
      "loc": {
       "Line": 25,
       "Column": 11
@@ -573,10 +354,10 @@
      }
     },
     {
-     "name": "field_a1",
+     "name": "field_b",
      "loc": {
       "Line": 25,
-      "Column": 21
+      "Column": 20
      },
      "is_temporary": false,
      "field_dimensions": {
@@ -588,12 +369,12 @@
      }
     },
     {
-     "name": "field_a2",
+     "name": "tmp_a",
      "loc": {
-      "Line": 25,
-      "Column": 31
+      "Line": 26,
+      "Column": 7
      },
-     "is_temporary": false,
+     "is_temporary": true,
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
@@ -603,72 +384,12 @@
      }
     },
     {
-     "name": "field_a3",
+     "name": "tmp_b",
      "loc": {
-      "Line": 25,
-      "Column": 41
+      "Line": 26,
+      "Column": 14
      },
-     "is_temporary": false,
-     "field_dimensions": {
-      "cartesian_horizontal_dimension": {
-       "mask_cart_i": 1,
-       "mask_cart_j": 1
-      },
-      "mask_k": 1
-     }
-    },
-    {
-     "name": "field_a4",
-     "loc": {
-      "Line": 25,
-      "Column": 51
-     },
-     "is_temporary": false,
-     "field_dimensions": {
-      "cartesian_horizontal_dimension": {
-       "mask_cart_i": 1,
-       "mask_cart_j": 1
-      },
-      "mask_k": 1
-     }
-    },
-    {
-     "name": "field_a5",
-     "loc": {
-      "Line": 25,
-      "Column": 61
-     },
-     "is_temporary": false,
-     "field_dimensions": {
-      "cartesian_horizontal_dimension": {
-       "mask_cart_i": 1,
-       "mask_cart_j": 1
-      },
-      "mask_k": 1
-     }
-    },
-    {
-     "name": "field_a6",
-     "loc": {
-      "Line": 25,
-      "Column": 71
-     },
-     "is_temporary": false,
-     "field_dimensions": {
-      "cartesian_horizontal_dimension": {
-       "mask_cart_i": 1,
-       "mask_cart_j": 1
-      },
-      "mask_k": 1
-     }
-    },
-    {
-     "name": "field_a7",
-     "loc": {
-      "Line": 25,
-      "Column": 81
-     },
-     "is_temporary": false,
+     "is_temporary": true,
      "field_dimensions": {
       "cartesian_horizontal_dimension": {
        "mask_cart_i": 1,
