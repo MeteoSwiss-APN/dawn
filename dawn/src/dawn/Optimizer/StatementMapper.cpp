@@ -94,8 +94,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   if(!stmt->getData<iir::VarDeclStmtData>().AccessID) {
-    // This is the first time we encounter this variable. We have to make sure the name is not
-    // already used in another scope!
+    // TODO: this code is almost a duplicate of `StencilMetaInformation::addStmt()`, but here it
+    // differs because it considers also the stencil function case. A common solution should be
+    // found.
+
+    // This is the first time we encounter this variable. We have to make sure the name is
+    // not already used in another scope!
     int accessID = instantiation_->nextUID();
 
     std::string globalName;
@@ -106,10 +110,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
 
     // We generate a new AccessID and insert it into the AccessMaps (using the global name)
     auto& function = scope_.top()->FunctionInstantiation;
-    if(function)
+    if(function) {
       function->getAccessIDToNameMap().emplace(accessID, globalName);
-    else
+    } else {
       metadata_.addAccessIDNamePair(accessID, globalName);
+      metadata_.addAccessIDToLocalVariableDataPair(accessID, iir::LocalVariableData{});
+    }
 
     stmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
 

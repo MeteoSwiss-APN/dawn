@@ -107,14 +107,14 @@ public:
   IIRBuilder(const ast::GridType gridType)
       : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
-  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
+  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float,
+                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {});
 
   template <class TWeight>
-  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                                    std::shared_ptr<iir::Expr>&& init,
-                                                    ast::LocationType lhs_location,
-                                                    ast::LocationType rhs_location,
-                                                    const std::vector<TWeight>&& weights) {
+  std::shared_ptr<iir::Expr>
+  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                         std::shared_ptr<iir::Expr>&& init, ast::LocationType lhs_location,
+                         ast::LocationType rhs_location, const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
     std::vector<sir::Value> vWeights;
