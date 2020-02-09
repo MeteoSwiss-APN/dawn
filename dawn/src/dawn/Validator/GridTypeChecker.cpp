@@ -7,6 +7,29 @@
 
 namespace dawn {
 bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
+  // Check LocalVariableDatas
+  for(const auto& stencil : iterateIIROver<iir::Stencil>(iir)) {
+    for(const auto& pair : stencil->getMetadata().getAccessIDToLocalVariableDataMap()) {
+      if(pair.second.isTypeSet()) {
+        iir::LocalVariableType varType = pair.second.getType();
+        switch(varType) {
+        case iir::LocalVariableType::OnCells:
+        case iir::LocalVariableType::OnEdges:
+        case iir::LocalVariableType::OnVertices:
+          if(iir.getGridType() == ast::GridType::Cartesian) {
+            return false;
+          }
+          break;
+        case iir::LocalVariableType::OnIJ:
+          if(iir.getGridType() == ast::GridType::Unstructured) {
+            return false;
+          }
+          break;
+        }
+      }
+    }
+  }
+  // Check Extents
   for(const auto& mSPtr : iterateIIROver<iir::MultiStage>(iir)) {
     for(const auto& field : mSPtr->getFields()) {
       std::vector<std::optional<iir::Extents>> extents = {

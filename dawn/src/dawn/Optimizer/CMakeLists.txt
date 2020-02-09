@@ -30,6 +30,8 @@ add_library(DawnOptimizer
   PassInlining.h
   PassIntervalPartitioner.cpp
   PassIntervalPartitioner.h
+  PassLocalVarType.h
+  PassLocalVarType.cpp
   PassManager.cpp
   PassManager.h
   PassMultiStageSplitter.cpp
