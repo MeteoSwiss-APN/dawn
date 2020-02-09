@@ -33,6 +33,7 @@ class CompileError : public std::exception {
 
 public:
   CompileError(const std::string& message, const std::string& file = "", unsigned line = 0);
+  virtual ~CompileError() {}
   std::string getMessage() const;
   std::string getFile() const;
   unsigned getLine() const;

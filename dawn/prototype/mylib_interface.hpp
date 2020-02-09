@@ -1,6 +1,7 @@
 #ifndef DAWN_PROTOTYPE_MYLIB_INTERFACE_H_
 #define DAWN_PROTOTYPE_MYLIB_INTERFACE_H_
 
+#include "driver-includes/unstructured_interface.hpp"
 #include "mylib.hpp"
 #include <functional>
 
@@ -16,6 +17,13 @@ mylib::EdgeData<T> edgeFieldType(mylibTag);
 template <typename T>
 mylib::VertexData<T> vertexFieldType(mylibTag);
 
+template <typename T>
+mylib::SparseEdgeData<T> sparseEdgeFieldType(mylibTag);
+template <typename T>
+mylib::SparseFaceData<T> sparseCellFieldType(mylibTag);
+template <typename T>
+mylib::SparseVertexData<T> sparseVertexFieldType(mylibTag);
+
 using Mesh = mylib::Grid;
 
 inline decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
@@ -27,7 +35,9 @@ inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<mylib::Edge> co
   return e; // implicit conversion
 }
 
-// unweighted version
+//===------------------------------------------------------------------------------------------===//
+// unweighted versions
+//===------------------------------------------------------------------------------------------===//
 
 template <typename Objs, typename Init, typename Op>
 auto reduce(Objs&& objs, Init init, Op&& op) {
@@ -49,22 +59,15 @@ auto reduceVertexToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f,
                         Op&& op) {
   return reduce(f.vertices(), init, op);
 }
-
 template <typename Init, typename Op>
 auto reduceCellToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&& op) {
   return reduce(e.faces(), init, op);
 }
-// template <typename Init, typename Op>
-// auto reduceEdgeToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&&
-// op) {
-//   return reduce(e.edges(), init, op);
-// }
 template <typename Init, typename Op>
 auto reduceVertexToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init,
                         Op&& op) {
   return reduce(e.vertices(), init, op);
 }
-
 template <typename Init, typename Op>
 auto reduceCellToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
                         Op&& op) {
@@ -81,10 +84,12 @@ auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const
   return reduce(v.vertices(), init, op);
 }
 
+//===------------------------------------------------------------------------------------------===//
 // weighted versions
+//===------------------------------------------------------------------------------------------===//
 
 template <typename Objs, typename Init, typename Op, typename Weight>
-auto reduce(Objs&& objs, Init init, Op&& op, const std::vector<Weight> weights) {
+auto reduce(Objs&& objs, Init init, Op&& op, std::vector<Weight>&& weights) {
   int i = 0;
   for(auto&& obj : objs)
     op(init, *obj, weights[i++]);
@@ -93,50 +98,43 @@ auto reduce(Objs&& objs, Init init, Op&& op, const std::vector<Weight> weights) 
 
 template <typename Init, typename Op, typename Weight>
 auto reduceCellToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op,
-                      std::vector<Weight> weights) {
-  return reduce(f.faces(), init, op, weights);
+                      std::vector<Weight>&& weights) {
+  return reduce(f.faces(), init, op, std::move(weights));
 }
 template <typename Init, typename Op, typename Weight>
 auto reduceEdgeToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op,
-                      std::vector<Weight> weights) {
-  return reduce(f.edges(), init, op, weights);
+                      std::vector<Weight>&& weights) {
+  return reduce(f.edges(), init, op, std::move(weights));
 }
 template <typename Init, typename Op, typename Weight>
 auto reduceVertexToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op,
-                        std::vector<Weight> weights) {
-  return reduce(f.vertices(), init, op, weights);
+                        std::vector<Weight>&& weights) {
+  return reduce(f.vertices(), init, op, std::move(weights));
 }
-
 template <typename Init, typename Op, typename Weight>
 auto reduceCellToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&& op,
-                      std::vector<Weight> weights) {
-  return reduce(e.faces(), init, op, weights);
+                      std::vector<Weight>&& weights) {
+  return reduce(e.faces(), init, op, std::move(weights));
 }
-// template <typename Init, typename Op, typename Weight>
-// auto reduceEdgeToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&&
-// op) {
-//   return reduce(e.edges(), init, op);
-// }
 template <typename Init, typename Op, typename Weight>
 auto reduceVertexToEdge(mylibTag, mylib::Grid const& grid, mylib::Edge const& e, Init init, Op&& op,
-                        std::vector<Weight> weights) {
-  return reduce(e.vertices(), init, op, weights);
+                        std::vector<Weight>&& weights) {
+  return reduce(e.vertices(), init, op, std::move(weights));
 }
-
 template <typename Init, typename Op, typename Weight>
 auto reduceCellToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
-                        Op&& op, std::vector<Weight> weights) {
-  return reduce(v.faces(), init, op, weights);
+                        Op&& op, std::vector<Weight>&& weights) {
+  return reduce(v.faces(), init, op, std::move(weights));
 }
 template <typename Init, typename Op, typename Weight>
 auto reduceEdgeToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
-                        Op&& op, std::vector<Weight> weights) {
-  return reduce(v.edges(), init, op, weights);
+                        Op&& op, std::vector<Weight>&& weights) {
+  return reduce(v.edges(), init, op, std::move(weights));
 }
 template <typename Init, typename Op, typename Weight>
 auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
-                          Op&& op, std::vector<Weight> weights) {
-  return reduce(v.vertices(), init, op, weights);
+                          Op&& op, std::vector<Weight>&& weights) {
+  return reduce(v.vertices(), init, op, std::move(weights));
 }
 
 } // namespace mylibInterface

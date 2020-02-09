@@ -16,9 +16,11 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestValidator)
 add_executable(${executable}
   TestMain.cpp  
-  TestLocationTypeChecker.cpp
+  TestUnstructuredDimensionChecker.cpp
   TestGridTypeChecker.cpp
+  TestIntegrityChecker.cpp
 )
 target_link_libraries(${executable} DawnValidator DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Validator::")
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

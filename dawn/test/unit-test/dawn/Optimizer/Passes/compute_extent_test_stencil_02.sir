@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "compute_extent_test_stencil_02.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 15
                    }
                   },
                   "op": "=",
@@ -83,7 +84,7 @@
                              "Column": 13
                             },
                             "data": {},
-                            "ID": 5
+                            "ID": 10
                            }
                           },
                           "op": "+",
@@ -111,14 +112,14 @@
                              "Column": 24
                             },
                             "data": {},
-                            "ID": 6
+                            "ID": 9
                            }
                           },
                           "loc": {
                            "Line": 27,
                            "Column": 13
                           },
-                          "ID": 7
+                          "ID": 11
                          }
                         },
                         "op": "+",
@@ -153,7 +154,7 @@
                          "Line": 27,
                          "Column": 13
                         },
-                        "ID": 9
+                        "ID": 12
                        }
                       },
                       "op": "+",
@@ -181,14 +182,14 @@
                          "Column": 46
                         },
                         "data": {},
-                        "ID": 10
+                        "ID": 7
                        }
                       },
                       "loc": {
                        "Line": 27,
                        "Column": 13
                       },
-                      "ID": 11
+                      "ID": 13
                      }
                     },
                     "op": "-",
@@ -205,7 +206,7 @@
                          "Column": 57
                         },
                         "data": {},
-                        "ID": 12
+                        "ID": 5
                        }
                       },
                       "op": "*",
@@ -230,21 +231,21 @@
                          "Column": 63
                         },
                         "data": {},
-                        "ID": 13
+                        "ID": 4
                        }
                       },
                       "loc": {
                        "Line": 27,
                        "Column": 57
                       },
-                      "ID": 14
+                      "ID": 6
                      }
                     },
                     "loc": {
                      "Line": 27,
                      "Column": 13
                     },
-                    "ID": 15
+                    "ID": 14
                    }
                   },
                   "loc": {
@@ -291,7 +292,7 @@
                          "Column": 10
                         },
                         "data": {},
-                        "ID": 18
+                        "ID": 22
                        }
                       },
                       "op": "*",
@@ -321,7 +322,7 @@
                            "Column": 17
                           },
                           "data": {},
-                          "ID": 19
+                          "ID": 20
                          }
                         },
                         "op": "-",
@@ -346,7 +347,7 @@
                            "Column": 28
                           },
                           "data": {},
-                          "ID": 20
+                          "ID": 19
                          }
                         },
                         "loc": {
@@ -360,7 +361,7 @@
                        "Line": 28,
                        "Column": 10
                       },
-                      "ID": 22
+                      "ID": 23
                      }
                     },
                     "op": "\u003e",
@@ -375,7 +376,7 @@
                        "Column": 33
                       },
                       "data": {},
-                      "ID": 23
+                      "ID": 18
                      }
                     },
                     "loc": {
@@ -421,7 +422,7 @@
                           "Column": 9
                          },
                          "data": {},
-                         "ID": 27
+                         "ID": 35
                         }
                        },
                        "op": "=",
@@ -436,14 +437,14 @@
                           "Column": 15
                          },
                          "data": {},
-                         "ID": 28
+                         "ID": 34
                         }
                        },
                        "loc": {
                         "Line": 29,
                         "Column": 9
                        },
-                       "ID": 29
+                       "ID": 36
                       }
                      },
                      "loc": {
@@ -451,7 +452,7 @@
                       "Column": 9
                      },
                      "data": {},
-                     "ID": 30
+                     "ID": 37
                     }
                    }
                   ],
@@ -460,7 +461,7 @@
                    "Column": 9
                   },
                   "data": {},
-                  "ID": 26
+                  "ID": 33
                  }
                 },
                 "else_part": {
@@ -491,7 +492,7 @@
                           "Column": 9
                          },
                          "data": {},
-                         "ID": 32
+                         "ID": 30
                         }
                        },
                        "op": "=",
@@ -521,7 +522,7 @@
                             "Column": 15
                            },
                            "data": {},
-                           "ID": 33
+                           "ID": 28
                           }
                          },
                          "op": "-",
@@ -546,21 +547,21 @@
                             "Column": 28
                            },
                            "data": {},
-                           "ID": 34
+                           "ID": 27
                           }
                          },
                          "loc": {
                           "Line": 31,
                           "Column": 15
                          },
-                         "ID": 35
+                         "ID": 29
                         }
                        },
                        "loc": {
                         "Line": 31,
                         "Column": 9
                        },
-                       "ID": 36
+                       "ID": 31
                       }
                      },
                      "loc": {
@@ -568,7 +569,7 @@
                       "Column": 9
                      },
                      "data": {},
-                     "ID": 37
+                     "ID": 32
                     }
                    }
                   ],
@@ -577,7 +578,7 @@
                    "Column": 9
                   },
                   "data": {},
-                  "ID": 31
+                  "ID": 26
                  }
                 },
                 "loc": {
@@ -617,7 +618,7 @@
                          "Column": 10
                         },
                         "data": {},
-                        "ID": 39
+                        "ID": 43
                        }
                       },
                       "op": "*",
@@ -647,7 +648,7 @@
                            "Column": 17
                           },
                           "data": {},
-                          "ID": 40
+                          "ID": 41
                          }
                         },
                         "op": "-",
@@ -672,7 +673,7 @@
                            "Column": 28
                           },
                           "data": {},
-                          "ID": 41
+                          "ID": 40
                          }
                         },
                         "loc": {
@@ -686,7 +687,7 @@
                        "Line": 33,
                        "Column": 10
                       },
-                      "ID": 43
+                      "ID": 44
                      }
                     },
                     "op": "\u003e",
@@ -701,7 +702,7 @@
                        "Column": 33
                       },
                       "data": {},
-                      "ID": 44
+                      "ID": 39
                      }
                     },
                     "loc": {
@@ -747,7 +748,7 @@
                           "Column": 9
                          },
                          "data": {},
-                         "ID": 48
+                         "ID": 56
                         }
                        },
                        "op": "=",
@@ -762,14 +763,14 @@
                           "Column": 15
                          },
                          "data": {},
-                         "ID": 49
+                         "ID": 55
                         }
                        },
                        "loc": {
                         "Line": 34,
                         "Column": 9
                        },
-                       "ID": 50
+                       "ID": 57
                       }
                      },
                      "loc": {
@@ -777,7 +778,7 @@
                       "Column": 9
                      },
                      "data": {},
-                     "ID": 51
+                     "ID": 58
                     }
                    }
                   ],
@@ -786,7 +787,7 @@
                    "Column": 9
                   },
                   "data": {},
-                  "ID": 47
+                  "ID": 54
                  }
                 },
                 "else_part": {
@@ -817,7 +818,7 @@
                           "Column": 9
                          },
                          "data": {},
-                         "ID": 53
+                         "ID": 51
                         }
                        },
                        "op": "=",
@@ -847,7 +848,7 @@
                             "Column": 15
                            },
                            "data": {},
-                           "ID": 54
+                           "ID": 49
                           }
                          },
                          "op": "-",
@@ -872,21 +873,21 @@
                             "Column": 28
                            },
                            "data": {},
-                           "ID": 55
+                           "ID": 48
                           }
                          },
                          "loc": {
                           "Line": 36,
                           "Column": 15
                          },
-                         "ID": 56
+                         "ID": 50
                         }
                        },
                        "loc": {
                         "Line": 36,
                         "Column": 9
                        },
-                       "ID": 57
+                       "ID": 52
                       }
                      },
                      "loc": {
@@ -894,7 +895,7 @@
                       "Column": 9
                      },
                      "data": {},
-                     "ID": 58
+                     "ID": 53
                     }
                    }
                   ],
@@ -903,7 +904,7 @@
                    "Column": 9
                   },
                   "data": {},
-                  "ID": 52
+                  "ID": 47
                  }
                 },
                 "loc": {
@@ -939,7 +940,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 60
+                    "ID": 71
                    }
                   },
                   "op": "=",
@@ -966,7 +967,7 @@
                        "Column": 13
                       },
                       "data": {},
-                      "ID": 61
+                      "ID": 69
                      }
                     },
                     "op": "-",
@@ -993,7 +994,7 @@
                          "Column": 17
                         },
                         "data": {},
-                        "ID": 62
+                        "ID": 67
                        }
                       },
                       "op": "*",
@@ -1052,14 +1053,14 @@
                                "Column": 32
                               },
                               "data": {},
-                              "ID": 64
+                              "ID": 62
                              }
                             },
                             "loc": {
                              "Line": 37,
                              "Column": 26
                             },
-                            "ID": 65
+                            "ID": 64
                            }
                           },
                           "op": "+",
@@ -1084,14 +1085,14 @@
                              "Column": 45
                             },
                             "data": {},
-                            "ID": 66
+                            "ID": 61
                            }
                           },
                           "loc": {
                            "Line": 37,
                            "Column": 26
                           },
-                          "ID": 67
+                          "ID": 65
                          }
                         },
                         "op": "-",
@@ -1119,28 +1120,28 @@
                            "Column": 51
                           },
                           "data": {},
-                          "ID": 68
+                          "ID": 60
                          }
                         },
                         "loc": {
                          "Line": 37,
                          "Column": 26
                         },
-                        "ID": 69
+                        "ID": 66
                        }
                       },
                       "loc": {
                        "Line": 37,
                        "Column": 17
                       },
-                      "ID": 70
+                      "ID": 68
                      }
                     },
                     "loc": {
                      "Line": 37,
                      "Column": 13
                     },
-                    "ID": 71
+                    "ID": 70
                    }
                   },
                   "loc": {
@@ -1202,12 +1203,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -1216,12 +1218,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "coeff",
@@ -1230,12 +1233,13 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "flx",
@@ -1244,12 +1248,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "fly",
@@ -1258,12 +1263,13 @@
       "Column": 12
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "lap",
@@ -1272,12 +1278,13 @@
       "Column": 17
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

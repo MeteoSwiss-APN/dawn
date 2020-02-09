@@ -19,6 +19,7 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
+#include "dawn/IIR/LocalVariable.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
@@ -130,13 +131,9 @@ public:
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
 
-  /// @brief get the iir::Field given an access ID
-  iir::Field getFieldFromFieldAccessID(int accessID) const;
-
-  /// @brief this checks if the user specialized the field to a dimensionality. If not all
-  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
-  /// specialization, it is returned
-  sir::FieldDimension getFieldDimensionsMask(int fieldID) const;
+  /// @brief returns the dimensions (see sir::FieldDimensions) of field with id fieldID
+  sir::FieldDimensions getFieldDimensions(int fieldID) const;
+  void setFieldDimensions(int fieldID, sir::FieldDimensions&& fieldDimensions);
 
   template <FieldAccessType TFieldAccessType>
   bool hasAccessesOfType() const {
@@ -155,13 +152,33 @@ public:
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
   int addField(FieldAccessType type, const std::string& name,
-               const sir::FieldDimension& fieldDimensions,
-               std::optional<ast::Expr::LocationType> = std::nullopt);
+               sir::FieldDimensions&& fieldDimensions, std::optional<int> accessID = std::nullopt);
 
   int addTmpField(FieldAccessType type, const std::string& basename,
-                  const sir::FieldDimension& fieldDimensions);
+                  sir::FieldDimensions&& fieldDimensions,
+                  std::optional<int> accessID = std::nullopt);
 
-  int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
+  /// @brief Adds an existing variable declaration to the metadata: assigns an accessID to the
+  /// variable, fixes the ID to name map, the ID to LocalVariableData map and the AccessID in the
+  /// `VarDeclStmt`'s data.
+  /// @param keepVarName: whether to keep the current name or complete it with the accessID
+  /// @param stmt: the variable declaration statement
+  /// @returns the access id of the variable
+  int addStmt(bool keepVarName, const std::shared_ptr<VarDeclStmt>& stmt);
+
+  /// @brief Adds an new variable declaration to the metadata: constructs a `VarDeclStmt`, assigns
+  /// an accessID to the variable, fixes the ID to name map, the ID to LocalVariableData map and the
+  /// AccessID in the `VarDeclStmt`'s data.
+  /// @param keepVarName: whether to keep the provided name or complete it with the accessID
+  /// @param varName: the variable's name
+  /// @param type: the variable's type (double, const int, ...)
+  /// @param rhs: the expression to initialize the variable (optional)
+  /// @returns the variable declaration statement
+  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          int accessID = UIDGenerator::getInstance()->get());
+  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          std::shared_ptr<Expr> rhs,
+                                          int accessID = UIDGenerator::getInstance()->get());
 
   void eraseStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
@@ -345,7 +362,7 @@ public:
     stencilFunInstantiationCandidate_.emplace(stencilFun, candidate);
   }
 
-  const std::unordered_map<int, sir::FieldDimension>& getFieldIDToDimsMap() const {
+  const std::unordered_map<int, sir::FieldDimensions>& getFieldIDToDimsMap() const {
     return fieldIDToInitializedDimensionsMap_;
   }
 
@@ -354,9 +371,16 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-  bool getIsUnstructuredFromAccessID(int AccessID) const;
-  dawn::ast::Expr::LocationType getLocationTypeFromAccessID(int ID) const;
-  void addAccessIDLocationPair(int ID, dawn::ast::Expr::LocationType location);
+  void addAccessIDToLocalVariableDataPair(int accessID, LocalVariableData&& data);
+  iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID);
+  const iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID) const;
+  const std::unordered_map<int, iir::LocalVariableData>& getAccessIDToLocalVariableDataMap() const {
+    return accessIDToLocalVariableDataMap_;
+  }
+  /// @brief Resets types of all variables to "not computed" (type_ = std::nullopt)
+  void resetLocalVarTypes();
+
+  dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
 
 private:
   //================================================================================================
@@ -369,9 +393,6 @@ private:
   /// "main stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
-
-  /// Stores the location type for every field as a map to the AccessID
-  std::unordered_map<int, ast::Expr::LocationType> FieldAccessIDToLocationTypeMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
@@ -390,7 +411,7 @@ private:
       fieldnameToBoundaryConditionMap_;
 
   /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
-  std::unordered_map<int, dawn::sir::FieldDimension> fieldIDToInitializedDimensionsMap_;
+  std::unordered_map<int, dawn::sir::FieldDimensions> fieldIDToInitializedDimensionsMap_;
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;
@@ -398,6 +419,9 @@ private:
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
       boundaryConditionToExtentsMap_;
+
+  /// Map from AccessID (of a local variable) to the data of such variable.
+  std::unordered_map<int, iir::LocalVariableData> accessIDToLocalVariableDataMap_;
 
   SourceLocation stencilLocation_;
   std::string stencilName_;

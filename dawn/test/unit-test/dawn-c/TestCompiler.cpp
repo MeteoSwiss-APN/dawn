@@ -86,7 +86,7 @@ TEST(CompilerTest, CompileCopyStencil) {
 
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);
@@ -113,7 +113,7 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
 
 TEST(CompilerTest, DISABLED_SumVertical) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Cells);
@@ -138,7 +138,7 @@ TEST(CompilerTest, DISABLED_SumVertical) {
 
 TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
   auto in_f = b.field("in_field", LocType::Cells);
@@ -153,15 +153,15 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
               dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
               b.stmt(b.assignExpr(b.at(cnt),
                                   b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
-                                                           dawn::ast::Expr::LocationType::Cells,
-                                                           dawn::ast::Expr::LocationType::Cells))),
+                                                           dawn::ast::LocationType::Cells,
+                                                           dawn::ast::LocationType::Cells))),
               b.stmt(b.assignExpr(
                   b.at(out_f),
                   b.reduceOverNeighborExpr(
                       Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                       b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
                                    b.at(in_f, HOffsetType::withOffset, 0), Op::multiply),
-                      dawn::ast::Expr::LocationType::Cells, dawn::ast::Expr::LocationType::Cells))),
+                      dawn::ast::LocationType::Cells, dawn::ast::LocationType::Cells))),
               b.stmt(b.assignExpr(b.at(out_f),
                                   b.binaryExpr(b.at(in_f),
                                                b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
@@ -175,7 +175,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
 
 TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
   UnstructuredIIRBuilder b;
 
   auto cell_f = b.field("cell_field", LocType::Cells);
@@ -185,24 +185,22 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
       "gradient",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Parallel,
-          b.stage(
-              LocType::Edges,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                         b.stmt(b.assignExpr(b.at(edge_f),
-                                             b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                 dawn::ast::Expr::LocationType::Cells,
-                                                 std::vector<float>({1., -1.})))))),
-          b.stage(
-              LocType::Cells,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                         b.stmt(b.assignExpr(b.at(cell_f),
-                                             b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                 dawn::ast::Expr::LocationType::Edges,
-                                                 std::vector<float>({1., 0., 0.})))))))));
+          b.stage(LocType::Edges,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(edge_f),
+                                 b.reduceOverNeighborExpr<float>(
+                                     Op::plus, b.at(cell_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                     dawn::ast::LocationType::Edges, dawn::ast::LocationType::Cells,
+                                     std::vector<float>({1., -1.})))))),
+          b.stage(LocType::Cells,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(cell_f),
+                                 b.reduceOverNeighborExpr<float>(
+                                     Op::plus, b.at(edge_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                     dawn::ast::LocationType::Cells, dawn::ast::LocationType::Edges,
+                                     std::vector<float>({1., 0., 0.})))))))));
 
   std::ofstream of("prototype/generated_triGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
@@ -212,7 +210,7 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
 
 TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
   using namespace dawn::iir;
-  using LocType = dawn::ast::Expr::LocationType;
+  using LocType = dawn::ast::LocationType;
   UnstructuredIIRBuilder b;
 
   auto cell_f = b.field("cell_field", LocType::Cells);
@@ -222,24 +220,22 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
       "gradient",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Parallel,
-          b.stage(
-              LocType::Edges,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                         b.stmt(b.assignExpr(b.at(edge_f),
-                                             b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Edges,
-                                                 dawn::ast::Expr::LocationType::Cells,
-                                                 std::vector<float>({1., -1.})))))),
-          b.stage(
-              LocType::Cells,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                         b.stmt(b.assignExpr(b.at(cell_f),
-                                             b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), dawn::ast::Expr::LocationType::Cells,
-                                                 dawn::ast::Expr::LocationType::Edges,
-                                                 std::vector<float>({0.5, 0., 0., 0.5})))))))));
+          b.stage(LocType::Edges,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(edge_f),
+                                 b.reduceOverNeighborExpr<float>(
+                                     Op::plus, b.at(cell_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                     dawn::ast::LocationType::Edges, dawn::ast::LocationType::Cells,
+                                     std::vector<float>({1., -1.})))))),
+          b.stage(LocType::Cells,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(cell_f),
+                                 b.reduceOverNeighborExpr<float>(
+                                     Op::plus, b.at(edge_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                     dawn::ast::LocationType::Cells, dawn::ast::LocationType::Edges,
+                                     std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
   std::ofstream of("prototype/generated_quadGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
@@ -247,4 +243,99 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
   of.close();
 }
 
+TEST(CompilerTest, DISABLED_SparseDimension) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cell_f = b.field("cell_field", LocType::Cells);
+  auto edge_f = b.field("edge_field", LocType::Edges);
+  auto sparse_f = b.field("sparse_dim", {LocType::Cells, LocType::Edges});
+
+  // stencil consuming a sparse dimension and a weight
+  auto stencil_instantiation = b.build(
+      "sparseDimension",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Parallel,
+          b.stage(
+              LocType::Cells,
+              b.doMethod(
+                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stmt(b.assignExpr(
+                      b.at(cell_f),
+                      b.reduceOverNeighborExpr<float>(
+                          Op::plus,
+                          b.binaryExpr(b.at(edge_f, HOffsetType::withOffset, 0),
+                                       b.at(sparse_f, HOffsetType::withOffset, 0), Op::multiply),
+                          b.lit(0.), dawn::ast::LocationType::Cells, dawn::ast::LocationType::Edges,
+                          std::vector<float>({1., 1., 1., 1})))))))));
+
+  std::ofstream of("prototype/generated_sparseDimension.hpp");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
+
+TEST(CompilerTest, DISABLED_NestedReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cell_f = b.field("cell_field", LocType::Cells);  
+  auto vertex_f = b.field("vertex_field", LocType::Vertices);
+
+  // a nested reduction v->e->c
+  auto stencil_instantiation = b.build(
+      "nested",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Parallel,
+          b.stage(LocType::Cells,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(cell_f),
+                                 b.reduceOverNeighborExpr(
+                                     Op::plus,
+                                     b.reduceOverNeighborExpr(Op::plus, b.at(vertex_f), b.lit(0.),
+                                                              dawn::ast::LocationType::Edges,
+                                                              dawn::ast::LocationType::Vertices),
+                                     b.lit(0.), dawn::ast::LocationType::Cells,
+                                     dawn::ast::LocationType::Edges))))))));
+
+  std::ofstream of("prototype/generated_NestedSimple.hpp");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
+
+TEST(CompilerTest, DISABLED_NestedReduceField) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cell_f = b.field("cell_field", LocType::Cells);
+  auto edge_f = b.field("edge_field", LocType::Edges);
+  auto vertex_f = b.field("vertex_field", LocType::Vertices);
+
+  // a nested reduction v->e->c, the edge field is also consumed "along the way"
+  auto stencil_instantiation = b.build(
+      "nested",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Parallel,
+          b.stage(LocType::Cells,
+                  b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.stmt(b.assignExpr(b.at(cell_f),
+                                          b.reduceOverNeighborExpr(
+                                              Op::plus,
+                                              b.binaryExpr(b.at(edge_f),
+                                                           b.reduceOverNeighborExpr(
+                                                               Op::plus, b.at(vertex_f), b.lit(0.),
+                                                               dawn::ast::LocationType::Edges,
+                                                               dawn::ast::LocationType::Vertices),
+                                                           Op::plus),
+                                              b.lit(0.), dawn::ast::LocationType::Cells,
+                                              dawn::ast::LocationType::Edges))))))));
+
+  std::ofstream of("prototype/generated_NestedWithField.hpp");
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+  of.close();
+}
 } // anonymous namespace

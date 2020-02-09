@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_PASSMANAGER_H
 
 #include "dawn/Optimizer/Pass.h"
+#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/STLExtras.h"
 #include <list>

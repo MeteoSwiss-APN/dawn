@@ -206,8 +206,10 @@ public:
 
       int genLineKey = static_cast<std::underlying_type<SourceLocation::ReservedSL>::type>(
           SourceLocation::ReservedSL::Generated);
-      tmpFunction_->Args.push_back(
-          std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
+      sir::FieldDimensions&& dims =
+          metadata_.getFieldDimensions(*expr->getData<iir::IIRAccessExprData>().AccessID);
+      tmpFunction_->Args.push_back(std::make_shared<sir::Field>(
+          expr->getName(), std::move(dims), SourceLocation(genLineKey, genLineKey)));
 
       accessIDs_.push_back(iir::getAccessID(expr));
     }

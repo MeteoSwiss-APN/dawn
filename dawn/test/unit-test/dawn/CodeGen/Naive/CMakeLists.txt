@@ -18,5 +18,5 @@ add_executable(${executable} TestCodeGenNaive.cpp TestMain.cpp)
 target_add_dawn_standard_props(${executable})
 target_link_libraries(${executable} DawnOptimizer DawnCompiler DawnUnittest gtest)
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::CodeGen::Naive::" DISCOVERY_TIMEOUT 30)
-file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+

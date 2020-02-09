@@ -112,8 +112,8 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   case ast::GridType::Cartesian:
     sirProto.set_gridtype(proto::enums::GridType::Cartesian);
     break;
-  case ast::GridType::Triangular:
-    sirProto.set_gridtype(proto::enums::GridType::Triangular);
+  case ast::GridType::Unstructured:
+    sirProto.set_gridtype(proto::enums::GridType::Unstructured);
     break;
   default:
     dawn_unreachable("invalid grid type");
@@ -264,35 +264,11 @@ static SourceLocation makeLocation(const T& proto) {
 }
 
 static std::shared_ptr<sir::Field> makeField(const dawn::proto::statements::Field& fieldProto) {
-  auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
+  auto field = std::make_shared<sir::Field>(fieldProto.name(),
+                                            makeFieldDimensions(fieldProto.field_dimensions()),
+                                            makeLocation(fieldProto));
   field->IsTemporary = fieldProto.is_temporary();
-  if(!fieldProto.field_dimensions().empty()) {
-    auto throwException = [&fieldProto](const char* member) {
-      throw std::runtime_error(
-          format("Field::%s (loc %s) exceeds 3 dimensions", member, makeLocation(fieldProto)));
-    };
-    if(fieldProto.field_dimensions().size() > 3)
-      throwException("field_dimensions");
 
-    field->fieldDimensions = sir::FieldDimension(
-        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
-                                                   (bool)fieldProto.field_dimensions()[1],
-                                                   (bool)fieldProto.field_dimensions()[2]}));
-
-    switch(fieldProto.location_type()) {
-    case dawn::proto::statements::LocationType::Cell:
-      field->locationType = ast::Expr::LocationType::Cells;
-      break;
-    case dawn::proto::statements::LocationType::Vertex:
-      field->locationType = ast::Expr::LocationType::Vertices;
-      break;
-    case dawn::proto::statements::LocationType::Edge:
-      field->locationType = ast::Expr::LocationType::Edges;
-      break;
-    default:
-      dawn_unreachable("unknown location type");
-    }
-  }
   return field;
 }
 
@@ -553,10 +529,14 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
 
     if(weights.size() > 0) {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights);
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights,
+          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
     } else {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()),
+          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
     }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
@@ -676,8 +656,8 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     case dawn::proto::enums::GridType::Cartesian:
       sir = std::make_shared<SIR>(ast::GridType::Cartesian);
       break;
-    case dawn::proto::enums::GridType::Triangular:
-      sir = std::make_shared<SIR>(ast::GridType::Triangular);
+    case dawn::proto::enums::GridType::Unstructured:
+      sir = std::make_shared<SIR>(ast::GridType::Unstructured);
       break;
     default:
       dawn_unreachable("unknown grid type");

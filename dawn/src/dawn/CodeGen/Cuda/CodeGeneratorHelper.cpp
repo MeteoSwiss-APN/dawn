@@ -58,12 +58,16 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
       if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
+        DAWN_ASSERT_MSG(
+            dawn::sir::dimension_isa<dawn::sir::CartesianFieldDimension>(
+                fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension()),
+            "Field has non cartesian horizontal dimension");
         auto const& dimCartesian =
             dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
-                fieldInfo.second.Dimensions);
+                fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension());
         dims[0] = dimCartesian.I() == 1;
         dims[1] = dimCartesian.J() == 1;
-        dims[2] = dimCartesian.K() == 1;
+        dims[2] = fieldInfo.second.field.getFieldDimensions().K() == 1;
         break;
       }
     }
