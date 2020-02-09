@@ -1,4 +1,4 @@
-FROM ubuntu:eoan AS dawn_gcc9_basedeps
+FROM ubuntu:eoan AS dawn-gcc9-base-env
 RUN apt update && apt install -y \
     build-essential ninja-build cmake \
     llvm-9-dev libclang-9-dev \
@@ -8,7 +8,7 @@ RUN apt update && apt install -y \
 RUN python3 -m pip install --upgrade pip
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
-FROM dawn_gcc9_basedeps AS dawn_gcc9_deps
+FROM dawn-gcc9-base-env AS dawn-gcc9-env
 RUN apt update && apt install -y \
     protobuf-compiler protobuf-c-compiler \
     libprotobuf-dev libprotobuf-c-dev \
@@ -26,7 +26,7 @@ RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
 RUN cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install
 RUN rm -rf /usr/src/gridtools-1.0.4/build
 
-FROM dawn_gcc9_deps AS dawn_gcc9
+FROM dawn-gcc9-env AS dawn-gcc9
 COPY . /usr/src/dawn
 RUN mkdir -p /usr/src/dawn/build
 RUN cmake -S /usr/src/dawn -B /usr/src/dawn/build \
