@@ -29,7 +29,7 @@ using namespace dawn;
 
 namespace {
 
-class TestStageReordering : public ::testing::Test {
+class TestPassStageReordering : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -79,19 +79,19 @@ protected:
   }
 };
 
-TEST_F(TestStageReordering, ReorderTest1) { runTest("input/ReorderTest01.sir", {0}); }
+TEST_F(TestPassStageReordering, ReorderTest1) { runTest("input/ReorderTest01.sir", {0}); }
 
-TEST_F(TestStageReordering, ReorderTest2) { runTest("input/ReorderTest02.sir", {1, 3, 0, 2}); }
+TEST_F(TestPassStageReordering, ReorderTest2) { runTest("input/ReorderTest02.sir", {1, 3, 0, 2}); }
 
-TEST_F(TestStageReordering, ReorderTest3) { runTest("input/ReorderTest03.sir", {0, 1}); }
+TEST_F(TestPassStageReordering, ReorderTest3) { runTest("input/ReorderTest03.sir", {0, 1}); }
 
-TEST_F(TestStageReordering, ReorderTest4) { runTest("input/ReorderTest04.sir", {2, 0, 1, 3}); }
+TEST_F(TestPassStageReordering, ReorderTest4) { runTest("input/ReorderTest04.sir", {2, 0, 1, 3}); }
 
-TEST_F(TestStageReordering, ReorderTest5) { runTest("input/ReorderTest05.sir", {1, 0}); }
+TEST_F(TestPassStageReordering, ReorderTest5) { runTest("input/ReorderTest05.sir", {1, 0}); }
 
-TEST_F(TestStageReordering, ReorderTest6) { runTest("input/ReorderTest06.sir", {0, 1}); }
+TEST_F(TestPassStageReordering, ReorderTest6) { runTest("input/ReorderTest06.sir", {0, 1}); }
 
-TEST_F(TestStageReordering, ReorderTest7) {
+TEST_F(TestPassStageReordering, ReorderTest7) {
   runTest("input/ReorderTest07.sir", {0, 1, 2, 3, 4, 5, 6});
 }
 

@@ -28,7 +28,7 @@ using namespace dawn;
 
 namespace {
 
-class TestSetNonTempCaches : public ::testing::Test {
+class TestPassSetNonTempCaches : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -46,11 +46,11 @@ protected:
   }
 };
 
-TEST_F(TestSetNonTempCaches, NoCache1) { runTest("input/NoCache_1.sir", {}); }
+TEST_F(TestPassSetNonTempCaches, NoCache1) { runTest("input/NoCache_1.sir", {}); }
 
-TEST_F(TestSetNonTempCaches, NoCache2) { runTest("input/NoCache_2.sir", {}); }
+TEST_F(TestPassSetNonTempCaches, NoCache2) { runTest("input/NoCache_2.sir", {}); }
 
-TEST_F(TestSetNonTempCaches, MultipleCaches1) {
+TEST_F(TestPassSetNonTempCaches, MultipleCaches1) {
   runTest("input/MultipleCaches_1.sir", {"field_b", "field_c"});
 }
 

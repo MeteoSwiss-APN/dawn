@@ -29,7 +29,7 @@ using namespace dawn;
 
 namespace {
 
-class TestFieldVersioning : public ::testing::Test {
+class TestPassFieldVersioning : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -58,24 +58,24 @@ protected:
   }
 };
 
-TEST_F(TestFieldVersioning, RaceCondition1) { raceConditionTest("input/RaceCondition01.sir"); }
+TEST_F(TestPassFieldVersioning, RaceCondition1) { raceConditionTest("input/RaceCondition01.sir"); }
 
-TEST_F(TestFieldVersioning, RaceCondition2) { raceConditionTest("input/RaceCondition02.sir"); }
+TEST_F(TestPassFieldVersioning, RaceCondition2) { raceConditionTest("input/RaceCondition02.sir"); }
 
-TEST_F(TestFieldVersioning, RaceCondition3) { raceConditionTest("input/RaceCondition03.sir"); }
+TEST_F(TestPassFieldVersioning, RaceCondition3) { raceConditionTest("input/RaceCondition03.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest1) { versioningTest("input/VersioningTest01.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest1) { versioningTest("input/VersioningTest01.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest2) { versioningTest("input/VersioningTest02.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest2) { versioningTest("input/VersioningTest02.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest3) { versioningTest("input/VersioningTest03.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest3) { versioningTest("input/VersioningTest03.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest4) { versioningTest("input/VersioningTest04.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest4) { versioningTest("input/VersioningTest04.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest5) { versioningTest("input/VersioningTest05.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest5) { versioningTest("input/VersioningTest05.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest6) { versioningTest("input/VersioningTest06.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest6) { versioningTest("input/VersioningTest06.sir"); }
 
-TEST_F(TestFieldVersioning, VersioningTest7) { versioningTest("input/VersioningTest07.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest7) { versioningTest("input/VersioningTest07.sir"); }
 
 } // anonymous namespace

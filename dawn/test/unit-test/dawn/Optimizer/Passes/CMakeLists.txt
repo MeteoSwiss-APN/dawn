@@ -16,22 +16,22 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestOptimizerPasses)
 add_executable(${executable}
   TestMain.cpp
-  TestPassComputeStageExtents.cpp
   TestComputeMaxExtent.cpp
+  TestFieldAccessIntervals.cpp
+  TestPassComputeStageExtents.cpp
   TestPassCaching.cpp
   TestPassLocalVarType.cpp
   TestPassSetBoundaryCondition.cpp
-  TestFieldAccessIntervals.cpp
-  TestTemporaryToFunction.cpp
-  TestIntervalPartitioner.cpp
-  TestFieldVersioning.cpp
-  TestMultiStageSplitter.cpp
+  TestPassIntervalPartitioner.cpp
+  TestPassFieldVersioning.cpp
+  TestPassMultiStageSplitter.cpp
   TestPassSetCaches.cpp
-  TestSetNonTempCaches.cpp
-  TestStageMerger.cpp
-  TestStageReordering.cpp
+  TestPassSetNonTempCaches.cpp
+  TestPassStageMerger.cpp
+  TestPassStageReordering.cpp
   TestPassTemporaryMerger.cpp
   TestPassTemporaryType.cpp
+  TestTemporaryToFunction.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})

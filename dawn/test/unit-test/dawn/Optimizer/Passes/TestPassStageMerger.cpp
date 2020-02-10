@@ -28,7 +28,7 @@ using namespace dawn;
 
 namespace {
 
-class TestStageMerger : public ::testing::Test {
+class TestPassStageMerger : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -68,22 +68,32 @@ protected:
   }
 };
 
-TEST_F(TestStageMerger, MergerTest1) { runTest("input/StageMergerTest01.sir", 1, {1}, {1}, {1}); }
+TEST_F(TestPassStageMerger, MergerTest1) {
+  runTest("input/StageMergerTest01.sir", 1, {1}, {1}, {1});
+}
 
-TEST_F(TestStageMerger, MergerTest2) {
+TEST_F(TestPassStageMerger, MergerTest2) {
   runTest("input/StageMergerTest02.sir", 1, {1}, {2}, {1, 1});
 }
 
-TEST_F(TestStageMerger, MergerTest3) { runTest("input/StageMergerTest03.sir", 1, {1}, {1}, {2}); }
+TEST_F(TestPassStageMerger, MergerTest3) {
+  runTest("input/StageMergerTest03.sir", 1, {1}, {1}, {2});
+}
 
-TEST_F(TestStageMerger, MergerTest4) { runTest("input/StageMergerTest04.sir", 1, {1}, {1}, {3}); }
+TEST_F(TestPassStageMerger, MergerTest4) {
+  runTest("input/StageMergerTest04.sir", 1, {1}, {1}, {3});
+}
 
-TEST_F(TestStageMerger, MergerTest5) {
+TEST_F(TestPassStageMerger, MergerTest5) {
   runTest("input/StageMergerTest05.sir", 1, {1}, {2}, {1, 1});
 }
 
-TEST_F(TestStageMerger, MergerTest6) { runTest("input/StageMergerTest06.sir", 1, {1}, {1}, {2}); }
+TEST_F(TestPassStageMerger, MergerTest6) {
+  runTest("input/StageMergerTest06.sir", 1, {1}, {1}, {2});
+}
 
-TEST_F(TestStageMerger, MergerTest7) { runTest("input/StageMergerTest07.sir", 1, {1}, {1}, {1}); }
+TEST_F(TestPassStageMerger, MergerTest7) {
+  runTest("input/StageMergerTest07.sir", 1, {1}, {1}, {1});
+}
 
 } // anonymous namespace

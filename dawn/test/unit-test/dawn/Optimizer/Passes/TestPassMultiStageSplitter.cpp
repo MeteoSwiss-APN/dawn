@@ -28,7 +28,7 @@ using namespace dawn;
 
 namespace {
 
-class TestMultiStageSplitter : public ::testing::Test {
+class TestPassMultiStageSplitter : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -54,14 +54,14 @@ protected:
   }
 };
 
-TEST_F(TestMultiStageSplitter, SplitterTest1) { runTest("input/SplitterTest01.sir", 1, {1}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest1) { runTest("input/SplitterTest01.sir", 1, {1}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest2) { runTest("input/SplitterTest02.sir", 1, {2}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest2) { runTest("input/SplitterTest02.sir", 1, {2}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest3) { runTest("input/SplitterTest03.sir", 1, {2}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest3) { runTest("input/SplitterTest03.sir", 1, {2}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest4) { runTest("input/SplitterTest04.sir", 1, {4}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest4) { runTest("input/SplitterTest04.sir", 1, {4}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest5) { runTest("input/SplitterTest05.sir", 1, {2}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest5) { runTest("input/SplitterTest05.sir", 1, {2}); }
 
 } // anonymous namespace
