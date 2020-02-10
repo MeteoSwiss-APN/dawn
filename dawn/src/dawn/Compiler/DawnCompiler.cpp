@@ -24,8 +24,8 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
+#include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -199,6 +199,9 @@ DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
     optimizer.checkAndPushBack<PassFixVersionedInputFields>();
     optimizer.checkAndPushBack<PassComputeStageExtents>();
     optimizer.checkAndPushBack<PassSetSyncStage>();
+    // validation checks after parallelisation
+    optimizer.checkAndPushBack<PassLocalVarType>();
+    optimizer.checkAndPushBack<PassValidation>();
   }
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
@@ -300,6 +303,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     optimizer.checkAndPushBack<PassStageMerger>();
     // since this can change the scope of temporaries ...
     optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassLocalVarType>();
     // this pass is broken as hell... Johann please
     // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
     // modify stages and their extents ...
@@ -319,6 +323,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // this should not affect the temporaries but since we're touching them it would probably be a
     // safe idea
     optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassLocalVarType>();
     // validation check
     optimizer.checkAndPushBack<PassValidation>();
   }
@@ -336,6 +341,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
       optimizer.checkAndPushBack<PassIntervalPartitioning>();
       // since this can change the scope of temporaries ...
       optimizer.checkAndPushBack<PassTemporaryType>();
+      optimizer.checkAndPushBack<PassLocalVarType>();
       // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
       // validation check
       optimizer.checkAndPushBack<PassValidation>();
@@ -353,6 +359,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // this should not affect the temporaries but since we're touching them it would probably be a
     // safe idea
     optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassLocalVarType>();
     // validation check
     optimizer.checkAndPushBack<PassValidation>();
   }
