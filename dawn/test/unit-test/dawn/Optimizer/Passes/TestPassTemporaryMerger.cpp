@@ -75,10 +75,10 @@ TEST_F(TestPassTemporaryMerger, MergeTest2) { runTest("input/MergeTest02.sir", {
 
 TEST_F(TestPassTemporaryMerger, MergeTest3) { runTest("input/MergeTest03.sir", {"tmp_b"}); }
 
-TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("input/MergeTest04.sir", {"tmp_a"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("input/MergeTest04.sir", {"tmp_b"}); }
 
 TEST_F(TestPassTemporaryMerger, MergeTest5) {
-  runTest("input/MergeTest05.sir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
+  runTest("input/MergeTest05.sir", {"tmp_1", "tmp_2", "tmp_4", "tmp_5"});
 }
 
 } // anonymous namespace
