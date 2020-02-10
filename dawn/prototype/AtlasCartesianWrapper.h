@@ -33,6 +33,7 @@ private:
 
 public:
   Point cellMidpoint(const atlas::Mesh& mesh, int cellIdx) const;
+  Point cellCircumcenter(const atlas::Mesh& mesh, int cellIdx) const;
 
   Orientation edgeOrientation(const atlas::Mesh& mesh, int edgeIdx) const;
 
@@ -42,5 +43,5 @@ public:
 
   Point edgeMidpoint(const atlas::Mesh& mesh, int edgeIdx) const;
 
-  AtlasToCartesian(const atlas::Mesh& mesh);
+  AtlasToCartesian(const atlas::Mesh& mesh, bool skewTrafo = false);
 };

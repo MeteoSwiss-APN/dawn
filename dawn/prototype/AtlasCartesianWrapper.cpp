@@ -36,6 +36,34 @@ Point AtlasToCartesian::cellMidpoint(const atlas::Mesh& mesh, int cellIdx) const
   return {midX, midY};
 }
 
+Point AtlasToCartesian::cellCircumcenter(const atlas::Mesh& mesh, int cellIdx) const {
+  const atlas::mesh::HybridElements::Connectivity& cellNodeConnectivity =
+      mesh.cells().node_connectivity();
+
+  const int missingVal = cellNodeConnectivity.missing_value();
+
+  // only valid for tringular cells with all node neighbors set
+  int numNbh = cellNodeConnectivity.cols(cellIdx);
+  assert(numNbh == 3);
+  for(int nbh = 0; nbh < numNbh; nbh++) {
+    int nbhIdx = cellNodeConnectivity(cellIdx, nbh);
+    assert(nbhIdx != missingVal);
+  }
+
+  auto [Ax, Ay] = nodeLocation(cellNodeConnectivity(cellIdx, 0));
+  auto [Bx, By] = nodeLocation(cellNodeConnectivity(cellIdx, 1));
+  auto [Cx, Cy] = nodeLocation(cellNodeConnectivity(cellIdx, 2));
+
+  double D = 2 * (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By));
+  double Ux = 1. / D *
+              ((Ax * Ax + Ay * Ay) * (By - Cy) + (Bx * Bx + By * By) * (Cy - Ay) +
+               (Cx * Cx + Cy * Cy) * (Ay - By));
+  double Uy = 1. / D *
+              ((Ax * Ax + Ay * Ay) * (Cx - Bx) + (Bx * Bx + By * By) * (Ax - Cx) +
+               (Cx * Cx + Cy * Cy) * (Bx - Ax));
+  return {Ux, Uy};
+}
+
 Orientation AtlasToCartesian::edgeOrientation(const atlas::Mesh& mesh, int edgeIdx) const {
   auto [lo, hi] = cartesianEdge(mesh, edgeIdx);
   auto [loX, loY] = lo;
@@ -75,7 +103,8 @@ Point AtlasToCartesian::edgeMidpoint(const atlas::Mesh& mesh, int edgeIdx) const
   return {0.5 * (fromX + toX), 0.5 * (fromY + toY)};
 }
 
-AtlasToCartesian::AtlasToCartesian(const atlas::Mesh& mesh) : nodeToCart(mesh.nodes().size()) {
+AtlasToCartesian::AtlasToCartesian(const atlas::Mesh& mesh, bool skewTrafo)
+    : nodeToCart(mesh.nodes().size()) {
   double lonLo = std::numeric_limits<double>::max();
   double lonHi = -std::numeric_limits<double>::max();
   double latLo = std::numeric_limits<double>::max();
@@ -95,6 +124,12 @@ AtlasToCartesian::AtlasToCartesian(const atlas::Mesh& mesh) : nodeToCart(mesh.no
     double lat = lonlat(cellIdx, 1);
     double cartx = (lon - lonLo) / (lonHi - lonLo);
     double carty = (lat - latLo) / (latHi - latLo);
+
+    if(skewTrafo) {
+      cartx = cartx - 0.5 * carty;
+      carty = carty * sqrt(3) / 2.;
+    }
+
     nodeToCart[cellIdx] = {cartx, carty};
   }
 }
