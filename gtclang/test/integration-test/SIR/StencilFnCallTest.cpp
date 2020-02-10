@@ -22,9 +22,9 @@
 using namespace gtclang::dsl;
 
 stencil_function fn {
-  storage a;
+  storage c;
   Do {
-    return a;
+    return c;
   }
 };
 

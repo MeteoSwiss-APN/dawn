@@ -87,7 +87,7 @@ if(eckit_FOUND AND atlas_FOUND)
   target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
   target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-  target_add_gtclang_standard_props(${test_name})
+  target_add_dawn_standard_props(${test_name})
   target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest)
 
   set_target_properties(${test_name} PROPERTIES
