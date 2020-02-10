@@ -31,3 +31,5 @@ add_executable(DawnUpdateIIRReferences
 target_link_libraries(DawnUpdateIIRReferences Dawn DawnUnittest gtest)
 target_add_dawn_standard_props(DawnUpdateIIRReferences)
 file(COPY reference_iir DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+add_subdirectory(unstructured)
