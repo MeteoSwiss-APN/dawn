@@ -34,7 +34,8 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runTest(const std::string& filename, const std::vector<std::string>& demotedFields) {
+  void runTest(const std::string& filename, const std::vector<std::string>& demotedFields,
+               const std::vector<std::string>& promotedFields = {}) {
     dawn::UIDGenerator::getInstance()->reset();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
@@ -42,14 +43,10 @@ protected:
     // Run prerequisite tests
     ASSERT_TRUE(CompilerUtil::runPasses(5, context_, instantiation));
 
-    //CompilerUtil::write(context_, 0, 1, "DemoteTest01");
-
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassTemporaryType>(context_, instantiation));
 
-    //CompilerUtil::write(context_, 1, 1, "DemoteTest01");
-
-    if(demotedFields.size() > 0) {
+    if(demotedFields.size() > 0 || promotedFields.size() > 0) {
       // Apply AST matcher to find all field access expressions
       dawn::ASTMatcher matcher(instantiation.get());
       std::vector<std::shared_ptr<ast::Expr>>& accessExprs =
@@ -61,9 +58,14 @@ protected:
         fieldNames.insert(field->getName());
       }
 
-      // Assert that merged fields are no longer accessed
+      // Assert that demoted fields are not accessed
       for(const auto& demotedField : demotedFields) {
         ASSERT_TRUE(fieldNames.find(demotedField) == fieldNames.end());
+      }
+
+      // Assert that promoted fields are accessed
+      for(const auto& promotedField : promotedFields) {
+        ASSERT_TRUE(fieldNames.find(promotedField) != fieldNames.end());
       }
     }
   }
@@ -71,14 +73,24 @@ protected:
 
 TEST_F(TestPassTemporaryType, DemoteTest1) { runTest("DemoteTest01.sir", {"tmp"}); }
 
-//TEST_F(TestPassTemporaryType, PromoteTest1) { runTest("PromoteTest01.sir", {}); }
-//
-//TEST_F(TestPassTemporaryType, PromoteTest2) { runTest("PromoteTest02.sir", {}); }
-//
-//TEST_F(TestPassTemporaryType, PromoteTest3) { runTest("PromoteTest03.sir", {}); }
-//
-//TEST_F(TestPassTemporaryType, PromoteTest4) { runTest("PromoteTest04.sir", {}); }
-//
-//TEST_F(TestPassTemporaryType, PromoteTest5) { runTest("PromoteTest05.sir", {}); }
+TEST_F(TestPassTemporaryType, PromoteTest1) {
+  runTest("PromoteTest01.sir", {}, {"__tmp_local_variable_40"});
+}
+
+TEST_F(TestPassTemporaryType, PromoteTest2) {
+  runTest("PromoteTest02.sir", {}, {"__tmp_local_variable_56"});
+}
+
+TEST_F(TestPassTemporaryType, PromoteTest3) {
+  runTest("PromoteTest03.sir", {}, {"__tmp_local_variable_53"});
+}
+
+TEST_F(TestPassTemporaryType, PromoteTest4) {
+  runTest("PromoteTest04.sir", {}, {"__tmp_local_variable_76"});
+}
+
+TEST_F(TestPassTemporaryType, PromoteTest5) {
+  runTest("PromoteTest05.sir", {"field_a_0"}, {"__tmp_local_variable_109"});
+}
 
 } // anonymous namespace
