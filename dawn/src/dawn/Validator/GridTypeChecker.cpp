@@ -69,6 +69,16 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
 
   // check type consistency of stencil functions
   for(auto const& stenFunIt : sir.StencilFunctions) {
+    for(auto arg : stenFunIt->Args) {
+      if(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field) {
+        sir::Field* field = (sir::Field*)arg.get();
+        // Check FieldDimensions
+        const auto& hDimension = field->Dimensions.getHorizontalFieldDimension();
+        if(hDimension.getType() != sir.GridType) {
+          return false;
+        }
+      }
+    }
     for(const auto& astIt : stenFunIt->Asts) {
       astIt->accept(typeChecker);
       if(!typeChecker.isConsistent()) {
@@ -79,7 +89,6 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
 
   // check type consistency of stencils
   for(const auto& stencil : sir.Stencils) {
-
     for(const auto& field : stencil->Fields) {
       // Check FieldDimensions
       const auto& hDimension = field->Dimensions.getHorizontalFieldDimension();
