@@ -45,7 +45,7 @@ OPT(bool, Debug, false, "debug", "",
 OPT(bool, Parallel, false, "parallel", "",
     "Run parallel pass group", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
-    "Transform all statements into static single assigment (SSA) form", "", false, false)
+    "Transform all statements into static single assignment (SSA) form", "", false, false)
 OPT(bool, PrintStencilGraph, false, "print-stencil-graph", "",
     "Dump the access dependency graph of each stencil to a dot file", "", false, true)
 OPT(bool, SetStageName, false, "set-stage-name", "",
