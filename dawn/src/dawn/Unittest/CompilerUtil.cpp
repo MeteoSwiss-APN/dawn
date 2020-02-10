@@ -53,10 +53,9 @@ std::shared_ptr<iir::StencilInstantiation>
 CompilerUtil::load(const std::string& irFilename,
                    const dawn::OptimizerContext::OptimizerContextOptions& options,
                    std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
-  std::string filename = envPath;
-  if(!filename.empty())
-    filename += "/";
-  filename += irFilename;
+  std::string filename = irFilename;
+  if(!envPath.empty() && filename.at(0) != '/')
+    filename = envPath + "/" + filename;
 
   if(filename.find(".sir") != std::string::npos) {
     return lower(filename, options, context, envPath);
@@ -83,12 +82,10 @@ CompilerUtil::lower(const std::string& sirFilename,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context,
                     const std::string& envPath) {
-  std::string filename = envPath;
-  if(!filename.empty())
-    filename += "/";
-  filename += sirFilename;
+  std::string filename = sirFilename;
+  if(!envPath.empty() && filename.at(0) != '/')
+    filename = envPath + "/" + filename;
 
-  // std::shared_ptr<dawn::SIR> sir = nullptr;
   std::shared_ptr<dawn::SIR> sir = load(filename);
   return lower(sir, options, context);
 }
