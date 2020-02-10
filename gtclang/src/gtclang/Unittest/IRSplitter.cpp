@@ -40,7 +40,7 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
     filePrefix_ = filePath.root_directory().string();
   filePrefix_ += "/" + filePath.stem().string();
 
-  std::vector<std::string> flags = {"-std=c++11", //"-verbose",
+  std::vector<std::string> flags = {"-std=c++11",
                                     std::string{"-I"} + std::string{GTCLANG_UNITTEST_INCLUDES}};
   for(const auto& arg : args) {
     flags.emplace_back(arg);
@@ -208,30 +208,3 @@ void IRSplitter::writeIIR(const unsigned level) {
 }
 
 } // namespace gtclang
-
-// TODO: Refactor this before PR!!!
-#ifdef MAIN_ENABLED
-int main(int argc, char* argv[]) {
-  if(argc < 2) {
-    std::cerr << "usage: " << argv[0] << " <DSL File> [Dest Dir] [Max Opt. Level]" << std::endl;
-    return 1;
-  }
-
-  std::string filename{argv[1]};
-  std::string dest_dir;
-  std::vector<std::string> args;
-
-  if(argc > 2)
-    dest_dir = std::string{argv[2]};
-  unsigned max_level = 1000;
-  if(argc > 3)
-    max_level = atoi(argv[3]);
-  if(argc > 4)
-    args = std::vector<std::string>(argv + 4, argv + (argc - 1));
-
-  gtclang::IRSplitter splitter(dest_dir, max_level);
-  splitter.split(filename, args);
-
-  return 0;
-}
-#endif
