@@ -160,7 +160,7 @@ void dumpField(const std::string& fname, const mylib::Grid& mesh,
                const mylib::VertexData<double>& field, int level);
 
 int main() {
-  int w = 10;
+  int w = 20;
   int k_size = 1;
   const int level = 0;
   double lDomain = M_PI;

@@ -158,7 +158,7 @@ void dumpField(const std::string& fname, const mylib::Grid& mesh,
                const mylib::VertexData<double>& field, int level);
 
 int main() {
-  int w = 33;
+  int w = 20;
   int k_size = 1;
   const int level = 0;
   double lDomain = M_PI;
@@ -168,8 +168,8 @@ int main() {
 
   mylib::Grid mesh{w, w, false, lDomain, lDomain, true};
   if(dbg_out) {
-    dumpMesh(mesh, "mesh.txt");
-    dumpDualMesh(mesh, "dualMesh.txt");
+    dumpMesh(mesh, "laplICONmylib_mesh.txt");
+    dumpDualMesh(mesh, "laplICONmylib_dualMesh.txt");
   }
 
   const int edgesPerVertex = 6;
@@ -299,7 +299,7 @@ int main() {
     // flows into the cell on two edges, and out on another (or vice versa). Divergence will hence
     // not be zero in this case!
     double fun = wave(px, py);
-    vec(e.get(), level) = fun * primal_normal_x(e.get(), level);
+    vec(e.get(), level) = fun;
 
     nabla2_vec(e.get(), level) = 0;
   }
@@ -454,13 +454,15 @@ int main() {
     nabla2_vec(e, level) = nabla2t1_vec(e, level) - nabla2t2_vec(e, level);
   }
 
-  dumpField("laplICONmylib_rotH.txt", mesh, nabla2t1_vec, level, mylib::edge_color::horizontal);
-  dumpField("laplICONmylib_rotV.txt", mesh, nabla2t1_vec, level, mylib::edge_color::vertical);
-  dumpField("laplICONmylib_rotD.txt", mesh, nabla2t1_vec, level, mylib::edge_color::diagonal);
+  if(dbg_out) {
+    dumpField("laplICONmylib_rotH.txt", mesh, nabla2t1_vec, level, mylib::edge_color::horizontal);
+    dumpField("laplICONmylib_rotV.txt", mesh, nabla2t1_vec, level, mylib::edge_color::vertical);
+    dumpField("laplICONmylib_rotD.txt", mesh, nabla2t1_vec, level, mylib::edge_color::diagonal);
 
-  dumpField("laplICONmylib_divH.txt", mesh, nabla2t2_vec, level, mylib::edge_color::horizontal);
-  dumpField("laplICONmylib_divV.txt", mesh, nabla2t2_vec, level, mylib::edge_color::vertical);
-  dumpField("laplICONmylib_divD.txt", mesh, nabla2t2_vec, level, mylib::edge_color::diagonal);
+    dumpField("laplICONmylib_divH.txt", mesh, nabla2t2_vec, level, mylib::edge_color::horizontal);
+    dumpField("laplICONmylib_divV.txt", mesh, nabla2t2_vec, level, mylib::edge_color::vertical);
+    dumpField("laplICONmylib_divD.txt", mesh, nabla2t2_vec, level, mylib::edge_color::diagonal);
+  }
 
   //===------------------------------------------------------------------------------------------===//
   // dumping a hopefully nice colorful laplacian
