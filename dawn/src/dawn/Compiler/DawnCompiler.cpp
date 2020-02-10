@@ -369,10 +369,12 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.DataLocalityMetric)) {
-    // Plain diagnostics, should not even be a pass but is independent
-    optimizer.checkAndPushBack<PassDataLocalityMetric>();
-    // validation check
-    optimizer.checkAndPushBack<PassValidation>();
+    if(options_.DataLocalityMetric) {
+      // Plain diagnostics, should not even be a pass but is independent
+      optimizer.checkAndPushBack<PassDataLocalityMetric>();
+      // validation check
+      optimizer.checkAndPushBack<PassValidation>();
+    }
   }
   //===-----------------------------------------------------------------------------------------
 
