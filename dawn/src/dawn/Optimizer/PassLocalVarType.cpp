@@ -32,6 +32,11 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
   // dependence of A. This map is from a variable B to all variables that depend on B. A variable
   // cannot depend on itself.
   std::unordered_map<int, std::set<int>> dependencyMap_;
+  // Type inferred from the conditional expression of the if statement we are currently in.
+  // Unset if either
+  // - we are not inside an if statement or
+  // - no type has been inferred from the conditional
+  std::optional<iir::LocalVariableType> conditionalType_;
 
   // Sets the type of variable with id `varID` to `newType` if the previous type was scalar or
   // unset. Throws if non-scalar previous type is different from `newType` (mixing different
@@ -91,29 +96,36 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
     recursivePropagate(accessID);
   }
 
+  // Construct a LocalVariableType from a field accessed within an assignment to / declaration of a
+  // local variable.
+  iir::LocalVariableType inferLocalVarTypeFromField(int fieldAccessID) {
+    iir::LocalVariableType type;
+
+    if(sir::dimension_isa<sir::CartesianFieldDimension>(
+           metadata_.getFieldDimensions(fieldAccessID).getHorizontalFieldDimension())) {
+      // Cartesian case
+      type = iir::LocalVariableType::OnIJ;
+    } else {
+      // Unstructured case, convert from location type
+      switch(metadata_.getDenseLocationTypeFromAccessID(fieldAccessID)) {
+      case ast::LocationType::Cells:
+        type = iir::LocalVariableType::OnCells;
+        break;
+      case ast::LocationType::Edges:
+        type = iir::LocalVariableType::OnEdges;
+        break;
+      case ast::LocationType::Vertices:
+        type = iir::LocalVariableType::OnVertices;
+        break;
+      }
+    }
+    return type;
+  }
+
 public:
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     if(curVarID_.has_value()) { // We are inside an assignment to variable / variable declaration
-      iir::LocalVariableType newType;
-
-      if(sir::dimension_isa<sir::CartesianFieldDimension>(
-             metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())) {
-        // Cartesian case
-        newType = iir::LocalVariableType::OnIJ;
-      } else {
-        // Unstructured case, convert to location type
-        switch(metadata_.getDenseLocationTypeFromAccessID(iir::getAccessID(expr))) {
-        case ast::LocationType::Cells:
-          newType = iir::LocalVariableType::OnCells;
-          break;
-        case ast::LocationType::Edges:
-          newType = iir::LocalVariableType::OnEdges;
-          break;
-        case ast::LocationType::Vertices:
-          newType = iir::LocalVariableType::OnVertices;
-          break;
-        }
-      }
+      iir::LocalVariableType newType = inferLocalVarTypeFromField(iir::getAccessID(expr));
       // Update the type of the current variable with `newType`
       updateVariableType(*curVarID_, newType, expr->getSourceLocation());
     }
@@ -145,19 +157,51 @@ public:
       }
     }
   }
+  void visit(const std::shared_ptr<iir::IfStmt>& ifStmt) override {
+    // If in the conditional expression we are accessing a field, it means that every statement in
+    // the then and else blocks will have a read-dependency on such field.
+
+    for(const auto& readAccess :
+        ifStmt->getCondStmt()->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses()) {
+      int fieldAccessID = readAccess.first;
+      // TODO: if it's a variable should make connections in the dep map
+      if(metadata_.isAccessType(iir::FieldAccessType::Field, fieldAccessID)) {
+        if(conditionalType_.has_value()) {
+          if(*conditionalType_ != inferLocalVarTypeFromField(fieldAccessID)) {
+            throw std::runtime_error(dawn::format(
+                "Invalid if-condition at line %d: accesses fields with different location types",
+                ifStmt->getSourceLocation().Line));
+          }
+        }
+        // Record the accessed field's location type
+        conditionalType_ = inferLocalVarTypeFromField(fieldAccessID);
+      }
+    }
+    // If we encounter an assignment to a local variable inside the then and else blocks, we should
+    // impose the recorded type.
+    ast::ASTVisitorForwarding::visit(ifStmt);
+    // Unset conditionalType_ as we are exiting the visit of the if statement
+    conditionalType_ = std::nullopt;
+  }
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
     // Run only when lhs is a local variable
     if(expr->getLeft()->getKind() == ast::Expr::Kind::VarAccessExpr &&
        std::dynamic_pointer_cast<iir::VarAccessExpr>(expr->getLeft())->isLocal()) {
 
-      if(curVarID_.has_value()) { // Variable assignment inside variable assignment, not supported.
-        throw std::runtime_error(dawn::format(
-            "Variable assignment inside rhs of variable assignment is not supported. Line %d.",
-            expr->getSourceLocation().Line));
+      if(curVarID_.has_value()) {
+        // Variable assignment inside variable assignment, not supported.
+        throw std::runtime_error(dawn::format("Variable assignment inside rhs of variable "
+                                              "assignment is not supported. Line %d.",
+                                              expr->getSourceLocation().Line));
       }
-      // Assume scalar if nothing proves the opposite during the visit
+      // Set curVarID_ to current variable being processed
       curVarID_ = iir::getAccessID(expr->getLeft());
-      updateVariableType(*curVarID_, iir::LocalVariableType::Scalar, expr->getSourceLocation());
+      // If we are inside an if-statement and the if condition accesses a field, we already have a
+      // variable type inferred. Otherwise, assume scalar as starting type. In any case we need
+      // to do the visit.
+      const iir::LocalVariableType startingType =
+          conditionalType_.has_value() ? *conditionalType_ : iir::LocalVariableType::Scalar;
+      updateVariableType(*curVarID_, startingType, expr->getSourceLocation());
       // If the set of dependers for this variable is not there, it means the variable hasn't been
       // declared
       DAWN_ASSERT_MSG(dependencyMap_.count(*curVarID_), "Variable accessed before being declared.");
@@ -170,9 +214,14 @@ public:
     }
   }
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    // Assume scalar if nothing proves the opposite during the visit
+    // Set curVarID_ to current variable being processed
     curVarID_ = iir::getAccessID(stmt);
-    updateVariableType(*curVarID_, iir::LocalVariableType::Scalar, stmt->getSourceLocation());
+    // If we are inside an if-statement and the if condition accesses a field, we already have a
+    // variable type inferred. Otherwise, assume scalar as starting type. In any case we need
+    // to do the visit.
+    const iir::LocalVariableType startingType =
+        conditionalType_.has_value() ? *conditionalType_ : iir::LocalVariableType::Scalar;
+    updateVariableType(*curVarID_, startingType, stmt->getSourceLocation());
     // Setup empty set of dependers for this variable
     dependencyMap_.emplace(*curVarID_, std::set<int>{});
     // Visit rhs
