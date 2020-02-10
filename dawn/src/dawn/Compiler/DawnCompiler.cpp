@@ -331,12 +331,14 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PartitionIntervals)) {
-    optimizer.checkAndPushBack<PassIntervalPartitioning>();
-    // since this can change the scope of temporaries ...
-    optimizer.checkAndPushBack<PassTemporaryType>();
-    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
-    // validation check
-    optimizer.checkAndPushBack<PassValidation>();
+    if(options_.PartitionIntervals) {
+      optimizer.checkAndPushBack<PassIntervalPartitioning>();
+      // since this can change the scope of temporaries ...
+      optimizer.checkAndPushBack<PassTemporaryType>();
+      // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+      // validation check
+      optimizer.checkAndPushBack<PassValidation>();
+    }
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PassTmpToFunction)) {
