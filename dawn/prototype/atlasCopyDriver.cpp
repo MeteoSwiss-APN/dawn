@@ -17,6 +17,8 @@ int main() {
   atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
+  atlas::mesh::actions::build_edges(mesh);
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
 
   int nb_levels = 1;
   atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
@@ -24,9 +26,6 @@ int main() {
 
   atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
   atlas::Field in{fs_edges.createField<double>(atlas::option::name("in"))};
-
-  atlas::mesh::actions::build_edges(mesh);
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
 
   atlas::output::Gmsh gmesh("mymesh.msh");
   gmesh.write(mesh);

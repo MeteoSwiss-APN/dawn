@@ -24,6 +24,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
