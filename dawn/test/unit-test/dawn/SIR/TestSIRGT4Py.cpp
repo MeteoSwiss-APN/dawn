@@ -1,0 +1,47 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
+#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Options.h"
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
+#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Unittest/CompilerUtil.h"
+//#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+
+#include <fstream>
+#include <gtest/gtest.h>
+
+using namespace dawn;
+
+namespace {
+
+class TestSIRGT4Py : public ::testing::Test {
+protected:
+  dawn::OptimizerContext::OptimizerContextOptions options_;
+  std::unique_ptr<OptimizerContext> context_;
+
+  void runTest(const std::string& filename) {
+    std::shared_ptr<iir::StencilInstantiation> instantiation =
+        CompilerUtil::load(filename, options_, context_);
+    SUCCEED();
+  }
+};
+
+TEST_F(TestSIRGT4Py, TridiagonalSolveGTClang) { runTest("input/tridiagonal_solve_gtclang.sir"); }
+
+TEST_F(TestSIRGT4Py, TridiagonalSolveGT4Py) { runTest("input/tridiagonal_solve_gt4py.sir"); }
+
+} // anonymous namespace
