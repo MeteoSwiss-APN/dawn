@@ -14,6 +14,8 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
       if(pair.second.isTypeSet()) {
         iir::LocalVariableType varType = pair.second.getType();
         switch(varType) {
+        case iir::LocalVariableType::Scalar:
+          continue;
         case iir::LocalVariableType::OnCells:
         case iir::LocalVariableType::OnEdges:
         case iir::LocalVariableType::OnVertices:
@@ -46,8 +48,7 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
 
       // Check FieldDimensions
       const auto& hDimension = field.second.getFieldDimensions().getHorizontalFieldDimension();
-      if(sir::dimension_isa<const sir::UnstructuredFieldDimension&>(hDimension) &&
-         (iir.getGridType() != ast::GridType::Unstructured)) {
+      if(hDimension.getType() != iir.getGridType()) {
         return false;
       }
     }
@@ -78,6 +79,15 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
 
   // check type consistency of stencils
   for(const auto& stencil : sir.Stencils) {
+
+    for(const auto& field : stencil->Fields) {
+      // Check FieldDimensions
+      const auto& hDimension = field->Dimensions.getHorizontalFieldDimension();
+      if(hDimension.getType() != sir.GridType) {
+        return false;
+      }
+    }
+
     DAWN_ASSERT(stencil);
     const auto& stencilAst = stencil->StencilDescAst;
     stencilAst->accept(typeChecker);
