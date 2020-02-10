@@ -711,7 +711,8 @@ bool OptimizerContext::restoreIIR(std::string const& name,
                                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilName(stencilInstantiation->getName());
-  metadata.setFileName("<unknown>");
+  if(metadata.getFileName().empty())
+    metadata.setFileName("<unknown>");
 
   stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
 
@@ -736,10 +737,13 @@ bool OptimizerContext::restoreIIR(std::string const& name,
   // contained in the DoMethods
   checkAndPushBack<PassSetStageName>();
   checkAndPushBack<PassComputeStageExtents>();
-  if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
-    return false;
+  const bool passed =
+      getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation);
 
-  return true;
+  // Clean up the passes just run
+  getPassManager().getPasses().clear();
+
+  return passed;
 }
 
 } // namespace dawn

@@ -140,7 +140,6 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
 
 } // namespace
 
-DawnCompiler::DawnCompiler() : diagnostics_(), options_() {}
 DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
 std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {

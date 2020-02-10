@@ -29,6 +29,9 @@
 
 namespace dawn {
 
+PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
+    : Pass(context, "PassFixVersionedInputFields", true) {}
+
 /// @brief Creates the assignment statement
 static std::shared_ptr<ast::Stmt>
 createAssignmentStatement(int assignmentID, int assigneeID,
@@ -120,11 +123,6 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
     }
   }
 };
-
-PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {
-  dependencies_.push_back("PassFieldVersioning");
-}
 
 bool PassFixVersionedInputFields::run(
     std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
