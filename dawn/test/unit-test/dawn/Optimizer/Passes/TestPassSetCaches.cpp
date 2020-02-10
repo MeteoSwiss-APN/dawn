@@ -72,33 +72,33 @@ protected:
 };
 
 TEST_F(TestPassSetCaches, IJCacheTest1) {
-  runTest("IJCacheTest01.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
+  runTest("input/IJCacheTest01.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
           {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, IJCacheTest2) {
-  runTest("IJCacheTest02.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
+  runTest("input/IJCacheTest02.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::IJ}},
           {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1) {
-  runTest("KCacheTest01.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
+  runTest("input/KCacheTest01.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::fill}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest1b) {
-  runTest("KCacheTest01b.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
+  runTest("input/KCacheTest01b.sir", 1, 1, {{"tmp"}}, {{iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::local}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest2) {
-  runTest("KCacheTest02.sir", 1, 2, {{"tmp"}, {"tmp"}},
+  runTest("input/KCacheTest02.sir", 1, 2, {{"tmp"}, {"tmp"}},
           {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::fill_and_flush}, {iir::Cache::IOPolicy::fill}});
 }
 
 TEST_F(TestPassSetCaches, KCacheTest2b) {
-  runTest("KCacheTest02b.sir", 1, 2, {{"tmp"}, {"b", "tmp"}},
+  runTest("input/KCacheTest02b.sir", 1, 2, {{"tmp"}, {"b", "tmp"}},
           {{iir::Cache::CacheType::K}, {iir::Cache::CacheType::K, iir::Cache::CacheType::K}},
           {{iir::Cache::IOPolicy::fill_and_flush},
            {iir::Cache::IOPolicy::fill, iir::Cache::IOPolicy::bpfill}});

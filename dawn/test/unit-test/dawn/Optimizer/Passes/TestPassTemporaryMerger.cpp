@@ -69,16 +69,16 @@ protected:
   }
 };
 
-TEST_F(TestPassTemporaryMerger, MergeTest1) { runTest("MergeTest01.sir", {}); }
+TEST_F(TestPassTemporaryMerger, MergeTest1) { runTest("input/MergeTest01.sir", {}); }
 
-TEST_F(TestPassTemporaryMerger, MergeTest2) { runTest("MergeTest02.sir", {}); }
+TEST_F(TestPassTemporaryMerger, MergeTest2) { runTest("input/MergeTest02.sir", {}); }
 
-TEST_F(TestPassTemporaryMerger, MergeTest3) { runTest("MergeTest03.sir", {"tmp_b"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest3) { runTest("input/MergeTest03.sir", {"tmp_b"}); }
 
-TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("MergeTest04.sir", {"tmp_a"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("input/MergeTest04.sir", {"tmp_a"}); }
 
 TEST_F(TestPassTemporaryMerger, MergeTest5) {
-  runTest("MergeTest05.sir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
+  runTest("input/MergeTest05.sir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
 }
 
 } // anonymous namespace

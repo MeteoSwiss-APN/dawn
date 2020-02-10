@@ -54,14 +54,14 @@ protected:
   }
 };
 
-TEST_F(TestMultiStageSplitter, SplitterTest1) { runTest("SplitterTest01.sir", 1, {1}); }
+TEST_F(TestMultiStageSplitter, SplitterTest1) { runTest("input/SplitterTest01.sir", 1, {1}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest2) { runTest("SplitterTest02.sir", 1, {2}); }
+TEST_F(TestMultiStageSplitter, SplitterTest2) { runTest("input/SplitterTest02.sir", 1, {2}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest3) { runTest("SplitterTest03.sir", 1, {2}); }
+TEST_F(TestMultiStageSplitter, SplitterTest3) { runTest("input/SplitterTest03.sir", 1, {2}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest4) { runTest("SplitterTest04.sir", 1, {4}); }
+TEST_F(TestMultiStageSplitter, SplitterTest4) { runTest("input/SplitterTest04.sir", 1, {4}); }
 
-TEST_F(TestMultiStageSplitter, SplitterTest5) { runTest("SplitterTest05.sir", 1, {2}); }
+TEST_F(TestMultiStageSplitter, SplitterTest5) { runTest("input/SplitterTest05.sir", 1, {2}); }
 
 } // anonymous namespace

@@ -48,7 +48,7 @@ protected:
 
 TEST_F(TestIntervalPartitioner, test_interval_partition) {
   std::shared_ptr<iir::StencilInstantiation> instantiation = CompilerUtil::load(
-      "test_interval_partition.sir", options_, context_, TestEnvironment::path_);
+      "input/test_interval_partition.sir", options_, context_, TestEnvironment::path_);
 
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));

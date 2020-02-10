@@ -46,12 +46,12 @@ protected:
   }
 };
 
-TEST_F(TestSetNonTempCaches, NoCache1) { runTest("NoCache_1.sir", {}); }
+TEST_F(TestSetNonTempCaches, NoCache1) { runTest("input/NoCache_1.sir", {}); }
 
-TEST_F(TestSetNonTempCaches, NoCache2) { runTest("NoCache_2.sir", {}); }
+TEST_F(TestSetNonTempCaches, NoCache2) { runTest("input/NoCache_2.sir", {}); }
 
 TEST_F(TestSetNonTempCaches, MultipleCaches1) {
-  runTest("MultipleCaches_1.sir", {"field_b", "field_c"});
+  runTest("input/MultipleCaches_1.sir", {"field_b", "field_c"});
 }
 
 } // anonymous namespace

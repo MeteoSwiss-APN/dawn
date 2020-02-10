@@ -63,7 +63,7 @@ protected:
 
 TEST_F(ComputeMaxExtents, test_stencil_01) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      loadTest("compute_extent_test_stencil_01.sir");
+      loadTest("input/compute_extent_test_stencil_01.sir");
   const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
@@ -87,7 +87,7 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
 
 TEST_F(ComputeMaxExtents, test_stencil_02) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      loadTest("compute_extent_test_stencil_02.sir");
+      loadTest("input/compute_extent_test_stencil_02.sir");
   const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
@@ -110,7 +110,7 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
 }
 TEST_F(ComputeMaxExtents, test_stencil_03) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      loadTest("compute_extent_test_stencil_03.sir");
+      loadTest("input/compute_extent_test_stencil_03.sir");
   const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
@@ -134,7 +134,7 @@ TEST_F(ComputeMaxExtents, test_stencil_03) {
 
 TEST_F(ComputeMaxExtents, test_stencil_04) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      loadTest("compute_extent_test_stencil_04.sir");
+      loadTest("input/compute_extent_test_stencil_04.sir");
   const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
@@ -156,7 +156,7 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
 
 TEST_F(ComputeMaxExtents, test_stencil_05) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      loadTest("compute_extent_test_stencil_05.sir");
+      loadTest("input/compute_extent_test_stencil_05.sir");
   const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();

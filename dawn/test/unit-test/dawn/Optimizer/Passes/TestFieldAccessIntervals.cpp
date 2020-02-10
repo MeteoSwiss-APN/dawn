@@ -62,7 +62,7 @@ protected:
 };
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_01.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_01.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
@@ -89,7 +89,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_02.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
@@ -120,7 +120,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_03.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_03.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
@@ -152,7 +152,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_04.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_04.sir");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -168,7 +168,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_05.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_05.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);

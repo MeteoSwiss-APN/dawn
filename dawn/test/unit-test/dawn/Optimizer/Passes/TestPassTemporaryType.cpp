@@ -71,26 +71,26 @@ protected:
   }
 };
 
-TEST_F(TestPassTemporaryType, DemoteTest1) { runTest("DemoteTest01.sir", {"tmp"}); }
+TEST_F(TestPassTemporaryType, DemoteTest1) { runTest("input/DemoteTest01.sir", {"tmp"}); }
 
 TEST_F(TestPassTemporaryType, PromoteTest1) {
-  runTest("PromoteTest01.sir", {}, {"__tmp_local_variable_40"});
+  runTest("input/PromoteTest01.sir", {}, {"__tmp_local_variable_40"});
 }
 
 TEST_F(TestPassTemporaryType, PromoteTest2) {
-  runTest("PromoteTest02.sir", {}, {"__tmp_local_variable_56"});
+  runTest("input/PromoteTest02.sir", {}, {"__tmp_local_variable_56"});
 }
 
 TEST_F(TestPassTemporaryType, PromoteTest3) {
-  runTest("PromoteTest03.sir", {}, {"__tmp_local_variable_53"});
+  runTest("input/PromoteTest03.sir", {}, {"__tmp_local_variable_53"});
 }
 
 TEST_F(TestPassTemporaryType, PromoteTest4) {
-  runTest("PromoteTest04.sir", {}, {"__tmp_local_variable_76"});
+  runTest("input/PromoteTest04.sir", {}, {"__tmp_local_variable_76"});
 }
 
 TEST_F(TestPassTemporaryType, PromoteTest5) {
-  runTest("PromoteTest05.sir", {"field_a_0"}, {"__tmp_local_variable_109"});
+  runTest("input/PromoteTest05.sir", {"field_a_0"}, {"__tmp_local_variable_109"});
 }
 
 } // anonymous namespace
