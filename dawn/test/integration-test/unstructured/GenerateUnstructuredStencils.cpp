@@ -41,7 +41,6 @@ int main() {
 
     std::ofstream of("generated/generated_copyCell.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -61,7 +60,6 @@ int main() {
 
     std::ofstream of("generated/generated_copyEdge.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -85,7 +83,6 @@ int main() {
 
     std::ofstream of("generated/generated_accumulateEdgeToCell.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -109,7 +106,6 @@ int main() {
 
     std::ofstream of("generated/generated_verticalSum.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -173,7 +169,6 @@ int main() {
 
     std::ofstream of("generated/generated_verticalSolver.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -209,7 +204,6 @@ int main() {
 
     std::ofstream of("generated/generated_diffusion.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -245,7 +239,6 @@ int main() {
 
     std::ofstream of("generated/generated_gradient.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -277,7 +270,6 @@ int main() {
 
     std::ofstream of("generated/generated_sparseDimension.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -318,7 +310,6 @@ int main() {
 
     std::ofstream of("generated/generated_sparseDimensionTwice.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -349,7 +340,6 @@ int main() {
 
     std::ofstream of("generated/generated_NestedSimple.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -383,7 +373,6 @@ int main() {
 
     std::ofstream of("generated/generated_NestedWithField.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-    of.close();
   }
 
   {
@@ -434,7 +423,6 @@ int main() {
     // Code generation deactivated for the reasons stated above
     // std::ofstream of("generated/generated_NestedSparse.hpp");
     // dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-    // of.close();
   }
 
   return 0;

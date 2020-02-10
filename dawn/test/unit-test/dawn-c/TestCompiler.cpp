@@ -95,7 +95,6 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
   std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_SumVertical) {
@@ -120,7 +119,6 @@ TEST(CompilerTest, DISABLED_SumVertical) {
   std::ofstream of("prototype/generated_verticalSum.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
@@ -157,7 +155,6 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
   std::ofstream of("prototype/generated_Diffusion.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
@@ -192,7 +189,6 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
   std::ofstream of("prototype/generated_triGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
@@ -227,7 +223,6 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
   std::ofstream of("prototype/generated_quadGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_SparseDimension) {
@@ -259,7 +254,6 @@ TEST(CompilerTest, DISABLED_SparseDimension) {
 
   std::ofstream of("prototype/generated_sparseDimension.hpp");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_NestedReduce) {
@@ -289,7 +283,6 @@ TEST(CompilerTest, DISABLED_NestedReduce) {
 
   std::ofstream of("prototype/generated_NestedSimple.hpp");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 TEST(CompilerTest, DISABLED_NestedReduceField) {
@@ -323,6 +316,5 @@ TEST(CompilerTest, DISABLED_NestedReduceField) {
 
   std::ofstream of("prototype/generated_NestedWithField.hpp");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 } // anonymous namespace
