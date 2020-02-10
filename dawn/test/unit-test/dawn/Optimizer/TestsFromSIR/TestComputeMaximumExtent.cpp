@@ -61,7 +61,7 @@ protected:
 };
 
 TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_02.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
@@ -94,7 +94,7 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
-  auto stencilInstantiation = loadTest("test_compute_maximum_extent_01.sir");
+  auto stencilInstantiation = loadTest("input/test_compute_maximum_extent_01.sir");
   const auto& stencils = stencilInstantiation->getStencils();
 
   ASSERT_TRUE((stencils.size() == 1));
