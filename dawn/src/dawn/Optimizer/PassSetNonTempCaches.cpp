@@ -29,10 +29,10 @@
 
 namespace dawn {
 
-struct AcessIDToLocalityMetric {
+struct AccessIDToLocalityMetric {
   int accessID;
   int dataLocalityGain;
-  bool operator<(const AcessIDToLocalityMetric& rhs) const {
+  bool operator<(const AccessIDToLocalityMetric& rhs) const {
     return dataLocalityGain < rhs.dataLocalityGain;
   }
 };
@@ -51,7 +51,7 @@ class GlobalFieldCacher {
   OptimizerContext& context_;
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
-  std::vector<AcessIDToLocalityMetric> sortedAccesses_;
+  std::vector<AccessIDToLocalityMetric> sortedAccesses_;
   std::vector<NameToImprovementMetric> originalNameToCache_;
 
 public:
@@ -114,7 +114,7 @@ private:
 
     for(auto& AcessIDMetricPair : accessIDToDataLocality_) {
       sortedAccesses_.emplace_back(
-          AcessIDToLocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
+          AccessIDToLocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
       std::sort(sortedAccesses_.begin(), sortedAccesses_.end());
     }
   }
