@@ -15,6 +15,7 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -23,7 +24,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
@@ -52,6 +53,7 @@
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -107,10 +109,6 @@ struct ComputeEditDistance<std::string> {
   }
 };
 
-bool shouldRunPass(const Options& options, bool runSpecificPass) {
-  return !options.DefaultNone || runSpecificPass;
-}
-
 OptimizerContext::OptimizerContextOptions
 createOptimizerOptionsFromAllOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
@@ -141,12 +139,16 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 
+static bool shouldRunPass(const Options& options, bool runSpecificPass) {
+  return !options.DefaultNone || runSpecificPass;
+}
+
 } // namespace
 
-DawnCompiler::DawnCompiler(Options const& options) : options_(options), diagnostics_() {}
+DawnCompiler::DawnCompiler(const Options& options) : options_(options), diagnostics_() {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
+DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
 
@@ -164,7 +166,7 @@ DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
     throw std::runtime_error("An error occurred.");
   }
 
-  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
+  IIRSerializer::Format serializationKind;
   if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
     if(options_.IIRFormat == "json") {
       serializationKind = IIRSerializer::Format::Json;
@@ -197,6 +199,9 @@ DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
     optimizer.checkAndPushBack<PassFixVersionedInputFields>();
     optimizer.checkAndPushBack<PassComputeStageExtents>();
     optimizer.checkAndPushBack<PassSetSyncStage>();
+    // validation checks after parallelisation
+    optimizer.checkAndPushBack<PassLocalVarType>();
+    optimizer.checkAndPushBack<PassValidation>();
   }
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
@@ -217,12 +222,6 @@ DawnCompiler::optimize(std::shared_ptr<SIR> const& stencilIR) {
   }
 
   auto stencilInstantiationMap = optimizer.getStencilInstantiationMap();
-
-  // Continue with all other optimization passes
-  if(!options_.Debug) {
-    stencilInstantiationMap = optimize(stencilInstantiationMap);
-  }
-
   return stencilInstantiationMap;
 }
 
@@ -260,23 +259,29 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
 
   // Optimization, step by step
   //===-----------------------------------------------------------------------------------------
-  if(shouldRunPass(options_, options_.SSA)) {
-    // broken but should run with no prerequesits
-    optimizer.checkAndPushBack<PassSSA>();
-    // rerun things we might have changed
-    // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
-    // todo: this does not work since it does not check if it was already run
-  }
+  // if(shouldRunPass(options_, options_.SSA)) {
+  //   // broken but should run with no prerequesits
+  //   optimizer.checkAndPushBack<PassSSA>();
+  //   // rerun things we might have changed
+  //   // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+  //   // todo: this does not work since it does not check if it was already run
+  // }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PrintStencilGraph)) {
     // --print-stencil-graph
+    // wow
+    optimizer.checkAndPushBack<PassSetDependencyGraph>();
     // Plain diagnostics, should not even be a pass but is independent
     optimizer.checkAndPushBack<PassPrintStencilGraph>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.SetStageName)) {
     // This is never used but if we want to reenable it, it is independent
     optimizer.checkAndPushBack<PassSetStageName>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.ReorderStages)) {
@@ -287,17 +292,26 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     optimizer.checkAndPushBack<PassSetSyncStage>();
     // if we want this info around, we should probably run this also
     // optimizer.checkAndPushBack<PassSetStageName>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.MergeStages)) {
+    // merging requires the stage graph
+    optimizer.checkAndPushBack<PassSetStageGraph>();
+    // running the actual pass
     optimizer.checkAndPushBack<PassStageMerger>();
     // since this can change the scope of temporaries ...
     optimizer.checkAndPushBack<PassTemporaryType>();
-    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+    optimizer.checkAndPushBack<PassLocalVarType>();
+    // this pass is broken as hell... Johann please
+    // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
     // modify stages and their extents ...
     optimizer.checkAndPushBack<PassComputeStageExtents>();
     // and changes their dependencies
     optimizer.checkAndPushBack<PassSetSyncStage>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   // // should be irrelevant now
@@ -309,23 +323,35 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // this should not affect the temporaries but since we're touching them it would probably be a
     // safe idea
     optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassLocalVarType>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.Inlining)) {
     optimizer.checkAndPushBack<PassInlining>(
-        (getOptions().InlineSF || getOptions().PassTmpToFunction),
+        (getOptions().Inlining || getOptions().PassTmpToFunction),
         PassInlining::InlineStrategy::ComputationsOnTheFly);
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PartitionIntervals)) {
-    optimizer.checkAndPushBack<PassIntervalPartitioner>();
-    // since this can change the scope of temporaries ...
-    optimizer.checkAndPushBack<PassTemporaryType>();
-    optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+    if(options_.PartitionIntervals) {
+      optimizer.checkAndPushBack<PassIntervalPartitioning>();
+      // since this can change the scope of temporaries ...
+      optimizer.checkAndPushBack<PassTemporaryType>();
+      optimizer.checkAndPushBack<PassLocalVarType>();
+      // optimizer.checkAndPushBack<PassFixVersionedInputFields>();
+      // validation check
+      optimizer.checkAndPushBack<PassValidation>();
+    }
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.PassTmpToFunction)) {
     optimizer.checkAndPushBack<PassTemporaryToStencilFunction>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.SetNonTempCaches)) {
@@ -333,19 +359,30 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // this should not affect the temporaries but since we're touching them it would probably be a
     // safe idea
     optimizer.checkAndPushBack<PassTemporaryType>();
+    optimizer.checkAndPushBack<PassLocalVarType>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.SetCaches)) {
     optimizer.checkAndPushBack<PassSetCaches>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.SetBlockSize)) {
     optimizer.checkAndPushBack<PassSetBlockSize>();
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunPass(options_, options_.DataLocalityMetric)) {
-    // Plain diagnostics, should not even be a pass but is independent
-    optimizer.checkAndPushBack<PassDataLocalityMetric>();
+    if(options_.DataLocalityMetric) {
+      // Plain diagnostics, should not even be a pass but is independent
+      optimizer.checkAndPushBack<PassDataLocalityMetric>();
+      // validation check
+      optimizer.checkAndPushBack<PassValidation>();
+    }
   }
   //===-----------------------------------------------------------------------------------------
 
@@ -448,39 +485,26 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
   if(options_.MaxHaloPoints < 0) {
     diagnostics_.report(buildDiag("-max-halo", options_.MaxHaloPoints,
                                   "maximum number of allowed halo points must be >= 0"));
-    throw std::runtime_error("An error occurred.");
+    return nullptr;
   }
 
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
+  // Parallelize the SIR
+  auto stencilInstantiation = lowerToIIR(stencilIR);
 
-  // Deserialize internal IR if passed as an option
-  if(!options_.DeserializeIIR.empty()) {
-    // A filename DeserializeIIR was specified
-    DAWN_ASSERT_MSG(!stencilIR.get(),
-                    "A stencilIR was passed to compile, but an IIR was specified in options!");
-
-    // Deserialize valid internal IR
-    auto optimizerOptions = createOptimizerOptionsFromAllOptions(options_);
-
-    OptimizerContext optimizer(getDiagnostics(), optimizerOptions, nullptr);
-    auto instantiation = IIRSerializer::deserialize(options_.DeserializeIIR, serializationKind);
-    optimizer.restoreIIR("<restored>", instantiation);
-
-    stencilInstantiationMap = optimizer.getStencilInstantiationMap();
-
-    if(!options_.Debug) {
-      stencilInstantiationMap = optimize(stencilInstantiationMap);
-      if(diagnostics_.hasErrors())
-        throw std::runtime_error("An error occurred in the optimizer.");
-    }
-  } else {
-    // No filename was specified, so continue with the stencil IR
-    stencilInstantiationMap = optimize(stencilIR);
-    if(diagnostics_.hasErrors())
-      throw std::runtime_error("An error occurred in the optimization steps.");
+  if(diagnostics_.hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
+    return nullptr;
   }
 
-  return generate(stencilInstantiationMap);
+  // Optimize the IIR
+  auto optimizedStencilInstantiation = optimize(stencilInstantiation);
+
+  if(diagnostics_.hasErrors()) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
+    return nullptr;
+  }
+  // Generate the Code
+  return generate(optimizedStencilInstantiation);
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }

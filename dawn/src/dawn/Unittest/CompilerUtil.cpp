@@ -37,7 +37,17 @@ CompilerUtil::load(const std::string& iirFilename,
 stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
   dawn::Options options;
   DawnCompiler compiler(options);
-  return compiler.optimize(sir);
+
+  auto SI = compiler.optimize(compiler.lowerToIIR(sir));
+
+  if(compiler.getDiagnostics().hasDiags()) {
+    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
+      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
+    }
+    throw std::runtime_error("Compilation failed");
+  }
+
+  return SI;
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {

@@ -11,12 +11,10 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestCodeGenCuda)
-add_executable(${executable}
-  TestCodeGenCuda.cpp
-  TestMain.cpp
-)
+add_executable(${executable} TestCodeGenCuda.cpp TestMain.cpp)
 target_add_dawn_standard_props(${executable})
 target_link_libraries(${executable} DawnUnittest gtest)
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::CodeGen::Cuda::" DISCOVERY_TIMEOUT 30)

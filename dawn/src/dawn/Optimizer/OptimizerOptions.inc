@@ -45,9 +45,9 @@ OPT(bool, Debug, false, "debug", "",
 OPT(bool, Parallel, false, "parallel", "",
     "Run parallel pass group", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
-    "Transform all statements into static single assigment (SSA) form", "", false, false)
+    "Transform all statements into static single assignment (SSA) form", "", false, false)
 OPT(bool, PrintStencilGraph, false, "print-stencil-graph", "",
-    "Run print-stencil-graph pass group", "", false, true)
+    "Dump the access dependency graph of each stencil to a dot file", "", false, true)
 OPT(bool, SetStageName, false, "set-stage-name", "",
     "Run print-stage-name pass group", "", false, true)
 OPT(bool, ReorderStages, false, "reorder-stages", "",
@@ -118,8 +118,6 @@ OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
 
 OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
     "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
-OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",
-    "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
 OPT(bool, DumpStageGraph, false, "dump-stage-dag", "",
     "Dump the initial dependency graph of the stages of each stencil to a dot file", "", false, true)
 OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
@@ -128,5 +126,7 @@ OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
     "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
 OPT(bool, DumpStencilInstantiation, false, "dump-si", "",
     "dump every stencilInstantiation to the standard output", "", false, true)
+OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",
+    "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
 
 // clang-format on

@@ -54,9 +54,9 @@ protected:
       compiler_.getOptions().MaxFieldsPerStencil = maxfields;
 
     // Run the optimization
-    auto stencilInstantiationMap = compiler_.optimize(sir);
+    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir));
 
-    // Report diganostics
+    // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
         std::cerr << "Compilation Error " << diag->getMessage() << std::endl;

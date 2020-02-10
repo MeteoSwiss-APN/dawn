@@ -16,8 +16,8 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
@@ -70,7 +70,7 @@ TEST_F(TestIntervalPartitioner, test_interval_partition) {
   expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
   expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
 
-  PassIntervalPartitioner pass(*context);
+  PassIntervalPartitioning pass(*context);
   bool result = pass.run(instantiation);
   ASSERT_TRUE(result);
 
