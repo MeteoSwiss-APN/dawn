@@ -35,8 +35,11 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
   // Type inferred from the conditional expression of the if statement we are currently in.
   // Unset if either
   // - we are not inside an if statement or
-  // - no type has been inferred from the conditional
+  // - no field is accessed in the conditional
   std::optional<iir::LocalVariableType> conditionalType_;
+  // Variables read within the conditional expression of the if statement we are currently in.
+  // If we are not inside an if statement it's empty.
+  std::set<int> variablesAccessedInConditional_;
 
   // Sets the type of variable with id `varID` to `newType` if the previous type was scalar or
   // unset. Throws if non-scalar previous type is different from `newType` (mixing different
@@ -121,6 +124,31 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
     }
     return type;
   }
+  // Records that to write into `destinationVariable` we need to access `accessedVariable`.
+  // `sourceLocation` is where this happens.
+  void recordVariablePair(int accessedVariable, int destinationVariable,
+                          SourceLocation sourceLocation) {
+    // No self-dependencies
+    if(accessedVariable != destinationVariable) {
+
+      // If the set of dependers for this variable is not there, it means the variable hasn't been
+      // declared
+      DAWN_ASSERT_MSG(dependencyMap_.count(accessedVariable),
+                      "Variable accessed before being declared.");
+      // Need to register a dependency. Pair to be added is from dependency (variable accessed in
+      // the rhs) to dependent (lhs).
+      dependencyMap_.at(accessedVariable).insert(destinationVariable);
+
+      // Retrieve the type of the accessed variable
+      const iir::LocalVariableData& data =
+          metadata_.getLocalVariableDataFromAccessID(accessedVariable);
+      DAWN_ASSERT_MSG(data.isTypeSet(), "Variable accessed before being declared.");
+      iir::LocalVariableType newType = data.getType();
+
+      // Update the type of the current variable with `newType`
+      updateVariableType(destinationVariable, newType, sourceLocation);
+    }
+  }
 
 public:
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
@@ -135,26 +163,7 @@ public:
     // global variable
     if(curVarID_.has_value() && expr->isLocal()) {
       int accessedVariableID = iir::getAccessID(expr);
-      // No self-dependencies
-      if(accessedVariableID != *curVarID_) {
-
-        // If the set of dependers for this variable is not there, it means the variable hasn't been
-        // declared
-        DAWN_ASSERT_MSG(dependencyMap_.count(accessedVariableID),
-                        "Variable accessed before being declared.");
-        // Need to register a dependency. Pair to be added is from dependency (variable accessed in
-        // the rhs) to dependent (lhs).
-        dependencyMap_.at(accessedVariableID).insert(*curVarID_);
-
-        // Retrieve the type of the accessed variable
-        const iir::LocalVariableData& data =
-            metadata_.getLocalVariableDataFromAccessID(accessedVariableID);
-        DAWN_ASSERT_MSG(data.isTypeSet(), "Variable accessed before being declared.");
-        iir::LocalVariableType newType = data.getType();
-
-        // Update the type of the current variable with `newType`
-        updateVariableType(*curVarID_, newType, expr->getSourceLocation());
-      }
+      recordVariablePair(accessedVariableID, *curVarID_, expr->getSourceLocation());
     }
   }
   void visit(const std::shared_ptr<iir::IfStmt>& ifStmt) override {
@@ -163,18 +172,19 @@ public:
 
     for(const auto& readAccess :
         ifStmt->getCondStmt()->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses()) {
-      int fieldAccessID = readAccess.first;
-      // TODO: if it's a variable should make connections in the dep map
-      if(metadata_.isAccessType(iir::FieldAccessType::Field, fieldAccessID)) {
+      int accessID = readAccess.first;
+      if(metadata_.isAccessType(iir::FieldAccessType::Field, accessID)) {
         if(conditionalType_.has_value()) {
-          if(*conditionalType_ != inferLocalVarTypeFromField(fieldAccessID)) {
+          if(*conditionalType_ != inferLocalVarTypeFromField(accessID)) {
             throw std::runtime_error(dawn::format(
                 "Invalid if-condition at line %d: accesses fields with different location types",
                 ifStmt->getSourceLocation().Line));
           }
         }
         // Record the accessed field's location type
-        conditionalType_ = inferLocalVarTypeFromField(fieldAccessID);
+        conditionalType_ = inferLocalVarTypeFromField(accessID);
+      } else if(metadata_.isAccessType(iir::FieldAccessType::LocalVariable, accessID)) {
+        variablesAccessedInConditional_.insert(accessID);
       }
     }
     // If we encounter an assignment to a local variable inside the then and else blocks, we should
@@ -182,6 +192,7 @@ public:
     ast::ASTVisitorForwarding::visit(ifStmt);
     // Unset conditionalType_ as we are exiting the visit of the if statement
     conditionalType_ = std::nullopt;
+    variablesAccessedInConditional_ = {};
   }
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
     // Run only when lhs is a local variable
@@ -205,6 +216,11 @@ public:
       // If the set of dependers for this variable is not there, it means the variable hasn't been
       // declared
       DAWN_ASSERT_MSG(dependencyMap_.count(*curVarID_), "Variable accessed before being declared.");
+      // If we are inside an if statement, for each variable accessed in the conditional of the if,
+      // we need to record its access as if it happened in the rhs of `expr`.
+      for(int accessedVariableID : variablesAccessedInConditional_) {
+        recordVariablePair(accessedVariableID, *curVarID_, expr->getSourceLocation());
+      }
       // Visit rhs
       expr->getRight()->accept(*this);
       // Propagate the type information to variables that depend on this one
@@ -224,6 +240,11 @@ public:
     updateVariableType(*curVarID_, startingType, stmt->getSourceLocation());
     // Setup empty set of dependers for this variable
     dependencyMap_.emplace(*curVarID_, std::set<int>{});
+    // If we are inside an if statement, for each variable accessed in the conditional of the if,
+    // we need to record its access as if it happened in the rhs of `stmt`.
+    for(int accessedVariableID : variablesAccessedInConditional_) {
+      recordVariablePair(accessedVariableID, *curVarID_, stmt->getSourceLocation());
+    }
     // Visit rhs
     ast::ASTVisitorForwarding::visit(stmt);
     // Unset curVarID_ as we are exiting the VarDeclStmt's visit
