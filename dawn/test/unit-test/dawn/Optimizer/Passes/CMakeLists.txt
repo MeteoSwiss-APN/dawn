@@ -19,6 +19,7 @@ add_executable(${executable}
   TestPassComputeStageExtents.cpp
   TestComputeMaxExtent.cpp
   TestPassCaching.cpp
+  TestPassLocalVarType.cpp
   TestPassSetBoundaryCondition.cpp
   TestFieldAccessIntervals.cpp
   TestTemporaryToFunction.cpp

@@ -70,7 +70,7 @@ fi
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
             -DProtobuf_DIR=${PROTOBUFDIR} \
             -DPROTOBUF_PYTHON_MODULE_DIR=${PROTOBUFDIR}/../../../python \
-            -DGTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON \
+            -DDAWN_REQUIRE_UNSTRUCTURED_TESTING=ON \
             -DDAWN_REQUIRE_PYTHON_TESTING=ON \
             -Datlas_DIR=${ATLAS_DIR}/lib/cmake/atlas \
             -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit \

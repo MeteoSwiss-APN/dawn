@@ -46,6 +46,9 @@ option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project b
 option(DAWN_REQUIRE_PYTHON_TESTING "Require enabling python." OFF)
 set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
 mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR)
+# By default unstructured integration tests are not built if atlas or eckit is not found.
+# DAWN_REQUIRE_UNSTRUCTURED_TESTING=ON will force an error if atlas or eckit are not found.
+option(DAWN_REQUIRE_UNSTRUCTURED_TESTING "Require building tests for unstructured grids." OFF)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)

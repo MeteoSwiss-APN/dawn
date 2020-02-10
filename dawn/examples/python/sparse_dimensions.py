@@ -14,12 +14,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""Copy stencil HIR generator
+"""Sparse Dimensions stencil HIR generator
 
-This program creates the HIR corresponding to an unstructured stencil using the SIR serialization Python API.
-The code is meant as an example for high-level DSLs that could generate HIR from their own
-internal IR.
-"""
+This program creates the HIR corresponding to an unstructured stencil including sparse dimensions
+using the SIR serialization Python API."""
 
 import argparse
 import os
@@ -28,7 +26,7 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 
-OUTPUT_NAME = "unstructured_stencil"
+OUTPUT_NAME = "sparse_dimensions"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 OUTPUT_PATH = os.path.join(os.path.dirname(
     __file__), "data", f"{OUTPUT_NAME}.cpp")
@@ -38,18 +36,19 @@ def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
         SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    # create the out = in[i+1] statement
+    # create the out = reduce(sparse_CE * in) statement
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
+                    sir_utils.make_binary_operator(
+                        sir_utils.make_field_access_expr("sparse_CE"), "*", sir_utils.make_field_access_expr("in")),
                     sir_utils.make_literal_access_expr(
                         "1.0", SIR.BuiltinType.Float),
-                    sir_utils.make_field_access_expr("in"),
-                    lhs_location=SIR.LocationType.Value('Edge'),
-                    rhs_location=SIR.LocationType.Value('Cell')
+                    lhs_location=SIR.LocationType.Value('Cell'),
+                    rhs_location=SIR.LocationType.Value('Edge')
                 ),
                 "=",
             )
@@ -68,9 +67,11 @@ def main(args: argparse.Namespace):
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Cell')], 1)),
+                        [SIR.LocationType.Value('Edge')], 1)),
+                    sir_utils.make_field("sparse_CE", sir_utils.make_field_dimensions_unstructured(
+                        [SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')], 1)),
                     sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Edge')], 1))
+                        [SIR.LocationType.Value('Cell')], 1))
                 ],
             ),
         ],
