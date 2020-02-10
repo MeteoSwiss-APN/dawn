@@ -39,16 +39,18 @@ if(ENABLE_PYTHON)
 
   set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/IIR)
 
-  string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
-    iir_proto_python_build_files "${iir_proto_python_files}")
+  list(TRANSFORM iir_proto_python_files
+    REPLACE ${CMAKE_CURRENT_BINARY_DIR}/IIR ${output_dir}
+    OUTPUT_VARIABLE iir_proto_python_dawn4py
+  )
 
-  add_custom_command(OUTPUT ${iir_proto_python_build_files}
+  add_custom_command(OUTPUT ${iir_proto_python_dawn4py}
     COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
     DEPENDS ${iir_proto_python_files}
   )
 endif()
 
-add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files} ${iir_proto_python_build_files})
+add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files} ${iir_proto_python_dawn4py})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -110,6 +112,8 @@ add_library(DawnIIR
   IIR.h
   IIRNode.h
   IIRNodeIterator.h
+  LocalVariable.cpp
+  LocalVariable.h
   LoopOrder.cpp
   LoopOrder.h
   MultiInterval.cpp

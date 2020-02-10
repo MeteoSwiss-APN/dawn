@@ -1,176 +1,132 @@
-#!/bin/bash
-
-# git pre-commit hook that runs an clang-format stylecheck.
-# Features:
-#  - abort commit when commit does not comply with the style guidelines
-#  - create a patch of the proposed style changes
-
+#!/usr/bin/env bash
+#
+# Runs clang-format on changed regions before commit.
+#
 # To install this, copy it to .git/hooks/pre-commit in your repo.
+# Remaining installation checks/instructions will be printed when you commit.
+#
+# Source: https://gist.github.com/alexeagle/c8ed91b14a407342d9a8e112b5ac7dab
+#
 
-# modifications for clang-format by rene.milk@wwu.de
-# This file is part of a set of unofficial pre-commit hooks available
-# at github.
-# Link:    https://github.com/githubbrowser/Pre-commit-hooks
-# Contact: David Martin, david.martin.mailbox@googlemail.com
+# Ensure we use this version of clang-format
+clang_format_version=6
 
-SCRIPT=$(readlink -f $0)
-SCRIPTPATH=`dirname $SCRIPT`
+read -d '' help <<- EOF
+  This repository requires you to install the git clang-format command.
 
-##################################################################
-# SETTINGS
-# set path to clang-format binary
-CLANG_FORMAT=`which clang-format`
+  One-time setup steps:
+    1) install the git-clang-format script in your \$PATH. For example:
 
-## parsing the clang format version from an output like
-## Ubuntu clang-format version 3.7.1-2ubuntu2
-CLANG_FORMAT_VERSION=`${CLANG_FORMAT} --version | sed 's/.*clang-format version \([[:digit:]]\.[[:digit:]]\).*/\1/g'`
+      curl https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/git-clang-format > /usr/local/bin/git-clang-format
 
-# remove any older patches from previous commits. Set to true or false.
-# DELETE_OLD_PATCHES=false
-DELETE_OLD_PATCHES=false
+    2) make sure git-clang-format is executable:
 
-# only parse files with the extensions in FILE_EXTS. Set to true or false.
-# if false every changed file in the commit will be parsed with clang-format.
-# if true only files matching one of the extensions are parsed with clang-format.
-# PARSE_EXTS=true
-PARSE_EXTS=true
+      chmod u+x /usr/local/bin/git-clang-format
 
-# file types to parse. Only effective when PARSE_EXTS is true.
-# FILE_EXTS=".c .h .cpp .hpp"
-FILE_EXTS=".c .h .cpp .hpp .cc .hh .cxx .cu .m"
+  In each repository where you use clang-format, add git config options
+  so that git clang-format finds your version. For example:
 
-source ${SCRIPTPATH}/../ignore_list.sh
+      $ git config clangFormat.binary /usr/local/bin/clang-format
+      $ git config clangFormat.style file # This is required to detect .clang-format files
+EOF
 
-##################################################################
-# There should be no need to change anything below this line.
-
-# Reference: http://stackoverflow.com/questions/1055671/how-can-i-get-the-behavior-of-gnus-readlink-f-on-a-mac
-canonicalize_filename () {
-    local target_file=$1
-    local physical_directory=""
-    local result=""
-
-    # Need to restore the working directory after work.
-    pushd `pwd` > /dev/null
-
-    cd "$(dirname "$target_file")"
-    target_file=`basename $target_file`
-
-    # Iterate down a (possible) chain of symlinks
-    while [ -L "$target_file" ]
-    do
-        target_file=$(readlink "$target_file")
-        cd "$(dirname "$target_file")"
-        target_file=$(basename "$target_file")
-    done
-
-    # Compute the canonicalized name by finding the physical path
-    # for the directory we're in and appending the target file.
-    physical_directory=`pwd -P`
-    result="$physical_directory"/"$target_file"
-
-    # restore the working directory after work.
-    popd > /dev/null
-
-    echo "$result"
+check_clang_format() {
+  if ! hash git-clang-format &>/dev/null; then
+    echo "SETUP ERROR: no git-clang-format executable found, or it is not executable"
+    echo "$help"
+    exit 1
+  elif [[ $($(git config --get clangFormat.binary) --version | awk '{ print $3 }' | cut -d. -f1) -ne $clang_format_version ]]; then
+    echo "SETUP ERROR: We currently require clang-format v6.
+Please ensure the correct version is installed by running $(git config --get clangFormat.binary) --version." >&2
+    exit 1
+  fi
 }
 
-# exit on error
-set -e
-
-# check whether the given file matches any of the set extensions
-matches_extension() {
-    local filepath=$1
-    local filename=$(basename "$1")
-    shift
-    local skip_files=$@
-
-    #early return if file is in list of files to skip
-    for ff in $skip_files; do 
-        [[ "$filepath" =~ $ff ]] && return 1;
-    done
-
-    local extension=".${filename##*.}"
-    local ext
-
-    for ext in $FILE_EXTS; do [[ "$ext" == "$extension" ]] && return 0; done
-
-    return 1
+check_git_config() {
+  if [[ -z "$(git config --get clangFormat.binary)" ]]; then
+    echo "SETUP ERROR: git config clangFormat.binary is empty." >&2
+    echo "$help"
+    exit 1
+  elif [[ "$(git config --get clangFormat.style)" != "file" ]]; then
+    echo "SETUP ERROR: git config clangFormat.style is wrong." >&2
+    echo "$help"
+    exit 1
+  fi
 }
 
-if [[ "${CLANG_FORMAT_VERSION}" != "6.0" ]]; then
-    echo "Clang format version ${CLANG_FORMAT_VERSION} not supported by pre_commit hook"
-    exit 1
-fi
+# no_dependency "<of_module>" "<on_module>"
+# checks that <of_module> does not depend on <on_module>
+# i.e. <of_module> does not include any file from <on_module>
+no_dependency() {
+  local last_result=`grep -rE "#include .*$2/.*(hpp|h)" dawn/src/dawn/$1 | wc -l`
+  if [ "$last_result" -gt 0 ]; then
+    echo "ERROR Modularization violated: found dependency of $1 on $2"
+    echo "`grep -rE "#include .*$2/.*(hpp|h)" dawn/src/dawn/$1`"
+    modularization_result+=1
+  fi
+}
 
-# necessary check for initial commit
-if git rev-parse --verify HEAD >/dev/null 2>&1 ; then
-    against=HEAD
-else
-    # Initial commit: diff against an empty tree object
-    against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
-fi
+are_independent() {
+  no_dependency "$1" "$2"
+  no_dependency "$2" "$1"
+}
 
-if [ ! -x "$CLANG_FORMAT" ] ; then
-    printf "Error: clang-format executable not found.\n"
-    printf "Set the correct path in $(canonicalize_filename "$0").\n"
-    exit 1
-fi
+check_modularization() {
+  local modularization_result=0
 
-# create a random filename to store our generated patch
-prefix="pre-commit-clang-format"
-suffix="$(date +%s)"
-patch="/tmp/$prefix-$suffix.patch"
+  # # list of non-dependencies
+  no_dependency "Support" "SIR"
+  no_dependency "Support" "AST"
+  no_dependency "Support" "IIR"
+  no_dependency "Support" "CodeGen"
+  no_dependency "Support" "Serialization"
+  no_dependency "Support" "Optimizer"
+  no_dependency "Support" "Compiler"
 
-# clean up any older clang-format patches
-$DELETE_OLD_PATCHES && rm -f /tmp/$prefix*.patch
+  no_dependency "AST" "IIR"
+  #no_dependency "AST" "SIR"
+  no_dependency "AST" "Optimizer"
+  no_dependency "AST" "Compiler"
+  no_dependency "AST" "Serialization"
+  no_dependency "AST" "CodeGen"
 
-# create one patch containing all changes to the files
-git diff-index --cached --diff-filter=ACMR --name-only $against -- | while read file;
-do
-    # ignore file if we do check for file extensions and the file
-    # does not match any of the extensions specified in $FILE_EXTS
-    if $PARSE_EXTS && ! matches_extension "$file" "${ignore_regex_list[@]}"; then
-        continue;
-    fi
+  no_dependency "SIR" "Optimizer"
+  no_dependency "SIR" "Compiler"
+  no_dependency "SIR" "Serialization"
+  no_dependency "SIR" "CodeGen"
 
-    # clang-format our sourcefile, create a patch with diff and append it to our $patch
-    # The sed call is necessary to transform the patch from
-    #    --- $file timestamp
-    #    +++ - timestamp
-    # to both lines working on the same file and having a a/ and b/ prefix.
-    # Else it can not be applied with 'git apply'.
-    "$CLANG_FORMAT" -style=file "$file" | \
-        diff -u "$file" - | \
-        sed -e "1s|--- |--- a/|" -e "2s|+++ -|+++ b/$file|" >> "$patch"
-done
+  no_dependency "IIR" "Optimizer"
+  no_dependency "IIR" "Compiler"
+  no_dependency "IIR" "Serialization"
+  no_dependency "IIR" "CodeGen"
 
-error_code=0
-# if no patch has been generated all is ok, clean up the file stub and exit
-if [ ! -s "$patch" ] ; then
-    printf "Files in this commit comply with the clang-format rules.\n"
-    rm -f "$patch"
-else
-# a patch has been created, notify the user and exit
-    printf "\nThe following differences were found between the code to commit "
-    printf "and the clang-format rules:\n\n"
-    cat "$patch"
+  no_dependency "Serialization" "Compiler"
+  no_dependency "Optimizer" "Compiler"
+  no_dependency "CodeGen" "Compiler"
 
-    printf "\nYou can apply these changes with:\n git apply --index $patch\n"
-    printf "(may need to be called from the root directory of your repository)\n"
+  no_dependency "Validator" "Compiler"
+  no_dependency "Validator" "CodeGen"
+  no_dependency "Validator" "Optimizer"
 
-    error_code=$((error_code || 1 ))
-fi
+  are_independent "Serialization" "Optimizer"
+  are_independent "Optimizer" "CodeGen"
+  #are_independent "SIR" "IIR"
+  #are_independent "SIR" "CodeGen"
 
-${SCRIPTPATH}/check_modularization
-modularization_result=$?
+  if [[ $modularization_result -ne 0 ]]; then
+    exit $modularization_result
+  fi
+}
 
-# exit if errors
-error_code=$((error_code || modularization_result ))
-if [ "$error_code" -gt 0 ]; then
-    printf "\nAborting commit. Apply changes and commit again or skip checking with"
-    printf " --no-verify (not recommended).\n"
-fi
+# List of checks
+check_modularization
+check_clang_format
+check_git_config
 
-exit $error_code
+readonly out=$(git clang-format -v --diff)
 
+if [[ "$out" == *"no modified files to format"* ]]; then exit 0; fi
+if [[ "$out" == *"clang-format did not modify any files"* ]]; then exit 0; fi
+
+echo "ERROR: you need to run git clang-format on your commit"
+exit 1

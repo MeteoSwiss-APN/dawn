@@ -40,6 +40,25 @@ source_dir=${BASEPATH_SCRIPT}/../..
 base_dir=$(pwd)
 build_dir=${base_dir}/build
 
+# python tests
+mkdir -p $build_dir
+cd $build_dir
+python -m venv dawn_venv
+source dawn_venv/bin/activate
+pip install --upgrade pip
+pip install wheel
+pip install -e ${base_dir}/dawn/ -v
+
+cd ${base_dir}/dawn/examples/python
+bash run.sh
+echo "PYTHON RUN TESTS SUCCESFUL!"
+
+python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py/
+echo "PYTHON PYTEST SUCCESFUL!"
+
+base_dir=$(pwd)
+rm -rf $build_dir
+
 mkdir -p $build_dir
 cd $build_dir
 
@@ -73,6 +92,6 @@ echo "Building with ${PARALLEL_BUILD_JOBS} jobs."
 cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
 
 # Run unittests
-ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
+ctest -C ${build_type} --output-on-failure --force-new-ctest-process
 
 cmake --build . --parallel ${PARALLEL_BUILD_JOBS} --target install

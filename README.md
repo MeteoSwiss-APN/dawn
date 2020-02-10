@@ -28,7 +28,7 @@ The following are required to build dawn and gtclang:
 
 A Python (>= 3.4) interpreter and setuptools are required to build and install the bindings.
 
-Sphinx and Doxygen are required to build the documentation and clang-format (version 6.0) is used to format new source code.
+Doxygen is required to build the documentation and clang-format (version 6.0) is used to format new source code.
 
 The following are required, but are automatically fetched and compiled if not found:
 
@@ -62,19 +62,19 @@ We introduce a new compiler framework, consisting of GTClang and Dawn, that deco
 
 * GTClang translates an easy to understand but expressive DSL that is capable of modelling Finite Difference stencils as well as spare solvers into a relatively simple SIR. See the [README.md](https://github.com/MeteoSwiss-APN/dawn/blob/master/gtclang/README.md) in the GTClang subdirectory for an illustrative example
 * Dawn allows the user to generate fast performing code for several back-ends from the SIR.
-* Dawn exposes several APIs in different languages (C++, Python, Java) to parse and process the SIR. 
+* Dawn exposes several APIs in different languages (C++, Python, Java) to parse and process the SIR.
 * Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
 * Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
 
 ## Developer Instructions
 
-If you wish to contribute to dawn or gtclang, please fork this repo into your own github user first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please make sure that:
+If you wish to contribute to dawn or gtclang, please fork this repo into your own GitHub user space first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please ensure that:
 
-* All tests are passing. This includes the dawn and GTClang unit tests and the tests performed in the dawn install step. In order that the full test suites are performed, gtclang needs to be built with [GridTools](https://github.com/GridTools/gridtools) enabled, and dawn needs to be built with python exampled enabled. Please see the `README.md` in the dawn and gtclang directories respectivley for information on how to do that.
+* All tests pass via `ctest`. In order to make sure all tests are built, add `-DBUILD_TESTING=ON -DDAWN_REQUIRE_PYTHON_TESTING=ON` to the CMake configure command.
 * The code is properly formatted according to the clang-format rules provided. This can be ensured automatically using the git hook located in scripts. To install it, simply put a symlink into your `.git` directory (usually located in the top level dawn folder, except if using git work trees) to the script as follows:
 
 ```bash
-$ ln -s $(pwd)/dawn/scripts/git_hooks/pre-commit $(pwd)/.git/hooks/
+$ ln -s $(pwd)/scripts/git_hooks/pre-commit $(pwd)/.git/hooks/
 ```
 
 If you want to call the script manually, simply run `scripts/clang_format_all.sh`.

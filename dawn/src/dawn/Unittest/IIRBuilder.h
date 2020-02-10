@@ -107,14 +107,14 @@ public:
   IIRBuilder(const ast::GridType gridType)
       : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
-  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
+  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float,
+                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {});
 
   template <class TWeight>
-  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                                    std::shared_ptr<iir::Expr>&& init,
-                                                    ast::Expr::LocationType lhs_location,
-                                                    ast::Expr::LocationType rhs_location,
-                                                    const std::vector<TWeight>&& weights) {
+  std::shared_ptr<iir::Expr>
+  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                         std::shared_ptr<iir::Expr>&& init, ast::LocationType lhs_location,
+                         ast::LocationType rhs_location, const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
     std::vector<sir::Value> vWeights;
@@ -132,11 +132,11 @@ public:
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    ast::Expr::LocationType lhs_location,
-                                                    ast::Expr::LocationType rhs_location);
+                                                    ast::LocationType lhs_location,
+                                                    ast::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                        std::shared_ptr<iir::Expr>&& rhs, Op operation);
+                                        std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);
 
   std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs,
@@ -181,16 +181,21 @@ public:
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
-                                          Stmts&&... stmts) {
+  std::unique_ptr<iir::DoMethod> doMethod(iir::Interval interval, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
+    auto ret = std::make_unique<iir::DoMethod>(interval, si_->getMetaData());
     ret->setID(si_->nextUID());
     [[maybe_unused]] int x[] = {
         (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
     computeAccesses(si_.get(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
+  }
+
+  template <typename... Stmts>
+  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                          Stmts&&... stmts) {
+    return doMethod(iir::Interval(s, e), stmts...);
   }
 
   template <typename... Stmts>
@@ -209,7 +214,7 @@ public:
 
   // specialized builder for the stage that accepts a location type
   template <typename... DoMethods>
-  std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
+  std::unique_ptr<iir::Stage> stage(ast::LocationType type, DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     ret->setLocationType(type);
@@ -285,14 +290,15 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
-  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Triangular) {}
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Unstructured) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, HOffsetType hOffset, int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
-  Field field(std::string const& name, ast::Expr::LocationType location);
+  Field field(std::string const& name, ast::LocationType denseLocation);
+  Field field(std::string const& name, ast::NeighborChain sparseChain);
 };
 
 class CartesianIIRBuilder : public IIRBuilder {

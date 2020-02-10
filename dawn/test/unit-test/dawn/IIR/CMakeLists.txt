@@ -28,4 +28,4 @@ add_executable(${executable}
 )
 target_link_libraries(${executable} PRIVATE DawnIIR DawnSerialization DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
-gtest_discover_tests(${executable} TEST_PREFIX "${executable}::")
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::IIR::" DISCOVERY_TIMEOUT 30)

@@ -5,8 +5,8 @@
    "12": "out_field"
   },
   "accessIDToType": {
-   "12": 6,
-   "11": 6
+   "11": 6,
+   "12": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -23,16 +23,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "11": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "12": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -64,6 +68,7 @@
   "stencilName": "generated"
  },
  "internalIR": {
+  "gridType": "Cartesian",
   "globalVariableToValue": {},
   "stencils": [
    {

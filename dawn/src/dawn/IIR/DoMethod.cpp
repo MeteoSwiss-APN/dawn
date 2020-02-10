@@ -63,15 +63,16 @@ public:
 } // namespace
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
-      metaData_(metaData), ast_{std::make_unique<iir::IIRStmtData>()} {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData),
+      ast_(std::make_shared<BlockStmt>(std::make_unique<iir::IIRStmtData>())) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
-  cloneMS->ast_ = iir::BlockStmt{ast_};
+  cloneMS->ast_ = std::make_shared<BlockStmt>(*ast_.get());
+
   return cloneMS;
 }
 
@@ -191,6 +192,16 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   return node;
 }
 
+const std::unordered_map<std::string, sir::FieldDimensions>
+DoMethod::getFieldDimensionsByName() const {
+  std::unordered_map<std::string, sir::FieldDimensions> fieldDimensionsByName;
+  for(const auto& it : getFields()) {
+    fieldDimensionsByName.insert(
+        {metaData_.getFieldNameFromAccessID(it.first), it.second.getFieldDimensions()});
+  }
+  return fieldDimensionsByName;
+}
+
 void DoMethod::updateLevel() {
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
@@ -221,14 +232,9 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, getInterval(),
-                                       metaData_.getLocationTypeFromAccessID(AccessID));
-      } else {
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, getInterval());
-      }
+      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                     extents, getInterval(),
+                                     metaData_.getFieldDimensions(AccessID));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -240,14 +246,8 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, getInterval(),
-                                      metaData_.getLocationTypeFromAccessID(AccessID));
-      } else {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, getInterval());
-      }
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
+                                    getInterval(), metaData_.getFieldDimensions(AccessID));
     }
   }
 
@@ -264,7 +264,7 @@ void DoMethod::updateLevel() {
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
   for(const auto& stmt : getAST().getStatements()) {
-    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;                                                                         
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {

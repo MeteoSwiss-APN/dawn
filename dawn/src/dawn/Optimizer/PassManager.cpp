@@ -13,9 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassManager.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <vector>
 
 namespace dawn {
@@ -57,8 +60,9 @@ bool PassManager::runPassOnStencilInstantiation(
                             "_Log.json");
   }
 
-  DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
-                  std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
+  // Run validation pass after each optimization pass
+  PassValidation validationPass(context);
+  validationPass.run(instantiation, "for pass " + pass->getName());
 
 #ifndef NDEBUG
   for(const auto& stencil : instantiation->getIIR()->getChildren()) {

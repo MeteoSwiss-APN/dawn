@@ -57,7 +57,7 @@ class DoMethod : public IIRNode<Stage, DoMethod, void> {
 
   const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
-  iir::BlockStmt ast_;
+  std::shared_ptr<iir::BlockStmt> ast_;
 
 public:
   static constexpr const char* name = "DoMethod";
@@ -113,6 +113,11 @@ public:
   /// The fields are computed during `DoMethod::update`.
   const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
 
+  /// @brief Get a map from field name to its dimensions for each field referenced in the DoMethod
+  ///
+  /// The fields are computed during `DoMethod::update`.
+  const std::unordered_map<std::string, sir::FieldDimensions> getFieldDimensionsByName() const;
+
   bool hasField(int accessID) const { return derivedInfo_.fields_.count(accessID); }
 
   /// @brief field getter
@@ -131,9 +136,10 @@ public:
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 
-  void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
-  iir::BlockStmt const& getAST() const { return ast_; }
-  iir::BlockStmt& getAST() { return ast_; }
+  void setAST(std::shared_ptr<BlockStmt> ast) { ast_ = ast; }
+  iir::BlockStmt const& getAST() const { return *ast_; }
+  iir::BlockStmt& getAST() { return *ast_; }
+  std::shared_ptr<iir::BlockStmt> getASTPtr() { return ast_; }
 };
 
 } // namespace iir

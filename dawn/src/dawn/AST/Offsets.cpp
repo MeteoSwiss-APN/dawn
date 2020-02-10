@@ -17,6 +17,7 @@
 
 #include "Offsets.h"
 
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 
@@ -117,6 +118,17 @@ HorizontalOffset& HorizontalOffset::operator+=(HorizontalOffset const& other) {
   return *this;
 }
 bool HorizontalOffset::isZero() const { return !impl_ || impl_->isZero(); }
+
+bool HorizontalOffset::hasType() const { return impl_.get() != nullptr; }
+
+GridType HorizontalOffset::getGridType() const {
+  DAWN_ASSERT(hasType());
+  if(dynamic_cast<CartesianOffset*>(impl_.get())) {
+    return GridType::Cartesian;
+  } else {
+    return GridType::Unstructured;
+  }
+}
 
 // Offsets
 

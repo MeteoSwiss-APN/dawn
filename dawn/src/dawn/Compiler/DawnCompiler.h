@@ -29,19 +29,23 @@ struct SIR;
 /// @brief The DawnCompiler class
 /// @ingroup compiler
 class DawnCompiler : NonCopyable {
-  std::unique_ptr<DiagnosticsEngine> diagnostics_;
-  std::unique_ptr<Options> options_;
-  std::string filename_;
+  DiagnosticsEngine diagnostics_;
+  Options options_;
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics
-  DawnCompiler(Options* options = nullptr);
+  DawnCompiler();
+  DawnCompiler(const Options& options);
 
   /// @brief Compile the SIR using the provided code generation routine
   /// @returns compiled TranslationUnit on success, `nullptr` otherwise
   std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& SIR);
 
   std::unique_ptr<OptimizerContext> runOptimizer(std::shared_ptr<SIR> const& SIR);
+
+  std::unique_ptr<codegen::TranslationUnit>
+  generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+               stencilInstantiationMap);
 
   /// @brief Get options
   const Options& getOptions() const;

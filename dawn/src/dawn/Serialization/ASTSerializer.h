@@ -25,6 +25,11 @@
 
 using namespace dawn;
 
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType);
+
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType);
+
 void setAST(dawn::proto::statements::AST* astProto, const ast::AST* ast);
 
 void setLocation(dawn::proto::statements::SourceLocation* locProto, const SourceLocation& loc);
@@ -38,6 +43,9 @@ void setDirection(dawn::proto::statements::Direction* directionProto,
                   const sir::Direction* direction);
 
 void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* offset);
+
+void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
+                        const sir::FieldDimensions& fieldDimensions);
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
 
@@ -113,6 +121,9 @@ SourceLocation makeLocation(const T& proto) {
   return proto.has_loc() ? SourceLocation(proto.loc().line(), proto.loc().column())
                          : SourceLocation{};
 }
+
+sir::FieldDimensions
+makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions);
 
 std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto);
 

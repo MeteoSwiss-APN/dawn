@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/AccessUtils.h"
+#include <optional>
 
 namespace dawn {
 
@@ -21,7 +22,8 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                        std::unordered_map<int, iir::Field>& inputFields,
                        std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                        const std::optional<iir::Extents>& writeExtents,
-                       iir::Interval const& doMethodInterval, ast::Expr::LocationType location) {
+                       iir::Interval const& doMethodInterval,
+                       sir::FieldDimensions&& fieldDimensions) {
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
     inputOutputFields.at(AccessID).extendInterval(doMethodInterval);
@@ -44,7 +46,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
   } else {
     outputFields.emplace(AccessID, iir::Field(AccessID, iir::Field::IntendKind::Output,
                                               std::optional<iir::Extents>(), writeExtents,
-                                              doMethodInterval, location));
+                                              doMethodInterval, std::move(fieldDimensions)));
   }
 }
 
@@ -52,7 +54,8 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                       std::unordered_map<int, iir::Field>& inputFields,
                       std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                       std::optional<iir::Extents> const& readExtents,
-                      const iir::Interval& doMethodInterval, ast::Expr::LocationType location) {
+                      const iir::Interval& doMethodInterval,
+                      sir::FieldDimensions&& fieldDimensions) {
 
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
@@ -75,9 +78,9 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
   if(inputFields.count(AccessID)) {
     inputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    inputFields.emplace(AccessID,
-                        iir::Field(AccessID, iir::Field::IntendKind::Input, readExtents,
-                                   std::optional<iir::Extents>(), doMethodInterval, location));
+    inputFields.emplace(AccessID, iir::Field(AccessID, iir::Field::IntendKind::Input, readExtents,
+                                             std::optional<iir::Extents>(), doMethodInterval,
+                                             std::move(fieldDimensions)));
   }
 }
 } // namespace AccessUtils

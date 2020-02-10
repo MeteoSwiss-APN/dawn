@@ -33,7 +33,7 @@ using stencilInstantiationContext =
 /// @ingroup codegen
 class CodeGen {
 protected:
-  stencilInstantiationContext context_;
+  const stencilInstantiationContext context_;
   DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;
@@ -58,6 +58,13 @@ protected:
 
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize) const;
 
+  bool
+  hasGlobalIndices(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  bool hasGlobalIndices(const iir::Stencil& stencil) const;
+
+  void generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass,
+                             bool genCheckOffset = true) const;
+
   const std::string tmpStorageTypename_ = "tmp_storage_t";
   const std::string tmpMetadataTypename_ = "tmp_meta_data_t";
   const std::string tmpMetadataName_ = "m_tmp_meta_data";
@@ -65,7 +72,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints)
+  CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints)
       : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
   virtual ~CodeGen() {}
 
@@ -74,7 +81,7 @@ public:
 
   static std::string getStorageType(const sir::Field& field);
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
-  static std::string getStorageType(const sir::FieldDimension& dimensions);
+  static std::string getStorageType(const sir::FieldDimensions& dimensions);
 
   void generateBoundaryConditionFunctions(
       Class& stencilWrapperClass,
@@ -87,8 +94,9 @@ public:
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
-  virtual std::string generateGlobals(stencilInstantiationContext& context, std::string namespace_);
-  virtual std::string generateGlobals(stencilInstantiationContext& context,
+  virtual std::string generateGlobals(const stencilInstantiationContext& context,
+                                      std::string namespace_);
+  virtual std::string generateGlobals(const stencilInstantiationContext& context,
                                       std::string outer_namespace_, std::string inner_namespace_);
   virtual std::string generateGlobals(const sir::GlobalVariableMap& globalsMaps,
                                       std::string namespace_) const;

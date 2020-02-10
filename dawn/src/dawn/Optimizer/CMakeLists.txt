@@ -30,6 +30,8 @@ add_library(DawnOptimizer
   PassInlining.h
   PassIntervalPartitioner.cpp
   PassIntervalPartitioner.h
+  PassLocalVarType.h
+  PassLocalVarType.cpp
   PassManager.cpp
   PassManager.h
   PassMultiStageSplitter.cpp
@@ -68,6 +70,8 @@ add_library(DawnOptimizer
   PassTemporaryType.h
   PassTemporaryToStencilFunction.cpp
   PassTemporaryToStencilFunction.h
+  PassValidation.cpp
+  PassValidation.h
   ReadBeforeWriteConflict.cpp
   ReadBeforeWriteConflict.h
   Renaming.cpp
@@ -86,4 +90,4 @@ add_library(DawnOptimizer
 )
 
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR)
+target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)

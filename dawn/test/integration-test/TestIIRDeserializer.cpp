@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/GridType.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -213,9 +214,8 @@ void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
 }
 
 TEST(IIRDeserializerTest, CopyStencil) {
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -230,9 +230,8 @@ TEST(IIRDeserializerTest, CopyStencil) {
 }
 
 TEST(IIRDeserializerTest, LapStencil) {
-  Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);
+  DawnCompiler compiler;
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
@@ -244,6 +243,21 @@ TEST(IIRDeserializerTest, LapStencil) {
   auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
 
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);
+}
+
+TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
+  // read IIR from file
+  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
+
+  // generate IIR in memory
+  UIDGenerator::getInstance()->reset();
+  auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory(optimizer);
+
+  compareIIRs(from_file, in_memory);
 }
 
 } // anonymous namespace

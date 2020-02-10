@@ -156,8 +156,24 @@ public:
     }
   }
   void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
+    auto getLocationTypeString = [](ast::LocationType type) {
+      switch(type) {
+      case ast::LocationType::Cells:
+        return "Cell";
+      case ast::LocationType::Edges:
+        return "Edge";
+      case ast::LocationType::Vertices:
+        return "Vertex";
+      default:
+        dawn_unreachable("unknown location type");
+        return "";
+      }
+    };
+
     ss_ << "Reduce (" << expr->getOp() << ", init = ";
     expr->getInit()->accept(*this);
+    ss_ << ", location = ";
+    ss_ << getLocationTypeString(expr->getRhsLocation());
     ss_ << "): ";
     expr->getRhs()->accept(*this);
   }

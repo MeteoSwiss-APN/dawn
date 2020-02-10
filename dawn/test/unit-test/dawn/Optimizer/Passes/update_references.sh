@@ -2,7 +2,8 @@
 
 usage()
 {
-    echo "usage: update_references.sh [-g path_to_gtclang] [-h]"
+    echo "usage: update_references.sh [-g path_to_gtclang_binary] [-h]"
+    echo "Generates references for stencil codes in {PWD}/samples directory. To be called from directory containing script."
 }
 
 while [ "$1" != "" ]; do
@@ -25,10 +26,8 @@ repo_path=$(git rev-parse --show-toplevel)
 
 # find gtclang
 if [[ "$gtclang_path" == "" ]]; then
-    if [[ -f "$repo_path/gtclang/build/bin/gtclang" ]]; then
-        gtclang_path="$repo_path/gtclang/build/bin/gtclang"
-    elif [[ -f "$repo_path/gtclang/bundle/install/bin/gtclang" ]]; then
-        gtclang_path="$repo_path/gtclang/bundle/install/bin/gtclang"
+    if [[ -f "$repo_path/build/gtclang/bin/gtclang" ]]; then
+        gtclang_path="$repo_path/build/gtclang/bin/gtclang"
     else
         echo "Cannot find gtclang."
         exit 1

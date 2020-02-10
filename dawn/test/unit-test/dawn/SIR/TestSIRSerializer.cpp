@@ -63,16 +63,24 @@ TEST_P(StencilTest, SourceLocation) {
 }
 
 TEST_P(StencilTest, Fields) {
-  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
-  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("bar"));
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  sirRef->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
+  sirRef->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("bar", makeFieldDimensions()));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
 TEST_P(StencilTest, FieldsWithAttributes) {
-  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
+  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>(
+      "foo", sir::FieldDimensions(sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}),
+                                  true)));
   sirRef->Stencils[0]->Fields[0]->IsTemporary = true;
-  sirRef->Stencils[0]->Fields[0]->fieldDimensions =
-      sir::FieldDimension(dawn::ast::cartesian, {true, true, false});
+  sirRef->Stencils[0]->Fields[0]->Dimensions = sir::FieldDimensions(
+      sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), false);
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
@@ -86,7 +94,8 @@ TEST_P(StencilTest, AST) {
 TEST_P(StencilTest, AST_Reduction) {
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
-      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double));
+      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
+      ast::LocationType::Cells, ast::LocationType::Cells);
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
@@ -99,7 +108,8 @@ TEST_P(StencilTest, AST_ReductionWeighted) {
 
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
-      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights);
+      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights,
+      ast::LocationType::Cells, ast::LocationType::Cells);
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
@@ -131,7 +141,12 @@ TEST_P(StencilFunctionTest, SourceLocation) {
 }
 
 TEST_P(StencilFunctionTest, Arguments) {
-  sirRef->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Field>("foo"));
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  sirRef->StencilFunctions[0]->Args.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
   sirRef->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Offset>("foo"));
   sirRef->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Direction>("foo"));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());

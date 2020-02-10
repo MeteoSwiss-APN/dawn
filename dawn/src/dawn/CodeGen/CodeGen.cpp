@@ -4,7 +4,6 @@
 
 namespace dawn {
 namespace codegen {
-
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
@@ -25,7 +24,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
   return fullIntervals ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
 }
 
-std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
+std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
@@ -38,7 +37,8 @@ std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
   return ss.str();
 }
 
-std::string CodeGen::generateGlobals(stencilInstantiationContext& context, std::string namespace_) {
+std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
+                                     std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
     return generateGlobals(globalsMap, namespace_);
@@ -174,63 +174,74 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   int idx = 0;
   std::unordered_set<std::string> generatedStencilFun;
 
-  for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
-    std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
+  // TODO not supported for unstructured
+  if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
+    for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
+      std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
 
-    if(generatedStencilFun.emplace(stencilFunName).second) {
-      auto stencilProperties =
-          codeGenProperties.insertStencil(StencilContext::SC_StencilFunction, idx, stencilFunName);
-      auto& paramNameToType = stencilProperties->paramNameToType_;
+      if(generatedStencilFun.emplace(stencilFunName).second) {
+        auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_StencilFunction,
+                                                                 idx, stencilFunName);
+        auto& paramNameToType = stencilProperties->paramNameToType_;
 
-      // Field declaration
-      const auto& fields = stencilFun->getCalleeFields();
+        // Field declaration
+        const auto& fields = stencilFun->getCalleeFields();
 
-      // list of template names of the stencil function declaration
-      std::vector<std::string> stencilFnTemplates(fields.size());
-      int n = 0;
-      std::generate(stencilFnTemplates.begin(), stencilFnTemplates.end(),
-                    [n]() mutable { return "StorageType" + std::to_string(n++); });
+        // list of template names of the stencil function declaration
+        std::vector<std::string> stencilFnTemplates(fields.size());
+        int n = 0;
+        std::generate(stencilFnTemplates.begin(), stencilFnTemplates.end(),
+                      [n]() mutable { return "StorageType" + std::to_string(n++); });
 
-      int m = 0;
-      for(const auto& field : fields) {
-        std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(field.getAccessID());
-        paramNameToType.emplace(paramName, stencilFnTemplates[m++]);
+        int m = 0;
+        for(const auto& field : fields) {
+          std::string paramName =
+              stencilFun->getOriginalNameFromCallerAccessID(field.getAccessID());
+          paramNameToType.emplace(paramName, stencilFnTemplates[m++]);
+        }
       }
+      idx++;
     }
-    idx++;
   }
   for(const auto& stencil : stencilInstantiation->getIIR()->getChildren()) {
     std::string stencilName = "stencil_" + std::to_string(stencil->getStencilID());
     auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
                                                              stencil->getStencilID(), stencilName);
-    auto& paramNameToType = stencilProperties->paramNameToType_;
+    // TODO not supported for unstructured
+    if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
+      auto& paramNameToType = stencilProperties->paramNameToType_;
 
-    // fields used in the stencil
-    const auto& StencilFields = stencil->getFields();
+      // fields used in the stencil
+      const auto& StencilFields = stencil->getFields();
 
-    auto nonTempFields =
-        makeRange(StencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-          return !p.second.IsTemporary;
-        });
-    auto tempFields =
-        makeRange(StencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-          return p.second.IsTemporary;
-        });
+      auto nonTempFields =
+          makeRange(StencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+            return !p.second.IsTemporary;
+          });
+      auto tempFields =
+          makeRange(StencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+            return p.second.IsTemporary;
+          });
 
-    for(const auto& field : nonTempFields) {
-      paramNameToType.emplace(field.second.Name, getStorageType(field.second.Dimensions));
-    }
+      for(const auto& field : nonTempFields) {
+        paramNameToType.emplace(field.second.Name,
+                                getStorageType(field.second.field.getFieldDimensions()));
+      }
 
-    for(const auto& field : tempFields) {
-      paramNameToType.emplace(field.second.Name, c_dgt().str() + "storage_t");
+      for(const auto& field : tempFields) {
+        paramNameToType.emplace(field.second.Name, c_dgt().str() + "storage_t");
+      }
     }
   }
 
-  int i = 0;
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
-    codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),
-                                  getStorageType(metadata.getFieldDimensionsMask(fieldID)));
-    ++i;
+  // TODO not supported for unstructured
+  if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
+    int i = 0;
+    for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+      codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),
+                                    getStorageType(metadata.getFieldDimensions(fieldID)));
+      ++i;
+    }
   }
   for(auto usedBoundaryCondition : metadata.getFieldNameToBCMap()) {
     for(const auto& field : usedBoundaryCondition.second->getFields()) {
@@ -268,23 +279,28 @@ void CodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const
   syncStoragesMethod.commit();
 }
 
-std::string CodeGen::getStorageType(const sir::FieldDimension& dimensions) {
-  auto const& structuredDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(dimensions);
+std::string CodeGen::getStorageType(const sir::FieldDimensions& dimensions) {
+  DAWN_ASSERT_MSG(
+      sir::dimension_isa<sir::CartesianFieldDimension>(dimensions.getHorizontalFieldDimension()),
+      "Storage type requested for a non cartesian horizontal dimension");
+  auto const& cartesianDimensions =
+      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+          dimensions.getHorizontalFieldDimension());
+
   std::string storageType = "storage_";
-  storageType += structuredDimensions.I() ? "i" : "";
-  storageType += structuredDimensions.J() ? "j" : "";
-  storageType += structuredDimensions.K() ? "k" : "";
+  storageType += cartesianDimensions.I() ? "i" : "";
+  storageType += cartesianDimensions.J() ? "j" : "";
+  storageType += dimensions.K() ? "k" : "";
   storageType += "_t";
   return storageType;
 }
 
 std::string CodeGen::getStorageType(const sir::Field& field) {
-  return getStorageType(field.fieldDimensions);
+  return getStorageType(field.Dimensions);
 }
 
 std::string CodeGen::getStorageType(const iir::Stencil::FieldInfo& field) {
-  return getStorageType(field.Dimensions);
+  return getStorageType(field.field.getFieldDimensions());
 }
 
 void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const {
@@ -364,6 +380,62 @@ std::string CodeGen::generateFileName(const stencilInstantiationContext& context
     return context_.begin()->second->getMetaData().getFileName();
   }
   return "";
+}
+
+bool CodeGen::hasGlobalIndices(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  for(auto& stencil : stencilInstantiation->getStencils()) {
+    if(hasGlobalIndices(*stencil)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CodeGen::hasGlobalIndices(const iir::Stencil& stencil) const {
+  for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+    if(std::any_of(stage->getIterationSpace().cbegin(), stage->getIterationSpace().cend(),
+                   [](const auto& p) -> bool { return p.has_value(); })) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass,
+                                    bool genCheckOffset) const {
+  for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+    if(stage->getIterationSpace()[0].has_value()) {
+      stencilClass.addMember("std::array<int, 2>",
+                             "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
+    }
+    if(stage->getIterationSpace()[1].has_value()) {
+      stencilClass.addMember("std::array<int, 2>",
+                             "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
+    }
+  }
+
+  stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
+  auto globalOffsetFunc =
+      stencilClass.addMemberFunction("static std::array<unsigned int, 2>", "computeGlobalOffsets");
+  globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
+  globalOffsetFunc.startBody();
+  globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
+  globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
+  globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
+  globalOffsetFunc.addStatement(
+      "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
+  globalOffsetFunc.commit();
+
+  if(genCheckOffset) {
+    auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
+    checkOffsetFunc.addArg("unsigned int min");
+    checkOffsetFunc.addArg("unsigned int max");
+    checkOffsetFunc.addArg("unsigned int val");
+    checkOffsetFunc.startBody();
+    checkOffsetFunc.addStatement("return (min <= val && val < max)");
+    checkOffsetFunc.commit();
+  }
 }
 
 } // namespace codegen

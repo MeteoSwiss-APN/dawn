@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_compute_maximum_extent_01.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -75,7 +76,7 @@
                      "Column": 13
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -118,7 +119,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 8
+                    "ID": 9
                    }
                   },
                   "op": "+=",
@@ -146,7 +147,7 @@
                      "Column": 14
                     },
                     "data": {},
-                    "ID": 9
+                    "ID": 8
                    }
                   },
                   "loc": {
@@ -189,7 +190,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 12
+                    "ID": 15
                    }
                   },
                   "op": "*=",
@@ -231,14 +232,14 @@
                        "Column": 25
                       },
                       "data": {},
-                      "ID": 14
+                      "ID": 12
                      }
                     },
                     "loc": {
                      "Line": 28,
                      "Column": 14
                     },
-                    "ID": 15
+                    "ID": 14
                    }
                   },
                   "loc": {
@@ -300,12 +301,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -314,12 +316,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

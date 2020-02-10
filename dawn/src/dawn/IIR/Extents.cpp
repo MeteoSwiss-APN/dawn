@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Extents.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/StringUtil.h"
@@ -217,6 +218,17 @@ void HorizontalExtent::limit(HorizontalExtent const& other) {
     impl_->limit(*other.impl_);
   else if(!other.impl_)
     *this = other;
+}
+
+bool HorizontalExtent::hasType() const { return impl_ != nullptr; }
+
+ast::GridType HorizontalExtent::getType() const {
+  DAWN_ASSERT(hasType());
+  if(dynamic_cast<CartesianExtent*>(impl_.get())) {
+    return ast::GridType::Cartesian;
+  } else {
+    return ast::GridType::Unstructured;
+  }
 }
 
 Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
