@@ -26,20 +26,20 @@ integration_test_dir="$repo_path/dawn/test/integration-test"
 
 # find DawnUpdateIIRReferences
 if [[ "$dawn_path" == "" ]]; then
-    if [[ -f "$repo_path/build/dawn/test/integration-test/DawnUpdateIIRReferences" ]]; then
-        update_path="$repo_path/build/dawn/test/integration-test/DawnUpdateIIRReferences"
-        ref_dest_path="$repo_path/build/dawn/test/integration-test/reference_iir"
+    if [[ -f "$repo_path/build/dawn/test/integration-test/serializer/DawnUpdateIIRReferences" ]]; then
+        update_path="$repo_path/build/dawn/test/integration-test/serializer/DawnUpdateIIRReferences"
+        ref_dest_path="$repo_path/build/dawn/test/integration-test/serializer/reference_iir"
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1
     fi
 else
-    if [[ -f "$dawn_path/test/integration-test/DawnUpdateIIRReferences" ]]; then
-        update_path=$(readlink -f "$dawn_path/test/integration-test/DawnUpdateIIRReferences")
-        ref_dest_path="$dawn_path/test/integration-test/reference_iir"
-    elif [[ -f "$dawn_path/dawn/test/integration-test/DawnUpdateIIRReferences" ]]; then
-        update_path=$(readlink -f "$dawn_path/dawn/test/integration-test/DawnUpdateIIRReferences")
-        ref_dest_path="$dawn_path/dawn/test/integration-test/reference_iir"
+    if [[ -f "$dawn_path/test/integration-test/serializer/DawnUpdateIIRReferences" ]]; then
+        update_path=$(readlink -f "$dawn_path/test/integration-test/serializer/DawnUpdateIIRReferences")
+        ref_dest_path="$dawn_path/test/integration-test/serializer/reference_iir"
+    elif [[ -f "$dawn_path/dawn/test/integration-test/serializer/DawnUpdateIIRReferences" ]]; then
+        update_path=$(readlink -f "$dawn_path/dawn/test/integration-test/serializer/DawnUpdateIIRReferences")
+        ref_dest_path="$dawn_path/dawn/test/integration-test/serializer/reference_iir"
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1

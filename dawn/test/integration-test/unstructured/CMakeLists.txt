@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING)
+if(DAWN_REQUIRE_UNSTRUCTURED_TESTING)
   find_package(eckit REQUIRED)
   find_package(atlas REQUIRED)
 else()
@@ -69,7 +69,6 @@ if(eckit_FOUND AND atlas_FOUND)
 
   add_custom_target(AtlasIntegrationTestCopyReferences ALL SOURCES ${reference_stencil_codes})
 
-  # TODO probably we want to put this skeleton in a add_gtclang_test
   set(test_name AtlasIntegrationTestCompareOutput)
   add_executable(${test_name}
     TestCompareOutputMain.cpp
