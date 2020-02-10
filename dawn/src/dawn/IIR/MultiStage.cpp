@@ -21,7 +21,7 @@
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/Support/IteratorAdapters.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/UIDGenerator.h"
 

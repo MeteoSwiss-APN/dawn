@@ -23,7 +23,7 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/ASTVisitor.h"
-#include "dawn/Support/IteratorAdapters.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
 #include <iterator>
