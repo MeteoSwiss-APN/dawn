@@ -35,15 +35,11 @@ TEST(GridTypeCheckerTest, MixedGridTypes) {
   auto cell_fB = b.field("cell_field_b", LocType::Cells);
 
   // lets build a consistent stencil
-  auto stencilContext =
-      b.build(stencilName.c_str(),
-              b.stencil(b.multistage(
-                  LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                     b.stmt(b.assignExpr(b.at(cell_fA), b.at(cell_fB))))))));
-
-  // extract the stencil instantiation
-  auto si = stencilContext[stencilName.c_str()];
+  auto si = b.build(stencilName.c_str(),
+                    b.stencil(b.multistage(
+                        LoopOrderKind::Parallel,
+                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                           b.stmt(b.assignExpr(b.at(cell_fA), b.at(cell_fB))))))));
 
   // lets manually add a field access of the wrong type to the IIR
   ast::Offsets offsets(ast::cartesian_{}, 0, 0, 0);
@@ -71,16 +67,12 @@ TEST(GridTypeCheckerTest, LocalVariableDataMixed) {
   auto varA = b.localvar("varA");
 
   // lets build a consistent stencil
-  auto stencilContext =
-      b.build(stencilName.c_str(),
-              b.stencil(b.multistage(
-                  LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                     b.declareVar(varA),
-                                     b.stmt(b.assignExpr(b.at(cell_fA), b.at(cell_fB))))))));
-
-  // extract the stencil instantiation
-  auto si = stencilContext[stencilName.c_str()];
+  auto si = b.build(stencilName.c_str(),
+                    b.stencil(b.multistage(
+                        LoopOrderKind::Parallel,
+                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                           b.declareVar(varA),
+                                           b.stmt(b.assignExpr(b.at(cell_fA), b.at(cell_fB))))))));
 
   // lets manually add a LocalVariableData with a cartesian type (OnIJ)
   si->getMetaData().addAccessIDToLocalVariableDataPair(varA.id, iir::LocalVariableData{});

@@ -351,5 +351,5 @@ createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
                                  b.at(out_f), b.reduceOverNeighborExpr(
                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                   b.lit(0.), LocType::Cells, LocType::Edges))))))));
-  return stencil_instantiation.at("generated");
+  return stencil_instantiation;
 }

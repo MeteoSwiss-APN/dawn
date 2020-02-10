@@ -16,27 +16,12 @@
 
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
 #include <cstring>
 #include <fstream>
 #include <optional>
-
-template <typename CG>
-void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
-  dawn::DiagnosticsEngine diagnostics;
-  CG generator(ctx, diagnostics, 0);
-  auto tu = generator.generateCode();
-
-  std::ostringstream ss;
-  for(auto const& macroDefine : tu->getPPDefines())
-    ss << macroDefine << "\n";
-
-  ss << tu->getGlobals();
-  for(auto const& s : tu->getStencils())
-    ss << s.second;
-  os << ss.str();
-}
 
 int main() {
 
@@ -55,7 +40,7 @@ int main() {
                                            b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyCell.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -75,7 +60,7 @@ int main() {
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyEdge.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -99,7 +84,7 @@ int main() {
                                                 b.lit(0.), LocType::Cells, LocType::Edges))))))));
 
     std::ofstream of("generated/generated_accumulateEdgeToCell.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -123,7 +108,7 @@ int main() {
                                                              Op::plus))))))));
 
     std::ofstream of("generated/generated_verticalSum.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -187,7 +172,7 @@ int main() {
                                                 Op::minus))))))));
 
     std::ofstream of("generated/generated_verticalSolver.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -223,7 +208,7 @@ int main() {
                                  Op::plus))))))));
 
     std::ofstream of("generated/generated_diffusion.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -259,7 +244,7 @@ int main() {
                                    std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
     std::ofstream of("generated/generated_gradient.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -291,7 +276,7 @@ int main() {
                                        std::vector<float>({1., 1., 1., 1})))))))));
 
     std::ofstream of("generated/generated_sparseDimension.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -332,7 +317,7 @@ int main() {
                             std::vector<float>({1., 1., 1., 1})))))))));
 
     std::ofstream of("generated/generated_sparseDimensionTwice.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -363,7 +348,7 @@ int main() {
                                        dawn::ast::LocationType::Edges))))))));
 
     std::ofstream of("generated/generated_NestedSimple.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
@@ -397,7 +382,7 @@ int main() {
                                                dawn::ast::LocationType::Edges))))))));
 
     std::ofstream of("generated/generated_NestedWithField.hpp");
-    dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
     of.close();
   }
 
