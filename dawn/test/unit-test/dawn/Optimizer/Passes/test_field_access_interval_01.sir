@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_field_access_interval_01.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 53
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 59
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -152,7 +153,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 10
+                    "ID": 21
                    }
                   },
                   "op": "=",
@@ -188,7 +189,7 @@
                              "Column": 13
                             },
                             "data": {},
-                            "ID": 11
+                            "ID": 16
                            }
                           },
                           "op": "+",
@@ -216,14 +217,14 @@
                              "Column": 24
                             },
                             "data": {},
-                            "ID": 12
+                            "ID": 15
                            }
                           },
                           "loc": {
                            "Line": 27,
                            "Column": 13
                           },
-                          "ID": 13
+                          "ID": 17
                          }
                         },
                         "op": "+",
@@ -258,7 +259,7 @@
                          "Line": 27,
                          "Column": 13
                         },
-                        "ID": 15
+                        "ID": 18
                        }
                       },
                       "op": "+",
@@ -286,14 +287,14 @@
                          "Column": 46
                         },
                         "data": {},
-                        "ID": 16
+                        "ID": 13
                        }
                       },
                       "loc": {
                        "Line": 27,
                        "Column": 13
                       },
-                      "ID": 17
+                      "ID": 19
                      }
                     },
                     "op": "-",
@@ -310,7 +311,7 @@
                          "Column": 57
                         },
                         "data": {},
-                        "ID": 18
+                        "ID": 11
                        }
                       },
                       "op": "*",
@@ -335,21 +336,21 @@
                          "Column": 63
                         },
                         "data": {},
-                        "ID": 19
+                        "ID": 10
                        }
                       },
                       "loc": {
                        "Line": 27,
                        "Column": 57
                       },
-                      "ID": 20
+                      "ID": 12
                      }
                     },
                     "loc": {
                      "Line": 27,
                      "Column": 13
                     },
-                    "ID": 21
+                    "ID": 20
                    }
                   },
                   "loc": {
@@ -392,7 +393,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 24
+                    "ID": 35
                    }
                   },
                   "op": "=",
@@ -428,7 +429,7 @@
                              "Column": 13
                             },
                             "data": {},
-                            "ID": 25
+                            "ID": 30
                            }
                           },
                           "op": "+",
@@ -456,14 +457,14 @@
                              "Column": 26
                             },
                             "data": {},
-                            "ID": 26
+                            "ID": 29
                            }
                           },
                           "loc": {
                            "Line": 28,
                            "Column": 13
                           },
-                          "ID": 27
+                          "ID": 31
                          }
                         },
                         "op": "+",
@@ -498,7 +499,7 @@
                          "Line": 28,
                          "Column": 13
                         },
-                        "ID": 29
+                        "ID": 32
                        }
                       },
                       "op": "+",
@@ -526,14 +527,14 @@
                          "Column": 52
                         },
                         "data": {},
-                        "ID": 30
+                        "ID": 27
                        }
                       },
                       "loc": {
                        "Line": 28,
                        "Column": 13
                       },
-                      "ID": 31
+                      "ID": 33
                      }
                     },
                     "op": "-",
@@ -550,7 +551,7 @@
                          "Column": 65
                         },
                         "data": {},
-                        "ID": 32
+                        "ID": 25
                        }
                       },
                       "op": "*",
@@ -575,21 +576,21 @@
                          "Column": 71
                         },
                         "data": {},
-                        "ID": 33
+                        "ID": 24
                        }
                       },
                       "loc": {
                        "Line": 28,
                        "Column": 65
                       },
-                      "ID": 34
+                      "ID": 26
                      }
                     },
                     "loc": {
                      "Line": 28,
                      "Column": 13
                     },
-                    "ID": 35
+                    "ID": 34
                    }
                   },
                   "loc": {
@@ -651,12 +652,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -665,12 +667,13 @@
       "Column": 14
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "lap",
@@ -679,12 +682,13 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

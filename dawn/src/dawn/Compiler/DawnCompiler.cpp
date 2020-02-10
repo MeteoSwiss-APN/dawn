@@ -23,8 +23,8 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntegrityCheck.h"
 #include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -44,6 +44,7 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Array.h"
@@ -52,8 +53,6 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/LocationTypeChecker.h"
 
 namespace dawn {
 
@@ -382,22 +381,11 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     }
   }
 
-  LocationTypeChecker checker;
-  // IIR produced should be type consistent too
-  for(auto& stencil : optimizer.getStencilInstantiationMap()) {
-    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-    const auto& internalIR = instantiation->getIIR();
-    if(!checker.checkLocationTypeConsistency(*internalIR.get(), instantiation->getMetaData())) {
-      throw std::runtime_error("Location types in IIR are not consistent, no code generation. This"
-                               "points to a bug in the optimization passes ");
-    }
-  }
-
   return optimizer.getStencilInstantiationMap();
 }
 
 std::unique_ptr<codegen::TranslationUnit>
-DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
   // Generate code
   try {
@@ -436,6 +424,7 @@ DawnCompiler::generate(std::map<std::string, std::shared_ptr<iir::StencilInstant
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
+  return nullptr;
 }
 
 std::unique_ptr<codegen::TranslationUnit>

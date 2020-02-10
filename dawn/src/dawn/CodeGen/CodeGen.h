@@ -80,7 +80,7 @@ public:
 
   static std::string getStorageType(const sir::Field& field);
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
-  static std::string getStorageType(const sir::FieldDimension& dimensions);
+  static std::string getStorageType(const sir::FieldDimensions& dimensions);
 
   void generateBoundaryConditionFunctions(
       Class& stencilWrapperClass,
@@ -93,9 +93,9 @@ public:
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
-  virtual std::string generateGlobals(stencilInstantiationContext const& context,
+  virtual std::string generateGlobals(const stencilInstantiationContext& context,
                                       std::string namespace_);
-  virtual std::string generateGlobals(stencilInstantiationContext const& context,
+  virtual std::string generateGlobals(const stencilInstantiationContext& context,
                                       std::string outer_namespace_, std::string inner_namespace_);
   virtual std::string generateGlobals(sir::GlobalVariableMap const& globalsMaps,
                                       std::string namespace_) const;

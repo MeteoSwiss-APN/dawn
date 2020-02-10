@@ -17,7 +17,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/FileUtil.h"
-#include "dawn/Unittest/CodeDumper.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestLogger.h"
 
@@ -43,7 +43,7 @@ TEST(CodeGenCudaTest, GlobalIndexStencil) {
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   std::ostringstream oss;
-  dawn::CodeDumper::dumpCuda(oss, stencil_instantiation);
+  dawn::CompilerUtil::dumpCuda(oss, stencil_instantiation);
   std::string gen = oss.str();
 
   std::string ref = dawn::readFile("reference/global_indexing.cpp");

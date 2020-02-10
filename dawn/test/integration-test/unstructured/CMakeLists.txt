@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING)
+if(DAWN_REQUIRE_UNSTRUCTURED_TESTING)
   find_package(eckit REQUIRED)
   find_package(atlas REQUIRED)
 else()
@@ -36,6 +36,10 @@ if(eckit_FOUND AND atlas_FOUND)
     generated_diffusion.hpp
     generated_gradient.hpp
     generated_verticalSolver.hpp
+    generated_NestedSimple.hpp
+    generated_NestedWithField.hpp
+    generated_sparseDimension.hpp
+    generated_sparseDimensionTwice.hpp
   )
   set(reference_stencil_codes reference_diffusion.hpp
     reference_gradient.hpp
@@ -65,7 +69,6 @@ if(eckit_FOUND AND atlas_FOUND)
 
   add_custom_target(AtlasIntegrationTestCopyReferences ALL SOURCES ${reference_stencil_codes})
 
-  # TODO probably we want to put this skeleton in a add_gtclang_test
   set(test_name AtlasIntegrationTestCompareOutput)
   add_executable(${test_name}
     TestCompareOutputMain.cpp
@@ -83,7 +86,7 @@ if(eckit_FOUND AND atlas_FOUND)
   target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
   target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-  target_add_gtclang_standard_props(${test_name})
+  target_add_dawn_standard_props(${test_name})
   target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest)
 
   set_target_properties(${test_name} PROPERTIES

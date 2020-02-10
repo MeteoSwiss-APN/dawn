@@ -33,7 +33,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                        std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                        const std::optional<iir::Extents>& extents,
                        iir::Interval const& doMethodInterval,
-                       std::optional<ast::Expr::LocationType> location = std::nullopt);
+                       sir::FieldDimensions&& fieldDimensions);
 
 /// @brief given a read access, with AccessID, it will recorded in the corresponding map of input,
 /// output or inputOutput
@@ -45,7 +45,7 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                       std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                       const std::optional<iir::Extents>& extents,
                       iir::Interval const& doMethodInterval,
-                      std::optional<ast::Expr::LocationType> = std::nullopt);
+                      sir::FieldDimensions&& fieldDimensions);
 
 } // namespace AccessUtils
 } // namespace dawn

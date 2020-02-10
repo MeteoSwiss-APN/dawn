@@ -34,6 +34,7 @@ using namespace dawn;
 using namespace ast;
 
 namespace {
+
 void fillData(iir::IIRStmtData& data, dawn::proto::statements::StmtData const& dataProto) {
   if(dataProto.has_accesses()) {
     iir::Accesses callerAccesses;
@@ -109,30 +110,41 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
 }
 } // namespace
 
-ast::Expr::LocationType convertLocationType(proto::statements::LocationType protoLocation) {
-  switch(protoLocation) {
-  case proto::statements::Cell:
-    return ast::Expr::LocationType::Cells;
-  case proto::statements::Edge:
-    return ast::Expr::LocationType::Edges;
-  case proto::statements::Vertex:
-    return ast::Expr::LocationType::Vertices;
+proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
+  proto::enums::LocationType protoLocationType;
+  switch(locationType) {
+  case ast::LocationType::Cells:
+    protoLocationType = proto::enums::LocationType::Cell;
+    break;
+  case ast::LocationType::Edges:
+    protoLocationType = proto::enums::LocationType::Edge;
+    break;
+  case ast::LocationType::Vertices:
+    protoLocationType = proto::enums::LocationType::Vertex;
+    break;
   default:
     dawn_unreachable("unknown location type");
   }
+  return protoLocationType;
 }
 
-proto::statements::LocationType convertLocationType(ast::Expr::LocationType location) {
-  switch(location) {
-  case ast::Expr::LocationType::Cells:
-    return proto::statements::Cell;
-  case ast::Expr::LocationType::Edges:
-    return proto::statements::Edge;
-  case ast::Expr::LocationType::Vertices:
-    return proto::statements::Vertex;
+ast::LocationType
+getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType) {
+  ast::LocationType loc;
+  switch(protoLocationType) {
+  case proto::enums::LocationType::Cell:
+    loc = ast::LocationType::Cells;
+    break;
+  case proto::enums::LocationType::Edge:
+    loc = ast::LocationType::Edges;
+    break;
+  case proto::enums::LocationType::Vertex:
+    loc = ast::LocationType::Vertices;
+    break;
   default:
     dawn_unreachable("unknown location type");
   }
+  return loc;
 }
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
@@ -240,23 +252,46 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
   setLocation(offsetProto->mutable_loc(), offset->Loc);
 }
 
+void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
+                        const sir::FieldDimensions& fieldDimensions) {
+  if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
+         fieldDimensions.getHorizontalFieldDimension())) {
+    auto const& cartesianDimension =
+        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+            fieldDimensions.getHorizontalFieldDimension());
+
+    dawn::proto::statements::CartesianDimension* protoCartesianDimension =
+        protoFieldDimensions->mutable_cartesian_horizontal_dimension();
+
+    protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
+    protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
+
+  } else {
+    auto const& unstructuredDimension =
+        dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
+            fieldDimensions.getHorizontalFieldDimension());
+
+    dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
+        protoFieldDimensions->mutable_unstructured_horizontal_dimension();
+
+    if(unstructuredDimension.isSparse()) {
+      for(int i = 0; i < unstructuredDimension.getNeighborChain().size(); ++i) {
+        protoUnstructuredDimension->set_sparse_part(
+            i, getProtoLocationTypeFromLocationType(unstructuredDimension.getNeighborChain()[i]));
+      }
+    }
+    protoUnstructuredDimension->set_dense_location_type(
+        getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
+  }
+  protoFieldDimensions->set_mask_k(fieldDimensions.K());
+}
+
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field) {
   fieldProto->set_name(field->Name);
   fieldProto->set_is_temporary(field->IsTemporary);
-
-  auto const dimensions = field->fieldDimensions;
-  auto const& structuredDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(dimensions);
-  fieldProto->add_field_dimensions(structuredDimensions.I());
-  fieldProto->add_field_dimensions(structuredDimensions.J());
-  fieldProto->add_field_dimensions(structuredDimensions.K());
-
   setLocation(fieldProto->mutable_loc(), field->Loc);
-  if(field->locationType.has_value()) {
-    proto::statements::LocationType protoLocationType =
-        convertLocationType(field->locationType.value());
-    fieldProto->set_location_type(protoLocationType);
-  }
+
+  setFieldDimensions(fieldProto->mutable_field_dimensions(), field->Dimensions);
 }
 
 ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto,
@@ -630,8 +665,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
-  protoExpr->set_rhs_location(convertLocationType(expr->getRhsLocation()));
-  protoExpr->set_lhs_location(convertLocationType(expr->getLhsLocation()));
+  protoExpr->set_rhs_location(getProtoLocationTypeFromLocationType(expr->getRhsLocation()));
+  protoExpr->set_lhs_location(getProtoLocationTypeFromLocationType(expr->getLhsLocation()));
 
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
@@ -679,24 +714,53 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
 // Deserialization
 //===------------------------------------------------------------------------------------------===//
 
-std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto) {
-  auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
-  field->IsTemporary = fieldProto.is_temporary();
-  if(!fieldProto.field_dimensions().empty()) {
-    auto throwException = [&fieldProto](const char* member) {
-      throw std::runtime_error(
-          format("Field::%s (loc %s) exceeds 3 dimensions", member, makeLocation(fieldProto)));
-    };
-    if(fieldProto.field_dimensions().size() > 3)
-      throwException("field_dimensions");
+sir::FieldDimensions
+makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions) {
 
-    field->fieldDimensions = sir::FieldDimension(
-        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
-                                                   (bool)fieldProto.field_dimensions()[1],
-                                                   (bool)fieldProto.field_dimensions()[2]}));
+  if(protoFieldDimensions.has_cartesian_horizontal_dimension()) {
+    const auto& protoCartesianDimension = protoFieldDimensions.cartesian_horizontal_dimension();
+    return sir::FieldDimensions(
+        sir::HorizontalFieldDimension(
+            dawn::ast::cartesian,
+            std::array<bool, 2>({(bool)protoCartesianDimension.mask_cart_i(),
+                                 (bool)protoCartesianDimension.mask_cart_j()})),
+        (bool)protoFieldDimensions.mask_k());
+  } else if(protoFieldDimensions.has_unstructured_horizontal_dimension()) {
+
+    const auto& protoUnstructuredDimension =
+        protoFieldDimensions.unstructured_horizontal_dimension();
+
+    if(protoUnstructuredDimension.sparse_part_size() != 0) { // sparse
+
+      // Check that first element of neighbor chain corresponds to dense location type
+      DAWN_ASSERT_MSG(protoUnstructuredDimension.sparse_part(0) ==
+                          protoUnstructuredDimension.dense_location_type(),
+                      "First element of neighbor chain and dense location type don't match in "
+                      "serialized FieldDimensions message.");
+
+      NeighborChain neighborChain;
+      neighborChain.push_back(
+          getLocationTypeFromProtoLocationType(protoUnstructuredDimension.dense_location_type()));
+      for(int i = 0; i < protoUnstructuredDimension.sparse_part_size(); ++i) {
+        neighborChain.push_back(
+            getLocationTypeFromProtoLocationType(protoUnstructuredDimension.sparse_part(i)));
+      }
+
+      return sir::FieldDimensions(
+          sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain),
+          protoFieldDimensions.mask_k());
+
+    } else { // dense
+
+      return sir::FieldDimensions(
+          sir::HorizontalFieldDimension(dawn::ast::unstructured,
+                                        getLocationTypeFromProtoLocationType(
+                                            protoUnstructuredDimension.dense_location_type())),
+          protoFieldDimensions.mask_k());
+    }
+  } else {
+    dawn_unreachable("No horizontal dimension in serialized FieldDimensions message.");
   }
-  field->locationType = convertLocationType(fieldProto.location_type());
-  return field;
 }
 
 BuiltinTypeID makeBuiltinTypeID(const proto::statements::BuiltinType& builtinTypeProto) {
@@ -912,8 +976,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
-          convertLocationType(exprProto.lhs_location()),
-          convertLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
       return expr;
     } else {
       std::vector<sir::Value> deserializedWeights;
@@ -941,8 +1005,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       }
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType), makeExpr(exprProto.init(), dataType),
-          deserializedWeights, convertLocationType(exprProto.lhs_location()),
-          convertLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          deserializedWeights, getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
+          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
       return expr;
     }
   }

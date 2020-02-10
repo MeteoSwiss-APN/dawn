@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "12": "out_field",
-   "11": "in_field"
+   "11": "in_field",
+   "12": "out_field"
   },
   "accessIDToType": {
    "11": 6,
@@ -10,8 +10,6 @@
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   11,
-   12,
    11,
    12
   ],
@@ -25,16 +23,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "11": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "12": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -58,10 +60,6 @@
    }
   },
   "boundaryCallToExtent": {},
-  "accessIDToLocation": {
-   "11": "Cell",
-   "12": "Cell"
-  },
   "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": -1,

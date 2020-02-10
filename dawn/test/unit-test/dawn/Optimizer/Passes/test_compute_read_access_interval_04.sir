@@ -1,4 +1,5 @@
 {
+ "gridType": "Cartesian",
  "filename": "test_compute_read_access_interval_04.cpp",
  "stencils": [
   {
@@ -47,7 +48,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 4
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -72,7 +73,7 @@
                      "Column": 13
                     },
                     "data": {},
-                    "ID": 5
+                    "ID": 4
                    }
                   },
                   "loc": {
@@ -115,7 +116,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 8
+                    "ID": 9
                    }
                   },
                   "op": "=",
@@ -140,7 +141,7 @@
                      "Column": 12
                     },
                     "data": {},
-                    "ID": 9
+                    "ID": 8
                    }
                   },
                   "loc": {
@@ -183,7 +184,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 12
+                    "ID": 13
                    }
                   },
                   "op": "=",
@@ -208,7 +209,7 @@
                      "Column": 12
                     },
                     "data": {},
-                    "ID": 13
+                    "ID": 12
                    }
                   },
                   "loc": {
@@ -251,7 +252,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 16
+                    "ID": 17
                    }
                   },
                   "op": "=",
@@ -276,7 +277,7 @@
                      "Column": 12
                     },
                     "data": {},
-                    "ID": 17
+                    "ID": 16
                    }
                   },
                   "loc": {
@@ -319,7 +320,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 20
+                    "ID": 21
                    }
                   },
                   "op": "=",
@@ -344,7 +345,7 @@
                      "Column": 13
                     },
                     "data": {},
-                    "ID": 21
+                    "ID": 20
                    }
                   },
                   "loc": {
@@ -387,7 +388,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 24
+                    "ID": 25
                    }
                   },
                   "op": "=",
@@ -412,7 +413,7 @@
                      "Column": 13
                     },
                     "data": {},
-                    "ID": 25
+                    "ID": 24
                    }
                   },
                   "loc": {
@@ -455,7 +456,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 28
+                    "ID": 29
                    }
                   },
                   "op": "=",
@@ -480,7 +481,7 @@
                      "Column": 12
                     },
                     "data": {},
-                    "ID": 29
+                    "ID": 28
                    }
                   },
                   "loc": {
@@ -523,7 +524,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 32
+                    "ID": 33
                    }
                   },
                   "op": "=",
@@ -548,7 +549,7 @@
                      "Column": 12
                     },
                     "data": {},
-                    "ID": 33
+                    "ID": 32
                    }
                   },
                   "loc": {
@@ -591,7 +592,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 36
+                    "ID": 37
                    }
                   },
                   "op": "=",
@@ -616,7 +617,7 @@
                      "Column": 12
                     },
                     "data": {},
-                    "ID": 37
+                    "ID": 36
                    }
                   },
                   "loc": {
@@ -659,7 +660,7 @@
                      "Column": 7
                     },
                     "data": {},
-                    "ID": 40
+                    "ID": 41
                    }
                   },
                   "op": "=",
@@ -684,7 +685,7 @@
                      "Column": 13
                     },
                     "data": {},
-                    "ID": 41
+                    "ID": 40
                    }
                   },
                   "loc": {
@@ -746,12 +747,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "out",
@@ -760,12 +762,13 @@
       "Column": 15
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "a1",
@@ -774,12 +777,13 @@
       "Column": 11
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "a2",
@@ -788,12 +792,13 @@
       "Column": 15
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "b1",
@@ -802,12 +807,13 @@
       "Column": 19
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "b2",
@@ -816,12 +822,13 @@
       "Column": 23
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "c1",
@@ -830,12 +837,13 @@
       "Column": 27
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "c2",
@@ -844,12 +852,13 @@
       "Column": 31
      },
      "is_temporary": false,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     },
     {
      "name": "tmp",
@@ -858,12 +867,13 @@
       "Column": 7
      },
      "is_temporary": true,
-     "field_dimensions": [
-      1,
-      1,
-      1
-     ],
-     "location_type": "Cell"
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
     }
    ]
   }

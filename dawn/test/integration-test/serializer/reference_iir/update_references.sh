@@ -22,25 +22,29 @@ done
 script=$(readlink -f $0)
 script_path=$(dirname $script)
 repo_path=$(git rev-parse --show-toplevel)
+integration_test_dir="$repo_path/dawn/test/integration-test"
 
 # find DawnUpdateIIRReferences
 if [[ "$dawn_path" == "" ]]; then
-    if [[ -f "$repo_path/build/dawn/test/integration-test/DawnUpdateIIRReferences" ]]; then
-        update_path="$repo_path/build/dawn/test/integration-test/DawnUpdateIIRReferences"
+    if [[ -f "$repo_path/build/dawn/test/integration-test/serializer/DawnUpdateIIRReferences" ]]; then
+        update_path="$repo_path/build/dawn/test/integration-test/serializer"
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1
     fi
 else
-    if [[ -f "$dawn_path/dawn/test/integration-test/DawnUpdateIIRReferences" ]]; then
-        update_path=$(readlink -f "$dawn_path/dawn/test/integration-test/DawnUpdateIIRReferences")
+    if [[ -f "$dawn_path/test/integration-test/serializer/DawnUpdateIIRReferences" ]]; then
+        update_path=$(readlink -f "$dawn_path/test/integration-test/serializer")
+    elif [[ -f "$dawn_path/dawn/test/integration-test/serializer/DawnUpdateIIRReferences" ]]; then
+        update_path=$(readlink -f "$dawn_path/dawn/test/integration-test/serializer")
     else
         echo "Cannot find DawnUpdateIIRReferences."
         exit 1
     fi
 fi
-
 # run the script
-pushd $(dirname $update_path) > /dev/null
-  $update_path
+pushd $integration_test_dir > /dev/null
+  cd $update_path
+  $update_path/DawnUpdateIIRReferences
+  cp -rf reference_iir/*.iir $script_path
 popd > /dev/null

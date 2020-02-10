@@ -12,18 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/PassIntegrityCheck.h"
-#include "dawn/Validator/IntegrityChecker.h"
+#pragma once
+
+#include <vector>
 
 namespace dawn {
+namespace ast {
 
-PassIntegrityCheck::PassIntegrityCheck(OptimizerContext& context)
-    : Pass(context, "PassIntegrityCheck") {}
+enum class LocationType { Cells, Edges, Vertices };
+using NeighborChain = std::vector<ast::LocationType>;
 
-bool PassIntegrityCheck::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  IntegrityChecker checker(instantiation.get());
-  checker.run();
-  return true;
-}
-
+} // namespace ast
 } // namespace dawn

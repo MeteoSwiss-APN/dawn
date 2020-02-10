@@ -85,6 +85,30 @@ Field<T> edgeFieldType(atlasTag);
 template <typename T>
 Field<T> vertexFieldType(atlasTag);
 
+template <typename T>
+class SparseDimension {
+public:
+  T const& operator()(int elem_idx, int sparse_dim_idx, int level) const {
+    return sparse_dimension_(elem_idx, level, sparse_dim_idx);
+  }
+  T& operator()(int elem_idx, int sparse_dim_idx, int level) {
+    return sparse_dimension_(elem_idx, level, sparse_dim_idx);
+  }
+
+  SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
+      : sparse_dimension_(sparse_dimension) {}
+
+private:
+  atlas::array::ArrayView<T, 3> sparse_dimension_;
+};
+
+template <typename T>
+SparseDimension<T> sparseCellFieldType(atlasTag);
+template <typename T>
+SparseDimension<T> sparseEdgeFieldType(atlasTag);
+template <typename T>
+SparseDimension<T> sparseVertexFieldType(atlasTag);
+
 atlas::Mesh meshType(atlasTag);
 
 auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
@@ -196,84 +220,88 @@ std::vector<int> nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   return neighs[idx];
 }
 
-// weighted versions
+//===------------------------------------------------------------------------------------------===//
+// weighted version
+//===------------------------------------------------------------------------------------------===//
 
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                      const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                      std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfCell(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                      const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                      std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : edgeNeighboursOfCell(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                        std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfCell(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
 
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                      const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                      std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfEdge(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                        std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfEdge(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
 
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                        std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : cellNeighboursOfNode(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                        std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : edgeNeighboursOfNode(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
-template <typename Init, typename Op, typename Weight>
+template <typename Init, typename Op, typename WeightT>
 auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                          const std::vector<Weight>&& weights) {
-  static_assert(std::is_arithmetic<Weight>::value, "weights need to be of arithmetic type!\n");
+                          std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : nodeNeighboursOfNode(m, idx))
     op(init, objIdx, weights[i++]);
   return init;
 }
 
+//===------------------------------------------------------------------------------------------===//
 // unweighted versions
+//===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {

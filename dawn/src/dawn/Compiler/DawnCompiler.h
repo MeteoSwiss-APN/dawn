@@ -51,7 +51,7 @@ public:
 
   /// @brief Generate a translation unit from a set of Stencil Instantiations
   std::unique_ptr<codegen::TranslationUnit>
-  generate(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+  generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);
 
   /// @brief Get options

@@ -192,13 +192,14 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   return node;
 }
 
-const std::unordered_map<std::string, ast::Expr::LocationType>
-DoMethod::getFieldLocationTypesByName() const {
-  std::unordered_map<std::string, ast::Expr::LocationType> fieldsByName;
+const std::unordered_map<std::string, sir::FieldDimensions>
+DoMethod::getFieldDimensionsByName() const {
+  std::unordered_map<std::string, sir::FieldDimensions> fieldDimensionsByName;
   for(const auto& it : getFields()) {
-    fieldsByName.insert({metaData_.getFieldNameFromAccessID(it.first), it.second.getLocation()});
+    fieldDimensionsByName.insert(
+        {metaData_.getFieldNameFromAccessID(it.first), it.second.getFieldDimensions()});
   }
-  return fieldsByName;
+  return fieldDimensionsByName;
 }
 
 void DoMethod::updateLevel() {
@@ -231,14 +232,9 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, getInterval(),
-                                       metaData_.getLocationTypeFromAccessID(AccessID));
-      } else {
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, getInterval());
-      }
+      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                     extents, getInterval(),
+                                     metaData_.getFieldDimensions(AccessID));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -250,14 +246,8 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, getInterval(),
-                                      metaData_.getLocationTypeFromAccessID(AccessID));
-      } else {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, getInterval());
-      }
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
+                                    getInterval(), metaData_.getFieldDimensions(AccessID));
     }
   }
 

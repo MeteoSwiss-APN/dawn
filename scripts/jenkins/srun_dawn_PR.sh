@@ -14,5 +14,5 @@ srun --job-name=dawn_PR \
      --partition=cscsci \
      --constraint=gpu \
      --account=c14 \
-     $BASEPATH_SCRIPT/dawn_PR.sh
+     $BASEPATH_SCRIPT/dawn_PR.sh "$@"
 
