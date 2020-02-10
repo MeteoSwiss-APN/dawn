@@ -386,22 +386,23 @@ TEST(CompilerTest, DISABLED_ICONStencil) {
                   b.stmt(b.assignExpr(b.at(nabla2t1_vec),
                                       b.reduceOverNeighborExpr(Op::plus, b.at(rot_vec), b.lit(0.),
                                                                dawn::ast::LocationType::Edges,
-                                                               dawn::ast::LocationType::Vertices, std::vector<double>{-1, 1}))),
-                  b.stmt(b.assignExpr(
-                      b.at(nabla2t1_vec),
-                      b.binaryExpr(b.binaryExpr(b.at(tangent_orientation),b.at(nabla2t1_vec),Op::multiply), b.at(primal_edge_length), Op::divide))),
-                  b.stmt(b.assignExpr(
-                      b.at(nabla2t2_vec),
-                      b.reduceOverNeighborExpr(Op::plus, b.at(div_vec), b.lit(0.),
-                                               dawn::ast::LocationType::Edges,
-                                               dawn::ast::LocationType::Cells, std::vector<double>{-1, 1}))),
+                                                               dawn::ast::LocationType::Vertices,
+                                                               std::vector<double>{-1, 1}))),
+                  b.stmt(b.assignExpr(b.at(nabla2t1_vec),
+                                      b.binaryExpr(b.binaryExpr(b.at(tangent_orientation),
+                                                                b.at(nabla2t1_vec), Op::multiply),
+                                                   b.at(primal_edge_length), Op::divide))),
+                  b.stmt(b.assignExpr(b.at(nabla2t2_vec),
+                                      b.reduceOverNeighborExpr(Op::plus, b.at(div_vec), b.lit(0.),
+                                                               dawn::ast::LocationType::Edges,
+                                                               dawn::ast::LocationType::Cells,
+                                                               std::vector<double>{-1, 1}))),
                   b.stmt(b.assignExpr(
                       b.at(nabla2t2_vec),
                       b.binaryExpr(b.at(nabla2t2_vec), b.at(dual_edge_length), Op::divide))),
                   b.stmt(b.assignExpr(
                       b.at(nabla2_vec),
-                      b.binaryExpr(b.at(nabla2t1_vec), b.at(nabla2t2_vec), Op::minus)))    
-                      )))));
+                      b.binaryExpr(b.at(nabla2t1_vec), b.at(nabla2t2_vec), Op::minus))))))));
 
   std::ofstream of("prototype/generated_iconLaplace.hpp");
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
