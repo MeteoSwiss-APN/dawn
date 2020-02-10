@@ -3,6 +3,7 @@
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/MultiStage.h"
+#include "dawn/SIR/SIR.h"
 #include <optional>
 
 namespace dawn {
@@ -29,9 +30,10 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
       }
     }
   }
-  // Check Extents
+
   for(const auto& mSPtr : iterateIIROver<iir::MultiStage>(iir)) {
     for(const auto& field : mSPtr->getFields()) {
+      // Check Extents
       std::vector<std::optional<iir::Extents>> extents = {
           field.second.getReadExtents(), field.second.getWriteExtents(),
           field.second.getReadExtentsRB(), field.second.getWriteExtentsRB()};
@@ -40,6 +42,13 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
            extent->horizontalExtent().getType() != iir.getGridType()) {
           return false;
         }
+      }
+
+      // Check FieldDimensions
+      const auto& hDimension = field.second.getFieldDimensions().getHorizontalFieldDimension();
+      if(sir::dimension_isa<const sir::UnstructuredFieldDimension&>(hDimension) &&
+         (iir.getGridType() != ast::GridType::Unstructured)) {
+        return false;
       }
     }
   }
