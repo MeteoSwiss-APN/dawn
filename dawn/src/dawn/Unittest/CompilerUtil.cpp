@@ -58,7 +58,8 @@ CompilerUtil::load(const std::string& irFilename,
     filename = envPath + "/" + filename;
 
   if(filename.find(".sir") != std::string::npos) {
-    return lower(filename, options, context, envPath);
+    stencilInstantiationContext siMap = lower(filename, options, context, envPath);
+    return siMap.begin()->second;
   } else {
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context = std::make_unique<OptimizerContext>(diag_, options, sir);
@@ -66,19 +67,14 @@ CompilerUtil::load(const std::string& irFilename,
   }
 }
 
-std::shared_ptr<iir::StencilInstantiation>
-CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
+stencilInstantiationContext CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context) {
-  //dawn::OptimizerContext::OptimizerContextOptions options;
   context = std::make_unique<OptimizerContext>(diag_, options, sir);
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& map =
-      context->getStencilInstantiationMap();
-  return map.begin()->second;
+  return context->getStencilInstantiationMap();
 }
 
-std::shared_ptr<iir::StencilInstantiation>
-CompilerUtil::lower(const std::string& sirFilename,
+stencilInstantiationContext CompilerUtil::lower(const std::string& sirFilename,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context,
                     const std::string& envPath) {
