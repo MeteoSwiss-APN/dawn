@@ -57,11 +57,11 @@ public:
   load(const std::string& iirFilename,
        const dawn::OptimizerContext::OptimizerContextOptions& options,
        std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
-  static std::shared_ptr<iir::StencilInstantiation>
+  static stencilInstantiationContext
   lower(const std::shared_ptr<dawn::SIR>& sir,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
         std::unique_ptr<OptimizerContext>& context);
-  static std::shared_ptr<iir::StencilInstantiation>
+  static stencilInstantiationContext
   lower(const std::string& sirFilename,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
         std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
