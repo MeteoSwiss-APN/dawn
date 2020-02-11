@@ -27,7 +27,7 @@ using namespace dawn;
 
 namespace {
 
-class TestSIRGT4Py : public ::testing::Test {
+class TestSIRFrontend : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -44,11 +44,11 @@ protected:
   }
 };
 
-TEST_F(TestSIRGT4Py, TridiagonalSolveGTClang) {
+TEST_F(TestSIRFrontend, TridiagonalSolveGTClang) {
   runTest("input/tridiagonal_solve_gtclang.sir", "output/tridiagonal_solve_gtclang.cpp");
 }
 
-TEST_F(TestSIRGT4Py, TridiagonalSolveGT4Py) {
+TEST_F(TestSIRFrontend, TridiagonalSolveGT4Py) {
   runTest("input/tridiagonal_solve_gt4py.sir", "output/tridiagonal_solve_gt4py.cpp");
 }
 

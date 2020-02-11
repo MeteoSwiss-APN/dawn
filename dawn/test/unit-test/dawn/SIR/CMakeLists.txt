@@ -20,7 +20,7 @@ add_executable(${executable}
   TestASTVisitor.cpp
   TestSIR.cpp
   TestSIRSerializer.cpp
-  TestSIRGT4Py.cpp
+  TestSIRFrontend.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnSIR DawnSerialization DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
