@@ -52,4 +52,12 @@ TEST_F(TestSIRFrontend, TridiagonalSolveGT4Py) {
   runTest("input/tridiagonal_solve_gt4py.sir", "output/tridiagonal_solve_gt4py.cpp");
 }
 
+TEST_F(TestSIRFrontend, HorizontalDifferenceGTClang) {
+  runTest("input/horizontal_difference_gtclang.sir", "output/horizontal_difference_gtclang.cpp");
+}
+
+TEST_F(TestSIRFrontend, HorizontalDifferenceGT4Py) {
+  runTest("input/horizontal_difference_gt4py.sir", "output/horizontal_difference_gt4py.cpp");
+}
+
 } // anonymous namespace

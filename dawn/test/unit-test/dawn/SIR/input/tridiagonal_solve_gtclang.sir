@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/eddied/Work/gt4py-jdahm/tridiagonal_solve.cpp",
+ "filename": "tridiagonal_solve.cpp",
  "stencils": [
   {
    "name": "tridiagonal_solve",
