@@ -748,13 +748,13 @@ bool OptimizerContext::restoreIIR(std::string const& name,
   // contained in the DoMethods
   checkAndPushBack<PassSetStageName>();
   checkAndPushBack<PassComputeStageExtents>();
-  if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
-    return false;
+  const bool passed =
+      getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation);
 
   // Clean up the passes just run
-  passManager_.getPasses().clear();
+  getPassManager().getPasses().clear();
 
-  return true;
+  return passed;
 }
 
 } // namespace dawn

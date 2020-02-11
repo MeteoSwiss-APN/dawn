@@ -56,7 +56,7 @@ class GlobalFieldCacher {
 
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
-  /// @param[in, out]  si      Stencil Instantiation holding all the Stencils
+  /// @param[in, out]  si      Stencil Instantiation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
                     const std::shared_ptr<iir::StencilInstantiation>& si, OptimizerContext& context)
       : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()), context_(context) {
@@ -225,7 +225,7 @@ private:
     return assignmentStage;
   }
 
-  ///@brief Add the assignment operator of two unique id's to a given do-Method
+  ///@brief Add the assignment operator of two unique id's to a given doMethod
   void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& doMethod, int assignmentID,
                                int assigneeID) {
     // Create the statement of the assignment with the new and old variables
