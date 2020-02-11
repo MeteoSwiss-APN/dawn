@@ -547,7 +547,7 @@ TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
   // each edge stores 200                     202
   // each face reduces its edges (4 per face) 808
   for(int i = 0; i < mesh.cells().size(); i++) {
-    assert(fabs(v_cells(i, 0) - 808) < 1e3 * std::numeric_limits<double>::epsilon());
+    EXPECT_TRUE(fabs(v_cells(i, 0) - 808) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
 } // namespace
@@ -598,8 +598,63 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
   // this is multiplied by the sparse dim storing 200         200
   // this is reduced by sum onto the cells at 4 eges p cell   800
   for(int i = 0; i < mesh.cells().size(); i++) {
-    assert(fabs(cells_v(i, 0) - 800) < 1e3 * std::numeric_limits<double>::epsilon());
+    EXPECT_TRUE(fabs(cells_v(i, 0) - 800) < 1e3 * std::numeric_limits<double>::epsilon());
   }
+}
+} // namespace
+
+#include <generated_sparseDimensionTwice.hpp>
+namespace {
+TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
+  // The purpose of this test is to ensure that the sparse index is handled correctly
+  // across multiple reductions
+  atlas::StructuredGrid structuredGrid = atlas::Grid("L10x11");
+  atlas::StructuredMeshGenerator generator;
+  auto mesh = generator.generate(structuredGrid);
+  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  const int edgesPerCell = 4;
+
+  int nb_levels = 1;
+  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
+  atlas::Field cellsField{fs_cells.createField<double>(atlas::option::name("cells"))};
+  atlas::Field sparseDimension{fs_cells.createField<double>(
+      atlas::option::name("sparseDimension") | atlas::option::variables(edgesPerCell))};
+
+  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
+  atlas::Field edgesField{fs_edges.createField<double>(atlas::option::name("edges"))};
+
+  atlasInterface::Field<double> cells_v = atlas::array::make_view<double, 2>(cellsField);
+  atlasInterface::Field<double> edges_v = atlas::array::make_view<double, 2>(edgesField);
+  atlasInterface::SparseDimension<double> sparseDim_v =
+      atlas::array::make_view<double, 3>(sparseDimension);
+
+  const int level = 0;
+  for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
+    cells_v(iCell, level) = 0;
+    for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
+      sparseDim_v(iCell, jNbh, level) = 200;
+    }
+  }
+
+  for(int iEdge = 0; iEdge < mesh.edges().size(); iEdge++) {
+    edges_v(iEdge, level) = 1;
+  }
+
+  dawn_generated::cxxnaiveico::sparseDimensionTwice<atlasInterface::atlasTag>(
+      mesh, nb_levels, cells_v, edges_v, sparseDim_v)
+      .run();
+
+  // each edge stores 1                                                1
+  // this is multiplied by the sparse dim storing 200                200
+  // this is reduced by sum onto the cells at 4 eges p cell          800
+  for(int i = 0; i < mesh.cells().size(); i++) {
+    EXPECT_TRUE(fabs(cells_v(i, 0) - 800) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+  // NOTE that the second reduction simply overwrites the result of the first one since there is
+  // "+=" in the IIRBuilder currently
 }
 } // namespace
 

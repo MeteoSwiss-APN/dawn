@@ -112,6 +112,8 @@ add_library(DawnIIR
   IIR.h
   IIRNode.h
   IIRNodeIterator.h
+  LocalVariable.cpp
+  LocalVariable.h
   LoopOrder.cpp
   LoopOrder.h
   MultiInterval.cpp

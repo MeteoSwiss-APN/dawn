@@ -49,7 +49,7 @@ fi
 CMAKE_ARGS="-DBUILD_TESTING=ON \
             -DProtobuf_DIR=${PROTOBUFDIR} \
             -DPROTOBUF_PYTHON_MODULE_DIR=${PROTOBUFDIR}/../../../python \
-            -DGTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON \
+            -DDAWN_REQUIRE_UNSTRUCTURED_TESTING=ON \
             -DDAWN_REQUIRE_PYTHON=ON \
             -Datlas_DIR=${ATLAS_DIR}/lib/cmake/atlas \
             -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit \

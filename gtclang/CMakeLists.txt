@@ -41,9 +41,6 @@ include(CMakeDependentOption)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(ENABLE_CUDA_IF_FOUND "Enable CUDA if it is detected" ON)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
-# By default unstructured integration tests are not built if atlas or eckit is not found.
-# GTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON will force an error if atlas or eckit are not found.
-option(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING "Require building tests for unstructured grids." OFF)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
