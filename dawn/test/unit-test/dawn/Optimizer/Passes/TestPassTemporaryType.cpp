@@ -41,7 +41,7 @@ protected:
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     // Run prerequisite tests
-    ASSERT_TRUE(CompilerUtil::runPasses(5, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation, 5));
 
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassTemporaryType>(context_, instantiation));

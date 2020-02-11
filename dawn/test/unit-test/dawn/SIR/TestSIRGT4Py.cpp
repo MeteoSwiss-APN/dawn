@@ -19,7 +19,6 @@
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
-//#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -33,15 +32,24 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runTest(const std::string& filename) {
+  void runTest(const std::string& irFilename, const std::string& srcFilename = "") {
     std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(filename, options_, context_);
-    SUCCEED();
+        CompilerUtil::load(irFilename, options_, context_);
+
+    // Run all passes
+    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation));
+
+    // Code gen...
+    ASSERT_TRUE(CompilerUtil::generate(context_, srcFilename));
   }
 };
 
-TEST_F(TestSIRGT4Py, TridiagonalSolveGTClang) { runTest("input/tridiagonal_solve_gtclang.sir"); }
+TEST_F(TestSIRGT4Py, TridiagonalSolveGTClang) {
+  runTest("input/tridiagonal_solve_gtclang.sir", "output/tridiagonal_solve_gtclang.cpp");
+}
 
-TEST_F(TestSIRGT4Py, TridiagonalSolveGT4Py) { runTest("input/tridiagonal_solve_gt4py.sir"); }
+TEST_F(TestSIRGT4Py, TridiagonalSolveGT4Py) {
+  runTest("input/tridiagonal_solve_gt4py.sir", "output/tridiagonal_solve_gt4py.cpp");
+}
 
 } // anonymous namespace

@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "tridiagonal_solve.cpp",
+ "filename": "/home/eddied/Work/gt4py-jdahm/tridiagonal_solve.cpp",
  "stencils": [
   {
    "name": "tridiagonal_solve",
@@ -861,7 +861,7 @@
            "special_lower_level": "Start",
            "special_upper_level": "End"
           },
-          "loop_order": "Forward"
+          "loop_order": "Backward"
          },
          "loc": {
           "Line": 35,
@@ -966,7 +966,7 @@
            "special_lower_level": "End",
            "special_upper_level": "End"
           },
-          "loop_order": "Forward"
+          "loop_order": "Backward"
          },
          "loc": {
           "Line": 39,

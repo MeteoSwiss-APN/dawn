@@ -598,7 +598,7 @@
               "mask_cart_i": 1,
               "mask_cart_j": 1
             },
-            "maskK": 1
+            "mask_k": 1
           }
         },
         {
@@ -608,7 +608,7 @@
               "mask_cart_i": 1,
               "mask_cart_j": 1
             },
-            "maskK": 1
+            "mask_k": 1
           }
         },
         {
@@ -618,7 +618,7 @@
               "mask_cart_i": 1,
               "mask_cart_j": 1
             },
-            "maskK": 1
+            "mask_k": 1
           }
         },
         {
@@ -628,7 +628,7 @@
               "mask_cart_i": 1,
               "mask_cart_j": 1
             },
-            "maskK": 1
+            "mask_k": 1
           }
         },
         {
@@ -638,12 +638,12 @@
               "mask_cart_i": 1,
               "mask_cart_j": 1
             },
-            "maskK": 1
+            "mask_k": 1
           }
         }
       ],
       "name": "tridiagonal_solve"
     }
   ],
-  "globalVariables": {}
+  "global_variables": {}
 }

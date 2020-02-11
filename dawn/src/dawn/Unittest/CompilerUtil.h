@@ -64,11 +64,12 @@ public:
   static std::shared_ptr<iir::StencilInstantiation>
   lower(const std::string& sirFilename,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
-        std::unique_ptr<OptimizerContext>& context,
-        const std::string& envPath = "");
+        std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
   static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
   static stencilInstantiationContext compile(const std::string& sirFile);
   static void clearDiags();
+  static bool generate(const std::unique_ptr<OptimizerContext>& context,
+                       const std::string& outFile = "");
   static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
   static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
 
@@ -90,8 +91,9 @@ public:
     return pass.run(instantiation);
   }
 
-  static bool runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
-                       std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
+  static bool runPasses(std::unique_ptr<OptimizerContext>& context,
+                        std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
+                        unsigned nPasses = 100);
 
   static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
                                                         std::unique_ptr<OptimizerContext>& context);

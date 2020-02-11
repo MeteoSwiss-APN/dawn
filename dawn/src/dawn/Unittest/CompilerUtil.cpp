@@ -70,7 +70,7 @@ std::shared_ptr<iir::StencilInstantiation>
 CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context) {
-  //dawn::OptimizerContext::OptimizerContextOptions options;
+  // dawn::OptimizerContext::OptimizerContextOptions options;
   context = std::make_unique<OptimizerContext>(diag_, options, sir);
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& map =
       context->getStencilInstantiationMap();
@@ -80,8 +80,7 @@ CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
 std::shared_ptr<iir::StencilInstantiation>
 CompilerUtil::lower(const std::string& sirFilename,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
-                    std::unique_ptr<OptimizerContext>& context,
-                    const std::string& envPath) {
+                    std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
   std::string filename = sirFilename;
   if(!envPath.empty() && filename.at(0) != '/')
     filename = envPath + "/" + filename;
@@ -110,8 +109,38 @@ stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
   return compile(sir);
 }
 
-void CompilerUtil::clearDiags() {
-  diag_.clear();
+void CompilerUtil::clearDiags() { diag_.clear(); }
+
+bool CompilerUtil::generate(const std::unique_ptr<OptimizerContext>& context,
+                            const std::string& outFile) {
+  std::unique_ptr<dawn::codegen::TranslationUnit> tu;
+  dawn::DiagnosticsEngine diagnostics;
+  auto& stencilMap = context->getStencilInstantiationMap();
+
+  if(outFile.find(".cu") != std::string::npos) {
+    dawn::codegen::cuda::CudaCodeGen generator(stencilMap, diagnostics, 0, 0, 0, {0, 0, 0});
+    tu = generator.generateCode();
+  } else {
+    dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(stencilMap, diagnostics, 0);
+    tu = generator.generateCode();
+  }
+
+  std::ostringstream ss;
+  for(auto const& macroDefine : tu->getPPDefines())
+    ss << macroDefine << "\n";
+
+  ss << tu->getGlobals();
+  for(auto const& s : tu->getStencils())
+    ss << s.second;
+
+  if(outFile.empty()) {
+    std::cerr << ss.str();
+  } else {
+    std::ofstream ofs(outFile.c_str());
+    ofs << ss.str();
+  }
+
+  return ss.str().size() > 0;
 }
 
 void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
@@ -231,8 +260,9 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
   return passes;
 }
 
-bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
-                      std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation) {
+bool CompilerUtil::runPasses(std::unique_ptr<OptimizerContext>& context,
+                             std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
+                             unsigned nPasses) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
   auto inlineStrategy = dawn::PassInlining::InlineStrategy::InlineProcedures;
   auto reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
