@@ -17,8 +17,8 @@ import re
 import shutil
 import subprocess
 import sys
-import glob
 
+from glob import glob
 from distutils.version import LooseVersion
 from setuptools import setup, find_packages, Command, Extension
 from setuptools.command.build_ext import build_ext
@@ -90,35 +90,41 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default="")
-        has_irs_in_build_lib = (
+        # Source is here
+        src_dir = os.path.join(DAWN_DIR, "src") if self.inplace else self.build_lib
+
+        # Build dir is here
+        build_dir = os.getenv("DAWN_BUILD_DIR", default="")
+
+        # Dest dir is here
+        dest_dir = src_dir if self.inplace else self.build_lib
+
+        has_irs_in_place = (
             len(
-                glob.glob(
-                    os.path.join(self.build_lib, "dawn4py", "serialization") + "/**/*_pb2.py",
+                glob(
+                    os.path.join(dest_dir, "dawn4py", "serialization") + "/**/*_pb2.py",
                     recursive=True,
                 )
             )
             > 0
         )
 
-        # Check if the extensions exist in the build dir and protos were copied over
+        # Check if the extensions exist in the build_dir and protos were copied over (in src_dir)
         if (
-            dawn_build_dir
-            and has_irs_in_build_lib
+            build_dir is not ""
+            and has_irs_in_place
             and all(
                 [
-                    os.path.exists(
-                        os.path.join(dawn_build_dir, "src", self.get_ext_filename(ext.name))
-                    )
+                    os.path.exists(os.path.join(build_dir, "src", self.get_ext_filename(ext.name)))
                     for ext in self.extensions
                 ]
             )
         ):
-            # All that we need to do is copy over the library
+            # All that we need to do is copy over the library to dest_dir
             for ext in self.extensions:
                 self.copy_file(
-                    os.path.join(dawn_build_dir, "src", self.get_ext_filename(ext.name)),
-                    os.path.join(self.build_lib, self.get_ext_filename(ext.name)),
+                    os.path.join(build_dir, "src", self.get_ext_filename(ext.name)),
+                    os.path.join(dest_dir, self.get_ext_filename(ext.name)),
                 )
 
         else:
