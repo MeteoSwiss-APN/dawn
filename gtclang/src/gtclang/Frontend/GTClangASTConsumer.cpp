@@ -19,6 +19,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Config.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -152,24 +153,17 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   // Determine filename of generated file (by default we append "_gen" to the filename)
-  std::string generatedFilename;
+  std::string generatedFileName;
   if(context_->getOptions().OutputFile.empty())
-    generatedFilename = llvm::StringRef(file_).split(".cpp").first.str() + "_gen.cpp";
+    generatedFileName = std::string(fs::path(file_).filename().stem()) + "_gen.cpp";
   else {
-    const auto& OutputFile = context_->getOptions().OutputFile;
-    llvm::SmallVector<char, 40> path(OutputFile.data(), OutputFile.data() + OutputFile.size());
-    llvm::sys::fs::make_absolute(path);
-    generatedFilename.assign(path.data(), path.size());
+    generatedFileName = context_->getOptions().OutputFile;
   }
 
   if(context_->getOptions().WriteSIR) {
-    llvm::SmallVector<char, 40> filename = llvm::SmallVector<char, 40>(
-        generatedFilename.data(), generatedFilename.data() + generatedFilename.size());
-
-    llvm::sys::path::replace_extension(filename, llvm::Twine(".sir"));
-
-    std::string generatedSIR(filename.data(), filename.data() + filename.size());
-    DAWN_LOG(INFO) << "Generating SIR file " << generatedFilename;
+    const std::string generatedSIR =
+        std::string(fs::path(generatedFileName).filename().stem()) + ".sir";
+    DAWN_LOG(INFO) << "Generating SIR file " << generatedSIR;
 
     if(context_->getOptions().SIRFormat == "json") {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
@@ -214,9 +208,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
         llvm::MemoryBuffer::getMemBufferCopy(SM.getBufferData(SM.getMainFileID()));
 
     // Create the generated file
-    DAWN_LOG(INFO) << "Creating generated file " << generatedFilename;
+    DAWN_LOG(INFO) << "Creating generated file " << generatedFileName;
     clang::FileID generatedFileID =
-        createInMemoryFile(generatedFilename, generatedCode.get(), sources, files, memFS.get());
+        createInMemoryFile(generatedFileName, generatedCode.get(), sources, files, memFS.get());
 
     // Replace clang DSL with gridtools
     clang::Rewriter rewriter(sources, context_->getASTContext().getLangOpts());
@@ -297,7 +291,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().OutputFile.empty()) {
     ost = std::make_shared<llvm::raw_os_ostream>(std::cout);
   } else {
-    ost = std::make_shared<llvm::raw_fd_ostream>(generatedFilename, ec, flags);
+    ost = std::make_shared<llvm::raw_fd_ostream>(generatedFileName, ec, flags);
   }
 
   // Write file to specified output

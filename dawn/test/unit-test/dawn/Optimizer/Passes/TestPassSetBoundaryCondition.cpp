@@ -56,7 +56,7 @@ protected:
     // Run the optimization
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
 
-    // Report diganostics
+    // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
         std::cerr << "Compilation Error " << diag->getMessage() << std::endl;

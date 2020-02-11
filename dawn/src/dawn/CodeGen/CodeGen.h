@@ -33,7 +33,7 @@ using stencilInstantiationContext =
 /// @ingroup codegen
 class CodeGen {
 protected:
-  const stencilInstantiationContext context_;
+  const stencilInstantiationContext& context_;
   DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;
@@ -72,8 +72,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints)
-      : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
+  CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints);
   virtual ~CodeGen() {}
 
   /// @brief Generate code
