@@ -73,7 +73,7 @@ void dump(CG& generator, std::ostream& os, std::shared_ptr<iir::StencilInstantia
 }
 
 dawn::codegen::stencilInstantiationContext
-si_to_context(std::shared_ptr<iir::StencilInstantiation> si) {
+siToContext(std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::codegen::stencilInstantiationContext ctx;
   ctx[si->getName()] = std::move(si);
   return ctx;
@@ -83,19 +83,19 @@ si_to_context(std::shared_ptr<iir::StencilInstantiation> si) {
 
 void CompilerUtil::dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
-  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(si_to_context(si), diagnostics, 0);
+  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(siToContext(si), diagnostics, 0);
   dump(generator, os, si);
 }
 
 void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
-  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(si_to_context(si), diagnostics, 0);
+  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(siToContext(si), diagnostics, 0);
   dump(generator, os, si);
 }
 
 void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
-  dawn::codegen::cuda::CudaCodeGen generator(si_to_context(si), diagnostics, 0, 0, 0, {0, 0, 0});
+  dawn::codegen::cuda::CudaCodeGen generator(siToContext(si), diagnostics, 0, 0, 0, {0, 0, 0});
   dump(generator, os, si);
 }
 
