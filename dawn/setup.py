@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import sys
+import glob
 
 from distutils.version import LooseVersion
 from setuptools import setup, find_packages, Command, Extension
@@ -89,24 +90,27 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default=None)
-        py_protos = [x + "_pb2.py" for x in ("IIR/IIR", "SIR/SIR", "SIR/statements", "SIR/enums")]
+        dawn_build_dir = os.getenv("DAWN_BUILD_DIR", default="")
+        has_irs_in_build_lib = (
+            len(
+                glob.glob(
+                    os.path.join(self.build_lib, "dawn4py", "serialization") + "/**/*_pb2.py",
+                    recursive=True,
+                )
+            )
+            > 0
+        )
 
         # Check if the extensions exist in the build dir and protos were copied over
         if (
             dawn_build_dir
+            and has_irs_in_build_lib
             and all(
                 [
                     os.path.exists(
                         os.path.join(dawn_build_dir, "src", self.get_ext_filename(ext.name))
                     )
                     for ext in self.extensions
-                ]
-            )
-            and all(
-                [
-                    os.path.exists(os.path.join(self.build_lib, "dawn4py", "serialization", x))
-                    for x in py_protos
                 ]
             )
         ):
