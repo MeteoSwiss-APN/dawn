@@ -29,7 +29,7 @@ using namespace dawn;
 
 namespace {
 
-class TestPassIntervalPartitioner : public ::testing::Test {
+class TestPassIntervalPartitioning : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
@@ -46,7 +46,7 @@ protected:
   }
 };
 
-TEST_F(TestPassIntervalPartitioner, test_interval_partition) {
+TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
   std::shared_ptr<iir::StencilInstantiation> instantiation = CompilerUtil::load(
       "input/test_interval_partition.sir", options_, context_, TestEnvironment::path_);
 
