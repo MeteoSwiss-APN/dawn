@@ -21,9 +21,7 @@
 
 namespace dawn {
 
-PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {
-  dependencies_.push_back("PassComputeStageExtents");
-}
+PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {}
 
 bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& IIR = stencilInstantiation->getIIR();
