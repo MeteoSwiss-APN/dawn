@@ -14,6 +14,7 @@
 
 #include "dawn/AST/Tags.h"
 #include "dawn/IIR/ASTFwd.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
@@ -24,7 +25,7 @@ using namespace dawn;
 
 namespace {
 
-TEST(GridTypeCheckerTest, MixedGridTypes) {
+TEST(GridTypeCheckerTest, MixedGridTypesOffset) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -56,6 +57,24 @@ TEST(GridTypeCheckerTest, MixedGridTypes) {
   // lets ensure that the grid type checking now fails
   GridTypeChecker checker;
   bool consistent = checker.checkGridTypeConsistency(*si->getIIR());
+  ASSERT_FALSE(consistent);
+}
+
+TEST(GridTypeCheckerTest, MixedGridTypesFieldDimensions) {
+  dawn::SIR sir(ast::GridType::Cartesian);
+  auto sten = std::make_shared<sir::Stencil>();
+  auto field = std::make_shared<dawn::sir::Field>(
+      "unstrcturedField",
+      sir::FieldDimensions(
+          sir::HorizontalFieldDimension(dawn::ast::unstructured_{},
+                                        {ast::LocationType::Cells, ast::LocationType::Edges}),
+          true));
+  sten->Fields.push_back(field);
+  sir.Stencils.push_back(sten);
+
+  // lets ensure that the grid type checking now fails
+  GridTypeChecker checker;
+  bool consistent = checker.checkGridTypeConsistency(sir);
   ASSERT_FALSE(consistent);
 }
 

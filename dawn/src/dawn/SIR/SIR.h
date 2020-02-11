@@ -250,6 +250,8 @@ public:
 
   bool operator==(const HorizontalFieldDimension& other) const { return *impl_ == *other.impl_; }
 
+  ast::GridType getType() const;
+
   template <typename T>
   friend T dimension_cast(HorizontalFieldDimension const& dimension);
   template <typename T>
