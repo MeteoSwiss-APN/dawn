@@ -23,9 +23,7 @@
 namespace dawn {
 
 PassComputeStageExtents::PassComputeStageExtents(OptimizerContext& context)
-    : Pass(context, "PassComputeStageExtents", true) {
-  dependencies_.push_back("PassSetStageName");
-}
+    : Pass(context, "PassComputeStageExtents", true) {}
 
 bool PassComputeStageExtents::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

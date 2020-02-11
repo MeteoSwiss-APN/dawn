@@ -4,6 +4,11 @@
 
 namespace dawn {
 namespace codegen {
+
+CodeGen::CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                 int maxHaloPoints)
+    : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {}
+
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
