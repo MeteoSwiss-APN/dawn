@@ -145,7 +145,7 @@ static bool shouldRunPass(const Options& options, bool runSpecificPass) {
 
 } // namespace
 
-DawnCompiler::DawnCompiler(const Options& options) : options_(options), diagnostics_() {}
+DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {

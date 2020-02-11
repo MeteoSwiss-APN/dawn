@@ -29,8 +29,8 @@ struct SIR;
 /// @brief The DawnCompiler class
 /// @ingroup compiler
 class DawnCompiler : NonCopyable {
-  Options options_;
   DiagnosticsEngine diagnostics_;
+  Options options_;
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics
