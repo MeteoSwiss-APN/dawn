@@ -67,17 +67,18 @@ CompilerUtil::load(const std::string& irFilename,
   }
 }
 
-stencilInstantiationContext CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
+stencilInstantiationContext
+CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context) {
   context = std::make_unique<OptimizerContext>(diag_, options, sir);
   return context->getStencilInstantiationMap();
 }
 
-stencilInstantiationContext CompilerUtil::lower(const std::string& sirFilename,
+stencilInstantiationContext
+CompilerUtil::lower(const std::string& sirFilename,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
-                    std::unique_ptr<OptimizerContext>& context,
-                    const std::string& envPath) {
+                    std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
   std::string filename = sirFilename;
   if(!envPath.empty() && filename.at(0) != '/')
     filename = envPath + "/" + filename;
@@ -106,9 +107,7 @@ stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
   return compile(sir);
 }
 
-void CompilerUtil::clearDiags() {
-  diag_.clear();
-}
+void CompilerUtil::clearDiags() { diag_.clear(); }
 
 void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
   using CG = dawn::codegen::cxxnaive::CXXNaiveCodeGen;
@@ -228,7 +227,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
 }
 
 bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
-                      std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation) {
+                             std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
   auto inlineStrategy = dawn::PassInlining::InlineStrategy::InlineProcedures;
   auto reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;

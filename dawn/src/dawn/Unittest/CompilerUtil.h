@@ -64,8 +64,7 @@ public:
   static stencilInstantiationContext
   lower(const std::string& sirFilename,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
-        std::unique_ptr<OptimizerContext>& context,
-        const std::string& envPath = "");
+        std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
   static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
   static stencilInstantiationContext compile(const std::string& sirFile);
   static void clearDiags();
@@ -91,7 +90,7 @@ public:
   }
 
   static bool runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
-                       std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
+                        std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
 
   static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
                                                         std::unique_ptr<OptimizerContext>& context);
