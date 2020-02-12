@@ -318,7 +318,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassLocalVarType) and expect exception to be thrown
+  // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType(optimizer);
   passLocalVarType.run(stencil);
 
@@ -371,7 +371,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassLocalVarType) and expect exception to be thrown
+  // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType(optimizer);
   passLocalVarType.run(stencil);
 
@@ -385,6 +385,198 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
   ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).isScalar());
   // Need to check that varC has been flagged as scalar
   ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).isScalar());
+}
+
+TEST(TestLocalVarType, test_unstructured_if_condition_01) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+  auto varB = b.localvar("varB", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varC = b.localvar("varC", dawn::BuiltinTypeID::Double, {b.lit(0.0)});
+
+  /// field(edges) f_e;
+  /// double varA = 2.0;
+  /// double varB = 1.0;
+  /// if(f_e > 0.0) {
+  ///    varA = 3.0;
+  /// } else {
+  ///    varB = 5.0;
+  ///    double varC = 0.0;
+  /// }
+
+  auto stencil =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  dawn::iir::LoopOrderKind::Forward,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.declareVar(varA), b.declareVar(varB),
+                                     b.ifStmt(b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
+                                              b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(3.0)))),
+                                              b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(5.0))),
+                                                      b.declareVar(varC))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType)
+  PassLocalVarType passLocalVarType(optimizer);
+  passLocalVarType.run(stencil);
+
+  int varAID = stencil->getMetaData().getAccessIDFromName("varA");
+  int varBID = stencil->getMetaData().getAccessIDFromName("varB");
+  int varCID = stencil->getMetaData().getAccessIDFromName("varC");
+  // Need to check that varA has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
+              ast::LocationType::Edges);
+  // Need to check that varB has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
+              ast::LocationType::Edges);
+  // Need to check that varC has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType() ==
+              ast::LocationType::Edges);
+}
+
+TEST(TestLocalVarType, test_unstructured_if_condition_02) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.at(f_e)});
+  auto varB = b.localvar("varB", dawn::BuiltinTypeID::Double, {b.at(f_e)});
+  auto varC = b.localvar("varC", dawn::BuiltinTypeID::Double, {b.at(f_e)});
+
+  /// field(edges) f_e;
+  /// double varA = f_e;
+  /// double varB = f_e;
+  /// if(f_e > 0.0) {
+  ///    varA = 3.0;
+  /// } else {
+  ///    varB = 5.0;
+  ///    double varC = f_e;
+  /// }
+
+  auto stencil =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  dawn::iir::LoopOrderKind::Forward,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.declareVar(varA), b.declareVar(varB),
+                                     b.ifStmt(b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
+                                              b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(3.0)))),
+                                              b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(5.0))),
+                                                      b.declareVar(varC))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType)
+  PassLocalVarType passLocalVarType(optimizer);
+  passLocalVarType.run(stencil);
+
+  int varAID = stencil->getMetaData().getAccessIDFromName("varA");
+  int varBID = stencil->getMetaData().getAccessIDFromName("varB");
+  int varCID = stencil->getMetaData().getAccessIDFromName("varC");
+  // Need to check that varA has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
+              ast::LocationType::Edges);
+  // Need to check that varB has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
+              ast::LocationType::Edges);
+  // Need to check that varC has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType() ==
+              ast::LocationType::Edges);
+}
+
+TEST(TestLocalVarType, test_unstructured_if_condition_03) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varB = b.localvar("varB", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+
+  /// field(edges) f_e;
+  /// double varA = 1.0;
+  /// double varB = 2.0;
+  /// if(varA > 0.0) {
+  ///    varB = 3.0;
+  /// }
+  /// varA = f_e;
+
+  auto stencil = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Forward,
+          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.declareVar(varA), b.declareVar(varB),
+                             b.ifStmt(b.binaryExpr(b.at(varA), b.lit(0.0), Op::greater),
+                                      b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(3.0))))),
+                             b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType)
+  PassLocalVarType passLocalVarType(optimizer);
+  passLocalVarType.run(stencil);
+
+  int varAID = stencil->getMetaData().getAccessIDFromName("varA");
+  int varBID = stencil->getMetaData().getAccessIDFromName("varB");
+  // Need to check that varA has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
+              ast::LocationType::Edges);
+  // Need to check that varB has been flagged as OnEdges
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
+              ast::LocationType::Edges);
+}
+
+TEST(TestLocalVarType, test_unstructured_reduction_01) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+
+  /// field(edges) f_e;
+  /// double varA = 1.0;
+  /// varA = reduceEdgesToCells(op = +, init = 0.0, rhs = f_e);
+
+  auto stencil =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  dawn::iir::LoopOrderKind::Forward,
+                  b.stage(b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                      b.stmt(b.assignExpr(b.at(varA),
+                                          b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
+                                                                   ast::LocationType::Cells,
+                                                                   ast::LocationType::Edges))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType)
+  PassLocalVarType passLocalVarType(optimizer);
+  passLocalVarType.run(stencil);
+
+  int varAID = stencil->getMetaData().getAccessIDFromName("varA");
+  // Need to check that varA has been flagged as OnCells
+  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
+              ast::LocationType::Cells);
 }
 
 TEST(TestLocalVarType, test_throw_unstructured_01) {
@@ -484,6 +676,113 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
                                      b.stmt(b.assignExpr(b.at(varC), b.at(varB))),
                                      b.stmt(b.assignExpr(b.at(varA), b.at(f_c))),
                                      b.stmt(b.assignExpr(b.at(varC), b.at(f_e))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType) and expect exception to be thrown
+  PassLocalVarType passLocalVarType(optimizer);
+  EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
+}
+
+TEST(TestLocalVarType, test_throw_unstructured_04) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_c = b.field("f_c", ast::LocationType::Cells);
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.at(f_e)});
+
+  /// field(cells) f_c;
+  /// field(edges) f_e;
+  /// double varA = f_e;
+  /// if(f_c > 0.0) {
+  ///    varA = 1.0;
+  /// }
+
+  auto stencil = b.build(
+      "generated", b.stencil(b.multistage(
+                       dawn::iir::LoopOrderKind::Forward,
+                       b.stage(b.doMethod(
+                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
+                                    b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(1.0))))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType) and expect exception to be thrown
+  PassLocalVarType passLocalVarType(optimizer);
+  EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
+}
+
+TEST(TestLocalVarType, test_throw_unstructured_05) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_c = b.field("f_c", ast::LocationType::Cells);
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+  auto varB = b.localvar("varB", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+
+  /// field(cells) f_c;
+  /// field(edges) f_e;
+  /// double varA = 2.0;
+  /// double varB = 1.0;
+  /// if(varA > 0.0) {
+  ///    varB = f_c;
+  /// }
+  /// varA = f_e;
+
+  auto stencil =
+      b.build("generated",
+              b.stencil(b.multistage(
+                  dawn::iir::LoopOrderKind::Forward,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.declareVar(varA), b.declareVar(varB),
+                                     b.ifStmt(b.binaryExpr(b.at(varA), b.lit(0.0), Op::greater),
+                                              b.block(b.stmt(b.assignExpr(b.at(varB), b.at(f_c))))),
+                                     b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  // run single pass (PassLocalVarType) and expect exception to be thrown
+  PassLocalVarType passLocalVarType(optimizer);
+  EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
+}
+
+TEST(TestLocalVarType, test_throw_unstructured_06) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_e = b.field("f_e", ast::LocationType::Edges);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+
+  /// field(edges) f_e;
+  /// double varA = 1.0;
+  /// varA = reduceEdgesToCells(op = +, init = 0.0, rhs = f_e);
+  /// varA = f_e;
+
+  auto stencil = b.build(
+      "generated", b.stencil(b.multistage(
+                       dawn::iir::LoopOrderKind::Forward,
+                       b.stage(b.doMethod(
+                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           b.stmt(b.assignExpr(
+                               b.at(varA), b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
+                                                                    ast::LocationType::Cells,
+                                                                    ast::LocationType::Edges))),
+                           b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
