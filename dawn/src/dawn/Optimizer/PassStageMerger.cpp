@@ -49,7 +49,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     iir::Stencil& stencil = *stencilPtr;
     auto stencilAxis = stencil.getAxis(false);
 
-    // Do we need to run the analysis for thist stencil?
+    // Do we need to run the analysis for this stencil?
     const std::shared_ptr<iir::DependencyGraphStage>& stageDAG = stencil.getStageDependencyGraph();
     bool MergeDoMethodsOfStencil =
         stencil.getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods) || MergeDoMethods;
@@ -60,7 +60,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     if(!MergeStagesOfStencil && !MergeDoMethodsOfStencil)
       continue;
 
-    // Note that the underyling assumption is that stages in the same multi-stage are guaranteed to
+    // Note that the underlying assumption is that stages in the same multi-stage are guaranteed to
     // have no counter loop-oorder vertical dependencies. We can thus treat each multi-stage in
     // isolation!
     for(const auto& multiStagePtr : stencil.getChildren()) {
@@ -117,12 +117,12 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
               if(candidateDoMethodIt != candidateStage.childrenEnd()) {
 
-                // Check if we can append our `curDoMethod` to that `candiateDoMethod`. We need
+                // Check if we can append our `curDoMethod` to that `candidateDoMethod`. We need
                 // to check if the resulting dep. graph is a DAG and does not contain any horizontal
                 // dependencies
-                iir::DoMethod& candiateDoMethod = **candidateDoMethodIt;
+                iir::DoMethod& candidateDoMethod = **candidateDoMethodIt;
 
-                auto& candiateDepGraph = candiateDoMethod.getDependencyGraph();
+                auto& candiateDepGraph = candidateDoMethod.getDependencyGraph();
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
                 auto newDepGraph = std::make_shared<iir::DependencyGraphAccesses>(
