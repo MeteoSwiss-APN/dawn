@@ -42,7 +42,7 @@ TEST(TestCaching, test_global_iteration_space_01) {
   auto in = b.field("in_field", FieldType::ijk);
   auto tmp = b.tmpField("tmp", FieldType::ijk);
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -50,7 +50,6 @@ TEST(TestCaching, test_global_iteration_space_01) {
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
                   b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
-  auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
   OptimizerContext::OptimizerContextOptions optimizerOptions;
@@ -86,7 +85,7 @@ TEST(TestCaching, test_global_iteration_space_02) {
   auto in = b.field("in_field", FieldType::ijk);
   auto tmp = b.tmpField("tmp", FieldType::ijk);
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -96,7 +95,6 @@ TEST(TestCaching, test_global_iteration_space_02) {
                   b.stage(Interval(2, 8), Interval(3, 10),
                           b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
-  auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
   OptimizerContext::OptimizerContextOptions optimizerOptions;
@@ -133,7 +131,7 @@ TEST(TestCaching, test_global_iteration_space_03) {
   auto in = b.field("in_field", FieldType::ijk);
   auto tmp = b.tmpField("tmp", FieldType::ijk);
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -143,7 +141,6 @@ TEST(TestCaching, test_global_iteration_space_03) {
                   b.stage(Interval(2, 12), Interval(10, 13),
                           b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
-  auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
   Options compileOptions;
@@ -178,7 +175,7 @@ TEST(TestCaching, test_global_iteration_space_04) {
   auto in = b.field("in_field", FieldType::ijk);
   auto tmp = b.tmpField("tmp", FieldType::ijk);
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -187,7 +184,6 @@ TEST(TestCaching, test_global_iteration_space_04) {
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
                   b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
-  auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
   OptimizerContext::OptimizerContextOptions optimizerOptions;
@@ -221,7 +217,7 @@ TEST(TestCaching, test_global_iteration_space_05) {
   auto in = b.field("in_field", FieldType::ijk);
   auto tmp = b.tmpField("tmp", FieldType::ijk);
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -230,7 +226,6 @@ TEST(TestCaching, test_global_iteration_space_05) {
                   b.stage(Interval(0, 10), Interval(0, 10),
                           b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
-  auto stencil = stencilInstantiationContext.at(stencilName.c_str());
 
   // dummy options
   OptimizerContext::OptimizerContextOptions optimizerOptions;

@@ -39,6 +39,10 @@
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 
+#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
+
 namespace dawn {
 
 bool CompilerUtil::Verbose;
@@ -109,10 +113,9 @@ stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
 
 void CompilerUtil::clearDiags() { diag_.clear(); }
 
-void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
-  using CG = dawn::codegen::cxxnaive::CXXNaiveCodeGen;
-  dawn::DiagnosticsEngine diagnostics;
-  CG generator(ctx, diagnostics, 0);
+namespace {
+template <typename CG>
+void dump(CG& generator, std::ostream& os) {
   auto tu = generator.generateCode();
 
   std::ostringstream ss;
@@ -125,20 +128,34 @@ void CompilerUtil::dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiati
   os << ss.str();
 }
 
-void CompilerUtil::dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
-  using CG = dawn::codegen::cuda::CudaCodeGen;
+dawn::codegen::stencilInstantiationContext
+siToContext(std::shared_ptr<iir::StencilInstantiation> si) {
+  dawn::codegen::stencilInstantiationContext ctx;
+  ctx[si->getName()] = si;
+  return ctx;
+}
+
+} // namespace
+
+void CompilerUtil::dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
-  CG generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
-  auto tu = generator.generateCode();
+  auto ctx = siToContext(si);
+  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(ctx, diagnostics, 0);
+  dump(generator, os);
+}
 
-  std::ostringstream ss;
-  for(auto const& macroDefine : tu->getPPDefines())
-    ss << macroDefine << "\n";
+void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
+  dawn::DiagnosticsEngine diagnostics;
+  auto ctx = siToContext(si);
+  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(ctx, diagnostics, 0);
+  dump(generator, os);
+}
 
-  ss << tu->getGlobals();
-  for(auto const& s : tu->getStencils())
-    ss << s.second;
-  os << ss.str();
+void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
+  dawn::DiagnosticsEngine diagnostics;
+  auto ctx = siToContext(si);
+  dawn::codegen::cuda::CudaCodeGen generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
+  dump(generator, os);
 }
 
 std::vector<std::shared_ptr<Pass>>
