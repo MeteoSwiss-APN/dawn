@@ -99,6 +99,17 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
     recursivePropagate(accessID);
   }
 
+  iir::LocalVariableType localVarTypeFromLocationType(ast::LocationType locationType) {
+    switch(locationType) {
+    case ast::LocationType::Cells:
+      return iir::LocalVariableType::OnCells;
+    case ast::LocationType::Edges:
+      return iir::LocalVariableType::OnEdges;
+    case ast::LocationType::Vertices:
+      return iir::LocalVariableType::OnVertices;
+    }
+  }
+
   // Construct a LocalVariableType from a field accessed within an assignment to / declaration of a
   // local variable.
   iir::LocalVariableType inferLocalVarTypeFromField(int fieldAccessID) {
@@ -110,17 +121,8 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
       type = iir::LocalVariableType::OnIJ;
     } else {
       // Unstructured case, convert from location type
-      switch(metadata_.getDenseLocationTypeFromAccessID(fieldAccessID)) {
-      case ast::LocationType::Cells:
-        type = iir::LocalVariableType::OnCells;
-        break;
-      case ast::LocationType::Edges:
-        type = iir::LocalVariableType::OnEdges;
-        break;
-      case ast::LocationType::Vertices:
-        type = iir::LocalVariableType::OnVertices;
-        break;
-      }
+      type =
+          localVarTypeFromLocationType(metadata_.getDenseLocationTypeFromAccessID(fieldAccessID));
     }
     return type;
   }
@@ -227,6 +229,15 @@ public:
       propagateVariableType(*curVarID_, expr->getSourceLocation());
       // Unset curVarID_ as we are exiting the AssignmentExpr's visit
       curVarID_ = std::nullopt;
+    }
+  }
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+    // We are inside an assignment to variable / variable declaration
+    if(curVarID_.has_value()) {
+      // Inferred variable type is the lhs location type of the reduction
+      updateVariableType(*curVarID_, localVarTypeFromLocationType(expr->getLhsLocation()),
+                         expr->getSourceLocation());
+      // No need to visit inside reduction
     }
   }
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
