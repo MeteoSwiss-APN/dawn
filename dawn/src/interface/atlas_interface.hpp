@@ -123,6 +123,14 @@ std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn
   return neighs;
 }
 
+std::vector<int> getNeighs(const atlas::mesh::Nodes::Connectivity& conn, int idx) {
+  std::vector<int> neighs;
+  for(int n = 0; n < conn.cols(idx); ++n) {
+    neighs.emplace_back(conn(idx, n));
+  }
+  return neighs;
+}
+
 std::vector<int> const cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
   const auto& conn = m.cells().edge_connectivity();
   auto neighs = std::vector<int>{};
@@ -161,7 +169,7 @@ std::vector<int> const nodeNeighboursOfEdge(atlas::Mesh const& m, int const& idx
 }
 
 std::vector<int> const cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
-  return getNeighs(m.edges().cell_connectivity(), idx);
+  return getNeighs(m.nodes().cell_connectivity(), idx);
 }
 
 std::vector<int> const edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
@@ -177,7 +185,7 @@ std::vector<int> const nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx
     for(int nn = 0; nn < conn_edge_to_nodes.cols(nbh_edge_idx); ++nn) {
       int nbhNode = conn_edge_to_nodes(idx, nn);
       if(nbhNode != idx) {
-        neighs.emplace_back();
+        neighs.emplace_back(nbhNode);
       }
     }
   }
