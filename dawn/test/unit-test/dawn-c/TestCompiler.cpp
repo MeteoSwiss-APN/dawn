@@ -385,7 +385,6 @@ TEST(CompilerTest, DISABLED_ICONStencil) {
 
   std::ofstream of("prototype/generated_iconLaplace.hpp");
   dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  of.close();
 }
 
 } // anonymous namespace
