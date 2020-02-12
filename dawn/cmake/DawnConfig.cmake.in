@@ -5,10 +5,14 @@ set(@PROJECT_NAME@_VERSION @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@)
 message(STATUS "Found @PROJECT_NAME@ ${@PROJECT_NAME@_VERSION} at ${CMAKE_CURRENT_LIST_FILE}")
 
 include(CMakeFindDependencyMacro)
-find_dependency(Protobuf 3.4.0
-  REQUIRED
-  PATHS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was build with dawn
-)
+if(@DAWN_BUILD_PROTOBUF@)
+  find_dependency(Protobuf 3.4.0
+    REQUIRED
+    PATHS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was build with dawn
+  )
+else()
+  find_dependency(Protobuf 3.4.0 MODULE REQUIRED)
+endif()
 
 if(NOT TARGET Dawn::Dawn)
   include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
