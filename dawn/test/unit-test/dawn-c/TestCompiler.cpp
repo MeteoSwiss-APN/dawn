@@ -17,10 +17,12 @@
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
 #include <gtest/gtest.h>
@@ -51,21 +53,6 @@ TEST(CompilerTest, CompileEmptySIR) {
   freeCharArray(ppDefines, size);
   dawnTranslationUnitDestroy(TU);
 }
-template <typename CG>
-void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
-  dawn::DiagnosticsEngine diagnostics;
-  CG generator(ctx, diagnostics, 0);
-  auto tu = generator.generateCode();
-
-  std::ostringstream ss;
-  for(auto const& macroDefine : tu->getPPDefines())
-    ss << macroDefine << "\n";
-
-  ss << tu->getGlobals();
-  for(auto const& s : tu->getStencils())
-    ss << s.second;
-  os << ss.str();
-}
 
 TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
@@ -81,7 +68,7 @@ TEST(CompilerTest, CompileCopyStencil) {
                   b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))))));
   std::ofstream of("/dev/null");
-  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
+  dawn::CompilerUtil::dumpNaive(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
@@ -107,8 +94,7 @@ TEST(CompilerTest, DISABLED_CodeGenSumEdgeToCells) {
 
   std::ofstream of("prototype/generated_copyEdgeToCell.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_SumVertical) {
@@ -132,8 +118,7 @@ TEST(CompilerTest, DISABLED_SumVertical) {
 
   std::ofstream of("prototype/generated_verticalSum.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
@@ -169,8 +154,7 @@ TEST(CompilerTest, DISABLED_CodeGenDiffusion) {
 
   std::ofstream of("prototype/generated_Diffusion.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
@@ -204,8 +188,7 @@ TEST(CompilerTest, DISABLED_CodeGenTriGradient) {
 
   std::ofstream of("prototype/generated_triGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
@@ -239,8 +222,7 @@ TEST(CompilerTest, DISABLED_CodeGenQuadGradient) {
 
   std::ofstream of("prototype/generated_quadGradient.hpp");
   DAWN_ASSERT_MSG(of, "file could not be opened. Binary must be called from dawn/dawn");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_SparseDimension) {
@@ -271,8 +253,7 @@ TEST(CompilerTest, DISABLED_SparseDimension) {
                           std::vector<float>({1., 1., 1., 1})))))))));
 
   std::ofstream of("prototype/generated_sparseDimension.hpp");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_NestedReduce) {
@@ -301,8 +282,7 @@ TEST(CompilerTest, DISABLED_NestedReduce) {
                                      dawn::ast::LocationType::Edges))))))));
 
   std::ofstream of("prototype/generated_NestedSimple.hpp");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, DISABLED_NestedReduceField) {
@@ -335,7 +315,6 @@ TEST(CompilerTest, DISABLED_NestedReduceField) {
                                               dawn::ast::LocationType::Edges))))))));
 
   std::ofstream of("prototype/generated_NestedWithField.hpp");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 } // anonymous namespace

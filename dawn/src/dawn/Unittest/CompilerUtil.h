@@ -15,16 +15,16 @@
 #ifndef DAWN_UNITTEST_COMPILERUTIL_H
 #define DAWN_UNITTEST_COMPILERUTIL_H
 
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 namespace dawn {
 
@@ -41,8 +41,9 @@ public:
   load(const std::string& iirFilename,
        const dawn::OptimizerContext::OptimizerContextOptions& options,
        std::unique_ptr<OptimizerContext>& context);
-  static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
-  static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
+  static void dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
+  static void dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
+  static void dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
 };
 
 } // namespace dawn
