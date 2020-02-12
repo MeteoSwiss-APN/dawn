@@ -33,13 +33,12 @@ TEST(TestLocalVarType, test_cartesian_01) {
   /// double varA = 3.0;
   /// f_ij = varA;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -68,14 +67,13 @@ TEST(TestLocalVarType, test_cartesian_02) {
   /// varA = f_ij;
   /// f_ij = varA;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(fIJ))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -106,13 +104,12 @@ TEST(TestLocalVarType, test_cartesian_propagation_01) {
   /// double varB = varA;
   /// f_ij = varB;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -146,14 +143,13 @@ TEST(TestLocalVarType, test_cartesian_propagation_02) {
   /// varA = f_ij;
   /// f_ij = varB;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(varA), b.at(fIJ))),
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -194,7 +190,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_03) {
   /// varD = varB;
   /// f_ij = varD;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
@@ -203,7 +199,6 @@ TEST(TestLocalVarType, test_cartesian_propagation_03) {
                              b.declareVar(varD), b.stmt(b.assignExpr(b.at(varB), b.at(varA))),
                              b.stmt(b.assignExpr(b.at(varD), b.at(varB))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varD))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -249,7 +244,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
   /// varB = f_ij;
   /// f_ij = varD;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
@@ -259,7 +254,6 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
                              b.stmt(b.assignExpr(b.at(varD), b.at(varB))),
                              b.stmt(b.assignExpr(b.at(varB), b.at(fIJ))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varD))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -308,7 +302,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
   /// varB = varD;
   /// varD = f_c;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
@@ -317,7 +311,6 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
                              b.declareVar(varD), b.stmt(b.assignExpr(b.at(varA), b.at(varB))),
                              b.stmt(b.assignExpr(b.at(varB), b.at(varD))),
                              b.stmt(b.assignExpr(b.at(varD), b.at(f_c))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -363,7 +356,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
   /// varA = varB;
   /// varB = varC;
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -371,7 +364,6 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
                                      b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
                                      b.stmt(b.assignExpr(b.at(varA), b.at(varB))),
                                      b.stmt(b.assignExpr(b.at(varB), b.at(varC))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -408,13 +400,12 @@ TEST(TestLocalVarType, test_throw_unstructured_01) {
   /// double varA = f_c;
   /// varA = f_e;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -443,7 +434,7 @@ TEST(TestLocalVarType, test_throw_unstructured_02) {
   /// varB = f_e + varA;
   /// varA = f_c;
 
-  auto stencilInstantiationContext = b.build(
+  auto stencil = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
@@ -451,7 +442,6 @@ TEST(TestLocalVarType, test_throw_unstructured_02) {
                              b.declareVar(varA), b.declareVar(varB),
                              b.stmt(b.assignExpr(b.at(varB), b.binaryExpr(b.at(f_e), b.at(varA)))),
                              b.stmt(b.assignExpr(b.at(varA), b.at(f_c))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -484,7 +474,7 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
   /// varA = f_c;
   /// varC = f_e;
 
-  auto stencilInstantiationContext =
+  auto stencil =
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
@@ -494,7 +484,6 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
                                      b.stmt(b.assignExpr(b.at(varC), b.at(varB))),
                                      b.stmt(b.assignExpr(b.at(varA), b.at(f_c))),
                                      b.stmt(b.assignExpr(b.at(varC), b.at(f_e))))))));
-  auto stencil = stencilInstantiationContext.at("generated");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
