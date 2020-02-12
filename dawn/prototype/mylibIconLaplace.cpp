@@ -1,3 +1,17 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
 #include "mylib.hpp"
 #include "mylib_interface.hpp"
 #include <assert.h>
@@ -14,7 +28,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 template <typename T>
-int sgn(T val) {
+static int sgn(T val) {
   return (T(0) < val) - (val < T(0));
 }
 
@@ -184,7 +198,7 @@ int main() {
   //    to edge direction)
 
   //===------------------------------------------------------------------------------------------===//
-  // output field (field we want to take the laplacian of)
+  // output field (field containing the computed laplacian)
   //===------------------------------------------------------------------------------------------===//
   mylib::EdgeData<double> nabla2_vec(mesh, k_size);
   mylib::EdgeData<double> nabla2t1_vec(mesh, k_size); // term 1 and term 2 of nabla for debugging
@@ -236,7 +250,7 @@ int main() {
   mylib::SparseFaceData<double> edge_orientation_cell(mesh, k_size, edgesPerCell);
 
   //===------------------------------------------------------------------------------------------===//
-  // fields containing geometric infromation
+  // fields containing geometric information
   //===------------------------------------------------------------------------------------------===//
   mylib::EdgeData<double> tangent_orientation(mesh, k_size);
   mylib::EdgeData<double> primal_edge_length(mesh, k_size);
@@ -337,9 +351,7 @@ int main() {
       mylib::Vertex testVec =
           mylib::Vertex(v.vertex(m_sparse).x() - v.x(), v.vertex(m_sparse).y() - v.y(), -1);
       mylib::Vertex dual = mylib::Vertex(dual_normal_x(*e, level), dual_normal_y(*e, level), -1);
-      edge_orientation_vertex(v, m_sparse, level) =
-          sgn(dot(mylib::Vertex(v.vertex(m_sparse).x() - v.x(), v.vertex(m_sparse).y() - v.y(), -1),
-                  mylib::Vertex(dual_normal_x(*e, level), dual_normal_y(*e, level), -1)));
+      edge_orientation_vertex(v, m_sparse, level) = sgn(dot(testVec, dual));
       m_sparse++;
     }
   }
@@ -358,7 +370,7 @@ int main() {
           sgn(dot(mylib::Vertex(e->vertex(0).x() - xm, e->vertex(0).y() - ym, -1),
                   mylib::Vertex(primal_normal_x(*e, level), primal_normal_y(*e, level), -1)));
       m_sparse++;
-      // explanation: the vector cellModpoint -> e.vertex(0) is guaranteed to point outside. The dot
+      // explanation: the vector cellMidpoint -> e.vertex(0) is guaranteed to point outside. The dot
       // product checks if the edge normal has the same orientation. e.vertex(0) is arbitrary,
       // vertex(1), or any point on e would work just as well
     }

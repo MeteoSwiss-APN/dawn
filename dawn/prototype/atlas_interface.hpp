@@ -123,6 +123,14 @@ std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn
   return neighs;
 }
 
+std::vector<int> getNeighs(const atlas::mesh::Nodes::Connectivity& conn, int idx) {
+  std::vector<int> neighs;
+  for(int n = 0; n < conn.cols(idx); ++n) {
+    neighs.emplace_back(conn(idx, n));
+  }
+  return neighs;
+}
+
 std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
@@ -186,7 +194,7 @@ std::vector<int> cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    neighs[idx] = getNeighs(m.edges().cell_connectivity(), idx);
+    neighs[idx] = getNeighs(m.nodes().cell_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -195,7 +203,7 @@ std::vector<int> edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
-    neighs[idx] = getNeighs(m.cells().edge_connectivity(), idx);
+    neighs[idx] = getNeighs(m.nodes().edge_connectivity(), idx);
   }
   return neighs[idx];
 }
@@ -212,7 +220,7 @@ std::vector<int> nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
       for(int nn = 0; nn < conn_edge_to_nodes.cols(nbh_edge_idx); ++nn) {
         int nbhNode = conn_edge_to_nodes(idx, nn);
         if(nbhNode != idx) {
-          neighs[idx].emplace_back();
+          neighs[idx].emplace_back(nbhNode);
         }
       }
     }

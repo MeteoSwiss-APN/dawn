@@ -1,3 +1,17 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
 #include "mylib.hpp"
 #include "mylib_interface.hpp"
 #include <assert.h>
@@ -160,7 +174,7 @@ void dumpField(const std::string& fname, const mylib::Grid& mesh,
                const mylib::VertexData<double>& field, int level);
 
 int main() {
-  int w = 20;
+  int w = 15;
   int k_size = 1;
   const int level = 0;
   double lDomain = M_PI;
@@ -170,8 +184,8 @@ int main() {
 
   mylib::Grid mesh{w, w, false, lDomain, lDomain, true};
   if(dbg_out) {
-    dumpMesh(mesh, "mesh.txt");
-    dumpDualMesh(mesh, "dualMesh.txt");
+    dumpMesh(mesh, "laplICONmylib_mesh.txt");
+    dumpDualMesh(mesh, "laplICONmylib_dualMesh.txt");
   }
 
   const int edgesPerVertex = 6;
@@ -186,7 +200,7 @@ int main() {
   //    to edge direction)
 
   //===------------------------------------------------------------------------------------------===//
-  // output field (field we want to take the laplacian of)
+  // output field (field containing the computed laplacian)
   //===------------------------------------------------------------------------------------------===//
   mylib::EdgeData<double> nabla2_vec(mesh, k_size);
   mylib::EdgeData<double> nabla2t1_vec(mesh, k_size); // term 1 and term 2 of nabla for debugging
@@ -238,7 +252,7 @@ int main() {
   mylib::SparseFaceData<double> edge_orientation_cell(mesh, k_size, edgesPerCell);
 
   //===------------------------------------------------------------------------------------------===//
-  // fields containing geometric infromation
+  // fields containing geometric information
   //===------------------------------------------------------------------------------------------===//
   mylib::EdgeData<double> tangent_orientation(mesh, k_size);
   mylib::EdgeData<double> primal_edge_length(mesh, k_size);
@@ -339,9 +353,7 @@ int main() {
       mylib::Vertex testVec =
           mylib::Vertex(v.vertex(m_sparse).x() - v.x(), v.vertex(m_sparse).y() - v.y(), -1);
       mylib::Vertex dual = mylib::Vertex(dual_normal_x(*e, level), dual_normal_y(*e, level), -1);
-      edge_orientation_vertex(v, m_sparse, level) =
-          sgn(dot(mylib::Vertex(v.vertex(m_sparse).x() - v.x(), v.vertex(m_sparse).y() - v.y(), -1),
-                  mylib::Vertex(dual_normal_x(*e, level), dual_normal_y(*e, level), -1)));
+      edge_orientation_vertex(v, m_sparse, level) = sgn(dot(testVec, dual));
       m_sparse++;
     }
   }
@@ -406,7 +418,7 @@ int main() {
   }
 
   //===------------------------------------------------------------------------------------------===//
-  // computation starts here
+  // stencil call (this replaces the computations in handrolled version)
   //===------------------------------------------------------------------------------------------===//
 
   dawn_generated::cxxnaiveico::icon<mylibInterface::mylibTag>(
@@ -417,15 +429,15 @@ int main() {
   if(dbg_out) {
     dumpField("laplICONmylib_div.txt", mesh, div_vec, level);
     dumpField("laplICONmylib_rot.txt", mesh, rot_vec, level);
+
+    dumpField("laplICONmylib_rotH.txt", mesh, nabla2t1_vec, level, mylib::edge_color::horizontal);
+    dumpField("laplICONmylib_rotV.txt", mesh, nabla2t1_vec, level, mylib::edge_color::vertical);
+    dumpField("laplICONmylib_rotD.txt", mesh, nabla2t1_vec, level, mylib::edge_color::diagonal);
+
+    dumpField("laplICONmylib_divH.txt", mesh, nabla2t2_vec, level, mylib::edge_color::horizontal);
+    dumpField("laplICONmylib_divV.txt", mesh, nabla2t2_vec, level, mylib::edge_color::vertical);
+    dumpField("laplICONmylib_divD.txt", mesh, nabla2t2_vec, level, mylib::edge_color::diagonal);
   }
-
-  dumpField("laplICONmylib_rotH.txt", mesh, nabla2t1_vec, level, mylib::edge_color::horizontal);
-  dumpField("laplICONmylib_rotV.txt", mesh, nabla2t1_vec, level, mylib::edge_color::vertical);
-  dumpField("laplICONmylib_rotD.txt", mesh, nabla2t1_vec, level, mylib::edge_color::diagonal);
-
-  dumpField("laplICONmylib_divH.txt", mesh, nabla2t2_vec, level, mylib::edge_color::horizontal);
-  dumpField("laplICONmylib_divV.txt", mesh, nabla2t2_vec, level, mylib::edge_color::vertical);
-  dumpField("laplICONmylib_divD.txt", mesh, nabla2t2_vec, level, mylib::edge_color::diagonal);
 
   //===------------------------------------------------------------------------------------------===//
   // dumping a hopefully nice colorful laplacian

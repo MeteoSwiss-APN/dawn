@@ -105,9 +105,16 @@ private:
 
 class Grid {
 public:
+  // generates a grid of right triangles, vertices are in [0,1] x [0,1]
+  //  if lx and/or ly is set, vertices are in [0,lx] x [0,ly]
+  //  if equilat is set and lx=ly equilateral triangles are generated instead of right ones
   Grid(int nx, int ny, bool periodic = false, double lx = 0., double ly = 0., bool equilat = false)
       : faces_(2 * nx * ny), vertices_(periodic ? nx * ny : (nx + 1) * (ny + 1)),
         edges_(periodic ? 3 * nx * ny : 3 * (nx + 1) * (ny + 1)), nx_(nx), ny_(ny) {
+
+    if(equilat && (lx != ly)) {
+      std::cout << "WARNING: domain not square but equilat set. Result will be skwewed!\n";
+    }
     auto edge_at = [&](int i, int j, int c) -> Edge& {
       if(periodic)
         return edges_.at(3 * (((j + ny) % ny) * nx + ((i + nx) % nx)) + c);
