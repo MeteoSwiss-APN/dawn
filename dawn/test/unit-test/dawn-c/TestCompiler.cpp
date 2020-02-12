@@ -384,8 +384,7 @@ TEST(CompilerTest, DISABLED_ICONStencil) {
                       b.binaryExpr(b.at(nabla2t1_vec), b.at(nabla2t2_vec), Op::minus))))))));
 
   std::ofstream of("prototype/generated_iconLaplace.hpp");
-  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
-  of.close();
+  dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
 }
 
 } // anonymous namespace
