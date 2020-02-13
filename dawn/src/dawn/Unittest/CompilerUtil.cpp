@@ -159,13 +159,24 @@ void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstan
 }
 
 bool CompilerUtil::generate(std::shared_ptr<iir::StencilInstantiation>& si, const std::string& srcFile) {
-  if(!srcFile.empty()) {
-    std::ofstream ofs(srcFile);
-    if(srcFile.find(".cu") != std::string::npos) {
-      dumpCuda(ofs, si);
-    }
+  std::ostringstream oss;
+  if(srcFile.find(".cu") != std::string::npos) {
+    dumpCuda(oss, si);
+  } else if(srcFile.find("ico") != std::string::npos) {
+    dumpNaiveIco(oss, si);
+  } else {
+    dumpNaive(oss, si);
   }
-  return true;
+
+  std::string code = oss.str();
+  if(srcFile.empty()) {
+    std::cout << code;
+  } else {
+    std::ofstream ofs(srcFile);
+    ofs << code;
+  }
+
+  return !code.empty();
 }
 
 std::vector<std::shared_ptr<Pass>>
