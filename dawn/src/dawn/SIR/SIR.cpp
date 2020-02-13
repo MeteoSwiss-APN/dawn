@@ -600,6 +600,14 @@ std::string UnstructuredFieldDimension::toString() const {
   return output;
 }
 
+ast::GridType HorizontalFieldDimension::getType() const {
+  if(sir::dimension_isa<sir::CartesianFieldDimension>(*this)) {
+    return ast::GridType::Cartesian;
+  } else {
+    return ast::GridType::Unstructured;
+  }
+} // namespace sir
+
 std::string FieldDimensions::toString() const {
   if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
     const auto& cartesianDimensions =

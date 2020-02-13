@@ -34,7 +34,7 @@ class DawnCompiler : NonCopyable {
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics
-  DawnCompiler();
+  DawnCompiler() = default;
   DawnCompiler(const Options& options);
 
   /// @brief Compile the SIR using the provided code generation routine

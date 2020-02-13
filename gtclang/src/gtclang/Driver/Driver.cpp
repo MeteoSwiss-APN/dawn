@@ -56,7 +56,7 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(!optionsParser.parse(args, clangArgs))
     return ReturnValue{1, returnSIR};
 
-  // Ininitialize the Logger
+  // Initialize the Logger
   auto logger = std::make_unique<Logger>();
   auto* oldLogger = dawn::Logger::getSingleton().getLogger();
   if(context->getOptions().Verbose)

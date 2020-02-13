@@ -18,11 +18,13 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 namespace dawn {
 
@@ -68,10 +70,9 @@ public:
   static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
   static stencilInstantiationContext compile(const std::string& sirFile);
   static void clearDiags();
-  static bool generate(const std::unique_ptr<OptimizerContext>& context,
-                       const std::string& outFile = "");
-  static void dumpNaive(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
-  static void dumpCuda(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx);
+  static void dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
+  static void dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
+  static void dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
 
   template <class TPass, typename... Args>
   static void addPass(std::unique_ptr<OptimizerContext>& context,
@@ -91,9 +92,8 @@ public:
     return pass.run(instantiation);
   }
 
-  static bool runPasses(std::unique_ptr<OptimizerContext>& context,
-                        std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
-                        unsigned nPasses = 100);
+  static bool runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
+                        std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
 
   static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
                                                         std::unique_ptr<OptimizerContext>& context);

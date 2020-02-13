@@ -61,6 +61,8 @@ private:
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
+  void fillIIR();
+
 public:
   /// @brief Initialize the context with a SIR
   OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
@@ -112,7 +114,6 @@ public:
                       const std::shared_ptr<SIR> fullSIR);
   bool restoreIIR(std::string const& name,
                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
-  void fillIIR();
 
   /// @brief this function check if a pass should be pushed back into the list of passes based on
   /// the options.

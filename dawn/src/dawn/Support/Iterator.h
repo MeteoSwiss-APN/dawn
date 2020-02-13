@@ -12,29 +12,20 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
-// This file includes the headers of the json library.
-// See: https://github.com/nlohmann/json/tree/master
+// This file includes the header of the easy_iterator library.
+// See: https://github.com/TheLartians/EasyIterator
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_JSON_H
-#define DAWN_SUPPORT_JSON_H
+#ifndef DAWN_SUPPORT_ITERATOR_H
+#define DAWN_SUPPORT_ITERATOR_H
 
-#include <nlohmann_json.hpp>
+#include <easy_iterator.hpp>
 
 namespace dawn {
 
-namespace json {
-
-/// @class json
-/// @brief JSON object
-///
-/// @see https://github.com/nlohmann/json/tree/master
-/// @ingroup support
-using nlohmann::json;
-
-} // namespace json
+using namespace easy_iterator;
 
 } // namespace dawn
 
-#endif
+#endif // DAWN_SUPPORT_ITERATOR_H

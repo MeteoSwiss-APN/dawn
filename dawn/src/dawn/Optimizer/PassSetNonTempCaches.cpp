@@ -29,10 +29,10 @@
 
 namespace dawn {
 
-struct AcessIDTolocalityMetric {
+struct AccessIDToLocalityMetric {
   int accessID;
   int dataLocalityGain;
-  bool operator<(const AcessIDTolocalityMetric& rhs) const {
+  bool operator<(const AccessIDToLocalityMetric& rhs) const {
     return dataLocalityGain < rhs.dataLocalityGain;
   }
 };
@@ -51,12 +51,12 @@ class GlobalFieldCacher {
   OptimizerContext& context_;
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
-  std::vector<AcessIDTolocalityMetric> sortedAccesses_;
+  std::vector<AccessIDToLocalityMetric> sortedAccesses_;
   std::vector<NameToImprovementMetric> originalNameToCache_;
 
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
-  /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
+  /// @param[in, out]  si      Stencil Instantiation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
                     const std::shared_ptr<iir::StencilInstantiation>& si, OptimizerContext& context)
       : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()), context_(context) {
@@ -114,13 +114,13 @@ private:
 
     for(auto& AcessIDMetricPair : accessIDToDataLocality_) {
       sortedAccesses_.emplace_back(
-          AcessIDTolocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
+          AccessIDToLocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
       std::sort(sortedAccesses_.begin(), sortedAccesses_.end());
     }
   }
 
-  /// @brief For each chached variable, check if we need a filler-stage (if we find a
-  /// read-before-write) and add it if necessary, renames all occurances and sets the cache for the
+  /// @brief For each cached variable, check if we need a filler-stage (if we find a
+  /// read-before-write) and add it if necessary, renames all occurrences and sets the cache for the
   /// temporary variable newly created
   ///
   /// We always fill to the extent of the given multistage and we only add one stage to fill all the
@@ -204,19 +204,19 @@ private:
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage = std::make_unique<iir::Stage>(
         instantiation_->getMetaData(), instantiation_->nextUID(), interval);
-    iir::Stage::DoMethodSmartPtr_t domethod =
+    iir::Stage::DoMethodSmartPtr_t doMethod =
         std::make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
-    domethod->getAST().clear();
+    doMethod->getAST().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
       int assignmentID = assignmentIDs[i];
       int assigneeID = assigneeIDs[i];
-      addAssignmentToDoMethod(domethod, assignmentID, assigneeID);
+      addAssignmentToDoMethod(doMethod, assignmentID, assigneeID);
     }
 
     // Add the single do method to the new Stage
     assignmentStage->clearChildren();
-    assignmentStage->addDoMethod(std::move(domethod));
+    assignmentStage->addDoMethod(std::move(doMethod));
     for(auto& doMethod : assignmentStage->getChildren()) {
       doMethod->update(iir::NodeUpdateType::level);
     }
@@ -225,8 +225,8 @@ private:
     return assignmentStage;
   }
 
-  ///@brief Add the assignment operator of two unique id's to a given domethod
-  void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
+  ///@brief Add the assignment operator of two unique id's to a given doMethod
+  void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& doMethod, int assignmentID,
                                int assigneeID) {
     // Create the statement of the assignment with the new and old variables
     auto fa_assignee =
@@ -241,7 +241,7 @@ private:
     newAccess.addReadExtent(assigneeID, iir::Extents{});
     expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
-    domethod->getAST().push_back(std::move(expAssignment));
+    doMethod->getAST().push_back(std::move(expAssignment));
 
     // Add access ids to the expressions
     fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
@@ -280,8 +280,8 @@ private:
       const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // If we find a write-statement we exit
-      auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
-      if(wirteAccessIterator != callerAccesses->getWriteAccesses().end()) {
+      auto writeAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
+      if(writeAccessIterator != callerAccesses->getWriteAccesses().end()) {
         return false;
       }
     }
