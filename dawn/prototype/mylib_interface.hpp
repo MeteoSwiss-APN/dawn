@@ -35,6 +35,10 @@ inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<mylib::Edge> co
   return e; // implicit conversion
 }
 
+inline mylib::Edge const& deref(mylibTag, std::reference_wrapper<const mylib::Edge> const& e) {
+  return e; // implicit conversion
+}
+
 //===------------------------------------------------------------------------------------------===//
 // unweighted versions
 //===------------------------------------------------------------------------------------------===//

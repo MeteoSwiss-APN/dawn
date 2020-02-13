@@ -146,10 +146,12 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   DAWN_ASSERT_MSG(assignmentExpr,
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
-  // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<iir::Stmt> varDeclStmt =
-      iir::makeVarDeclStmt(Type(BuiltinTypeID::Float), varname, 0, "=",
-                           std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
+  // Remove the field
+  instantiation->getMetaData().removeAccessID(AccessID);
+
+  // Create the new `VarDeclStmt` which will replace the old `ExprStmt` and register the variable
+  std::shared_ptr<iir::Stmt> varDeclStmt = instantiation->getMetaData().declareVar(
+      true, varname, Type(BuiltinTypeID::Float), assignmentExpr->getRight(), AccessID);
 
   // Replace the statement
   varDeclStmt->getData<iir::IIRStmtData>().StackTrace =
@@ -159,13 +161,6 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
       oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
   blockStmt.replaceChildren(oldStatement, varDeclStmt);
-
-  // Remove the field
-  instantiation->getMetaData().removeAccessID(AccessID);
-
-  // Register the variable
-  instantiation->getMetaData().addAccessIDNamePair(AccessID, varname);
-  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

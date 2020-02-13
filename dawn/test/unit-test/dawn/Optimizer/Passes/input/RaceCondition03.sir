@@ -1,0 +1,394 @@
+{
+ "gridType": "Cartesian",
+ "filename": "RaceCondition03.cpp",
+ "stencils": [
+  {
+   "name": "Test",
+   "loc": {
+    "Line": 33,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 37,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "stencil_fun_call_expr": {
+                  "callee": "TestFunction",
+                  "arguments": [
+                   {
+                    "field_access_expr": {
+                     "name": "field_a",
+                     "vertical_offset": 0,
+                     "zero_offset": {},
+                     "argument_map": [
+                      -1,
+                      -1,
+                      -1
+                     ],
+                     "argument_offset": [
+                      0,
+                      0,
+                      0
+                     ],
+                     "negate_offset": false,
+                     "loc": {
+                      "Line": 38,
+                      "Column": 20
+                     },
+                     "data": {},
+                     "ID": 16
+                    }
+                   },
+                   {
+                    "field_access_expr": {
+                     "name": "field_b",
+                     "vertical_offset": 0,
+                     "zero_offset": {},
+                     "argument_map": [
+                      -1,
+                      -1,
+                      -1
+                     ],
+                     "argument_offset": [
+                      0,
+                      0,
+                      0
+                     ],
+                     "negate_offset": false,
+                     "loc": {
+                      "Line": 38,
+                      "Column": 29
+                     },
+                     "data": {},
+                     "ID": 17
+                    }
+                   }
+                  ],
+                  "loc": {
+                   "Line": 38,
+                   "Column": 7
+                  },
+                  "ID": 15
+                 }
+                },
+                "loc": {
+                 "Line": 38,
+                 "Column": 7
+                },
+                "data": {},
+                "ID": 18
+               }
+              }
+             ],
+             "loc": {
+              "Line": 37,
+              "Column": 5
+             },
+             "data": {},
+             "ID": 14
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 37,
+          "Column": 5
+         },
+         "data": {},
+         "ID": 19
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "data": {},
+      "ID": 13
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "field_a",
+     "loc": {
+      "Line": 34,
+      "Column": 11
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    },
+    {
+     "name": "field_b",
+     "loc": {
+      "Line": 34,
+      "Column": 20
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [
+  {
+   "name": "TestFunction",
+   "loc": {
+    "Line": 23,
+    "Column": 8
+   },
+   "asts": [
+    {
+     "root": {
+      "block_stmt": {
+       "statements": [
+        {
+         "expr_stmt": {
+          "expr": {
+           "assignment_expr": {
+            "left": {
+             "field_access_expr": {
+              "name": "field_b",
+              "vertical_offset": 0,
+              "zero_offset": {},
+              "argument_map": [
+               -1,
+               -1,
+               -1
+              ],
+              "argument_offset": [
+               0,
+               0,
+               0
+              ],
+              "negate_offset": false,
+              "loc": {
+               "Line": 27,
+               "Column": 5
+              },
+              "data": {},
+              "ID": 3
+             }
+            },
+            "op": "=",
+            "right": {
+             "field_access_expr": {
+              "name": "field_a",
+              "vertical_offset": 0,
+              "zero_offset": {},
+              "argument_map": [
+               -1,
+               -1,
+               -1
+              ],
+              "argument_offset": [
+               0,
+               0,
+               0
+              ],
+              "negate_offset": false,
+              "loc": {
+               "Line": 27,
+               "Column": 15
+              },
+              "data": {},
+              "ID": 2
+             }
+            },
+            "loc": {
+             "Line": 27,
+             "Column": 5
+            },
+            "ID": 4
+           }
+          },
+          "loc": {
+           "Line": 27,
+           "Column": 5
+          },
+          "data": {},
+          "ID": 5
+         }
+        },
+        {
+         "expr_stmt": {
+          "expr": {
+           "assignment_expr": {
+            "left": {
+             "field_access_expr": {
+              "name": "field_a",
+              "vertical_offset": 0,
+              "zero_offset": {},
+              "argument_map": [
+               -1,
+               -1,
+               -1
+              ],
+              "argument_offset": [
+               0,
+               0,
+               0
+              ],
+              "negate_offset": false,
+              "loc": {
+               "Line": 28,
+               "Column": 5
+              },
+              "data": {},
+              "ID": 7
+             }
+            },
+            "op": "=",
+            "right": {
+             "field_access_expr": {
+              "name": "field_b",
+              "vertical_offset": 0,
+              "cartesian_offset": {
+               "i_offset": 1,
+               "j_offset": 0
+              },
+              "argument_map": [
+               -1,
+               -1,
+               -1
+              ],
+              "argument_offset": [
+               0,
+               0,
+               0
+              ],
+              "negate_offset": false,
+              "loc": {
+               "Line": 28,
+               "Column": 15
+              },
+              "data": {},
+              "ID": 6
+             }
+            },
+            "loc": {
+             "Line": 28,
+             "Column": 5
+            },
+            "ID": 8
+           }
+          },
+          "loc": {
+           "Line": 28,
+           "Column": 5
+          },
+          "data": {},
+          "ID": 9
+         }
+        },
+        {
+         "return_stmt": {
+          "expr": {
+           "literal_access_expr": {
+            "value": "0",
+            "type": {
+             "type_id": "Float"
+            },
+            "loc": {
+             "Line": 29,
+             "Column": 12
+            },
+            "data": {},
+            "ID": 10
+           }
+          },
+          "loc": {
+           "Line": 29,
+           "Column": 5
+          },
+          "data": {},
+          "ID": 11
+         }
+        }
+       ],
+       "loc": {
+        "Line": 26,
+        "Column": 16
+       },
+       "data": {},
+       "ID": 1
+      }
+     }
+    }
+   ],
+   "intervals": [],
+   "arguments": [
+    {
+     "field_value": {
+      "name": "field_a",
+      "loc": {
+       "Line": 24,
+       "Column": 11
+      },
+      "is_temporary": false,
+      "field_dimensions": {
+       "cartesian_horizontal_dimension": {
+        "mask_cart_i": 1,
+        "mask_cart_j": 1
+       },
+       "mask_k": 1
+      }
+     }
+    },
+    {
+     "field_value": {
+      "name": "field_b",
+      "loc": {
+       "Line": 24,
+       "Column": 20
+      },
+      "is_temporary": false,
+      "field_dimensions": {
+       "cartesian_horizontal_dimension": {
+        "mask_cart_i": 1,
+        "mask_cart_j": 1
+       },
+       "mask_k": 1
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "global_variables": {
+  "map": {}
+ }
+}

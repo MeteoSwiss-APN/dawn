@@ -742,6 +742,11 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
 std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
                                                                       OptimizerContext* context,
                                                                       IIRSerializer::Format kind) {
+  return deserialize(file, kind);
+}
+
+std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std::string& file,
+                                                                      IIRSerializer::Format kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
@@ -755,6 +760,11 @@ std::shared_ptr<iir::StencilInstantiation> IIRSerializer::deserialize(const std:
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::Format kind) {
+  return deserializeFromString(str, kind);
+}
+
+std::shared_ptr<iir::StencilInstantiation>
+IIRSerializer::deserializeFromString(const std::string& str, IIRSerializer::Format kind) {
   return deserializeImpl(str, kind);
 }
 

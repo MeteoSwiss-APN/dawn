@@ -55,7 +55,7 @@ Array3i asArray(FieldType ft) {
 }
 } // namespace
 
-dawn::codegen::stencilInstantiationContext
+std::shared_ptr<iir::StencilInstantiation>
 IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencilIIR) {
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
@@ -103,9 +103,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;
-  map[new_si->getName()] = std::move(new_si);
-
-  return map;
+  return new_si;
 }
 
 std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
@@ -157,9 +155,10 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
+IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type,
+                                          std::vector<std::shared_ptr<iir::Expr>>&& initList) {
   DAWN_ASSERT(si_);
-  auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::vector<std::shared_ptr<Expr>>{});
+  auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::move(initList));
   int id = si_->getMetaData().addStmt(true, iirStmt);
   return {id, name, iirStmt};
 }
