@@ -40,7 +40,7 @@ protected:
     ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation));
 
     // Code gen...
-    ASSERT_TRUE(CompilerUtil::generate(context_, srcFilename));
+    ASSERT_TRUE(CompilerUtil::generate(instantiation, srcFilename));
   }
 };
 

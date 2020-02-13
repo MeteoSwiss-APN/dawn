@@ -158,6 +158,16 @@ void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstan
   dump(generator, os);
 }
 
+bool CompilerUtil::generate(std::shared_ptr<iir::StencilInstantiation>& si, const std::string& srcFile) {
+  if(!srcFile.empty()) {
+    std::ofstream ofs(srcFile);
+    if(srcFile.find(".cu") != std::string::npos) {
+      dumpCuda(ofs, si);
+    }
+  }
+  return true;
+}
+
 std::vector<std::shared_ptr<Pass>>
 CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
@@ -243,8 +253,9 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
   return passes;
 }
 
-bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
-                             std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation) {
+bool CompilerUtil::runPasses(std::unique_ptr<OptimizerContext>& context,
+                             std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
+                             unsigned nPasses) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
   auto inlineStrategy = dawn::PassInlining::InlineStrategy::InlineProcedures;
   auto reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
