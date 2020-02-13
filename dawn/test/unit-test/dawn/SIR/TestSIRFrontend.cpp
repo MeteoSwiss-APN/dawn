@@ -32,12 +32,13 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runTest(const std::string& irFilename, const std::string& srcFilename = "") {
+  void runTest(const std::string& irFilename, const std::string& srcFilename = "",
+      const unsigned nPasses = 100) {
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(irFilename, options_, context_);
 
     // Run all passes
-    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation, nPasses));
 
     // Code gen...
     ASSERT_TRUE(CompilerUtil::generate(instantiation, srcFilename));
@@ -58,6 +59,10 @@ TEST_F(TestSIRFrontend, HorizontalDifferenceGTClang) {
 
 TEST_F(TestSIRFrontend, HorizontalDifferenceGT4Py) {
   runTest("input/horizontal_difference_gt4py.sir", "output/horizontal_difference_gt4py.cpp");
+}
+
+TEST_F(TestSIRFrontend, BurgersDemoGTClang) {
+  runTest("input/burgers_demo_gtclang.sir", "output/burgers_demo_gtclang.cpp");
 }
 
 } // anonymous namespace

@@ -40,4 +40,8 @@ TEST(IRSplittingTest, CacheTest) {
       "PassSetCaches/IJCacheTest02.cpp", {"-freport-pass-set-caches"});
 }
 
+TEST(IRSplittingTest, BurgersTest) {
+  gtclang::IRSplitter(".", 1).split("input/burgers_demo.cpp", {});
+}
+
 } // anonymous namespace
