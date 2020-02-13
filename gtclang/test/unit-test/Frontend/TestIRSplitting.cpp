@@ -41,7 +41,7 @@ TEST(IRSplittingTest, CacheTest) {
 }
 
 TEST(IRSplittingTest, BurgersTest) {
-  gtclang::IRSplitter(".", 1).split("input/burgers_demo.cpp", {});
+  gtclang::IRSplitter(".", 1).split("input/burgers_demo_gtcerr.cpp", {});
 }
 
 } // anonymous namespace
