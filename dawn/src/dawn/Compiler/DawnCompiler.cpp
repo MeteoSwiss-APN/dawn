@@ -49,6 +49,7 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/EditDistance.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"

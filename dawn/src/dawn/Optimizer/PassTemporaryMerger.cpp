@@ -104,7 +104,8 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    std::cout << TemporaryDAG.toDot() << std::endl;
+    if(context_.getOptions().ReportPassTemporaryMerger)
+      std::cout << TemporaryDAG.toDot() << std::endl;
 
     if(TemporaryDAG.empty())
       continue;
