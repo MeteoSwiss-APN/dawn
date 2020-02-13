@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "PassLocalVarType.h"
+#include "PassRemoveScalars.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/DoMethod.h"
@@ -50,20 +50,19 @@ std::optional<int> getScalarWrittenByStatement(const std::shared_ptr<iir::Stmt> 
   const auto& idToLocalVariableData = metadata.getAccessIDToLocalVariableDataMap();
   std::optional<int> scalarAccessID;
 
-  switch(stmt->getKind()) {
-  case iir::Stmt::Kind::VarDeclStmt:
+  if(stmt->getKind() == iir::Stmt::Kind::VarDeclStmt) {
     scalarAccessID = iir::getAccessID(std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt));
-    break;
-  case iir::Stmt::Kind::ExprStmt:
+  } else if(stmt->getKind() == iir::Stmt::Kind::ExprStmt) {
     const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt);
     if(exprStmt->getExpr()->getKind() == iir::Expr::Kind::AssignmentExpr) {
-      int accessID = iir::getAccessID(exprStmt->getExpr());
+      int accessID = iir::getAccessID(
+          std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())->getLeft());
       if(metadata.isAccessType(iir::FieldAccessType::LocalVariable, accessID)) {
         scalarAccessID = accessID;
       }
     }
-    break;
   }
+
   if(scalarAccessID.has_value()) {
     DAWN_ASSERT_MSG(idToLocalVariableData.count(*scalarAccessID), "Uncategorized local variable.");
     if(idToLocalVariableData.at(*scalarAccessID).isScalar()) {
@@ -75,22 +74,19 @@ std::optional<int> getScalarWrittenByStatement(const std::shared_ptr<iir::Stmt> 
 
 // Returns the rhs `Expr` of a variable declaration / assignment.
 std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> stmt) {
-
-  switch(stmt->getKind()) {
-  case iir::Stmt::Kind::VarDeclStmt:
+  if(stmt->getKind() == iir::Stmt::Kind::VarDeclStmt) {
     return std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)->getInitList()[0];
-  case iir::Stmt::Kind::ExprStmt:
+  } else if(stmt->getKind() == iir::Stmt::Kind::ExprStmt) {
     const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt);
     if(exprStmt->getExpr()->getKind() == iir::Expr::Kind::AssignmentExpr) {
       return std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())->getRight();
     }
   }
+
   dawn_unreachable("Function called with non-assignment stmt");
 }
 
 void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformation& metadata) {
-
-  const auto& idToLocalVariableData = metadata.getAccessIDToLocalVariableDataMap();
 
   // Map from variable's access id to last rhs assigned to the variable
   std::unordered_map<int, std::shared_ptr<const iir::Expr>> variableToLastRhsMap;
@@ -130,7 +126,8 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
 }
 } // namespace
 
-bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassRemoveScalars::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilPtr)) {
       // Local variables are local to a DoMethod. Remove scalar local variables from the statements

@@ -28,6 +28,7 @@
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
+#include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
@@ -195,19 +196,22 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
     optimizer->checkAndPushBack<PassFieldVersioning>();
     optimizer->checkAndPushBack<PassSSA>();
-    optimizer->checkAndPushBack<PassLocalVarType>(); // Needs to be run before splitters.
+    optimizer->checkAndPushBack<PassLocalVarType>();  // Needs to be run before PassRemoveScalars.
+    optimizer->checkAndPushBack<PassRemoveScalars>(); // Needs to be run before splitters.
     optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
     optimizer->checkAndPushBack<PassStageSplitter>();
     optimizer->checkAndPushBack<PassPrintStencilGraph>();
     optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassLocalVarType>(); // Needs to be run after temporary type.
+    optimizer->checkAndPushBack<PassLocalVarType>();  // Needs to be run after temporary type.
+    optimizer->checkAndPushBack<PassRemoveScalars>(); // Needs to be run after PassLocalVarType.
     optimizer->checkAndPushBack<PassSetStageName>();
     optimizer->checkAndPushBack<PassSetStageGraph>();
     optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
     optimizer->checkAndPushBack<PassStageMerger>();
     optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
     optimizer->checkAndPushBack<PassTemporaryType>();
-    optimizer->checkAndPushBack<PassLocalVarType>(); // Needs to be run after temporary type.
+    optimizer->checkAndPushBack<PassLocalVarType>();  // Needs to be run after temporary type.
+    optimizer->checkAndPushBack<PassRemoveScalars>(); // Needs to be run after PassLocalVarType.
     optimizer->checkAndPushBack<PassTemporaryMerger>();
     optimizer->checkAndPushBack<PassInlining>(
         (getOptions().InlineSF || getOptions().PassTmpToFunction),
