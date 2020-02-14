@@ -22,11 +22,11 @@
 using namespace gtclang::dsl;
 
 stencil Test {
-  storage field_a, field_b, field_c, field_d;
+  storage field_a, field_b, field_c, field_d, field_e;
 
   Do {
     vertical_region(k_start, k_end) {
-      double local_variable = 5.0;
+      double local_variable = field_e;
 
       local_variable *= local_variable;
 

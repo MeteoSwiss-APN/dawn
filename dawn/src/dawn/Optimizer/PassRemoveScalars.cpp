@@ -15,6 +15,7 @@
 #include "PassRemoveScalars.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
@@ -92,7 +93,7 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
   std::unordered_map<int, std::shared_ptr<const iir::Expr>> variableToLastRhsMap;
 
   for(auto stmtIt = doMethod.getAST().getStatements().begin();
-      stmtIt != doMethod.getAST().getStatements().end(); ++stmtIt) {
+      stmtIt != doMethod.getAST().getStatements().end();) {
 
     for(const auto& [varAccessID, lastRhs] : variableToLastRhsMap) {
 
@@ -104,20 +105,26 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
         if(const std::shared_ptr<iir::AssignmentExpr> assignmentExpr =
                std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
 
-          assignmentExpr->getRight()->acceptAndReplace(replacer);
+          assignmentExpr->getRight() = assignmentExpr->getRight()->acceptAndReplace(replacer);
           continue;
         }
       }
       (*stmtIt)->acceptAndReplace(replacer);
     }
+    // TODO: var *= var case must be fixed
     // TODO: missing: scalars declared inside if-else construct
 
     auto scalarAccessID = getScalarWrittenByStatement(*stmtIt, metadata);
     if(scalarAccessID.has_value()) { // Writing to a scalar variable
       variableToLastRhsMap[*scalarAccessID] = getRhsOfAssignment(*stmtIt);
-      doMethod.getAST().erase(stmtIt);
+      stmtIt = doMethod.getAST().erase(stmtIt);
+    } else {
+      ++stmtIt;
     }
   }
+  // Recompute the accesses metadata of all statements (removed variables means removed accesses)
+  computeAccesses(metadata, doMethod.getAST().getStatements());
+  doMethod.update(iir::NodeUpdateType::level);
   // Metadata cleanup
   for(const auto& pair : variableToLastRhsMap) {
     int scalarAccessID = pair.first;

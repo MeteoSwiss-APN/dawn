@@ -26,7 +26,7 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end) {
-      double local_variable = 5.0;
+      double local_variable = field_b;
 
       field_a = field_b;
       field_c = field_a(i + 1);

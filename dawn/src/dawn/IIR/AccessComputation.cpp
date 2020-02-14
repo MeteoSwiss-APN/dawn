@@ -20,6 +20,7 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include <iostream>
 #include <stack>
 
@@ -450,13 +451,18 @@ public:
 
 } // anonymous namespace
 
-void computeAccesses(iir::StencilInstantiation* instantiation,
+void computeAccesses(const iir::StencilMetaInformation& metadata,
                      ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
   for(const auto& stmt : stmts) {
-    DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), stmt, nullptr);
+    AccessMapper mapper(metadata, stmt, nullptr);
     stmt->accept(mapper);
   }
+}
+
+void computeAccesses(iir::StencilInstantiation* instantiation,
+                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+  DAWN_ASSERT(instantiation);
+  computeAccesses(instantiation->getMetaData(), stmts);
 }
 
 void computeAccesses(
