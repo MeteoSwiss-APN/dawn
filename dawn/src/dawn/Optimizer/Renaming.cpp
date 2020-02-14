@@ -41,8 +41,9 @@ public:
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     int& varAccessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
-    if(varAccessID == oldAccessID_)
+    if(varAccessID == oldAccessID_) {
       varAccessID = newAccessID_;
+    }
     iir::ASTVisitorForwarding::visit(stmt);
     stmt->getName() = instantiation_->getNameFromAccessID(varAccessID);
   }
@@ -56,8 +57,9 @@ public:
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     int& varAccessID = *expr->getData<iir::IIRAccessExprData>().AccessID;
-    if(varAccessID == oldAccessID_)
+    if(varAccessID == oldAccessID_) {
       varAccessID = newAccessID_;
+    }
     expr->setName(instantiation_->getNameFromAccessID(varAccessID));
   }
 
@@ -65,8 +67,8 @@ public:
     int& fieldAccessID = *expr->getData<iir::IIRAccessExprData>().AccessID;
     if(fieldAccessID == oldAccessID_) {
       fieldAccessID = newAccessID_;
-      expr->setName(instantiation_->getNameFromAccessID(fieldAccessID));
     }
+    expr->setName(instantiation_->getNameFromAccessID(fieldAccessID));
   }
 };
 
