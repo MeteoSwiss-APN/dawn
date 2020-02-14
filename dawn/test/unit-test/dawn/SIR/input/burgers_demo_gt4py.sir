@@ -2746,11 +2746,11 @@
                                                     "is_external": true
                                                   }
                                                 },
-                                                "op": "**",
+                                                "op": "*",
                                                 "right": {
-                                                  "literal_access_expr": {
-                                                    "value": "2",
-                                                    "type": {}
+                                                  "var_access_expr": {
+                                                    "name": "dx",
+                                                    "is_external": true
                                                   }
                                                 }
                                               }
@@ -2991,11 +2991,11 @@
                                                     "is_external": true
                                                   }
                                                 },
-                                                "op": "**",
+                                                "op": "*",
                                                 "right": {
-                                                  "literal_access_expr": {
-                                                    "value": "2",
-                                                    "type": {}
+                                                  "var_access_expr": {
+                                                    "name": "dy",
+                                                    "is_external": true
                                                   }
                                                 }
                                               }
@@ -3298,11 +3298,11 @@
                                                     "is_external": true
                                                   }
                                                 },
-                                                "op": "**",
+                                                "op": "*",
                                                 "right": {
-                                                  "literal_access_expr": {
-                                                    "value": "2",
-                                                    "type": {}
+                                                  "var_access_expr": {
+                                                    "name": "dx",
+                                                    "is_external": true
                                                   }
                                                 }
                                               }
@@ -3543,11 +3543,11 @@
                                                     "is_external": true
                                                   }
                                                 },
-                                                "op": "**",
+                                                "op": "*",
                                                 "right": {
-                                                  "literal_access_expr": {
-                                                    "value": "2",
-                                                    "type": {}
+                                                  "var_access_expr": {
+                                                    "name": "dy",
+                                                    "is_external": true
                                                   }
                                                 }
                                               }
@@ -4355,9 +4355,6 @@
   ],
   "global_variables": {
     "map": {
-      "dx": {
-        "double_value": 0.0
-      },
       "dy": {
         "double_value": 0.0
       },
@@ -4365,6 +4362,9 @@
         "double_value": 0.0
       },
       "dt": {
+        "double_value": 0.0
+      },
+      "dx": {
         "double_value": 0.0
       }
     }
