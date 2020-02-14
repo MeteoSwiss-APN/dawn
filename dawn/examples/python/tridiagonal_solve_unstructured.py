@@ -34,41 +34,41 @@ from dawn4py.serialization import utils as sir_utils
 
 OUTPUT_NAME = "unstructured_vertical_solver"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
-OUTPUT_PATH = os.path.join(os.path.dirname(
-    __file__), "data", f"{OUTPUT_NAME}.cpp")
+OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def create_vertical_region_stmt1():
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(
-        sir_utils.Interval.Start, sir_utils.Interval.Start, 0, 0)
+    interval = sir_utils.make_interval(sir_utils.Interval.Start, sir_utils.Interval.Start, 0, 0)
 
     body_ast = sir_utils.make_ast(
-        [sir_utils.make_assignment_stmt(
-            sir_utils.make_unstructured_field_access_expr("c"),
-            sir_utils.make_binary_operator(
-                sir_utils.make_unstructured_field_access_expr("c"),
-                "/",
-                sir_utils.make_unstructured_field_access_expr("b")
-            ),
-            "="
-        ),
+        [
             sir_utils.make_assignment_stmt(
-            sir_utils.make_unstructured_field_access_expr("d"),
-            sir_utils.make_binary_operator(
-                sir_utils.make_unstructured_field_access_expr("d"),
-                "/",
-                sir_utils.make_unstructured_field_access_expr("b")
+                sir_utils.make_unstructured_field_access_expr("c"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("c"),
+                    "/",
+                    sir_utils.make_unstructured_field_access_expr("b"),
+                ),
+                "=",
             ),
-            "="
-        )
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("d"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("d"),
+                    "/",
+                    sir_utils.make_unstructured_field_access_expr("b"),
+                ),
+                "=",
+            ),
         ]
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
     return vertical_region_stmt
 
 
@@ -76,41 +76,41 @@ def create_vertical_region_stmt2():
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(
-        sir_utils.Interval.Start, sir_utils.Interval.End, 1, 0)
+    interval = sir_utils.make_interval(sir_utils.Interval.Start, sir_utils.Interval.End, 1, 0)
 
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_var_decl_stmt(
                 sir_utils.make_type(sir_utils.BuiltinType.Float),
-                "m", 0, "=",
+                "m",
+                0,
+                "=",
                 sir_utils.make_expr(
                     sir_utils.make_binary_operator(
-                        sir_utils.make_literal_access_expr(
-                            "1.0", sir_utils.BuiltinType.Float),
+                        sir_utils.make_literal_access_expr("1.0", sir_utils.BuiltinType.Float),
                         "/",
                         sir_utils.make_binary_operator(
                             sir_utils.make_unstructured_field_access_expr("b"),
                             "-",
                             sir_utils.make_binary_operator(
-                                sir_utils.make_unstructured_field_access_expr(
-                                    "a"),
+                                sir_utils.make_unstructured_field_access_expr("a"),
                                 "*",
                                 sir_utils.make_unstructured_field_access_expr(
-                                    "c", sir_utils.make_unstructured_offset(False), -1)
-                            )
-                        )
+                                    "c", sir_utils.make_unstructured_offset(False), -1
+                                ),
+                            ),
+                        ),
                     )
-                )
+                ),
             ),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_unstructured_field_access_expr("c"),
                 sir_utils.make_binary_operator(
                     sir_utils.make_unstructured_field_access_expr("c"),
                     "*",
-                    sir_utils.make_var_access_expr("m")
+                    sir_utils.make_var_access_expr("m"),
                 ),
-                "="
+                "=",
             ),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_unstructured_field_access_expr("d"),
@@ -122,19 +122,21 @@ def create_vertical_region_stmt2():
                             sir_utils.make_unstructured_field_access_expr("a"),
                             "*",
                             sir_utils.make_unstructured_field_access_expr(
-                                "d", sir_utils.make_unstructured_offset(False), - 1)
-                        )
+                                "d", sir_utils.make_unstructured_offset(False), -1
+                            ),
+                        ),
                     ),
                     "*",
-                    sir_utils.make_var_access_expr("m")
+                    sir_utils.make_var_access_expr("m"),
                 ),
-                "="
-            )
+                "=",
+            ),
         ]
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
     return vertical_region_stmt
 
 
@@ -142,48 +144,73 @@ def create_vertical_region_stmt3():
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(
-        sir_utils.Interval.Start, sir_utils.Interval.End, 0, -1)
+    interval = sir_utils.make_interval(sir_utils.Interval.Start, sir_utils.Interval.End, 0, -1)
 
     body_ast = sir_utils.make_ast(
-        [sir_utils.make_assignment_stmt(
-            sir_utils.make_unstructured_field_access_expr("d"),
-            sir_utils.make_binary_operator(
-                sir_utils.make_unstructured_field_access_expr("c"),
-                "*",
-                sir_utils.make_unstructured_field_access_expr(
-                    "d", sir_utils.make_unstructured_offset(False), 1)
-            ),
-            "-="
-        )
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("d"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("c"),
+                    "*",
+                    sir_utils.make_unstructured_field_access_expr(
+                        "d", sir_utils.make_unstructured_offset(False), 1
+                    ),
+                ),
+                "-=",
+            )
         ]
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Backward)
+        body_ast, interval, SIR.VerticalRegion.Backward
+    )
     return vertical_region_stmt
 
 
 def main(args: argparse.Namespace):
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value('Unstructured'), [
+        SIR.GridType.Value("Unstructured"),
+        [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([
-                    create_vertical_region_stmt1(),
-                    create_vertical_region_stmt2(),
-                    create_vertical_region_stmt3()
-                ]),
-                [sir_utils.make_field("a", sir_utils.make_field_dimensions_unstructured([LocationType.Value('Cell')], 1)),
-                 sir_utils.make_field("b", sir_utils.make_field_dimensions_unstructured(
-                     [LocationType.Value('Cell')], 1)),
-                 sir_utils.make_field("c", sir_utils.make_field_dimensions_unstructured(
-                     [LocationType.Value('Cell')], 1)),
-                 sir_utils.make_field("d", sir_utils.make_field_dimensions_unstructured([LocationType.Value('Cell')], 1))]
+                sir_utils.make_ast(
+                    [
+                        create_vertical_region_stmt1(),
+                        create_vertical_region_stmt2(),
+                        create_vertical_region_stmt3(),
+                    ]
+                ),
+                [
+                    sir_utils.make_field(
+                        "a",
+                        sir_utils.make_field_dimensions_unstructured(
+                            SIR.LocationType.Value("Cell"), 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "b",
+                        sir_utils.make_field_dimensions_unstructured(
+                            SIR.LocationType.Value("Cell"), 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "c",
+                        sir_utils.make_field_dimensions_unstructured(
+                            SIR.LocationType.Value("Cell"), 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "d",
+                        sir_utils.make_field_dimensions_unstructured(
+                            SIR.LocationType.Value("Cell"), 1
+                        ),
+                    ),
+                ],
             )
-
-        ])
+        ],
+    )
 
     # print the SIR
     if args.verbose:
@@ -200,8 +227,14 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate a unstructured vertical solver using the Dawn compiler")
+        description="Generate a unstructured vertical solver using the Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

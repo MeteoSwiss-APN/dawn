@@ -1,7 +1,11 @@
+export PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
+
 @Python3_EXECUTABLE@ @CMAKE_CURRENT_SOURCE_DIR@/@example@.py || {
     echo 'SIR Python example @example@ did not run. TEST failed.' && exit 1
 }
 
-diff @example@.cpp @CMAKE_CURRENT_SOURCE_DIR@/data/@example@_ref.cpp || {
-    echo 'SIR Python example @example@ TEST failed.' && exit 1
-}
+if @verify@; then
+    diff @example@.cpp @CMAKE_CURRENT_SOURCE_DIR@/data/@example@_reference.cpp || {
+        echo 'SIR Python example @example@ TEST failed.' && exit 1
+    }
+fi

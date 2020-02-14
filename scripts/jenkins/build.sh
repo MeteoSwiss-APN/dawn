@@ -84,8 +84,5 @@ pip install wheel
 export DAWN_BUILD_DIR=$build_dir/dawn
 pip install $base_dir/dawn/
 
-$source_dir/dawn/examples/python/generate_and_diff $source_dir/dawn
-echo "PYTHON RUN TESTS SUCCESSFUL!"
-
 python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py
 echo "PYTHON PYTEST SUCCESSFUL!"
