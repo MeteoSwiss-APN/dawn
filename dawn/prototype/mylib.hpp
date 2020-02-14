@@ -22,10 +22,10 @@ enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 class Vertex {
 public:
   Vertex() = default;
-  Vertex(int x, int y, int id) : x_(x), y_(y), id_(id) {}
+  Vertex(double x, double y, int id) : x_(x), y_(y), id_(id) {}
 
-  int x() const { return x_; }
-  int y() const { return y_; }
+  double x() const { return x_; }
+  double y() const { return y_; }
   int id() const { return id_; }
 
   Edge const& edge(size_t i) const;
@@ -40,8 +40,8 @@ public:
 
 private:
   int id_;
-  int x_;
-  int y_;
+  double x_;
+  double y_;
 
   std::vector<Edge*> edges_;
   std::vector<Face*> faces_;
@@ -89,6 +89,12 @@ public:
 
   operator bool() const { return id_ >= 0; }
 
+  void swap() {
+    if(faces_.size() != 2)
+      return;
+    std::swap(faces_[0], faces_[1]);
+  }
+
 private:
   int id_ = -1;
   edge_color color_;
@@ -99,9 +105,16 @@ private:
 
 class Grid {
 public:
-  Grid(int nx, int ny, bool periodic = false)
+  // generates a grid of right triangles, vertices are in [0,1] x [0,1]
+  //  if lx and/or ly is set, vertices are in [0,lx] x [0,ly]
+  //  if equilat is set and lx=ly equilateral triangles are generated instead of right ones
+  Grid(int nx, int ny, bool periodic = false, double lx = 0., double ly = 0., bool equilat = false)
       : faces_(2 * nx * ny), vertices_(periodic ? nx * ny : (nx + 1) * (ny + 1)),
         edges_(periodic ? 3 * nx * ny : 3 * (nx + 1) * (ny + 1)), nx_(nx), ny_(ny) {
+
+    if(equilat && (lx != ly)) {
+      std::cout << "WARNING: domain not square but equilat set. Result will be skwewed!\n";
+    }
     auto edge_at = [&](int i, int j, int c) -> Edge& {
       if(periodic)
         return edges_.at(3 * (((j + ny) % ny) * nx + ((i + nx) % nx)) + c);
@@ -130,7 +143,19 @@ public:
     for(int j = 0; j < (periodic ? ny : ny + 1); ++j)
       for(int i = 0; i < (periodic ? nx : nx + 1); ++i) {
         auto& v = vertex_at(i, j);
-        v = Vertex(i, j, &v - vertices_.data());
+        double px = i;
+        double py = j;
+        if(lx != 0.) {
+          px = double(i) / (nx)*lx;
+        }
+        if(ly != 0.) {
+          py = double(j) / (ny)*ly;
+        }
+        if(equilat) {
+          px = px - 0.5 * py;
+          py = py * sqrt(3) / 2.;
+        }
+        v = Vertex(px, py, &v - vertices_.data());
       }
 
     for(int j = 0; j < ny; ++j)
@@ -282,6 +307,13 @@ public:
       if(e.id() != -1)
         valid_edges_.push_back(e);
     }
+
+    // ICON compat attempt
+    for(auto& e : edges_) {
+      if(e.color() == edge_color::diagonal) {
+        e.swap();
+      }
+    }
   }
 
   std::vector<Face> const& faces() const { return faces_; }
@@ -301,7 +333,7 @@ private:
 
   int nx_;
   int ny_;
-};
+}; // namespace mylib
 
 //===------------------------------------------------------------------------------------------===//
 // dense fields

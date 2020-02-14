@@ -281,7 +281,7 @@ public:
   }
 
   // generates the final instantiation context
-  dawn::codegen::stencilInstantiationContext build(std::string const& name,
+  std::shared_ptr<iir::StencilInstantiation> build(std::string const& name,
                                                    std::unique_ptr<iir::Stencil> stencil);
 
 protected:

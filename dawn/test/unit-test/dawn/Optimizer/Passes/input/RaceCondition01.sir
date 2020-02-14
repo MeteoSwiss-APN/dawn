@@ -1,0 +1,319 @@
+{
+ "gridType": "Cartesian",
+ "filename": "RaceCondition01.cpp",
+ "stencils": [
+  {
+   "name": "Test",
+   "loc": {
+    "Line": 23,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 27,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "if_stmt": {
+                "cond_part": {
+                 "expr_stmt": {
+                  "expr": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "field_a",
+                      "vertical_offset": 0,
+                      "zero_offset": {},
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 28,
+                       "Column": 10
+                      },
+                      "data": {},
+                      "ID": 5
+                     }
+                    },
+                    "op": "\u003e",
+                    "right": {
+                     "literal_access_expr": {
+                      "value": "0",
+                      "type": {
+                       "type_id": "Float"
+                      },
+                      "loc": {
+                       "Line": 28,
+                       "Column": 20
+                      },
+                      "data": {},
+                      "ID": 4
+                     }
+                    },
+                    "loc": {
+                     "Line": 28,
+                     "Column": 10
+                    },
+                    "ID": 6
+                   }
+                  },
+                  "loc": {
+                   "Line": 28,
+                   "Column": 10
+                  },
+                  "data": {},
+                  "ID": 7
+                 }
+                },
+                "then_part": {
+                 "block_stmt": {
+                  "statements": [
+                   {
+                    "expr_stmt": {
+                     "expr": {
+                      "assignment_expr": {
+                       "left": {
+                        "field_access_expr": {
+                         "name": "field_b",
+                         "vertical_offset": 0,
+                         "zero_offset": {},
+                         "argument_map": [
+                          -1,
+                          -1,
+                          -1
+                         ],
+                         "argument_offset": [
+                          0,
+                          0,
+                          0
+                         ],
+                         "negate_offset": false,
+                         "loc": {
+                          "Line": 29,
+                          "Column": 9
+                         },
+                         "data": {},
+                         "ID": 10
+                        }
+                       },
+                       "op": "=",
+                       "right": {
+                        "field_access_expr": {
+                         "name": "field_a",
+                         "vertical_offset": 0,
+                         "zero_offset": {},
+                         "argument_map": [
+                          -1,
+                          -1,
+                          -1
+                         ],
+                         "argument_offset": [
+                          0,
+                          0,
+                          0
+                         ],
+                         "negate_offset": false,
+                         "loc": {
+                          "Line": 29,
+                          "Column": 19
+                         },
+                         "data": {},
+                         "ID": 9
+                        }
+                       },
+                       "loc": {
+                        "Line": 29,
+                        "Column": 9
+                       },
+                       "ID": 11
+                      }
+                     },
+                     "loc": {
+                      "Line": 29,
+                      "Column": 9
+                     },
+                     "data": {},
+                     "ID": 12
+                    }
+                   },
+                   {
+                    "expr_stmt": {
+                     "expr": {
+                      "assignment_expr": {
+                       "left": {
+                        "field_access_expr": {
+                         "name": "field_a",
+                         "vertical_offset": 0,
+                         "zero_offset": {},
+                         "argument_map": [
+                          -1,
+                          -1,
+                          -1
+                         ],
+                         "argument_offset": [
+                          0,
+                          0,
+                          0
+                         ],
+                         "negate_offset": false,
+                         "loc": {
+                          "Line": 30,
+                          "Column": 9
+                         },
+                         "data": {},
+                         "ID": 14
+                        }
+                       },
+                       "op": "=",
+                       "right": {
+                        "field_access_expr": {
+                         "name": "field_b",
+                         "vertical_offset": 0,
+                         "cartesian_offset": {
+                          "i_offset": 1,
+                          "j_offset": 0
+                         },
+                         "argument_map": [
+                          -1,
+                          -1,
+                          -1
+                         ],
+                         "argument_offset": [
+                          0,
+                          0,
+                          0
+                         ],
+                         "negate_offset": false,
+                         "loc": {
+                          "Line": 30,
+                          "Column": 19
+                         },
+                         "data": {},
+                         "ID": 13
+                        }
+                       },
+                       "loc": {
+                        "Line": 30,
+                        "Column": 9
+                       },
+                       "ID": 15
+                      }
+                     },
+                     "loc": {
+                      "Line": 30,
+                      "Column": 9
+                     },
+                     "data": {},
+                     "ID": 16
+                    }
+                   }
+                  ],
+                  "loc": {
+                   "Line": 28,
+                   "Column": 25
+                  },
+                  "data": {},
+                  "ID": 8
+                 }
+                },
+                "loc": {
+                 "Line": 28,
+                 "Column": 7
+                },
+                "data": {},
+                "ID": 17
+               }
+              }
+             ],
+             "loc": {
+              "Line": 27,
+              "Column": 5
+             },
+             "data": {},
+             "ID": 3
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 27,
+          "Column": 5
+         },
+         "data": {},
+         "ID": 18
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "data": {},
+      "ID": 2
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "field_a",
+     "loc": {
+      "Line": 24,
+      "Column": 11
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    },
+    {
+     "name": "field_b",
+     "loc": {
+      "Line": 24,
+      "Column": 20
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [],
+ "global_variables": {
+  "map": {}
+ }
+}
