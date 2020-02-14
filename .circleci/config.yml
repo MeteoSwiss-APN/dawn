@@ -28,7 +28,7 @@ jobs:
       - run:
           name: Dawn tests
           working_directory: /usr/src/dawn/dawn/build
-          command: ctest -j$(nproc) --progress
+          command: ctest -j$(nproc) --progress --output-on-failure
       - run:
           name: Dawn python module tests
           command: |
