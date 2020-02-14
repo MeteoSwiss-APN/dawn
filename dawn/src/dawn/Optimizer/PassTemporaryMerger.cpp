@@ -159,25 +159,28 @@ bool PassTemporaryMerger::run(
     for(const auto& colorRenameCandidatesPair : colorToAccessIDOfRenameCandidatesMap) {
       const std::vector<int>& AccessIDOfRenameCandidates = colorRenameCandidatesPair.second;
 
+      // Sort the rename candidates in alphabetical order
+      std::vector<std::string> renameCandidatesNames;
+      for(int AccessID : AccessIDOfRenameCandidates)
+        renameCandidatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
+      std::sort(renameCandidatesNames.begin(), renameCandidatesNames.end());
+
       // Print the rename candidates in alphabetical order
       if(context_.getOptions().ReportPassTemporaryMerger &&
          AccessIDOfRenameCandidates.size() >= 2) {
-        std::vector<std::string> renameCandidatesNames;
-        for(int AccessID : AccessIDOfRenameCandidates)
-          renameCandidatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
-        std::sort(renameCandidatesNames.begin(), renameCandidatesNames.end());
         std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
                   << ": merging: " << RangeToString(", ", "", "\n")(renameCandidatesNames);
       }
 
-      int newAccessID = AccessIDOfRenameCandidates[0];
-
-      // Rename all other fields of the color to the AccessID of the first field (note that it
-      // wouldn't matter which AccessID we choose)
-      for(int i = 1; i < AccessIDOfRenameCandidates.size(); ++i) {
-        merged = true;
+      // Rename all other fields of the color to the AccessID of the first field in alphabetical
+      // order (note that it wouldn't matter which AccessID we choose).
+      int newAccessID = metadata.getAccessIDFromName(renameCandidatesNames[0]);
+      for(int i = 0; i < AccessIDOfRenameCandidates.size(); ++i) {
         int oldAccessID = AccessIDOfRenameCandidates[i];
-        renameAccessIDInStencil(stencilPtr.get(), oldAccessID, newAccessID);
+        if(oldAccessID != newAccessID) {
+          merged = true;
+          renameAccessIDInStencil(stencilPtr.get(), oldAccessID, newAccessID);
+        }
       }
     }
 
