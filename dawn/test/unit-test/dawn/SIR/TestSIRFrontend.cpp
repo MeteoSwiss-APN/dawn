@@ -73,4 +73,8 @@ TEST_F(TestSIRFrontend, BurgersDemoGTClang) {
   runTest("input/burgers_demo_gtclang.sir", "output/burgers_demo_gtclang.cpp");
 }
 
+TEST_F(TestSIRFrontend, BurgersDemoGT4Py) {
+  runTest("input/burgers_demo_gt4py.sir", "output/burgers_demo_gt4py.cpp");
+}
+
 } // anonymous namespace
