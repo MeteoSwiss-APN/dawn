@@ -219,9 +219,8 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
 
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiation);
 
-  referenceInstantiation->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::StencilTemporary, 713,
-  //                                                         712, "field4");
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary,
+                                                           713, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 7);

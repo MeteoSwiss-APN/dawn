@@ -39,7 +39,7 @@ public:
     Byte  ///< Protobuf's internal byte format
   };
 
-  /// @brief Deserialize the StencilInstantiaion from `file`
+  /// @brief Deserialize the StencilInstantiation from `file`
   ///
   /// @param file    Path the file
   /// @param kind    The kind of serialization used in `file` (Json or Byte)
@@ -48,16 +48,7 @@ public:
   static std::shared_ptr<iir::StencilInstantiation> deserialize(const std::string& file,
                                                                 Format kind = Format::Json);
 
-  /// @brief Deserialize the StencilInstantiaion from `file`
-  ///
-  /// @param file    Path the file
-  /// @param kind    The kind of serialization used in `file` (Json or Byte)
-  /// @throws std::excetpion    Failed to deserialize
-  /// @returns newly allocated IIR on success or `NULL`
-  static std::shared_ptr<iir::StencilInstantiation>
-  deserialize(const std::string& file, Format kind = Format::Json);
-
-  /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
+  /// @brief Deserialize the StencilInstantiaation from the given JSON formatted `string`
   ///
   /// @param str    Byte or JSON string to deserializee
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
@@ -68,7 +59,7 @@ public:
   deserializeFromString(const std::string& str, dawn::OptimizerContext* context,
                         Format kind = Format::Json);
 
-  /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
+  /// @brief Deserialize the StencilInstantiation from the given JSON formatted `string`
   ///
   /// @param str    Byte or JSON string to deserializee
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
@@ -77,21 +68,21 @@ public:
   static std::shared_ptr<iir::StencilInstantiation>
   deserializeFromString(const std::string& str, Format kind = Format::Json);
 
-  /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string to `file`
+  /// @brief Serialize the StencilInstantiation as a Json or Byte formatted string to `file`
   ///
   /// @param file          Path the file
-  /// @param instantiation StencilInstantiaion to serialize
+  /// @param instantiation StencilInstantiation to serialize
   /// @param kind          The kind of serialization to use to write to `file` (Json or Byte)
   /// @throws std::exception    Failed to open `file`
   static void serialize(const std::string& file,
                         const std::shared_ptr<iir::StencilInstantiation> instantiation,
                         dawn::IIRSerializer::Format kind = Format::Json);
 
-  /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string
+  /// @brief Serialize the StencilInstantiai as a Json or Byte formatted string
   ///
-  /// @param instantiation StencilInstantiaion to serialize
+  /// @param instantiation StencilInstantiation to serialize
   /// @param kind         The kind of serialization to use when writing to the string (Json or Byte)
-  /// @returns JSON formatted string of `StencilInstantiaion`
+  /// @returns JSON formatted string of `StencilInstantiation`
   static std::string
   serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
                     Format kind = Format::Json);

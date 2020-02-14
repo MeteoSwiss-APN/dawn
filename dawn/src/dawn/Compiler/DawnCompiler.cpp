@@ -470,25 +470,6 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
 
-  IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
-  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
-    if(options_.IIRFormat == "json") {
-      serializationKind = IIRSerializer::Format::Json;
-    } else if(options_.IIRFormat == "byte") {
-      serializationKind = IIRSerializer::Format::Byte;
-    } else {
-      dawn_unreachable("Unknown SIRFormat option");
-    }
-  }
-
-  // Check if options are valid
-  // -max-halo
-  if(options_.MaxHaloPoints < 0) {
-    diagnostics_.report(buildDiag("-max-halo", options_.MaxHaloPoints,
-                                  "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
-  }
-
   // Parallelize the SIR
   auto stencilInstantiation = lowerToIIR(stencilIR);
 
