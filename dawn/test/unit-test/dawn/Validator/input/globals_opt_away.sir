@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "./globals_opt_away.cpp",
+ "filename": "/home/eddied/Work/dawn/dawn/cmake-build-debug/test/unit-test/dawn/CodeGen/Naive/input/globals_opt_away.cpp",
  "stencils": [
   {
    "name": "Test",

@@ -29,10 +29,7 @@ class TemporaryToFunction : public ::testing::Test {
   dawn::DawnCompiler compiler_;
 
 protected:
-  TemporaryToFunction() {
-    compiler_.getOptions().PassTmpToFunction = true;
-    //    compiler_.getOptions().ReportPassTmpToFunction = true;
-  }
+  TemporaryToFunction() { compiler_.getOptions().PassTmpToFunction = true; }
   virtual void SetUp() {}
 
   std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {

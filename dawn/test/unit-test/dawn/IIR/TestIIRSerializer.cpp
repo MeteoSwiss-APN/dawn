@@ -274,9 +274,9 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
                                                   b.lit(0.), LocType::Cells, LocType::Edges))))))));
 
   auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
-      IIRSerializer::serializeToString(stencil_instantiation[stencilName.c_str()]), context_.get());
+      IIRSerializer::serializeToString(stencil_instantiation), context_.get());
 
-  IIR_EXPECT_EQ(stencil_instantiation[stencilName.c_str()], deserializedAndSerialized);
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
 TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
@@ -309,9 +309,9 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
                                                    std::vector<int>({1, 2, 3, 4})))))))));
 
   auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
-      IIRSerializer::serializeToString(stencil_instantiation[stencilName.c_str()]), context_.get());
+      IIRSerializer::serializeToString(stencil_instantiation), context_.get());
 
-  IIR_EXPECT_EQ(stencil_instantiation[stencilName.c_str()], deserializedAndSerialized);
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
 TEST_F(IIRSerializerTest, IIRTests) {

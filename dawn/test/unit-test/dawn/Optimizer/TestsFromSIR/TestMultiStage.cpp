@@ -136,7 +136,7 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_ordered_do_methods.sir", "stencil");
+  auto stencilInstantiation = loadTest("input/test_compute_ordered_do_methods.sir", "stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -228,7 +228,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval.sir", "stencil");
+  auto stencilInstantiation = loadTest("input/test_compute_read_access_interval.sir", "stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -297,7 +297,7 @@ TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval_02) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval_02.sir", "stencil");
+  auto stencilInstantiation = loadTest("input/test_compute_read_access_interval_02.sir", "stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -363,7 +363,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
   //    }
 
   auto stencilInstantiation =
-      loadTest("test_field_access_interval_04.sir", "compute_extent_test_stencil");
+      loadTest("input/test_field_access_interval_04.sir", "compute_extent_test_stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -441,7 +441,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval_03.sir", "stencil");
+  auto stencilInstantiation = loadTest("input/test_compute_read_access_interval_03.sir", "stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -557,7 +557,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   //  }
   //}
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval_04.sir", "stencil");
+  auto stencilInstantiation = loadTest("input/test_compute_read_access_interval_04.sir", "stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];

@@ -16,20 +16,29 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestOptimizerPasses)
 add_executable(${executable}
   TestMain.cpp
-  TestPassComputeStageExtents.cpp
   TestComputeMaxExtent.cpp
+  TestFieldAccessIntervals.cpp
+  TestPassComputeStageExtents.cpp
   TestPassCaching.cpp
   TestPassLocalVarType.cpp
   TestPassSetBoundaryCondition.cpp
-  TestFieldAccessIntervals.cpp
+  TestPassIntervalPartitioning.cpp
+  TestPassFieldVersioning.cpp
+  TestPassMultiStageSplitter.cpp
+  TestPassSetCaches.cpp
+  TestPassSetNonTempCaches.cpp
+  TestPassStageMerger.cpp
+  TestPassStageReordering.cpp
+  TestPassTemporaryMerger.cpp
+  TestPassTemporaryType.cpp
   TestTemporaryToFunction.cpp
-  TestIntervalPartitioner.cpp
 )
-target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
 target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::Passes::"
   EXTRA_ARGS ${CMAKE_CURRENT_LIST_DIR}
   DISCOVERY_TIMEOUT 30)

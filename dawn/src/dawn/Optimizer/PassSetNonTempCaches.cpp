@@ -304,9 +304,14 @@ bool dawn::PassSetNonTempCaches::run(
       for(const auto& multiStagePtr : stencil.getChildren()) {
         GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, context_);
         organizer.process();
+        for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
+          cachedFieldNames_.push_back(nametoCache.name);
+        }
+
         if(context_.getOptions().ReportPassSetNonTempCaches) {
-          for(const auto& nametoCache : organizer.getOriginalNameToCache())
+          for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
             allCachedFields.push_back(nametoCache);
+          }
         }
       }
     }
@@ -330,6 +335,10 @@ bool dawn::PassSetNonTempCaches::run(
   }
 
   return true;
+}
+
+std::vector<std::string>& PassSetNonTempCaches::getCachedFieldNames() {
+  return cachedFieldNames_;
 }
 
 } // namespace dawn

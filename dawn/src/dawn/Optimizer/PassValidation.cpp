@@ -13,6 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassValidation.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 namespace dawn {
 

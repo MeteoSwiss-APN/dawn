@@ -35,7 +35,9 @@ protected:
 
   std::unique_ptr<iir::IIR> loadTest(std::string sirFilename) {
 
-    std::string filename = TestEnvironment::path_ + "/" + sirFilename;
+    std::string filename = sirFilename;
+    if (!TestEnvironment::path_.empty())
+      filename = TestEnvironment::path_ + "/" + filename;
     std::ifstream file(filename);
     DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
@@ -62,7 +64,7 @@ protected:
 };
 
 TEST_F(ComputeStageExtents, test_stencil_01) {
-  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_01.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("input/compute_extent_test_stencil_01.sir");
   const auto& stencils = IIR->getChildren();
 
   EXPECT_EQ(stencils.size(), 1);
@@ -74,7 +76,7 @@ TEST_F(ComputeStageExtents, test_stencil_01) {
 }
 
 TEST_F(ComputeStageExtents, test_stencil_02) {
-  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_02.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("input/compute_extent_test_stencil_02.sir");
   const auto& stencils = IIR->getChildren();
 
   EXPECT_EQ(stencils.size(), 1);
@@ -86,7 +88,7 @@ TEST_F(ComputeStageExtents, test_stencil_02) {
   EXPECT_EQ(stencil->getStage(2)->getExtents(), iir::Extents(ast::cartesian));
 }
 TEST_F(ComputeStageExtents, test_stencil_03) {
-  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_03.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("input/compute_extent_test_stencil_03.sir");
   const auto& stencils = IIR->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -99,7 +101,7 @@ TEST_F(ComputeStageExtents, test_stencil_03) {
 }
 
 TEST_F(ComputeStageExtents, test_stencil_04) {
-  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_04.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("input/compute_extent_test_stencil_04.sir");
   const auto& stencils = IIR->getChildren();
 
   EXPECT_EQ(stencils.size(), 1);
@@ -113,7 +115,7 @@ TEST_F(ComputeStageExtents, test_stencil_04) {
 }
 
 TEST_F(ComputeStageExtents, test_stencil_05) {
-  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_05.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("input/compute_extent_test_stencil_05.sir");
   const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
