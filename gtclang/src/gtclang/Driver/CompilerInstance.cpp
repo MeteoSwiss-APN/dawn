@@ -91,8 +91,8 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
 
 #ifdef __APPLE__
   // Set the root where system headers are located.
-  // ccArgs.push_back("-internal-isystem");
-  // ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "/../../../../include/c++/v1/");
+  ccArgs.push_back("-internal-isystem");
+  ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "/../../../../include/c++/v1/");
   ccArgs.push_back("-internal-isystem");
   ccArgs.push_back("/Library/Developer/CommandLineTools/usr/include/c++/v1");
   // 20191208: -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk does not work, so we
