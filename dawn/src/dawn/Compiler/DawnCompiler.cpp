@@ -167,17 +167,6 @@ DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
     throw std::runtime_error("An error occurred.");
   }
 
-  IIRSerializer::Format serializationKind;
-  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
-    if(options_.IIRFormat == "json") {
-      serializationKind = IIRSerializer::Format::Json;
-    } else if(options_.IIRFormat == "byte") {
-      serializationKind = IIRSerializer::Format::Byte;
-    } else {
-      dawn_unreachable("Unknown SIRFormat option");
-    }
-  }
-
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
   if(options_.MaxCutMSS) {
@@ -214,12 +203,12 @@ DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
     // Run optimization passes
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
 
-    DAWN_LOG(INFO) << "Starting parallelization passes for `" << instantiation->getName()
+    DAWN_LOG(INFO) << "Starting parallelisation passes for `" << instantiation->getName()
                    << "` ...";
     if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
       throw std::runtime_error("An error occurred.");
 
-    DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
+    DAWN_LOG(INFO) << "Done with parallelisation passes for `" << instantiation->getName() << "`";
   }
 
   auto stencilInstantiationMap = optimizer.getStencilInstantiationMap();
@@ -385,6 +374,12 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
       optimizer.checkAndPushBack<PassValidation>();
     }
   }
+  if(options_.Backend == "cuda" || options_.SerializeIIR) {
+    optimizer.checkAndPushBack<PassInlining>(true,
+                                             PassInlining::InlineStrategy::ComputationsOnTheFly);
+    // validation check
+    optimizer.checkAndPushBack<PassValidation>();
+  }
   //===-----------------------------------------------------------------------------------------
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
@@ -471,7 +466,13 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
   diagnostics_.setFilename(stencilIR->Filename);
 
   // Parallelize the SIR
-  auto stencilInstantiation = lowerToIIR(stencilIR);
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiation;
+  try {
+    stencilInstantiation = lowerToIIR(stencilIR);
+  } catch(...) {
+    DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
+    return nullptr;
+  }
 
   if(diagnostics_.hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";

@@ -609,8 +609,9 @@ OptimizerContext::OptimizerContext(
         stencilInstantiationMap)
     : diagnostics_(diagnostics), options_(options), SIR_() {
   DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
-  for(auto& [name, stencilInstantiation] : stencilInstantiationMap)
+  for(auto& [name, stencilInstantiation] : stencilInstantiationMap) {
     restoreIIR(name, stencilInstantiation);
+  }
 }
 
 bool OptimizerContext::fillIIRFromSIR(

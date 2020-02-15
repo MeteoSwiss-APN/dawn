@@ -70,7 +70,7 @@ add_integration_test(Diagnostics/err_stencilfun_vertical_region.cpp)
 add_integration_test(IIRSerializer/AccessTest.cpp)
 add_integration_test(IIRSerializer/CopyTest.cpp)
 add_integration_test(IIRSerializer/NestedStencils.cpp)
-# add_integration_test(IIRSerializer/StencilFnCallTest.cpp)
+add_integration_test(IIRSerializer/StencilFnCallTest.cpp)
 
 add_integration_test(Regression/globals_dependencies_issue401.cpp)
 
