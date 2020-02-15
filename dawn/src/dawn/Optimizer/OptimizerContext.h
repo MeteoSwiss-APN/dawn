@@ -102,11 +102,9 @@ public:
 
   /// @brief Create a new pass at the end of the pass list
   template <class T, typename... Args>
-  void checkAndPushBack(Args&&... args) {
+  void pushBackPass(Args&&... args) {
     std::unique_ptr<T> pass = std::make_unique<T>(*this, std::forward<Args>(args)...);
-    if(compareOptionsToPassFlags<T>(pass)) {
-      passManager_.getPasses().push_back(std::move(pass));
-    }
+    passManager_.getPasses().push_back(std::move(pass));
   }
 
   /// @brief fillIIRFromSIR
@@ -119,23 +117,6 @@ public:
                       const std::shared_ptr<SIR> fullSIR);
   bool restoreIIR(std::string const& name,
                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
-
-  /// @brief this function check if a pass should be pushed back into the list of passes based on
-  /// the options.
-  ///
-  /// Currently this is a placeholder for the final design once a more elaborate scheme of
-  /// grouping is in place that enables more paths. This should also eventually replace the
-  /// option-checks that are currently hidden in the passes run-methods
-  template <typename T>
-  bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
-
-    // bool retval;
-    // if(options_.Debug)
-    //   retval = p->isDebug();
-    // else
-    //   retval = true;
-    return true;
-  }
 };
 
 } // namespace dawn
