@@ -77,4 +77,16 @@ TEST_F(TestSIRFrontend, BurgersDemoGT4Py) {
   runTest("input/burgers_demo_gt4py.sir", "output/burgers_demo_gt4py.cpp");
 }
 
+TEST_F(TestSIRFrontend, BurgersDemoGT4PyCuda) {
+  runTest("input/burgers_demo_gt4py.sir", "output/burgers_demo_gt4py.cu");
+}
+
+TEST_F(TestSIRFrontend, YPPMMainAlGT4Py) {
+  runTest("input/yppm_main_al_gt4py.sir", "output/yppm_main_al_gt4py.cpp");
+}
+
+TEST_F(TestSIRFrontend, YPPMAlXEdgeGT4Py) {
+  runTest("input/yppm_al_x_edge_gt4py.sir", "output/yppm_al_x_edge_gt4py.cpp");
+}
+
 } // anonymous namespace
