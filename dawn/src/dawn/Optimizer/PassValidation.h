@@ -16,10 +16,7 @@
 #define DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
 
 #include "dawn/Optimizer/Pass.h"
-#include "dawn/Support/Logging.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/IntegrityChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
+#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 

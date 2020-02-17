@@ -40,13 +40,14 @@ add_library(DawnSupport
   EditDistance.h
   FileUtil.cpp
   Exception.h
-        Exception.cpp
+  Exception.cpp
   FileUtil.h
   Format.h
   HashCombine.h
   IndexGenerator.cpp
   IndexGenerator.h
   IndexRange.h
+  Iterator.h
   Json.h
   Logging.cpp
   Logging.h
