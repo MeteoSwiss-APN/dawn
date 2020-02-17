@@ -12,6 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+# Define SIR and IIR proto files here, since they are needed for the python bindings in dawn4py as well as dawn
+# This situation will be fixed when dawn_irs is separated from dawn
+set(dawn_sir_proto_files SIR/SIR.proto SIR/statements.proto SIR/enums.proto)
+set(dawn_iir_proto_files IIR/IIR.proto)
+
 add_subdirectory(dawn)
 add_subdirectory(dawn-c)
 

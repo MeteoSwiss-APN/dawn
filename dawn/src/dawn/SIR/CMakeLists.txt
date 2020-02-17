@@ -12,41 +12,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(protos SIR/SIR.proto SIR/statements.proto SIR/enums.proto)
-
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS ${protos}
+  PROTOS ${dawn_sir_proto_files}
   PACKG SIR
   LANGUAGE cpp
 )
-
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES sir_proto_python_files
-    PROTOS ${protos}
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG SIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${DAWN4PY_MODULE_DIR}/dawn4py/serialization/SIR)
-
-  list(TRANSFORM sir_proto_python_files
-    REPLACE ${CMAKE_CURRENT_BINARY_DIR}/SIR ${output_dir}
-    OUTPUT_VARIABLE sir_proto_python_dawn4py
-  )
-
-  add_custom_command(OUTPUT ${sir_proto_python_dawn4py}
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
-    DEPENDS ${sir_proto_python_files}
-  )
-endif()
 
 add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files} ${sir_proto_python_dawn4py})
 target_compile_features(DawnSIRProto PUBLIC cxx_std_11)

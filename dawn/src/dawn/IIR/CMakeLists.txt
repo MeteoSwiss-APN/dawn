@@ -12,45 +12,18 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(protos IIR/IIR.proto)
-
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES iir_proto_cpp_files
   OUT_INCLUDE_DIRS iir_proto_include_dirs
-  PROTOS ${protos}
+  PROTOS ${dawn_iir_proto_files}
   INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PACKG IIR
   LANGUAGE cpp
 )
 
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES iir_proto_python_files
-    PROTOS ${protos}
-    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG IIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${DAWN4PY_MODULE_DIR}/dawn4py/serialization/IIR)
-
-  list(TRANSFORM iir_proto_python_files
-    REPLACE ${CMAKE_CURRENT_BINARY_DIR}/IIR ${output_dir}
-    OUTPUT_VARIABLE iir_proto_python_dawn4py
-  )
-
-  add_custom_command(OUTPUT ${iir_proto_python_dawn4py}
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
-    DEPENDS ${iir_proto_python_files}
-  )
-endif()
-
-add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files} ${iir_proto_python_dawn4py})
+add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
