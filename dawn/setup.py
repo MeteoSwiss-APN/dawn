@@ -99,20 +99,16 @@ class CMakeBuild(build_ext):
         # Dest dir is here
         dest_dir = src_dir if self.inplace else self.build_lib
 
-        has_irs_in_place = (
-            len(
-                glob(
-                    os.path.join(dest_dir, "dawn4py", "serialization") + "/**/*_pb2.py",
-                    recursive=True,
-                )
-            )
-            > 0
+        irs_in_build = glob(
+            os.path.join(build_dir, "src", "dawn4py", "serialization") + "/**/*_pb2.py",
+            recursive=True,
         )
+        has_irs_in_build = len(irs_in_build) > 0
 
-        # Check if the extensions exist in the build_dir and protos were copied over (in src_dir)
+        # Check if the extensions and python protobuf files exist in build_dir
         if (
             build_dir is not ""
-            and has_irs_in_place
+            and has_irs_in_build
             and all(
                 [
                     os.path.exists(os.path.join(build_dir, "src", self.get_ext_filename(ext.name)))
@@ -120,7 +116,12 @@ class CMakeBuild(build_ext):
                 ]
             )
         ):
-            # All that we need to do is copy over the library to dest_dir
+            # Copy irs over to dest_dir
+            for proto in irs_in_build:
+                rel_path = proto.replace(os.path.join(build_dir, "src") + "/", "")
+                self.copy_file(proto, os.path.join(dest_dir, rel_path))
+
+            # Copy extension over to dest_dir
             for ext in self.extensions:
                 self.copy_file(
                     os.path.join(build_dir, "src", self.get_ext_filename(ext.name)),
