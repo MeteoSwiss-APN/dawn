@@ -22,7 +22,7 @@ dawn_protobuf_generate(
   LANGUAGE cpp
 )
 
-add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files} ${sir_proto_python_dawn4py})
+add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files})
 target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 

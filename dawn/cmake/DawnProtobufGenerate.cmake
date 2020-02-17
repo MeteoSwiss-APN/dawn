@@ -106,7 +106,6 @@ function(dawn_protobuf_generate)
   endif()
 
   set(output_files)
-  set(output_include_dirs)
 
   if(ARG_OUTDIR)
     set(output_directory ${ARG_OUTDIR})
@@ -121,16 +120,16 @@ function(dawn_protobuf_generate)
     unset(generated_srcs)
     foreach(ext ${extensions})
       if(${ARG_LANGUAGE} STREQUAL "java" )
-        list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/dawn/sir/${basename}${ext}")
+        list(APPEND generated_srcs "${output_directory}/sir/${basename}${ext}")
       else()
-        list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/${ARG_PACKG}/${basename}${ext}")
+        list(APPEND generated_srcs "${output_directory}/${ARG_PACKG}/${basename}${ext}")
       endif()
     endforeach()
 
     add_custom_command(
       OUTPUT ${generated_srcs}
       COMMAND protobuf::protoc
-      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${output_directory}"
+      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out ${output_directory}
            ${include_path} "${proto}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
       DEPENDS ${abs_file} protobuf::protoc ${depends}
@@ -139,27 +138,7 @@ function(dawn_protobuf_generate)
     )
 
     list(APPEND output_files ${generated_srcs})
-
-    foreach(src ${generated_srcs})
-      get_filename_component(abs_file ${src} ABSOLUTE)
-      get_filename_component(abs_path ${src} PATH)
-      list(FIND output_include_dirs ${abs_path} existing)
-      if(${existing} EQUAL -1)
-        list(APPEND output_include_dirs ${abs_path})
-      endif()
-    endforeach()
   endforeach()
 
-  if(ARG_OUT_DIRS)
-    if(${ARG_LANGUAGE} STREQUAL "java")
-      set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}/dawn/" PARENT_SCOPE)
-    else()
-      set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
-    endif()
-  endif()
-
-  set("${ARG_OUT_FILES}" ${output_files} PARENT_SCOPE)
-  if(ARG_OUT_INCLUDE_DIRS)
-    set("${ARG_OUT_INCLUDE_DIRS}" ${output_include_dirs} PARENT_SCOPE)
-  endif()
+  set("${ARG_OUT_FILES}" "${output_files}" PARENT_SCOPE)
 endfunction()
