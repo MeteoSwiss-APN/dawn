@@ -79,23 +79,10 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
   } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
     if(const auto& assignmentExpr =
            std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
-      // TODO: it doesn't make sense to have compound assignments in IIR/SIR. They are just
-      // syntactic sugar.
-      std::string op = "";
-      if(StringRef(assignmentExpr->getOp()) == "+=") {
-        op = "+";
-      } else if(StringRef(assignmentExpr->getOp()) == "-=") {
-        op = "-";
-      } else if(StringRef(assignmentExpr->getOp()) == "*=") {
-        op = "*";
-      } else if(StringRef(assignmentExpr->getOp()) == "/=") {
-        op = "/";
-      } else {
-        DAWN_ASSERT_MSG(StringRef(assignmentExpr->getOp()) == "=", "Invalid compound assignment");
+      if(StringRef(assignmentExpr->getOp()) != "=") {
+        throw std::runtime_error("Compound assignment not supported.");
       }
-      return op == "" ? assignmentExpr->getRight()
-                      : std::make_shared<iir::BinaryOperator>(assignmentExpr->getLeft()->clone(),
-                                                              op, assignmentExpr->getRight());
+      return assignmentExpr->getRight();
     }
   }
 
@@ -119,7 +106,7 @@ void removeScalarsFromBlockStmt(
         if(const std::shared_ptr<iir::AssignmentExpr> assignmentExpr =
                std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
 
-          assignmentExpr->getRight() = getRhsOfAssignment(exprStmt)->acceptAndReplace(replacer);
+          assignmentExpr->getRight() = assignmentExpr->getRight()->acceptAndReplace(replacer);
           continue;
         }
       }
@@ -172,6 +159,13 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
 
 bool PassRemoveScalars::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  // TODO: sir from GTClang currently not supported: it introduces compound assignments (handling
+  // them complicates this pass). For now disabling the pass for cartesian grids.
+  // We should remove compound assignments from SIR/IIR. They are syntactic sugar, only useful at
+  // DSL level.
+  if(stencilInstantiation->getIIR()->getGridType() == ast::GridType::Cartesian) {
+    return true;
+  }
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilPtr)) {
       // Local variables are local to a DoMethod. Remove scalar local variables from the statements

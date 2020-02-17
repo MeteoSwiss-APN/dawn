@@ -22,7 +22,10 @@ namespace dawn {
 /// the IIR tree.
 /// * Input:  IIR with local variables' types (iir::LocalVariableData::type_) correctly computed by
 ///           PassLocalVariableType.
-/// * Output: same as input, but with scalar local variables inlined.
+/// * Output: (unstructured) same as input, but with scalar local variables inlined.
+///           (cartesian) same as input. Pass is not run: GTClang generates SIR with compound
+///           assignments (handling them complicates this pass). TODO: We should remove compound
+///           assignments from SIR/IIR. They are syntactic sugar, only useful at DSL level.
 /// @ingroup optimizer
 ///
 /// This pass is necessary to generate legal IIR
