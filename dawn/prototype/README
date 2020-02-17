@@ -12,3 +12,8 @@ Compiling and running the prototype (until we have a proper setup)
    --> gmsh mymesh.msh
 
 NOTE: TestCase is curently one of [Copy|Diffusion|VerticalSum|Gradient]
+
+For testing the netcdf import:
+cd prototype && g++ -o out TestAtlasFromNetcdf.cpp AtlasFromNetcdf.cpp -std=c++17 -I../../dawn/src -I<path/to/atlas>/include -I<path/to/eckit>/include -L</path/to/atlas>/lib -latlas -L<path/to/eckit>/lib -leckit -lnetcdf-cxx4; ./out <mesh.nc>  
+--> gmsh earthV(1|2).msh
+The above assumes that g++/ld can locate netcdf. If your netcdf location is not in the standard paths you may need to add them with -I / -L (as with atlas)
