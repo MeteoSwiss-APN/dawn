@@ -133,9 +133,9 @@ static bool CellsFromNetCDF(const netCDF::NcFile& dataFile, atlas::Mesh& mesh) {
 
   for(int cellIdx = 0; cellIdx < ncells; cellIdx++) {
     // indices in netcdf are 1 based, data is column major
-    atlas::idx_t tri_nodes[3] = {tri_nodes[0] = cellToVertex[0 * ncells + cellIdx] - 1,
-                                 tri_nodes[1] = cellToVertex[1 * ncells + cellIdx] - 1,
-                                 tri_nodes[2] = cellToVertex[2 * ncells + cellIdx] - 1};
+    atlas::idx_t tri_nodes[3] = {cellToVertex[0 * ncells + cellIdx] - 1,
+                                 cellToVertex[1 * ncells + cellIdx] - 1,
+                                 cellToVertex[2 * ncells + cellIdx] - 1};
     node_connectivity.set(cellIdx, tri_nodes);
     glb_idx_cell[cellIdx] = cellIdx;
     cells_part(cellIdx) = myPart;
