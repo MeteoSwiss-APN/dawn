@@ -26,6 +26,30 @@
 namespace dawn {
 namespace {
 
+// TODO: replace with a more general expr.getDimensions() = Scalar | OnEdges | ...
+//      that considers the dimensionality of local variables and fields
+class ExprScalarChecker : public ast::ASTVisitorForwarding {
+  const iir::StencilMetaInformation& metadata_;
+  bool isScalar_ = true;
+
+public:
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override { isScalar_ = false; }
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
+    isScalar_ &= metadata_.getLocalVariableDataFromAccessID(iir::getAccessID(expr)).isScalar();
+  }
+
+  bool isScalar() const { return isScalar_; }
+
+  ExprScalarChecker(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
+};
+
+bool isExprScalar(const std::shared_ptr<iir::Expr>& expr,
+                  const iir::StencilMetaInformation& metadata) {
+  ExprScalarChecker checker(metadata);
+  expr->accept(checker);
+  return checker.isScalar();
+}
+
 class VarAccessesReplacer : public ast::ASTVisitorPostOrder {
   const int variableToSubstitute_;
   const std::shared_ptr<const iir::Expr> substituteExpr_;
@@ -80,7 +104,8 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
     if(const auto& assignmentExpr =
            std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
       if(StringRef(assignmentExpr->getOp()) != "=") {
-        throw std::runtime_error("Compound assignment not supported.");
+        throw std::runtime_error(dawn::format("Compound assignment not supported at line %d",
+                                              assignmentExpr->getSourceLocation().Line));
       }
       return assignmentExpr->getRight();
     }
@@ -89,47 +114,83 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
   dawn_unreachable("Function called with non-assignment stmt");
 }
 
+/// TODO: if-statements with conditions containing only globals, scalars, literals (and not
+/// dimensional variables or fields) are not supported yet. (If the condition expression has
+/// dimensions instead, then each variable we write to, inside the then/else blocks, will have
+/// dimensions)
+///
+/// Would need a new pass to run before this one (and after PassLocalVarType):
+/// (recall that a global cannot be set inside a DoMethod)
+///
+/// if(scalar_expr) { // with scalar_expr containing only globals, scalars, literals
+///    varA = varA + 5.0;
+///    f_c = varB + varA;
+/// } else {
+///    varB = 2.0;
+///    f_c = varA * varB;
+/// }
+///
+/// CHANGE INTO
+///
+/// bool _ifCond_0 = scalar_expr;
+/// varA = _ifCond_0 ? varA + 5.0 : varA;
+/// f_c = _ifCond_0 ? varB + varA;
+/// varB = !_ifCond_0 ? 2.0 : varB;
+/// f_c = !_ifCond_0 ? varA * varB : f_c;
+///
+/// than this pass (PassRemoveScalars) will remove the scalars _ifCond_0, varA, varB, ...
+/// another pass could also remove the ternary operators if the conditions are literals.
 void removeScalarsFromBlockStmt(
     iir::BlockStmt& blockStmt,
-    std::unordered_map<int, std::shared_ptr<const iir::Expr>>& variableToLastRhsMap,
+    std::unordered_map<int, std::shared_ptr<const iir::Expr>>& scalarToLastRhsMap,
     const iir::StencilMetaInformation& metadata) {
 
   for(auto stmtIt = blockStmt.getStatements().begin(); stmtIt != blockStmt.getStatements().end();) {
 
-    for(const auto& [varAccessID, lastRhs] : variableToLastRhsMap) {
+    for(const auto& [varAccessID, lastRhs] : scalarToLastRhsMap) {
 
       VarAccessesReplacer replacer(varAccessID, lastRhs);
-      // Only apply replacer on the rhs if current statement is an assignment, otherwise apply on
-      // the whole statement.
+      // Only apply replacer on the rhs if current statement is an assignment.
       if(const std::shared_ptr<iir::ExprStmt> exprStmt =
              std::dynamic_pointer_cast<iir::ExprStmt>(*stmtIt)) {
         if(const std::shared_ptr<iir::AssignmentExpr> assignmentExpr =
                std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
 
           assignmentExpr->getRight() = assignmentExpr->getRight()->acceptAndReplace(replacer);
-          continue;
+
+        } else if(exprStmt->getExpr()->getKind() != iir::Expr::Kind::StencilFunCallExpr) {
+          throw std::runtime_error(dawn::format("Unsupported statement at line %d",
+                                                exprStmt->getSourceLocation().Line)); // e.g. i++;
         }
       }
-      (*stmtIt)->acceptAndReplace(replacer);
     }
-    // Need to treat if-statement differently. There are block statements inside.
+    // Need to treat if statements differently. There are block statements inside.
     if(const std::shared_ptr<iir::IfStmt> ifStmt =
            std::dynamic_pointer_cast<iir::IfStmt>(*stmtIt)) {
+
+      if(isExprScalar(ifStmt->getCondExpr(), metadata)) {
+        throw std::runtime_error(
+            dawn::format("If-condition is scalar at line %d. It is not yet supported.",
+                         ifStmt->getSourceLocation().Line)); // See reason above.
+      }
+
       DAWN_ASSERT_MSG(ifStmt->getThenStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
                       "Then statement must be a block statement.");
       removeScalarsFromBlockStmt(*std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getThenStmt()),
-                                 variableToLastRhsMap, metadata);
+                                 scalarToLastRhsMap, metadata);
+
       if(ifStmt->hasElse()) {
         DAWN_ASSERT_MSG(ifStmt->getElseStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
                         "Else statement must be a block statement.");
         removeScalarsFromBlockStmt(
-            *std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getElseStmt()), variableToLastRhsMap,
+            *std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getElseStmt()), scalarToLastRhsMap,
             metadata);
       }
-    } else {
+
+    } else { // Not an if statement
       auto scalarAccessID = getScalarWrittenByStatement(*stmtIt, metadata);
       if(scalarAccessID.has_value()) { // Writing to a scalar variable
-        variableToLastRhsMap[*scalarAccessID] = getRhsOfAssignment(*stmtIt);
+        scalarToLastRhsMap[*scalarAccessID] = getRhsOfAssignment(*stmtIt);
         stmtIt = blockStmt.erase(stmtIt);
         continue; // to next statement
       }
@@ -141,16 +202,15 @@ void removeScalarsFromBlockStmt(
 void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformation& metadata) {
 
   // Map from variable's access id to last rhs assigned to the variable
-  std::unordered_map<int, std::shared_ptr<const iir::Expr>> variableToLastRhsMap;
+  std::unordered_map<int, std::shared_ptr<const iir::Expr>> scalarToLastRhsMap;
 
-  removeScalarsFromBlockStmt(doMethod.getAST(), variableToLastRhsMap, metadata);
+  removeScalarsFromBlockStmt(doMethod.getAST(), scalarToLastRhsMap, metadata);
 
   // Recompute the accesses metadata of all statements (removed variables means removed
   // accesses)
   computeAccesses(metadata, doMethod.getAST().getStatements());
-  doMethod.update(iir::NodeUpdateType::level);
   // Metadata cleanup
-  for(const auto& pair : variableToLastRhsMap) {
+  for(const auto& pair : scalarToLastRhsMap) {
     int scalarAccessID = pair.first;
     metadata.removeAccessID(scalarAccessID);
   }
@@ -161,8 +221,8 @@ bool PassRemoveScalars::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   // TODO: sir from GTClang currently not supported: it introduces compound assignments (handling
   // them complicates this pass). For now disabling the pass for cartesian grids.
-  // We should remove compound assignments from SIR/IIR. They are syntactic sugar, only useful at
-  // DSL level.
+  // We should remove compound assignments and increment/decrement ops from SIR/IIR. They are
+  // syntactic sugar, only useful at DSL level.
   if(stencilInstantiation->getIIR()->getGridType() == ast::GridType::Cartesian) {
     return true;
   }

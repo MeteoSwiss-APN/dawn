@@ -87,8 +87,8 @@ TEST(TestLocalVarType, test_cartesian_02) {
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
   // Need to check that varA has been flagged as OnIJ
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getType() ==
-              iir::LocalVariableType::OnIJ);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getType(),
+            iir::LocalVariableType::OnIJ);
 }
 
 TEST(TestLocalVarType, test_cartesian_propagation_01) {
@@ -164,11 +164,11 @@ TEST(TestLocalVarType, test_cartesian_propagation_02) {
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
   int varBID = stencil->getMetaData().getAccessIDFromName("varB");
   // Need to check that varA has been flagged as IJ
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getType() ==
-              iir::LocalVariableType::OnIJ);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getType(),
+            iir::LocalVariableType::OnIJ);
   // Need to check that varB has been flagged as IJ
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getType() ==
-              iir::LocalVariableType::OnIJ);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getType(),
+            iir::LocalVariableType::OnIJ);
 }
 
 TEST(TestLocalVarType, test_cartesian_propagation_03) {
@@ -272,13 +272,13 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
   // Need to check that varA has been flagged as scalar
   ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).isScalar());
   // Need to check that varB has been flagged as OnIJ
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getType() ==
-              iir::LocalVariableType::OnIJ);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getType(),
+            iir::LocalVariableType::OnIJ);
   // Need to check that varC has been flagged as scalar
   ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).isScalar());
   // Need to check that varD has been flagged as OnIJ
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varDID).getType() ==
-              iir::LocalVariableType::OnIJ);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varDID).getType(),
+            iir::LocalVariableType::OnIJ);
 }
 
 TEST(TestLocalVarType, test_unstructured_propagation_01) {
@@ -327,17 +327,17 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
   int varCID = stencil->getMetaData().getAccessIDFromName("varC");
   int varDID = stencil->getMetaData().getAccessIDFromName("varD");
   // Need to check that varA has been flagged as OnCells
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
-              ast::LocationType::Cells);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
+            ast::LocationType::Cells);
   // Need to check that varB has been flagged as OnCells
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
-              ast::LocationType::Cells);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType(),
+            ast::LocationType::Cells);
   // Need to check that varC has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varD has been flagged as OnCells
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varDID).getLocationType() ==
-              ast::LocationType::Cells);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varDID).getLocationType(),
+            ast::LocationType::Cells);
 }
 
 TEST(TestLocalVarType, test_unstructured_propagation_02) {
@@ -379,8 +379,8 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
   int varBID = stencil->getMetaData().getAccessIDFromName("varB");
   int varCID = stencil->getMetaData().getAccessIDFromName("varC");
   // Need to check that varA has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varB has been flagged as scalar
   ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).isScalar());
   // Need to check that varC has been flagged as scalar
@@ -431,14 +431,14 @@ TEST(TestLocalVarType, test_unstructured_if_condition_01) {
   int varBID = stencil->getMetaData().getAccessIDFromName("varB");
   int varCID = stencil->getMetaData().getAccessIDFromName("varC");
   // Need to check that varA has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varB has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varC has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType(),
+            ast::LocationType::Edges);
 }
 
 TEST(TestLocalVarType, test_unstructured_if_condition_02) {
@@ -485,14 +485,14 @@ TEST(TestLocalVarType, test_unstructured_if_condition_02) {
   int varBID = stencil->getMetaData().getAccessIDFromName("varB");
   int varCID = stencil->getMetaData().getAccessIDFromName("varC");
   // Need to check that varA has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varB has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varC has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varCID).getLocationType(),
+            ast::LocationType::Edges);
 }
 
 TEST(TestLocalVarType, test_unstructured_if_condition_03) {
@@ -534,11 +534,11 @@ TEST(TestLocalVarType, test_unstructured_if_condition_03) {
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
   int varBID = stencil->getMetaData().getAccessIDFromName("varB");
   // Need to check that varA has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
+            ast::LocationType::Edges);
   // Need to check that varB has been flagged as OnEdges
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType() ==
-              ast::LocationType::Edges);
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varBID).getLocationType(),
+            ast::LocationType::Edges);
 }
 
 TEST(TestLocalVarType, test_unstructured_reduction_01) {
@@ -575,7 +575,7 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
   // Need to check that varA has been flagged as OnCells
-  ASSERT_TRUE(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType() ==
+  ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
               ast::LocationType::Cells);
 }
 
