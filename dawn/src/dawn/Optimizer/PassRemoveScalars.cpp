@@ -51,13 +51,12 @@ std::optional<int> getScalarWrittenByStatement(const std::shared_ptr<iir::Stmt> 
   const auto& idToLocalVariableData = metadata.getAccessIDToLocalVariableDataMap();
   std::optional<int> scalarAccessID;
 
-  if(stmt->getKind() == iir::Stmt::Kind::VarDeclStmt) {
-    scalarAccessID = iir::getAccessID(std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt));
-  } else if(stmt->getKind() == iir::Stmt::Kind::ExprStmt) {
-    const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt);
-    if(exprStmt->getExpr()->getKind() == iir::Expr::Kind::AssignmentExpr) {
-      int accessID = iir::getAccessID(
-          std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())->getLeft());
+  if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
+    scalarAccessID = iir::getAccessID(varDeclStmt);
+  } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+    if(const auto& assignmentExpr =
+           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+      int accessID = iir::getAccessID(assignmentExpr->getLeft());
       if(metadata.isAccessType(iir::FieldAccessType::LocalVariable, accessID)) {
         scalarAccessID = accessID;
       }
@@ -75,25 +74,40 @@ std::optional<int> getScalarWrittenByStatement(const std::shared_ptr<iir::Stmt> 
 
 // Returns the rhs `Expr` of a variable declaration / assignment.
 std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> stmt) {
-  if(stmt->getKind() == iir::Stmt::Kind::VarDeclStmt) {
-    return std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)->getInitList()[0];
-  } else if(stmt->getKind() == iir::Stmt::Kind::ExprStmt) {
-    const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt);
-    if(exprStmt->getExpr()->getKind() == iir::Expr::Kind::AssignmentExpr) {
-      return std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())->getRight();
+  if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
+    return varDeclStmt->getInitList()[0];
+  } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+    if(const auto& assignmentExpr =
+           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+      // TODO: it doesn't make sense to have compound assignments in IIR/SIR. They are just
+      // syntactic sugar.
+      std::string op = "";
+      if(StringRef(assignmentExpr->getOp()) == "+=") {
+        op = "+";
+      } else if(StringRef(assignmentExpr->getOp()) == "-=") {
+        op = "-";
+      } else if(StringRef(assignmentExpr->getOp()) == "*=") {
+        op = "*";
+      } else if(StringRef(assignmentExpr->getOp()) == "/=") {
+        op = "/";
+      } else {
+        DAWN_ASSERT_MSG(StringRef(assignmentExpr->getOp()) == "=", "Invalid compound assignment");
+      }
+      return op == "" ? assignmentExpr->getRight()
+                      : std::make_shared<iir::BinaryOperator>(assignmentExpr->getLeft()->clone(),
+                                                              op, assignmentExpr->getRight());
     }
   }
 
   dawn_unreachable("Function called with non-assignment stmt");
 }
 
-void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformation& metadata) {
+void removeScalarsFromBlockStmt(
+    iir::BlockStmt& blockStmt,
+    std::unordered_map<int, std::shared_ptr<const iir::Expr>>& variableToLastRhsMap,
+    const iir::StencilMetaInformation& metadata) {
 
-  // Map from variable's access id to last rhs assigned to the variable
-  std::unordered_map<int, std::shared_ptr<const iir::Expr>> variableToLastRhsMap;
-
-  for(auto stmtIt = doMethod.getAST().getStatements().begin();
-      stmtIt != doMethod.getAST().getStatements().end();) {
+  for(auto stmtIt = blockStmt.getStatements().begin(); stmtIt != blockStmt.getStatements().end();) {
 
     for(const auto& [varAccessID, lastRhs] : variableToLastRhsMap) {
 
@@ -105,24 +119,47 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
         if(const std::shared_ptr<iir::AssignmentExpr> assignmentExpr =
                std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
 
-          assignmentExpr->getRight() = assignmentExpr->getRight()->acceptAndReplace(replacer);
+          assignmentExpr->getRight() = getRhsOfAssignment(exprStmt)->acceptAndReplace(replacer);
           continue;
         }
       }
       (*stmtIt)->acceptAndReplace(replacer);
     }
-    // TODO: var *= var case must be fixed
-    // TODO: missing: scalars declared inside if-else construct
-
-    auto scalarAccessID = getScalarWrittenByStatement(*stmtIt, metadata);
-    if(scalarAccessID.has_value()) { // Writing to a scalar variable
-      variableToLastRhsMap[*scalarAccessID] = getRhsOfAssignment(*stmtIt);
-      stmtIt = doMethod.getAST().erase(stmtIt);
+    // Need to treat if-statement differently. There are block statements inside.
+    if(const std::shared_ptr<iir::IfStmt> ifStmt =
+           std::dynamic_pointer_cast<iir::IfStmt>(*stmtIt)) {
+      DAWN_ASSERT_MSG(ifStmt->getThenStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
+                      "Then statement must be a block statement.");
+      removeScalarsFromBlockStmt(*std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getThenStmt()),
+                                 variableToLastRhsMap, metadata);
+      if(ifStmt->hasElse()) {
+        DAWN_ASSERT_MSG(ifStmt->getElseStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
+                        "Else statement must be a block statement.");
+        removeScalarsFromBlockStmt(
+            *std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getElseStmt()), variableToLastRhsMap,
+            metadata);
+      }
     } else {
-      ++stmtIt;
+      auto scalarAccessID = getScalarWrittenByStatement(*stmtIt, metadata);
+      if(scalarAccessID.has_value()) { // Writing to a scalar variable
+        variableToLastRhsMap[*scalarAccessID] = getRhsOfAssignment(*stmtIt);
+        stmtIt = blockStmt.erase(stmtIt);
+        continue; // to next statement
+      }
     }
+    ++stmtIt;
   }
-  // Recompute the accesses metadata of all statements (removed variables means removed accesses)
+}
+
+void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformation& metadata) {
+
+  // Map from variable's access id to last rhs assigned to the variable
+  std::unordered_map<int, std::shared_ptr<const iir::Expr>> variableToLastRhsMap;
+
+  removeScalarsFromBlockStmt(doMethod.getAST(), variableToLastRhsMap, metadata);
+
+  // Recompute the accesses metadata of all statements (removed variables means removed
+  // accesses)
   computeAccesses(metadata, doMethod.getAST().getStatements());
   doMethod.update(iir::NodeUpdateType::level);
   // Metadata cleanup
