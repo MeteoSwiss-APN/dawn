@@ -45,7 +45,9 @@ enum class Op {
   lessEqual,
   logicalAnd,
   locigalOr,
-  logicalNot
+  logicalNot,
+  increment,
+  decrement
 };
 enum class AccessType { r, rw };
 enum class HOffsetType { withOffset, noOffset };
@@ -88,6 +90,10 @@ private:
       return "||";
     case Op::logicalNot:
       return "!";
+    case Op::increment:
+      return "++";
+    case Op::decrement:
+      return "--";
     }
     dawn_unreachable("Unreachable");
   }

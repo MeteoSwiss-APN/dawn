@@ -133,7 +133,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& l
 std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation) {
   DAWN_ASSERT(si_);
   auto ret = std::make_shared<iir::UnaryOperator>(
-      std::move(expr), toStr(operation, {Op::plus, Op::minus, Op::logicalNot}));
+      std::move(expr), toStr(operation, {Op::increment, Op::decrement, Op::logicalNot}));
   ret->setID(si_->nextUID());
   return ret;
 }

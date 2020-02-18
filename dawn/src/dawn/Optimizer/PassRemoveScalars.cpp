@@ -35,7 +35,9 @@ class ExprScalarChecker : public ast::ASTVisitorForwarding {
 public:
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override { isScalar_ = false; }
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    isScalar_ &= metadata_.getLocalVariableDataFromAccessID(iir::getAccessID(expr)).isScalar();
+    if(expr->isLocal()) {
+      isScalar_ &= metadata_.getLocalVariableDataFromAccessID(iir::getAccessID(expr)).isScalar();
+    }
   }
 
   bool isScalar() const { return isScalar_; }
