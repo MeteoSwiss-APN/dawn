@@ -12,10 +12,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+# Defines dawn_iir_proto_files
+include(proto/DawnIIR.cmake)
+
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES iir_proto_cpp_files
-  OUT_INCLUDE_DIRS iir_proto_include_dirs
   PROTOS ${dawn_iir_proto_files}
   INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto

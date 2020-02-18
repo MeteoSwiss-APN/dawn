@@ -12,10 +12,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+# Defines dawn_sir_proto_files
+include(proto/DawnSIR.cmake)
+
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
-  OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PROTOS ${dawn_sir_proto_files}
   PACKG SIR

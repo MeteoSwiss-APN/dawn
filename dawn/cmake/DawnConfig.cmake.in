@@ -8,7 +8,7 @@ include(CMakeFindDependencyMacro)
 if(@DAWN_BUILD_PROTOBUF@)
   find_dependency(Protobuf 3.4.0
     REQUIRED
-    PATHS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was build with dawn
+    PATHS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was built with dawn
   )
 else()
   find_dependency(Protobuf 3.4.0 MODULE REQUIRED)

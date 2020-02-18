@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -71,10 +71,10 @@ echo "Building with $PARALLEL_BUILD_JOBS jobs."
 cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS
 
 # Run tests -- this also runs python tests
-ctest --output-on-failure --force-new-ctest-process
+(cd $build_dir && ctest --output-on-failure --force-new-ctest-process)
 
 # Test installation
-cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS --target install
+cmake --build $build_dir --parallel $PARALLEL_BUILD_JOBS --target install
 
 # Python
 python -m venv dawn_venv

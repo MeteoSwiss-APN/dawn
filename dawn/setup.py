@@ -90,43 +90,39 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        # Source is here
-        src_dir = os.path.join(DAWN_DIR, "src") if self.inplace else self.build_lib
-
         # Build dir is here
         build_dir = os.getenv("DAWN_BUILD_DIR", default="")
 
+        # dawn4py module in-build source is here
+        dawn4py_build_dir = os.path.join(build_dir, "src", "dawn4py", "CMakeFiles")
+
         # Dest dir is here
-        dest_dir = src_dir if self.inplace else self.build_lib
+        dest_dir = os.path.join(DAWN_DIR, "src") if self.inplace else self.build_lib
 
         irs_in_build = glob(
-            os.path.join(build_dir, "src", "dawn4py", "serialization") + "/**/*_pb2.py",
+            os.path.join(dawn4py_build_dir, "dawn4py", "serialization") + "/**/*_pb2.py",
             recursive=True,
         )
         has_irs_in_build = len(irs_in_build) > 0
 
+        exts_in_build = [
+            os.path.join(dawn4py_build_dir, self.get_ext_filename(ext.name))
+            for ext in self.extensions
+        ]
+
+        has_exts_in_build = all([os.path.exists(e) for e in exts_in_build])
+
         # Check if the extensions and python protobuf files exist in build_dir
-        if (
-            build_dir is not ""
-            and has_irs_in_build
-            and all(
-                [
-                    os.path.exists(os.path.join(build_dir, "src", self.get_ext_filename(ext.name)))
-                    for ext in self.extensions
-                ]
-            )
-        ):
+        if build_dir is not "" and has_irs_in_build and has_exts_in_build:
             # Copy irs over to dest_dir
             for proto in irs_in_build:
-                rel_path = proto.replace(os.path.join(build_dir, "src") + "/", "")
+                rel_path = proto.replace(dawn4py_build_dir + "/", "")
                 self.copy_file(proto, os.path.join(dest_dir, rel_path))
 
             # Copy extension over to dest_dir
-            for ext in self.extensions:
-                self.copy_file(
-                    os.path.join(build_dir, "src", self.get_ext_filename(ext.name)),
-                    os.path.join(dest_dir, self.get_ext_filename(ext.name)),
-                )
+            for extension in exts_in_build:
+                rel_path = extension.replace(dawn4py_build_dir + "/", "")
+                self.copy_file(extension, os.path.join(dest_dir, rel_path))
 
         else:
             # Otherwise, build extension, copying protos over in the process

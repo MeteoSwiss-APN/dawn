@@ -18,6 +18,10 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}${C
 # Generate python proto files
 include(DawnProtobufGenerate)
 
+# Defines dawn_sir_proto_files and dawn_iir_proto_files
+include(${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto/DawnSIR.cmake)
+include(${PROJECT_SOURCE_DIR}/src/dawn/IIR/proto/DawnIIR.cmake)
+
 dawn_protobuf_generate(
   OUT_FILES sir_proto_python_files
   PROTOS ${dawn_sir_proto_files}

@@ -11,6 +11,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_test(NAME Dawn::Unit::dawn4py
+add_test(NAME Dawn4Py::Unit::structured
   COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PROJECT_BINARY_DIR}/src/dawn4py/${CMAKE_FILES_DIRECTORY}
-  ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR})
+  ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR}/test_structured.py
+)
+
+add_test(NAME Dawn4Py::Unit::unstructured
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PROJECT_BINARY_DIR}/src/dawn4py/${CMAKE_FILES_DIRECTORY}
+  ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR}/test_unstructured.py
+)
