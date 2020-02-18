@@ -171,6 +171,14 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
 }
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::GlobalVar const& var) {
+  DAWN_ASSERT(si_);
+  auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
+  expr->setIsExternal(true);
+  expr->setID(si_->nextUID());
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
+  return expr;
+}
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::VarAccessExpr>(var.name);

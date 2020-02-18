@@ -196,7 +196,68 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   ASSERT_FALSE(isVarInDoMethodsAccesses(varBID, getDoMethod(stencil)));
 }
 
-// TODO TEST globals
+TEST(TestRemoveScalars, test_global_01) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_c = b.field("f_c", ast::LocationType::Cells);
+  auto pi = b.globalvar("pi", 3.14);
+  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+
+  /// field(cells) f_c;
+  /// global double pi = 3.14;
+  /// double varA = 2.0;
+  /// varA = pi * 2.0;
+  /// f_c = varA;
+
+  auto stencil = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Forward,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              b.stmt(b.assignExpr(b.at(varA), b.binaryExpr(b.at(pi), b.lit(2.0), Op::multiply))),
+              b.stmt(b.assignExpr(b.at(f_c), b.at(varA))))))));
+
+  // Setup variables' metadata before running pass
+  auto& metadata = stencil->getMetaData();
+  int varAID = metadata.getAccessIDFromName("varA");
+  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  PassRemoveScalars passRemoveScalars(optimizer);
+  passRemoveScalars.run(stencil);
+
+  // Check that there is 1 statement
+  ASSERT_EQ(getDoMethod(stencil).getAST().getStatements().size(), 1);
+
+  auto firstStatement = getNthStmt(stencil, 0);
+  // Check that first statement is: f_c = pi * 2.0;
+  ASSERT_EQ(firstStatement->getKind(), iir::Stmt::Kind::ExprStmt);
+  auto rhs = getRhsOfAssignment(firstStatement);
+  ASSERT_TRUE(rhs);
+  ASSERT_EQ(rhs->getKind(), iir::Expr::Kind::BinaryOperator);
+  auto binOp = std::dynamic_pointer_cast<iir::BinaryOperator>(rhs);
+  ASSERT_EQ(binOp->getOp(), "*");
+  ASSERT_EQ(binOp->getLeft()->getKind(), iir::Expr::Kind::VarAccessExpr);
+  auto globalAccess = std::dynamic_pointer_cast<iir::VarAccessExpr>(binOp->getLeft());
+  ASSERT_TRUE(globalAccess->isExternal());
+  ASSERT_EQ(globalAccess->getName(), "pi");
+  ASSERT_EQ(binOp->getRight()->getKind(), iir::Expr::Kind::LiteralAccessExpr);
+  ASSERT_EQ(
+      std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOp->getRight())->getValue()),
+      2.0);
+
+  // Check that variables' metadata is gone
+  ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
+  // Check that statements' accesses do not contain the variables
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getDoMethod(stencil)));
+}
 
 // TODO TEST
 // double varA = 2.0;

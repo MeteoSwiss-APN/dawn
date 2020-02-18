@@ -97,6 +97,10 @@ protected:
     int id;
     std::string name;
   };
+  struct GlobalVar {
+    int id;
+    std::string name;
+  };
   struct LocalVar {
     int id;
     std::string name;
@@ -106,6 +110,16 @@ protected:
 public:
   IIRBuilder(const ast::GridType gridType)
       : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
+
+  template <typename T>
+  GlobalVar globalvar(std::string const& name, T&& v) {
+    DAWN_ASSERT(si_);
+    int accessID =
+        si_->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable, name);
+    auto&& global = sir::Global(std::forward<T>(v));
+    si_->getIIR()->insertGlobalVariable(name, std::move(global));
+    return {accessID, name};
+  }
 
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float,
                     std::vector<std::shared_ptr<iir::Expr>>&& initList = {});
@@ -162,6 +176,8 @@ public:
   }
 
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, ast::Offsets const& offset);
+
+  std::shared_ptr<iir::Expr> at(GlobalVar const& var);
 
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
