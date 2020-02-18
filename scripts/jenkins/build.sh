@@ -70,19 +70,16 @@ fi
 echo "Building with $PARALLEL_BUILD_JOBS jobs."
 cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS
 
-# Run unittests
+# Run tests -- this also runs python tests
 ctest --output-on-failure --force-new-ctest-process
 
 # Test installation
 cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS --target install
 
-# Python tests
+# Python
 python -m venv dawn_venv
 source dawn_venv/bin/activate
 pip install --upgrade pip
 pip install wheel
 export DAWN_BUILD_DIR=$build_dir/dawn
 pip install $base_dir/dawn/
-
-python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py
-echo "PYTHON PYTEST SUCCESSFUL!"

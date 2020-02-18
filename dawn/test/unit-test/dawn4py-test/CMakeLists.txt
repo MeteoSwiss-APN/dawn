@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _
 ##                         | |
 ##                       __| | __ ___      ___ ___
@@ -12,3 +10,7 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+
+add_test(NAME Dawn::Unit::dawn4py
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PROJECT_BINARY_DIR}/src/dawn4py/${CMAKE_FILES_DIRECTORY}
+  ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR})
