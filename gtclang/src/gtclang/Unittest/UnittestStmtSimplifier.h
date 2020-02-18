@@ -76,11 +76,11 @@ std::shared_ptr<dawn::sir::ExprStmt> expr(const std::shared_ptr<dawn::sir::Expr>
 std::shared_ptr<dawn::sir::ReturnStmt> ret(const std::shared_ptr<dawn::sir::Expr>& expr);
 std::shared_ptr<dawn::sir::VarDeclStmt> vardecl(const std::string& type, const std::string& name,
                                                 const std::shared_ptr<dawn::sir::Expr>& init,
-                                                const char* op = "=");
+                                                const std::string op = "=");
 std::shared_ptr<dawn::sir::VarDeclStmt>
 vecdecl(const std::string& type, const std::string& name,
         std::vector<std::shared_ptr<dawn::sir::Expr>> initList, int dimension = 0,
-        const char* op = "=");
+        const std::string op = "=");
 std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
 verticalRegion(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion);
 std::shared_ptr<dawn::sir::StencilCallDeclStmt>
@@ -91,13 +91,13 @@ ifstmt(const std::shared_ptr<dawn::sir::Stmt>& condExpr,
        const std::shared_ptr<dawn::sir::Stmt>& thenStmt,
        const std::shared_ptr<dawn::sir::Stmt>& elseStmt = nullptr);
 std::shared_ptr<dawn::sir::UnaryOperator> unop(const std::shared_ptr<dawn::sir::Expr>& operand,
-                                               const char* op);
+                                               const std::string op);
 std::shared_ptr<dawn::sir::BinaryOperator> binop(const std::shared_ptr<dawn::sir::Expr>& left,
-                                                 const char* op,
+                                                 const std::string op,
                                                  const std::shared_ptr<dawn::sir::Expr>& right);
 std::shared_ptr<dawn::sir::AssignmentExpr> assign(const std::shared_ptr<dawn::sir::Expr>& left,
                                                   const std::shared_ptr<dawn::sir::Expr>& right,
-                                                  const char* op = "=");
+                                                  const std::string op = "=");
 std::shared_ptr<dawn::sir::TernaryOperator> ternop(const std::shared_ptr<dawn::sir::Expr>& cond,
                                                    const std::shared_ptr<dawn::sir::Expr>& left,
                                                    const std::shared_ptr<dawn::sir::Expr>& right);

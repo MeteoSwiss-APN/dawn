@@ -153,7 +153,8 @@ void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
 //===------------------------------------------------------------------------------------------===//
 
 VarDeclStmt::VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
-                         int dimension, const char* op, InitList initList, SourceLocation loc)
+                         int dimension, const std::string& op, InitList initList,
+                         SourceLocation loc)
     : Stmt(std::move(data), Kind::VarDeclStmt, loc), type_(type), name_(name),
       dimension_(dimension), op_(op), initList_(std::move(initList)) {}
 

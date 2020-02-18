@@ -144,7 +144,7 @@ public:
 
   void setOperand(const std::shared_ptr<Expr>& operand) { operand_ = operand; }
   const std::shared_ptr<Expr>& getOperand() const { return operand_; }
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
@@ -185,7 +185,7 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[Right]; }
 
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
@@ -275,8 +275,8 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[Right]; }
 
-  const char* getOp() const { return "?"; }
-  const char* getSeperator() const { return ":"; }
+  const std::string getOp() const { return "?"; }
+  const std::string getSeperator() const { return ":"; }
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;

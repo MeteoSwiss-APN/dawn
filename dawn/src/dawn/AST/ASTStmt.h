@@ -318,7 +318,7 @@ public:
   /// @name Constructor & Destructor
   /// @{
   VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
-              int dimension, const char* op, InitList initList,
+              int dimension, const std::string& op, InitList initList,
               SourceLocation loc = SourceLocation());
   VarDeclStmt(const VarDeclStmt& stmt);
   VarDeclStmt& operator=(VarDeclStmt stmt);
@@ -331,7 +331,7 @@ public:
   const std::string& getName() const { return name_; }
   std::string& getName() { return name_; }
 
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
   int getDimension() const { return dimension_; }
 
   bool isArray() const { return (dimension_ > 0); }

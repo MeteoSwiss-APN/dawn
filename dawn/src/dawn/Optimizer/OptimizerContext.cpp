@@ -501,15 +501,15 @@ public:
       if(scope_.top()->VariableMap.count(var->getName())) {
         double result;
         if(iir::evalExprAsDouble(expr->getRight(), result, scope_.top()->VariableMap)) {
-          if(StringRef(expr->getOp()) == "=")
+          if(expr->getOp() == "=")
             scope_.top()->VariableMap[var->getName()] = result;
-          else if(StringRef(expr->getOp()) == "+=")
+          else if(expr->getOp() == "+=")
             scope_.top()->VariableMap[var->getName()] += result;
-          else if(StringRef(expr->getOp()) == "-=")
+          else if(expr->getOp() == "-=")
             scope_.top()->VariableMap[var->getName()] -= result;
-          else if(StringRef(expr->getOp()) == "*=")
+          else if(expr->getOp() == "*=")
             scope_.top()->VariableMap[var->getName()] *= result;
-          else if(StringRef(expr->getOp()) == "/=")
+          else if(expr->getOp() == "/=")
             scope_.top()->VariableMap[var->getName()] /= result;
           else // unknown operator
             scope_.top()->VariableMap.erase(var->getName());

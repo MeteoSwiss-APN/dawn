@@ -103,7 +103,7 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
   } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
     if(const auto& assignmentExpr =
            std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
-      if(StringRef(assignmentExpr->getOp()) != "=") {
+      if(assignmentExpr->getOp() != "=") {
         throw std::runtime_error(dawn::format("Compound assignment not supported at line %d",
                                               assignmentExpr->getSourceLocation().Line));
       }

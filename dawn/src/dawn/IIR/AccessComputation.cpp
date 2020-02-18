@@ -369,9 +369,8 @@ public:
     // LHS is a write, we resolve this manually as we only care about FieldAccessExpr and
     // VarAccessExpr. However, if we have an expression `a += 5` we need to register the access as
     // write and read!
-    bool readAndWrite = StringRef(expr->getOp()) == "+=" || StringRef(expr->getOp()) == "-=" ||
-                        StringRef(expr->getOp()) == "/=" || StringRef(expr->getOp()) == "*=" ||
-                        StringRef(expr->getOp()) == "|=" || StringRef(expr->getOp()) == "&=";
+    bool readAndWrite = expr->getOp() == "+=" || expr->getOp() == "-=" || expr->getOp() == "/=" ||
+                        expr->getOp() == "*=" || expr->getOp() == "|=" || expr->getOp() == "&=";
 
     if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
       auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
