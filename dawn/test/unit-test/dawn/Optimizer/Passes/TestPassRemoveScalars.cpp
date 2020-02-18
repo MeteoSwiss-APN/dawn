@@ -65,6 +65,7 @@ bool isVarInDoMethodsAccesses(int varAccessID, const iir::DoMethod& doMethod) {
       }
     }
   }
+  return false;
 }
 
 TEST(TestRemoveScalars, test_unstructured_scalar_01) {
@@ -172,14 +173,14 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   ASSERT_TRUE(rhs);
   ASSERT_EQ(rhs->getKind(), iir::Expr::Kind::BinaryOperator);
   auto binOpExt = std::dynamic_pointer_cast<iir::BinaryOperator>(rhs);
-  ASSERT_EQ(binOpExt->getOp(), Op::plus);
+  ASSERT_EQ(binOpExt->getOp(), "+");
   ASSERT_EQ(binOpExt->getLeft()->getKind(), iir::Expr::Kind::LiteralAccessExpr);
   ASSERT_EQ(
       std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOpExt->getLeft())->getValue()),
       5.0);
   ASSERT_EQ(binOpExt->getRight()->getKind(), iir::Expr::Kind::BinaryOperator);
   auto binOpInt = std::dynamic_pointer_cast<iir::BinaryOperator>(binOpExt->getRight());
-  ASSERT_EQ(binOpInt->getOp(), Op::plus);
+  ASSERT_EQ(binOpInt->getOp(), "+");
   ASSERT_EQ(
       std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOpInt->getLeft())->getValue()),
       3.0);
