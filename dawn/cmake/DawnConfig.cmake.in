@@ -11,7 +11,7 @@ if(@DAWN_BUILD_PROTOBUF@)
     PATHS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was built with dawn
   )
 else()
-  find_dependency(Protobuf 3.4.0 MODULE REQUIRED)
+  find_dependency(Protobuf 3.4.0 @PROTOBUF_FIND_ARGS@ REQUIRED)
 endif()
 
 if(NOT TARGET Dawn::Dawn)
