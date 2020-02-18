@@ -18,8 +18,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logging.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <vector>
 
 namespace dawn {
@@ -60,16 +58,6 @@ bool PassManager::runPassOnStencilInstantiation(
     instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
                             "_Log.json");
   }
-
-  // Run validation pass after each optimization pass
-  PassValidation validationPass(context);
-  validationPass.run(instantiation, "for pass " + pass->getName());
-
-#ifndef NDEBUG
-  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
-    DAWN_ASSERT(stencil->compareDerivedInfo());
-  }
-#endif
 
   passCounter_[pass->getName()]++;
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";

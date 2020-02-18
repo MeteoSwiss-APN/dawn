@@ -31,8 +31,12 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
 
-  if(!iir->checkTreeConsistency())
-    throw SemanticError("Tree consistency check failed " + description, metadata.getFileName());
+  try {
+    if(!iir->checkTreeConsistency())
+      throw SemanticError("Tree consistency check failed " + description, metadata.getFileName());
+  } catch(CompileError& error) {
+    DAWN_ASSERT_MSG(false, error.getMessage().c_str());
+  }
 
   if(iir->getGridType() == ast::GridType::Unstructured) {
     UnstructuredDimensionChecker dimensionsChecker;
@@ -50,6 +54,12 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
   }
+
+#ifndef NDEBUG
+  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
+    DAWN_ASSERT(stencil->compareDerivedInfo());
+  }
+#endif
   return true;
 }
 

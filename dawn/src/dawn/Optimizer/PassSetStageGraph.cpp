@@ -57,9 +57,7 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
 }
 
 PassSetStageGraph::PassSetStageGraph(OptimizerContext& context)
-    : Pass(context, "PassSetStageGraph") {
-  dependencies_.push_back("PassSetStageName");
-}
+    : Pass(context, "PassSetStageGraph") {}
 
 bool PassSetStageGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

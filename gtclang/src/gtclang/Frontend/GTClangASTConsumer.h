@@ -35,7 +35,7 @@ public:
   GTClangASTConsumer(GTClangContext* context, const std::string& file,
                      gtclang::GTClangASTAction* parentAction);
 
-  /// @brief This method translating the AST to SIR and generating gridtools C++ code
+  /// @brief This method translating the AST to SIR and generates code
   virtual void HandleTranslationUnit(clang::ASTContext& ASTContext) override;
 
 private:

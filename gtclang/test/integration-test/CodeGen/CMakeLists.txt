@@ -30,7 +30,7 @@ function(generate_target)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
     set(config_str --config=${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
   endif()
-  
+
   # TODO this probably didn't work before CMAKE refactoring because of wrong matching
   # string(TOLOWER "${CMAKE_BUILD_TYPE}" LOWERCASE_CMAKE_BUILD_TYPE)
   # if(LOWERCASE_CMAKE_BUILD_TYPE MATCHES debug)

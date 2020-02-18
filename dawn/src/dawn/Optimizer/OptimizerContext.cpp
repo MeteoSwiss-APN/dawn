@@ -602,6 +602,18 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
   if(SIR)
     fillIIR();
 }
+
+OptimizerContext::OptimizerContext(
+    DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+        stencilInstantiationMap)
+    : diagnostics_(diagnostics), options_(options), SIR_() {
+  DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
+  for(auto& [name, stencilInstantiation] : stencilInstantiationMap) {
+    restoreIIR(name, stencilInstantiation);
+  }
+}
+
 bool OptimizerContext::fillIIRFromSIR(
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
@@ -735,8 +747,8 @@ bool OptimizerContext::restoreIIR(std::string const& name,
 
   // fix extents of stages since they are not stored in the iir but computed from the accesses
   // contained in the DoMethods
-  checkAndPushBack<PassSetStageName>();
-  checkAndPushBack<PassComputeStageExtents>();
+  pushBackPass<PassSetStageName>();
+  pushBackPass<PassComputeStageExtents>();
   const bool passed =
       getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation);
 
