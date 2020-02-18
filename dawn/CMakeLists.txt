@@ -127,12 +127,7 @@ endfunction()
 
 # Protobuf
 if(NOT DAWN_BUILD_PROTOBUF)
-  if(Protobuf_DIR)
-    set(PROTOBUF_FIND_ARGS CONFIG)
-  else()
-    set(PROTOBUF_FIND_ARGS)
-  endif()
-  find_package(Protobuf ${PROTOBUF_FIND_ARGS} 3.4.0)
+  find_package(Protobuf 3.4.0)
 endif()
 if(NOT Protobuf_FOUND)
   include(FetchProtobuf)
