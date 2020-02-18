@@ -292,8 +292,6 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // since this can change the scope of temporaries ...
     optimizer.pushBackPass<PassTemporaryType>();
     optimizer.pushBackPass<PassLocalVarType>();
-    // this pass is broken as hell... Johann please
-    // optimizer.pushBackPass<PassFixVersionedInputFields>();
     // modify stages and their extents ...
     optimizer.pushBackPass<PassComputeStageExtents>();
     // and changes their dependencies
