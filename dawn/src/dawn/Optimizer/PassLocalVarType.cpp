@@ -102,6 +102,9 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
       return iir::LocalVariableType::OnEdges;
     case ast::LocationType::Vertices:
       return iir::LocalVariableType::OnVertices;
+    default:
+      DAWN_ASSERT_MSG(false, "unknown location type");
+      return iir::LocalVariableType::OnCells;
     }
   }
 

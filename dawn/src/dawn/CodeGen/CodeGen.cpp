@@ -50,6 +50,7 @@ std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
   }
   return "";
 }
+
 std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
                                      std::string namespace_) const {
 

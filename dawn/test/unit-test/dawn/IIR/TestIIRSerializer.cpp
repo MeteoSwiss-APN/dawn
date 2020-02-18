@@ -194,17 +194,17 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, -5,
-                                                          "test");
+                                                           "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::Field, 712,
-                                                          "field0");
+                                                           "field0");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
-                                                          "field1");
+                                                           "field1");
   referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
-                                                          "field2");
+                                                           "field2");
   auto deserializedStencilInstantiaion = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiation);
 
@@ -213,23 +213,16 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiation->getMetaData().removeAccessID(10);
 
   referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
-                                                          "field1");
+                                                           "field1");
   referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
-                                                          "field2");
+                                                           "field2");
 
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiation);
 
-  referenceInstantiation->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::StencilTemporary, 713,
-      "field3"); // access ids should be globally unique, not only per type
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary,
+                                                           713, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  // This would fail, since 712 is already present
-  // referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable,
-  //                                                         712, "field4");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
-
-  referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 6);
   referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 7);
   referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 8);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
