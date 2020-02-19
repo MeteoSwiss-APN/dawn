@@ -19,6 +19,9 @@ include(DawnProtobufGenerate)
 include(${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto/DawnSIR.cmake)
 include(${PROJECT_SOURCE_DIR}/src/dawn/IIR/proto/DawnIIR.cmake)
 
+# Create version file
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.py.in ${DAWN4PY_MODULE_DIR}/version.py @ONLY)
+
 dawn_protobuf_generate(
   OUT_FILES sir_proto_python_files
   PROTOS ${dawn_sir_proto_files}

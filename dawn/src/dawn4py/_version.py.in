@@ -13,5 +13,4 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-__versioninfo__ = {VERSION}   # Automatically set in 'setup.py'
-__version__ = ".".join(str(v) for v in __versioninfo__)
+__version__ = @CMAKE_PROJECT_VERSION@

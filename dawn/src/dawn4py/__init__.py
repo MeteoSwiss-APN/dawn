@@ -24,7 +24,7 @@ from typing import Any, Dict, Optional, Union
 from . import _dawn4py
 from . import serialization
 from ._dawn4py import Options, SerializerFormat
-from ._version import __version__, __versioninfo__
+from ._version import __version__
 
 
 def compile(
