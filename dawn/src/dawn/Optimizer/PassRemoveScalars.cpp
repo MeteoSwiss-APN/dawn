@@ -228,12 +228,10 @@ bool PassRemoveScalars::run(
   if(stencilInstantiation->getIIR()->getGridType() == ast::GridType::Cartesian) {
     return true;
   }
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilPtr)) {
-      // Local variables are local to a DoMethod. Remove scalar local variables from the statements
-      // in this DoMethod.
-      removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
-    }
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilInstantiation->getIIR())) {
+    // Local variables are local to a DoMethod. Remove scalar local variables from the statements
+    // in this DoMethod.
+    removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
   }
   return true;
 }
