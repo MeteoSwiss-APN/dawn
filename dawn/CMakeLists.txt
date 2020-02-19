@@ -126,10 +126,11 @@ function(target_add_dawn_standard_props target)
 endfunction()
 
 # Protobuf
+#if(NOT DAWN_BUILD_PROTOBUF)
+#  find_package(Protobuf 3.4.0)
+#endif()
+#if(NOT Protobuf_FOUND)
 if(NOT DAWN_BUILD_PROTOBUF)
-  find_package(Protobuf 3.4.0)
-endif()
-if(NOT Protobuf_FOUND)
   include(FetchProtobuf)
 endif()
 

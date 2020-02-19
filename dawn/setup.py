@@ -20,8 +20,10 @@ import sys
 
 from glob import glob
 from distutils.version import LooseVersion
-from setuptools import setup, find_packages, Command, Extension
+from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
 
 # Based on:
 #   https://github.com/navdeep-G/setup.py
@@ -33,7 +35,9 @@ AUTHOR = "MeteoSwiss / ETH Zurich / Vulcan"
 
 # Note that DAWN_DIR below may be the version pip copies over before building
 DAWN_DIR = os.path.join(os.path.dirname(__file__))
-BUILD_JOBS = 4
+DAWN4PY_DIR = os.path.join(DAWN_DIR, "src", "dawn4py")
+
+BUILD_JOBS = os.cpu_count()
 
 # Select protobuf version
 with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
@@ -50,32 +54,21 @@ with open(os.path.join(DAWN_DIR, "version.txt"), mode="r") as f:
     VERSION = f.read().strip("\n")
 
 
-def validate_cmake_install(extensions):
-    """Return a cmake executable or \"cmake\" after checking version.
-    Raises an exception if cmake is not found."""
-    # Check if a recent version of CMake is present
-    cmake_executable = os.getenv("CMAKE_EXECUTABLE", default="cmake")
-    try:
-        out = subprocess.check_output([cmake_executable, "--version"])
-    except OSError:
-        raise RuntimeError(
-            "CMake must be installed to build the following extensions: "
-            + ", ".join(e.name for e in extensions)
-        )
+def update_sources():
+    # Set the dawn4py version string from the main Dawn version string
+    with open(os.path.join(DAWN4PY_DIR, "_version.py.in"), mode="r") as f:
+        version_tuple = tuple(int(i) for i in VERSION.split("."))
+        version_py = f.read().format(VERSION=str(version_tuple))
+    with open(os.path.join(DAWN4PY_DIR, "_version.py"), mode="w") as f:
+        f.write(version_py)
 
-    cmake_version = LooseVersion(re.search(r"version\s*([\d.]+)", out.decode()).group(1))
-    if cmake_version < "3.13.0":
-        raise RuntimeError("CMake >= 3.13.0 is required")
-
-    return cmake_executable
-
-
-def find_all(name, path):
-    result = []
-    for root, dirs, files in os.walk(path):
-        if name in files:
-            result.append(os.path.join(root, name))
-    return result
+    # Copy additional C++ headers for the generated code
+    target_path = os.path.join(DAWN4PY_DIR, "_external_src", "driver-includes")
+    if os.path.exists(target_path):
+        shutil.rmtree(target_path)
+    shutil.copytree(
+        os.path.join(DAWN_DIR, "src", "driver-includes"), target_path,
+    )
 
 
 # Based on:
@@ -109,8 +102,7 @@ class CMakeBuild(build_ext):
             os.path.join(dawn4py_build_dir, self.get_ext_filename(ext.name))
             for ext in self.extensions
         ]
-
-        has_exts_in_build = all([os.path.exists(e) for e in exts_in_build])
+        has_exts_in_build = all(os.path.exists(e) for e in exts_in_build)
 
         # Check if the extensions and python protobuf files exist in build_dir
         if build_dir is not "" and has_irs_in_build and has_exts_in_build:
@@ -126,7 +118,7 @@ class CMakeBuild(build_ext):
 
         else:
             # Otherwise, build extension, copying protos over in the process
-            cmake_executable = validate_cmake_install(self.extensions)
+            cmake_executable = self.validate_cmake_install(self.extensions)
             self.compile_extension(self.build_temp, cmake=cmake_executable)
             # Move from build_tmp to final position
             for ext in self.extensions:
@@ -135,9 +127,6 @@ class CMakeBuild(build_ext):
                     os.path.join(self.build_lib, self.get_ext_filename(ext.name)),
                 )
 
-        # Install included headers
-        self.run_command("install_dawn_includes")
-
     def compile_extension(self, build_dir, cmake="cmake"):
         cmake_args = os.getenv("CMAKE_ARGS", default="").split(" ") or []
 
@@ -145,7 +134,7 @@ class CMakeBuild(build_ext):
         # Installing in editable/develop mode builds the extension in the original build path,
         # but a regular `pip install` copies the full tree to a temporary folder
         # before building, which makes CMake fail if a CMake cache had been already generated.
-        for cache_file in find_all("CMakeCache.txt", build_dir):
+        for cache_file in self.find_all("CMakeCache.txt", build_dir):
             with open(cache_file, "r") as f:
                 text = f.read()
                 m = re.search(r"\s*Dawn_BINARY_DIR\s*:\s*STATIC\s*=\s*([\w/\\]+)\s*", text)
@@ -169,18 +158,55 @@ class CMakeBuild(build_ext):
         print("-" * 10, "Building extensions", "-" * 40)
         cfg = "Debug" if self.debug else "Release"
         build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
-        self.spawn([cmake, "--build", build_dir, "--target", "python"] + build_args)
+        self.spawn([cmake, "--build", build_dir, "--target", "_dawn4py"] + build_args)
+
+    @staticmethod
+    def validate_cmake_install(extensions):
+        """Return a cmake executable or \"cmake\" after checking version.
+        Raises an exception if cmake is not found."""
+        # Check if a recent version of CMake is present
+        cmake_executable = os.getenv("CMAKE_EXECUTABLE", default="cmake")
+        try:
+            out = subprocess.check_output([cmake_executable, "--version"])
+        except OSError:
+            raise RuntimeError(
+                "CMake must be installed to build the following extensions: "
+                + ", ".join(e.name for e in extensions)
+            )
+
+        cmake_version = LooseVersion(re.search(r"version\s*([\d.]+)", out.decode()).group(1))
+        if cmake_version < "3.13.0":
+            raise RuntimeError("CMake >= 3.13.0 is required")
+
+        return cmake_executable
+
+    @staticmethod
+    def find_all(name, path):
+        result = []
+        for root, dirs, files in os.walk(path):
+            if name in files:
+                result.append(os.path.join(root, name))
+        return result
 
 
-class InstallDawnIncludesCommand(build_ext):
-    """A custom command to install in the Python package the Dawn C++ headers for generated code."""
+class dawn4py_build_py(build_py):
+    """A custom 'build_py' command to add required extra files to the Python package."""
 
     def run(self):
-        """Run command."""
-        self.copy_tree(
-            os.path.join(DAWN_DIR, "src", "driver-includes"),
-            os.path.join(self.build_lib, "dawn4py", "_external_src", "driver-includes"),
-        )
+        """Copy and update source files before running normal 'build_py' command."""
+
+        update_sources()
+        super().run()
+
+
+class dawn4py_develop(develop):
+    """A custom 'develop' command to add required extra files to the Python package."""
+
+    def run(self):
+        """Copy and update source files before running normal 'develop' command."""
+
+        update_sources()
+        super().run()
 
 
 setup(
@@ -195,7 +221,7 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     ext_modules=[CMakeExtension("dawn4py._dawn4py")],
-    cmdclass={"build_ext": CMakeBuild, "install_dawn_includes": InstallDawnIncludesCommand},
+    cmdclass={"build_ext": CMakeBuild, "build_py": dawn4py_build_py, "develop": dawn4py_develop},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     zip_safe=False,

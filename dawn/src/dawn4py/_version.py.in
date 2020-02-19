@@ -13,5 +13,5 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-__versioninfo__ = (0, 0, 1)  # TODO: set automatically
+__versioninfo__ = {VERSION}   # Automatically set in 'setup.py'
 __version__ = ".".join(str(v) for v in __versioninfo__)

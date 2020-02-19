@@ -69,6 +69,6 @@ pybind11_add_module(_dawn4py MODULE _dawn4py.cpp)
 target_compile_features(_dawn4py PUBLIC cxx_std_17)
 target_link_libraries(_dawn4py PUBLIC pybind11::pybind11 Dawn)
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)
-set_target_properties(_dawn4py PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py)
+#set_target_properties(_dawn4py PROPERTIES
+#  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py)
 add_dependencies(_dawn4py generate_python_proto)
