@@ -55,13 +55,6 @@ with open(os.path.join(DAWN_DIR, "version.txt"), mode="r") as f:
 
 
 def update_sources():
-    # Set the dawn4py version string from the main Dawn version string
-    with open(os.path.join(DAWN4PY_DIR, "_version.py.in"), mode="r") as f:
-        version_tuple = tuple(int(i) for i in VERSION.split("."))
-        version_py = f.read().format(VERSION=str(version_tuple))
-    with open(os.path.join(DAWN4PY_DIR, "_version.py"), mode="w") as f:
-        f.write(version_py)
-
     # Copy additional C++ headers for the generated code
     target_path = os.path.join(DAWN4PY_DIR, "_external_src", "driver-includes")
     if os.path.exists(target_path):
