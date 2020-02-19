@@ -90,8 +90,8 @@ class CMakeBuild(build_ext):
             os.environ["CCACHE_BASEDIR"] = os.path.dirname(os.path.abspath(__file__))
             os.environ["CCACHE_NOHASHDIR"] = "1"
 
-        # dawn4py module in-build source is here
-        dawn4py_build_dir = os.path.join(build_dir, "src", "dawn4py", "CMakeFiles")
+        # Check for dawn4py in the default DAWN4PY_MODULE_DIR location -- in dawn/src/dawn4py
+        dawn4py_build_dir = os.path.join(build_dir, "src")
 
         # Dest dir is here
         dest_dir = os.path.join(DAWN_DIR, "src") if self.inplace else self.build_lib
