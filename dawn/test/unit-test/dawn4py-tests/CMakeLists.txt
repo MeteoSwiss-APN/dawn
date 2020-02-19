@@ -12,11 +12,11 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_test(NAME Dawn4Py::Unit::structured
-  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PROJECT_BINARY_DIR}/src/dawn4py/${CMAKE_FILES_DIRECTORY}:${PROTOBUF_PYTHON_DIR}
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}
   ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR}/test_structured.py
 )
 
 add_test(NAME Dawn4Py::Unit::unstructured
-  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PROJECT_BINARY_DIR}/src/dawn4py/${CMAKE_FILES_DIRECTORY}:${PROTOBUF_PYTHON_DIR}
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}
   ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR}/test_unstructured.py
 )
