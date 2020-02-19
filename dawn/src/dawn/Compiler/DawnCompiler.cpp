@@ -444,12 +444,16 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
     case BackendType::CXXOpt:
       dawn_unreachable("GTClangOptCXX not supported yet");
     }
-  } catch(...) {
+  } catch(CompileError& e) {
     diagnostics_.report(buildDiag("-backend", options_.Backend,
                                   "backend options must be : " +
                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
+  } catch(...) {
+    DiagnosticsBuilder diag(DiagnosticsKind::Error);
+    diag << "code generation for backend `" << options_.Backend << "` failed";
+    diagnostics_.report(diag);
   }
   return nullptr;
 }
