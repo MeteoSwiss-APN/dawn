@@ -39,7 +39,7 @@
 namespace {
 // dummy partition identifier. always zero throughout since this reader does not support
 // partitioning (yet)
-const int myPart = 0;
+const int defaultPartition = 0;
 
 template <typename loadT>
 std::vector<loadT> LoadField(const netCDF::NcFile& dataFile, const std::string& name) {
@@ -55,8 +55,8 @@ std::vector<loadT> LoadField(const netCDF::NcFile& dataFile, const std::string& 
 }
 
 template <typename loadT>
-std::tuple<std::vector<loadT>, int, int> Load2DField(const netCDF::NcFile& dataFile,
-                                                     const std::string& name) {
+std::tuple<std::vector<loadT>, size_t, size_t> Load2DField(const netCDF::NcFile& dataFile,
+                                                           const std::string& name) {
   netCDF::NcVar data = dataFile.getVar(name.c_str());
   if(data.isNull()) {
     return {};
@@ -87,7 +87,6 @@ bool NodesFromNetCDF(const netCDF::NcFile& dataFile, atlas::Mesh& mesh) {
   // define nodes and associated properties for Atlas meshs
   mesh.nodes().resize(numNodes);
   atlas::mesh::Nodes& nodes = mesh.nodes();
-  auto xy = atlas::array::make_view<double, 2>(nodes.xy());
   auto lonlat = atlas::array::make_view<double, 2>(nodes.lonlat());
 
   // we currently don't care about parts, so myPart is always 0 and remotde_idx == glb_idx
@@ -110,7 +109,7 @@ bool NodesFromNetCDF(const netCDF::NcFile& dataFile, atlas::Mesh& mesh) {
     glb_idx_node(nodeIdx) = nodeIdx;
     remote_idx(nodeIdx) = nodeIdx;
 
-    part(nodeIdx) = myPart;
+    part(nodeIdx) = defaultPartition;
     ghost(nodeIdx) = false;
     atlas::mesh::Nodes::Topology::reset(flags(nodeIdx));
   }
@@ -132,14 +131,14 @@ bool CellsFromNetCDF(const netCDF::NcFile& dataFile, atlas::Mesh& mesh) {
   atlas::array::ArrayView<atlas::gidx_t, 1> glb_idx_cell =
       atlas::array::make_view<atlas::gidx_t, 1>(mesh.cells().global_index());
 
-  for(int cellIdx = 0; cellIdx < ncells; cellIdx++) {
+  for(size_t cellIdx = 0; cellIdx < ncells; cellIdx++) {
     // indices in netcdf are 1 based, data is column major
     atlas::idx_t tri_nodes[3] = {cellToVertex[0 * ncells + cellIdx] - 1,
                                  cellToVertex[1 * ncells + cellIdx] - 1,
                                  cellToVertex[2 * ncells + cellIdx] - 1};
     node_connectivity.set(cellIdx, tri_nodes);
     glb_idx_cell[cellIdx] = cellIdx;
-    cells_part(cellIdx) = myPart;
+    cells_part(cellIdx) = defaultPartition;
   }
 
   return true;
@@ -147,16 +146,16 @@ bool CellsFromNetCDF(const netCDF::NcFile& dataFile, atlas::Mesh& mesh) {
 
 template <typename ConnectivityT>
 bool AddNeighborList(const netCDF::NcFile& dataFile, atlas::Mesh& mesh,
-                     const std::string nbhListName, int yPerXExpected,
+                     const std::string nbhListName, size_t yPerXExpected,
                      ConnectivityT& connectivity) {
   auto [xToY, yPerX, numY] = Load2DField<int>(dataFile, nbhListName);
   if(yPerX != yPerXExpected) {
     std::cout << "number of neighbors per element not as expected!\n";
     return false;
   }
-  for(int elemIdx = 0; elemIdx < numY; elemIdx++) {
+  for(size_t elemIdx = 0; elemIdx < numY; elemIdx++) {
     atlas::idx_t yOfX[yPerX];
-    for(int innerIdx = 0; innerIdx < yPerX; innerIdx++) {
+    for(size_t innerIdx = 0; innerIdx < yPerX; innerIdx++) {
       // indices in netcdf are 1 based, data is column major
       yOfX[innerIdx] = xToY[innerIdx * numY + elemIdx] - 1;
     }
@@ -167,14 +166,8 @@ bool AddNeighborList(const netCDF::NcFile& dataFile, atlas::Mesh& mesh,
 
 // Pre-allocate neighborhood table, snippet taken from
 // https://github.com/ecmwf/atlas/blob/98ff1f20dc883ba2dfd7658196622b9bc6d6fceb/src/atlas/mesh/actions/BuildEdges.cc#L73
-void AllocNbhTable(atlas::mesh::HybridElements::Connectivity& connectivity, int numElements,
-                   int nbhPerElem) {
-  std::vector<int> init(numElements * nbhPerElem, connectivity.missing_value());
-  connectivity.add(numElements, nbhPerElem, init.data());
-}
-
-void AllocNbhTable(atlas::mesh::Nodes::Connectivity& connectivity, int numElements,
-                   int nbhPerElem) {
+template <typename ConnectivityT>
+void AllocNbhTable(ConnectivityT& connectivity, int numElements, int nbhPerElem) {
   std::vector<int> init(numElements * nbhPerElem, connectivity.missing_value());
   connectivity.add(numElements, nbhPerElem, init.data());
 }
@@ -229,13 +222,15 @@ std::optional<atlas::Mesh> AtlasMeshFromNetCDFComplete(const std::string& filena
     // ------------------------------
 
     // Edges
-    AllocNbhTable(mesh.edges().cell_connectivity(), mesh.edges().size(), cellsPerEdge);
+    AllocNbhTable<atlas::mesh::HybridElements::Connectivity>(mesh.edges().cell_connectivity(),
+                                                             mesh.edges().size(), cellsPerEdge);
     if(!AddNeighborList<atlas::mesh::HybridElements::Connectivity>(
            dataFile, mesh, "adjacent_cell_of_edge", cellsPerEdge,
            mesh.edges().cell_connectivity())) {
       return {};
     }
-    AllocNbhTable(mesh.edges().node_connectivity(), mesh.edges().size(), verticesPerEdge);
+    AllocNbhTable<atlas::mesh::HybridElements::Connectivity>(mesh.edges().node_connectivity(),
+                                                             mesh.edges().size(), verticesPerEdge);
     if(!AddNeighborList<atlas::mesh::HybridElements::Connectivity>(
            dataFile, mesh, "edge_vertices", verticesPerEdge, mesh.edges().node_connectivity())) {
       return {};
@@ -244,12 +239,14 @@ std::optional<atlas::Mesh> AtlasMeshFromNetCDFComplete(const std::string& filena
     // AllocNbhTable(mesh.edges().edge_connectivity(), ??, ??);
 
     // Nodes
-    AllocNbhTable(mesh.nodes().cell_connectivity(), mesh.nodes().size(), cellsPerNode);
+    AllocNbhTable<atlas::mesh::Nodes::Connectivity>(mesh.nodes().cell_connectivity(),
+                                                    mesh.nodes().size(), cellsPerNode);
     if(!AddNeighborList<atlas::mesh::Nodes::Connectivity>(
            dataFile, mesh, "cells_of_vertex", cellsPerNode, mesh.nodes().cell_connectivity())) {
       return {};
     }
-    AllocNbhTable(mesh.nodes().edge_connectivity(), mesh.nodes().size(), edgesPerNode);
+    AllocNbhTable<atlas::mesh::Nodes::Connectivity>(mesh.nodes().edge_connectivity(),
+                                                    mesh.nodes().size(), edgesPerNode);
     if(!AddNeighborList<atlas::mesh::Nodes::Connectivity>(
            dataFile, mesh, "edges_of_vertex", edgesPerNode, mesh.nodes().edge_connectivity())) {
       return {};
@@ -259,7 +256,8 @@ std::optional<atlas::Mesh> AtlasMeshFromNetCDFComplete(const std::string& filena
 
     // Cells
     // cell to node was already computed in AtlasMeshFromNetCDFMinimal
-    AllocNbhTable(mesh.cells().edge_connectivity(), mesh.cells().size(), edgesPerCell);
+    AllocNbhTable<atlas::mesh::HybridElements::Connectivity>(mesh.cells().edge_connectivity(),
+                                                             mesh.cells().size(), edgesPerCell);
     if(!AddNeighborList<atlas::mesh::HybridElements::Connectivity>(
            dataFile, mesh, "edge_of_cell", edgesPerCell, mesh.cells().edge_connectivity())) {
       return {};
