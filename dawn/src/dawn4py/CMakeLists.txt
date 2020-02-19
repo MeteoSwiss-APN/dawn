@@ -12,9 +12,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-# Copy over to build directory
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY} PATTERN "*.py")
-
 # Generate python proto files
 include(DawnProtobufGenerate)
 
@@ -26,7 +23,7 @@ dawn_protobuf_generate(
   OUT_FILES sir_proto_python_files
   PROTOS ${dawn_sir_proto_files}
   WDIR ${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto
-  OUTDIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py/serialization
+  OUTDIR ${DAWN4PY_MODULE_DIR}/dawn4py/serialization
   PACKG SIR
   LANGUAGE python
 )
@@ -36,7 +33,7 @@ dawn_protobuf_generate(
   PROTOS ${dawn_iir_proto_files}
   INC_DIR ${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto
   WDIR ${PROJECT_SOURCE_DIR}/src/dawn/IIR/proto
-  OUTDIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py/serialization
+  OUTDIR ${DAWN4PY_MODULE_DIR}/dawn4py/serialization
   PACKG IIR
   LANGUAGE python
 )
@@ -69,6 +66,8 @@ pybind11_add_module(_dawn4py MODULE _dawn4py.cpp)
 target_compile_features(_dawn4py PUBLIC cxx_std_17)
 target_link_libraries(_dawn4py PUBLIC pybind11::pybind11 Dawn)
 target_compile_options(_dawn4py PUBLIC -Wno-shadow)
-#set_target_properties(_dawn4py PROPERTIES
-#  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dawn4py)
+add_custom_command(TARGET _dawn4py POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy
+  $<TARGET_FILE:_dawn4py> ${DAWN4PY_MODULE_DIR}/dawn4py/$<TARGET_FILE_NAME:_dawn4py>
+)
 add_dependencies(_dawn4py generate_python_proto)

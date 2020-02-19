@@ -120,12 +120,6 @@ class CMakeBuild(build_ext):
             # Otherwise, build extension, copying protos over in the process
             cmake_executable = self.validate_cmake_install(self.extensions)
             self.compile_extension(self.build_temp, cmake=cmake_executable)
-            # Move from build_tmp to final position
-            for ext in self.extensions:
-                self.copy_file(
-                    os.path.join(self.build_temp, "src", self.get_ext_filename(ext.name)),
-                    os.path.join(self.build_lib, self.get_ext_filename(ext.name)),
-                )
 
     def compile_extension(self, build_dir, cmake="cmake"):
         cmake_args = os.getenv("CMAKE_ARGS", default="").split(" ") or []
