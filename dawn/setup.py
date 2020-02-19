@@ -34,7 +34,7 @@ EMAIL = "gridtools@cscs.com"
 AUTHOR = "MeteoSwiss / ETH Zurich / Vulcan"
 
 # Note that DAWN_DIR below may be the version pip copies over before building
-DAWN_DIR = os.path.join(os.path.dirname(__file__))
+DAWN_DIR = os.path.dirname(__file__)
 DAWN4PY_DIR = os.path.join(DAWN_DIR, "src", "dawn4py")
 
 BUILD_JOBS = os.cpu_count()
@@ -53,15 +53,16 @@ EXTRAS = {"dev": ["Jinja2", "pytest", "tox"]}
 with open(os.path.join(DAWN_DIR, "version.txt"), mode="r") as f:
     VERSION = f.read().strip("\n")
 
+# Add the main Dawn version file to the dawn4py package
+shutil.copyfile(os.path.join(DAWN_DIR, "version.txt"), os.path.join(DAWN4PY_DIR, "version.txt"))
 
-def update_sources():
-    # Copy additional C++ headers for the generated code
-    target_path = os.path.join(DAWN4PY_DIR, "_external_src", "driver-includes")
-    if os.path.exists(target_path):
-        shutil.rmtree(target_path)
-    shutil.copytree(
-        os.path.join(DAWN_DIR, "src", "driver-includes"), target_path,
-    )
+# Copy additional C++ headers for the generated code
+target_path = os.path.join(DAWN4PY_DIR, "_external_src", "driver-includes")
+if os.path.exists(target_path):
+    shutil.rmtree(target_path)
+shutil.copytree(
+    os.path.join(DAWN_DIR, "src", "driver-includes"), target_path,
+)
 
 
 # Based on:
@@ -78,6 +79,16 @@ class CMakeBuild(build_ext):
 
         # Build dir is here
         build_dir = os.getenv("DAWN_BUILD_DIR", default="")
+
+        # If a global build_dir has not been set, activate ccache
+        if not build_dir:
+            # Taken from: https://github.com/h5py/h5py/pull/1382
+            # This allows ccache to recognise the files when pip builds in a temp
+            # directory. It speeds up repeatedly running tests through tox with
+            # ccache configured (CC="ccache gcc"). It should have no effect if
+            # ccache is not in use.
+            os.environ["CCACHE_BASEDIR"] = os.path.dirname(os.path.abspath(__file__))
+            os.environ["CCACHE_NOHASHDIR"] = "1"
 
         # dawn4py module in-build source is here
         dawn4py_build_dir = os.path.join(build_dir, "src", "dawn4py", "CMakeFiles")
@@ -159,26 +170,6 @@ class CMakeBuild(build_ext):
         return cmake_executable
 
 
-class dawn4py_build_py(build_py):
-    """A custom 'build_py' command to add required extra files to the Python package."""
-
-    def run(self):
-        """Copy and update source files before running normal 'build_py' command."""
-
-        update_sources()
-        super().run()
-
-
-class dawn4py_develop(develop):
-    """A custom 'develop' command to add required extra files to the Python package."""
-
-    def run(self):
-        """Copy and update source files before running normal 'develop' command."""
-
-        update_sources()
-        super().run()
-
-
 setup(
     name=NAME,
     version=VERSION,
@@ -191,7 +182,7 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     ext_modules=[CMakeExtension("dawn4py._dawn4py")],
-    cmdclass={"build_ext": CMakeBuild, "build_py": dawn4py_build_py, "develop": dawn4py_develop},
+    cmdclass={"build_ext": CMakeBuild},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     zip_safe=False,
