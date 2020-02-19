@@ -115,20 +115,10 @@ class CMakeBuild(build_ext):
             self.compile_extension(self.build_temp, cmake=cmake_executable)
 
     def compile_extension(self, build_dir, cmake="cmake"):
+        if os.path.exists(build_dir):
+            shutil.rmtree(build_dir, ignore_errors=False)
         cmake_args = os.getenv("CMAKE_ARGS", default="").split(" ") or []
 
-        # Set build folder inside dawn and remove CMake cache if it contains wrong paths.
-        # Installing in editable/develop mode builds the extension in the original build path,
-        # but a regular `pip install` copies the full tree to a temporary folder
-        # before building, which makes CMake fail if a CMake cache had been already generated.
-        for cache_file in self.find_all("CMakeCache.txt", build_dir):
-            with open(cache_file, "r") as f:
-                text = f.read()
-                m = re.search(r"\s*Dawn_BINARY_DIR\s*:\s*STATIC\s*=\s*([\w/\\]+)\s*", text)
-                cache_build_dir = m.group(1) if m else ""
-                if os.path.dirname(cache_file) != cache_build_dir:
-                    shutil.rmtree(os.path.dirname(cache_file), ignore_errors=False)
-                    assert not os.path.exists(cache_file)
         os.makedirs(build_dir, exist_ok=True)
 
         # Run CMake configure
@@ -167,14 +157,6 @@ class CMakeBuild(build_ext):
             raise RuntimeError("CMake >= 3.13.0 is required")
 
         return cmake_executable
-
-    @staticmethod
-    def find_all(name, path):
-        result = []
-        for root, dirs, files in os.walk(path):
-            if name in files:
-                result.append(os.path.join(root, name))
-        return result
 
 
 class dawn4py_build_py(build_py):
