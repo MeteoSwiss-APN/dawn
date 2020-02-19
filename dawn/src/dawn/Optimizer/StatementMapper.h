@@ -29,18 +29,22 @@ class StatementMapper : public iir::ASTVisitor {
   /// @brief Representation of the current scope which keeps track of the binding of field and
   /// variable names
   struct Scope : public NonCopyable {
-    Scope(iir::MultiStage& multiStage, iir::DoMethod& doMethod, const iir::Interval& interval,
+    Scope(iir::MultiStage& multiStage, const iir::Interval& interval,
+          const iir::Stage::IterationSpace& iterationspace,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFun)
-        : multiStage_(multiStage), doMethod_(doMethod), VerticalInterval(interval), ScopeDepth(0),
-          FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
+        : multiStage_(multiStage), VerticalInterval(interval), iterationSpace(iterationspace),
+          ScopeDepth(0), FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
     /// Current Multistage that represents the VerticalRegionDeclStmt
     iir::MultiStage& multiStage_;
 
-    /// DoMethod containing the list of statements of the stencil function or stage
-    iir::DoMethod& doMethod_;
+    // /// DoMethod containing the list of statements of the stencil function or stage
+    // iir::DoMethod& doMethod_;
 
     /// The current interval
     const iir::Interval VerticalInterval;
+
+    /// The current iterationspace
+    iir::Stage::IterationSpace iterationSpace;
 
     /// Scope variable name to (global) AccessID
     std::unordered_map<std::string, int> LocalVarNameToAccessIDMap;
@@ -73,7 +77,7 @@ public:
   StatementMapper(
       iir::StencilInstantiation* instantiation, OptimizerContext& context,
       const std::vector<ast::StencilCall*>& stackTrace, iir::MultiStage& multiStage,
-      iir::DoMethod& doMethod, const iir::Interval& interval,
+      const iir::Interval& interval, const iir::Stage::IterationSpace& iterationSpace,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
       const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation);
 

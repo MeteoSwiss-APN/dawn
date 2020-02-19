@@ -23,7 +23,7 @@ namespace dawn {
 StatementMapper::StatementMapper(
     iir::StencilInstantiation* instantiation, OptimizerContext& context,
     const std::vector<ast::StencilCall*>& stackTrace, iir::MultiStage& multiStage,
-    iir::DoMethod& doMethod, const iir::Interval& interval,
+    const iir::Interval& interval, const iir::Stage::IterationSpace& iterationSpace,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
     : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
@@ -31,7 +31,7 @@ StatementMapper::StatementMapper(
 
   // Create the initial scope
   scope_.push(
-      std::make_shared<Scope>(multiStage, doMethod, interval, stencilFunctionInstantiation));
+      std::make_shared<Scope>(multiStage, interval, iterationSpace, stencilFunctionInstantiation));
   scope_.top()->LocalFieldnameToAccessIDMap = localFieldnameToAccessIDMap;
 }
 
@@ -44,17 +44,12 @@ void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt)
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
     auto& ms = scope_.top()->multiStage_;
-    // temporary
-    iir::Interval interval(0, 1);
-    iir::Stage::IterationSpace iterationspace;
-    std::unique_ptr<iir::Stage> stage = std::make_unique<iir::Stage>(
-        metadata_, instantiation_->nextUID(), interval, iterationspace);
+    std::unique_ptr<iir::Stage> stage =
+        std::make_unique<iir::Stage>(metadata_, instantiation_->nextUID(),
+                                     scope_.top()->VerticalInterval, scope_.top()->iterationSpace);
     iir::DoMethod& doMethod = stage->getSingleDoMethod();
 
     doMethod.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
-
-    // // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
-    // stage->update(iir::NodeUpdateType::level);
 
     // Put the stage into a separate MultiStage ...
     ms.insertChild(std::move(stage));
@@ -248,9 +243,9 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
   }
 
   // Create the scope of the stencil function
-  scope_.top()->CandidateScopes.push(
-      std::make_shared<Scope>(*(stencilFun->getDoMethod()->getParent()->getParent()),
-                              *(stencilFun->getDoMethod()), stencilFun->getInterval(), stencilFun));
+  scope_.top()->CandidateScopes.push(std::make_shared<Scope>(
+      *(stencilFun->getDoMethod()->getParent()->getParent()), stencilFun->getInterval(),
+      stencilFun->getDoMethod()->getParent()->getIterationSpace(), stencilFun));
 
   // Resolve the arguments
   for(auto& arg : expr->getArguments())
@@ -329,8 +324,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 
       auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-      iir::replaceOldExprWithNewExprInStmt(
-          (*(scope_.top()->doMethod_.getAST().getStatements().rbegin())), expr, newExpr);
+      std::vector<std::shared_ptr<iir::Stmt>> allStatements;
+      for(const auto& doMethod : iterateIIROver<iir::DoMethod>((scope_.top()->multiStage_))) {
+        allStatements.insert(allStatements.end(), doMethod->getAST().getStatements().begin(),
+                             doMethod->getAST().getStatements().end());
+      }
+      iir::replaceOldExprWithNewExprInStmt((*(allStatements.rbegin())), expr, newExpr);
 
       // if a global is replaced by its value it becomes a de-facto literal negate access id
       int AccessID = -instantiation_->nextUID();

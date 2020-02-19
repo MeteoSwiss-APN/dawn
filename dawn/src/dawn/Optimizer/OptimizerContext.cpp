@@ -401,7 +401,7 @@ public:
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
     StatementMapper statementMapper(instantiation_.get(), context_, scope_.top()->StackTrace,
-                                    *multiStage, doMethod, doMethod.getInterval(),
+                                    *multiStage, interval, iterationspace,
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getAST().getStatements().size() << " statements";
