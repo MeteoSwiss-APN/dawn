@@ -23,7 +23,7 @@ namespace dawn {
 ASTConverter::ASTConverter() {}
 
 ASTConverter::StmtMap& ASTConverter::getStmtMap() {
-  // TODO: this class whould need to be tested. Here is a possible test:
+  // TODO: this class would need to be tested. Here is a possible test:
   //  for(const std::pair<std::shared_ptr<sir::Stmt>, std::shared_ptr<iir::Stmt>>& pair : stmtMap_)
   //  {
   //      DAWN_ASSERT((int)pair.first->getKind() == (int)pair.second->getKind());

@@ -18,6 +18,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/AccessComputation.h"
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/Interval.h"
@@ -144,7 +145,7 @@ public:
     instantiation_->getIIR()->insertChild(
         std::make_unique<Stencil>(metadata_, sirStencil_->Attributes, StencilID),
         instantiation_->getIIR());
-    // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
+    // We create a paceholder stencil-call for CodeGen to know where we need to insert calls to
     // this stencil
     auto placeholderStencil = std::make_shared<ast::StencilCall>(
         InstantiationHelper::makeStencilCallCodeGenName(StencilID));
@@ -155,7 +156,7 @@ public:
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
 
-  /// @brief Replace the first VerticalRegionDeclStmt or StencilCallDelcStmt with a dummy
+  /// @brief Replace the first VerticalRegionDeclStmt or StencilCallDeclStmt with a dummy
   /// placeholder signaling code-gen that it should insert a call to the gridtools stencil.
   ///
   /// All remaining VerticalRegion/StencilCalls statements which are still in the stencil
@@ -191,7 +192,7 @@ public:
   void cleanupStencilDeclAST() {
 
     // We only need to remove "nested" nodes as the top-level VerticalRegions or StencilCalls are
-    // not inserted into the statement list in the frist place
+    // not inserted into the statement list in the first place
     class RemoveStencilDescNodes : public iir::ASTVisitorForwarding {
     public:
       RemoveStencilDescNodes() {}
@@ -400,7 +401,7 @@ public:
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
     StatementMapper statementMapper(instantiation_.get(), context_, scope_.top()->StackTrace,
-                                    doMethod, doMethod.getInterval(),
+                                    *multiStage, doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getAST().getStatements().size() << " statements";
@@ -410,13 +411,20 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_.get(), doMethod.getAST().getStatements());
+    /////// todo fix this also
+    std::vector<std::shared_ptr<Stmt>> allStmts;
+    for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
+      allStmts.insert(allStmts.end(), doMethod->getAST().getStatements().begin(),
+                      doMethod->getAST().getStatements().end());
+    }
+    // computeAccesses(instantiation_.get(), doMethod.getAST().getStatements());
+    computeAccesses(instantiation_.get(), allStmts);
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
-    stage->update(iir::NodeUpdateType::level);
+    // stage->update(iir::NodeUpdateType::level);
 
     // Put the stage into a separate MultiStage ...
-    multiStage->insertChild(std::move(stage));
+    // multiStage->insertChild(std::move(stage));
 
     // ... and append the MultiStages of the current stencil
     const auto& stencil = instantiation_->getIIR()->getChildren().back();
@@ -625,7 +633,7 @@ bool OptimizerContext::fillIIRFromSIR(
   metadata.setStencilLocation(SIRStencil->Loc);
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
-  // indentify the field).
+  // identify the field).
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
                                           : iir::FieldAccessType::APIField),
@@ -642,6 +650,8 @@ bool OptimizerContext::fillIIRFromSIR(
 
   //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
   stencilDeclMapper.cleanupStencilDeclAST();
+
+  stencilInstantiation->dump();
 
   //  // Repair broken references to temporaries i.e promote them to real fields
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(

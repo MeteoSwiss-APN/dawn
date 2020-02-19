@@ -351,7 +351,7 @@ public:
   virtual std::shared_ptr<iir::Expr>
   postVisitNode(std::shared_ptr<iir::StencilFunCallExpr> const& expr) override {
     // at the post visit of a stencil function node, we will replace the arguments to "tmp" fields
-    // by stecil function calls
+    // by stencil function calls
     std::shared_ptr<iir::StencilFunctionInstantiation> thisStencilFun =
         metadata_.getStencilFunctionInstantiation(expr);
 
@@ -469,6 +469,7 @@ public:
 
     // recompute the list of <statement, accesses> pairs
     StatementMapper statementMapper(stencilInstantiation_.get(), context_, stackTrace_,
+                                    *(cloneStencilFun->getDoMethod()->getParent()->getParent()),
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);
 
@@ -662,7 +663,8 @@ bool PassTemporaryToStencilFunction::run(
 
                   StatementMapper statementMapper(
                       stencilInstantiation.get(), context_,
-                      *stmt->getData<iir::IIRStmtData>().StackTrace, tmpStmtDoMethod, sirInterval,
+                      *stmt->getData<iir::IIRStmtData>().StackTrace,
+                      *(tmpStmtDoMethod.getParent()->getParent()), tmpStmtDoMethod, sirInterval,
                       stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr);
 
                   std::shared_ptr<iir::BlockStmt> blockStmt =

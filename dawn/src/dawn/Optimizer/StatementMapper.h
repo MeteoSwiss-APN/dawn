@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <stack>
 
@@ -28,10 +29,12 @@ class StatementMapper : public iir::ASTVisitor {
   /// @brief Representation of the current scope which keeps track of the binding of field and
   /// variable names
   struct Scope : public NonCopyable {
-    Scope(iir::DoMethod& doMethod, const iir::Interval& interval,
+    Scope(iir::MultiStage& multiStage, iir::DoMethod& doMethod, const iir::Interval& interval,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFun)
-        : doMethod_(doMethod), VerticalInterval(interval), ScopeDepth(0),
+        : multiStage_(multiStage), doMethod_(doMethod), VerticalInterval(interval), ScopeDepth(0),
           FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
+    /// Current Multistage that represents the VerticalRegionDeclStmt
+    iir::MultiStage& multiStage_;
 
     /// DoMethod containing the list of statements of the stencil function or stage
     iir::DoMethod& doMethod_;
@@ -54,9 +57,9 @@ class StatementMapper : public iir::ASTVisitor {
     /// Counter of the parsed arguments
     int ArgumentIndex;
 
-    /// Druring traversal of an argument list of a stencil function, this will hold the scope of
+    /// During traversal of an argument list of a stencil function, this will hold the scope of
     /// the new stencil function
-    std::stack<std::shared_ptr<Scope>> CandiateScopes;
+    std::stack<std::shared_ptr<Scope>> CandidateScopes;
   };
 
   iir::StencilInstantiation* instantiation_;
@@ -69,8 +72,8 @@ class StatementMapper : public iir::ASTVisitor {
 public:
   StatementMapper(
       iir::StencilInstantiation* instantiation, OptimizerContext& context,
-      const std::vector<ast::StencilCall*>& stackTrace, iir::DoMethod& doMethod,
-      const iir::Interval& interval,
+      const std::vector<ast::StencilCall*>& stackTrace, iir::MultiStage& multiStage,
+      iir::DoMethod& doMethod, const iir::Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
       const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation);
 

@@ -14,32 +14,50 @@
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/Interval.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
 StatementMapper::StatementMapper(
     iir::StencilInstantiation* instantiation, OptimizerContext& context,
-    const std::vector<ast::StencilCall*>& stackTrace, iir::DoMethod& doMethod,
-    const iir::Interval& interval,
+    const std::vector<ast::StencilCall*>& stackTrace, iir::MultiStage& multiStage,
+    iir::DoMethod& doMethod, const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
     : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
       stackTrace_(stackTrace) {
 
   // Create the initial scope
-  scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
+  scope_.push(
+      std::make_shared<Scope>(multiStage, doMethod, interval, stencilFunctionInstantiation));
   scope_.top()->LocalFieldnameToAccessIDMap = localFieldnameToAccessIDMap;
 }
 
 StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
-  return (!scope_.top()->CandiateScopes.empty() ? scope_.top()->CandiateScopes.top().get()
-                                                : nullptr);
+  return (!scope_.top()->CandidateScopes.empty() ? scope_.top()->CandidateScopes.top().get()
+                                                 : nullptr);
 }
 
 void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
+    auto& ms = scope_.top()->multiStage_;
+    // temporary
+    iir::Interval interval(0, 1);
+    iir::Stage::IterationSpace iterationspace;
+    std::unique_ptr<iir::Stage> stage = std::make_unique<iir::Stage>(
+        metadata_, instantiation_->nextUID(), interval, iterationspace);
+    iir::DoMethod& doMethod = stage->getSingleDoMethod();
+
+    doMethod.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
+
+    // // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
+    // stage->update(iir::NodeUpdateType::level);
+
+    // Put the stage into a separate MultiStage ...
+    ms.insertChild(std::move(stage));
   }
 }
 
@@ -213,7 +231,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
       // Clone the AST s.t each stencil function has their own AST which is modifiable
       ast = ast->clone();
 
-      // TODO decouple the funciton of stencil function instantiation from the statement mapper
+      // TODO decouple the function of stencil function instantiation from the statement mapper
       stencilFun = instantiation_->makeStencilFunctionInstantiation(
           expr, iirStencilFun, ast, interval, scope_.top()->FunctionInstantiation);
       break;
@@ -223,15 +241,16 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
 
   // If this is a nested function call (e.g the `bar` in `foo(bar(i+1, u))`) register the new
   // stencil function in the current stencil function
-  if(Scope* candiateScope = getCurrentCandidateScope()) {
-    candiateScope->FunctionInstantiation->setFunctionInstantiationOfArgField(
-        candiateScope->ArgumentIndex, stencilFun);
-    candiateScope->ArgumentIndex += 1;
+  if(Scope* candidateScope = getCurrentCandidateScope()) {
+    candidateScope->FunctionInstantiation->setFunctionInstantiationOfArgField(
+        candidateScope->ArgumentIndex, stencilFun);
+    candidateScope->ArgumentIndex += 1;
   }
 
   // Create the scope of the stencil function
-  scope_.top()->CandiateScopes.push(
-      std::make_shared<Scope>(*(stencilFun->getDoMethod()), stencilFun->getInterval(), stencilFun));
+  scope_.top()->CandidateScopes.push(
+      std::make_shared<Scope>(*(stencilFun->getDoMethod()->getParent()->getParent()),
+                              *(stencilFun->getDoMethod()), stencilFun->getInterval(), stencilFun));
 
   // Resolve the arguments
   for(auto& arg : expr->getArguments())
@@ -239,19 +258,19 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
 
   metadata_.finalizeStencilFunctionSetup(stencilFun);
 
-  Scope* candiateScope = getCurrentCandidateScope();
+  Scope* candidateScope = getCurrentCandidateScope();
 
-  const auto& arguments = candiateScope->FunctionInstantiation->getArguments();
+  const auto& arguments = candidateScope->FunctionInstantiation->getArguments();
 
   for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
     if(sir::Field* field = dyn_cast<sir::Field>(arguments[argIdx].get())) {
-      int AccessID = candiateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);
-      candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
+      int AccessID = candidateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);
+      candidateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
     }
   }
 
   // Resolve the function
-  scope_.push(scope_.top()->CandiateScopes.top());
+  scope_.push(scope_.top()->CandidateScopes.top());
 
   scope_.top()->FunctionInstantiation->getAST()->accept(*this);
 
@@ -263,14 +282,14 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
 
   scope_.pop();
 
-  // We resolved the candiate function, move on ...
-  scope_.top()->CandiateScopes.pop();
+  // We resolved the candidate function, move on ...
+  scope_.top()->CandidateScopes.pop();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
-  DAWN_ASSERT(!scope_.top()->CandiateScopes.empty());
+  DAWN_ASSERT(!scope_.top()->CandidateScopes.empty());
 
   auto& function = scope_.top()->FunctionInstantiation;
   auto stencilFun = getCurrentCandidateScope()->FunctionInstantiation;
@@ -368,14 +387,14 @@ void StatementMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
-  if(Scope* candiateScope = getCurrentCandidateScope()) {
+  if(Scope* candidateScope = getCurrentCandidateScope()) {
     // We are currently traversing an argument list of a stencil function (create the mapping of
     // the arguments and compute the initial offset of the field)
-    candiateScope->FunctionInstantiation->setCallerAccessIDOfArgField(candiateScope->ArgumentIndex,
-                                                                      AccessID);
-    candiateScope->FunctionInstantiation->setCallerInitialOffsetFromAccessID(
+    candidateScope->FunctionInstantiation->setCallerAccessIDOfArgField(
+        candidateScope->ArgumentIndex, AccessID);
+    candidateScope->FunctionInstantiation->setCallerInitialOffsetFromAccessID(
         AccessID, function ? function->evalOffsetOfFieldAccessExpr(expr) : expr->getOffset());
-    candiateScope->ArgumentIndex += 1;
+    candidateScope->ArgumentIndex += 1;
   }
 }
 } // namespace dawn
