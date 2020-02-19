@@ -37,6 +37,11 @@
 //
 // - Both readers only generate one Atlas partition. This also means that NO halos are generated and
 //   MPI will NOT work!
+//
+// - The reader also does not assign xy values since such a mapping would require a map projection,
+//   where no universally accepted default exists (c.f.
+//   https://en.wikipedia.org/wiki/Map_projection)
+//
 
 std::optional<atlas::Mesh> AtlasMeshFromNetCDFMinimal(const std::string& filename);
 std::optional<atlas::Mesh> AtlasMeshFromNetCDFComplete(const std::string& filename);
