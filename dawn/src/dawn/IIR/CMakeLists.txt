@@ -35,6 +35,7 @@ target_include_directories(DawnIIRProto
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
+# ... and linked to protobuf
 target_link_libraries(DawnIIRProto PUBLIC DawnSIRProto protobuf::libprotobuf)
 
 add_library(DawnIIR

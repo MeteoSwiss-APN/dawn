@@ -34,6 +34,7 @@ target_include_directories(DawnSIRProto
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
+# ... and linked to protobuf
 target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
 
 # Builds one library for both SIR and AST
