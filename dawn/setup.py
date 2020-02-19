@@ -137,8 +137,9 @@ class CMakeBuild(build_ext):
             "-DPYTHON_EXECUTABLE=" + sys.executable,
             "-DBUILD_TESTING=OFF",
             "-DDAWN_REQUIRE_PYTHON=ON",
-            "-DDAWN4PY_MODULE_DIR=" + self.build_lib,
         ]
+        if not self.inplace:
+            cmake_args.append("-DDAWN4PY_MODULE_DIR=" + self.build_lib)
         self.spawn([cmake, "-S", os.path.abspath(DAWN_DIR), "-B", build_dir] + cmake_args)
 
         # Run CMake build
