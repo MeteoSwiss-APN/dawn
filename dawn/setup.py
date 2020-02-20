@@ -77,11 +77,37 @@ class CMakeBuild(build_ext):
     def run(self):
         assert all(isinstance(ext, CMakeExtension) for ext in self.extensions)
 
-        # Build dir is here
-        build_dir = os.getenv("DAWN_BUILD_DIR", default="")
+        module_dir = os.getenv("DAWN4PY_MODULE_DIR", default=os.path.join(DAWN_DIR, "src"))
 
-        # If a global build_dir has not been set, activate ccache
-        if not build_dir:
+        # Dest dir is here
+        dest_dir = os.path.join(DAWN_DIR, "src") if self.inplace else self.build_lib
+
+        irs_in_module = glob(
+            os.path.join(module_dir, "dawn4py", "serialization") + "/**/*_pb2.py", recursive=True,
+        )
+        has_irs_in_module = len(irs_in_module) > 0
+
+        exts_in_module = [
+            os.path.join(module_dir, self.get_ext_filename(ext.name)) for ext in self.extensions
+        ]
+        has_exts_in_module = all(os.path.exists(e) for e in exts_in_module)
+
+        # Check if the extensions and python protobuf files exist in build_dir
+        if module_dir is not "" and has_irs_in_module and has_exts_in_module:
+            # Copy irs over to dest_dir
+            for proto in irs_in_module:
+                rel_path = proto.replace(module_dir + "/", "")
+                self.copy_file(proto, os.path.join(dest_dir, rel_path))
+
+            # Copy extension over to dest_dir
+            for extension in exts_in_module:
+                rel_path = extension.replace(module_dir + "/", "")
+                self.copy_file(extension, os.path.join(dest_dir, rel_path))
+
+        else:
+            # Otherwise, build extension, copying protos over in the process
+
+            # Activate ccache
             # Taken from: https://github.com/h5py/h5py/pull/1382
             # This allows ccache to recognise the files when pip builds in a temp
             # directory. It speeds up repeatedly running tests through tox with
@@ -90,38 +116,6 @@ class CMakeBuild(build_ext):
             os.environ["CCACHE_BASEDIR"] = os.path.dirname(os.path.abspath(__file__))
             os.environ["CCACHE_NOHASHDIR"] = "1"
 
-        # Check for dawn4py in the default DAWN4PY_MODULE_DIR location -- in dawn/src/dawn4py
-        dawn4py_build_dir = os.path.join(build_dir, "src")
-
-        # Dest dir is here
-        dest_dir = os.path.join(DAWN_DIR, "src") if self.inplace else self.build_lib
-
-        irs_in_build = glob(
-            os.path.join(dawn4py_build_dir, "dawn4py", "serialization") + "/**/*_pb2.py",
-            recursive=True,
-        )
-        has_irs_in_build = len(irs_in_build) > 0
-
-        exts_in_build = [
-            os.path.join(dawn4py_build_dir, self.get_ext_filename(ext.name))
-            for ext in self.extensions
-        ]
-        has_exts_in_build = all(os.path.exists(e) for e in exts_in_build)
-
-        # Check if the extensions and python protobuf files exist in build_dir
-        if build_dir is not "" and has_irs_in_build and has_exts_in_build:
-            # Copy irs over to dest_dir
-            for proto in irs_in_build:
-                rel_path = proto.replace(dawn4py_build_dir + "/", "")
-                self.copy_file(proto, os.path.join(dest_dir, rel_path))
-
-            # Copy extension over to dest_dir
-            for extension in exts_in_build:
-                rel_path = extension.replace(dawn4py_build_dir + "/", "")
-                self.copy_file(extension, os.path.join(dest_dir, rel_path))
-
-        else:
-            # Otherwise, build extension, copying protos over in the process
             cmake_executable = self.validate_cmake_install(self.extensions)
             self.compile_extension(self.build_temp, cmake=cmake_executable)
 
@@ -147,7 +141,7 @@ class CMakeBuild(build_ext):
         print("-" * 10, "Building extensions", "-" * 40)
         cfg = "Debug" if self.debug else "Release"
         build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
-        self.spawn([cmake, "--build", build_dir, "--target", "_dawn4py"] + build_args)
+        self.spawn([cmake, "--build", build_dir, "--target", "python"] + build_args)
 
     @staticmethod
     def validate_cmake_install(extensions):
