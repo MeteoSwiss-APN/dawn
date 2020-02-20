@@ -81,5 +81,4 @@ python -m venv dawn_venv
 source dawn_venv/bin/activate
 pip install --upgrade pip
 pip install wheel
-export DAWN_BUILD_DIR=$build_dir/dawn
 pip install $base_dir/dawn/

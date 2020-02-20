@@ -23,8 +23,6 @@ jobs:
       - run:
           name: Dawn python module
           command: python -m pip install -e /usr/src/dawn/dawn
-          environment:
-            DAWN_BUILD_DIR: /usr/src/dawn/dawn/build
       - run:
           name: Dawn tests
           working_directory: /usr/src/dawn/dawn/build

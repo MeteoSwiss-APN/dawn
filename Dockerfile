@@ -48,7 +48,6 @@ RUN cmake -S /usr/src/dawn -B /usr/src/dawn/build \
     -DPROTOBUF_PYTHON_DIR=/usr/src/protobuf-3.10.1/python \
     -GNinja
 RUN cmake --build /usr/src/dawn/build -j $(nproc) --target install
-ENV DAWN_BUILD_DIR /usr/src/dawn/build/dawn
 RUN python -m pip install /usr/src/dawn/dawn
 RUN cd /usr/src/dawn/build && ctest -j$(nproc) --progress --output-on-failure
 RUN rm -rf /usr/src/dawn/build
