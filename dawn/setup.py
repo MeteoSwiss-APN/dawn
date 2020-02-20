@@ -93,7 +93,7 @@ class CMakeBuild(build_ext):
         has_exts_in_module = all(os.path.exists(e) for e in exts_in_module)
 
         # Check if the extensions and python protobuf files exist in build_dir
-        if module_dir is not "" and has_irs_in_module and has_exts_in_module:
+        if has_irs_in_module and has_exts_in_module:
             # Copy irs over to dest_dir
             for proto in irs_in_module:
                 rel_path = proto.replace(module_dir + "/", "")
