@@ -38,6 +38,8 @@ dawn_protobuf_generate(
   LANGUAGE python
 )
 
+add_custom_target(generate_python_proto DEPENDS ${sir_proto_python_files} ${iir_proto_python_files})
+
 # Build python module
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
@@ -68,4 +70,5 @@ add_custom_command(TARGET _dawn4py POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy
   $<TARGET_FILE:_dawn4py> ${DAWN4PY_MODULE_DIR}/dawn4py/$<TARGET_FILE_NAME:_dawn4py>
 )
-add_custom_target(python DEPENDS _dawn4py ${sir_proto_python_files} ${iir_proto_python_files})
+add_dependencies(_dawn4py generate_python_proto)
+add_custom_target(python DEPENDS _dawn4py)
