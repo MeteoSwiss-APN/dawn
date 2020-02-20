@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _
 ##                         | |
 ##                       __| | __ ___      ___ ___
@@ -13,5 +11,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-__versioninfo__ = (0, 0, 1)  # TODO: set automatically
-__version__ = ".".join(str(v) for v in __versioninfo__)
+add_test(NAME Dawn4Py::Unit::structured
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}
+  ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR}/test_structured.py
+)
+
+add_test(NAME Dawn4Py::Unit::unstructured
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}
+  ${Python3_EXECUTABLE} -m pytest -v ${CMAKE_CURRENT_SOURCE_DIR}/test_unstructured.py
+)

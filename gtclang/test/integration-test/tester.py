@@ -152,7 +152,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
         print_test("EXPECTED_LINE: " + m)
         # Look for line in stdout
         if not re.search(m, stdout):
-            print_error("Could not match: {}".format(m))
+            print_error(f"Could not match: {m}")
             error_happened = True
 
     # Look for EXPECTED_ERROR
@@ -163,7 +163,7 @@ def run_test(content, gtclang_exec, filename, verbose=False, ignore_keys=[]):
         print_test("EXPECTED_ERROR: " + m)
         # Look for line in stdout
         if re.search(m, stderr) is None:
-            print_error("Could not find error in stdout: {}".format(m))
+            print_error(f"Could not find error in stdout: {m}")
             error_happened = True
 
     # If we expect an error, we want gtclang to return an error

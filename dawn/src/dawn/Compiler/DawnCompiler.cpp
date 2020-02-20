@@ -421,8 +421,17 @@ std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
   // Generate code
+  BackendType backend;
   try {
-    BackendType backend = parseBackendString(options_.Backend);
+    backend = parseBackendString(options_.Backend);
+  } catch(CompileError& e) {
+    diagnostics_.report(buildDiag("-backend", options_.Backend,
+                                  "backend options must be : " +
+                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
+    return nullptr;
+  }
+  try {
     switch(backend) {
     case BackendType::GridTools: {
       codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
@@ -451,11 +460,9 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
       dawn_unreachable("GTClangOptCXX not supported yet");
     }
   } catch(...) {
-    diagnostics_.report(buildDiag("-backend", options_.Backend,
-                                  "backend options must be : " +
-                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-    return nullptr;
+    DiagnosticsBuilder diag(DiagnosticsKind::Error);
+    diag << "code generation for backend `" << options_.Backend << "` failed";
+    diagnostics_.report(diag);
   }
   return nullptr;
 }

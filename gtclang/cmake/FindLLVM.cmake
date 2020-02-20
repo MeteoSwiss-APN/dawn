@@ -117,7 +117,7 @@ foreach(flag ${LLVM_CXXFLAGS})
     continue()
   endif()
 
-  # Filter -f* options (we want exceptions tough!)
+  # Filter -f* options (we want exceptions though!)
   if(${flag} MATCHES "^-f.*$" AND NOT(${flag} STREQUAL "-fno-exceptions"))
     list(APPEND FILTERED_LLVM_CXXFLAGS ${flag})
   endif()

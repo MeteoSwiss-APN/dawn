@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
 root_dir=$(pwd)
 BASEPATH_SCRIPT=$(dirname $(realpath -s $0))
-source ${BASEPATH_SCRIPT}/machine_env.sh
-source ${BASEPATH_SCRIPT}/env_${myhost}.sh
+source $BASEPATH_SCRIPT/machine_env.sh
+source $BASEPATH_SCRIPT/env_$myhost.sh
 
 if [ -z ${myhost+x} ]; then
   echo "myhost is unset"
@@ -57,17 +57,16 @@ if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
   export CLANG_GRIDTOOLS_BRANCH=master
 fi
 
-cd ${root_dir}
+cd $root_dir
 git clone ${CLANG_GRIDTOOLS_REPOSITORY} --depth=1 --branch=${CLANG_GRIDTOOLS_BRANCH}
 
-source_dir=${root_dir}/clang-gridtools
-build_dir=${source_dir}/build
+source_dir=$root_dir/clang-gridtools
+build_dir=$source_dir/build
 
 mkdir -p $build_dir
-cd $build_dir
 
 if [ -z ${GTCLANG_INSTALL_DIR+x} ]; then
-  export GTCLANG_INSTALL_DIR=${root_dir}/install #try this
+  export GTCLANG_INSTALL_DIR=$root_dir/install #try this
 fi
 
 if [ -z ${PROTOBUFDIR+x} ]; then
@@ -75,33 +74,33 @@ if [ -z ${PROTOBUFDIR+x} ]; then
 fi
 
 
-CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
-            -DCMAKE_PREFIX_PATH=${GTCLANG_INSTALL_DIR} \
-            -DProtobuf_DIR=${PROTOBUFDIR} \
-            -DPROTOBUF_PYTHON_MODULE_DIR=${PROTOBUFDIR}/../../../python \
-            -DGridTools_DIR=${GTCLANG_INSTALL_DIR}/lib/cmake \
+cmake_args="-DCMAKE_BUILD_TYPE=$build_type \
+            -DCMAKE_PREFIX_PATH=$GTCLANG_INSTALL_DIR \
+            -DProtobuf_DIR=$PROTOBUFDIR \
+            -DPROTOBUF_PYTHON_MODULE_DIR=$PROTOBUFDIR/../../../python \
+            -DGridTools_DIR=$GTCLANG_INSTALL_DIR/lib/cmake \
             "
 
-cmake ${CMAKE_ARGS} ${source_dir}
+cmake -S $source_dir -B $build_dir $cmake_args $source_dir
 
 if [ -z ${PARALLEL_BUILD_JOBS+x} ]; then
   PARALLEL_BUILD_JOBS=8
 fi
 
-echo "Building with ${PARALLEL_BUILD_JOBS} jobs."
-cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
+echo "Building with $parallel_build_jobs jobs."
+cmake --build $build_dir --config $build_type --parallel $parallel_build_jobs
 
 # Run unittests
-ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
+(cd $build_dir && ctest --output-on-failure --force-new-ctest-process)
 
 if [ -z ${RUN_PERFTETS+x} ]; then
   echo "do not run performance tests"
 else
-  if [ "${target}" = "cuda" ]; then
+  if [ "$target" = "cuda" ]; then
     export ENABLE_CUDA_GPU=true
   else
     export ENABLE_GT_GPU=true
   fi
  cd $source_dir
- bash scripts/jenkins/run_perftests.sh -b $build_dir 
+ bash scripts/jenkins/run_perftests.sh -b $build_dir
 fi

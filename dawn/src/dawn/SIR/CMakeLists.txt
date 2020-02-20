@@ -12,43 +12,19 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(protos SIR/SIR.proto SIR/statements.proto SIR/enums.proto)
+# Defines dawn_sir_proto_files
+include(proto/DawnSIR.cmake)
 
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
-  OUT_INCLUDE_DIRS sir_proto_include_dirs
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PROTOS ${protos}
+  PROTOS ${dawn_sir_proto_files}
   PACKG SIR
   LANGUAGE cpp
 )
 
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES sir_proto_python_files
-    PROTOS ${protos}
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG SIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/SIR)
-
-  list(TRANSFORM sir_proto_python_files
-    REPLACE ${CMAKE_CURRENT_BINARY_DIR}/SIR ${output_dir}
-    OUTPUT_VARIABLE sir_proto_python_dawn4py
-  )
-
-  add_custom_command(OUTPUT ${sir_proto_python_dawn4py}
-    COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${output_dir}
-    DEPENDS ${sir_proto_python_files}
-  )
-endif()
-
-add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files} ${sir_proto_python_dawn4py})
+add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files})
 target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnSIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
@@ -58,6 +34,7 @@ target_include_directories(DawnSIRProto
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
+# ... and linked to protobuf
 target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
 
 # Builds one library for both SIR and AST
@@ -73,6 +50,7 @@ add_library(DawnSIR
   ASTVisitor.h
   SIR.cpp
   SIR.h
+  $<TARGET_OBJECTS:DawnSIRProto>
 )
 
 target_add_dawn_standard_props(DawnSIR)

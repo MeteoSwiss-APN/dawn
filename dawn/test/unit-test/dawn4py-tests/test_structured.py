@@ -20,10 +20,10 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 
-from . import utils
+import utils
 
 
-@pytest.mark.parametrize("name", utils.UNSTRUCTURED_TEST_CASES)
+@pytest.mark.parametrize("name", utils.GRID_TEST_CASES)
 def test_sir_serialization(name):
     sir = getattr(utils, f"make_{name}_sir")(name=name)
 
@@ -45,9 +45,9 @@ def test_sir_serialization(name):
     assert bytes_strio.getvalue() == json_strio.getvalue()
 
 
-def test_compilation(unstructure_sir_with_reference_code):
-    sir, reference_code = unstructure_sir_with_reference_code
-    backend = "c++-naive-ico"
+def test_compilation(grid_sir_with_reference_code):
+    sir, reference_code = grid_sir_with_reference_code
+    backend = "cuda"
 
     unit_info = {}
     code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
