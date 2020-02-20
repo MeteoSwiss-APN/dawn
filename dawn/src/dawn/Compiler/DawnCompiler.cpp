@@ -395,8 +395,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
                    << "`";
 
     if(options_.SerializeIIR) {
-      const auto p = std::filesystem::path(options_.OutputFile.empty()
-                                               ? instantiation->getMetaData().getFileName()
+      const auto p =
+          fs::path(options_.OutputFile.empty() ? instantiation->getMetaData().getFileName()
                                                : options_.OutputFile);
       IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
                                    ".iir",
