@@ -19,7 +19,7 @@ import os.path
 
 import pytest
 
-from . import utils
+import utils
 
 
 @pytest.fixture(params=utils.GRID_TEST_CASES)

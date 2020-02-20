@@ -1,5 +1,6 @@
-include *.md
-include *.rst
 include *.toml
-include *.txt
+include *.md *.rst *.txt
+
+recursive-include src/dawn4py *.md *.rst *.txt
+
 graft src/dawn4py/_external_src

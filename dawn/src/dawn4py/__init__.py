@@ -18,13 +18,25 @@
 Python bindings for the C++ Dawn compiler project.
 """
 
-
 from typing import Any, Dict, Optional, Union
 
 from . import _dawn4py
 from . import serialization
 from ._dawn4py import Options, SerializerFormat
-from ._version import __version__, __versioninfo__
+
+try:
+    import os
+
+    with open(os.path.join(os.path.dirname(__file__), "version.txt"), mode="r") as f:
+        __version__ = f.read().strip("\n")
+        __versioninfo__ = tuple([int(i) for i in __version__.split(".")])
+
+except IOError:
+    __version__ = ""
+    __versioninfo__ = (-1, -1, -1)
+
+finally:
+    del os
 
 
 def compile(
