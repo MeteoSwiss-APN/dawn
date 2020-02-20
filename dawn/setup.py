@@ -113,7 +113,7 @@ class CMakeBuild(build_ext):
             # directory. It speeds up repeatedly running tests through tox with
             # ccache configured (CC="ccache gcc"). It should have no effect if
             # ccache is not in use.
-            os.environ["CCACHE_BASEDIR"] = os.path.dirname(os.path.abspath(__file__))
+            os.environ["CCACHE_BASEDIR"] = DAWN_DIR
             os.environ["CCACHE_NOHASHDIR"] = "1"
 
             cmake_executable = self.validate_cmake_install(self.extensions)
