@@ -73,8 +73,8 @@ public:
   static void dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
   static void dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
   static void dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
-
-  static bool generate(std::shared_ptr<iir::StencilInstantiation>& si, const std::string& srcFile = "");
+  static std::string generate(std::shared_ptr<iir::StencilInstantiation>& si,
+                              const std::string& srcFile = "", const bool writeStdout = false);
 
   template <class TPass, typename... Args>
   static void addPass(std::unique_ptr<OptimizerContext>& context,
@@ -96,7 +96,7 @@ public:
 
   static bool runPasses(std::unique_ptr<OptimizerContext>& context,
                         std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
-                        unsigned nPasses = 100);
+                        const unsigned nPasses = 100);
 
   static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
                                                         std::unique_ptr<OptimizerContext>& context);

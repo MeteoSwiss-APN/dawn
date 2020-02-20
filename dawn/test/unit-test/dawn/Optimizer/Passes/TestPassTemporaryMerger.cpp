@@ -57,8 +57,8 @@ protected:
 
       std::unordered_set<std::string> fieldNames;
       for(const auto& access : accessExprs) {
-        const auto& field = std::dynamic_pointer_cast<ast::FieldAccessExpr>(access);
-        fieldNames.insert(field->getName());
+        const auto& fieldAccessExpr = std::dynamic_pointer_cast<ast::FieldAccessExpr>(access);
+        fieldNames.insert(fieldAccessExpr->getName());
       }
 
       // Assert that merged fields are no longer accessed
@@ -78,7 +78,7 @@ TEST_F(TestPassTemporaryMerger, MergeTest3) { runTest("input/MergeTest03.sir", {
 TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("input/MergeTest04.sir", {"tmp_b"}); }
 
 TEST_F(TestPassTemporaryMerger, MergeTest5) {
-  runTest("input/MergeTest05.sir", {"tmp_1", "tmp_2", "tmp_4", "tmp_5"});
+  runTest("input/MergeTest05.sir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
 }
 
 } // anonymous namespace

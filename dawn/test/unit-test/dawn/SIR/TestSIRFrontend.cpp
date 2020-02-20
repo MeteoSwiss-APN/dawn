@@ -41,7 +41,7 @@ protected:
     ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation, nPasses));
 
     // Code gen...
-    ASSERT_TRUE(CompilerUtil::generate(instantiation, srcFilename));
+    ASSERT_GT(CompilerUtil::generate(instantiation, srcFilename).size(), 0);
   }
 };
 

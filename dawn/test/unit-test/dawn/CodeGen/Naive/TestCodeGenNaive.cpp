@@ -55,6 +55,11 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
 }
 
+stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
+  DawnCompiler compiler{};
+  return compiler.optimize(compiler.lowerToIIR(sir));
+}
+
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
   using namespace dawn::iir;
   using SInterval = dawn::sir::Interval;

@@ -17,7 +17,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -53,7 +53,7 @@ TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runPass<dawn::PassIntervalPartitioner>(context_, instantiation));
+  ASSERT_TRUE(CompilerUtil::runPass<dawn::PassIntervalPartitioning>(context_, instantiation));
 
   const auto& stencils = instantiation->getIIR()->getChildren();
   ASSERT_TRUE((stencils.size() == 1));

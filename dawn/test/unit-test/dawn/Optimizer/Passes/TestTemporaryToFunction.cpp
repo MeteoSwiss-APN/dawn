@@ -43,32 +43,22 @@ protected:
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
-    // Report diganostics
+    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir));
+    // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
         std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+    DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
                     "compute_extent_test_stencil not found in sir");
 
-    // Generate code
-    std::unique_ptr<codegen::CodeGen> CG;
-    CG = std::make_unique<codegen::gt::GTCodeGen>(
-        optimizer->getStencilInstantiationMap(), optimizer->getDiagnostics(),
-        optimizer->getOptions().UseParallelEP, optimizer->getOptions().MaxHaloPoints);
-    auto translationUnit = CG->generateCode();
-
-    if(optimizer->getDiagnostics().hasDiags()) {
-      for(const auto& diag : optimizer->getDiagnostics().getQueue())
-        std::cerr << "ERROR : " << diag->getMessage().c_str() << std::endl;
-    }
-
+    // // Generate code
+    auto translationUnit = compiler_.generate(stencilInstantiationMap);
     DAWN_ASSERT(translationUnit);
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
+    return stencilInstantiationMap["compute_extent_test_stencil"];
   }
 };
 

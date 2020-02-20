@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Unittest/CompilerUtil.h"
+#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
@@ -21,7 +22,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassIntervalPartitioner.h"
+#include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -38,10 +39,8 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
-
-#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
+#include "dawn/Support/FileSystem.h"
+#include "dawn/Support/FileUtil.h"
 
 namespace dawn {
 
@@ -94,7 +93,8 @@ CompilerUtil::lower(const std::string& sirFilename,
 stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
   dawn::Options options;
   DawnCompiler compiler(options);
-  auto optimizer = compiler.runOptimizer(sir);
+
+  auto SI = compiler.optimize(compiler.lowerToIIR(sir));
 
   if(compiler.getDiagnostics().hasDiags()) {
     for(const auto& diag : compiler.getDiagnostics().getQueue()) {
@@ -103,7 +103,7 @@ stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& si
     throw std::runtime_error("Compilation failed");
   }
 
-  return optimizer->getStencilInstantiationMap();
+  return SI;
 }
 
 stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
@@ -158,7 +158,8 @@ void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstan
   dump(generator, os);
 }
 
-bool CompilerUtil::generate(std::shared_ptr<iir::StencilInstantiation>& si, const std::string& srcFile) {
+std::string CompilerUtil::generate(std::shared_ptr<iir::StencilInstantiation>& si,
+                                   const std::string& srcFile, const bool writeStdout) {
   std::ostringstream oss;
   if(srcFile.find(".cu") != std::string::npos) {
     dumpCuda(oss, si);
@@ -167,16 +168,18 @@ bool CompilerUtil::generate(std::shared_ptr<iir::StencilInstantiation>& si, cons
   } else {
     dumpNaive(oss, si);
   }
-
   std::string code = oss.str();
-  if(srcFile.empty()) {
+
+  if(writeStdout) {
     std::cout << code;
-  } else {
+  }
+
+  if(!srcFile.empty()) {
     std::ofstream ofs(srcFile);
     ofs << code;
   }
 
-  return !code.empty();
+  return code;
 }
 
 std::vector<std::shared_ptr<Pass>>
@@ -228,7 +231,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     break;
 
   case PassGroup::PartitionIntervals:
-    addPass<dawn::PassIntervalPartitioner>(context, passes);
+    addPass<dawn::PassIntervalPartitioning>(context, passes);
     // since this can change the scope of temporaries ...
     addPass<dawn::PassTemporaryType>(context, passes);
     break;
@@ -266,7 +269,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
 
 bool CompilerUtil::runPasses(std::unique_ptr<OptimizerContext>& context,
                              std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
-                             unsigned nPasses) {
+                             const unsigned nPasses) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
   auto inlineStrategy = dawn::PassInlining::InlineStrategy::InlineProcedures;
   auto reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
@@ -302,7 +305,7 @@ bool CompilerUtil::runPasses(std::unique_ptr<OptimizerContext>& context,
   if(nPasses > 13)
     result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
   if(nPasses > 14)
-    result &= runPass<dawn::PassIntervalPartitioner>(context, instantiation);
+    result &= runPass<dawn::PassIntervalPartitioning>(context, instantiation);
   if(nPasses > 15)
     result &= runPass<dawn::PassTemporaryToStencilFunction>(context, instantiation);
   if(nPasses > 16)
@@ -377,7 +380,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     break;
 
   case PassGroup::PartitionIntervals:
-    result &= runPass<dawn::PassIntervalPartitioner>(context, instantiation);
+    result &= runPass<dawn::PassIntervalPartitioning>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
     break;
 
