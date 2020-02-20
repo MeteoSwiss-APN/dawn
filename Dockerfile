@@ -22,7 +22,7 @@ RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     -DBUILD_SHARED_LIBS=ON \
     -GNinja
 RUN cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc)
-RUN python -m pip install -e /usr/src/protobuf-3.10.1/python
+RUN cd /usr/src/protobuf-3.10.1/python python -m pip install .
 RUN rm -rf /usr/src/protobuf-3.10.1/build
 RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
     tar -xz -C /usr/src
@@ -45,9 +45,9 @@ RUN cmake -S /usr/src/dawn -B /usr/src/dawn/build \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
     -DGridTools_DIR=/usr/local/lib/cmake \
-    -DPROTOBUF_PYTHON_DIR=/usr/src/protobuf-3.10.1/python \
+    -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
     -GNinja
 RUN cmake --build /usr/src/dawn/build -j $(nproc) --target install
-RUN python -m pip install /usr/src/dawn/dawn
+RUN python -m pip install -e /usr/src/dawn/dawn
 RUN cd /usr/src/dawn/build && ctest -j$(nproc) --progress --output-on-failure
 RUN rm -rf /usr/src/dawn/build
