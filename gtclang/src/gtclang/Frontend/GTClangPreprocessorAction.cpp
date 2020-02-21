@@ -43,7 +43,7 @@ std::istream& operator>>(std::istream& is, WordDelimitedBy<delimiter>& output) {
 
 template <typename Iter, typename Cont>
 bool is_last(Iter iter, const Cont& cont) {
-  return (iter != cont.end()) && (next(iter) == cont.end());
+  return (iter != cont.end()) && (std::next(iter) == cont.end());
 }
 
 /// @brief Lex the source file and generate replacements for the enhanced gridtools clang DSL
@@ -313,26 +313,50 @@ private:
           std::vector<std::string> curBounds{std::istream_iterator<WordDelimitedBy<','>>(iss),
                                              std::istream_iterator<WordDelimitedBy<','>>()};
           std::string replacement = "for(auto __k_indexrange__ : {";
-          auto boundIter = curBounds.cbegin();
           const std::array<char, 3> coordChar{'i', 'j', 'k'};
-          for(char e : coordChar) {
-            const std::string& boundStart = *boundIter;
-            ++boundIter;
-            const std::string& boundEnd = *boundIter;
-            const std::string errMsg = std::string{"failed parsing iteration_space argument: "} +
-                                       "(" + boundStart + "," + boundEnd + ")";
-            if(e != boundStart[0]) {
-              if(!std::any_of(coordChar.begin(), coordChar.end(),
-                              [boundStart](const char& e) { return boundStart[0] == e; }))
-                reportError(token_.getLocation(), errMsg + "blah");
-            } else if(boundStart[0] != boundEnd[0]) {
-              reportError(token_.getLocation(), errMsg);
+
+          auto boundIter = std::begin(curBounds);
+          auto charIter = std::begin(coordChar);
+
+          while(charIter != std::end(coordChar)) {
+            bool forwardChar = false, forwardBound = false;
+            if(boundIter != std::end(curBounds)) {
+              const std::string boundStart = *boundIter;
+              auto nextIter = std::next(boundIter);
+              const std::string boundEnd = *nextIter;
+              const std::string errMsg = std::string("failed parsing iteration_space argument: ") +
+                                         "(" + boundStart + "," + boundEnd + ").";
+              if(!std::any_of(charIter, std::end(coordChar),
+                              [boundStart](const char& other) { return boundStart[0] == other; })) {
+                // If boundStart is not any coordChar
+                reportError(token_.getLocation(),
+                            errMsg + " Iteration space argument does not begin with {i, j, k}");
+              } else if(boundStart[0] != boundEnd[0]) {
+                // Is *charIter, but does not match.
+                // Example: boundStart = i_start, boundEnd = j_end
+                reportError(token_.getLocation(), errMsg + " Dimensions do not match");
+              } else if(boundStart[0] != *charIter) {
+                // Add default
+                replacement +=
+                    std::string(1, *charIter) + "_start, " + std::string(1, *charIter) + "_end";
+                forwardChar = true;
+              } else {
+                replacement += boundStart + ", " + boundEnd;
+                forwardBound = true;
+                forwardChar = true;
+              }
+            } else {
+              // Add default
+              replacement +=
+                  std::string(1, *charIter) + "_start, " + std::string(1, *charIter) + "_end";
+              forwardChar = true;
             }
-            replacement += boundStart + "," + boundEnd;
-            if(!is_last(boundIter, curBounds))
+            if(!is_last(charIter, coordChar))
               replacement += ", ";
-            else
-              break;
+            if(forwardChar)
+              ++charIter;
+            if(forwardBound)
+              std::advance(boundIter, 2);
           }
           replacement += "})";
           registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
@@ -727,8 +751,8 @@ private:
   ///
   /// `#pragma gtclang CLAUSE_1 [, ... CLAUSE_N]`
   ///
-  /// Note that there might be cleaner ways of doing this but it is not clear if custom pragmas can
-  /// be parsed in a proper way without hacking Clang. This is fairly efficient though.
+  /// Note that there might be cleaner ways of doing this but it is not clear if custom pragmas
+  /// can be parsed in a proper way without hacking Clang. This is fairly efficient though.
   void tryLexPragmas() {
     using namespace clang;
 
@@ -879,7 +903,7 @@ public:
   const std::vector<clang::tooling::Replacement>& getReplacements() const { return replacements_; }
 };
 
-} // anonymous namespace
+} // namespace
 
 GTClangPreprocessorAction::GTClangPreprocessorAction(GTClangContext* context) : context_(context) {}
 
