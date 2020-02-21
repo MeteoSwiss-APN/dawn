@@ -222,33 +222,28 @@ std::optional<atlas::Mesh> AtlasMeshFromNetCDFComplete(const std::string& filena
     // ------------------------------
 
     // Edges
-    AllocNbhTable<atlas::mesh::HybridElements::Connectivity>(mesh.edges().cell_connectivity(),
-                                                             mesh.edges().size(), cellsPerEdge);
-    if(!AddNeighborList<atlas::mesh::HybridElements::Connectivity>(
-           dataFile, mesh, "adjacent_cell_of_edge", cellsPerEdge,
-           mesh.edges().cell_connectivity())) {
+    AllocNbhTable(mesh.edges().cell_connectivity(), mesh.edges().size(), cellsPerEdge);
+    if(!AddNeighborList(dataFile, mesh, "adjacent_cell_of_edge", cellsPerEdge,
+                        mesh.edges().cell_connectivity())) {
       return {};
     }
-    AllocNbhTable<atlas::mesh::HybridElements::Connectivity>(mesh.edges().node_connectivity(),
-                                                             mesh.edges().size(), verticesPerEdge);
-    if(!AddNeighborList<atlas::mesh::HybridElements::Connectivity>(
-           dataFile, mesh, "edge_vertices", verticesPerEdge, mesh.edges().node_connectivity())) {
+    AllocNbhTable(mesh.edges().node_connectivity(), mesh.edges().size(), verticesPerEdge);
+    if(!AddNeighborList(dataFile, mesh, "edge_vertices", verticesPerEdge,
+                        mesh.edges().node_connectivity())) {
       return {};
     }
     // edge to edge connectivity not supported so far
     // AllocNbhTable(mesh.edges().edge_connectivity(), ??, ??);
 
     // Nodes
-    AllocNbhTable<atlas::mesh::Nodes::Connectivity>(mesh.nodes().cell_connectivity(),
-                                                    mesh.nodes().size(), cellsPerNode);
-    if(!AddNeighborList<atlas::mesh::Nodes::Connectivity>(
-           dataFile, mesh, "cells_of_vertex", cellsPerNode, mesh.nodes().cell_connectivity())) {
+    AllocNbhTable(mesh.nodes().cell_connectivity(), mesh.nodes().size(), cellsPerNode);
+    if(!AddNeighborList(dataFile, mesh, "cells_of_vertex", cellsPerNode,
+                        mesh.nodes().cell_connectivity())) {
       return {};
     }
-    AllocNbhTable<atlas::mesh::Nodes::Connectivity>(mesh.nodes().edge_connectivity(),
-                                                    mesh.nodes().size(), edgesPerNode);
-    if(!AddNeighborList<atlas::mesh::Nodes::Connectivity>(
-           dataFile, mesh, "edges_of_vertex", edgesPerNode, mesh.nodes().edge_connectivity())) {
+    AllocNbhTable(mesh.nodes().edge_connectivity(), mesh.nodes().size(), edgesPerNode);
+    if(!AddNeighborList(dataFile, mesh, "edges_of_vertex", edgesPerNode,
+                        mesh.nodes().edge_connectivity())) {
       return {};
     }
     // ATLAS has no conn. tables for node to node
@@ -256,10 +251,9 @@ std::optional<atlas::Mesh> AtlasMeshFromNetCDFComplete(const std::string& filena
 
     // Cells
     // cell to node was already computed in AtlasMeshFromNetCDFMinimal
-    AllocNbhTable<atlas::mesh::HybridElements::Connectivity>(mesh.cells().edge_connectivity(),
-                                                             mesh.cells().size(), edgesPerCell);
-    if(!AddNeighborList<atlas::mesh::HybridElements::Connectivity>(
-           dataFile, mesh, "edge_of_cell", edgesPerCell, mesh.cells().edge_connectivity())) {
+    AllocNbhTable(mesh.cells().edge_connectivity(), mesh.cells().size(), edgesPerCell);
+    if(!AddNeighborList(dataFile, mesh, "edge_of_cell", edgesPerCell,
+                        mesh.cells().edge_connectivity())) {
       return {};
     }
     // cell to cell supported by atlas but not present in ICON netcdf
