@@ -109,8 +109,11 @@ public:
   static void write(std::unique_ptr<OptimizerContext>& context, const unsigned level = 0,
                     const unsigned maxLevel = 100, const std::string& filePrefix = "");
 
+  static void setPath(const std::string& rootPath = "");
+
 private:
   static dawn::DiagnosticsEngine diag_;
+  static std::string rootPath_;
 };
 
 } // namespace dawn

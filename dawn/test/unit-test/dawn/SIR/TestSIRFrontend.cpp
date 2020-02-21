@@ -45,55 +45,51 @@ protected:
 };
 
 TEST_F(TestSIRFrontend, TridiagonalSolveGTClang) {
-  runTest("input/tridiagonal_solve_gtclang.sir", "output/tridiagonal_solve_gtclang.cpp");
+  runTest("input/tridiagonal_solve_gtclang.sir");
 }
 
 TEST_F(TestSIRFrontend, TridiagonalSolveGT4Py) {
-  runTest("input/tridiagonal_solve_gt4py.sir", "output/tridiagonal_solve_gt4py.cpp");
+  runTest("input/tridiagonal_solve_gt4py.sir");
 }
 
 TEST_F(TestSIRFrontend, TridiagonalSolveGT4PyCuda) {
-  runTest("input/tridiagonal_solve_gt4py.sir", "output/tridiagonal_solve_gt4py.cu");
+  runTest("input/tridiagonal_solve_gt4py.sir");
 }
 
 TEST_F(TestSIRFrontend, HorizontalDifferenceGTClang) {
-  runTest("input/horizontal_difference_gtclang.sir", "output/horizontal_difference_gtclang.cpp");
+  runTest("input/horizontal_difference_gtclang.sir");
 }
 
 TEST_F(TestSIRFrontend, HorizontalDifferenceGT4Py) {
-  runTest("input/horizontal_difference_gt4py.sir", "output/horizontal_difference_gt4py.cpp");
+  runTest("input/horizontal_difference_gt4py.sir");
 }
 
 TEST_F(TestSIRFrontend, HorizontalDifferenceGT4PyCuda) {
-  runTest("input/horizontal_difference_gt4py.sir", "output/horizontal_difference_gt4py.cu");
+  runTest("input/horizontal_difference_gt4py.sir");
 }
 
-TEST_F(TestSIRFrontend, BurgersDemoGTClang) {
-  runTest("input/burgers_demo_gtclang.sir", "output/burgers_demo_gtclang.cpp");
+TEST_F(TestSIRFrontend, BurgersDemo) {
+  runTest("input/burgers_demo.sir");
 }
 
-TEST_F(TestSIRFrontend, BurgersDemoGT4Py) {
-  runTest("input/burgers_demo_gt4py.sir", "output/burgers_demo_gt4py.cpp");
+TEST_F(TestSIRFrontend, BurgersDemoCuda) {
+  runTest("input/burgers_demo.sir");
 }
 
-TEST_F(TestSIRFrontend, BurgersDemoGT4PyCuda) {
-  runTest("input/burgers_demo_gt4py.sir", "output/burgers_demo_gt4py.cu");
+TEST_F(TestSIRFrontend, Coriolis) {
+  runTest("input/coriolis_stencil.sir");
 }
 
-TEST_F(TestSIRFrontend, CoriolisGT4Py) {
-  runTest("input/coriolis_stencil_gt4py.sir", "output/coriolis_stencil_gt4py.cpp");
+TEST_F(TestSIRFrontend, CoriolisCuda) {
+  runTest("input/coriolis_stencil.sir");
 }
 
-TEST_F(TestSIRFrontend, CoriolisGT4PyCuda) {
-  runTest("input/coriolis_stencil_gt4py.sir", "output/coriolis_stencil_gt4py.cu");
+TEST_F(TestSIRFrontend, YPPMMainAl) {
+  runTest("input/yppm_main_al.sir");
 }
 
-TEST_F(TestSIRFrontend, YPPMMainAlGT4Py) {
-  runTest("input/yppm_main_al_gt4py.sir", "output/yppm_main_al_gt4py.cpp");
-}
-
-TEST_F(TestSIRFrontend, YPPMAlXEdgeGT4Py) {
-  runTest("input/yppm_al_x_edge_gt4py.sir", "output/yppm_al_x_edge_gt4py.cpp");
+TEST_F(TestSIRFrontend, YPPMAlXEdge) {
+  runTest("input/yppm_al_x_edge.sir");
 }
 
 } // anonymous namespace

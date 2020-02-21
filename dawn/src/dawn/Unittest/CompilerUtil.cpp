@@ -48,8 +48,13 @@ bool CompilerUtil::Verbose;
 
 dawn::DiagnosticsEngine CompilerUtil::diag_;
 
+std::string CompilerUtil::rootPath_;
+
 std::shared_ptr<SIR> CompilerUtil::load(const std::string& sirFilename) {
-  return SIRSerializer::deserialize(sirFilename);
+  std::string sirPath = sirFilename;
+  if(!fs::exists(sirPath) && !rootPath_.empty())
+    sirPath = rootPath_ + "/" + sirPath;
+  return SIRSerializer::deserialize(sirPath);
 }
 
 std::shared_ptr<iir::StencilInstantiation>
@@ -439,6 +444,10 @@ void CompilerUtil::write(std::unique_ptr<OptimizerContext>& context, const unsig
     dawn::IIRSerializer::serialize(iirFile, instantiation);
     stencil_id += 1;
   }
+}
+
+void CompilerUtil::setPath(const std::string& rootPath) {
+  rootPath_ = rootPath;
 }
 
 } // namespace dawn
