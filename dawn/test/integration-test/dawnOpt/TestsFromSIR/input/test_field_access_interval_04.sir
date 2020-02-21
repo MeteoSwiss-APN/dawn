@@ -1,0 +1,442 @@
+{
+ "gridType": "Cartesian",
+ "filename": "test_field_access_interval_04.cpp",
+ "stencils": [
+  {
+   "name": "compute_extent_test_stencil",
+   "loc": {
+    "Line": 21,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 26,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "u",
+                    "vertical_offset": 0,
+                    "zero_offset": {},
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 26,
+                     "Column": 54
+                    },
+                    "data": {},
+                    "ID": 5
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "in",
+                    "vertical_offset": 0,
+                    "zero_offset": {},
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 26,
+                     "Column": 58
+                    },
+                    "data": {},
+                    "ID": 4
+                   }
+                  },
+                  "loc": {
+                   "Line": 26,
+                   "Column": 54
+                  },
+                  "ID": 6
+                 }
+                },
+                "loc": {
+                 "Line": 26,
+                 "Column": 54
+                },
+                "data": {},
+                "ID": 7
+               }
+              }
+             ],
+             "loc": {
+              "Line": 26,
+              "Column": 5
+             },
+             "data": {},
+             "ID": 3
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 2,
+           "upper_offset": 3,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 26,
+          "Column": 5
+         },
+         "data": {},
+         "ID": 8
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 27,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out1",
+                    "vertical_offset": 0,
+                    "zero_offset": {},
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 55
+                    },
+                    "data": {},
+                    "ID": 13
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "vertical_offset": 2,
+                      "zero_offset": {},
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 27,
+                       "Column": 62
+                      },
+                      "data": {},
+                      "ID": 11
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "vertical_offset": 1,
+                      "zero_offset": {},
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 27,
+                       "Column": 73
+                      },
+                      "data": {},
+                      "ID": 10
+                     }
+                    },
+                    "loc": {
+                     "Line": 27,
+                     "Column": 62
+                    },
+                    "ID": 12
+                   }
+                  },
+                  "loc": {
+                   "Line": 27,
+                   "Column": 55
+                  },
+                  "ID": 14
+                 }
+                },
+                "loc": {
+                 "Line": 27,
+                 "Column": 55
+                },
+                "data": {},
+                "ID": 15
+               }
+              }
+             ],
+             "loc": {
+              "Line": 27,
+              "Column": 5
+             },
+             "data": {},
+             "ID": 9
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 2,
+           "upper_offset": 10,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 27,
+          "Column": 5
+         },
+         "data": {},
+         "ID": 16
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 28,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out2",
+                    "vertical_offset": 0,
+                    "zero_offset": {},
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 28,
+                     "Column": 52
+                    },
+                    "data": {},
+                    "ID": 19
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "u",
+                    "vertical_offset": 6,
+                    "zero_offset": {},
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 28,
+                     "Column": 59
+                    },
+                    "data": {},
+                    "ID": 18
+                   }
+                  },
+                  "loc": {
+                   "Line": 28,
+                   "Column": 52
+                  },
+                  "ID": 20
+                 }
+                },
+                "loc": {
+                 "Line": 28,
+                 "Column": 52
+                },
+                "data": {},
+                "ID": 21
+               }
+              }
+             ],
+             "loc": {
+              "Line": 28,
+              "Column": 5
+             },
+             "data": {},
+             "ID": 17
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 8,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 28,
+          "Column": 5
+         },
+         "data": {},
+         "ID": 22
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "data": {},
+      "ID": 2
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "in",
+     "loc": {
+      "Line": 22,
+      "Column": 11
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    },
+    {
+     "name": "out1",
+     "loc": {
+      "Line": 22,
+      "Column": 15
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    },
+    {
+     "name": "out2",
+     "loc": {
+      "Line": 22,
+      "Column": 21
+     },
+     "is_temporary": false,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    },
+    {
+     "name": "u",
+     "loc": {
+      "Line": 24,
+      "Column": 7
+     },
+     "is_temporary": true,
+     "field_dimensions": {
+      "cartesian_horizontal_dimension": {
+       "mask_cart_i": 1,
+       "mask_cart_j": 1
+      },
+      "mask_k": 1
+     }
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [],
+ "global_variables": {
+  "map": {}
+ }
+}
