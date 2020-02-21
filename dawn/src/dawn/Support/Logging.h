@@ -16,6 +16,7 @@
 #define DAWN_SUPPORT_LOGGING_H
 
 #include <functional>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -64,11 +65,12 @@ public:
 
 } // namespace internal
 
-/// @brief DAWN Logger adapter
+/// @brief Dawn Logger adapter
 ///
-/// To make use of this Logger class, you are required to register your own implementation of a
-/// Logger via `registerLogger`. The registered Logger has to implement the `LoggerInterface`.
-/// By default no Logger is registered and no logging is performed.
+/// This is the interface for logging from Dawn. A default logger is provided, but if you would like
+/// to register your own, you need to implement the `LoggerInterface`.
+///
+/// The `DefaultLogger` is a good minimal example.
 ///
 /// The following snippet can be seen as a minimal working example:
 ///
@@ -101,6 +103,7 @@ class Logger {
 public:
   /// @brief Initialize Logger object
   Logger();
+  ~Logger();
 
   /// @brief Register a Logger (this does @b not take ownership of the object)
   void registerLogger(LoggerInterface* logger);
@@ -121,6 +124,13 @@ public:
 
   /// @brief Get singleton instance
   static Logger& getSingleton();
+};
+
+/// @brief Simple logger
+/// @ingroup support
+class DefaultLogger : public LoggerInterface {
+public:
+  void log(LoggingLevel level, const std::string& message, const char* file, int line) override;
 };
 
 /// @macro DAWN_LOG
