@@ -32,13 +32,12 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runTest(const std::string& irFilename, const std::string& srcFilename = "",
-      const unsigned nPasses = 100) {
+  void runTest(const std::string& irFilename, const std::string& srcFilename = "") {
     std::shared_ptr<iir::StencilInstantiation> instantiation =
         CompilerUtil::load(irFilename, options_, context_);
 
     // Run all passes
-    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation, nPasses));
+    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation));
 
     // Code gen...
     ASSERT_GT(CompilerUtil::generate(instantiation, srcFilename).size(), 0);
@@ -79,6 +78,14 @@ TEST_F(TestSIRFrontend, BurgersDemoGT4Py) {
 
 TEST_F(TestSIRFrontend, BurgersDemoGT4PyCuda) {
   runTest("input/burgers_demo_gt4py.sir", "output/burgers_demo_gt4py.cu");
+}
+
+TEST_F(TestSIRFrontend, CoriolisGT4Py) {
+  runTest("input/coriolis_stencil_gt4py.sir", "output/coriolis_stencil_gt4py.cpp");
+}
+
+TEST_F(TestSIRFrontend, CoriolisGT4PyCuda) {
+  runTest("input/coriolis_stencil_gt4py.sir", "output/coriolis_stencil_gt4py.cu");
 }
 
 TEST_F(TestSIRFrontend, YPPMMainAlGT4Py) {
