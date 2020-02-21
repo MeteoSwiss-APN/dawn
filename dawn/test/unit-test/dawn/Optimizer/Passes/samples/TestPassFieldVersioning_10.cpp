@@ -16,7 +16,7 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end) {
-      TestFunction(field_a, field_b); // EXPECTED_ERROR: unresolvable race-condition in statement
+      TestFunction(field_a, field_b);
     }
   }
 };
