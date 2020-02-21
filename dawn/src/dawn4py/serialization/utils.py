@@ -365,7 +365,7 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
     """
     stmt = BlockStmt()
     if isinstance(statements, Iterable):
-        stmt.statements.extend([make_stmt(s) for s in statements if not isinstance(s, Field)])
+        stmt.statements.extend([make_stmt(s) for s in statements])
     else:
         stmt.statements.extend([make_stmt(statements)])
     return stmt
@@ -718,6 +718,7 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     :param type:    Builtin type id of the literal.
     """
     builtin_type = BuiltinType()
+    builtin_type.type_id = type
 
     expr = LiteralAccessExpr()
     expr.value = value
