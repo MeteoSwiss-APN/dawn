@@ -326,7 +326,7 @@ private:
               const std::string boundEnd = *nextIter;
               const std::string errMsg = std::string("failed parsing iteration_space argument: ") +
                                          "(" + boundStart + "," + boundEnd + ").";
-              if(!std::any_of(coordChar.begin(), coordChar.end(),
+              if(!std::any_of(charIter, std::end(coordChar),
                               [boundStart](const char& other) { return boundStart[0] == other; })) {
                 // If boundStart is not any coordChar
                 reportError(token_.getLocation(),
@@ -901,7 +901,7 @@ public:
 
   /// @brief Get the replacements
   const std::vector<clang::tooling::Replacement>& getReplacements() const { return replacements_; }
-}; // namespace
+};
 
 } // namespace
 

@@ -14,7 +14,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// #include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Casting.h"
@@ -86,9 +85,6 @@ TEST(PreprocessingTest, IterationSpaceToken) {
                         std::optional<Interval>(Interval(LevelKind::Start, LevelKind::End, 0, -1)),
                         std::optional<Interval>());
   }
-
-  std::cout << "2" << std::endl;
-
   {
     // iteration_space(j_start, j_end - 2)
     dawn::ast::VerticalRegionDeclStmt* vrds =
@@ -98,9 +94,6 @@ TEST(PreprocessingTest, IterationSpaceToken) {
                         std::optional<Interval>(),
                         std::optional<Interval>(Interval(LevelKind::Start, LevelKind::End, 0, -2)));
   }
-
-  std::cout << "3" << std::endl;
-
   {
     // iteration_space(i_start, i_start + 1, j_start, j_start + 1, k_start,
     // k_end - 1)
