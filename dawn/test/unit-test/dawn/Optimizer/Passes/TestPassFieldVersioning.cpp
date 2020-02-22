@@ -62,42 +62,122 @@ protected:
 };
 
 TEST_F(TestPassFieldVersioning, RaceCondition1) {
+  /*
+  vertical_region(k_start, k_end) {
+    if(field_a > 0.0) {
+      field_b = field_a;
+      field_a = field_b(i + 1);
+    }
+  }
+  */
   raceConditionTest("input/TestPassFieldVersioning_01.iir");
 }
 
 TEST_F(TestPassFieldVersioning, RaceCondition2) {
+  /*
+  vertical_region(k_start, k_end) {
+    if(field_a > 0.0) {
+      field_b = field_a;
+      double b = field_b(i + 1);
+      field_a = b;
+    }
+  }
+  */
   raceConditionTest("input/TestPassFieldVersioning_02.iir");
 }
 
 TEST_F(TestPassFieldVersioning, RaceCondition3) {
+  /*
+  stencil_function TestFunction {
+    storage field_a;
+
+    Do { return field_a(i + 1); }
+  };
+  vertical_region(k_start, k_end) {
+    field_a = TestFunction(field_a);
+  }
+  Note: Inlined
+  */
   raceConditionTest("input/TestPassFieldVersioning_03.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest1) {
+  /*
+  vertical_region(k_start, k_end) { field_a = field_b; }
+  */
   versioningTest("input/TestPassFieldVersioning_04.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest2) {
+  /*
+  vertical_region(k_start, k_end) {
+    field_a = field_a(i + 1);
+  }
+  */
   versioningTest("input/TestPassFieldVersioning_05.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest3) {
+  /*
+  vertical_region(k_start, k_end) {
+    field_b = field_a(i + 1);
+    field_a = field_b;
+  }
+  */
   versioningTest("input/TestPassFieldVersioning_06.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest4) {
+  /*
+  vertical_region(k_start, k_end) {
+    tmp = field_a(i + 1) + field_b(i + 1);
+    field_a = tmp;
+    field_b = tmp;
+  }
+  */
   versioningTest("input/TestPassFieldVersioning_07.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest5) {
+  /*
+  vertical_region(k_start, k_end) {
+    tmp1 = field_a(i + 1);
+    tmp2 = tmp1;
+    field_a = tmp2;
+  }
+  */
   versioningTest("input/TestPassFieldVersioning_08.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest6) {
+  /*
+  vertical_region(k_start, k_end) {
+      tmp = field(i + 1);
+      field = tmp;
+
+      tmp = field(i + 1);
+      field = tmp;
+  }
+  */
   versioningTest("input/TestPassFieldVersioning_09.iir");
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest7) {
+  /*
+  stencil_function TestFunction {
+  storage field_a, field_b;
+
+  Do {
+      field_b = field_a;
+      field_a = field_b(i + 1);
+      return 0.0;
+    }
+  };
+  vertical_region(k_start, k_end) {
+        TestFunction(field_a, field_b);
+      }
+    Note: Inlined
+*/
   versioningTest("input/TestPassFieldVersioning_10.iir");
 }
 } // anonymous namespace
