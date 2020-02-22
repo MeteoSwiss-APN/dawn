@@ -51,13 +51,14 @@ protected:
     ASSERT_TRUE(context_->getDiagnostics().hasErrors());
   }
 
-  void versioningTest(const std::string& filename) {
+  std::shared_ptr<iir::StencilInstantiation> versioningTest(const std::string& filename) {
     context_->getDiagnostics().clear();
     std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
     dawn::PassFieldVersioning pass(*context_);
-    ASSERT_TRUE(pass.run(instantiation));
+    pass.run(instantiation);
+    return instantiation;
   }
 };
 
@@ -105,7 +106,12 @@ TEST_F(TestPassFieldVersioning, VersioningTest1) {
   /*
   vertical_region(k_start, k_end) { field_a = field_b; }
   */
-  versioningTest("input/TestPassFieldVersioning_04.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_04.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idA));
+
+  int idB = instantiation->getMetaData().getAccessIDFromName("field_b");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idB));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest2) {
@@ -114,7 +120,9 @@ TEST_F(TestPassFieldVersioning, VersioningTest2) {
     field_a = field_a(i + 1);
   }
   */
-  versioningTest("input/TestPassFieldVersioning_05.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_05.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest3) {
@@ -124,7 +132,13 @@ TEST_F(TestPassFieldVersioning, VersioningTest3) {
     field_a = field_b;
   }
   */
-  versioningTest("input/TestPassFieldVersioning_06.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_06.iir");
+
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+
+  int idB = instantiation->getMetaData().getAccessIDFromName("field_b");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idB));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest4) {
@@ -135,7 +149,13 @@ TEST_F(TestPassFieldVersioning, VersioningTest4) {
     field_b = tmp;
   }
   */
-  versioningTest("input/TestPassFieldVersioning_07.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_07.iir");
+
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+
+  int idB = instantiation->getMetaData().getAccessIDFromName("field_b");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idB));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest5) {
@@ -146,7 +166,16 @@ TEST_F(TestPassFieldVersioning, VersioningTest5) {
     field_a = tmp2;
   }
   */
-  versioningTest("input/TestPassFieldVersioning_08.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_08.iir");
+
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+
+  int idTmp1 = instantiation->getMetaData().getAccessIDFromName("tmp1");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idTmp1));
+
+  int idTmp2 = instantiation->getMetaData().getAccessIDFromName("tmp2");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idTmp2));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest6) {
@@ -159,7 +188,14 @@ TEST_F(TestPassFieldVersioning, VersioningTest6) {
       field = tmp;
   }
   */
-  versioningTest("input/TestPassFieldVersioning_09.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_09.iir");
+  int idField = instantiation->getMetaData().getAccessIDFromName("field");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idField));
+  auto versions = instantiation->getMetaData().getVersionsOf(idField);
+  ASSERT_EQ(versions->size(), 2);
+
+  int idTmp = instantiation->getMetaData().getAccessIDFromName("tmp");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idTmp));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest7) {
@@ -178,6 +214,8 @@ TEST_F(TestPassFieldVersioning, VersioningTest7) {
       }
     Note: Inlined
 */
-  versioningTest("input/TestPassFieldVersioning_10.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_10.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
 }
 } // anonymous namespace
