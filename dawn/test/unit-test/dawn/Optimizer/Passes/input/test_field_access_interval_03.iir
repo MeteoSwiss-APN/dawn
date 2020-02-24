@@ -1,0 +1,213 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "9": "in"
+  },
+  "accessIDToType": {
+   "9": 6
+  },
+  "literalIDToName": {
+   "-22": "12"
+  },
+  "fieldAccessIDs": [
+   9
+  ],
+  "APIFieldIDs": [
+   9
+  ],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {
+   "9": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   }
+  },
+  "idToStencilCall": {
+   "10": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_10",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 11
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": 4,
+   "Column": 8
+  },
+  "stencilName": "Test"
+ },
+ "internalIR": {
+  "gridType": "Cartesian",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "in",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 7,
+                    "Column": 54
+                   },
+                   "data": {
+                    "accessID": 9
+                   },
+                   "ID": 27
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "literal_access_expr": {
+                   "value": "12",
+                   "type": {
+                    "type_id": "Integer"
+                   },
+                   "loc": {
+                    "Line": 7,
+                    "Column": 59
+                   },
+                   "data": {
+                    "accessID": -22
+                   },
+                   "ID": 26
+                  }
+                 },
+                 "loc": {
+                  "Line": 7,
+                  "Column": 54
+                 },
+                 "ID": 28
+                }
+               },
+               "loc": {
+                "Line": 7,
+                "Column": 54
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "9": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "-22": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 25
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 24
+           }
+          },
+          "doMethodID": 0,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 2,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          }
+         }
+        ],
+        "stageID": 20
+       }
+      ],
+      "loopOrder": "Parallel",
+      "multiStageID": 23,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 10,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_10",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 11
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "test.cpp"
+}
