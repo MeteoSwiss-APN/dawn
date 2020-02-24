@@ -14,6 +14,8 @@
 #include "dawn/AST/ASTMatcher.h"
 
 namespace dawn {
+namespace iir {
+
 ASTMatcher::ASTMatcher(iir::StencilInstantiation* instantiation)
     : instantiation_(instantiation), metadata_(instantiation->getMetaData()) {}
 
@@ -164,4 +166,5 @@ void ASTMatcher::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
   check(expr);
 }
 
+} // namespace iir
 } // namespace dawn

@@ -20,6 +20,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
+namespace iir {
 
 //===------------------------------------------------------------------------------------------===//
 //     ASTMatcher
@@ -67,6 +68,7 @@ private:
   void check(const std::shared_ptr<ast::Expr>& expr);
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif // DAWN_AST_ASTMATCHER_H

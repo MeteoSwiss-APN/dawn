@@ -51,7 +51,7 @@ protected:
 
     if(mergedFields.size() > 0) {
       // Apply AST matcher to find all field access expressions
-      dawn::ASTMatcher matcher(instantiation.get());
+      dawn::iir::ASTMatcher matcher(instantiation.get());
       std::vector<std::shared_ptr<ast::Expr>>& accessExprs =
           matcher.match(ast::Expr::Kind::FieldAccessExpr);
 
