@@ -15,6 +15,8 @@
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
+#include "dawn/IIR/LoopOrder.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -29,39 +31,107 @@ using namespace dawn;
 namespace {
 
 class TestPassMultiStageSplitter : public ::testing::Test {
+public:
+  TestPassMultiStageSplitter() {
+    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
+  }
+
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
+  DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
-  void runTest(const std::string& filename, int nStencils, const std::vector<int>& nMultiStages) {
-    if(nStencils < 1)
-      nStencils = 1;
-
-    std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+  std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
+    context_->getDiagnostics().clear();
+    std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
     auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassMultiStageSplitter>(context_, instantiation,
-                                                                    mssSplitStrategy));
+    PassMultiStageSplitter splitter(*context_, mssSplitStrategy);
+    splitter.run(instantiation);
 
-    auto& stencils = instantiation->getStencils();
-    ASSERT_EQ(stencils.size(), nStencils);
-
-    for(int i = 0; i < nStencils; i++) {
-      ASSERT_EQ(stencils[i]->getChildren().size(), nMultiStages[i]);
-    }
+    return instantiation;
   }
 };
 
-TEST_F(TestPassMultiStageSplitter, SplitterTest1) { runTest("input/SplitterTest01.sir", 1, {1}); }
+int getNumberOfMultistages(iir::StencilInstantiation& instantiation) {
+  return instantiation.getIIR()->getChild(0)->getChildren().size();
+}
 
-TEST_F(TestPassMultiStageSplitter, SplitterTest2) { runTest("input/SplitterTest02.sir", 1, {2}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest1) {
+  /*
+    vertical_region(k_start, k_end) { field_a = field_b; }
+  */
+  auto instantiation = runPass("input/TestMultiStageSplitter_01.iir");
+  ASSERT_EQ(getNumberOfMultistages(*instantiation), 1);
+  auto& multiStage = instantiation->getIIR()->getChild(0)->getChild(0);
+  ASSERT_EQ(multiStage->getLoopOrder(), iir::LoopOrderKind::Parallel);
+}
 
-TEST_F(TestPassMultiStageSplitter, SplitterTest3) { runTest("input/SplitterTest03.sir", 1, {2}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest2) {
+  /*
+    vertical_region(k_start, k_end - 1) {
+      field_b =field_c;
+      field_a = field_b[k + 1];
+    }
+  */
+  auto instantiation = runPass("input/TestMultiStageSplitter_02.iir");
+  ASSERT_EQ(getNumberOfMultistages(*instantiation), 2);
+  auto& multiStage0 = instantiation->getIIR()->getChild(0)->getChild(0);
+  ASSERT_EQ(multiStage0->getLoopOrder(), iir::LoopOrderKind::Parallel);
+  auto& multiStage1 = instantiation->getIIR()->getChild(0)->getChild(1);
+  ASSERT_EQ(multiStage1->getLoopOrder(), iir::LoopOrderKind::Parallel);
+}
 
-TEST_F(TestPassMultiStageSplitter, SplitterTest4) { runTest("input/SplitterTest04.sir", 1, {4}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest3) {
+  /*
+    vertical_region(k_end, k_start + 1) {
+      field_b = field_c;
+      field_a = field_b[k - 1];
+    }
+  */
+  auto instantiation = runPass("input/TestMultiStageSplitter_03.iir");
+  ASSERT_EQ(getNumberOfMultistages(*instantiation), 2);
+  auto& multiStage0 = instantiation->getIIR()->getChild(0)->getChild(0);
+  ASSERT_EQ(multiStage0->getLoopOrder(), iir::LoopOrderKind::Parallel);
+  auto& multiStage1 = instantiation->getIIR()->getChild(0)->getChild(1);
+  ASSERT_EQ(multiStage1->getLoopOrder(), iir::LoopOrderKind::Parallel);
+}
 
-TEST_F(TestPassMultiStageSplitter, SplitterTest5) { runTest("input/SplitterTest05.sir", 1, {2}); }
+TEST_F(TestPassMultiStageSplitter, SplitterTest4) {
+  /*
+    vertical_region(k_start, k_end - 1) {
+      field_b = field_c;
+      field_a = field_b[k + 1];
+    }
+
+    vertical_region(k_end - 1, k_start) {
+      field_b = field_c;
+      field_a = field_b[k - 1];
+    }
+  */
+  auto instantiation = runPass("input/TestMultiStageSplitter_04.iir");
+  ASSERT_EQ(getNumberOfMultistages(*instantiation), 4);
+  for(auto& multiStage : instantiation->getIIR()->getChild(0)->getChildren()) {
+    ASSERT_EQ(multiStage->getLoopOrder(), iir::LoopOrderKind::Parallel);
+  }
+}
+
+TEST_F(TestPassMultiStageSplitter, SplitterTest5) {
+  /*
+    vertical_region(k_start + 1, k_end - 1) {
+      field_c = field_d;
+      field_b = field_c[k + 1];
+      field_a = field_b[k - 1];
+    }
+  */
+  auto instantiation = runPass("input/TestMultiStageSplitter_05.iir");
+  ASSERT_EQ(getNumberOfMultistages(*instantiation), 2);
+  auto& multiStage0 = instantiation->getIIR()->getChild(0)->getChild(0);
+  ASSERT_EQ(multiStage0->getLoopOrder(), iir::LoopOrderKind::Parallel);
+  auto& multiStage1 = instantiation->getIIR()->getChild(0)->getChild(1);
+  ASSERT_EQ(multiStage1->getLoopOrder(), iir::LoopOrderKind::Forward);
+  ASSERT_TRUE(true);
+}
 
 } // anonymous namespace
