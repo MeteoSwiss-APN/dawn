@@ -37,9 +37,9 @@ TEST(ComputeMaxExtents, test_stencil_01) {
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
   const auto& stencils = IIR->getChildren();
-  auto exts = stencils[0]->getFields();
+  auto fields = stencils[0]->getFields();
   int inID = metadata.getAccessIDFromName("in");
-  EXPECT_EQ(exts.at(inID).field.getExtentsRB(),
+  EXPECT_EQ(fields.at(inID).field.getExtentsRB(),
             (iir::Extents(dawn::ast::cartesian, -1, -1, 0, 0, 0, 0)));
 }
 TEST(ComputeMaxExtents, test_stencil_02) {
@@ -55,10 +55,10 @@ TEST(ComputeMaxExtents, test_stencil_02) {
   const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
-  auto exts = stencil->getFields();
+  auto fields = stencil->getFields();
   int inID = metadata.getAccessIDFromName("in");
 
-  EXPECT_EQ(exts.at(inID).field.getExtentsRB(),
+  EXPECT_EQ(fields.at(inID).field.getExtentsRB(),
             (iir::Extents(dawn::ast::cartesian, -1, 0, 0, 1, 0, 0)));
 }
 
@@ -80,10 +80,10 @@ TEST(ComputeMaxExtents, test_stencil_03) {
   PassComputeStageExtents pass(*context);
   pass.run(instantiation);
 
-  auto exts = stencil->getFields();
+  auto fields = stencil->getFields();
   int inID = metadata.getAccessIDFromName("in");
 
-  EXPECT_EQ(exts.at(inID).field.getExtentsRB(),
+  EXPECT_EQ(fields.at(inID).field.getExtentsRB(),
             (iir::Extents(dawn::ast::cartesian, -2, -1, 0, 0, 0, 0)));
 }
 
