@@ -29,12 +29,7 @@ protected:
     std::string testPath = irFilename + "_" + frontend + ".sir";
     auto testSIR = SIRSerializer::deserialize(testPath);
 
-    auto result = refSIR->comparison(*testSIR);
-    if(!result.match)
-      std::cerr << result.message << std::endl;
-
-    ASSERT_TRUE(result.match);
-    ASSERT_TRUE(result.message.empty());
+    ASSERT_TRUE(*refSIR == *testSIR);
   }
 };
 
