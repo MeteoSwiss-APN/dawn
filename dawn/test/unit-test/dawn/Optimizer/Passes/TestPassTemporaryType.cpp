@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/AST/ASTMatcher.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassTemporaryType.h"

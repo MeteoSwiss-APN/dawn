@@ -11,7 +11,9 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/AST/ASTMatcher.h"
+#include "dawn/IIR/ASTMatcher.h"
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTUtil.h"
 
 namespace dawn {
 namespace iir {
@@ -146,25 +148,15 @@ void ASTMatcher::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
-  check(expr);
-}
+void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
-  check(expr);
-}
+void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
-  check(expr);
-}
+void ASTMatcher::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  check(expr);
-}
+void ASTMatcher::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
-  check(expr);
-}
+void ASTMatcher::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { check(expr); }
 
 } // namespace iir
 } // namespace dawn

@@ -15,8 +15,7 @@
 #ifndef DAWN_AST_ASTMATCHER_H
 #define DAWN_AST_ASTMATCHER_H
 
-#include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTUtil.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
