@@ -15,16 +15,14 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestSupport)
 add_executable(${executable}
-  TestMain.cpp
   TestSmallVector.cpp
   TestStringRef.cpp
   TestArrayRef.cpp
   TestIndexRange.cpp
-  TestMain.cpp
   TestRemoveIf.cpp
   TestRangeToString.cpp
   TestType.cpp
 )
-target_link_libraries(${executable} DawnSupport DawnUnittest gtest)
+target_link_libraries(${executable} DawnSupport DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Support::" DISCOVERY_TIMEOUT 30)

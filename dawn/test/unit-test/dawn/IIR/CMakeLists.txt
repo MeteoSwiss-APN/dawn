@@ -21,11 +21,10 @@ add_executable(${executable}
   TestIntervalAlgorithms.cpp
   TestIIRNode.cpp
   TestIIRNodeIterator.cpp
-  TestMain.cpp
   TestMultiInterval.cpp
   TestStencil.cpp
   TestIIRSerializer.cpp
 )
-target_link_libraries(${executable} PRIVATE DawnIIR DawnSerialization DawnUnittest gtest)
+target_link_libraries(${executable} PRIVATE DawnIIR DawnSerialization DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::IIR::" DISCOVERY_TIMEOUT 30)

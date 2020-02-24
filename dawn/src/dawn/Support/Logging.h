@@ -15,7 +15,6 @@
 #ifndef DAWN_SUPPORT_LOGGING_H
 #define DAWN_SUPPORT_LOGGING_H
 
-#include <functional>
 #include <memory>
 #include <sstream>
 #include <string>
