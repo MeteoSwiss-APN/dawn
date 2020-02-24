@@ -18,8 +18,6 @@ add_library(DawnAST OBJECT
   ASTExpr.cpp
   ASTExpr.h
   ASTFwd.h
-  ASTMatcher.cpp
-  ASTMatcher.h
   ASTStmt.cpp
   ASTStmt.h
   ASTStringifier.cpp
