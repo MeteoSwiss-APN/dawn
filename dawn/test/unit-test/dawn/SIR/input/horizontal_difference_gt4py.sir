@@ -40,8 +40,10 @@
                                           "binary_operator": {
                                             "left": {
                                               "literal_access_expr": {
-                                                "value": "4.0",
-                                                "type": {}
+                                                "value": "4",
+                                                "type": {
+                                                  "type_id": "Float"
+                                                }
                                               }
                                             },
                                             "op": "*",
@@ -310,7 +312,9 @@
                                             "right": {
                                               "literal_access_expr": {
                                                 "value": "0",
-                                                "type": {}
+                                                "type": {
+                                                  "type_id": "Integer"
+                                                }
                                               }
                                             }
                                           }
@@ -318,7 +322,9 @@
                                         "left": {
                                           "literal_access_expr": {
                                             "value": "0",
-                                            "type": {}
+                                            "type": {
+                                              "type_id": "Integer"
+                                            }
                                           }
                                         },
                                         "right": {
@@ -496,7 +502,9 @@
                                             "right": {
                                               "literal_access_expr": {
                                                 "value": "0",
-                                                "type": {}
+                                                "type": {
+                                                  "type_id": "Integer"
+                                                }
                                               }
                                             }
                                           }
@@ -504,7 +512,9 @@
                                         "left": {
                                           "literal_access_expr": {
                                             "value": "0",
-                                            "type": {}
+                                            "type": {
+                                              "type_id": "Integer"
+                                            }
                                           }
                                         },
                                         "right": {

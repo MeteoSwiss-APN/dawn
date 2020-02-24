@@ -12,84 +12,46 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassSetNonTempCaches.h"
-#include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
-
+#include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include <fstream>
 #include <gtest/gtest.h>
 
-using namespace dawn;
-
 namespace {
+using namespace dawn;
 
 class TestSIRFrontend : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
+  void runTest(const std::string& irFilename, const std::string frontend = "gt4py") {
+    std::string refPath = irFilename + "_ref.sir";
+    auto refSIR = SIRSerializer::deserialize(refPath);
 
-  void runTest(const std::string& irFilename, const std::string& srcFilename = "") {
-    std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(irFilename, options_, context_);
+    std::string testPath = irFilename + "_" + frontend + ".sir";
+    auto testSIR = SIRSerializer::deserialize(testPath);
 
-    // Run all passes
-    ASSERT_TRUE(CompilerUtil::runPasses(context_, instantiation));
+    auto result = refSIR->comparison(*testSIR);
+    if(!result.match)
+      std::cerr << result.message << std::endl;
 
-    // Code gen...
-    ASSERT_GT(CompilerUtil::generate(instantiation, srcFilename).size(), 0);
+    ASSERT_TRUE(result.match);
+    ASSERT_TRUE(result.message.empty());
   }
 };
 
-TEST_F(TestSIRFrontend, TridiagonalSolveGTClang) {
-  runTest("input/tridiagonal_solve_gtclang.sir");
+TEST_F(TestSIRFrontend, TridiagonalSolve) {
+  runTest("input/tridiagonal_solve");
 }
 
-TEST_F(TestSIRFrontend, TridiagonalSolveGT4Py) {
-  runTest("input/tridiagonal_solve_gt4py.sir");
-}
-
-TEST_F(TestSIRFrontend, TridiagonalSolveGT4PyCuda) {
-  runTest("input/tridiagonal_solve_gt4py.sir");
-}
-
-TEST_F(TestSIRFrontend, HorizontalDifferenceGTClang) {
-  runTest("input/horizontal_difference_gtclang.sir");
-}
-
-TEST_F(TestSIRFrontend, HorizontalDifferenceGT4Py) {
-  runTest("input/horizontal_difference_gt4py.sir");
-}
-
-TEST_F(TestSIRFrontend, HorizontalDifferenceGT4PyCuda) {
-  runTest("input/horizontal_difference_gt4py.sir");
-}
-
-TEST_F(TestSIRFrontend, BurgersDemo) {
-  runTest("input/burgers_demo.sir");
-}
-
-TEST_F(TestSIRFrontend, BurgersDemoCuda) {
-  runTest("input/burgers_demo.sir");
+TEST_F(TestSIRFrontend, HorizontalDifference) {
+  runTest("input/horizontal_difference");
 }
 
 TEST_F(TestSIRFrontend, Coriolis) {
-  runTest("input/coriolis_stencil.sir");
+  runTest("input/coriolis_stencil");
 }
 
-TEST_F(TestSIRFrontend, CoriolisCuda) {
-  runTest("input/coriolis_stencil.sir");
+TEST_F(TestSIRFrontend, DISABLED_BurgersDemo) {
+  runTest("input/burgers_demo");
 }
 
-TEST_F(TestSIRFrontend, YPPMMainAl) {
-  runTest("input/yppm_main_al.sir");
-}
-
-TEST_F(TestSIRFrontend, YPPMAlXEdge) {
-  runTest("input/yppm_al_x_edge.sir");
-}
-
-} // anonymous namespace
+} // namespace

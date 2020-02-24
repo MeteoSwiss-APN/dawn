@@ -73,8 +73,6 @@ public:
   static void dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
   static void dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
   static void dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
-  static std::string generate(std::shared_ptr<iir::StencilInstantiation>& si,
-                              const std::string& srcFile = "", const bool writeStdout = false);
 
   template <class TPass, typename... Args>
   static void addPass(std::unique_ptr<OptimizerContext>& context,
@@ -94,9 +92,8 @@ public:
     return pass.run(instantiation);
   }
 
-  static bool runPasses(std::unique_ptr<OptimizerContext>& context,
-                        std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
-                        const unsigned nPasses = 100);
+  static bool runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
+                        std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation);
 
   static std::vector<std::shared_ptr<Pass>> createGroup(PassGroup group,
                                                         std::unique_ptr<OptimizerContext>& context);
@@ -109,11 +106,8 @@ public:
   static void write(std::unique_ptr<OptimizerContext>& context, const unsigned level = 0,
                     const unsigned maxLevel = 100, const std::string& filePrefix = "");
 
-  static void setPath(const std::string& rootPath = "");
-
 private:
   static dawn::DiagnosticsEngine diag_;
-  static std::string rootPath_;
 };
 
 } // namespace dawn

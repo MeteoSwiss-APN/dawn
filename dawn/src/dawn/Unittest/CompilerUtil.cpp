@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Unittest/CompilerUtil.h"
-#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
@@ -39,8 +38,10 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
-#include "dawn/Support/FileSystem.h"
-#include "dawn/Support/FileUtil.h"
+
+#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 
 namespace dawn {
 
@@ -48,13 +49,8 @@ bool CompilerUtil::Verbose;
 
 dawn::DiagnosticsEngine CompilerUtil::diag_;
 
-std::string CompilerUtil::rootPath_;
-
 std::shared_ptr<SIR> CompilerUtil::load(const std::string& sirFilename) {
-  std::string sirPath = sirFilename;
-  if(!fs::exists(sirPath) && !rootPath_.empty())
-    sirPath = rootPath_ + "/" + sirPath;
-  return SIRSerializer::deserialize(sirPath);
+  return SIRSerializer::deserialize(sirFilename);
 }
 
 std::shared_ptr<iir::StencilInstantiation>
@@ -163,30 +159,6 @@ void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstan
   dump(generator, os);
 }
 
-std::string CompilerUtil::generate(std::shared_ptr<iir::StencilInstantiation>& si,
-                                   const std::string& srcFile, const bool writeStdout) {
-  std::ostringstream oss;
-  if(srcFile.find(".cu") != std::string::npos) {
-    dumpCuda(oss, si);
-  } else if(srcFile.find("ico") != std::string::npos) {
-    dumpNaiveIco(oss, si);
-  } else {
-    dumpNaive(oss, si);
-  }
-  std::string code = oss.str();
-
-  if(writeStdout) {
-    std::cout << code;
-  }
-
-  if(!srcFile.empty()) {
-    std::ofstream ofs(srcFile);
-    ofs << code;
-  }
-
-  return code;
-}
-
 std::vector<std::shared_ptr<Pass>>
 CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& context) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
@@ -272,9 +244,8 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
   return passes;
 }
 
-bool CompilerUtil::runPasses(std::unique_ptr<OptimizerContext>& context,
-                             std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation,
-                             const unsigned nPasses) {
+bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>& context,
+                             std::shared_ptr<dawn::iir::StencilInstantiation>& instantiation) {
   auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
   auto inlineStrategy = dawn::PassInlining::InlineStrategy::InlineProcedures;
   auto reorderStrategy = dawn::ReorderStrategy::Kind::Greedy;
@@ -444,10 +415,6 @@ void CompilerUtil::write(std::unique_ptr<OptimizerContext>& context, const unsig
     dawn::IIRSerializer::serialize(iirFile, instantiation);
     stencil_id += 1;
   }
-}
-
-void CompilerUtil::setPath(const std::string& rootPath) {
-  rootPath_ = rootPath;
 }
 
 } // namespace dawn

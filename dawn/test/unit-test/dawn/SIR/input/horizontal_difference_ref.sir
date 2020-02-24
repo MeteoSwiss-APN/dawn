@@ -1,9 +1,9 @@
 {
  "gridType": "Cartesian",
- "filename": "horizontal_diff.cpp",
+ "filename": "horizontal_difference.cpp",
  "stencils": [
   {
-   "name": "horizontal_diff",
+   "name": "horizontal_difference",
    "loc": {
     "Line": 20,
     "Column": 8

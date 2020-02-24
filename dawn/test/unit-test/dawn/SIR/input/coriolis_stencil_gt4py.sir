@@ -233,7 +233,9 @@
                                             "left": {
                                               "literal_access_expr": {
                                                 "value": "0.25",
-                                                "type": {}
+                                                "type": {
+                                                  "type_id": "Float"
+                                                }
                                               }
                                             },
                                             "op": "*",
@@ -502,7 +504,9 @@
                                             "left": {
                                               "literal_access_expr": {
                                                 "value": "0.25",
-                                                "type": {}
+                                                "type": {
+                                                  "type_id": "Float"
+                                                }
                                               }
                                             },
                                             "op": "*",
