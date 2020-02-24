@@ -15,8 +15,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
-#include <fstream>
+
 #include <gtest/gtest.h>
 
 using namespace dawn;
