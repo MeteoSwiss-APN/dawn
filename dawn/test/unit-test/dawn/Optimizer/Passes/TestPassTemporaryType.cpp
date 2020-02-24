@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/AST/ASTMatcher.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
@@ -48,7 +48,7 @@ protected:
 
     if(demotedFields.size() > 0 || promotedFields.size() > 0) {
       // Apply AST matcher to find all field access expressions
-      dawn::ASTMatcher matcher(instantiation.get());
+      dawn::iir::ASTMatcher matcher(instantiation.get());
       std::vector<std::shared_ptr<ast::Expr>>& accessExprs =
           matcher.match(ast::Expr::Kind::FieldAccessExpr);
 

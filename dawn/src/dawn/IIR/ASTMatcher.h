@@ -15,11 +15,11 @@
 #ifndef DAWN_AST_ASTMATCHER_H
 #define DAWN_AST_ASTMATCHER_H
 
-#include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTUtil.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
+namespace iir {
 
 //===------------------------------------------------------------------------------------------===//
 //     ASTMatcher
@@ -67,6 +67,7 @@ private:
   void check(const std::shared_ptr<ast::Expr>& expr);
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif // DAWN_AST_ASTMATCHER_H

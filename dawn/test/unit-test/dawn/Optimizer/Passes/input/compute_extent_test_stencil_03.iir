@@ -1,0 +1,386 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "13": "in",
+   "14": "mid",
+   "15": "out"
+  },
+  "accessIDToType": {
+   "13": 6,
+   "14": 6,
+   "15": 6
+  },
+  "literalIDToName": {},
+  "fieldAccessIDs": [
+   13,
+   14,
+   15
+  ],
+  "APIFieldIDs": [
+   13,
+   14,
+   15
+  ],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {
+   "13": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   },
+   "14": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   },
+   "15": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   }
+  },
+  "idToStencilCall": {
+   "16": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_16",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 17
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": 5,
+   "Column": 8
+  },
+  "stencilName": "compute_extents"
+ },
+ "internalIR": {
+  "gridType": "Cartesian",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "mid",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 9,
+                    "Column": 7
+                   },
+                   "data": {
+                    "accessID": 14
+                   },
+                   "ID": 40
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "field_access_expr": {
+                   "name": "in",
+                   "vertical_offset": 0,
+                   "cartesian_offset": {
+                    "i_offset": -1,
+                    "j_offset": 0
+                   },
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 9,
+                    "Column": 13
+                   },
+                   "data": {
+                    "accessID": 13
+                   },
+                   "ID": 39
+                  }
+                 },
+                 "loc": {
+                  "Line": 9,
+                  "Column": 7
+                 },
+                 "ID": 41
+                }
+               },
+               "loc": {
+                "Line": 9,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "14": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "13": {
+                   "cartesian_extent": {
+                    "i_extent": {
+                     "minus": -1,
+                     "plus": -1
+                    },
+                    "j_extent": {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   },
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 38
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 37
+           }
+          },
+          "doMethodID": 1,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 32
+       },
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "out",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 10,
+                    "Column": 7
+                   },
+                   "data": {
+                    "accessID": 15
+                   },
+                   "ID": 45
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "field_access_expr": {
+                   "name": "mid",
+                   "vertical_offset": 0,
+                   "cartesian_offset": {
+                    "i_offset": -1,
+                    "j_offset": 0
+                   },
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 10,
+                    "Column": 13
+                   },
+                   "data": {
+                    "accessID": 14
+                   },
+                   "ID": 44
+                  }
+                 },
+                 "loc": {
+                  "Line": 10,
+                  "Column": 7
+                 },
+                 "ID": 46
+                }
+               },
+               "loc": {
+                "Line": 10,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "15": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "14": {
+                   "cartesian_extent": {
+                    "i_extent": {
+                     "minus": -1,
+                     "plus": -1
+                    },
+                    "j_extent": {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   },
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 43
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 42
+           }
+          },
+          "doMethodID": 2,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 34
+       }
+      ],
+      "loopOrder": "Parallel",
+      "multiStageID": 36,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 16,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_16",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 17
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "test.cpp"
+}
