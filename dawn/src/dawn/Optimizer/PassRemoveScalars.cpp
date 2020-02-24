@@ -26,8 +26,9 @@
 namespace dawn {
 namespace {
 
-// TODO: replace with a more general expr.getDimensions() = Scalar | OnEdges | ...
-//      that considers the dimensionality of local variables and fields
+// TODO: If we had a function such as getDimensions(expr) = Scalar | OnEdges | ...
+//       that would consider the dimensionality of local variables and fields
+//       this checker would not be needed.
 class ExprScalarChecker : public ast::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   bool isScalar_ = true;

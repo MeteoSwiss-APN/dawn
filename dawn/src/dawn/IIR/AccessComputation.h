@@ -39,12 +39,6 @@ void computeAccesses(const iir::StencilMetaInformation& metadata,
                      ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
 
 /// @fn computeAccesses
-/// @brief Compute the Accesses of `stmts`.
-/// @ingroup optimizer
-void computeAccesses(iir::StencilInstantiation* instantiation,
-                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
-
-/// @fn computeAccesses
 /// @brief Compute the caller and callee Accesses of `stmts`
 ///
 /// The caller Accesses will have the initial offset added (e.g if a stencil function is called with

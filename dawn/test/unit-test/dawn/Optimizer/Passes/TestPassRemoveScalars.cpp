@@ -38,35 +38,33 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
   return nullptr;
 }
 
-iir::DoMethod& getDoMethod(std::shared_ptr<iir::StencilInstantiation>& si) {
-  auto& iir = si->getIIR();
-  auto& stencil = iir->getChild(0);
-  auto& ms = stencil->getChild(0);
-  auto& stage = ms->getChild(0);
-  return *stage->getChild(0);
+iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si) {
+  return **iterateIIROver<iir::DoMethod>(*si->getIIR()).begin();
 }
 
 std::shared_ptr<iir::Stmt> getNthStmt(std::shared_ptr<iir::StencilInstantiation>& si, int n) {
-  return getDoMethod(si).getAST().getStatements()[n];
+
+  return getFirstDoMethod(si).getAST().getStatements()[n];
 }
 
 bool isVarInDoMethodsAccesses(int varAccessID, const iir::DoMethod& doMethod) {
   for(const auto& stmt : doMethod.getAST().getStatements()) {
     const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
-    for(auto& accessPair : access->getWriteAccesses()) {
-      if(varAccessID == accessPair.first) { // first = AccessID
-        return true;
-      }
+    if(std::any_of(
+           access->getWriteAccesses().begin(), access->getWriteAccesses().end(),
+           [&](const auto& pair) { return pair.first == varAccessID; })) { // pair.first = AccessID
+      return true;
     }
-    for(const auto& accessPair : access->getReadAccesses()) {
-      if(varAccessID == accessPair.first) { // first = AccessID
-        return true;
-      }
+
+    if(std::any_of(
+           access->getReadAccesses().begin(), access->getReadAccesses().end(),
+           [&](const auto& pair) { return pair.first == varAccessID; })) { // pair.first = AccessID
+      return true;
     }
   }
   return false;
-}
+} // namespace
 
 TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   using namespace dawn::iir;
@@ -101,7 +99,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement left
-  ASSERT_EQ(getDoMethod(stencil).getAST().getStatements().size(), 1);
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is: f_c = 3.0;
@@ -115,7 +113,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   // Check that variable's metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variable
-  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getDoMethod(stencil)));
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
 }
 
 TEST(TestRemoveScalars, test_unstructured_scalar_02) {
@@ -164,7 +162,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   passRemoveScalars.run(stencil);
 
   // Check that there are 2 statements left
-  ASSERT_EQ(getDoMethod(stencil).getAST().getStatements().size(), 2);
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 2);
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is: f_c = 5.0 + (3.0 + 1.0);
@@ -192,8 +190,8 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varBID), 0);
   // Check that statements' accesses do not contain the variables
-  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getDoMethod(stencil)));
-  ASSERT_FALSE(isVarInDoMethodsAccesses(varBID, getDoMethod(stencil)));
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varBID, getFirstDoMethod(stencil)));
 }
 
 TEST(TestRemoveScalars, test_global_01) {
@@ -234,7 +232,7 @@ TEST(TestRemoveScalars, test_global_01) {
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
-  ASSERT_EQ(getDoMethod(stencil).getAST().getStatements().size(), 1);
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is: f_c = pi * 2.0;
@@ -256,7 +254,7 @@ TEST(TestRemoveScalars, test_global_01) {
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variables
-  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getDoMethod(stencil)));
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
 }
 
 TEST(TestRemoveScalars, test_if_01) {
@@ -297,7 +295,7 @@ TEST(TestRemoveScalars, test_if_01) {
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
-  ASSERT_EQ(getDoMethod(stencil).getAST().getStatements().size(), 1);
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is:
@@ -317,7 +315,7 @@ TEST(TestRemoveScalars, test_if_01) {
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variables
-  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getDoMethod(stencil)));
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
 }
 
 TEST(TestRemoveScalars, test_else_01) {
@@ -362,7 +360,7 @@ TEST(TestRemoveScalars, test_else_01) {
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
-  ASSERT_EQ(getDoMethod(stencil).getAST().getStatements().size(), 1);
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is:
@@ -389,7 +387,7 @@ TEST(TestRemoveScalars, test_else_01) {
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variables
-  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getDoMethod(stencil)));
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
 }
 
 TEST(TestRemoveScalars, throw_compound_assignments) {

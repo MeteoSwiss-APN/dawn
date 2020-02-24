@@ -458,12 +458,6 @@ void computeAccesses(const iir::StencilMetaInformation& metadata,
   }
 }
 
-void computeAccesses(iir::StencilInstantiation* instantiation,
-                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
-  DAWN_ASSERT(instantiation);
-  computeAccesses(instantiation->getMetaData(), stmts);
-}
-
 void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
     ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
