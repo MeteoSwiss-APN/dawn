@@ -72,28 +72,6 @@ public:
 ///
 /// The `DefaultLogger` is a good minimal example.
 ///
-/// The following snippet can be seen as a minimal working example:
-///
-/// @code
-///   #include <dawn/Support/Logging.h>
-///   #include <iostream>
-///
-///   class MyLogger : dawn::LoggerInterface {
-///   public:
-///      void log(LoggingLevel level, const std::string& message, const char* file, int line) {
-///        std::cout << file << ":" << line << " " << message << std::endl;
-///   };
-///
-///   int main() {
-///     myLogger = new MyLogger;
-///     dawn::Logger::getSingleton().registerLogger(myLogger);
-///
-///     DAWN_LOG(INFO) << "Hello world!";
-///
-///     delete myLogger;
-///   }
-/// @endcode
-///
 /// @ingroup support
 class Logger {
   static Logger* instance_;
