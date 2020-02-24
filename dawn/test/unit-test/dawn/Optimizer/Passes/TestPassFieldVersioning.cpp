@@ -11,18 +11,13 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
-
 #include "dawn/Support/DiagnosticsEngine.h"
 
-#include <fstream>
 #include <gtest/gtest.h>
 #include <memory>
 
