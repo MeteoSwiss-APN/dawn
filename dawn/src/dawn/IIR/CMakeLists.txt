@@ -53,6 +53,8 @@ add_library(DawnIIR
   ASTUtil.h
   ASTUtil.cpp
   ASTVisitor.h
+  ASTMatcher.cpp
+  ASTMatcher.h
   Accesses.cpp
   Accesses.h
   AccessUtils.cpp
