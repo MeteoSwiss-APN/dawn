@@ -31,13 +31,13 @@ TEST(IRSplittingTest, Interval) {
 }
 
 TEST(IRSplittingTest, FieldVersioning) {
-  gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes", 0)
-      .split("RaceCondition03.cpp", {"-freport-pass-field-versioning", "-inline=none"});
+  gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes", 0).split(
+      "RaceCondition03.cpp", {"-freport-pass-field-versioning", "-inline=none"});
 }
 
 TEST(IRSplittingTest, CacheTest) {
-  gtclang::IRSplitter("../../../dawn/test/unit-test/dawn/Optimizer/Passes", 100)
-      .split("PassSetCaches/IJCacheTest02.cpp", {"-freport-pass-set-caches"});
+  gtclang::IRSplitter("../../../dawn/test/unit-test/dawn/Optimizer/Passes", 100).split(
+      "PassSetCaches/IJCacheTest02.cpp", {"-freport-pass-set-caches"});
 }
 
 } // anonymous namespace

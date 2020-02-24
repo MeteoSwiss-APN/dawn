@@ -40,6 +40,7 @@ public:
   void split(const std::string& dslFile, const std::vector<std::string>& args = {});
   void parallelize();
   void optimize();
+  void generate(const std::string& outFile = "");
 
 protected:
   void createContext(const std::shared_ptr<dawn::SIR>& sir);

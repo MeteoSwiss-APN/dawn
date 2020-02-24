@@ -71,6 +71,35 @@ void IRSplitter::split(const std::string& dslFile, const std::vector<std::string
   }
 }
 
+void IRSplitter::generate(const std::string& outFile) {
+  std::unique_ptr<dawn::codegen::TranslationUnit> tu;
+  dawn::DiagnosticsEngine diagnostics;
+  auto& ctx = context_->getStencilInstantiationMap();
+
+  if(outFile.find(".cu") != std::string::npos) {
+    dawn::codegen::cuda::CudaCodeGen generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
+    tu = generator.generateCode();
+  } else {
+    dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(ctx, diagnostics, 0);
+    tu = generator.generateCode();
+  }
+
+  std::ostringstream ss;
+  for(auto const& macroDefine : tu->getPPDefines())
+    ss << macroDefine << "\n";
+
+  ss << tu->getGlobals();
+  for(auto const& s : tu->getStencils())
+    ss << s.second;
+
+  if(outFile.empty()) {
+    std::cerr << ss.str();
+  } else {
+    std::ofstream ofs(outFile.c_str());
+    ofs << ss.str();
+  }
+}
+
 void IRSplitter::createContext(const std::shared_ptr<dawn::SIR>& sir) {
   context_ = std::make_unique<dawn::OptimizerContext>(diag_, options_, sir);
 }
