@@ -16,9 +16,9 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
@@ -96,16 +96,61 @@ TEST_F(TestPassStageReordering, ReorderTest2) {
   runTest("input/ReorderTest02.iir", {1, 3, 0, 2});
 }
 
-//TEST_F(TestPassStageReordering, ReorderTest3) { runTest("input/ReorderTest03.sir", {0, 1}); }
-//
-//TEST_F(TestPassStageReordering, ReorderTest4) { runTest("input/ReorderTest04.sir", {2, 0, 1, 3}); }
-//
-//TEST_F(TestPassStageReordering, ReorderTest5) { runTest("input/ReorderTest05.sir", {1, 0}); }
-//
-//TEST_F(TestPassStageReordering, ReorderTest6) { runTest("input/ReorderTest06.sir", {0, 1}); }
-//
-//TEST_F(TestPassStageReordering, ReorderTest7) {
-//  runTest("input/ReorderTest07.sir", {0, 1, 2, 3, 4, 5, 6});
-//}
+TEST_F(TestPassStageReordering, ReorderTest3) {
+  /*
+     vertical_region(k_end - 1, k_start + 1) {
+       field_b1 = field_b0;
+       field_b2 = field_b1(k - 1);
+     }
+   */
+  runTest("input/ReorderTest03.iir", {0, 1});
+}
+
+TEST_F(TestPassStageReordering, ReorderTest4) {
+  /*
+     vertical_region(k_end - 1, k_start + 1) {
+       field_b1 = field_b0;
+       field_b2 = field_b1(k - 1);  }
+     vertical_region(k_start + 1, k_end - 1) {
+       field_a1 = field_a0;
+       field_a2 = field_a1(k + 1);  }
+   */
+  runTest("input/ReorderTest04.iir", {2, 0, 1, 3});
+}
+
+TEST_F(TestPassStageReordering, ReorderTest5) {
+  /*
+   vertical_region(k_start, k_start) { field_a1 = field_a0(k + 1); }
+   vertical_region(k_start + 2, k_end - 1) { field_a2 = field_a1(k + 1); }
+   */
+  runTest("input/ReorderTest05.iir", {1, 0});
+}
+
+TEST_F(TestPassStageReordering, ReorderTest6) {
+  /*
+   vertical_region(k_start + 1, k_start + 1) {
+     field_a1 = field_a0(k + 1);
+     field_b1 = field_a0(k - 1);  }
+   vertical_region(k_start + 3, k_end - 1) {
+     field_a2 = field_a1(k + 1);
+     field_b2 = field_b1(k - 1);  }
+   */
+  runTest("input/ReorderTest06.iir", {0, 1});
+}
+
+TEST_F(TestPassStageReordering, ReorderTest7) {
+  /*
+    vertical_region(k_start, k_end) {
+      field_a1 = field_a0(i + 1);
+      field_a2 = field_a1(i + 1);
+      field_a3 = field_a2(i + 1);
+      field_a4 = field_a3(i + 1);
+      field_a5 = field_a4(i + 1);
+      field_a6 = field_a5(i + 1);
+      field_a7 = field_a6(i + 1);
+    }
+   */
+  runTest("input/ReorderTest07.iir", {0, 1, 2, 3, 4, 5, 6});
+}
 
 } // anonymous namespace
