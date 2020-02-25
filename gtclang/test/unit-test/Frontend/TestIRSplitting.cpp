@@ -31,8 +31,15 @@ TEST(IRSplittingTest, Interval) {
 }
 
 TEST(IRSplittingTest, FieldVersioning) {
-  gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes", 0).split(
-      "RaceCondition03.cpp", {"-freport-pass-field-versioning", "-inline=none"});
+  gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes/samples", 1).split(
+      "../../../../dawn/test/unit-test/dawn/Optimizer/Passes/samples/RaceCondition01.cpp",
+      {"-freport-pass-field-versioning"});
+}
+
+TEST(IRSplittingTest, StageReordering) {
+  gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes", 1).split(
+      "../../../../dawn/test/unit-test/dawn/Optimizer/Passes/samples/ReorderTest02.cpp",
+      {"-freport-pass-stage-reordering"});
 }
 
 TEST(IRSplittingTest, CacheTest) {
