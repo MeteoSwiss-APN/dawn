@@ -14,7 +14,7 @@
 
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Filesystem.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
 #include <chrono>
 #include <iostream>
