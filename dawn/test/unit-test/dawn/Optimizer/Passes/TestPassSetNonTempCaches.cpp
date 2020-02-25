@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/UIDGenerator.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
@@ -48,45 +49,45 @@ protected:
   }
 };
 
-// TEST_F(TestPassSetNonTempCaches, NoCache1) {
-//   std::shared_ptr<iir::StencilInstantiation> instantiation =
-//       IIRSerializer::deserialize("input/noCache.iir");
-//   DiagnosticsEngine diag;
-//   dawn::OptimizerContext::OptimizerContextOptions options_;
-//   std::unique_ptr<OptimizerContext> context_ =
-//       std::make_unique<OptimizerContext>(diag, options_, nullptr);
-//   context_->getOptions().UseNonTempCaches = true;
-//   PassSetNonTempCaches pass(*context_);
-//   instantiation->dump();
-//   pass.run(instantiation);
-//   ASSERT_EQ(pass.getCachedFieldNames().size(), 0);
-// }
+TEST_F(TestPassSetNonTempCaches, NoCache1) {
+  std::shared_ptr<iir::StencilInstantiation> instantiation =
+      IIRSerializer::deserialize("input/TestNonTempCache_01.iir");
+  DiagnosticsEngine diag;
+  dawn::OptimizerContext::OptimizerContextOptions options_;
+  std::unique_ptr<OptimizerContext> context_ =
+      std::make_unique<OptimizerContext>(diag, options_, nullptr);
+  context_->getOptions().UseNonTempCaches = true;
+  PassSetNonTempCaches pass(*context_);
+  pass.run(instantiation);
+  ASSERT_EQ(pass.getCachedFieldNames().size(), 0);
+}
 
-// TEST_F(TestPassSetNonTempCaches, NoCache2) {
-//   std::shared_ptr<iir::StencilInstantiation> instantiation =
-//       IIRSerializer::deserialize("input/noCache2.iir");
-//   DiagnosticsEngine diag;
-//   dawn::OptimizerContext::OptimizerContextOptions options_;
-//   std::unique_ptr<OptimizerContext> context_ =
-//       std::make_unique<OptimizerContext>(diag, options_, nullptr);
-//   context_->getOptions().UseNonTempCaches = true;
-//   PassSetNonTempCaches pass(*context_);
-//   instantiation->dump();
-//   pass.run(instantiation);
-//   ASSERT_EQ(pass.getCachedFieldNames().size(), 0);
-// }
+TEST_F(TestPassSetNonTempCaches, NoCache2) {
+  std::shared_ptr<iir::StencilInstantiation> instantiation =
+      IIRSerializer::deserialize("input/TestNonTempCache_02.iir");
+  DiagnosticsEngine diag;
+  dawn::OptimizerContext::OptimizerContextOptions options_;
+  std::unique_ptr<OptimizerContext> context_ =
+      std::make_unique<OptimizerContext>(diag, options_, nullptr);
+  context_->getOptions().UseNonTempCaches = true;
+  PassSetNonTempCaches pass(*context_);
+  pass.run(instantiation);
+  ASSERT_EQ(pass.getCachedFieldNames().size(), 0);
+}
 
 TEST_F(TestPassSetNonTempCaches, MultipleCaches1) {
   std::shared_ptr<iir::StencilInstantiation> instantiation =
-      IIRSerializer::deserialize("input/field_aCached.iir");
+      IIRSerializer::deserialize("input/TestNonTempCache_03.iir");
   DiagnosticsEngine diag;
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_ =
       std::make_unique<OptimizerContext>(diag, options_, nullptr);
   context_->getOptions().SetNonTempCaches = true;
   PassSetNonTempCaches pass(*context_);
-  for(int i = 0; i < 50; ++i)
+  /// Remove this after deserialisation is fixed
+  for(int i = 0; i < 50; ++i) {
     UIDGenerator::getInstance()->get();
+  }
   pass.run(instantiation);
   ASSERT_EQ(pass.getCachedFieldNames().size(), 1);
 }
