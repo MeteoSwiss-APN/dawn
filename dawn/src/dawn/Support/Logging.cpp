@@ -33,27 +33,33 @@ internal::LoggerProxy::~LoggerProxy() {
 
 Logger* Logger::instance_ = nullptr;
 
-Logger::Logger() { registerLogger(new DefaultLogger); }
-Logger::~Logger() { delete logger_; }
+Logger::Logger() : isDefault_(true) { registerLogger(new DefaultLogger); }
+Logger::~Logger() {
+  if(isDefault_)
+    delete logger_;
+}
 
-void Logger::registerLogger(LoggerInterface* logger) { logger_ = logger; }
+void Logger::registerLogger(LoggerInterface* logger) {
+  isDefault_ = false;
+  logger_ = logger;
+}
 
 LoggerInterface* Logger::getLogger() { return logger_; }
 
-internal::LoggerProxy Logger::logInfo(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Info, ss_, file, line);
-}
-
-internal::LoggerProxy Logger::logWarning(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Warning, ss_, file, line);
+internal::LoggerProxy Logger::logFatal(const char* file, int line) {
+  return internal::LoggerProxy(LoggingLevel::Fatal, ss_, file, line);
 }
 
 internal::LoggerProxy Logger::logError(const char* file, int line) {
   return internal::LoggerProxy(LoggingLevel::Error, ss_, file, line);
 }
 
-internal::LoggerProxy Logger::logFatal(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Fatal, ss_, file, line);
+internal::LoggerProxy Logger::logWarning(const char* file, int line) {
+  return internal::LoggerProxy(LoggingLevel::Warning, ss_, file, line);
+}
+
+internal::LoggerProxy Logger::logInfo(const char* file, int line) {
+  return internal::LoggerProxy(LoggingLevel::Info, ss_, file, line);
 }
 
 void Logger::log(LoggingLevel level, const std::string& message, const char* file, int line) {
@@ -68,6 +74,8 @@ Logger& Logger::getSingleton() {
   }
   return *instance_;
 }
+
+void DefaultLogger::setVerbosity(LoggingLevel level) { level_ = static_cast<int>(level); }
 
 void DefaultLogger::log(LoggingLevel level, const std::string& message, const char* file,
                         int line) {
@@ -91,35 +99,30 @@ void DefaultLogger::log(LoggingLevel level, const std::string& message, const ch
   ss << "[" << timeStr << "] [" << fileStr << ":" << line << "] [";
 
   switch(level) {
-  case LoggingLevel::Info:
-    ss << "INFO";
-    break;
-  case LoggingLevel::Warning:
-    ss << "WARN";
+  case LoggingLevel::Fatal:
+    ss << "FATAL";
     break;
   case LoggingLevel::Error:
     ss << "ERROR";
     break;
-  case LoggingLevel::Fatal:
-    ss << "FATAL";
+  case LoggingLevel::Warning:
+    ss << "WARN";
+    break;
+  case LoggingLevel::Info:
+    ss << "INFO";
     break;
   }
 
   ss << "] " << message << "\n";
 
-  switch(level) {
-  case LoggingLevel::Info:
-    std::cout << ss.str();
-    break;
-  case LoggingLevel::Warning:
-    std::cout << ss.str();
-    break;
-  case LoggingLevel::Error:
+  if(level == LoggingLevel::Fatal && level_ >= static_cast<int>(LoggingLevel::Fatal)) {
     std::cerr << ss.str();
-    break;
-  case LoggingLevel::Fatal:
+  } else if(level == LoggingLevel::Error && level_ >= static_cast<int>(LoggingLevel::Error)) {
     std::cerr << ss.str();
-    break;
+  } else if(level == LoggingLevel::Warning && level_ >= static_cast<int>(LoggingLevel::Warning)) {
+    std::cout << ss.str();
+  } else if(level == LoggingLevel::Info && level_ >= static_cast<int>(LoggingLevel::Info)) {
+    std::cerr << ss.str();
   }
 }
 

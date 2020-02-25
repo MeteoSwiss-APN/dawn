@@ -24,7 +24,7 @@ namespace dawn {
 /// @enum LoggingLevel
 /// @brief Severity levels
 /// @ingroup support
-enum class LoggingLevel { Info = 0, Warning, Error, Fatal };
+enum class LoggingLevel : int { Fatal, Error, Warning, Info };
 
 /// @brief Logging interface
 /// @ingroup support
@@ -66,16 +66,16 @@ public:
 
 /// @brief Dawn Logger adapter
 ///
-/// This is the interface for logging from Dawn. A default logger is provided, but if you would like
-/// to register your own, you need to implement the `LoggerInterface`.
-///
-/// The `DefaultLogger` is a good minimal example.
+/// This is the interface for logging from Dawn. `DefaultLogger` is provided and used by default,
+/// but if you would like to register your own, you need to implement the `LoggerInterface` and call
+/// `registerLogger` on an instance.
 ///
 /// @ingroup support
 class Logger {
   static Logger* instance_;
   LoggerInterface* logger_;
   std::stringstream ss_;
+  bool isDefault_;
 
 public:
   /// @brief Initialize Logger object
@@ -90,10 +90,10 @@ public:
 
   /// @name Start logging
   /// @{
-  internal::LoggerProxy logInfo(const char* file, int line);
-  internal::LoggerProxy logWarning(const char* file, int line);
-  internal::LoggerProxy logError(const char* file, int line);
   internal::LoggerProxy logFatal(const char* file, int line);
+  internal::LoggerProxy logError(const char* file, int line);
+  internal::LoggerProxy logWarning(const char* file, int line);
+  internal::LoggerProxy logInfo(const char* file, int line);
   /// @}
 
   /// @brief Log `message` of severity `level` at position `file:line`
@@ -106,8 +106,17 @@ public:
 /// @brief Simple logger
 /// @ingroup support
 class DefaultLogger : public LoggerInterface {
+  int level_;
+
 public:
+  /// Default logging level: Warning
+  DefaultLogger() : level_(static_cast<int>(LoggingLevel::Warning)) {}
+
+  /// Override log method
   void log(LoggingLevel level, const std::string& message, const char* file, int line) override;
+
+  /// Change the verbosity level
+  void setVerbosity(LoggingLevel level);
 };
 
 /// @macro DAWN_LOG
@@ -115,10 +124,10 @@ public:
 /// @ingroup support
 #define DAWN_LOG(Level) DAWN_LOG_##Level##_IMPL()
 
-#define DAWN_LOG_INFO_IMPL() dawn::Logger::getSingleton().logInfo(__FILE__, __LINE__)
-#define DAWN_LOG_WARNING_IMPL() dawn::Logger::getSingleton().logWarning(__FILE__, __LINE__)
-#define DAWN_LOG_ERROR_IMPL() dawn::Logger::getSingleton().logError(__FILE__, __LINE__)
 #define DAWN_LOG_FATAL_IMPL() dawn::Logger::getSingleton().logFatal(__FILE__, __LINE__)
+#define DAWN_LOG_ERROR_IMPL() dawn::Logger::getSingleton().logError(__FILE__, __LINE__)
+#define DAWN_LOG_WARNING_IMPL() dawn::Logger::getSingleton().logWarning(__FILE__, __LINE__)
+#define DAWN_LOG_INFO_IMPL() dawn::Logger::getSingleton().logInfo(__FILE__, __LINE__)
 
 } // namespace dawn
 
