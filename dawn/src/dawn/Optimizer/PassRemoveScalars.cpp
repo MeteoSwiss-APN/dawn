@@ -117,32 +117,6 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
   dawn_unreachable("Function called with non-assignment stmt");
 }
 
-/// TODO: if-statements with conditions containing only globals, scalars, literals (and not
-/// dimensional variables or fields) are not supported yet. (If the condition expression has
-/// dimensions instead, then each variable we write to, inside the then/else blocks, will have
-/// dimensions)
-///
-/// Would need a new pass to run before this one (and after PassLocalVarType):
-/// (recall that a global cannot be set inside a DoMethod)
-///
-/// if(scalar_expr) { // with scalar_expr containing only globals, scalars, literals
-///    varA = varA + 5.0;
-///    f_c = varB + varA;
-/// } else {
-///    varB = 2.0;
-///    f_c = varA * varB;
-/// }
-///
-/// CHANGE INTO
-///
-/// bool _ifCond_0 = scalar_expr;
-/// varA = _ifCond_0 ? varA + 5.0 : varA;
-/// f_c = _ifCond_0 ? varB + varA;
-/// varB = !_ifCond_0 ? 2.0 : varB;
-/// f_c = !_ifCond_0 ? varA * varB : f_c;
-///
-/// than this pass (PassRemoveScalars) will remove the scalars _ifCond_0, varA, varB, ...
-/// another pass could also remove the ternary operators if the conditions are literals.
 void removeScalarsFromBlockStmt(
     iir::BlockStmt& blockStmt,
     std::unordered_map<int, std::shared_ptr<const iir::Expr>>& scalarToLastRhsMap,
@@ -170,11 +144,12 @@ void removeScalarsFromBlockStmt(
     // Need to treat if statements differently. There are block statements inside.
     if(const std::shared_ptr<iir::IfStmt> ifStmt =
            std::dynamic_pointer_cast<iir::IfStmt>(*stmtIt)) {
-
+      // TODO: change to assert once we have a pass to transform from the if construct to ternary
+      // operators.
       if(isExprScalar(ifStmt->getCondExpr(), metadata)) {
         throw std::runtime_error(
             dawn::format("If-condition is scalar at line %d. It is not yet supported.",
-                         ifStmt->getSourceLocation().Line)); // See reason above.
+                         ifStmt->getSourceLocation().Line));
       }
 
       DAWN_ASSERT_MSG(ifStmt->getThenStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
@@ -222,10 +197,7 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
 
 bool PassRemoveScalars::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  // TODO: sir from GTClang currently not supported: it introduces compound assignments (handling
-  // them complicates this pass). For now disabling the pass for cartesian grids.
-  // We should remove compound assignments and increment/decrement ops from SIR/IIR. They are
-  // syntactic sugar, only useful at DSL level.
+  // TODO: add support for cartesian
   if(stencilInstantiation->getIIR()->getGridType() == ast::GridType::Cartesian) {
     return true;
   }
