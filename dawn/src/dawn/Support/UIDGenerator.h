@@ -33,7 +33,10 @@ public:
   /// @brief Get a unique *strictly* positive identifer
   int get() { return (counter_++); }
 
-  void reset() { counter_ = 1; }
+  void reset() { set(1); }
+
+  /// @brief We need a way to modify the generator after deserialization
+  void set(int id) { counter_ = id; }
 };
 
 } // namespace dawn
