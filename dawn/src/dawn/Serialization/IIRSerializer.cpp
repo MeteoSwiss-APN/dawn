@@ -566,7 +566,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
         foundDecl != declStmtFinder.boundaryConditionDecl.end()
             ? foundDecl->second
             : dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(
-                  makeStmt(FieldnameToBC.second, ast::StmtData::IIR_DATA_TYPE));
+                  makeStmt(FieldnameToBC.second, ast::StmtData::IIR_DATA_TYPE, maxID));
   }
 
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtodimensions()) {
@@ -630,6 +630,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     target->getIIR()->insertChild(std::make_unique<iir::Stencil>(target->getMetaData(), attributes,
                                                                  protoStencils.stencilid()),
                                   target->getIIR());
+    checkAndUpdateMaxID(protoStencils.stencilid(), maxID);
     const auto& IIRStencil = target->getIIR()->getChild(stencilPos++);
 
     for(auto attribute : protoStencils.attr().attributes()) {
@@ -672,6 +673,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
       const auto& IIRMSS = (IIRStencil)->getChild(mssPos++);
       IIRMSS->setID(protoMSS.multistageid());
+      checkAndUpdateMaxID(protoMSS.multistageid(), maxID);
 
       for(const auto& IDCachePair : protoMSS.caches()) {
         IIRMSS->getCaches().insert({IDCachePair.first, makeCache(&IDCachePair.second)});
@@ -680,6 +682,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       for(const auto& protoStage : protoMSS.stages()) {
         int doMethodPos = 0;
         int stageID = protoStage.stageid();
+        checkAndUpdateMaxID(stageID, maxID);
 
         IIRMSS->insertChild(std::make_unique<iir::Stage>(target->getMetaData(), stageID));
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
@@ -690,9 +693,10 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
           auto& IIRDoMethod = (IIRStage)->getChild(doMethodPos++);
           IIRDoMethod->setID(protoDoMethod.domethodid());
+          checkAndUpdateMaxID(protoDoMethod.domethodid(), maxID);
 
           auto ast = std::dynamic_pointer_cast<iir::BlockStmt>(
-              makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE));
+              makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE, maxID));
           DAWN_ASSERT(ast);
           IIRDoMethod->setAST(ast);
         }
@@ -701,7 +705,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
   for(auto& controlFlowStmt : protoIIR.controlflowstatements()) {
     target->getIIR()->getControlFlowDescriptor().insertStmt(
-        makeStmt(controlFlowStmt, ast::StmtData::IIR_DATA_TYPE));
+        makeStmt(controlFlowStmt, ast::StmtData::IIR_DATA_TYPE, maxID));
   }
   for(auto& boundaryCondition : protoIIR.boundaryconditions()) {
     auto stencilFunction = std::make_shared<sir::StencilFunction>();
@@ -714,7 +718,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       stencilFunction->Args.push_back(std::move(new_arg));
     }
     auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(
-        makeStmt(boundaryCondition.aststmt(), ast::StmtData::IIR_DATA_TYPE));
+        makeStmt(boundaryCondition.aststmt(), ast::StmtData::IIR_DATA_TYPE, maxID));
     DAWN_ASSERT(stmt);
     stencilFunction->Asts.push_back(std::make_shared<iir::AST>(stmt));
 
