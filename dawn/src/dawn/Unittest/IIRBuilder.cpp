@@ -156,11 +156,15 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type,
-                                          std::vector<std::shared_ptr<iir::Expr>>&& initList) {
+IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID dataType,
+                                          std::vector<std::shared_ptr<iir::Expr>>&& initList,
+                                          std::optional<LocalVariableType> localVarType) {
   DAWN_ASSERT(si_);
-  auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::move(initList));
+  auto iirStmt = makeVarDeclStmt(Type{dataType}, name, 0, "=", std::move(initList));
   int id = si_->getMetaData().addStmt(true, iirStmt);
+  if(localVarType.has_value()) {
+    si_->getMetaData().getLocalVariableDataFromAccessID(id).setType(*localVarType);
+  }
   return {id, name, iirStmt};
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,

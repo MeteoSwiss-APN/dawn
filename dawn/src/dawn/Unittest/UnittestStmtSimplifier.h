@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_UNITTEST_UNITTESTSTMTSIMPLYFIER_H
-#define DAWN_UNITTEST_UNITTESTSTMTSIMPLYFIER_H
+#pragma once
 
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
@@ -132,5 +131,3 @@ std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(T&& value) {
 } // namespace sirgen
 
 } // namespace dawn
-
-#endif

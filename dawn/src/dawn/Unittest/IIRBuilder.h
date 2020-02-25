@@ -128,7 +128,8 @@ public:
   }
 
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float,
-                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {});
+                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {},
+                    std::optional<LocalVariableType> localVarType = std::nullopt);
 
   template <class TWeight>
   std::shared_ptr<iir::Expr>

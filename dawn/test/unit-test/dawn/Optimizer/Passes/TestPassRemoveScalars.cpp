@@ -16,6 +16,7 @@
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestStmtSimplifier.h"
+#include "dawn/Unittest/UnittestUtils.h"
 
 #include <gtest/gtest.h>
 
@@ -23,15 +24,6 @@ using namespace dawn;
 using namespace sirgen;
 
 namespace {
-
-iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si) {
-  return **iterateIIROver<iir::DoMethod>(*si->getIIR()).begin();
-}
-
-std::shared_ptr<iir::Stmt> getNthStmt(std::shared_ptr<iir::StencilInstantiation>& si, int n) {
-
-  return getFirstDoMethod(si).getAST().getStatements()[n];
-}
 
 bool isVarInDoMethodsAccesses(int varAccessID, const iir::DoMethod& doMethod) {
   for(const auto& stmt : doMethod.getAST().getStatements()) {
@@ -57,7 +49,8 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
 
   UnstructuredIIRBuilder b;
   auto f_c = b.field("f_c", ast::LocationType::Cells);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(3.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(3.0)}, iir::LocalVariableType::Scalar);
 
   /// field(cells) f_c;
   /// double varA = 3.0;
@@ -70,10 +63,8 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(f_c), b.at(varA))))))));
 
-  // Setup variable's metadata before running pass
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -87,7 +78,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   // Check that there is 1 statement left
   ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
-  auto firstStatement = getNthStmt(stencil, 0);
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
   // Check that first statement is: f_c = 3.0;
   ASSERT_TRUE(firstStatement->equals(expr(assign(field("f_c"), lit(3.0))).get(),
                                      /*compareData = */ false));
@@ -103,8 +94,10 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   UnstructuredIIRBuilder b;
   auto f_c = b.field("f_c", ast::LocationType::Cells);
   auto f_c_out = b.field("f_c_out", ast::LocationType::Cells);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(3.0)});
-  auto varB = b.localvar("varB", dawn::BuiltinTypeID::Double, {b.lit(5.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(3.0)}, iir::LocalVariableType::Scalar);
+  auto varB =
+      b.localvar("varB", dawn::BuiltinTypeID::Double, {b.lit(5.0)}, iir::LocalVariableType::Scalar);
 
   /// field(cells) f_c, f_c_out;
   /// double varA = 3.0;
@@ -126,12 +119,9 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
               b.stmt(b.assignExpr(b.at(f_c), b.at(varB))),
               b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c))))))));
 
-  // Setup variables' metadata before running pass
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
   int varBID = metadata.getAccessIDFromName("varB");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
-  metadata.getLocalVariableDataFromAccessID(varBID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -145,7 +135,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   // Check that there are 2 statements left
   ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 2);
 
-  auto firstStatement = getNthStmt(stencil, 0);
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
   // Check that first statement is: f_c = 5.0 + (3.0 + 1.0);
   ASSERT_TRUE(firstStatement->equals(
       expr(assign(field("f_c"), binop(lit(5.0), "+", binop(lit(3.0), "+", lit(1.0))))).get(),
@@ -164,7 +154,8 @@ TEST(TestRemoveScalars, test_global_01) {
   UnstructuredIIRBuilder b;
   auto f_c = b.field("f_c", ast::LocationType::Cells);
   auto pi = b.globalvar("pi", 3.14);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)}, iir::LocalVariableType::Scalar);
 
   /// field(cells) f_c;
   /// global double pi = 3.14;
@@ -181,10 +172,8 @@ TEST(TestRemoveScalars, test_global_01) {
               b.stmt(b.assignExpr(b.at(varA), b.binaryExpr(b.at(pi), b.lit(2.0), Op::multiply))),
               b.stmt(b.assignExpr(b.at(f_c), b.at(varA))))))));
 
-  // Setup variables' metadata before running pass
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -198,7 +187,7 @@ TEST(TestRemoveScalars, test_global_01) {
   // Check that there is 1 statement
   ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
-  auto firstStatement = getNthStmt(stencil, 0);
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
   // Check that first statement is: f_c = pi * 2.0;
   ASSERT_TRUE(
       firstStatement->equals(expr(assign(field("f_c"), binop(global("pi"), "*", lit(2.0)))).get(),
@@ -215,9 +204,10 @@ TEST(TestRemoveScalars, test_if_01) {
   UnstructuredIIRBuilder b;
   auto f_c = b.field("f_c", ast::LocationType::Cells);
   auto f_c_out = b.field("f_c_out", ast::LocationType::Cells);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)}, iir::LocalVariableType::Scalar);
 
-  /// field(cells) f_c, f_c_out;
+  // field(cells) f_c, f_c_out;
   // double varA = 2.0;
   // if(f_c > 0.0) {
   //   f_c_out = varA;
@@ -232,10 +222,8 @@ TEST(TestRemoveScalars, test_if_01) {
                            b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
                                     b.block(b.stmt(b.assignExpr(b.at(f_c_out), b.at(varA))))))))));
 
-  // Setup variables' metadata before running pass
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -249,7 +237,7 @@ TEST(TestRemoveScalars, test_if_01) {
   // Check that there is 1 statement
   ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
-  auto firstStatement = getNthStmt(stencil, 0);
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
   // Check that first statement is:
   // if(f_c > 0.0) {
   //   f_c_out = 2.0;
@@ -258,7 +246,6 @@ TEST(TestRemoveScalars, test_if_01) {
                                             block(expr(assign(field("f_c_out"), lit(2.0)))))
                                          .get(),
                                      /*compareData = */ false));
-
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variables
@@ -271,9 +258,10 @@ TEST(TestRemoveScalars, test_else_01) {
   UnstructuredIIRBuilder b;
   auto f_c = b.field("f_c", ast::LocationType::Cells);
   auto f_c_out = b.field("f_c_out", ast::LocationType::Cells);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)}, iir::LocalVariableType::Scalar);
 
-  /// field(cells) f_c, f_c_out;
+  // field(cells) f_c, f_c_out;
   // double varA = 2.0;
   // if(f_c > 0.0) {
   //
@@ -292,10 +280,8 @@ TEST(TestRemoveScalars, test_else_01) {
                        b.block(b.stmt(b.assignExpr(
                            b.at(f_c_out), b.binaryExpr(b.at(varA), b.lit(1.0), Op::plus))))))))));
 
-  // Setup variables' metadata before running pass
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -309,7 +295,7 @@ TEST(TestRemoveScalars, test_else_01) {
   // Check that there is 1 statement
   ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
 
-  auto firstStatement = getNthStmt(stencil, 0);
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
   // Check that first statement is:
   // if(f_c > 0.0) {
   //
@@ -333,7 +319,8 @@ TEST(TestRemoveScalars, throw_compound_assignments) {
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)}, iir::LocalVariableType::Scalar);
 
   /// field(edges) f_e;
   /// double varA = 1.0;
@@ -348,11 +335,6 @@ TEST(TestRemoveScalars, throw_compound_assignments) {
                                      b.declareVar(varA),
                                      b.stmt(b.assignExpr(b.at(varA), b.lit(3.0), Op::multiply)),
                                      b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
-
-  // Setup variables' metadata before running pass
-  auto& metadata = stencil->getMetaData();
-  int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -370,7 +352,8 @@ TEST(TestRemoveScalars, throw_increment) {
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)}, iir::LocalVariableType::Scalar);
 
   /// field(edges) f_e;
   /// double varA = 1.0;
@@ -384,11 +367,6 @@ TEST(TestRemoveScalars, throw_increment) {
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.unaryExpr(b.at(varA), Op::increment)),
                              b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
-
-  // Setup variables' metadata before running pass
-  auto& metadata = stencil->getMetaData();
-  int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -406,7 +384,8 @@ TEST(TestRemoveScalars, throw_condition_adimensional_01) {
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)}, iir::LocalVariableType::Scalar);
 
   // field(edges) f_e;
   // double varA = 1.0;
@@ -424,11 +403,6 @@ TEST(TestRemoveScalars, throw_condition_adimensional_01) {
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
-  // Setup variables' metadata before running pass
-  auto& metadata = stencil->getMetaData();
-  int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
-
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
   DawnCompiler compiler;
@@ -445,7 +419,8 @@ TEST(TestRemoveScalars, throw_condition_adimensional_02) {
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)}, iir::LocalVariableType::Scalar);
 
   // field(edges) f_e;
   // double varA = 1.0;
@@ -462,11 +437,6 @@ TEST(TestRemoveScalars, throw_condition_adimensional_02) {
                            b.ifStmt(b.binaryExpr(b.lit(1.0), b.lit(1.0), Op::minus),
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
-
-  // Setup variables' metadata before running pass
-  auto& metadata = stencil->getMetaData();
-  int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -485,7 +455,8 @@ TEST(TestRemoveScalars, throw_condition_adimensional_03) {
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
   auto myBool = b.globalvar("myBool", true);
-  auto varA = b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)});
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(1.0)}, iir::LocalVariableType::Scalar);
 
   // field(edges) f_e;
   // global bool myBool = true;
@@ -503,11 +474,6 @@ TEST(TestRemoveScalars, throw_condition_adimensional_03) {
                       dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
                       b.ifStmt(b.at(myBool), b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                       b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
-
-  // Setup variables' metadata before running pass
-  auto& metadata = stencil->getMetaData();
-  int varAID = metadata.getAccessIDFromName("varA");
-  metadata.getLocalVariableDataFromAccessID(varAID).setType(iir::LocalVariableType::Scalar);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 

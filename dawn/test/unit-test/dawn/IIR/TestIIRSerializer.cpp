@@ -25,6 +25,7 @@
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Unittest/IIRBuilder.h"
+#include "dawn/Unittest/UnittestUtils.h"
 #include <gtest/gtest.h>
 #include <memory>
 #include <optional>
@@ -366,31 +367,22 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
   IIRDoMethod->getAST().push_back(std::move(varDeclStmt));
 
-  auto&& getNthChild = [](std::shared_ptr<iir::StencilInstantiation>& si,
-                          int n) -> std::shared_ptr<iir::Stmt> {
-    auto& iir = si->getIIR();
-    auto& stencil = iir->getChild(0);
-    auto& ms = stencil->getChild(0);
-    auto& stage = ms->getChild(0);
-    auto& doMethod = stage->getChild(0);
-    return doMethod->getAST().getStatements()[n];
-  };
-
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   auto deserializedExprStmt =
-      std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0));
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
   deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0))->getExpr());
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0))
+          ->getExpr());
   deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
       std::make_optional<int>(50);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarDeclStmt =
-      std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthChild(deserialized, 1));
+      std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
   deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
 }

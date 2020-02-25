@@ -21,6 +21,8 @@ add_library(DawnUnittest
   UnittestLogger.h
   UnittestStmtSimplifier.h
   UnittestStmtSimplifier.cpp
+  UnittestUtils.h
+  UnittestUtils.cpp
 )
 
 target_add_dawn_standard_props(DawnUnittest)
