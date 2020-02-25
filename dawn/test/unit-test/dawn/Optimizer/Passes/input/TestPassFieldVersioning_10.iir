@@ -1,0 +1,439 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "31": "field_a",
+   "32": "field_b",
+   "58": "__local_TestFunction_58"
+  },
+  "accessIDToType": {
+   "31": 6,
+   "32": 6
+  },
+  "literalIDToName": {
+   "-57": "0"
+  },
+  "fieldAccessIDs": [
+   31,
+   32
+  ],
+  "APIFieldIDs": [
+   31,
+   32
+  ],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {
+   "31": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   },
+   "32": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   }
+  },
+  "idToStencilCall": {
+   "33": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_33",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 34
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": 14,
+   "Column": 8
+  },
+  "stencilName": "Test"
+ },
+ "internalIR": {
+  "gridType": "Cartesian",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "field_b",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 8,
+                    "Column": 5
+                   },
+                   "data": {
+                    "accessID": 32
+                   },
+                   "ID": 64
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "field_access_expr": {
+                   "name": "field_a",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 8,
+                    "Column": 15
+                   },
+                   "data": {
+                    "accessID": 31
+                   },
+                   "ID": 63
+                  }
+                 },
+                 "loc": {
+                  "Line": 8,
+                  "Column": 5
+                 },
+                 "ID": 65
+                }
+               },
+               "loc": {
+                "Line": 8,
+                "Column": 5
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "32": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "31": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 62
+              }
+             },
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "field_a",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 9,
+                    "Column": 5
+                   },
+                   "data": {
+                    "accessID": 31
+                   },
+                   "ID": 68
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "field_access_expr": {
+                   "name": "field_b",
+                   "vertical_offset": 0,
+                   "cartesian_offset": {
+                    "i_offset": 1,
+                    "j_offset": 0
+                   },
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 9,
+                    "Column": 15
+                   },
+                   "data": {
+                    "accessID": 32
+                   },
+                   "ID": 67
+                  }
+                 },
+                 "loc": {
+                  "Line": 9,
+                  "Column": 5
+                 },
+                 "ID": 69
+                }
+               },
+               "loc": {
+                "Line": 9,
+                "Column": 5
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "31": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "32": {
+                   "cartesian_extent": {
+                    "i_extent": {
+                     "minus": 1,
+                     "plus": 1
+                    },
+                    "j_extent": {
+                     "minus": 0,
+                     "plus": 0
+                    }
+                   },
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 66
+              }
+             },
+             {
+              "var_decl_stmt": {
+               "type": {
+                "builtin_type": {
+                 "type_id": "Float"
+                },
+                "is_const": true,
+                "is_volatile": false
+               },
+               "name": "__local_TestFunction_58",
+               "dimension": 0,
+               "op": "=",
+               "init_list": [
+                {
+                 "literal_access_expr": {
+                  "value": "0",
+                  "type": {
+                   "type_id": "Float"
+                  },
+                  "loc": {
+                   "Line": 10,
+                   "Column": 12
+                  },
+                  "data": {
+                   "accessID": -57
+                  },
+                  "ID": 71
+                 }
+                }
+               ],
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "58": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "-57": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "var_decl_stmt_data": {
+                "accessID": 58
+               },
+               "ID": 70
+              }
+             },
+             {
+              "expr_stmt": {
+               "expr": {
+                "var_access_expr": {
+                 "name": "__local_TestFunction_58",
+                 "is_external": false,
+                 "loc": {
+                  "Line": -1,
+                  "Column": -1
+                 },
+                 "data": {
+                  "accessID": 58
+                 },
+                 "ID": 73
+                }
+               },
+               "loc": {
+                "Line": 19,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {},
+                 "readAccess": {
+                  "58": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 72
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 61
+           }
+          },
+          "doMethodID": 0,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 43
+       }
+      ],
+      "loopOrder": "Forward",
+      "multiStageID": 42,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 33,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_33",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 34
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "test.cpp"
+}
