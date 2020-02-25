@@ -309,11 +309,6 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   //===-----------------------------------------------------------------------------------------
   if(shouldRunGroup(options_, options_.MergeTemporaries)) {
     optimizer.pushBackPass<PassTemporaryMerger>();
-    // this should not affect the temporaries but since we're touching them it would probably be a
-    // safe idea
-    optimizer.pushBackPass<PassTemporaryType>();
-    optimizer.pushBackPass<PassLocalVarType>();
-    optimizer.pushBackPass<PassRemoveScalars>();
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
@@ -330,8 +325,6 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
       optimizer.pushBackPass<PassIntervalPartitioning>();
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
-      optimizer.pushBackPass<PassLocalVarType>();
-      optimizer.pushBackPass<PassRemoveScalars>();
       // optimizer.pushBackPass<PassFixVersionedInputFields>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
