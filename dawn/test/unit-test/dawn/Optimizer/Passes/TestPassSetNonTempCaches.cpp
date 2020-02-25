@@ -84,10 +84,6 @@ TEST_F(TestPassSetNonTempCaches, MultipleCaches1) {
       std::make_unique<OptimizerContext>(diag, options_, nullptr);
   context_->getOptions().SetNonTempCaches = true;
   PassSetNonTempCaches pass(*context_);
-  /// Remove this after deserialisation is fixed
-  for(int i = 0; i < 50; ++i) {
-    UIDGenerator::getInstance()->get();
-  }
   pass.run(instantiation);
   ASSERT_EQ(pass.getCachedFieldNames().size(), 1);
 }
