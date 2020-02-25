@@ -15,28 +15,14 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Unittest/IIRBuilder.h"
+#include "dawn/Unittest/UnittestStmtSimplifier.h"
 
 #include <gtest/gtest.h>
 
 using namespace dawn;
+using namespace sirgen;
 
 namespace {
-
-std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> stmt) {
-  if(stmt->getKind() == iir::Stmt::Kind::VarDeclStmt) {
-    const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt);
-    return varDeclStmt->getInitList()[0];
-  } else if(stmt->getKind() == iir::Stmt::Kind::ExprStmt) {
-    const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt);
-    if(exprStmt->getExpr()->getKind() == iir::Expr::Kind::AssignmentExpr) {
-      const auto& assignmentExpr =
-          std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr());
-      return assignmentExpr->getRight();
-    }
-  }
-
-  return nullptr;
-}
 
 iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si) {
   return **iterateIIROver<iir::DoMethod>(*si->getIIR()).begin();
@@ -103,13 +89,8 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is: f_c = 3.0;
-  ASSERT_EQ(firstStatement->getKind(), iir::Stmt::Kind::ExprStmt);
-  ASSERT_TRUE(getRhsOfAssignment(firstStatement));
-  ASSERT_EQ(getRhsOfAssignment(firstStatement)->getKind(), iir::Expr::Kind::LiteralAccessExpr);
-  ASSERT_EQ(std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(
-                          getRhsOfAssignment(firstStatement))
-                          ->getValue()),
-            3.0);
+  ASSERT_TRUE(firstStatement->equals(expr(assign(field("f_c"), lit(3.0))).get(),
+                                     /*compareData = */ false));
   // Check that variable's metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variable
@@ -166,26 +147,9 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is: f_c = 5.0 + (3.0 + 1.0);
-  ASSERT_EQ(firstStatement->getKind(), iir::Stmt::Kind::ExprStmt);
-  auto rhs = getRhsOfAssignment(firstStatement);
-  ASSERT_TRUE(rhs);
-  ASSERT_EQ(rhs->getKind(), iir::Expr::Kind::BinaryOperator);
-  auto binOpExt = std::dynamic_pointer_cast<iir::BinaryOperator>(rhs);
-  ASSERT_EQ(binOpExt->getOp(), "+");
-  ASSERT_EQ(binOpExt->getLeft()->getKind(), iir::Expr::Kind::LiteralAccessExpr);
-  ASSERT_EQ(
-      std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOpExt->getLeft())->getValue()),
-      5.0);
-  ASSERT_EQ(binOpExt->getRight()->getKind(), iir::Expr::Kind::BinaryOperator);
-  auto binOpInt = std::dynamic_pointer_cast<iir::BinaryOperator>(binOpExt->getRight());
-  ASSERT_EQ(binOpInt->getOp(), "+");
-  ASSERT_EQ(
-      std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOpInt->getLeft())->getValue()),
-      3.0);
-  ASSERT_EQ(
-      std::stof(
-          std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOpInt->getRight())->getValue()),
-      1.0);
+  ASSERT_TRUE(firstStatement->equals(
+      expr(assign(field("f_c"), binop(lit(5.0), "+", binop(lit(3.0), "+", lit(1.0))))).get(),
+      /*compareData = */ false));
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varBID), 0);
@@ -236,21 +200,9 @@ TEST(TestRemoveScalars, test_global_01) {
 
   auto firstStatement = getNthStmt(stencil, 0);
   // Check that first statement is: f_c = pi * 2.0;
-  ASSERT_EQ(firstStatement->getKind(), iir::Stmt::Kind::ExprStmt);
-  auto rhs = getRhsOfAssignment(firstStatement);
-  ASSERT_TRUE(rhs);
-  ASSERT_EQ(rhs->getKind(), iir::Expr::Kind::BinaryOperator);
-  auto binOp = std::dynamic_pointer_cast<iir::BinaryOperator>(rhs);
-  ASSERT_EQ(binOp->getOp(), "*");
-  ASSERT_EQ(binOp->getLeft()->getKind(), iir::Expr::Kind::VarAccessExpr);
-  auto globalAccess = std::dynamic_pointer_cast<iir::VarAccessExpr>(binOp->getLeft());
-  ASSERT_TRUE(globalAccess->isExternal());
-  ASSERT_EQ(globalAccess->getName(), "pi");
-  ASSERT_EQ(binOp->getRight()->getKind(), iir::Expr::Kind::LiteralAccessExpr);
-  ASSERT_EQ(
-      std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOp->getRight())->getValue()),
-      2.0);
-
+  ASSERT_TRUE(
+      firstStatement->equals(expr(assign(field("f_c"), binop(global("pi"), "*", lit(2.0)))).get(),
+                             /*compareData = */ false));
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
   // Check that statements' accesses do not contain the variables
@@ -302,15 +254,10 @@ TEST(TestRemoveScalars, test_if_01) {
   // if(f_c > 0.0) {
   //   f_c_out = 2.0;
   // }
-  ASSERT_EQ(firstStatement->getKind(), iir::Stmt::Kind::IfStmt);
-  auto ifStmt = std::dynamic_pointer_cast<iir::IfStmt>(firstStatement);
-  ASSERT_EQ(ifStmt->getThenStmt()->getKind(), iir::Stmt::Kind::BlockStmt);
-  auto blk = std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getThenStmt());
-  ASSERT_EQ(blk->getStatements().size(), 1);
-  auto rhs = getRhsOfAssignment(blk->getStatements()[0]);
-  ASSERT_TRUE(rhs);
-  ASSERT_EQ(rhs->getKind(), iir::Expr::Kind::LiteralAccessExpr);
-  ASSERT_EQ(std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(rhs)->getValue()), 2.0);
+  ASSERT_TRUE(firstStatement->equals(ifstmt(expr(binop(field("f_c"), ">", lit(0.0))),
+                                            block(expr(assign(field("f_c_out"), lit(2.0)))))
+                                         .get(),
+                                     /*compareData = */ false));
 
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
@@ -369,20 +316,11 @@ TEST(TestRemoveScalars, test_else_01) {
   // } else {
   //   f_c_out = 2.0 + 1.0;
   // }
-  ASSERT_EQ(firstStatement->getKind(), iir::Stmt::Kind::IfStmt);
-  auto ifStmt = std::dynamic_pointer_cast<iir::IfStmt>(firstStatement);
-  ASSERT_TRUE(ifStmt->hasElse());
-  ASSERT_EQ(ifStmt->getElseStmt()->getKind(), iir::Stmt::Kind::BlockStmt);
-  auto blk = std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getElseStmt());
-  ASSERT_EQ(blk->getStatements().size(), 1);
-  auto rhs = getRhsOfAssignment(blk->getStatements()[0]);
-  ASSERT_TRUE(rhs);
-  ASSERT_EQ(rhs->getKind(), iir::Expr::Kind::BinaryOperator);
-  auto binOp = std::dynamic_pointer_cast<iir::BinaryOperator>(rhs);
-  ASSERT_EQ(binOp->getOp(), "+");
-  ASSERT_EQ(
-      std::stof(std::dynamic_pointer_cast<iir::LiteralAccessExpr>(binOp->getLeft())->getValue()),
-      2.0);
+  ASSERT_TRUE(firstStatement->equals(
+      ifstmt(expr(binop(field("f_c"), ">", lit(0.0))), block(),
+             block(expr(assign(field("f_c_out"), binop(lit(2.0), "+", lit(1.0))))))
+          .get(),
+      /*compareData = */ false));
 
   // Check that variables' metadata is gone
   ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);

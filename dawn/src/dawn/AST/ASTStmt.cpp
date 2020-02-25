@@ -68,12 +68,13 @@ void BlockStmt::substitute(StmtConstIterator position, std::shared_ptr<Stmt>&& r
 
 std::shared_ptr<Stmt> BlockStmt::clone() const { return std::make_shared<BlockStmt>(*this); }
 
-bool BlockStmt::equals(const Stmt* other) const {
+bool BlockStmt::equals(const Stmt* other, bool compareData) const {
   const BlockStmt* otherPtr = dyn_cast<BlockStmt>(other);
-  return otherPtr && Stmt::equals(other) && otherPtr->statements_.size() == statements_.size() &&
+  return otherPtr && Stmt::equals(other, compareData) &&
+         otherPtr->statements_.size() == statements_.size() &&
          std::equal(statements_.begin(), statements_.end(), otherPtr->statements_.begin(),
-                    [](const std::shared_ptr<Stmt>& a, const std::shared_ptr<Stmt>& b) {
-                      return a->equals(b.get());
+                    [compareData](const std::shared_ptr<Stmt>& a, const std::shared_ptr<Stmt>& b) {
+                      return a->equals(b.get(), compareData);
                     });
 }
 
@@ -105,9 +106,10 @@ ExprStmt::~ExprStmt() {}
 
 std::shared_ptr<Stmt> ExprStmt::clone() const { return std::make_shared<ExprStmt>(*this); }
 
-bool ExprStmt::equals(const Stmt* other) const {
+bool ExprStmt::equals(const Stmt* other, bool compareData) const {
   const ExprStmt* otherPtr = dyn_cast<ExprStmt>(other);
-  return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
+  return otherPtr && Stmt::equals(other, compareData) &&
+         expr_->equals(otherPtr->expr_.get(), compareData);
 }
 
 void ExprStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
@@ -137,9 +139,10 @@ ReturnStmt::~ReturnStmt() {}
 
 std::shared_ptr<Stmt> ReturnStmt::clone() const { return std::make_shared<ReturnStmt>(*this); }
 
-bool ReturnStmt::equals(const Stmt* other) const {
+bool ReturnStmt::equals(const Stmt* other, bool compareData) const {
   const ReturnStmt* otherPtr = dyn_cast<ReturnStmt>(other);
-  return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
+  return otherPtr && Stmt::equals(other, compareData) &&
+         expr_->equals(otherPtr->expr_.get(), compareData);
 }
 
 void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
@@ -179,14 +182,14 @@ VarDeclStmt::~VarDeclStmt() {}
 
 std::shared_ptr<Stmt> VarDeclStmt::clone() const { return std::make_shared<VarDeclStmt>(*this); }
 
-bool VarDeclStmt::equals(const Stmt* other) const {
+bool VarDeclStmt::equals(const Stmt* other, bool compareData) const {
   const VarDeclStmt* otherPtr = dyn_cast<VarDeclStmt>(other);
-  return otherPtr && Stmt::equals(other) && type_ == otherPtr->type_ && name_ == otherPtr->name_ &&
-         dimension_ == otherPtr->dimension_ && op_ == otherPtr->op_ &&
+  return otherPtr && Stmt::equals(other, compareData) && type_ == otherPtr->type_ &&
+         name_ == otherPtr->name_ && dimension_ == otherPtr->dimension_ && op_ == otherPtr->op_ &&
          initList_.size() == otherPtr->initList_.size() &&
          std::equal(initList_.begin(), initList_.end(), otherPtr->initList_.begin(),
-                    [](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
-                      return a->equals(b.get());
+                    [compareData](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
+                      return a->equals(b.get(), compareData);
                     });
 }
 
@@ -223,9 +226,9 @@ std::shared_ptr<Stmt> VerticalRegionDeclStmt::clone() const {
   return std::make_shared<VerticalRegionDeclStmt>(*this);
 }
 
-bool VerticalRegionDeclStmt::equals(const Stmt* other) const {
+bool VerticalRegionDeclStmt::equals(const Stmt* other, bool compareData) const {
   const VerticalRegionDeclStmt* otherPtr = dyn_cast<VerticalRegionDeclStmt>(other);
-  return otherPtr && Stmt::equals(other) &&
+  return otherPtr && Stmt::equals(other, compareData) &&
          *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
 
@@ -287,7 +290,7 @@ std::shared_ptr<Stmt> StencilCallDeclStmt::clone() const {
   return std::make_shared<StencilCallDeclStmt>(*this);
 }
 
-bool StencilCallDeclStmt::equals(const Stmt* other) const {
+bool StencilCallDeclStmt::equals(const Stmt* other, bool compareData) const {
   const StencilCallDeclStmt* otherPtr = dyn_cast<StencilCallDeclStmt>(other);
   if(otherPtr) {
     if(stencilCall_) {
@@ -296,7 +299,7 @@ bool StencilCallDeclStmt::equals(const Stmt* other) const {
         return false;
       }
     }
-    return Stmt::equals(other);
+    return Stmt::equals(other, compareData);
   }
   return false;
 }
@@ -325,9 +328,9 @@ std::shared_ptr<Stmt> BoundaryConditionDeclStmt::clone() const {
   return std::make_shared<BoundaryConditionDeclStmt>(*this);
 }
 
-bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
+bool BoundaryConditionDeclStmt::equals(const Stmt* other, bool compareData) const {
   const BoundaryConditionDeclStmt* otherPtr = dyn_cast<BoundaryConditionDeclStmt>(other);
-  return otherPtr && Stmt::equals(other) && functor_ == otherPtr->functor_ &&
+  return otherPtr && Stmt::equals(other, compareData) && functor_ == otherPtr->functor_ &&
          fields_.size() == otherPtr->fields_.size() &&
          std::equal(fields_.begin(), fields_.end(), otherPtr->fields_.begin(),
                     [](const std::string& a, const std::string& b) { return a == b; });
@@ -362,16 +365,19 @@ IfStmt::~IfStmt() {}
 
 std::shared_ptr<Stmt> IfStmt::clone() const { return std::make_shared<IfStmt>(*this); }
 
-bool IfStmt::equals(const Stmt* other) const {
+bool IfStmt::equals(const Stmt* other, bool compareData) const {
   const IfStmt* otherPtr = dyn_cast<IfStmt>(other);
   bool sameElse;
   if(hasElse() && otherPtr->hasElse())
-    sameElse = subStmts_[OperandKind::Else]->equals(otherPtr->subStmts_[OperandKind::Else].get());
+    sameElse = subStmts_[OperandKind::Else]->equals(otherPtr->subStmts_[OperandKind::Else].get(),
+                                                    compareData);
   else
     sameElse = !(hasElse() ^ otherPtr->hasElse());
-  return otherPtr && Stmt::equals(other) &&
-         subStmts_[OperandKind::Cond]->equals(otherPtr->subStmts_[OperandKind::Cond].get()) &&
-         subStmts_[OperandKind::Then]->equals(otherPtr->subStmts_[OperandKind::Then].get()) &&
+  return otherPtr && Stmt::equals(other, compareData) &&
+         subStmts_[OperandKind::Cond]->equals(otherPtr->subStmts_[OperandKind::Cond].get(),
+                                              compareData) &&
+         subStmts_[OperandKind::Then]->equals(otherPtr->subStmts_[OperandKind::Then].get(),
+                                              compareData) &&
          sameElse;
 }
 void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,

@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang/Unittest/UnittestStmtSimplifier.h"
+#include "dawn/Unittest/UnittestStmtSimplifier.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 
-namespace gtclang {
+namespace dawn {
 namespace sirgen {
 
 static dawn::Type stringToType(const std::string& typestring) {
@@ -114,6 +114,17 @@ std::shared_ptr<dawn::sir::VarAccessExpr> var(const std::string& name,
   return std::make_shared<dawn::sir::VarAccessExpr>(name, index);
 }
 
+std::shared_ptr<dawn::sir::VarAccessExpr> global(const std::string& name,
+                                                 std::shared_ptr<dawn::sir::Expr> index) {
+  auto expr = std::make_shared<dawn::sir::VarAccessExpr>(name, index);
+  expr->setIsExternal(true);
+  return expr;
+}
+
+std::shared_ptr<dawn::sir::FieldAccessExpr> field(const std::string& name) {
+  return std::make_shared<dawn::sir::FieldAccessExpr>(name, dawn::ast::Offsets{});
+}
+
 std::shared_ptr<dawn::sir::FieldAccessExpr> field(const std::string& name, dawn::Array3i offset,
                                                   dawn::Array3i argumentMap,
                                                   dawn::Array3i argumentOffset, bool negateOffset) {
@@ -127,6 +138,11 @@ std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(const std::string& value,
   return std::make_shared<dawn::sir::LiteralAccessExpr>(value, builtinType);
 }
 
+std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(const char* value,
+                                                  dawn::BuiltinTypeID builtinType) {
+  return lit(std::string(value), builtinType);
+}
+
 } // namespace sirgen
 
-} // namespace gtclang
+} // namespace dawn

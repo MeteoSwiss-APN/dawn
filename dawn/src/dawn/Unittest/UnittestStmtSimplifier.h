@@ -17,9 +17,10 @@
 
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
+#include "dawn/SIR/SIR.h"
 #include <memory>
 
-namespace gtclang {
+namespace dawn {
 
 namespace sirgen {
 
@@ -38,6 +39,8 @@ public:
   }
 
   void recursiveBlock() {}
+
+  const std::vector<std::shared_ptr<dawn::sir::Stmt>>& createVec() { return storage_; }
 
   template <typename... Args>
   const std::vector<std::shared_ptr<dawn::sir::Stmt>>&
@@ -106,16 +109,28 @@ std::shared_ptr<dawn::sir::StencilFunCallExpr> sfcall(const std::string& calee);
 std::shared_ptr<dawn::sir::StencilFunArgExpr> arg(int direction, int offset, int argumentIndex);
 std::shared_ptr<dawn::sir::VarAccessExpr> var(const std::string& name,
                                               std::shared_ptr<dawn::sir::Expr> index = nullptr);
+std::shared_ptr<dawn::sir::VarAccessExpr> global(const std::string& name,
+                                                 std::shared_ptr<dawn::sir::Expr> index = nullptr);
+std::shared_ptr<dawn::sir::FieldAccessExpr> field(const std::string& name);
 std::shared_ptr<dawn::sir::FieldAccessExpr>
-field(const std::string& name, dawn::Array3i offset = dawn::Array3i{{0, 0, 0}},
+field(const std::string& name, dawn::Array3i offset,
       dawn::Array3i argumentMap = dawn::Array3i{{-1, -1, -1}},
       dawn::Array3i argumentOffset = dawn::Array3i{{0, 0, 0}}, bool negateOffset = false);
 std::shared_ptr<dawn::sir::LiteralAccessExpr>
 lit(const std::string& value, dawn::BuiltinTypeID builtinType = dawn::BuiltinTypeID::Integer);
+std::shared_ptr<dawn::sir::LiteralAccessExpr>
+lit(const char* value, dawn::BuiltinTypeID builtinType = dawn::BuiltinTypeID::Integer);
+template <typename T>
+std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(T&& value) {
+  return std::make_shared<dawn::sir::LiteralAccessExpr>(
+      std::to_string(std::forward<T>(value)),
+      dawn::sir::Value::typeToBuiltinTypeID(
+          dawn::sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
+}
 /// @}
 
 } // namespace sirgen
 
-} // namespace gtclang
+} // namespace dawn
 
 #endif

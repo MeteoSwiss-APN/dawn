@@ -116,8 +116,9 @@ public:
                                std::shared_ptr<Stmt> const& newStmt) {}
 
   /// @brief Compare for equality
-  virtual bool equals(const Stmt* other) const {
-    return kind_ == other->kind_ && checkSameDataType(*other) && data_->equals(other->data_.get());
+  virtual bool equals(const Stmt* other, bool compareData = true) const {
+    return kind_ == other->kind_ &&
+           (compareData ? checkSameDataType(*other) && data_->equals(other->data_.get()) : true);
   }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++
@@ -223,7 +224,7 @@ public:
   const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
@@ -265,7 +266,7 @@ public:
 #pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::ExprStmt; }
   ACCEPTVISITOR(Stmt, ExprStmt)
 };
@@ -300,7 +301,7 @@ public:
 #pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::ReturnStmt; }
   ACCEPTVISITOR(Stmt, ReturnStmt)
 };
@@ -346,7 +347,7 @@ public:
 #pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VarDeclStmt; }
   ACCEPTVISITOR(Stmt, VarDeclStmt)
 
@@ -386,7 +387,7 @@ public:
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VerticalRegionDeclStmt; }
   ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
 };
@@ -437,7 +438,7 @@ public:
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::StencilCallDeclStmt; }
   ACCEPTVISITOR(Stmt, StencilCallDeclStmt)
 };
@@ -469,7 +470,7 @@ public:
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) {
     return stmt->getKind() == Kind::BoundaryConditionDeclStmt;
   }
@@ -528,7 +529,7 @@ public:
   }
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::IfStmt; }
   virtual StmtRangeType getChildren() override {
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], End - 1);

@@ -14,12 +14,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Unittest/UnittestStmtSimplifier.h"
 #include "gtclang/Unittest/ParsingComparison.h"
-#include "gtclang/Unittest/UnittestStmtSimplifier.h"
 #include <fstream>
 #include <gtest/gtest.h>
 
 using namespace gtclang;
+using namespace dawn;
 using namespace sirgen;
 
 namespace {
