@@ -109,12 +109,6 @@ void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
   }
 }
 
-static void checkAndUpdateMaxID(int newID, int& maxID) {
-  if(std::abs(newID) > maxID) {
-    maxID = std::abs(newID);
-  }
-}
-
 } // namespace
 
 proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType) {
@@ -829,7 +823,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     auto expr = std::make_shared<UnaryOperator>(makeExpr(exprProto.operand(), dataType, maxID),
                                                 exprProto.op(), makeLocation(exprProto));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kBinaryOperator: {
@@ -838,7 +832,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
         makeExpr(exprProto.left(), dataType, maxID), exprProto.op(),
         makeExpr(exprProto.right(), dataType, maxID), makeLocation(exprProto));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kAssignmentExpr: {
@@ -847,7 +841,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
                                                  makeExpr(exprProto.right(), dataType, maxID),
                                                  exprProto.op(), makeLocation(exprProto));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kTernaryOperator: {
@@ -856,7 +850,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
         makeExpr(exprProto.cond(), dataType, maxID), makeExpr(exprProto.left(), dataType, maxID),
         makeExpr(exprProto.right(), dataType, maxID), makeLocation(exprProto));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kFunCallExpr: {
@@ -865,7 +859,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     for(const auto& argProto : exprProto.arguments())
       expr->getArguments().emplace_back(makeExpr(argProto, dataType, maxID));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kStencilFunCallExpr: {
@@ -874,7 +868,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     for(const auto& argProto : exprProto.arguments())
       expr->getArguments().emplace_back(makeExpr(argProto, dataType, maxID));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kStencilFunArgExpr: {
@@ -903,7 +897,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     auto expr = std::make_shared<StencilFunArgExpr>(direction, offset, argumentIndex,
                                                     makeLocation(exprProto));
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kVarAccessExpr: {
@@ -916,7 +910,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kFieldAccessExpr: {
@@ -974,7 +968,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kLiteralAccessExpr: {
@@ -984,7 +978,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(dataType == StmtData::IIR_DATA_TYPE)
       fillAccessExprDataFromProto(expr->getData<iir::IIRAccessExprData>(), exprProto.data());
     expr->setID(exprProto.id());
-    checkAndUpdateMaxID(exprProto.id(), maxID);
+    maxID = std::max(std::abs(exprProto.id()), maxID);
     return expr;
   }
   case proto::statements::Expr::kReductionOverNeighborExpr: {
@@ -1047,7 +1041,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     for(const auto& s : stmtProto.statements())
       stmt->push_back(makeStmt(s, dataType, maxID));
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::kExprStmt: {
@@ -1056,7 +1050,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
                                            makeExpr(stmtProto.expr(), dataType, maxID),
                                            makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::kReturnStmt: {
@@ -1065,7 +1059,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
                                              makeExpr(stmtProto.expr(), dataType, maxID),
                                              makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::kVarDeclStmt: {
@@ -1089,7 +1083,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
         stmtProto.name(), stmtProto.dimension(), stmtProto.op().c_str(), initList,
         makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::kStencilCallDeclStmt: {
@@ -1104,7 +1098,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto stmt =
         std::make_shared<StencilCallDeclStmt>(makeData(dataType, stmtProto.data()), call, metaloc);
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::kVerticalRegionDeclStmt: {
@@ -1128,7 +1122,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType, stmtProto.data()),
                                                          verticalRegion, loc);
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     if(stmtProto.vertical_region().has_i_range()) {
       auto range = stmtProto.vertical_region().i_range();
       verticalRegion->IterationSpace[0] = *makeInterval(range);
@@ -1147,7 +1141,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     for(const auto& fieldName : stmtProto.fields())
       stmt->getFields().emplace_back(fieldName);
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::kIfStmt: {
@@ -1158,7 +1152,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
         stmtProto.has_else_part() ? makeStmt(stmtProto.else_part(), dataType, maxID) : nullptr,
         makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
-    checkAndUpdateMaxID(stmtProto.id(), maxID);
+    maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
   }
   case proto::statements::Stmt::STMT_NOT_SET:
