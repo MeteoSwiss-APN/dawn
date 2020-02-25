@@ -21,6 +21,8 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/UIDGenerator.h"
+#include <cmath>
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <memory>
@@ -149,6 +151,12 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
 static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
   for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+}
+
+static void checkAndUpdateMaxID(int newID, int& maxID) {
+  if(std::abs(newID) > maxID) {
+    maxID = std::abs(newID);
   }
 }
 
@@ -466,56 +474,70 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
 }
 
 void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiation>& target,
-                                        const proto::iir::StencilMetaInfo& protoMetaData) {
+                                        const proto::iir::StencilMetaInfo& protoMetaData,
+                                        int& maxID) {
   auto& metadata = target->getMetaData();
   for(auto IDtoName : protoMetaData.accessidtoname()) {
     metadata.addAccessIDNamePair(IDtoName.first, IDtoName.second);
+    checkAndUpdateMaxID(IDtoName.first, maxID);
   }
 
   for(auto accessIDTypePair : protoMetaData.accessidtotype()) {
     metadata.fieldAccessMetadata_.accessIDType_.emplace(
         accessIDTypePair.first, (iir::FieldAccessType)accessIDTypePair.second);
+    checkAndUpdateMaxID(accessIDTypePair.first, maxID);
   }
 
   for(auto literalIDToName : protoMetaData.literalidtoname()) {
     metadata.fieldAccessMetadata_.LiteralAccessIDToNameMap_[literalIDToName.first] =
         literalIDToName.second;
+    checkAndUpdateMaxID(literalIDToName.first, maxID);
   }
   for(auto fieldaccessID : protoMetaData.fieldaccessids()) {
     metadata.fieldAccessMetadata_.FieldAccessIDSet_.insert(fieldaccessID);
+    checkAndUpdateMaxID(fieldaccessID, maxID);
   }
   for(auto ApiFieldID : protoMetaData.apifieldids()) {
     metadata.fieldAccessMetadata_.apiFieldIDs_.push_back(ApiFieldID);
+    checkAndUpdateMaxID(ApiFieldID, maxID);
   }
   for(auto temporaryFieldID : protoMetaData.temporaryfieldids()) {
     metadata.fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(temporaryFieldID);
+    checkAndUpdateMaxID(temporaryFieldID, maxID);
   }
   for(auto globalVariableID : protoMetaData.globalvariableids()) {
     metadata.fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(globalVariableID);
+    checkAndUpdateMaxID(globalVariableID, maxID);
   }
   for(auto allocatedFieldID : protoMetaData.allocatedfieldids()) {
     metadata.fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(allocatedFieldID);
+    checkAndUpdateMaxID(allocatedFieldID, maxID);
   }
 
   for(auto variableVersionMap : protoMetaData.versionedfields().variableversionmap()) {
     for(auto versionedID : variableVersionMap.second.allids()) {
       metadata.addFieldVersionIDPair(variableVersionMap.first, versionedID);
+      checkAndUpdateMaxID(versionedID, maxID);
     }
   }
 
   struct DeclStmtFinder : public iir::ASTVisitorForwarding {
+    DeclStmtFinder(int& maxid) : maxID(maxid) {}
     void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
       stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
+      checkAndUpdateMaxID(stmt->getID(), maxID);
       ASTVisitorForwarding::visit(stmt);
     }
     void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
       boundaryConditionDecl.insert(std::make_pair(stmt->getID(), stmt));
+      checkAndUpdateMaxID(stmt->getID(), maxID);
       ASTVisitorForwarding::visit(stmt);
     }
     std::map<int, std::shared_ptr<iir::StencilCallDeclStmt>> stencilCallDecl;
     std::map<int, std::shared_ptr<iir::BoundaryConditionDeclStmt>> boundaryConditionDecl;
+    int& maxID;
   };
-  DeclStmtFinder declStmtFinder;
+  DeclStmtFinder declStmtFinder(maxID);
   for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements())
     stmt->accept(declStmtFinder);
 
@@ -530,12 +552,15 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
     auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
     stmt->setID(call.stencil_call_decl_stmt().id());
+    checkAndUpdateMaxID(call.stencil_call_decl_stmt().id(), maxID);
     metadata.addStencilCallStmt(stmt, IDToCall.first);
+    checkAndUpdateMaxID(IDToCall.first, maxID);
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
     auto foundDecl = declStmtFinder.boundaryConditionDecl.find(
         FieldnameToBC.second.boundary_condition_decl_stmt().id());
+    checkAndUpdateMaxID(FieldnameToBC.second.boundary_condition_decl_stmt().id(), maxID);
 
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
         foundDecl != declStmtFinder.boundaryConditionDecl.end()
@@ -547,6 +572,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtodimensions()) {
     metadata.fieldIDToInitializedDimensionsMap_.emplace(
         fieldIDInitializedDims.first, makeFieldDimensions(fieldIDInitializedDims.second));
+    checkAndUpdateMaxID(fieldIDInitializedDims.first, maxID);
   }
 
   for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())
@@ -561,7 +587,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 }
 
 void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
-                                   const proto::iir::IIR& protoIIR) {
+                                   const proto::iir::IIR& protoIIR, int& maxID) {
   for(auto GlobalToValue : protoIIR.globalvariabletovalue()) {
     std::shared_ptr<sir::Global> value;
     switch(GlobalToValue.second.type()) {
@@ -731,9 +757,11 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
     dawn_unreachable("unknown grid type");
   }
 
-  deserializeIIR(target, (protoStencilInstantiation.internalir()));
-  deserializeMetaData(target, (protoStencilInstantiation.metadata()));
+  int maxID = 0;
+  deserializeIIR(target, (protoStencilInstantiation.internalir()), maxID);
+  deserializeMetaData(target, (protoStencilInstantiation.metadata()), maxID);
   target->getMetaData().fileName_ = protoStencilInstantiation.filename();
+  UIDGenerator::getInstance()->set(maxID + 1);
   computeInitialDerivedInfo(target);
 
   return target;
