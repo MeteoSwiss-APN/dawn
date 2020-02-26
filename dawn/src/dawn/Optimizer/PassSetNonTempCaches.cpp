@@ -23,7 +23,7 @@
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
+
 #include <set>
 #include <vector>
 
