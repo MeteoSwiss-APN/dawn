@@ -34,9 +34,9 @@
 
 OPT(int, MaxHaloPoints, 3, "max-halo", "",
     "Set the maximum number of allowed halo points", "<N>", true, false)
-OPT(int, block_size_i, 0, "block-size-i", "", "i block size for tiled computations", "", true, false)
-OPT(int, block_size_j, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
-OPT(int, block_size_k, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
+OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations", "", true, false)
+OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
+OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
 OPT(bool, DefaultNone, false, "default-none", "",
     "Selectively run passes", "", false, true)
