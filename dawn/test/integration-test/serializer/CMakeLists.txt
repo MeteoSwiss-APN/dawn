@@ -14,12 +14,11 @@
 include(GoogleTest)
 
 add_executable(${PROJECT_NAME}IntegrationTest
-  TestMain.cpp
   TestIIRDeserializer.cpp
   GenerateInMemoryStencils.cpp
 )
 target_add_dawn_standard_props(${PROJECT_NAME}IntegrationTest)
-target_link_libraries(${PROJECT_NAME}IntegrationTest Dawn DawnUnittest gtest)
+target_link_libraries(${PROJECT_NAME}IntegrationTest Dawn DawnUnittest gtest gtest_main)
 set_target_properties(${PROJECT_NAME}IntegrationTest PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 gtest_discover_tests(${PROJECT_NAME}IntegrationTest TEST_PREFIX "Dawn::Integration::" DISCOVERY_TIMEOUT 30)

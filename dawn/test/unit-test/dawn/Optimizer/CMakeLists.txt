@@ -20,10 +20,9 @@ add_executable(${executable}
   TestGraph.cpp
   TestIsDAGAlgorithm.cpp
   TestPartitionAlgorithm.cpp
-  TestMain.cpp
   TestSCCAlgorithm.cpp
 )
-target_link_libraries(${executable} PRIVATE DawnOptimizer DawnUnittest gtest)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::" DISCOVERY_TIMEOUT 30)
 
