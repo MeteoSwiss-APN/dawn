@@ -38,11 +38,16 @@ protected:
   explicit TestPassStageReordering() {
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
+    dawn::UIDGenerator::getInstance()->reset();
   }
 
   void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {
-    dawn::UIDGenerator::getInstance()->reset();
-    auto instantiation = IIRSerializer::deserialize(filename);
+    std::string filepath = filename;
+    if(!TestEnvironment::path_.empty()) {
+      filepath = TestEnvironment::path_ + "/" + filepath;
+    }
+
+    auto instantiation = IIRSerializer::deserialize(filepath);
 
     // Run stage splitter pass
     PassStageSplitter stageSplitPass(*context_);
