@@ -33,20 +33,12 @@ protected:
   }
 };
 
-TEST_F(TestSIRFrontend, TridiagonalSolve) {
-  runTest("input/tridiagonal_solve");
-}
+TEST_F(TestSIRFrontend, TridiagonalSolve) { runTest("input/tridiagonal_solve"); }
 
-TEST_F(TestSIRFrontend, HorizontalDifference) {
-  runTest("input/horizontal_difference");
-}
+TEST_F(TestSIRFrontend, HorizontalDifference) { runTest("input/horizontal_difference"); }
 
-TEST_F(TestSIRFrontend, Coriolis) {
-  runTest("input/coriolis_stencil");
-}
+TEST_F(TestSIRFrontend, Coriolis) { runTest("input/coriolis_stencil"); }
 
-TEST_F(TestSIRFrontend, DISABLED_BurgersDemo) {
-  runTest("input/burgers_demo");
-}
+TEST_F(TestSIRFrontend, DISABLED_BurgersDemo) { runTest("input/burgers_demo"); }
 
 } // namespace
