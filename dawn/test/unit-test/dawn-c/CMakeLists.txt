@@ -15,11 +15,10 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}CUnittest)
 add_executable(${executable}
-  TestMain.cpp
   TestOptions.cpp
   TestCompiler.cpp
 )
 
 target_add_dawn_standard_props(${executable})
-target_link_libraries(${executable} DawnC DawnUnittest gtest)
+target_link_libraries(${executable} DawnC DawnUnittest gtest gtest_main)
 gtest_discover_tests(${executable} TEST_PREFIX "DawnC::Unit::" DISCOVERY_TIMEOUT 30)

@@ -19,7 +19,6 @@
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
-#include "dawn/Unittest/UnittestLogger.h"
 
 #include <gtest/gtest.h>
 
