@@ -355,6 +355,31 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     // synchronize storages method
 
+    // accumulated extents of API fields
+
+    auto extent_to_string = [](auto extents) {
+      return std::to_string(extents.verticalExtent().minus());
+    };
+
+    auto extent_per_field =
+        [&](Structure& stencilClass,
+            IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields) {
+          if(!(nonTempFields.empty())) {
+            for(const auto& [_ignored, fieldInfo] : nonTempFields) {
+              // std::cout << fieldInfo.Name << "(RB): " << fieldInfo.field.getExtentsRB()
+              //           << std::endl;
+              // std::cout << fieldInfo.Name << "    : " << fieldInfo.field.getExtents() <<
+              // std::endl;
+
+              stencilClass.addStatement("std::array<std::array<int,2>,3> " + fieldInfo.Name +
+                                        "_extent = {" +
+                                        extent_to_string(fieldInfo.field.getExtentsRB()) + "}");
+            }
+          }
+        };
+
+    extent_per_field(stencilClass, nonTempFields);
+
     //
     // Run-Method
     //
