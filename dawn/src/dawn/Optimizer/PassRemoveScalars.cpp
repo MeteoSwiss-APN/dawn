@@ -19,6 +19,7 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Support/Logging.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -106,10 +107,7 @@ std::shared_ptr<iir::Expr> getRhsOfAssignment(const std::shared_ptr<iir::Stmt> s
   } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
     if(const auto& assignmentExpr =
            std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
-      if(assignmentExpr->getOp() != "=") {
-        throw std::runtime_error(dawn::format("Compound assignment not supported at line %d",
-                                              assignmentExpr->getSourceLocation().Line));
-      }
+
       return assignmentExpr->getRight();
     }
   }
@@ -134,23 +132,12 @@ void removeScalarsFromBlockStmt(
                std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
 
           assignmentExpr->getRight() = assignmentExpr->getRight()->acceptAndReplace(replacer);
-
-        } else if(exprStmt->getExpr()->getKind() != iir::Expr::Kind::StencilFunCallExpr) {
-          throw std::runtime_error(dawn::format("Unsupported statement at line %d",
-                                                exprStmt->getSourceLocation().Line)); // e.g. i++;
         }
       }
     }
     // Need to treat if statements differently. There are block statements inside.
     if(const std::shared_ptr<iir::IfStmt> ifStmt =
            std::dynamic_pointer_cast<iir::IfStmt>(*stmtIt)) {
-      // TODO: change to assert once we have a pass to transform from the if construct to ternary
-      // operators.
-      if(isExprScalar(ifStmt->getCondExpr(), metadata)) {
-        throw std::runtime_error(
-            dawn::format("If-condition is scalar at line %d. It is not yet supported.",
-                         ifStmt->getSourceLocation().Line));
-      }
 
       DAWN_ASSERT_MSG(ifStmt->getThenStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
                       "Then statement must be a block statement.");
@@ -195,11 +182,42 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
 }
 } // namespace
 
+bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
+                            const iir::StencilMetaInformation& metadata) {
+  if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+    if(const auto& assignmentExpr =
+           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+      if(assignmentExpr->getOp() != "=") { // Compound assignment
+        return true;
+      }
+    } else if(exprStmt->getExpr()->getKind() ==
+              iir::Expr::Kind::UnaryOperator) { // Increment / decrement ops
+      return true;
+    }
+  } else if(const std::shared_ptr<iir::IfStmt> ifStmt =
+                std::dynamic_pointer_cast<iir::IfStmt>(stmt)) {
+    if(isExprScalar(ifStmt->getCondExpr(), metadata)) {
+      return true;
+    }
+    for(const auto& subStmt : ifStmt->getChildren()) {
+      if(isStatementUnsupported(subStmt, metadata)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 bool PassRemoveScalars::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  // TODO: add support for cartesian
-  if(stencilInstantiation->getIIR()->getGridType() == ast::GridType::Cartesian) {
-    return true;
+  // Check if we have unsupported statements. If we do, warn the user and skip the pass execution.
+  for(const auto& stmt : iterateIIROverStmt(*stencilInstantiation->getIIR())) {
+    if(isStatementUnsupported(stmt, stencilInstantiation->getMetaData())) {
+      DAWN_LOG(WARNING) << "Unsupported statement at line " << stmt->getSourceLocation()
+                        << ". Skipping removal of scalar variables.";
+      return true;
+    }
   }
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilInstantiation->getIIR())) {
     // Local variables are local to a DoMethod. Remove scalar local variables from the statements

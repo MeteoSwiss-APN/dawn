@@ -314,7 +314,7 @@ TEST(TestRemoveScalars, test_else_01) {
   ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
 }
 
-TEST(TestRemoveScalars, throw_compound_assignments) {
+TEST(TestRemoveScalars, warn_compound_assignments) {
   using namespace dawn::iir;
 
   UnstructuredIIRBuilder b;
@@ -342,12 +342,18 @@ TEST(TestRemoveScalars, throw_compound_assignments) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassRemoveScalars) and expect exception to be thrown
+  // run single pass (PassRemoveScalars) and expect warning on output
   PassRemoveScalars passRemoveScalars(optimizer);
-  EXPECT_THROW(passRemoveScalars.run(stencil), std::runtime_error);
+  testing::internal::CaptureStdout();
+  passRemoveScalars.run(stencil);
+  std::cout.flush();
+  std::string output = testing::internal::GetCapturedStdout();
+  ASSERT_NE(
+      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+      std::string::npos);
 }
 
-TEST(TestRemoveScalars, throw_increment) {
+TEST(TestRemoveScalars, warn_increment) {
   using namespace dawn::iir;
 
   UnstructuredIIRBuilder b;
@@ -374,12 +380,18 @@ TEST(TestRemoveScalars, throw_increment) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassRemoveScalars) and expect exception to be thrown
+  // run single pass (PassRemoveScalars) and expect warning on output
   PassRemoveScalars passRemoveScalars(optimizer);
-  EXPECT_THROW(passRemoveScalars.run(stencil), std::runtime_error);
+  testing::internal::CaptureStdout();
+  passRemoveScalars.run(stencil);
+  std::cout.flush();
+  std::string output = testing::internal::GetCapturedStdout();
+  ASSERT_NE(
+      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+      std::string::npos);
 }
 
-TEST(TestRemoveScalars, throw_condition_adimensional_01) {
+TEST(TestRemoveScalars, warn_condition_adimensional_01) {
   using namespace dawn::iir;
 
   UnstructuredIIRBuilder b;
@@ -409,12 +421,18 @@ TEST(TestRemoveScalars, throw_condition_adimensional_01) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassRemoveScalars) and expect exception to be thrown
+  // run single pass (PassRemoveScalars) and expect warning on output
   PassRemoveScalars passRemoveScalars(optimizer);
-  EXPECT_THROW(passRemoveScalars.run(stencil), std::runtime_error);
+  testing::internal::CaptureStdout();
+  passRemoveScalars.run(stencil);
+  std::cout.flush();
+  std::string output = testing::internal::GetCapturedStdout();
+  ASSERT_NE(
+      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+      std::string::npos);
 }
 
-TEST(TestRemoveScalars, throw_condition_adimensional_02) {
+TEST(TestRemoveScalars, warn_condition_adimensional_02) {
   using namespace dawn::iir;
 
   UnstructuredIIRBuilder b;
@@ -444,12 +462,18 @@ TEST(TestRemoveScalars, throw_condition_adimensional_02) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassRemoveScalars) and expect exception to be thrown
+  // run single pass (PassRemoveScalars) and expect warning on output
   PassRemoveScalars passRemoveScalars(optimizer);
-  EXPECT_THROW(passRemoveScalars.run(stencil), std::runtime_error);
+  testing::internal::CaptureStdout();
+  passRemoveScalars.run(stencil);
+  std::cout.flush();
+  std::string output = testing::internal::GetCapturedStdout();
+  ASSERT_NE(
+      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+      std::string::npos);
 }
 
-TEST(TestRemoveScalars, throw_condition_adimensional_03) {
+TEST(TestRemoveScalars, warn_condition_adimensional_03) {
   using namespace dawn::iir;
 
   UnstructuredIIRBuilder b;
@@ -481,9 +505,15 @@ TEST(TestRemoveScalars, throw_condition_adimensional_03) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
-  // run single pass (PassRemoveScalars) and expect exception to be thrown
+  // run single pass (PassRemoveScalars) and expect warning on output
   PassRemoveScalars passRemoveScalars(optimizer);
-  EXPECT_THROW(passRemoveScalars.run(stencil), std::runtime_error);
+  testing::internal::CaptureStdout();
+  passRemoveScalars.run(stencil);
+  std::cout.flush();
+  std::string output = testing::internal::GetCapturedStdout();
+  ASSERT_NE(
+      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+      std::string::npos);
 }
 
 } // namespace
