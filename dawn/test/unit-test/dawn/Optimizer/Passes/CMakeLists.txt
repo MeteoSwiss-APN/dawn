@@ -27,11 +27,11 @@ add_executable(${executable}
   TestPassMultiStageSplitter.cpp
   TestPassSetCaches.cpp
   TestPassSetNonTempCaches.cpp
-  # TestPassStageMerger.cpp
-  # TestPassStageReordering.cpp
-  # TestPassTemporaryMerger.cpp
-  # TestPassTemporaryType.cpp
-  # TestTemporaryToFunction.cpp
+  TestPassStageMerger.cpp
+  TestPassStageReordering.cpp
+  TestPassTemporaryMerger.cpp
+  TestPassTemporaryType.cpp
+  TestTemporaryToFunction.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
