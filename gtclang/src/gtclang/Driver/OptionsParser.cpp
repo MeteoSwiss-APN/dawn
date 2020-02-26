@@ -112,7 +112,9 @@ DAWN_ATTRIBUTE_NORETURN static void helpPrinter() {
 
   llvm::outs() << "\nDAWN OPTIONS:\n";
 
+#include "dawn/CodeGen/Options.inc"
 #include "dawn/Compiler/Options.inc"
+#include "dawn/Optimizer/Options.inc"
 #undef OPT
 
   llvm::outs().flush();

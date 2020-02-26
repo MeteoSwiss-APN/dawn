@@ -115,7 +115,7 @@ createOptimizerOptionsFromAllOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   retval.NAME = options.NAME;
-#include "dawn/Optimizer/OptimizerOptions.inc"
+#include "dawn/Optimizer/Options.inc"
 #undef OPT
   return retval;
 }
@@ -440,7 +440,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
     case BackendType::CUDA: {
       const Array3i domain_size{options_.DomainSizeI, options_.DomainSizeJ, options_.DomainSizeK};
       codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
-                                    options_.nsms, options_.maxBlocksPerSM, domain_size);
+                                    options_.nsms, options_.MaxBlocksPerSM, domain_size);
       return CG.generateCode();
     }
     case BackendType::CXXNaiveIco: {
