@@ -25,11 +25,6 @@ using namespace gtclang;
 
 namespace {
 
-TEST(IRSplittingTest, Interval) {
-  std::string filename = "input/test_compute_read_access_interval_02.cpp";
-  gtclang::IRSplitter().split(filename);
-}
-
 TEST(IRSplittingTest, FieldVersioning) {
   gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes/samples", 1)
       .split("../../../../dawn/test/unit-test/dawn/Optimizer/Passes/samples/RaceCondition01.cpp",
