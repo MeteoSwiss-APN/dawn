@@ -19,6 +19,7 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
 
 #include <tuple>
@@ -164,7 +165,10 @@ void removeScalarsFromBlockStmt(
   }
 }
 
-void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformation& metadata) {
+std::vector<std::string> removeScalarsFromDoMethod(iir::DoMethod& doMethod,
+                                                   iir::StencilMetaInformation& metadata) {
+
+  std::vector<std::string> removedScalars;
 
   // Map from variable's access id to last rhs assigned to the variable
   std::unordered_map<int, std::shared_ptr<const iir::Expr>> scalarToLastRhsMap;
@@ -174,13 +178,14 @@ void removeScalarsFromDoMethod(iir::DoMethod& doMethod, iir::StencilMetaInformat
   // Recompute the accesses metadata of all statements (removed variables means removed
   // accesses)
   computeAccesses(metadata, doMethod.getAST().getStatements());
-  // Metadata cleanup
+  // Collect names of removed scalars and cleanup metadata
   for(const auto& pair : scalarToLastRhsMap) {
     int scalarAccessID = pair.first;
+    removedScalars.push_back(metadata.getNameFromAccessID(scalarAccessID));
     metadata.removeAccessID(scalarAccessID);
   }
+  return removedScalars;
 }
-} // namespace
 
 bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
                             const iir::StencilMetaInformation& metadata) {
@@ -208,6 +213,7 @@ bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
 
   return false;
 }
+} // namespace
 
 bool PassRemoveScalars::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
@@ -221,8 +227,17 @@ bool PassRemoveScalars::run(
   }
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilInstantiation->getIIR())) {
     // Local variables are local to a DoMethod. Remove scalar local variables from the statements
-    // in this DoMethod.
-    removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
+    // and metadata in this DoMethod.
+    auto removedScalars = removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
+    if(context_.getOptions().ReportPassRemoveScalars) {
+      for(const auto& varName : removedScalars) {
+        std::cout << "PASS: " << getName() << ": " << stencilInstantiation->getName()
+                  << ": DoMethod: " << doMethod->getID() << " removed variable: " << varName
+                  << std::endl;
+      }
+      std::cout.flush();
+    }
+    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
   return true;
 }
