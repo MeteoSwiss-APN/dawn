@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
@@ -356,31 +357,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     // synchronize storages method
 
     // accumulated extents of API fields
-
-    auto extent_to_string = [](auto extents) {
-      auto const& hExtents =
-          iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
-      auto const& vExtents = extents.verticalExtent();
-      using namespace std::string_literals;
-      return "{"s + std::to_string(hExtents.iMinus()) + "," + std::to_string(hExtents.iPlus()) +
-             "}, {" + std::to_string(hExtents.jMinus()) + "," + std::to_string(hExtents.jPlus()) +
-             "}, {" + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus()) +
-             "}";
-    };
-
-    auto extent_per_field =
-        [&](Structure& stencilClass,
-            IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields) {
-          if(!(nonTempFields.empty())) {
-            for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
-              stencilClass.addStatement("static constexpr std::array<std::array<int,2>,3> " +
-                                        fieldInfo.Name + "_extent = {{" +
-                                        extent_to_string(fieldInfo.field.getExtentsRB()) + "}}");
-            }
-          }
-        };
-
-    extent_per_field(stencilClass, nonTempFields);
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
 
     //
     // Run-Method
