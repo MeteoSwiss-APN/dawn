@@ -52,17 +52,6 @@ public:
   ///
   /// @param str    Byte or JSON string to deserialize
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
-  /// @param context The OptimizerContext in which we register the Instantiation
-  /// @throws std::exception    Failed to deserialize
-  /// @returns newly allocated IIR on success or `NULL`
-  static std::shared_ptr<iir::StencilInstantiation>
-  deserializeFromString(const std::string& str, dawn::OptimizerContext* context,
-                        Format kind = Format::Json);
-
-  /// @brief Deserialize the StencilInstantiation from the given JSON formatted `string`
-  ///
-  /// @param str    Byte or JSON string to deserialize
-  /// @param kind   The kind of serialization used in `str` (Json or Byte)
   /// @throws std::exception    Failed to deserialize
   /// @returns newly allocated IIR on success or `NULL`
   static std::shared_ptr<iir::StencilInstantiation>
