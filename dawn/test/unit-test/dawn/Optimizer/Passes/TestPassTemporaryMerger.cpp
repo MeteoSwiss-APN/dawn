@@ -80,15 +80,62 @@ protected:
   }
 };
 
-TEST_F(TestPassTemporaryMerger, MergeTest1) { runTest("input/MergeTest01.iir", {}); }
+TEST_F(TestPassTemporaryMerger, MergeTest1) {
+  /*
+   vertical_region(k_start, k_end) { field_a = field_b; }
+   */
+  runTest("input/MergeTest01.iir", {});
+}
 
-TEST_F(TestPassTemporaryMerger, MergeTest2) { runTest("input/MergeTest02.iir", {}); }
+TEST_F(TestPassTemporaryMerger, MergeTest2) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_a = field_a;
+      tmp_b = field_b;
+      field_a = tmp_a(i + 1);
+      field_b = tmp_b(i + 1);
+    } */
+  runTest("input/MergeTest02.iir", {});
+}
 
-TEST_F(TestPassTemporaryMerger, MergeTest3) { runTest("input/MergeTest03.iir", {"tmp_b"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest3) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_a = field_a;
+      field_a = tmp_a(i + 1);
+      tmp_b = field_b;
+      field_b = tmp_b(i + 1);
+      } */
+  runTest("input/MergeTest03.iir", {"tmp_b"});
+}
 
-TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("input/MergeTest04.iir", {"tmp_b"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest4) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_a = field_a;
+      field_a = tmp_a(i + 1);
+    }
+    vertical_region(k_start, k_end) {
+      tmp_b = field_b;
+      field_b = tmp_b(i + 1);
+    } */
+  runTest("input/MergeTest04.iir", {"tmp_b"});
+}
 
 TEST_F(TestPassTemporaryMerger, MergeTest5) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_1 = field_1;
+      field_1 = tmp_1(i + 1);
+      tmp_2 = field_2;
+      field_2 = tmp_2(i + 1);
+      tmp_3 = field_3;
+      field_3 = tmp_3(i + 1);
+      tmp_4 = field_4;
+      field_4 = tmp_4(i + 1);
+      tmp_5 = field_5;
+      field_5 = tmp_5(i + 1);
+    } */
   runTest("input/MergeTest05.iir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
 }
 

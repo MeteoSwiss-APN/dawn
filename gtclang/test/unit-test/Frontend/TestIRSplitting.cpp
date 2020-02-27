@@ -47,4 +47,10 @@ TEST(IRSplittingTest, CacheTest) {
       "PassSetCaches/IJCacheTest02.cpp", {"-freport-pass-set-caches"});
 }
 
+TEST(IRSplittingTest, TemporaryMerger) {
+  gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 3)
+      .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/MergeTest05.cpp",
+             {"-fmerge-temporaries"});
+}
+
 } // anonymous namespace
