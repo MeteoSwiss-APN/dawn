@@ -1,5 +1,6 @@
 //---- Preprocessor defines ----
 #define DAWN_GENERATED 1
+#undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CUDA
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1

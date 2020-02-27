@@ -51,10 +51,19 @@ using halo_j_t = gridtools::halo<0, 0, 0>;
 /**
  * @brief Backend type
  */
+#ifdef DAWN_GT_BACKEND
+// This is a temporary fix for enabling gt4py (and other consumers) of generated code with the
+// GridTools backend. A proper solution would be to remove backend specific code from the API of the
+// generated code, e.g. by introducing the GridTools SID concept.
+// A less-hacky solution could be to template all generated code on the backend, which would be a
+// lot of effort, which would be meaningless, if we go with the proper solution as outlined above.
+using backend_t = DAWN_GT_BACKEND;
+#else
 #ifdef __CUDACC__
 using backend_t = gridtools::backend::cuda;
 #else
 using backend_t = gridtools::backend::mc;
+#endif
 #endif
 
 using storage_traits_t = gridtools::storage_traits<backend_t>;

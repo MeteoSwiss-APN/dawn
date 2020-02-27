@@ -14,7 +14,6 @@
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/Unittest/UnittestLogger.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <gtest/gtest.h>
 

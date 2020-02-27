@@ -71,7 +71,6 @@ if(eckit_FOUND AND atlas_FOUND)
 
   set(test_name AtlasIntegrationTestCompareOutput)
   add_executable(${test_name}
-    TestCompareOutputMain.cpp
     AtlasIntegrationTestCompareOutput.cpp
     AtlasVerifier.h
     AtlasCartesianWrapper.h
@@ -87,7 +86,7 @@ if(eckit_FOUND AND atlas_FOUND)
   target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   target_add_dawn_standard_props(${test_name})
-  target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest)
+  target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest gtest_main)
 
   set_target_properties(${test_name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
