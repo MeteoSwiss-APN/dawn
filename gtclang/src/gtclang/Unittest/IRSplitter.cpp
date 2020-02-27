@@ -104,9 +104,7 @@ void IRSplitter::createContext(const std::shared_ptr<dawn::SIR>& sir) {
   context_ = std::make_unique<dawn::OptimizerContext>(diag_, options_, sir);
 }
 
-void IRSplitter::parallelize() {
-  CompilerUtil::runGroup(dawn::PassGroup::Parallel, context_);
-}
+void IRSplitter::parallelize() { CompilerUtil::runGroup(dawn::PassGroup::Parallel, context_); }
 
 void IRSplitter::optimize() {
   unsigned level = 1;
@@ -137,20 +135,20 @@ void IRSplitter::optimize() {
   writeIIR(level);
 
   // Pass temporaries to functions
-  // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
+  // OFF by default (dawn/Optimizer/Options.inc)
   //  passTmpToFunction();
   //  level += 1;
   //  writeIIR(level);
 
-  // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
+  // OFF by default (dawn/Optimizer/Options.inc)
   //  setNonTempCaches();
   //  level += 1;
   //  writeIIR(level);
 
-  // OFF by default (dawn/Optimizer/OptimizerOptions.inc)
-    setCaches();
-    level += 1;
-    writeIIR(level);
+  // OFF by default (dawn/Optimizer/Options.inc)
+  setCaches();
+  level += 1;
+  writeIIR(level);
 
   // Unsure whether this is ON by default -- probably only for CudaCodeGen
   //  setBlockSize();
@@ -167,17 +165,13 @@ void IRSplitter::reorderStages() {
   CompilerUtil::runGroup(dawn::PassGroup::ReorderStages, context_);
 }
 
-void IRSplitter::mergeStages() {
-  CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_);
-}
+void IRSplitter::mergeStages() { CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_); }
 
 void IRSplitter::mergeTemporaries() {
   CompilerUtil::runGroup(dawn::PassGroup::MergeTemporaries, context_);
 }
 
-void IRSplitter::inlining() {
-  CompilerUtil::runGroup(dawn::PassGroup::Inlining, context_);
-}
+void IRSplitter::inlining() { CompilerUtil::runGroup(dawn::PassGroup::Inlining, context_); }
 
 void IRSplitter::partitionIntervals() {
   CompilerUtil::runGroup(dawn::PassGroup::PartitionIntervals, context_);
@@ -191,13 +185,9 @@ void IRSplitter::setNonTempCaches() {
   CompilerUtil::runGroup(dawn::PassGroup::SetNonTempCaches, context_);
 }
 
-void IRSplitter::setCaches() {
-  CompilerUtil::runGroup(dawn::PassGroup::SetCaches, context_);
-}
+void IRSplitter::setCaches() { CompilerUtil::runGroup(dawn::PassGroup::SetCaches, context_); }
 
-void IRSplitter::setBlockSize() {
-  CompilerUtil::runGroup(dawn::PassGroup::SetBlockSize, context_);
-}
+void IRSplitter::setBlockSize() { CompilerUtil::runGroup(dawn::PassGroup::SetBlockSize, context_); }
 
 void IRSplitter::dataLocalityMetric() {
   CompilerUtil::runGroup(dawn::PassGroup::DataLocalityMetric, context_);

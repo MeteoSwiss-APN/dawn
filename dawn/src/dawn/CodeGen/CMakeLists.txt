@@ -58,6 +58,7 @@ add_library(DawnCodeGen
   GridTools/CodeGenUtils.h
   GridTools/GTCodeGen.cpp
   GridTools/GTCodeGen.h
+  Options.inc
   StencilFunctionAsBCGenerator.cpp
   StencilFunctionAsBCGenerator.h
   TranslationUnit.cpp

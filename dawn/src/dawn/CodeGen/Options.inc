@@ -11,6 +11,7 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
+
 // clang-format off
 
 // #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP)
@@ -31,18 +32,11 @@
 //                  command-line target will be generated which allows to negate the option i.e
 //
 
-OPT(std::string, Backend, "gridtools", "backend", "",
-    "Set backend code-generator. Possible values for <backend> are:"
-    "\n - gridtools     = gridtools C++ code"
-    "\n - c++-naive     = naive C++ code\n"
-    "\n - c++-naive-ico = naive unstructured C++ code\n"
-    "\n - c++-opt       = optimized C++ code"
-    "\n - cuda          = optimized cuda", "<backend>", true, false)
-OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
-OPT(bool, SerializeIIR, false, "write-iir", "",
-    "Serialize the low level intermediate representation after Optimization", "", false, false)
-OPT(std::string, DeserializeIIR, "", "read-iir", "",
-    "Deserialize the low level intermediate representation from file", "", true, false)
-OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
+OPT(int, MaxBlocksPerSM, 0, "max-blocks-sm", "",
+    "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
+OPT(int, nsms, 0, "nsms", "", "Number of (CUDA) SMs", "<nsms>", true, false)
+OPT(int, DomainSizeI, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeJ, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeK, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
 
 // clang-format on
