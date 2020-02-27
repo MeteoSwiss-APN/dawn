@@ -475,12 +475,10 @@ void CodeGen::generateFieldExtentsInfo(
                                  ? "dawn::driver::cartesian_extent"
                                  : "dawn::driver::unstructured_extent";
 
-  if(!(nonTempFields.empty())) {
-    for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
-      stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +
-                                "_extent = {" +
-                                extent_to_string(fieldInfo.field.getExtentsRB(), gridType) + "}");
-    }
+  for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
+    stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +
+                              "_extent = {" +
+                              extent_to_string(fieldInfo.field.getExtentsRB(), gridType) + "}");
   }
 }
 
