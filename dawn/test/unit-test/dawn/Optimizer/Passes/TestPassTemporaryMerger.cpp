@@ -21,7 +21,6 @@
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Serialization/IIRSerializer.h"
-//#include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
@@ -44,7 +43,8 @@ protected:
     dawn::UIDGenerator::getInstance()->reset();
   }
 
-  void runTest(const std::string& filename, const std::vector<std::string>& mergedFields) {
+  void runTest(const std::string& filename,
+               const std::unordered_set<std::string>& mergedFields = {}) {
     // Deserialize IIR
     std::string filepath = filename;
     if(!TestEnvironment::path_.empty())
@@ -66,8 +66,8 @@ protected:
           matcher.match(ast::Expr::Kind::FieldAccessExpr);
 
       std::unordered_set<std::string> fieldNames;
-      for(const auto& access : accessExprs) {
-        const auto& fieldAccessExpr = std::dynamic_pointer_cast<ast::FieldAccessExpr>(access);
+      for(const auto& accessExpr : accessExprs) {
+        const auto& fieldAccessExpr = std::dynamic_pointer_cast<ast::FieldAccessExpr>(accessExpr);
         fieldNames.insert(fieldAccessExpr->getName());
       }
 
@@ -83,7 +83,7 @@ TEST_F(TestPassTemporaryMerger, MergeTest1) {
   /*
    vertical_region(k_start, k_end) { field_a = field_b; }
    */
-  runTest("input/MergeTest01.iir", {});
+  runTest("input/MergeTest01.iir");
 }
 
 TEST_F(TestPassTemporaryMerger, MergeTest2) {
@@ -94,7 +94,7 @@ TEST_F(TestPassTemporaryMerger, MergeTest2) {
       field_a = tmp_a(i + 1);
       field_b = tmp_b(i + 1);
     } */
-  runTest("input/MergeTest02.iir", {});
+  runTest("input/MergeTest02.iir");
 }
 
 TEST_F(TestPassTemporaryMerger, MergeTest3) {
