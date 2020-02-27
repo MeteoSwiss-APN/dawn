@@ -168,7 +168,7 @@ function(add_codegen_test)
 endfunction()
 
 add_codegen_test(TEST copy_stencil)
-add_codegen_test(TEST lap FLAGS -fpass-tmp-to-function)
+add_codegen_test(TEST lap FLAGS -ftmp-to-stencil-function)
 add_codegen_test(TEST conditional_stencil)
 add_codegen_test(TEST coriolis_stencil)
 add_codegen_test(TEST hori_diff_stencil_01)

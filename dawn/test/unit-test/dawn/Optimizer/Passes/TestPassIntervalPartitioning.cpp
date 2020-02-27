@@ -36,7 +36,7 @@ protected:
   std::unordered_set<iir::Interval> expected_;
 
   virtual void SetUp() {
-    options_.PartitionIntervals = true;
+    options_.IntervalPartitioning = true;
     dawn::UIDGenerator::getInstance()->reset();
     expected_.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
     expected_.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
@@ -51,8 +51,8 @@ TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
       "input/test_interval_partition.sir", options_, context_, TestEnvironment::path_);
 
   ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
+  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::StageReordering, context_, instantiation));
+  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::StageMerger, context_, instantiation));
   ASSERT_TRUE(CompilerUtil::runPass<dawn::PassIntervalPartitioning>(context_, instantiation));
 
   const auto& stencils = instantiation->getIIR()->getChildren();

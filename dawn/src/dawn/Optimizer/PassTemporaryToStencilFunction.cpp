@@ -570,7 +570,7 @@ bool PassTemporaryToStencilFunction::run(
 
   const auto& metadata = stencilInstantiation->getMetaData();
 
-  if(!(context_.getOptions().PassTmpToFunction))
+  if(!(context_.getOptions().TmpToStencilFunction))
     return true;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {

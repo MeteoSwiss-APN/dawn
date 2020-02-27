@@ -34,7 +34,7 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  virtual void SetUp() { options_.MergeTemporaries = true; }
+  virtual void SetUp() { options_.TemporaryMerger = true; }
 
   void runTest(const std::string& filename, const std::vector<std::string>& mergedFields) {
     dawn::UIDGenerator::getInstance()->reset();
@@ -43,8 +43,8 @@ protected:
 
     // Run prerequisite groups
     ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::StageReordering, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::StageMerger, context_, instantiation));
 
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassTemporaryMerger>(context_, instantiation));
