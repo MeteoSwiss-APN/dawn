@@ -45,7 +45,7 @@ protected:
                const std::unordered_set<std::string>& promotedFields = {}) {
     // Deserialize IIR
     std::string filepath = filename;
-    if(!TestEnvironment::path_.empty())
+    if(!TestEnvironment::path_.empty() && filepath.find('/') != 0)
       filepath = TestEnvironment::path_ + "/" + filepath;
     auto instantiation = IIRSerializer::deserialize(filepath);
 
