@@ -115,6 +115,7 @@ createOptimizerOptionsFromAllOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   retval.NAME = options.NAME;
+#include "dawn/CodeGen/Options.inc"
 #include "dawn/Optimizer/Options.inc"
 #undef OPT
   return retval;
