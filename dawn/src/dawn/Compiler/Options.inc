@@ -18,7 +18,7 @@
 // TYPE           - Type of the option (bool, std::string or int)
 // NAME           - Name of the option (must be a valid C++ identifier)
 // DEFAULT_VALUE  - Default value if option was not passsed via command-line.
-// OPTION         - Option for command-line (e.g OPTION == "XXX" generates a command-line target 
+// OPTION         - Option for command-line (e.g OPTION == "XXX" generates a command-line target
 //                  for --XXX and -XXX).
 // OPTION_SHORT   - Option for POSIX style command-line. Set to empty NULL if unsued.
 // HELP           - Help string.
@@ -26,9 +26,9 @@
 //                  the option as "--XXX=<file>"). Set to empty if unsued.
 // HAS_VALUE      - Boolean if this option takes a value (only int and std::string options can take
 //                  values).
-// F_GROUP        - Boolean whether this option is part of the f-group. f-group options are 
-//                  prepended by an 'f' (e.g OPTION == "XXX" becomes "fXXX) an additional 
-//                  command-line target will be generated which allows to negate the option i.e 
+// F_GROUP        - Boolean whether this option is part of the f-group. f-group options are
+//                  prepended by an 'f' (e.g OPTION == "XXX" becomes "fXXX) an additional
+//                  command-line target will be generated which allows to negate the option i.e
 //
 
 OPT(std::string, Backend, "gridtools", "backend", "",
@@ -43,9 +43,9 @@ OPT(int, nsms, 0, "nsms", "",
     "Number of (CUDA) SMs", "<nsms>", true, false)
 OPT(int, maxBlocksPerSM, 0, "max-blocks-sm", "",
     "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
-OPT(int, domain_size_i, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
-OPT(int, domain_size_j, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
-OPT(int, domain_size_k, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeI, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeJ, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeK, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, false)
 OPT(std::string, DeserializeIIR, "", "read-iir", "",
@@ -53,7 +53,7 @@ OPT(std::string, DeserializeIIR, "", "read-iir", "",
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)
-OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 
+OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
     "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:"
     "\n - none   = Disable reordering"
     "\n - greedy = Use greedy fusing"

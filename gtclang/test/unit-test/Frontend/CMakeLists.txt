@@ -20,6 +20,7 @@ add_executable(${test_name}
   TestParsing.cpp
   TestPreprocessing.cpp
   TestIRSplitting.cpp
+  TestSIRFrontend.cpp
   TestMain.cpp
 )
 

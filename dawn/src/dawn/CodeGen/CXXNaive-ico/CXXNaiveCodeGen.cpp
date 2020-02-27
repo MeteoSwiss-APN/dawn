@@ -599,8 +599,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       stencilFunMethod.addArg("const int j");
       stencilFunMethod.addArg("const int k");
 
-      const auto& stencilProp = codeGenProperties.getStencilProperties(
-          StencilContext::SC_StencilFunction, stencilFunName);
+      // const auto& stencilProp = codeGenProperties.getStencilProperties(
+      //    StencilContext::SC_StencilFunction, stencilFunName);
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
@@ -616,8 +616,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
         // offset passed to the storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
         //        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType
-        //        + ">> pw_" +
-        //                                argName);
+        //        + ">> pw_" + argName);
       }
 
       // add global parameter
@@ -671,6 +670,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
 
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define DAWN_GENERATED 1");
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVEICO");
   ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
   DAWN_LOG(INFO) << "Done generating code";

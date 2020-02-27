@@ -33,11 +33,11 @@ PYBIND11_MODULE(_dawn4py, m) {
   py::class_<dawn::Options>(m, "Options")
       .def(py::init(
                [](const std::string& Backend, const std::string& OutputFile, int nsms,
-                  int maxBlocksPerSM, int domain_size_i, int domain_size_j, int domain_size_k,
+                  int maxBlocksPerSM, int DomainSizeI, int DomainSizeJ, int DomainSizeK,
                   bool SerializeIIR, const std::string& DeserializeIIR,
                   const std::string& IIRFormat, bool InlineSF, const std::string& ReorderStrategy,
-                  int MaxFieldsPerStencil, bool MaxCutMSS, int MaxHaloPoints, int block_size_i,
-                  int block_size_j, int block_size_k, bool Debug, bool SSA, bool MergeTemporaries,
+                  int MaxFieldsPerStencil, bool MaxCutMSS, int MaxHaloPoints, int BlockSizeI,
+                  int BlockSizeJ, int BlockSizeK, bool Debug, bool SSA, bool MergeTemporaries,
                   bool SplitStencils, bool MergeStages, bool MergeDoMethods, bool UseParallelEP,
                   bool DisableKCaches, bool PassTmpToFunction, bool UseNonTempCaches,
                   bool KeepVarnames, bool PartitionIntervals, bool PassVerbose, bool ReportAccesses,
@@ -54,9 +54,9 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       OutputFile,
                                       nsms,
                                       maxBlocksPerSM,
-                                      domain_size_i,
-                                      domain_size_j,
-                                      domain_size_k,
+                                      DomainSizeI,
+                                      DomainSizeJ,
+                                      DomainSizeK,
                                       SerializeIIR,
                                       DeserializeIIR,
                                       IIRFormat,
@@ -65,9 +65,9 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       MaxFieldsPerStencil,
                                       MaxCutMSS,
                                       MaxHaloPoints,
-                                      block_size_i,
-                                      block_size_j,
-                                      block_size_k,
+                                      BlockSizeI,
+                                      BlockSizeJ,
+                                      BlockSizeK,
                                       Debug,
                                       SSA,
                                       MergeTemporaries,
@@ -135,9 +135,9 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("output_file", &dawn::Options::OutputFile)
       .def_readwrite("nsms", &dawn::Options::nsms)
       .def_readwrite("max_blocks_per_sm", &dawn::Options::maxBlocksPerSM)
-      .def_readwrite("domain_size_i", &dawn::Options::domain_size_i)
-      .def_readwrite("domain_size_j", &dawn::Options::domain_size_j)
-      .def_readwrite("domain_size_k", &dawn::Options::domain_size_k)
+      .def_readwrite("domain_size_i", &dawn::Options::DomainSizeI)
+      .def_readwrite("domain_size_j", &dawn::Options::DomainSizeJ)
+      .def_readwrite("domain_size_k", &dawn::Options::DomainSizeK)
       .def_readwrite("serialize_iir", &dawn::Options::SerializeIIR)
       .def_readwrite("deserialize_iir", &dawn::Options::DeserializeIIR)
       .def_readwrite("iir_format", &dawn::Options::IIRFormat)
@@ -146,9 +146,9 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("max_fields_per_stencil", &dawn::Options::MaxFieldsPerStencil)
       .def_readwrite("max_cut_mss", &dawn::Options::MaxCutMSS)
       .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
-      .def_readwrite("block_size_i", &dawn::Options::block_size_i)
-      .def_readwrite("block_size_j", &dawn::Options::block_size_j)
-      .def_readwrite("block_size_k", &dawn::Options::block_size_k)
+      .def_readwrite("block_size_i", &dawn::Options::BlockSizeI)
+      .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
+      .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
       .def_readwrite("debug", &dawn::Options::Debug)
       .def_readwrite("ssa", &dawn::Options::SSA)
       .def_readwrite("merge_temporaries", &dawn::Options::MergeTemporaries)
@@ -192,9 +192,9 @@ PYBIND11_MODULE(_dawn4py, m) {
            << ",\n    "
            << "nsms=" << self.nsms << ",\n    "
            << "max_blocks_per_sm=" << self.maxBlocksPerSM << ",\n    "
-           << "domain_size_i=" << self.domain_size_i << ",\n    "
-           << "domain_size_j=" << self.domain_size_j << ",\n    "
-           << "domain_size_k=" << self.domain_size_k << ",\n    "
+           << "domain_size_i=" << self.DomainSizeI << ",\n    "
+           << "domain_size_j=" << self.DomainSizeJ << ",\n    "
+           << "domain_size_k=" << self.DomainSizeK << ",\n    "
            << "serialize_iir=" << self.SerializeIIR << ",\n    "
            << "deserialize_iir="
            << "\"" << self.DeserializeIIR << "\""
@@ -209,9 +209,9 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "max_fields_per_stencil=" << self.MaxFieldsPerStencil << ",\n    "
            << "max_cut_mss=" << self.MaxCutMSS << ",\n    "
            << "max_halo_points=" << self.MaxHaloPoints << ",\n    "
-           << "block_size_i=" << self.block_size_i << ",\n    "
-           << "block_size_j=" << self.block_size_j << ",\n    "
-           << "block_size_k=" << self.block_size_k << ",\n    "
+           << "block_size_i=" << self.BlockSizeI << ",\n    "
+           << "block_size_j=" << self.BlockSizeJ << ",\n    "
+           << "block_size_k=" << self.BlockSizeK << ",\n    "
            << "debug=" << self.Debug << ",\n    "
            << "ssa=" << self.SSA << ",\n    "
            << "merge_temporaries=" << self.MergeTemporaries << ",\n    "

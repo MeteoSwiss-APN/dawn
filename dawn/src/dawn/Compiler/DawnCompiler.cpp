@@ -438,8 +438,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
       return CG.generateCode();
     }
     case BackendType::CUDA: {
-      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
-                                options_.domain_size_k};
+      const Array3i domain_size{options_.DomainSizeI, options_.DomainSizeJ, options_.DomainSizeK};
       codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
                                     options_.nsms, options_.maxBlocksPerSM, domain_size);
       return CG.generateCode();
