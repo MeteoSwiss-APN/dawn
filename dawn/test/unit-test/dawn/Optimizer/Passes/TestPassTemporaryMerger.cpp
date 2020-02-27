@@ -17,6 +17,8 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetStageGraph.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Serialization/IIRSerializer.h"
 //#include "dawn/Unittest/CompilerUtil.h"
@@ -43,22 +45,19 @@ protected:
   }
 
   void runTest(const std::string& filename, const std::vector<std::string>& mergedFields) {
+    // Deserialize IIR
     std::string filepath = filename;
-    if(!TestEnvironment::path_.empty()) {
+    if(!TestEnvironment::path_.empty())
       filepath = TestEnvironment::path_ + "/" + filepath;
-    }
-
     auto instantiation = IIRSerializer::deserialize(filepath);
 
-    // Run prerequisite groups
-//    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-//    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
-//    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
+    // Run stage splitter pass
+    PassStageSplitter stageSplitPass(*context_);
+    EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
     PassTemporaryMerger tempMergerPass(*context_);
     EXPECT_TRUE(tempMergerPass.run(instantiation));
-    //ASSERT_TRUE(CompilerUtil::runPass<dawn::PassTemporaryMerger>(context_, instantiation));
 
     if(mergedFields.size() > 0) {
       // Apply AST matcher to find all field access expressions
