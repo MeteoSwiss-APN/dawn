@@ -23,7 +23,7 @@
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
+
 #include <set>
 #include <vector>
 
@@ -300,7 +300,7 @@ bool dawn::PassSetNonTempCaches::run(
     const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
-    if(context_.getOptions().UseNonTempCaches) {
+    if(context_.getOptions().SetNonTempCaches) {
       for(const auto& multiStagePtr : stencil.getChildren()) {
         GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, context_);
         organizer.process();
@@ -337,8 +337,6 @@ bool dawn::PassSetNonTempCaches::run(
   return true;
 }
 
-std::vector<std::string>& PassSetNonTempCaches::getCachedFieldNames() {
-  return cachedFieldNames_;
-}
+std::vector<std::string>& PassSetNonTempCaches::getCachedFieldNames() { return cachedFieldNames_; }
 
 } // namespace dawn
