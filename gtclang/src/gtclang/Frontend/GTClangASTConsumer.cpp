@@ -70,7 +70,9 @@ static dawn::Options makeDAWNOptions(const Options& options) {
   dawn::Options DAWNOptions;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   DAWNOptions.NAME = options.NAME;
+#include "dawn/CodeGen/Options.inc"
 #include "dawn/Compiler/Options.inc"
+#include "dawn/Optimizer/Options.inc"
 #undef OPT
   return DAWNOptions;
 }

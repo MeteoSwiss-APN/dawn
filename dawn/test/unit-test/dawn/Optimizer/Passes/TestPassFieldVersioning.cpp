@@ -11,71 +11,217 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
-#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
-#include <fstream>
 #include <gtest/gtest.h>
+#include <memory>
 
 using namespace dawn;
 
 namespace {
 
 class TestPassFieldVersioning : public ::testing::Test {
+public:
+  TestPassFieldVersioning() {
+    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
+  }
+
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
+  DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
   void raceConditionTest(const std::string& filename) {
-    CompilerUtil::clearDiags();
+    std::string fullFileName = filename;
+    if(!TestEnvironment::path_.empty() && filename.at(0) != '/') {
+      fullFileName = TestEnvironment::path_ + "/" + filename;
+    }
+    context_->getDiagnostics().clear();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
-
-    // Inline pass is a prerequisite...
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassInlining>(
-        context_, instantiation, true, dawn::PassInlining::InlineStrategy::InlineProcedures));
+        IIRSerializer::deserialize(fullFileName);
 
     // Expect pass to fail...
-    ASSERT_FALSE(CompilerUtil::runPass<dawn::PassFieldVersioning>(context_, instantiation));
+    dawn::PassFieldVersioning pass(*context_);
+    ASSERT_FALSE(pass.run(instantiation));
     ASSERT_TRUE(context_->getDiagnostics().hasErrors());
   }
 
-  void versioningTest(const std::string& filename) {
-    CompilerUtil::clearDiags();
+  std::shared_ptr<iir::StencilInstantiation> versioningTest(const std::string& filename) {
+    std::string fullFileName = filename;
+    if(!TestEnvironment::path_.empty() && filename.at(0) != '/') {
+      fullFileName = TestEnvironment::path_ + "/" + filename;
+    }
+    context_->getDiagnostics().clear();
     std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+        IIRSerializer::deserialize(fullFileName);
 
     // Expect pass to succeed...
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassFieldVersioning>(context_, instantiation));
+    dawn::PassFieldVersioning pass(*context_);
+    pass.run(instantiation);
+    return instantiation;
   }
 };
 
-TEST_F(TestPassFieldVersioning, RaceCondition1) { raceConditionTest("input/RaceCondition01.sir"); }
+TEST_F(TestPassFieldVersioning, RaceCondition1) {
+  /*
+  vertical_region(k_start, k_end) {
+    if(field_a > 0.0) {
+      field_b = field_a;
+      field_a = field_b(i + 1);
+    }
+  }
+  */
+  raceConditionTest("input/TestPassFieldVersioning_01.iir");
+}
 
-TEST_F(TestPassFieldVersioning, RaceCondition2) { raceConditionTest("input/RaceCondition02.sir"); }
+TEST_F(TestPassFieldVersioning, RaceCondition2) {
+  /*
+  vertical_region(k_start, k_end) {
+    if(field_a > 0.0) {
+      field_b = field_a;
+      double b = field_b(i + 1);
+      field_a = b;
+    }
+  }
+  */
+  raceConditionTest("input/TestPassFieldVersioning_02.iir");
+}
 
-TEST_F(TestPassFieldVersioning, RaceCondition3) { raceConditionTest("input/RaceCondition03.sir"); }
+TEST_F(TestPassFieldVersioning, RaceCondition3) {
+  /*
+  stencil_function TestFunction {
+    storage field_a;
 
-TEST_F(TestPassFieldVersioning, VersioningTest1) { versioningTest("input/VersioningTest01.sir"); }
+    Do { return field_a(i + 1); }
+  };
+  vertical_region(k_start, k_end) {
+    field_a = TestFunction(field_a);
+  }
+  Note: Inlined
+  */
+  raceConditionTest("input/TestPassFieldVersioning_03.iir");
+}
 
-TEST_F(TestPassFieldVersioning, VersioningTest2) { versioningTest("input/VersioningTest02.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest1) {
+  /*
+  vertical_region(k_start, k_end) { field_a = field_b; }
+  */
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_04.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idA));
 
-TEST_F(TestPassFieldVersioning, VersioningTest3) { versioningTest("input/VersioningTest03.sir"); }
+  int idB = instantiation->getMetaData().getAccessIDFromName("field_b");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idB));
+}
 
-TEST_F(TestPassFieldVersioning, VersioningTest4) { versioningTest("input/VersioningTest04.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest2) {
+  /*
+  vertical_region(k_start, k_end) {
+    field_a = field_a(i + 1);
+  }
+  */
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_05.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+}
 
-TEST_F(TestPassFieldVersioning, VersioningTest5) { versioningTest("input/VersioningTest05.sir"); }
+TEST_F(TestPassFieldVersioning, VersioningTest3) {
+  /*
+  vertical_region(k_start, k_end) {
+    field_b = field_a(i + 1);
+    field_a = field_b;
+  }
+  */
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_06.iir");
 
-TEST_F(TestPassFieldVersioning, VersioningTest6) { versioningTest("input/VersioningTest06.sir"); }
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
 
-TEST_F(TestPassFieldVersioning, VersioningTest7) { versioningTest("input/VersioningTest07.sir"); }
+  int idB = instantiation->getMetaData().getAccessIDFromName("field_b");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idB));
+}
 
+TEST_F(TestPassFieldVersioning, VersioningTest4) {
+  /*
+  vertical_region(k_start, k_end) {
+    tmp = field_a(i + 1) + field_b(i + 1);
+    field_a = tmp;
+    field_b = tmp;
+  }
+  */
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_07.iir");
+
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+
+  int idB = instantiation->getMetaData().getAccessIDFromName("field_b");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idB));
+}
+
+TEST_F(TestPassFieldVersioning, VersioningTest5) {
+  /*
+  vertical_region(k_start, k_end) {
+    tmp1 = field_a(i + 1);
+    tmp2 = tmp1;
+    field_a = tmp2;
+  }
+  */
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_08.iir");
+
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+
+  int idTmp1 = instantiation->getMetaData().getAccessIDFromName("tmp1");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idTmp1));
+
+  int idTmp2 = instantiation->getMetaData().getAccessIDFromName("tmp2");
+  ASSERT_FALSE(instantiation->getMetaData().isMultiVersionedField(idTmp2));
+}
+
+TEST_F(TestPassFieldVersioning, VersioningTest6) {
+  /*
+  vertical_region(k_start, k_end) {
+      tmp = field(i + 1);
+      field = tmp;
+
+      tmp = field(i + 1);
+      field = tmp;
+  }
+  */
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_09.iir");
+  int idField = instantiation->getMetaData().getAccessIDFromName("field");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idField));
+  auto versions = instantiation->getMetaData().getVersionsOf(idField);
+  ASSERT_EQ(versions->size(), 2);
+
+  int idTmp = instantiation->getMetaData().getAccessIDFromName("tmp");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idTmp));
+}
+
+TEST_F(TestPassFieldVersioning, VersioningTest7) {
+  /*
+  stencil_function TestFunction {
+  storage field_a, field_b;
+
+  Do {
+      field_b = field_a;
+      field_a = field_b(i + 1);
+      return 0.0;
+    }
+  };
+  vertical_region(k_start, k_end) {
+        TestFunction(field_a, field_b);
+      }
+    Note: Inlined
+*/
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_10.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
+}
 } // anonymous namespace

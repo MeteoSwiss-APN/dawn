@@ -115,7 +115,8 @@ createOptimizerOptionsFromAllOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   retval.NAME = options.NAME;
-#include "dawn/Optimizer/OptimizerOptions.inc"
+#include "dawn/CodeGen/Options.inc"
+#include "dawn/Optimizer/Options.inc"
 #undef OPT
   return retval;
 }
@@ -395,8 +396,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
                    << "`";
 
     if(options_.SerializeIIR) {
-      const auto p = std::filesystem::path(options_.OutputFile.empty()
-                                               ? instantiation->getMetaData().getFileName()
+      const auto p =
+          fs::path(options_.OutputFile.empty() ? instantiation->getMetaData().getFileName()
                                                : options_.OutputFile);
       IIRSerializer::serialize(static_cast<std::string>(p.stem()) + "." + std::to_string(i) +
                                    ".iir",
@@ -415,8 +416,17 @@ std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
   // Generate code
+  BackendType backend;
   try {
-    BackendType backend = parseBackendString(options_.Backend);
+    backend = parseBackendString(options_.Backend);
+  } catch(CompileError& e) {
+    diagnostics_.report(buildDiag("-backend", options_.Backend,
+                                  "backend options must be : " +
+                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
+    return nullptr;
+  }
+  try {
     switch(backend) {
     case BackendType::GridTools: {
       codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
@@ -429,10 +439,9 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
       return CG.generateCode();
     }
     case BackendType::CUDA: {
-      const Array3i domain_size{options_.domain_size_i, options_.domain_size_j,
-                                options_.domain_size_k};
+      const Array3i domain_size{options_.DomainSizeI, options_.DomainSizeJ, options_.DomainSizeK};
       codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
-                                    options_.nsms, options_.maxBlocksPerSM, domain_size);
+                                    options_.nsms, options_.MaxBlocksPerSM, domain_size);
       return CG.generateCode();
     }
     case BackendType::CXXNaiveIco: {
@@ -445,11 +454,9 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
       dawn_unreachable("GTClangOptCXX not supported yet");
     }
   } catch(...) {
-    diagnostics_.report(buildDiag("-backend", options_.Backend,
-                                  "backend options must be : " +
-                                      dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                          "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
-    return nullptr;
+    DiagnosticsBuilder diag(DiagnosticsKind::Error);
+    diag << "code generation for backend `" << options_.Backend << "` failed";
+    diagnostics_.report(diag);
   }
   return nullptr;
 }

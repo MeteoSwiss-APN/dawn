@@ -981,6 +981,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T GT");
 
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);

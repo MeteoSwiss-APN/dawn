@@ -21,7 +21,6 @@
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
-#include "dawn/Unittest/UnittestLogger.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -53,11 +52,6 @@ TEST(CodeGenNaiveTest, GlobalIndexStencil) {
 
   std::string ref = dawn::readFile("reference/global_indexing.cpp");
   ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
-}
-
-stencilInstantiationContext compile(std::shared_ptr<SIR> sir) {
-  DawnCompiler compiler{};
-  return compiler.optimize(compiler.lowerToIIR(sir));
 }
 
 TEST(CodeGenNaiveTest, NonOverlappingInterval) {
