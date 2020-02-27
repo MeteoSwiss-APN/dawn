@@ -1,0 +1,787 @@
+{
+  "filename": "<gt4py>",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "block_stmt": {
+            "statements": [
+              {
+                "vertical_region_decl_stmt": {
+                  "vertical_region": {
+                    "ast": {
+                      "root": {
+                        "block_stmt": {
+                          "statements": [
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "lap",
+                                        "cartesian_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "literal_access_expr": {
+                                                "value": "4",
+                                                "type": {
+                                                  "type_id": "Float"
+                                                }
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "field_access_expr": {
+                                                "name": "input",
+                                                "cartesian_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "binary_operator": {
+                                                    "left": {
+                                                      "field_access_expr": {
+                                                        "name": "input",
+                                                        "cartesian_offset": {
+                                                          "i_offset": 1
+                                                        },
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    },
+                                                    "op": "+",
+                                                    "right": {
+                                                      "field_access_expr": {
+                                                        "name": "input",
+                                                        "cartesian_offset": {
+                                                          "i_offset": -1
+                                                        },
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "op": "+",
+                                                "right": {
+                                                  "field_access_expr": {
+                                                    "name": "input",
+                                                    "cartesian_offset": {
+                                                      "j_offset": 1
+                                                    },
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "op": "+",
+                                            "right": {
+                                              "field_access_expr": {
+                                                "name": "input",
+                                                "cartesian_offset": {
+                                                  "j_offset": -1
+                                                },
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "res",
+                                        "cartesian_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "lap",
+                                            "cartesian_offset": {
+                                              "i_offset": 1
+                                            },
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "field_access_expr": {
+                                            "name": "lap",
+                                            "cartesian_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "flx",
+                                        "cartesian_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "ternary_operator": {
+                                        "cond": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "field_access_expr": {
+                                                    "name": "res",
+                                                    "cartesian_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "binary_operator": {
+                                                    "left": {
+                                                      "field_access_expr": {
+                                                        "name": "input",
+                                                        "cartesian_offset": {
+                                                          "i_offset": 1
+                                                        },
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    },
+                                                    "op": "-",
+                                                    "right": {
+                                                      "field_access_expr": {
+                                                        "name": "input",
+                                                        "cartesian_offset": {},
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "op": ">",
+                                            "right": {
+                                              "literal_access_expr": {
+                                                "value": "0",
+                                                "type": {
+                                                  "type_id": "Integer"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "left": {
+                                          "literal_access_expr": {
+                                            "value": "0",
+                                            "type": {
+                                              "type_id": "Integer"
+                                            }
+                                          }
+                                        },
+                                        "right": {
+                                          "field_access_expr": {
+                                            "name": "res",
+                                            "cartesian_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "res",
+                                        "cartesian_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "lap",
+                                            "cartesian_offset": {
+                                              "j_offset": 1
+                                            },
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "field_access_expr": {
+                                            "name": "lap",
+                                            "cartesian_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "fly",
+                                        "cartesian_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "ternary_operator": {
+                                        "cond": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "field_access_expr": {
+                                                    "name": "res",
+                                                    "cartesian_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "binary_operator": {
+                                                    "left": {
+                                                      "field_access_expr": {
+                                                        "name": "input",
+                                                        "cartesian_offset": {
+                                                          "j_offset": 1
+                                                        },
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    },
+                                                    "op": "-",
+                                                    "right": {
+                                                      "field_access_expr": {
+                                                        "name": "input",
+                                                        "cartesian_offset": {},
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "op": ">",
+                                            "right": {
+                                              "literal_access_expr": {
+                                                "value": "0",
+                                                "type": {
+                                                  "type_id": "Integer"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "left": {
+                                          "literal_access_expr": {
+                                            "value": "0",
+                                            "type": {
+                                              "type_id": "Integer"
+                                            }
+                                          }
+                                        },
+                                        "right": {
+                                          "field_access_expr": {
+                                            "name": "res",
+                                            "cartesian_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "output",
+                                        "cartesian_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "input",
+                                            "cartesian_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "field_access_expr": {
+                                                "name": "coeff",
+                                                "cartesian_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "binary_operator": {
+                                                    "left": {
+                                                      "binary_operator": {
+                                                        "left": {
+                                                          "field_access_expr": {
+                                                            "name": "flx",
+                                                            "cartesian_offset": {},
+                                                            "argument_map": [
+                                                              -1,
+                                                              -1,
+                                                              -1
+                                                            ],
+                                                            "argument_offset": [
+                                                              0,
+                                                              0,
+                                                              0
+                                                            ]
+                                                          }
+                                                        },
+                                                        "op": "-",
+                                                        "right": {
+                                                          "field_access_expr": {
+                                                            "name": "flx",
+                                                            "cartesian_offset": {
+                                                              "i_offset": -1
+                                                            },
+                                                            "argument_map": [
+                                                              -1,
+                                                              -1,
+                                                              -1
+                                                            ],
+                                                            "argument_offset": [
+                                                              0,
+                                                              0,
+                                                              0
+                                                            ]
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "op": "+",
+                                                    "right": {
+                                                      "field_access_expr": {
+                                                        "name": "fly",
+                                                        "cartesian_offset": {},
+                                                        "argument_map": [
+                                                          -1,
+                                                          -1,
+                                                          -1
+                                                        ],
+                                                        "argument_offset": [
+                                                          0,
+                                                          0,
+                                                          0
+                                                        ]
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "op": "-",
+                                                "right": {
+                                                  "field_access_expr": {
+                                                    "name": "fly",
+                                                    "cartesian_offset": {
+                                                      "j_offset": -1
+                                                    },
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "special_lower_level": "Start",
+                      "special_upper_level": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "input",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "coeff",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "output",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "lap",
+          "is_temporary": true,
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "res",
+          "is_temporary": true,
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "flx",
+          "is_temporary": true,
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "fly",
+          "is_temporary": true,
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        }
+      ],
+      "name": "horizontal_difference"
+    }
+  ],
+  "global_variables": {}
+}
