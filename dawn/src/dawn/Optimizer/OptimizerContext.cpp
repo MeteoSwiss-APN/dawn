@@ -408,7 +408,13 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_->getMetaData(), allStmts);
+
+    std::vector<std::shared_ptr<Stmt>> allStatements;
+    for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
+      allStatements.insert(allStatements.end(), doMethod->getAST().getStatements().begin(),
+                           doMethod->getAST().getStatements().end());
+    }
+    computeAccesses(instantiation_->getMetaData(), allStatements);
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     // stage->update(iir::NodeUpdateType::level);
