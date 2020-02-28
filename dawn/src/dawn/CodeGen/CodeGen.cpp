@@ -446,7 +446,7 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
 }
 
 namespace {
-std::string extent_to_string(iir::Extents const& extents, ast::GridType const& gridType) {
+std::string extentToString(iir::Extents const& extents, ast::GridType const& gridType) {
   std::string result = "";
   if(gridType == ast::GridType::Cartesian) {
     auto const& hExtents =
@@ -478,7 +478,7 @@ void CodeGen::generateFieldExtentsInfo(
   for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
     stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +
                               "_extent = {" +
-                              extent_to_string(fieldInfo.field.getExtentsRB(), gridType) + "}");
+                              extentToString(fieldInfo.field.getExtentsRB(), gridType) + "}");
   }
 }
 

@@ -50,7 +50,7 @@ struct get_impl<1> {
 } // namespace detail
 
 template <int I>
-constexpr auto get(unstructured_extent const& extent) {
+constexpr auto get(unstructured_extent const& extent) -> decltype(detail::get_impl<I>{}(extent)) {
   return detail::get_impl<I>{}(extent);
 }
 
