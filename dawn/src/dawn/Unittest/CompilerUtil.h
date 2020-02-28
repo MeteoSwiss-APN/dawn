@@ -28,6 +28,7 @@
 
 namespace dawn {
 
+/// @brief Enumeration of all pass groups
 enum class PassGroup {
   Parallel,
   SSA,
