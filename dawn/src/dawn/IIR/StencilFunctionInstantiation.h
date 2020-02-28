@@ -142,7 +142,7 @@ private:
   //     Accesses & Fields
 
   /// DoMethod containing the list of statements in this stencil function
-  std::unique_ptr<DoMethod> doMethod_;
+  // std::unique_ptr<DoMethod> doMethod_;
 
   std::vector<Field> calleeFields_;
   std::vector<Field> callerFields_;
@@ -166,7 +166,7 @@ public:
 
   StencilFunctionInstantiation clone() const;
 
-  inline const std::unique_ptr<DoMethod>& getDoMethod() { return doMethod_; }
+  // inline const std::unique_ptr<DoMethod>& getDoMethod() { return doMethod_; }
 
   std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
     return ArgumentIndexToCallerAccessIDMap_;

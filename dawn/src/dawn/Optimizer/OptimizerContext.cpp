@@ -263,9 +263,6 @@ public:
 
     // A ExprStmt in the control flow region might change a global variable on which a later
     // vertical region depends, therefore we need to create a new stencil.
-    // TODO(havogt): Consider creating one stencil for each VerticalRegionDeclStmt in
-    // StencilDescStatementMapper and add a pass to fuse them later (in short: don't try to be smart
-    // in SIR->IIR...).
     makeNewStencil();
     stmt->getExpr()->accept(*this);
   }
@@ -389,22 +386,22 @@ public:
                        : LoopOrderKind::Backward);
     Stage::IterationSpace iterationspace = {stmt->getVerticalRegion()->IterationSpace[0],
                                             stmt->getVerticalRegion()->IterationSpace[1]};
-    std::unique_ptr<Stage> stage =
-        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval, iterationspace);
+    // std::unique_ptr<Stage> stage =
+    //     std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval, iterationspace);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
     // Here we convert the AST of the vertical region to a flat list of statements of the stage.
     // Further, we instantiate all referenced stencil functions.
     DAWN_LOG(INFO) << "Inserting statements ... ";
-    DoMethod& doMethod = stage->getSingleDoMethod();
+    // DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
     StatementMapper statementMapper(instantiation_.get(), context_, scope_.top()->StackTrace,
                                     *multiStage, interval, iterationspace,
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
-    DAWN_LOG(INFO) << "Inserted " << doMethod.getAST().getStatements().size() << " statements";
+    // DAWN_LOG(INFO) << "Inserted " << doMethod.getAST().getStatements().size() << " statements";
 
     if(context_.getDiagnostics().hasErrors())
       return;
@@ -649,9 +646,7 @@ bool OptimizerContext::fillIIRFromSIR(
   //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
   stencilDeclMapper.cleanupStencilDeclAST();
 
-  stencilInstantiation->dump();
-
-  //  // Repair broken references to temporaries i.e promote them to real fields
+  // Repair broken references to temporaries i.e promote them to real fields
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 

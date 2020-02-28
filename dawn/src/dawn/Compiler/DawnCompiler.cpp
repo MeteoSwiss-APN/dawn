@@ -288,6 +288,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   if(shouldRunGroup(options_, options_.MergeStages)) {
     // merging requires the stage graph
     optimizer.pushBackPass<PassSetStageGraph>();
+    optimizer.pushBackPass<PassSetDependencyGraph>();
     // running the actual pass
     optimizer.pushBackPass<PassStageMerger>();
     // since this can change the scope of temporaries ...

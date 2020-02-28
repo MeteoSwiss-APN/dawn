@@ -466,13 +466,13 @@ public:
         fieldsMap[field->Name] = AccessID;
       }
     }
-
+    // this is not correct of course
     // recompute the list of <statement, accesses> pairs
     StatementMapper statementMapper(
         stencilInstantiation_.get(), context_, stackTrace_,
-        *(cloneStencilFun->getDoMethod()->getParent()->getParent()), interval_,
-        cloneStencilFun->getDoMethod()->getParent()->getIterationSpace(), fieldsMap,
-        cloneStencilFun);
+        *(stencilInstantiation_->getIIR()->getChild(0)->getChild(0)), interval_,
+        stencilInstantiation_->getIIR()->getChild(0)->getChild(0)->getChild(0)->getIterationSpace(),
+        fieldsMap, cloneStencilFun);
 
     cloneStencilFun->getAST()->accept(statementMapper);
 

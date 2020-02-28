@@ -170,11 +170,11 @@ void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* fu
 
   // Update statements
   renameAccessIDInStmts(function, oldAccessID, newAccessID,
-                        function->getDoMethod()->getAST().getStatements());
+                        function->getAST()->getRoot()->getStatements());
 
   // Update accesses
   renameAccessIDInAccesses(function, oldAccessID, newAccessID,
-                           function->getDoMethod()->getAST().getStatements());
+                           function->getAST()->getRoot()->getStatements());
 
   // Recompute the fields
   function->update();

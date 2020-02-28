@@ -37,14 +37,15 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
     const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<iir::AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), metadata_(context->getMetaData()), expr_(expr),
-      function_(function), ast_(ast), interval_(interval), hasReturn_(false), isNested_(isNested),
-      doMethod_(std::make_unique<DoMethod>(interval, context->getMetaData())) {
+      function_(function), ast_(ast), interval_(interval), hasReturn_(false), isNested_(isNested)
+// ,doMethod_(std::make_unique<DoMethod>(interval, context->getMetaData())) {
+{
   DAWN_ASSERT(context);
   DAWN_ASSERT(function);
 }
 
 StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
-  // The SIR object function_ is not cloned, but copied, since the SIR is considered immuatble
+  // The SIR object function_ is not cloned, but copied, since the SIR is considered immutable
   StencilFunctionInstantiation stencilFun(
       stencilInstantiation_, std::static_pointer_cast<iir::StencilFunCallExpr>(expr_->clone()),
       function_, ast_->clone(), interval_, isNested_);
@@ -65,7 +66,7 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   stencilFun.unusedFields_ = unusedFields_;
   stencilFun.GlobalVariableAccessIDSet_ = GlobalVariableAccessIDSet_;
 
-  stencilFun.doMethod_ = doMethod_->clone();
+  // stencilFun.doMethod_ = doMethod_->clone();
 
   return stencilFun;
 }
@@ -354,7 +355,8 @@ bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
 }
 
 const std::vector<std::shared_ptr<iir::Stmt>>& StencilFunctionInstantiation::getStatements() const {
-  return doMethod_->getAST().getStatements();
+  return getAST()->getRoot()->getStatements();
+  // doMethod_->getAST().getStatements();
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -381,7 +383,7 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> inputFields;
   std::unordered_map<int, Field> outputFields;
 
-  for(const auto& stmt : doMethod_->getAST().getStatements()) {
+  for(const auto& stmt : getAST()->getRoot()->getStatements()) {
     const auto& access = stmt->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
@@ -473,7 +475,7 @@ void StencilFunctionInstantiation::update() {
         AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
       // Accumulate the extents of each field in this stage
-      for(const auto& stmt : doMethod_->getAST().getStatements()) {
+      for(const auto& stmt : getAST()->getRoot()->getStatements()) {
         const auto& access = callerAccesses ? stmt->getData<IIRStmtData>().CallerAccesses
                                             : stmt->getData<IIRStmtData>().CalleeAccesses;
 
@@ -614,7 +616,7 @@ void StencilFunctionInstantiation::dump() const {
     std::cout << "\033[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\033[0m";
     const auto& callerAccesses =
-        doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
+        getAST()->getRoot()->getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
       std::cout << callerAccesses->toString(
                        [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
@@ -673,9 +675,10 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
   }
 
   // check that the list of <statement,access> are set for all statements
-  DAWN_ASSERT_MSG(
-      (getAST()->getRoot()->getStatements().size() == doMethod_->getAST().getStatements().size()),
-      "AST has different number of statements with respect to DoMethod's AST");
+  // DAWN_ASSERT_MSG(
+  //     (getAST()->getRoot()->getStatements().size() ==
+  //     doMethod_->getAST().getStatements().size()), "AST has different number of statements with
+  //     respect to DoMethod's AST");
 }
 
 } // namespace iir

@@ -43,16 +43,21 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
 void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    auto& ms = scope_.top()->multiStage_;
-    std::unique_ptr<iir::Stage> stage =
-        std::make_unique<iir::Stage>(metadata_, instantiation_->nextUID(),
-                                     scope_.top()->VerticalInterval, scope_.top()->iterationSpace);
-    iir::DoMethod& doMethod = stage->getSingleDoMethod();
+    if(scope_.top()->FunctionInstantiation) {
+      // scope_.top()->FunctionInstantiation->getAST()->getRoot()->push_back(
+      //     std::shared_ptr<iir::Stmt>{stmt});
+    } else {
+      auto& ms = scope_.top()->multiStage_;
+      std::unique_ptr<iir::Stage> stage = std::make_unique<iir::Stage>(
+          metadata_, instantiation_->nextUID(), scope_.top()->VerticalInterval,
+          scope_.top()->iterationSpace);
+      iir::DoMethod& doMethod = stage->getSingleDoMethod();
 
-    doMethod.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
+      doMethod.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
 
-    // Put the stage into a separate MultiStage ...
-    ms.insertChild(std::move(stage));
+      // Put the stage into a separate MultiStage ...
+      ms.insertChild(std::move(stage));
+    }
   }
 }
 
@@ -241,11 +246,10 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
         candidateScope->ArgumentIndex, stencilFun);
     candidateScope->ArgumentIndex += 1;
   }
-
   // Create the scope of the stencil function
-  scope_.top()->CandidateScopes.push(std::make_shared<Scope>(
-      *(stencilFun->getDoMethod()->getParent()->getParent()), stencilFun->getInterval(),
-      stencilFun->getDoMethod()->getParent()->getIterationSpace(), stencilFun));
+  scope_.top()->CandidateScopes.push(
+      std::make_shared<Scope>(scope_.top()->multiStage_, stencilFun->getInterval(),
+                              scope_.top()->iterationSpace, stencilFun));
 
   // Resolve the arguments
   for(auto& arg : expr->getArguments())
