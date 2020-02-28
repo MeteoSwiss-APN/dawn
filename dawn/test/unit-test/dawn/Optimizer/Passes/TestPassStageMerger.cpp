@@ -16,9 +16,10 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageMerger.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
@@ -32,21 +33,35 @@ class TestPassStageMerger : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
+  dawn::DiagnosticsEngine diag_;
 
-  virtual void SetUp() { options_.MergeStages = options_.MergeDoMethods = true; }
+  explicit TestPassStageMerger() {
+    options_.MergeStages = options_.MergeDoMethods = true;
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+    context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
+    dawn::UIDGenerator::getInstance()->reset();
+  }
 
   void runTest(const std::string& filename, unsigned nStencils,
                const std::vector<unsigned>& nMultiStages, const std::vector<unsigned>& nStages,
                const std::vector<unsigned>& nDoMethods) {
-    dawn::UIDGenerator::getInstance()->reset();
-    std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+    // Deserialize IIR
+    std::string filepath = filename;
+    if(!TestEnvironment::path_.empty())
+      filepath = TestEnvironment::path_ + "/" + filepath;
+    auto instantiation = IIRSerializer::deserialize(filepath);
 
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
+    // Run stage splitter pass
+    PassStageSplitter stageSplitPass(*context_);
+    EXPECT_TRUE(stageSplitPass.run(instantiation));
+
+    // Run stage graph pass
+    PassSetStageGraph stageGraphPass(*context_);
+    EXPECT_TRUE(stageGraphPass.run(instantiation));
 
     // Expect pass to succeed...
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageMerger>(context_, instantiation));
+    PassStageMerger stageMergerPass(*context_);
+    EXPECT_TRUE(stageMergerPass.run(instantiation));
 
     unsigned stencilIdx = 0;
     unsigned msIdx = 0;
@@ -69,31 +84,83 @@ protected:
 };
 
 TEST_F(TestPassStageMerger, MergerTest1) {
-  runTest("input/StageMergerTest01.sir", 1, {1}, {1}, {1});
+  /*
+    vertical_region(k_start, k_end) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_start, k_end) {
+      field_b1 = field_b0;
+    } */
+  runTest("input/StageMergerTest01.iir", 1, {1}, {1}, {1});
 }
 
 TEST_F(TestPassStageMerger, MergerTest2) {
-  runTest("input/StageMergerTest02.sir", 1, {1}, {2}, {1, 1});
+  /*
+    vertical_region(k_start, k_end) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_start + 1, k_end) {
+      field_b1 = field_b0;
+    } */
+  runTest("input/StageMergerTest02.iir", 1, {1}, {2}, {1, 1});
 }
 
 TEST_F(TestPassStageMerger, MergerTest3) {
-  runTest("input/StageMergerTest03.sir", 1, {1}, {1}, {2});
+  /*
+    vertical_region(k_start, k_start) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_start + 1, k_end) {
+      field_b1 = field_b0;
+    } */
+  runTest("input/StageMergerTest03.iir", 1, {1}, {1}, {2});
 }
 
 TEST_F(TestPassStageMerger, MergerTest4) {
-  runTest("input/StageMergerTest04.sir", 1, {1}, {1}, {3});
+  /*
+    vertical_region(k_start, k_start) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_start + 1, k_end - 1) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_end, k_end) {
+      field_a1 = field_a0;
+    } */
+  runTest("input/StageMergerTest04.iir", 1, {1}, {1}, {3});
 }
 
 TEST_F(TestPassStageMerger, MergerTest5) {
-  runTest("input/StageMergerTest05.sir", 1, {1}, {2}, {1, 1});
+  /*
+    vertical_region(k_start, k_end) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_start, k_end) {
+      field_a2 = field_a1(i + 1);
+    } */
+  runTest("input/StageMergerTest05.iir", 1, {1}, {2}, {1, 1});
 }
 
 TEST_F(TestPassStageMerger, MergerTest6) {
-  runTest("input/StageMergerTest06.sir", 1, {1}, {1}, {2});
+  /*
+    vertical_region(k_start, k_start) {
+      field_a1 = field_a0;
+    }
+    vertical_region(k_start + 1, k_end) {
+      field_a2 = field_a1(i + 1);
+    } */
+  runTest("input/StageMergerTest06.iir", 1, {1}, {1}, {2});
 }
 
 TEST_F(TestPassStageMerger, MergerTest7) {
-  runTest("input/StageMergerTest07.sir", 1, {1}, {1}, {1});
+  /*
+    vertical_region(k_start, k_end) {
+      out = in;
+    }
+    vertical_region(k_start, k_end) {
+      out = 0;
+    } */
+  runTest("input/StageMergerTest07.iir", 1, {1}, {1}, {1});
 }
 
 } // anonymous namespace

@@ -47,4 +47,10 @@ TEST(IRSplittingTest, TemporaryMerger) {
              {"-fmerge-temporaries"});
 }
 
+TEST(IRSplittingTest, StageMerger) {
+  gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 2)
+      .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/StageMergerTest07.cpp",
+             {"-fmerge-stages", "-fmerge-do-methods"});
+}
+
 } // anonymous namespace
