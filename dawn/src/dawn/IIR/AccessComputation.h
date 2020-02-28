@@ -25,6 +25,7 @@ namespace dawn {
 namespace iir {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+class StencilMetaInformation;
 } // namespace iir
 
 /// @name Access computation routines
@@ -32,10 +33,10 @@ class StencilFunctionInstantiation;
 /// @{
 
 /// @fn computeAccesses
-/// @brief Compute the Accesses of `stmts`
+/// @brief Compute the Accesses of `stmts`.
 /// @ingroup optimizer
-extern void computeAccesses(iir::StencilInstantiation* instantiation,
-                            ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+void computeAccesses(const iir::StencilMetaInformation& metadata,
+                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
 
 /// @fn computeAccesses
 /// @brief Compute the caller and callee Accesses of `stmts`
@@ -45,9 +46,9 @@ extern void computeAccesses(iir::StencilInstantiation* instantiation,
 ///
 /// @see StencilFunctionInstantiation
 /// @ingroup optimizer
-extern void
-computeAccesses(std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-                ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+void computeAccesses(
+    std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
+    ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
 
 /// @}
 

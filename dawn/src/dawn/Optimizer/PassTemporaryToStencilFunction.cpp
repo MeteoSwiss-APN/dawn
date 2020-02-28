@@ -677,7 +677,7 @@ bool PassTemporaryToStencilFunction::run(
 
                   const std::shared_ptr<iir::Stmt>& replacementStmt =
                       *(tmpStmtDoMethod.getAST().getStatements().begin());
-                  computeAccesses(stencilInstantiation.get(), replacementStmt);
+                  computeAccesses(stencilInstantiation->getMetaData(), replacementStmt);
 
                   doMethodPtr->getAST().replaceChildren(stmt, replacementStmt);
                   doMethodPtr->update(iir::NodeUpdateType::level);

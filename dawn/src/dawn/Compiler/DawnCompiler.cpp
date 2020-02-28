@@ -28,6 +28,7 @@
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
+#include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
@@ -185,13 +186,14 @@ DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
     optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
     optimizer.pushBackPass<PassFieldVersioning>();
     optimizer.pushBackPass<PassMultiStageSplitter>(mssSplitStrategy);
+    optimizer.pushBackPass<PassLocalVarType>();
+    optimizer.pushBackPass<PassRemoveScalars>();
     optimizer.pushBackPass<PassStageSplitter>();
     optimizer.pushBackPass<PassTemporaryType>();
     optimizer.pushBackPass<PassFixVersionedInputFields>();
     optimizer.pushBackPass<PassComputeStageExtents>();
     optimizer.pushBackPass<PassSetSyncStage>();
     // validation checks after parallelisation
-    optimizer.pushBackPass<PassLocalVarType>();
     optimizer.pushBackPass<PassValidation>();
   }
 
@@ -294,6 +296,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // since this can change the scope of temporaries ...
     optimizer.pushBackPass<PassTemporaryType>();
     optimizer.pushBackPass<PassLocalVarType>();
+    optimizer.pushBackPass<PassRemoveScalars>();
     // modify stages and their extents ...
     optimizer.pushBackPass<PassComputeStageExtents>();
     // and changes their dependencies
@@ -308,10 +311,6 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   //===-----------------------------------------------------------------------------------------
   if(shouldRunGroup(options_, options_.MergeTemporaries)) {
     optimizer.pushBackPass<PassTemporaryMerger>();
-    // this should not affect the temporaries but since we're touching them it would probably be a
-    // safe idea
-    optimizer.pushBackPass<PassTemporaryType>();
-    optimizer.pushBackPass<PassLocalVarType>();
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
@@ -328,7 +327,6 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
       optimizer.pushBackPass<PassIntervalPartitioning>();
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
-      optimizer.pushBackPass<PassLocalVarType>();
       // optimizer.pushBackPass<PassFixVersionedInputFields>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
@@ -347,6 +345,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // safe idea
     optimizer.pushBackPass<PassTemporaryType>();
     optimizer.pushBackPass<PassLocalVarType>();
+    optimizer.pushBackPass<PassRemoveScalars>();
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }

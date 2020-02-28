@@ -408,12 +408,7 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    std::vector<std::shared_ptr<Stmt>> allStatements;
-    for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
-      allStatements.insert(allStatements.end(), doMethod->getAST().getStatements().begin(),
-                           doMethod->getAST().getStatements().end());
-    }
-    computeAccesses(instantiation_.get(), allStatements);
+    computeAccesses(instantiation_->getMetaData(), allStmts);
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     // stage->update(iir::NodeUpdateType::level);
@@ -504,15 +499,15 @@ public:
       if(scope_.top()->VariableMap.count(var->getName())) {
         double result;
         if(iir::evalExprAsDouble(expr->getRight(), result, scope_.top()->VariableMap)) {
-          if(StringRef(expr->getOp()) == "=")
+          if(expr->getOp() == "=")
             scope_.top()->VariableMap[var->getName()] = result;
-          else if(StringRef(expr->getOp()) == "+=")
+          else if(expr->getOp() == "+=")
             scope_.top()->VariableMap[var->getName()] += result;
-          else if(StringRef(expr->getOp()) == "-=")
+          else if(expr->getOp() == "-=")
             scope_.top()->VariableMap[var->getName()] -= result;
-          else if(StringRef(expr->getOp()) == "*=")
+          else if(expr->getOp() == "*=")
             scope_.top()->VariableMap[var->getName()] *= result;
-          else if(StringRef(expr->getOp()) == "/=")
+          else if(expr->getOp() == "/=")
             scope_.top()->VariableMap[var->getName()] /= result;
           else // unknown operator
             scope_.top()->VariableMap.erase(var->getName());

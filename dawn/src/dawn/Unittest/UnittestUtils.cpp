@@ -12,16 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
+#include "UnittestUtils.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 
-#define GT_FLOAT_PRECISION 8
+namespace dawn {
+iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si) {
+  return **iterateIIROver<iir::DoMethod>(*si->getIIR()).begin();
+}
 
-#include "arrayAddons.hpp"
-#include "cxx11_warning.hpp"
-#include "defs.hpp"
-#include "domain.hpp"
-#include "extent.hpp"
-#include "halo.hpp"
-#include "math.hpp"
-#include "param_wrapper.hpp"
-#include "storage.hpp"
+std::shared_ptr<iir::Stmt> getNthStmt(iir::DoMethod& doMethod, int n) {
+  return doMethod.getAST().getStatements()[n];
+}
+} // namespace dawn

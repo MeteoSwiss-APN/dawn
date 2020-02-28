@@ -13,15 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #pragma once
+#include "dawn/IIR/StencilInstantiation.h"
 
-#define GT_FLOAT_PRECISION 8
+namespace dawn {
 
-#include "arrayAddons.hpp"
-#include "cxx11_warning.hpp"
-#include "defs.hpp"
-#include "domain.hpp"
-#include "extent.hpp"
-#include "halo.hpp"
-#include "math.hpp"
-#include "param_wrapper.hpp"
-#include "storage.hpp"
+iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si);
+
+std::shared_ptr<iir::Stmt> getNthStmt(iir::DoMethod& doMethod, int n);
+
+} // namespace dawn
