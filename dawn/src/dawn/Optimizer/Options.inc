@@ -47,6 +47,7 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
+// TODO Remove DefaultNone
 OPT(bool, DefaultNone, false, "default-none", "",
     "Selectively run passes", "", false, true)
 OPT(bool, Parallel, false, "parallel", "",

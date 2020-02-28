@@ -26,27 +26,46 @@ namespace dawn {
 
 struct SIR;
 
+/// @brief Enumeration of all pass groups
+enum class PassGroup {
+  Parallel,
+  SSA,
+  PrintStencilGraph,
+  SetStageName,
+  StageReordering,
+  StageMerger,
+  TemporaryMerger,
+  Inlining,
+  IntervalPartitioning,
+  TmpToStencilFunction,
+  SetNonTempCaches,
+  SetCaches,
+  SetBlockSize,
+  DataLocalityMetric
+};
+
 /// @brief The DawnCompiler class
 /// @ingroup compiler
 class DawnCompiler : NonCopyable {
   DiagnosticsEngine diagnostics_;
   Options options_;
+  std::list<PassGroup> groups_;
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics
   DawnCompiler() = default;
-  DawnCompiler(const Options& options);
+  DawnCompiler(const Options& options, const std::list<PassGroup>& groups = {});
 
   /// @brief Apply parallelizer, code optimization, and generate
-  std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& stencilIR);
+  std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR);
 
   /// @brief Lower to IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-  lowerToIIR(std::shared_ptr<SIR> const& stencilIR);
+  lowerToIIR(const std::shared_ptr<SIR>& stencilIR);
 
   /// @brief Run optimization passes on the IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-  optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+  optimize(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);
 
   /// @brief Generate a translation unit from a set of Stencil Instantiations

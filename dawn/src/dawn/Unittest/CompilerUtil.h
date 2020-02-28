@@ -28,24 +28,6 @@
 
 namespace dawn {
 
-/// @brief Enumeration of all pass groups
-enum class PassGroup {
-  Parallel,
-  SSA,
-  PrintStencilGraph,
-  SetStageName,
-  StageReordering,
-  StageMerger,
-  TemporaryMerger,
-  Inlining,
-  IntervalPartitioning,
-  TmpToStencilFunction,
-  SetNonTempCaches,
-  SetCaches,
-  SetBlockSize,
-  DataLocalityMetric
-};
-
 using stencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
