@@ -34,9 +34,18 @@
 
 OPT(int, MaxHaloPoints, 3, "max-halo", "",
     "Set the maximum number of allowed halo points", "<N>", true, false)
-OPT(int, block_size_i, 0, "block-size-i", "", "i block size for tiled computations", "", true, false)
-OPT(int, block_size_j, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
-OPT(int, block_size_k, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
+OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
+    "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:"
+    "\n - none   = Disable reordering"
+    "\n - greedy = Use greedy fusing"
+    "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
+OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
+    "Set the maximum number of fields in any given stencils", "<N>", true, false)
+OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
+    "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
+OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations", "", true, false)
+OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
+OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
 OPT(bool, DefaultNone, false, "default-none", "",
     "Selectively run passes", "", false, true)

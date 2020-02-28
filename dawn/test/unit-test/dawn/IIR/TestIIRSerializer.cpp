@@ -174,7 +174,7 @@ protected:
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
     return IIRSerializer::deserializeFromString(
-        IIRSerializer::serializeToString(referenceInstantiation), context_.get());
+        IIRSerializer::serializeToString(referenceInstantiation));
   }
 
   std::shared_ptr<iir::StencilInstantiation> referenceInstantiation;
@@ -273,8 +273,8 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                   b.lit(0.), LocType::Cells, LocType::Edges))))))));
 
-  auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
-      IIRSerializer::serializeToString(stencil_instantiation), context_.get());
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
 
   IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
@@ -308,8 +308,8 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
                                                    b.lit(0.), LocType::Cells, LocType::Edges,
                                                    std::vector<int>({1, 2, 3, 4})))))))));
 
-  auto deserializedAndSerialized = IIRSerializer::deserializeFromString(
-      IIRSerializer::serializeToString(stencil_instantiation), context_.get());
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
 
   IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }

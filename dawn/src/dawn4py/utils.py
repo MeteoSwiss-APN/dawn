@@ -34,3 +34,19 @@ def pythonize_name(name: str) -> str:
     words = camel_case_split(name)
     result = "_".join(words).lower()
     return result
+
+def convert_sir(sir):
+    if isinstance(sir, int) or isinstance(sir, float):
+        return
+    for elem in sir:
+        if isinstance(elem, str):
+            key = elem
+            new_key = pythonize_name(key)
+            if new_key != key:
+                sir[new_key] = sir.pop(key)
+                key = new_key
+            if isinstance(sir[key], dict):
+                convert_sir(sir[key])
+            elif isinstance(sir[key], list):
+                for sub in sir[key]:
+                    convert_sir(sub)

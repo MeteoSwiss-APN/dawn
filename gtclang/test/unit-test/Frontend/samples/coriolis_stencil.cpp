@@ -14,27 +14,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GTCLANG_FRONTEND_OPTIONS_H
-#define GTCLANG_FRONTEND_OPTIONS_H
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
-#include <string>
+using namespace gtclang::dsl;
 
-namespace gtclang {
+stencil coriolis_stencil
+{
+  storage u_nnow, v_nnow, fc, u_tens, v_tens;
+  var z_fv_north, z_fv_south, z_fu_east, z_fu_west;
 
-/// @brief Configuration options used by gtclang and the DAWN library (most of them are parsed from
-/// the command-line)
-///
-/// @ingroup driver
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/CodeGen/Options.inc"
-#include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/Options.inc"
-#include "gtclang/Driver/Options.inc"
-#undef OPT
+  Do
+  {
+    vertical_region(k_start, k_end)
+    {
+      z_fv_north = fc * (v_nnow + v_nnow(i + 1));
+      z_fv_south = fc(j - 1) * (v_nnow(j - 1) + v_nnow(i + 1, j - 1));
+      u_tens = u_tens + 0.25 * (z_fv_north + z_fv_south);
+
+      z_fu_east = fc * (u_nnow + u_nnow(j + 1));
+      z_fu_west = fc(i - 1) * (u_nnow(i - 1) + u_nnow(i - 1, j + 1));
+      v_tens = v_tens - 0.25 * (z_fu_east + z_fu_west);
+    }
+  }
 };
-
-} // namespace gtclang
-
-#endif

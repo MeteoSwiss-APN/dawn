@@ -26,9 +26,9 @@ PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "P
 bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& IIR = stencilInstantiation->getIIR();
 
-  Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().block_size_i),
-                     static_cast<unsigned int>(context_.getOptions().block_size_j),
-                     static_cast<unsigned int>(context_.getOptions().block_size_k)};
+  Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().BlockSizeI),
+                     static_cast<unsigned int>(context_.getOptions().BlockSizeJ),
+                     static_cast<unsigned int>(context_.getOptions().BlockSizeK)};
   if(std::all_of(blockSize.begin(), blockSize.end(), [](unsigned int size) { return size == 0; })) {
     bool verticalPattern = true;
     for(const auto& stage : iterateIIROver<iir::Stage>(*IIR)) {

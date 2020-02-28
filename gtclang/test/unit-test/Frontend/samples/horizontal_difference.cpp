@@ -14,27 +14,24 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GTCLANG_FRONTEND_OPTIONS_H
-#define GTCLANG_FRONTEND_OPTIONS_H
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
+using namespace gtclang::dsl;
 
-#include <string>
+stencil horizontal_difference
+{
+  storage input, coeff, output;
+  var lap, res, flx, fly;
 
-namespace gtclang {
-
-/// @brief Configuration options used by gtclang and the DAWN library (most of them are parsed from
-/// the command-line)
-///
-/// @ingroup driver
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/CodeGen/Options.inc"
-#include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/Options.inc"
-#include "gtclang/Driver/Options.inc"
-#undef OPT
+  Do
+  {
+    vertical_region(k_start, k_end)
+    {
+      lap = 4.0 * input - (input[i+1] + input[i-1] + input[j+1] + input[j-1]);
+      res = lap[i+1] - lap;
+      flx = ((res * (input[i+1] - input)) > 0) ? 0 : res;
+      res = lap[j+1] - lap;
+      fly = ((res * (input[j+1] - input)) > 0) ? 0 : res;
+      output = input - coeff * (flx - flx[i-1] + fly - fly[j-1]);
+    }
+  }
 };
-
-} // namespace gtclang
-
-#endif

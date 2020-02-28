@@ -14,27 +14,32 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GTCLANG_FRONTEND_OPTIONS_H
-#define GTCLANG_FRONTEND_OPTIONS_H
+#include "gtclang_dsl_defs/gtclang_dsl.hpp"
+using namespace gtclang::dsl;
 
-#include <string>
+stencil tridiagonal_solve
+{
+  storage inf, diag, sup, rhs, out;
 
-namespace gtclang {
-
-/// @brief Configuration options used by gtclang and the DAWN library (most of them are parsed from
-/// the command-line)
-///
-/// @ingroup driver
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/CodeGen/Options.inc"
-#include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/Options.inc"
-#include "gtclang/Driver/Options.inc"
-#undef OPT
+  Do
+  {
+    vertical_region(k_start, k_start + 1)
+    {
+      sup = sup / diag;
+      rhs = rhs / diag;
+    }
+    vertical_region(k_start + 1, k_end)
+    {
+      sup = sup / (diag - sup[k - 1] * inf);
+      rhs = (rhs - inf * rhs[k - 1]) / (diag - sup[k - 1] * inf);
+    }
+    vertical_region(k_end - 1, k_start)
+    {
+      out = rhs - (sup * out[k + 1]);
+    }
+    vertical_region(k_end, k_end - 1)
+    {
+      out = rhs;
+    }
+  }
 };
-
-} // namespace gtclang
-
-#endif

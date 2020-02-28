@@ -74,10 +74,11 @@ def extract_dawn_compiler_options() -> list:
         os.path.dirname(__file__), os.pardir, os.pardir, "src", "dawn"
     )
 
-    # Extract info from .cpp files
+    # Extract info from .cpp files -- note that this order must match that in Compiler/Options.h
     for name in [
+        os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),
         os.path.join(DAWN_CPP_SRC_ROOT, "Compiler", "Options.inc"),
-        os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "OptimizerOptions.inc"),
+        os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),
     ]:
         options_cpp = []
         with open(name, "r") as f:
