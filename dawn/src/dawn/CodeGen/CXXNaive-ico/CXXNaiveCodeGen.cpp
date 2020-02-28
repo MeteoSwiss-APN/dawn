@@ -362,7 +362,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                        "dimensions, and vice versa!\n");
     }
 
-    Structure StencilClass = stencilWrapperClass.addStruct(stencilName);
+    Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                          StencilContext::SC_Stencil);
@@ -397,18 +397,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       }
     };
 
-    StencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
-    StencilClass.addMember("int", "m_k_size");
+    stencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
+    stencilClass.addMember("int", "m_k_size");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
+      stencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
 
-    StencilClass.changeAccessibility("public");
+    stencilClass.changeAccessibility("public");
 
-    auto stencilClassCtr = StencilClass.addConstructor();
+    auto stencilClassCtr = stencilClass.addConstructor();
 
     stencilClassCtr.addArg("dawn::mesh_t<LibTag> const &mesh");
     stencilClassCtr.addArg("int k_size");
@@ -431,12 +431,12 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     stencilClassCtr.commit();
 
     // virtual dtor
-    MemberFunction stencilClassDtr = StencilClass.addDestructor(false);
+    MemberFunction stencilClassDtr = stencilClass.addDestructor(false);
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
     // synchronize storages method
-    MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
+    MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
     // for(auto fieldIt : nonTempFields) {
@@ -445,10 +445,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     syncStoragesMethod.commit();
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Unstructured);
+
     //
     // Run-Method
     //
-    MemberFunction StencilRunMethod = StencilClass.addMemberFunction("void", "run", "");
+    MemberFunction StencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
     StencilRunMethod.startBody();
 
     // TODO the generic deref should be moved to a different namespace

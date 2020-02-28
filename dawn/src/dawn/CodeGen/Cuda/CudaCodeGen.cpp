@@ -216,6 +216,9 @@ void CudaCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
                             stencilProperties);
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
+
     //
     // Run-Method
     //

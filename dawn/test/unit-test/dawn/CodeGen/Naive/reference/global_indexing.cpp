@@ -69,6 +69,8 @@ private:
   public:
 
     stencil_28(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : m_dom(dom_), stage14GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
+    static constexpr dawn::driver::cartesian_extent in_field_extent = {0,0, 0,0, 0,0};
+    static constexpr dawn::driver::cartesian_extent out_field_extent = {0,0, 0,0, 0,0};
 
     void run(storage_ijk_t& in_field_, storage_ijk_t& out_field_) {
       int iMin = m_dom.iminus();
