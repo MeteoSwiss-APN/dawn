@@ -56,7 +56,8 @@ public:
   }
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
     auto data = expr->getData<iir::IIRAccessExprData>();
-    std::string realName = metadata_.getNameFromAccessID(data.AccessID.value());
+    int accessID = *data.AccessID;
+    std::string realName = metadata_.getNameFromAccessID(accessID);
     expr->setName(realName);
   }
 };

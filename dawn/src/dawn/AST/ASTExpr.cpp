@@ -48,10 +48,10 @@ std::shared_ptr<Expr> UnaryOperator::clone() const {
   return std::make_shared<UnaryOperator>(*this);
 }
 
-bool UnaryOperator::equals(const Expr* other) const {
+bool UnaryOperator::equals(const Expr* other, bool compareData) const {
   const UnaryOperator* otherPtr = dyn_cast<UnaryOperator>(other);
-  return otherPtr && Expr::equals(other) && operand_->equals(otherPtr->operand_.get()) &&
-         op_ == otherPtr->op_;
+  return otherPtr && Expr::equals(other, compareData) &&
+         operand_->equals(otherPtr->operand_.get(), compareData) && op_ == otherPtr->op_;
 }
 
 void UnaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -87,11 +87,12 @@ std::shared_ptr<Expr> BinaryOperator::clone() const {
   return std::make_shared<BinaryOperator>(*this);
 }
 
-bool BinaryOperator::equals(const Expr* other) const {
+bool BinaryOperator::equals(const Expr* other, bool compareData) const {
   const BinaryOperator* otherPtr = dyn_cast<BinaryOperator>(other);
-  return otherPtr && Expr::equals(other) &&
-         operands_[Left]->equals(otherPtr->operands_[Left].get()) &&
-         operands_[Right]->equals(otherPtr->operands_[Right].get()) && op_ == otherPtr->op_;
+  return otherPtr && Expr::equals(other, compareData) &&
+         operands_[Left]->equals(otherPtr->operands_[Left].get(), compareData) &&
+         operands_[Right]->equals(otherPtr->operands_[Right].get(), compareData) &&
+         op_ == otherPtr->op_;
 }
 
 void BinaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -131,11 +132,12 @@ std::shared_ptr<Expr> AssignmentExpr::clone() const {
   return std::make_shared<AssignmentExpr>(*this);
 }
 
-bool AssignmentExpr::equals(const Expr* other) const {
+bool AssignmentExpr::equals(const Expr* other, bool compareData) const {
   const AssignmentExpr* otherPtr = dyn_cast<AssignmentExpr>(other);
-  return otherPtr && Expr::equals(other) &&
-         operands_[Left]->equals(otherPtr->operands_[Left].get()) &&
-         operands_[Right]->equals(otherPtr->operands_[Right].get()) && op_ == otherPtr->op_;
+  return otherPtr && Expr::equals(other, compareData) &&
+         operands_[Left]->equals(otherPtr->operands_[Left].get(), compareData) &&
+         operands_[Right]->equals(otherPtr->operands_[Right].get(), compareData) &&
+         op_ == otherPtr->op_;
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -157,7 +159,7 @@ NOPExpr::~NOPExpr() {}
 
 std::shared_ptr<Expr> NOPExpr::clone() const { return std::make_shared<NOPExpr>(*this); }
 
-bool NOPExpr::equals(const Expr* other) const { return true; }
+bool NOPExpr::equals(const Expr* other, bool compareData) const { return true; }
 
 //===------------------------------------------------------------------------------------------===//
 //     TernaryOperator
@@ -187,12 +189,12 @@ std::shared_ptr<Expr> TernaryOperator::clone() const {
   return std::make_shared<TernaryOperator>(*this);
 }
 
-bool TernaryOperator::equals(const Expr* other) const {
+bool TernaryOperator::equals(const Expr* other, bool compareData) const {
   const TernaryOperator* otherPtr = dyn_cast<TernaryOperator>(other);
-  return otherPtr && Expr::equals(other) &&
-         operands_[Cond]->equals(otherPtr->operands_[Cond].get()) &&
-         operands_[Left]->equals(otherPtr->operands_[Left].get()) &&
-         operands_[Right]->equals(otherPtr->operands_[Right].get());
+  return otherPtr && Expr::equals(other, compareData) &&
+         operands_[Cond]->equals(otherPtr->operands_[Cond].get(), compareData) &&
+         operands_[Left]->equals(otherPtr->operands_[Left].get(), compareData) &&
+         operands_[Right]->equals(otherPtr->operands_[Right].get(), compareData);
 }
 
 void TernaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -225,13 +227,13 @@ FunCallExpr::~FunCallExpr() {}
 
 std::shared_ptr<Expr> FunCallExpr::clone() const { return std::make_shared<FunCallExpr>(*this); }
 
-bool FunCallExpr::equals(const Expr* other) const {
+bool FunCallExpr::equals(const Expr* other, bool compareData) const {
   const FunCallExpr* otherPtr = dyn_cast<FunCallExpr>(other);
-  return otherPtr && Expr::equals(other) && callee_ == otherPtr->callee_ &&
+  return otherPtr && Expr::equals(other, compareData) && callee_ == otherPtr->callee_ &&
          arguments_.size() == otherPtr->arguments_.size() &&
          std::equal(arguments_.begin(), arguments_.end(), otherPtr->arguments_.begin(),
-                    [](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
-                      return a->equals(b.get());
+                    [compareData](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
+                      return a->equals(b.get(), compareData);
                     });
 }
 
@@ -272,13 +274,13 @@ std::shared_ptr<Expr> StencilFunCallExpr::clone() const {
   return std::make_shared<StencilFunCallExpr>(*this);
 }
 
-bool StencilFunCallExpr::equals(const Expr* other) const {
+bool StencilFunCallExpr::equals(const Expr* other, bool compareData) const {
   const StencilFunCallExpr* otherPtr = dyn_cast<StencilFunCallExpr>(other);
-  return otherPtr && Expr::equals(other) && callee_ == otherPtr->callee_ &&
+  return otherPtr && Expr::equals(other, compareData) && callee_ == otherPtr->callee_ &&
          arguments_.size() == otherPtr->arguments_.size() &&
          std::equal(arguments_.begin(), arguments_.end(), otherPtr->arguments_.begin(),
-                    [](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
-                      return a->equals(b.get());
+                    [compareData](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
+                      return a->equals(b.get(), compareData);
                     });
 }
 
@@ -309,9 +311,9 @@ std::shared_ptr<Expr> StencilFunArgExpr::clone() const {
   return std::make_shared<StencilFunArgExpr>(*this);
 }
 
-bool StencilFunArgExpr::equals(const Expr* other) const {
+bool StencilFunArgExpr::equals(const Expr* other, bool compareData) const {
   const StencilFunArgExpr* otherPtr = dyn_cast<StencilFunArgExpr>(other);
-  return otherPtr && Expr::equals(other) && dimension_ == otherPtr->dimension_ &&
+  return otherPtr && Expr::equals(other, compareData) && dimension_ == otherPtr->dimension_ &&
          offset_ == otherPtr->offset_ && argumentIndex_ == otherPtr->argumentIndex_;
 }
 
@@ -344,12 +346,12 @@ std::shared_ptr<Expr> VarAccessExpr::clone() const {
   return std::make_shared<VarAccessExpr>(*this);
 }
 
-bool VarAccessExpr::equals(const Expr* other) const {
+bool VarAccessExpr::equals(const Expr* other, bool compareData) const {
   const VarAccessExpr* otherPtr = dyn_cast<VarAccessExpr>(other);
-  return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
+  return otherPtr && Expr::equals(other, compareData) && name_ == otherPtr->name_ &&
          isExternal_ == otherPtr->isExternal_ && isArrayAccess() == otherPtr->isArrayAccess() &&
-         (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true) &&
-         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
+         (isArrayAccess() ? index_->equals(otherPtr->index_.get(), compareData) : true) &&
+         (compareData ? (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_) : true);
 }
 
 void VarAccessExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -403,12 +405,12 @@ std::shared_ptr<Expr> FieldAccessExpr::clone() const {
   return std::make_shared<FieldAccessExpr>(*this);
 }
 
-bool FieldAccessExpr::equals(const Expr* other) const {
+bool FieldAccessExpr::equals(const Expr* other, bool compareData) const {
   const FieldAccessExpr* otherPtr = dyn_cast<FieldAccessExpr>(other);
-  return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
+  return otherPtr && Expr::equals(other, compareData) && name_ == otherPtr->name_ &&
          offset_ == otherPtr->offset_ && argumentMap_ == otherPtr->argumentMap_ &&
          argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_ &&
-         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
+         (compareData ? (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_) : true);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -439,11 +441,11 @@ std::shared_ptr<Expr> LiteralAccessExpr::clone() const {
   return std::make_shared<LiteralAccessExpr>(*this);
 }
 
-bool LiteralAccessExpr::equals(const Expr* other) const {
+bool LiteralAccessExpr::equals(const Expr* other, bool compareData) const {
   const LiteralAccessExpr* otherPtr = dyn_cast<LiteralAccessExpr>(other);
-  return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
+  return otherPtr && Expr::equals(other, compareData) && value_ == otherPtr->value_ &&
          builtinType_ == otherPtr->builtinType_ &&
-         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
+         (compareData ? (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_) : true);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -487,7 +489,7 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
   return std::make_shared<ReductionOverNeighborExpr>(*this);
 }
 
-bool ReductionOverNeighborExpr::equals(const Expr* other) const {
+bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
 
   if(weights_.has_value()) {
@@ -504,8 +506,10 @@ bool ReductionOverNeighborExpr::equals(const Expr* other) const {
     }
   }
 
-  return otherPtr && *otherPtr->getInit() == *getInit() && otherPtr->getOp() == getOp() &&
-         *otherPtr->getRhs() == *getRhs() && otherPtr->getRhsLocation() == getRhsLocation();
+  return otherPtr && otherPtr->getInit()->equals(getInit().get(), compareData) &&
+         otherPtr->getOp() == getOp() && otherPtr->getRhs()->equals(getRhs().get(), compareData) &&
+         otherPtr->getRhsLocation() == getRhsLocation() &&
+         otherPtr->getLhsLocation() == getLhsLocation();
 }
 
 } // namespace ast

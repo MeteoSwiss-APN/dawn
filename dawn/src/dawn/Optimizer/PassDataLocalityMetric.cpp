@@ -195,9 +195,8 @@ public:
 
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
     // LHS is a write and maybe a read if we have an expression like `a += 5`
-    bool readAndWrite = StringRef(expr->getOp()) == "+=" || StringRef(expr->getOp()) == "-=" ||
-                        StringRef(expr->getOp()) == "/=" || StringRef(expr->getOp()) == "*=" ||
-                        StringRef(expr->getOp()) == "|=" || StringRef(expr->getOp()) == "&=";
+    bool readAndWrite = expr->getOp() == "+=" || expr->getOp() == "-=" || expr->getOp() == "/=" ||
+                        expr->getOp() == "*=" || expr->getOp() == "|=" || expr->getOp() == "&=";
 
     if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
       auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
