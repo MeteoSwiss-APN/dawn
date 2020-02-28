@@ -353,6 +353,60 @@ TEST(TestRemoveScalars, test_if_01) {
   ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
 }
 
+TEST(TestRemoveScalars, test_if_02) {
+  using namespace dawn::iir;
+
+  UnstructuredIIRBuilder b;
+  auto f_c = b.field("f_c", ast::LocationType::Cells);
+  auto f_c_out = b.field("f_c_out", ast::LocationType::Cells);
+  auto varA =
+      b.localvar("varA", dawn::BuiltinTypeID::Double, {b.lit(2.0)}, iir::LocalVariableType::Scalar);
+
+  // field(cells) f_c, f_c_out;
+  // double varA = 2.0;
+  // if(f_c > varA) {
+  //   f_c_out = varA;
+  // }
+  //
+
+  auto stencil = b.build(
+      "generated", b.stencil(b.multistage(
+                       dawn::iir::LoopOrderKind::Forward,
+                       b.stage(b.doMethod(
+                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           b.ifStmt(b.binaryExpr(b.at(f_c), b.at(varA), Op::greater),
+                                    b.block(b.stmt(b.assignExpr(b.at(f_c_out), b.at(varA))))))))));
+
+  auto& metadata = stencil->getMetaData();
+  int varAID = metadata.getAccessIDFromName("varA");
+
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  PassRemoveScalars passRemoveScalars(optimizer);
+  passRemoveScalars.run(stencil);
+
+  // Check that there is 1 statement
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
+
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
+  // Check that first statement is:
+  // if(f_c > 2.0) {
+  //   f_c_out = 2.0;
+  // }
+  ASSERT_TRUE(firstStatement->equals(ifstmt(expr(binop(field("f_c"), ">", lit(2.0))),
+                                            block(expr(assign(field("f_c_out"), lit(2.0)))))
+                                         .get(),
+                                     /*compareData = */ false));
+  // Check that variables' metadata is gone
+  ASSERT_EQ(metadata.getAccessIDToLocalVariableDataMap().count(varAID), 0);
+  // Check that statements' accesses do not contain the variables
+  ASSERT_FALSE(isVarInDoMethodsAccesses(varAID, getFirstDoMethod(stencil)));
+}
+
 TEST(TestRemoveScalars, test_else_01) {
   using namespace dawn::iir;
 

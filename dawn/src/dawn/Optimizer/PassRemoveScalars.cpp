@@ -141,13 +141,16 @@ std::set<int> removeScalarsFromBlockStmt(
     for(const auto& [varAccessID, lastRhs] : scalarToLastRhsMap) {
 
       VarAccessesReplacer replacer(varAccessID, lastRhs);
-      // Only apply replacer on the rhs if current statement is an assignment / var decl.
+      // Apply replacer on the rhs if current statement is an assignment / var decl
       if(hasRhs(*stmtIt)) {
         auto& rhs = getRhs(*stmtIt);
         rhs = rhs->acceptAndReplace(replacer);
+      } else if(const std::shared_ptr<iir::IfStmt> ifStmt = std::dynamic_pointer_cast<iir::IfStmt>(
+                    *stmtIt)) { // or on the condition expression if current statement is an if.
+        ifStmt->getCondExpr() = ifStmt->getCondExpr()->acceptAndReplace(replacer);
       }
     }
-    // Need to treat if statements differently. There are block statements inside.
+    // Now process then and else block statements of an if
     if(const std::shared_ptr<iir::IfStmt> ifStmt =
            std::dynamic_pointer_cast<iir::IfStmt>(*stmtIt)) {
 
