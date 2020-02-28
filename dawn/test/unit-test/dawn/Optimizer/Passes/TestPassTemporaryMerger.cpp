@@ -17,9 +17,10 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetStageGraph.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
@@ -33,21 +34,30 @@ class TestPassTemporaryMerger : public ::testing::Test {
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
+  dawn::DiagnosticsEngine diag_;
 
-  virtual void SetUp() { options_.MergeTemporaries = true; }
-
-  void runTest(const std::string& filename, const std::vector<std::string>& mergedFields) {
+  explicit TestPassTemporaryMerger() {
+    options_.MergeTemporaries = true;
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+    context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
     dawn::UIDGenerator::getInstance()->reset();
-    std::shared_ptr<iir::StencilInstantiation> instantiation =
-        CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+  }
 
-    // Run prerequisite groups
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
+  void runTest(const std::string& filename,
+               const std::unordered_set<std::string>& mergedFields = {}) {
+    // Deserialize IIR
+    std::string filepath = filename;
+    if(!TestEnvironment::path_.empty())
+      filepath = TestEnvironment::path_ + "/" + filepath;
+    auto instantiation = IIRSerializer::deserialize(filepath);
+
+    // Run stage splitter pass
+    PassStageSplitter stageSplitPass(*context_);
+    EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassTemporaryMerger>(context_, instantiation));
+    PassTemporaryMerger tempMergerPass(*context_);
+    EXPECT_TRUE(tempMergerPass.run(instantiation));
 
     if(mergedFields.size() > 0) {
       // Apply AST matcher to find all field access expressions
@@ -56,8 +66,8 @@ protected:
           matcher.match(ast::Expr::Kind::FieldAccessExpr);
 
       std::unordered_set<std::string> fieldNames;
-      for(const auto& access : accessExprs) {
-        const auto& fieldAccessExpr = std::dynamic_pointer_cast<ast::FieldAccessExpr>(access);
+      for(const auto& accessExpr : accessExprs) {
+        const auto& fieldAccessExpr = std::dynamic_pointer_cast<ast::FieldAccessExpr>(accessExpr);
         fieldNames.insert(fieldAccessExpr->getName());
       }
 
@@ -69,16 +79,63 @@ protected:
   }
 };
 
-TEST_F(TestPassTemporaryMerger, MergeTest1) { runTest("input/MergeTest01.sir", {}); }
+TEST_F(TestPassTemporaryMerger, MergeTest1) {
+  /*
+   vertical_region(k_start, k_end) { field_a = field_b; }
+   */
+  runTest("input/MergeTest01.iir");
+}
 
-TEST_F(TestPassTemporaryMerger, MergeTest2) { runTest("input/MergeTest02.sir", {}); }
+TEST_F(TestPassTemporaryMerger, MergeTest2) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_a = field_a;
+      tmp_b = field_b;
+      field_a = tmp_a(i + 1);
+      field_b = tmp_b(i + 1);
+    } */
+  runTest("input/MergeTest02.iir");
+}
 
-TEST_F(TestPassTemporaryMerger, MergeTest3) { runTest("input/MergeTest03.sir", {"tmp_b"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest3) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_a = field_a;
+      field_a = tmp_a(i + 1);
+      tmp_b = field_b;
+      field_b = tmp_b(i + 1);
+      } */
+  runTest("input/MergeTest03.iir", {"tmp_b"});
+}
 
-TEST_F(TestPassTemporaryMerger, MergeTest4) { runTest("input/MergeTest04.sir", {"tmp_b"}); }
+TEST_F(TestPassTemporaryMerger, MergeTest4) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_a = field_a;
+      field_a = tmp_a(i + 1);
+    }
+    vertical_region(k_start, k_end) {
+      tmp_b = field_b;
+      field_b = tmp_b(i + 1);
+    } */
+  runTest("input/MergeTest04.iir", {"tmp_b"});
+}
 
 TEST_F(TestPassTemporaryMerger, MergeTest5) {
-  runTest("input/MergeTest05.sir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
+  /*
+    vertical_region(k_start, k_end) {
+      tmp_1 = field_1;
+      field_1 = tmp_1(i + 1);
+      tmp_2 = field_2;
+      field_2 = tmp_2(i + 1);
+      tmp_3 = field_3;
+      field_3 = tmp_3(i + 1);
+      tmp_4 = field_4;
+      field_4 = tmp_4(i + 1);
+      tmp_5 = field_5;
+      field_5 = tmp_5(i + 1);
+    } */
+  runTest("input/MergeTest05.iir", {"tmp_2", "tmp_3", "tmp_4", "tmp_5"});
 }
 
 } // anonymous namespace
