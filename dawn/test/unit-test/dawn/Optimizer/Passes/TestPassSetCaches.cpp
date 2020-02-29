@@ -44,7 +44,7 @@ protected:
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::StageReordering, context_, instantiation));
 
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSetCaches>(context_, instantiation));

@@ -40,7 +40,7 @@ bool PassTemporaryMerger::run(
     stencilNeedsMergePass |=
         stencilPtr->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries);
 
-  if(!(context_.getOptions().MergeTemporaries || stencilNeedsMergePass))
+  if(!(context_.getOptions().TemporaryMerger || stencilNeedsMergePass))
     return true;
 
   // Pair of nodes to visit and AccessID of the last temporary (or -1 if no temporary has been
