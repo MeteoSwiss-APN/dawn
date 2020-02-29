@@ -28,17 +28,18 @@
 
 namespace dawn {
 
+/// @brief Enumeration of all pass groups
 enum class PassGroup {
   Parallel,
   SSA,
   PrintStencilGraph,
   SetStageName,
-  ReorderStages,
-  MergeStages,
-  MergeTemporaries,
+  StageReordering,
+  StageMerger,
+  TemporaryMerger,
   Inlining,
-  PartitionIntervals,
-  PassTmpToFunction,
+  IntervalPartitioning,
+  TmpToStencilFunction,
   SetNonTempCaches,
   SetCaches,
   SetBlockSize,

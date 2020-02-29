@@ -33,7 +33,7 @@ protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
 
-  virtual void SetUp() { options_.MergeStages = options_.MergeDoMethods = true; }
+  virtual void SetUp() { options_.StageMerger = options_.MergeDoMethods = true; }
 
   void runTest(const std::string& filename, unsigned nStencils,
                const std::vector<unsigned>& nMultiStages, const std::vector<unsigned>& nStages,
@@ -43,7 +43,7 @@ protected:
         CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
+    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::StageReordering, context_, instantiation));
 
     // Expect pass to succeed...
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageMerger>(context_, instantiation));
