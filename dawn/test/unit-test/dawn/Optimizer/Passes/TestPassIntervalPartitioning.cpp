@@ -16,18 +16,16 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
 
-using namespace dawn;
-
 namespace {
+
+using namespace dawn;
 
 class TestPassIntervalPartitioning : public ::testing::Test {
 protected:
@@ -47,18 +45,18 @@ protected:
 };
 
 TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
-  std::shared_ptr<iir::StencilInstantiation> instantiation = CompilerUtil::load(
-      "input/test_interval_partition.sir", options_, context_, TestEnvironment::path_);
+  std::string filepath = "input/test_interval_partition.iir";
+  if(!TestEnvironment::path_.empty())
+    filepath = TestEnvironment::path_ + "/" + filepath;
+  auto instantiation = IIRSerializer::deserialize(filepath);
 
-  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::MergeStages, context_, instantiation));
-  ASSERT_TRUE(CompilerUtil::runPass<dawn::PassIntervalPartitioning>(context_, instantiation));
+  // Expect pass to succeed...
+  PassIntervalPartitioning intervalPartitioningPass(*context_);
+  EXPECT_TRUE(intervalPartitioningPass.run(instantiation));
 
   const auto& stencils = instantiation->getIIR()->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
-  ASSERT_TRUE(stencil->getChildren().size() > 0);
   ASSERT_TRUE(stencil->getNumStages() == 3);
 
   const auto& multiStage = stencil->getChildren().begin()->get();
