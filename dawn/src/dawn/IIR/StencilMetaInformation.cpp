@@ -70,6 +70,7 @@ const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int Access
 const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID) const {
   if(accessID < 0)
     return getNameFromLiteralAccessID(accessID);
+  DAWN_ASSERT_MSG(AccessIDToNameMap_.getDirectMap().count(accessID), "Unregistered access id");
   return AccessIDToNameMap_.directAt(accessID);
 }
 

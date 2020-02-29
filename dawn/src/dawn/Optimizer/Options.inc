@@ -101,6 +101,8 @@ OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
     "Compute and report the data-locality metric for each stencil", "", false, true)
 OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
     "Detailed report on the actions taken during the replace temporary by stencil function call pass", "", false, true)
+OPT(bool, ReportPassRemoveScalars, false, "report-pass-remove-scalars", "", 
+    "Report which variables are removed by the scalar removal pass", "", false, true)
 OPT(bool, ReportPassStageSplit, false, "report-pass-stage-split", "",
     "Detailed report on the actions taken during the stage splitting pass", "", false, true)
 OPT(bool, ReportPassMultiStageSplit, false, "report-pass-multi-stage-split", "",

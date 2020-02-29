@@ -145,6 +145,9 @@ public:
   public:
 
     stencil_41(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
+    static constexpr dawn::driver::cartesian_extent in_extent = {-2,2, -2,2, 0,0};
+    static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
+    static constexpr dawn::driver::cartesian_extent coeff_extent = {-1,1, -1,1, 0,0};
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
 

@@ -45,7 +45,9 @@ enum class Op {
   lessEqual,
   logicalAnd,
   locigalOr,
-  logicalNot
+  logicalNot,
+  increment,
+  decrement
 };
 enum class AccessType { r, rw };
 enum class HOffsetType { withOffset, noOffset };
@@ -88,12 +90,20 @@ private:
       return "||";
     case Op::logicalNot:
       return "!";
+    case Op::increment:
+      return "++";
+    case Op::decrement:
+      return "--";
     }
     dawn_unreachable("Unreachable");
   }
 
 protected:
   struct Field {
+    int id;
+    std::string name;
+  };
+  struct GlobalVar {
     int id;
     std::string name;
   };
@@ -107,8 +117,19 @@ public:
   IIRBuilder(const ast::GridType gridType)
       : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
+  template <typename T>
+  GlobalVar globalvar(std::string const& name, T&& v) {
+    DAWN_ASSERT(si_);
+    int accessID =
+        si_->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable, name);
+    auto&& global = sir::Global(std::forward<T>(v));
+    si_->getIIR()->insertGlobalVariable(name, std::move(global));
+    return {accessID, name};
+  }
+
   LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float,
-                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {});
+                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {},
+                    std::optional<LocalVariableType> localVarType = std::nullopt);
 
   template <class TWeight>
   std::shared_ptr<iir::Expr>
@@ -163,6 +184,8 @@ public:
 
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, ast::Offsets const& offset);
 
+  std::shared_ptr<iir::Expr> at(GlobalVar const& var);
+
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
   std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
@@ -187,7 +210,7 @@ public:
     ret->setID(si_->nextUID());
     [[maybe_unused]] int x[] = {
         (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
-    computeAccesses(si_.get(), ret->getAST().getStatements());
+    computeAccesses(si_->getMetaData(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
   }
@@ -207,7 +230,7 @@ public:
     ret->setID(si_->nextUID());
     [[maybe_unused]] int x[] = {
         (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
-    computeAccesses(si_.get(), ret->getAST().getStatements());
+    computeAccesses(si_->getMetaData(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
   }

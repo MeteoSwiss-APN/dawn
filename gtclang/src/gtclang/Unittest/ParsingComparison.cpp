@@ -226,8 +226,9 @@ CompareResult ParsingComparison::compare(const ParsedString& ps,
       dawn::format("TestStencil_%i.cpp", UnittestEnvironment::getSingleton().getUniqueID());
   FileWriter writer(localPath, fileName);
   writer.addParsedString(ps);
-  auto out = GTClang::run({writer.getFileName(), "-fno-codegen"},
-                          UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
+  std::pair<bool, std::shared_ptr<dawn::SIR>> out =
+      GTClang::run({writer.getFileName(), "-fno-codegen"},
+                   UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
   if(!out.first) {
     return CompareResult{"could not parse file " + writer.getFileName(), false};
   }

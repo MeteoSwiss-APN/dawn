@@ -31,10 +31,10 @@ PYBIND11_MODULE(_dawn4py, m) {
                   bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
                   bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
                   bool ReportPassTmpToFunction, bool ReportPassStageSplit,
-                  bool ReportPassMultiStageSplit, bool ReportPassFieldVersioning,
-                  bool ReportPassTemporaryMerger, bool ReportPassTemporaryType,
-                  bool ReportPassStageReodering, bool ReportPassStageMerger,
-                  bool ReportPassSetCaches, bool ReportPassSetBlockSize,
+                  bool ReportPassRemoveScalars, bool ReportPassMultiStageSplit,
+                  bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
+                  bool ReportPassTemporaryType, bool ReportPassStageReodering,
+                  bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
                   bool ReportPassSetNonTempCaches, bool DumpSplitGraphs, bool DumpStageGraph,
                   bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
                   bool DumpStencilInstantiation, bool DumpStencilGraph) {
@@ -81,6 +81,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       ReportBoundaryConditions,
                                       ReportDataLocalityMetric,
                                       ReportPassTmpToFunction,
+                                      ReportPassRemoveScalars,
                                       ReportPassStageSplit,
                                       ReportPassMultiStageSplit,
                                       ReportPassFieldVersioning,
@@ -120,6 +121,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("report_boundary_conditions") = false,
            py::arg("report_data_locality_metric") = false,
            py::arg("report_pass_tmp_to_function") = false,
+           py::arg("report_pass_remove_scalars") = false,
            py::arg("report_pass_stage_split") = false,
            py::arg("report_pass_multi_stage_split") = false,
            py::arg("report_pass_field_versioning") = false,
@@ -175,6 +177,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("report_boundary_conditions", &dawn::Options::ReportBoundaryConditions)
       .def_readwrite("report_data_locality_metric", &dawn::Options::ReportDataLocalityMetric)
       .def_readwrite("report_pass_tmp_to_function", &dawn::Options::ReportPassTmpToFunction)
+      .def_readwrite("report_pass_remove_scalars", &dawn::Options::ReportPassRemoveScalars)
       .def_readwrite("report_pass_stage_split", &dawn::Options::ReportPassStageSplit)
       .def_readwrite("report_pass_multi_stage_split", &dawn::Options::ReportPassMultiStageSplit)
       .def_readwrite("report_pass_field_versioning", &dawn::Options::ReportPassFieldVersioning)
@@ -246,6 +249,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "report_boundary_conditions=" << self.ReportBoundaryConditions << ",\n    "
            << "report_data_locality_metric=" << self.ReportDataLocalityMetric << ",\n    "
            << "report_pass_tmp_to_function=" << self.ReportPassTmpToFunction << ",\n    "
+           << "report_pass_remove_scalars=" << self.ReportPassRemoveScalars << ",\n    "
            << "report_pass_stage_split=" << self.ReportPassStageSplit << ",\n    "
            << "report_pass_multi_stage_split=" << self.ReportPassMultiStageSplit << ",\n    "
            << "report_pass_field_versioning=" << self.ReportPassFieldVersioning << ",\n    "

@@ -189,8 +189,8 @@ template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
   using PlainT = std::remove_reference_t<T>;
   static_assert(std::is_base_of_v<HorizontalExtentImpl, PlainT>,
-                "Can only be casted to a valid horizontal extent implementation");
-  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+                "Can only be cast to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be cast to const");
   static PlainT nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
