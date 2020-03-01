@@ -60,3 +60,9 @@ install(
 )
 
 target_link_libraries(gtclang GTClang)
+
+include(FetchCxxopts)
+
+add_executable(gtclang-fe Driver/gtclang-fe.cpp)
+target_link_libraries(gtclang-fe GTClang cxxopts)
+set_target_properties(gtclang-fe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)

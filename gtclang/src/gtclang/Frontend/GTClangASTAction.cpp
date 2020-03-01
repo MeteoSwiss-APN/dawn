@@ -27,7 +27,7 @@ GTClangASTAction::GTClangASTAction(GTClangContext* context) : context_(context) 
 std::unique_ptr<clang::ASTConsumer>
 GTClangASTAction::CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef file) {
   DAWN_LOG(INFO) << "Creating ASTConsumer for " << file.str();
-  if(context_->getOptions().CodeGen) {
+  if(context_->useDawn()) {
     return std::make_unique<GTClangASTConsumer>(context_, file, this);
   } else {
     return std::make_unique<GTClangASTConsumerNoCodegen>(context_, file, this);
