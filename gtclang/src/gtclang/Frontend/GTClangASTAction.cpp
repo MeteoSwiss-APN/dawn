@@ -16,6 +16,7 @@
 
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangASTConsumer.h"
+#include "gtclang/Frontend/GTClangASTConsumerNoCodegen.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Frontend/CompilerInstance.h"
 
@@ -26,7 +27,11 @@ GTClangASTAction::GTClangASTAction(GTClangContext* context) : context_(context) 
 std::unique_ptr<clang::ASTConsumer>
 GTClangASTAction::CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef file) {
   DAWN_LOG(INFO) << "Creating ASTConsumer for " << file.str();
-  return std::make_unique<GTClangASTConsumer>(context_, file, this);
+  if(context_->getOptions().CodeGen) {
+    return std::make_unique<GTClangASTConsumer>(context_, file, this);
+  } else {
+    return std::make_unique<GTClangASTConsumerNoCodegen>(context_, file, this);
+  }
 }
 
 void GTClangASTAction::setSIR(std::shared_ptr<dawn::SIR> sir) { sir_ = sir; }
