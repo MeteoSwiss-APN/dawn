@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
+#include <list>
 #include <memory>
 
 namespace dawn {
@@ -49,15 +50,15 @@ enum class PassGroup {
 class DawnCompiler : NonCopyable {
   DiagnosticsEngine diagnostics_;
   Options options_;
-  std::list<PassGroup> groups_;
 
 public:
   /// @brief Initialize the compiler by setting up diagnostics
   DawnCompiler() = default;
-  DawnCompiler(const Options& options, const std::list<PassGroup>& groups = {});
+  DawnCompiler(const Options& options);
 
   /// @brief Apply parallelizer, code optimization, and generate
-  std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR);
+  std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR,
+                                                    std::list<PassGroup> groups = {});
 
   /// @brief Lower to IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
@@ -66,7 +67,8 @@ public:
   /// @brief Run optimization passes on the IIRs
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   optimize(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-               stencilInstantiationMap);
+               stencilInstantiationMap,
+           std::list<PassGroup> groups = {});
 
   /// @brief Generate a translation unit from a set of Stencil Instantiations
   std::unique_ptr<codegen::TranslationUnit>

@@ -142,19 +142,15 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 
+std::list<PassGroup> defaultPassGroups() {
+  return {PassGroup::PrintStencilGraph,    PassGroup::SetStageName,     PassGroup::StageReordering,
+          PassGroup::StageMerger,          PassGroup::TemporaryMerger,  PassGroup::Inlining,
+          PassGroup::TmpToStencilFunction, PassGroup::SetNonTempCaches, PassGroup::SetCaches,
+          PassGroup::SetBlockSize};
+}
 } // namespace
 
-DawnCompiler::DawnCompiler(const Options& options, const std::list<PassGroup>& groups)
-    : diagnostics_(), options_(options), groups_(groups) {
-  if(groups_.empty()) {
-    // default groups run (in order) if no group is specified in list
-    groups_ = {
-        PassGroup::PrintStencilGraph,    PassGroup::SetStageName,     PassGroup::StageReordering,
-        PassGroup::StageMerger,          PassGroup::TemporaryMerger,  PassGroup::Inlining,
-        PassGroup::TmpToStencilFunction, PassGroup::SetNonTempCaches, PassGroup::SetCaches,
-        PassGroup::SetBlockSize};
-  }
-}
+DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
@@ -165,8 +161,6 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
                              stencilIR);
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-
-  groups_.remove(PassGroup::Parallel);
 
   // required passes to have proper, parallelized IR
   optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
@@ -203,7 +197,8 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-                           stencilInstantiationMap) {
+                           stencilInstantiationMap,
+                       std::list<PassGroup> groups) {
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
@@ -233,7 +228,10 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilInstantiationMap);
 
-  for(auto g : groups_) {
+  if(groups.empty())
+    groups = defaultPassGroups();
+
+  for(auto g : groups) {
     switch(g) {
     case PassGroup::SSA:
       DAWN_ASSERT_MSG(false, "The SSA pass is broken.");
@@ -337,7 +335,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::Parallel:
-      DAWN_ASSERT_MSG(false, "This should not happen.");
+      DAWN_ASSERT_MSG(false, "The parallel group is only valid for lowering to IIR.");
     }
   }
 
@@ -428,7 +426,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
 }
 
 std::unique_ptr<codegen::TranslationUnit>
-DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
+DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR, std::list<PassGroup> groups) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
 
@@ -447,7 +445,7 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
   }
 
   // Optimize the IIR
-  auto optimizedStencilInstantiation = optimize(stencilInstantiation);
+  auto optimizedStencilInstantiation = optimize(stencilInstantiation, groups);
 
   if(diagnostics_.hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
