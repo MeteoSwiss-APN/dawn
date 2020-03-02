@@ -58,8 +58,6 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
-#include <algorithm>
-
 namespace dawn {
 
 namespace {
