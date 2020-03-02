@@ -199,8 +199,8 @@ def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
 
 def make_field_dimensions_unstructured(
-    locations: List[LocationTypeValue], 
-    mask_k: int, 
+    locations: List[LocationTypeValue],
+    mask_k: int,
 ) -> FieldDimensions:
 
     """ Create FieldDimensions of unstructured type
@@ -232,8 +232,8 @@ def make_field(
     """ Create a Field
 
     :param name:         Name of the field
-    :param is_temporary: Is it a temporary field?
     :param dimensions:   dimensions of the field (use make_field_dimensions_*)
+    :param is_temporary: Is it a temporary field?
     """
 
     field = Field()
@@ -634,7 +634,7 @@ def make_stencil_fun_arg_expr(
 
 def make_unstructured_field_access_expr(
     name: str,
-    horizontal_offset: UnstructuredOffset = None, 
+    horizontal_offset: UnstructuredOffset = None,
     vertical_offset: int = 0,
 ) -> FieldAccessExpr:
     expr = FieldAccessExpr()
@@ -748,14 +748,14 @@ def make_weights(weights) -> List[Weight]:
             raise SIRError("cannot create Weight from type {}".format(type(weight)))
 
         proto_weights.append(proto_weight)
-        
+
     return proto_weights
 
 def make_reduction_over_neighbor_expr(
-    op: str, 
-    rhs: ExprType, 
-    init: ExprType, 
-    lhs_location: LocationTypeValue, 
+    op: str,
+    rhs: ExprType,
+    init: ExprType,
+    lhs_location: LocationTypeValue,
     rhs_location: LocationTypeValue,
     weights: List[Weight] = None
 ) -> ReductionOverNeighborExpr:
@@ -1107,9 +1107,9 @@ class SIRPrinter:
     def visit_cartesian_field(self, field):
         str_ = field.name + "("
         dims_ = []
-        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1: dims_.append("i") 
-        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1: dims_.append("j") 
-        if field.field_dimensions.mask_k == 1: dims_.append("k") 
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1: dims_.append("i")
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1: dims_.append("j")
+        if field.field_dimensions.mask_k == 1: dims_.append("k")
         str_ += str(dims_) + ")"
         return str_
 

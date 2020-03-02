@@ -94,7 +94,9 @@ public:
   /// @brief Compare for equality
   /// @{
   virtual bool equals(const std::shared_ptr<Expr>& other) const { return equals(other.get()); }
-  virtual bool equals(const Expr* other) const { return kind_ == other->kind_; }
+  virtual bool equals(const Expr* other, bool compareData = true) const {
+    return kind_ == other->kind_;
+  }
   /// @}
 
   /// @name Operators
@@ -144,10 +146,10 @@ public:
 
   void setOperand(const std::shared_ptr<Expr>& operand) { operand_ = operand; }
   const std::shared_ptr<Expr>& getOperand() const { return operand_; }
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::UnaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -185,10 +187,10 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[Right]; }
 
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::BinaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -215,7 +217,7 @@ public:
   /// @}
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::AssignmentExpr; }
   ACCEPTVISITOR(Expr, AssignmentExpr)
 };
@@ -237,7 +239,7 @@ public:
   /// @}
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::NOPExpr; }
   ACCEPTVISITOR(Expr, NOPExpr)
 };
@@ -275,11 +277,11 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[Right]; }
 
-  const char* getOp() const { return "?"; }
-  const char* getSeperator() const { return ":"; }
+  const std::string getOp() const { return "?"; }
+  const std::string getSeperator() const { return ":"; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::TernaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -325,7 +327,7 @@ public:
   }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::FunCallExpr; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -351,7 +353,7 @@ public:
 
   //  void setName(std::string name);
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::StencilFunCallExpr; }
   ACCEPTVISITOR(Expr, StencilFunCallExpr)
 };
@@ -392,7 +394,7 @@ public:
   int getArgumentIndex() const { return argumentIndex_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::StencilFunArgExpr; }
   ACCEPTVISITOR(Expr, StencilFunArgExpr)
 };
@@ -458,7 +460,7 @@ public:
   void setIndex(const std::shared_ptr<Expr>& index) { index_ = index; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::VarAccessExpr; }
   virtual ExprRangeType getChildren() override {
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
@@ -575,7 +577,7 @@ public:
   void setArgumentOffset(Array3i const& argOffset) { argumentOffset_ = argOffset; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::FieldAccessExpr; }
   ACCEPTVISITOR(Expr, FieldAccessExpr)
 };
@@ -619,7 +621,7 @@ public:
   BuiltinTypeID& getBuiltinType() { return builtinType_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::LiteralAccessExpr; }
   ACCEPTVISITOR(Expr, LiteralAccessExpr)
 };
@@ -670,7 +672,7 @@ public:
   }
 
   std::shared_ptr<Expr> clone() const override;
-  bool equals(const Expr* other) const override;
+  bool equals(const Expr* other, bool compareData = true) const override;
 
   ACCEPTVISITOR(Expr, ReductionOverNeighborExpr)
 };

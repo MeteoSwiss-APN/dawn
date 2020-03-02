@@ -1,4 +1,5 @@
 #define DAWN_GENERATED 1
+#undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CUDA
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
@@ -137,6 +138,8 @@ public:
   public:
 
     stencil_28(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_28"), m_dom(dom_), stage14GlobalJIndices({dom_.jminus() + 0 , dom_.jminus() + 2}), globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)}){}
+    static constexpr dawn::driver::cartesian_extent in_field_extent = {0,0, 0,0, 0,0};
+    static constexpr dawn::driver::cartesian_extent out_field_extent = {0,0, 0,0, 0,0};
 
     void run(storage_ijk_t in_field_ds, storage_ijk_t out_field_ds) {
 

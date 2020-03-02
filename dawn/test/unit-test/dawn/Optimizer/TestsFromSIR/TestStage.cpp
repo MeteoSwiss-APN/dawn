@@ -45,23 +45,23 @@ protected:
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
-    // Report diganostics
+    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir));
+    // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
         std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+    DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
+    return stencilInstantiationMap["compute_extent_test_stencil"];
   }
 };
 
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_01.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_01.sir");
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
 
@@ -114,7 +114,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
 }
 
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
+  auto stencilInstantiation = loadTest("input/test_field_access_interval_02.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
 

@@ -1,0 +1,649 @@
+{
+  "filename": "<gt4py>",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "block_stmt": {
+            "statements": [
+              {
+                "vertical_region_decl_stmt": {
+                  "vertical_region": {
+                    "ast": {
+                      "root": {
+                        "block_stmt": {
+                          "statements": [
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "sup",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "sup",
+                                            "zero_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "field_access_expr": {
+                                            "name": "diag",
+                                            "zero_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "rhs",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "rhs",
+                                            "zero_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "field_access_expr": {
+                                            "name": "diag",
+                                            "zero_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "special_lower_level": "Start",
+                      "special_upper_level": "Start",
+                      "upper_offset": 1
+                    }
+                  }
+                }
+              },
+              {
+                "vertical_region_decl_stmt": {
+                  "vertical_region": {
+                    "ast": {
+                      "root": {
+                        "block_stmt": {
+                          "statements": [
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "sup",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "sup",
+                                            "zero_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "field_access_expr": {
+                                                "name": "diag",
+                                                "zero_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "-",
+                                            "right": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "field_access_expr": {
+                                                    "name": "sup",
+                                                    "vertical_offset": -1,
+                                                    "zero_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "field_access_expr": {
+                                                    "name": "inf",
+                                                    "zero_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "rhs",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "field_access_expr": {
+                                                "name": "rhs",
+                                                "zero_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "-",
+                                            "right": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "field_access_expr": {
+                                                    "name": "inf",
+                                                    "zero_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "field_access_expr": {
+                                                    "name": "rhs",
+                                                    "vertical_offset": -1,
+                                                    "zero_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "field_access_expr": {
+                                                "name": "diag",
+                                                "zero_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "-",
+                                            "right": {
+                                              "binary_operator": {
+                                                "left": {
+                                                  "field_access_expr": {
+                                                    "name": "sup",
+                                                    "vertical_offset": -1,
+                                                    "zero_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "field_access_expr": {
+                                                    "name": "inf",
+                                                    "zero_offset": {},
+                                                    "argument_map": [
+                                                      -1,
+                                                      -1,
+                                                      -1
+                                                    ],
+                                                    "argument_offset": [
+                                                      0,
+                                                      0,
+                                                      0
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "special_lower_level": "Start",
+                      "special_upper_level": "End",
+                      "lower_offset": 1
+                    }
+                  }
+                }
+              },
+              {
+                "vertical_region_decl_stmt": {
+                  "vertical_region": {
+                    "ast": {
+                      "root": {
+                        "block_stmt": {
+                          "statements": [
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "out",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binary_operator": {
+                                        "left": {
+                                          "field_access_expr": {
+                                            "name": "rhs",
+                                            "zero_offset": {},
+                                            "argument_map": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argument_offset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "binary_operator": {
+                                            "left": {
+                                              "field_access_expr": {
+                                                "name": "sup",
+                                                "zero_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "field_access_expr": {
+                                                "name": "out",
+                                                "vertical_offset": 1,
+                                                "zero_offset": {},
+                                                "argument_map": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argument_offset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "special_lower_level": "Start",
+                      "special_upper_level": "End",
+                      "upper_offset": -1
+                    },
+                    "loop_order": "Backward"
+                  }
+                }
+              },
+              {
+                "vertical_region_decl_stmt": {
+                  "vertical_region": {
+                    "ast": {
+                      "root": {
+                        "block_stmt": {
+                          "statements": [
+                            {
+                              "expr_stmt": {
+                                "expr": {
+                                  "assignment_expr": {
+                                    "left": {
+                                      "field_access_expr": {
+                                        "name": "out",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "field_access_expr": {
+                                        "name": "rhs",
+                                        "zero_offset": {},
+                                        "argument_map": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argument_offset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "special_lower_level": "End",
+                      "special_upper_level": "End",
+                      "lower_offset": -1
+                    },
+                    "loop_order": "Backward"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "inf",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "diag",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "sup",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "rhs",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        },
+        {
+          "name": "out",
+          "field_dimensions": {
+            "cartesian_horizontal_dimension": {
+              "mask_cart_i": 1,
+              "mask_cart_j": 1
+            },
+            "mask_k": 1
+          }
+        }
+      ],
+      "name": "tridiagonal_solve"
+    }
+  ],
+  "global_variables": {}
+}

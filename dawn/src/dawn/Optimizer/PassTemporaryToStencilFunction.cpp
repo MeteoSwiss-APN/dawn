@@ -570,7 +570,7 @@ bool PassTemporaryToStencilFunction::run(
 
   const auto& metadata = stencilInstantiation->getMetaData();
 
-  if(!(context_.getOptions().PassTmpToFunction))
+  if(!(context_.getOptions().TmpToStencilFunction))
     return true;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -673,7 +673,7 @@ bool PassTemporaryToStencilFunction::run(
 
                   const std::shared_ptr<iir::Stmt>& replacementStmt =
                       *(tmpStmtDoMethod.getAST().getStatements().begin());
-                  computeAccesses(stencilInstantiation.get(), replacementStmt);
+                  computeAccesses(stencilInstantiation->getMetaData(), replacementStmt);
 
                   doMethodPtr->getAST().replaceChildren(stmt, replacementStmt);
                   doMethodPtr->update(iir::NodeUpdateType::level);

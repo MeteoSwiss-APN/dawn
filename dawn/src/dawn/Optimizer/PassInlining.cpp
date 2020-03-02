@@ -497,7 +497,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
         if(inliner.inlineCandiatesFound()) {
           auto& newStmtList = inliner.getNewStatements();
           // Compute the accesses of the new statements
-          computeAccesses(stencilInstantiation.get(), newStmtList);
+          computeAccesses(stencilInstantiation->getMetaData(), newStmtList);
           // Erase the old stmt ...
           stmtIt = doMethod->getAST().erase(stmtIt);
 

@@ -15,8 +15,9 @@
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT GTCLANG_BUILD_GRIDTOOLS)
-  find_package(GridTools 1.0.4 QUIET)
+  find_package(GridTools 1.0.4)
 endif()
+
 if(NOT GridTools_FOUND)
   if(NOT GTCLANG_BUILD_GRIDTOOLS)
     message(STATUS "Fetching GridTools...")
@@ -48,4 +49,3 @@ endif()
 
 add_subdirectory(unit-test)
 add_subdirectory(integration-test)
-add_subdirectory(atlas-integration-test)

@@ -410,7 +410,7 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_.get(), doMethod.getAST().getStatements());
+    computeAccesses(instantiation_->getMetaData(), doMethod.getAST().getStatements());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     stage->update(iir::NodeUpdateType::level);
@@ -501,15 +501,15 @@ public:
       if(scope_.top()->VariableMap.count(var->getName())) {
         double result;
         if(iir::evalExprAsDouble(expr->getRight(), result, scope_.top()->VariableMap)) {
-          if(StringRef(expr->getOp()) == "=")
+          if(expr->getOp() == "=")
             scope_.top()->VariableMap[var->getName()] = result;
-          else if(StringRef(expr->getOp()) == "+=")
+          else if(expr->getOp() == "+=")
             scope_.top()->VariableMap[var->getName()] += result;
-          else if(StringRef(expr->getOp()) == "-=")
+          else if(expr->getOp() == "-=")
             scope_.top()->VariableMap[var->getName()] -= result;
-          else if(StringRef(expr->getOp()) == "*=")
+          else if(expr->getOp() == "*=")
             scope_.top()->VariableMap[var->getName()] *= result;
-          else if(StringRef(expr->getOp()) == "/=")
+          else if(expr->getOp() == "/=")
             scope_.top()->VariableMap[var->getName()] /= result;
           else // unknown operator
             scope_.top()->VariableMap.erase(var->getName());
@@ -602,6 +602,18 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
   if(SIR)
     fillIIR();
 }
+
+OptimizerContext::OptimizerContext(
+    DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
+        stencilInstantiationMap)
+    : diagnostics_(diagnostics), options_(options), SIR_() {
+  DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
+  for(auto& [name, stencilInstantiation] : stencilInstantiationMap) {
+    restoreIIR(name, stencilInstantiation);
+  }
+}
+
 bool OptimizerContext::fillIIRFromSIR(
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
@@ -711,7 +723,8 @@ bool OptimizerContext::restoreIIR(std::string const& name,
                                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilName(stencilInstantiation->getName());
-  metadata.setFileName("<unknown>");
+  if(metadata.getFileName().empty())
+    metadata.setFileName("<unknown>");
 
   stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
 
@@ -734,12 +747,15 @@ bool OptimizerContext::restoreIIR(std::string const& name,
 
   // fix extents of stages since they are not stored in the iir but computed from the accesses
   // contained in the DoMethods
-  checkAndPushBack<PassSetStageName>();
-  checkAndPushBack<PassComputeStageExtents>();
-  if(!getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation))
-    return false;
+  pushBackPass<PassSetStageName>();
+  pushBackPass<PassComputeStageExtents>();
+  const bool passed =
+      getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation);
 
-  return true;
+  // Clean up the passes just run
+  getPassManager().getPasses().clear();
+
+  return passed;
 }
 
 } // namespace dawn

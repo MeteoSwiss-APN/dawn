@@ -1,9 +1,15 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/IIR/Extents.h"
 #include <optional>
 
 namespace dawn {
 namespace codegen {
+
+CodeGen::CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                 int maxHaloPoints)
+    : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {}
+
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
@@ -45,6 +51,7 @@ std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
   }
   return "";
 }
+
 std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
                                      std::string namespace_) const {
 
@@ -435,6 +442,43 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
     checkOffsetFunc.startBody();
     checkOffsetFunc.addStatement("return (min <= val && val < max)");
     checkOffsetFunc.commit();
+  }
+}
+
+namespace {
+std::string extentToString(iir::Extents const& extents, ast::GridType const& gridType) {
+  std::string result = "";
+  if(gridType == ast::GridType::Cartesian) {
+    auto const& hExtents =
+        iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
+    result += std::to_string(hExtents.iMinus()) + "," + std::to_string(hExtents.iPlus()) + ", " +
+              std::to_string(hExtents.jMinus()) + "," + std::to_string(hExtents.jPlus());
+  } else {
+    auto const& hExtents =
+        iir::extent_cast<iir::UnstructuredExtent const&>(extents.horizontalExtent());
+    if(hExtents.hasExtent())
+      result += "true";
+    else
+      result += "false";
+  }
+  auto const& vExtents = extents.verticalExtent();
+  result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
+  return result;
+}
+} // namespace
+
+void CodeGen::generateFieldExtentsInfo(
+    Structure& stencilClass,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    ast::GridType const& gridType) const {
+  std::string extents_type = gridType == ast::GridType::Cartesian
+                                 ? "dawn::driver::cartesian_extent"
+                                 : "dawn::driver::unstructured_extent";
+
+  for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
+    stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +
+                              "_extent = {" +
+                              extentToString(fieldInfo.field.getExtentsRB(), gridType) + "}");
   }
 }
 

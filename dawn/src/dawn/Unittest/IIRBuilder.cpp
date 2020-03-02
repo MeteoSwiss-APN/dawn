@@ -55,7 +55,7 @@ Array3i asArray(FieldType ft) {
 }
 } // namespace
 
-dawn::codegen::stencilInstantiationContext
+std::shared_ptr<iir::StencilInstantiation>
 IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencilIIR) {
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
@@ -103,9 +103,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;
-  map[new_si->getName()] = std::move(new_si);
-
-  return map;
+  return new_si;
 }
 
 std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
@@ -135,7 +133,8 @@ std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& l
 std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation) {
   DAWN_ASSERT(si_);
   auto ret = std::make_shared<iir::UnaryOperator>(
-      std::move(expr), toStr(operation, {Op::plus, Op::minus, Op::logicalNot}));
+      std::move(expr),
+      toStr(operation, {Op::plus, Op::minus, Op::increment, Op::decrement, Op::logicalNot}));
   ret->setID(si_->nextUID());
   return ret;
 }
@@ -157,11 +156,15 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type,
-                                          std::vector<std::shared_ptr<iir::Expr>>&& initList) {
+IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID dataType,
+                                          std::vector<std::shared_ptr<iir::Expr>>&& initList,
+                                          std::optional<LocalVariableType> localVarType) {
   DAWN_ASSERT(si_);
-  auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::move(initList));
+  auto iirStmt = makeVarDeclStmt(Type{dataType}, name, 0, "=", std::move(initList));
   int id = si_->getMetaData().addStmt(true, iirStmt);
+  if(localVarType.has_value()) {
+    si_->getMetaData().getLocalVariableDataFromAccessID(id).setType(*localVarType);
+  }
   return {id, name, iirStmt};
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
@@ -171,6 +174,14 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
+  return expr;
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::GlobalVar const& var) {
+  DAWN_ASSERT(si_);
+  auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
+  expr->setIsExternal(true);
+  expr->setID(si_->nextUID());
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {

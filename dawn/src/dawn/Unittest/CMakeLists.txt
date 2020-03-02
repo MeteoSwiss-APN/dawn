@@ -17,8 +17,10 @@ add_library(DawnUnittest
   CompilerUtil.h
   IIRBuilder.h
   IIRBuilder.cpp
-  UnittestLogger.cpp
-  UnittestLogger.h
+  UnittestStmtSimplifier.h
+  UnittestStmtSimplifier.cpp
+  UnittestUtils.h
+  UnittestUtils.cpp
 )
 
 target_add_dawn_standard_props(DawnUnittest)

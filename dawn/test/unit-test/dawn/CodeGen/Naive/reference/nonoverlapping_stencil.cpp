@@ -1,4 +1,5 @@
 #define DAWN_GENERATED 1
+#undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CXXNAIVE
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
@@ -55,6 +56,8 @@ private:
   public:
 
     stencil_59(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : m_dom(dom_){}
+    static constexpr dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
+    static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
 
     void run(storage_ijk_t& in_, storage_ijk_t& out_) {
       int iMin = m_dom.iminus();

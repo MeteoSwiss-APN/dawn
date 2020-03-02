@@ -362,7 +362,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                        "dimensions, and vice versa!\n");
     }
 
-    Structure StencilClass = stencilWrapperClass.addStruct(stencilName);
+    Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                          StencilContext::SC_Stencil);
@@ -397,18 +397,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       }
     };
 
-    StencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
-    StencilClass.addMember("int", "m_k_size");
+    stencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
+    stencilClass.addMember("int", "m_k_size");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
+      stencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
 
-    StencilClass.changeAccessibility("public");
+    stencilClass.changeAccessibility("public");
 
-    auto stencilClassCtr = StencilClass.addConstructor();
+    auto stencilClassCtr = stencilClass.addConstructor();
 
     stencilClassCtr.addArg("dawn::mesh_t<LibTag> const &mesh");
     stencilClassCtr.addArg("int k_size");
@@ -431,12 +431,12 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     stencilClassCtr.commit();
 
     // virtual dtor
-    MemberFunction stencilClassDtr = StencilClass.addDestructor(false);
+    MemberFunction stencilClassDtr = stencilClass.addDestructor(false);
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
     // synchronize storages method
-    MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
+    MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
     // for(auto fieldIt : nonTempFields) {
@@ -445,10 +445,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     syncStoragesMethod.commit();
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Unstructured);
+
     //
     // Run-Method
     //
-    MemberFunction StencilRunMethod = StencilClass.addMemberFunction("void", "run", "");
+    MemberFunction StencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
     StencilRunMethod.startBody();
 
     // TODO the generic deref should be moved to a different namespace
@@ -599,8 +602,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       stencilFunMethod.addArg("const int j");
       stencilFunMethod.addArg("const int k");
 
-      const auto& stencilProp = codeGenProperties.getStencilProperties(
-          StencilContext::SC_StencilFunction, stencilFunName);
+      // const auto& stencilProp = codeGenProperties.getStencilProperties(
+      //    StencilContext::SC_StencilFunction, stencilFunName);
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
@@ -616,8 +619,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
         // offset passed to the storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
         //        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType
-        //        + ">> pw_" +
-        //                                argName);
+        //        + ">> pw_" + argName);
       }
 
       // add global parameter
@@ -671,6 +673,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
 
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define DAWN_GENERATED 1");
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVEICO");
   ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
   DAWN_LOG(INFO) << "Done generating code";

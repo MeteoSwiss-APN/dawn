@@ -56,9 +56,8 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(!optionsParser.parse(args, clangArgs))
     return ReturnValue{1, returnSIR};
 
-  // Ininitialize the Logger
+  // Initialize the Logger
   auto logger = std::make_unique<Logger>();
-  auto* oldLogger = dawn::Logger::getSingleton().getLogger();
   if(context->getOptions().Verbose)
     dawn::Logger::getSingleton().registerLogger(logger.get());
 
@@ -81,10 +80,6 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
     }
     DAWN_LOG(INFO) << "Compilation finished " << (ret ? "with errors" : "successfully");
   }
-
-  // Cleanup (restore the old logger)
-  if(context->getOptions().Verbose)
-    dawn::Logger::getSingleton().registerLogger(oldLogger);
 
   includeChecker.Restore();
 

@@ -105,8 +105,8 @@ public:
   }
   const sir::GlobalVariableMap& getGlobalVariableMap() const { return *globalVariableMap_; }
 
-  void insertGlobalVariable(std::string&& varName, sir::Global&& value) {
-    globalVariableMap_->insert(std::pair(std::move(varName), std::move(value)));
+  void insertGlobalVariable(const std::string& varName, sir::Global&& value) {
+    globalVariableMap_->insert(std::pair(varName, std::move(value)));
   }
 
   const Stencil& getStencil(const int stencilID) const;

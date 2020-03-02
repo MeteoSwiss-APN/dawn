@@ -22,6 +22,7 @@
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
+#include "dawn/Validator/IntegrityChecker.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -34,13 +35,11 @@ TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
   // Load IIR from file
   std::unique_ptr<OptimizerContext> context;
   dawn::OptimizerContext::OptimizerContextOptions options;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation =
-      CompilerUtil::load("input/globals_opt_away.iir", options, context);
+  std::shared_ptr<iir::StencilInstantiation> instantiation =
+      CompilerUtil::load("input/globals_opt_away.sir", options, context);
 
-  // Run inlining pass
-  PassInlining inliningPass(*context, true, PassInlining::InlineStrategy::InlineProcedures);
-  bool result = inliningPass.run(instantiation);
-  ASSERT_TRUE(result);
+  // Run parallel group
+  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context, instantiation));
 
   // Run validation pass and check for exception
   IntegrityChecker checker(instantiation.get());

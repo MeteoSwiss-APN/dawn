@@ -26,6 +26,7 @@ ControlFlowDescriptor ControlFlowDescriptor::clone() const {
 }
 void ControlFlowDescriptor::removeStencilCalls(const std::set<int>& stencilIDs,
                                                iir::StencilMetaInformation& metadata) {
+  std::vector<StmtConstIterator> stmtsToRemove;
   for(StmtConstIterator it = getStatements().begin(); it != getStatements().end(); ++it) {
     const std::shared_ptr<iir::Stmt>& stmt = *it;
     if(isa<iir::StencilCallDeclStmt>(stmt.get())) {
@@ -37,9 +38,12 @@ void ControlFlowDescriptor::removeStencilCalls(const std::set<int>& stencilIDs,
         }
       }
       if(remove) {
-        it = eraseStmt(it);
+        stmtsToRemove.push_back(it);
       }
     }
+  }
+  for(StmtConstIterator it : stmtsToRemove) {
+    eraseStmt(it);
   }
   for(auto stencilID : stencilIDs) {
     metadata.eraseStencilID(stencilID);

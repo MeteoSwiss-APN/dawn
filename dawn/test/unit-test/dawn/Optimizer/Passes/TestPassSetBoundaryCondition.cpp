@@ -54,18 +54,17 @@ protected:
       compiler_.getOptions().MaxFieldsPerStencil = maxfields;
 
     // Run the optimization
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
+    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir));
 
-    // Report diganostics
+    // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
         std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("SplitStencil")),
-                    "SplitStencil not found in sir");
-    return std::move(optimizer->getStencilInstantiationMap()["SplitStencil"]);
+    DAWN_ASSERT_MSG(stencilInstantiationMap.count("SplitStencil"), "SplitStencil not found in sir");
+    return std::move(stencilInstantiationMap["SplitStencil"]);
   }
 };
 
@@ -87,7 +86,7 @@ private:
 
 TEST_F(StencilSplitAnalyzer, DISABLED_test_no_bc_inserted) {
   std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_01.sir", false);
+      loadTest("input/boundary_condition_test_stencil_01.sir", false);
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 1));
   BCFinder myvisitor;
   for(const auto& stmt : test->getIIR()->getControlFlowDescriptor().getStatements()) {
@@ -102,7 +101,7 @@ TEST_F(StencilSplitAnalyzer, DISABLED_test_no_bc_inserted) {
 // An unused BC has no extents to it
 TEST_F(StencilSplitAnalyzer, DISABLED_test_unused_bc) {
   std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_02.sir", false);
+      loadTest("input/boundary_condition_test_stencil_02.sir", false);
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("out"));
   auto bc = test->getMetaData().getFieldNameToBCMap().find("out")->second;
   ASSERT_TRUE((!test->getMetaData().hasBoundaryConditionStmtToExtent(bc)));
@@ -110,7 +109,7 @@ TEST_F(StencilSplitAnalyzer, DISABLED_test_unused_bc) {
 
 TEST_F(StencilSplitAnalyzer, DISABLED_test_bc_extent_calc) {
   std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_01.sir", true, 2);
+      loadTest("input/boundary_condition_test_stencil_01.sir", true, 2);
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 1));
   BCFinder myvisitor;
   for(const auto& stmt : test->getIIR()->getControlFlowDescriptor().getStatements()) {
@@ -125,7 +124,7 @@ TEST_F(StencilSplitAnalyzer, DISABLED_test_bc_extent_calc) {
 
 TEST_F(StencilSplitAnalyzer, DISABLED_test_two_bc) {
   std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_03.sir", true, 2);
+      loadTest("input/boundary_condition_test_stencil_03.sir", true, 2);
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 2));
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("intermediate"));
   auto bcfoo = test->getMetaData().getFieldNameToBCMap().find("intermediate")->second;

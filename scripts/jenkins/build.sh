@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -38,60 +38,47 @@ done
 
 source_dir=${BASEPATH_SCRIPT}/../..
 base_dir=$(pwd)
-build_dir=${base_dir}/build
-
-# python tests
+build_dir=$base_dir/build
 mkdir -p $build_dir
-cd $build_dir
-python -m venv dawn_venv
-source dawn_venv/bin/activate
-pip install --upgrade pip
-pip install wheel
-pip install -e ${base_dir}/dawn/ -v
-
-cd ${base_dir}/dawn/examples/python
-bash run.sh
-echo "PYTHON RUN TESTS SUCCESFUL!"
-
-python -m pytest -v ${base_dir}/dawn/test/unit-test/test_dawn4py/
-echo "PYTHON PYTEST SUCCESFUL!"
-
-base_dir=$(pwd)
-rm -rf $build_dir
-
-mkdir -p $build_dir
-cd $build_dir
 
 if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIR needs to be set in the machine env"
 fi
 
 #TODO -DDAWN_BUNDLE_JAVA=ON
-CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} \
+CMAKE_ARGS="-DBUILD_TESTING=ON \
             -DProtobuf_DIR=${PROTOBUFDIR} \
             -DPROTOBUF_PYTHON_MODULE_DIR=${PROTOBUFDIR}/../../../python \
-            -DGTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON \
-            -DDAWN_REQUIRE_PYTHON_TESTING=ON \
+            -DDAWN_REQUIRE_UNSTRUCTURED_TESTING=ON \
+            -DDAWN_REQUIRE_PYTHON=ON \
             -Datlas_DIR=${ATLAS_DIR}/lib/cmake/atlas \
             -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit \
             "
 
 if [ -z ${INSTALL_DIR+x} ]; then
-  INSTALL_DIR=${base_dir}/install
+  INSTALL_DIR=$base_dir/install
 fi
 
-CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
+CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR"
 
-cmake ${CMAKE_ARGS} ${source_dir}
+cmake -S $source_dir -B $build_dir $CMAKE_ARGS
 
 if [ -z ${PARALLEL_BUILD_JOBS+x} ]; then
   PARALLEL_BUILD_JOBS=8
 fi
 
-echo "Building with ${PARALLEL_BUILD_JOBS} jobs."
-cmake --build . --parallel ${PARALLEL_BUILD_JOBS}
+echo "Building with $PARALLEL_BUILD_JOBS jobs."
+cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS
 
-# Run unittests
-ctest -C ${build_type} --output-on-failure --force-new-ctest-process
+# Run tests -- this also runs python tests
+(cd $build_dir && ctest --output-on-failure --force-new-ctest-process)
 
-cmake --build . --parallel ${PARALLEL_BUILD_JOBS} --target install
+# Test installation
+cmake --build $build_dir --parallel $PARALLEL_BUILD_JOBS --target install
+
+# Python
+python -m venv dawn_venv
+source dawn_venv/bin/activate
+pip install --upgrade pip
+pip install wheel
+pip install $base_dir/dawn/

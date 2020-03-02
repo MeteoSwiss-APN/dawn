@@ -230,7 +230,7 @@ public:
     std::shared_ptr<sir::BinaryOperator> op =
         std::dynamic_pointer_cast<sir::BinaryOperator>(stmt->getCondExpr());
 
-    result_ = result_ && (std::string(op->getOp()) == ">=");
+    result_ = result_ && (op->getOp() == ">=");
 
     DAWN_ASSERT(isa<sir::ExprStmt>(*(stmt->getThenStmt())));
     std::shared_ptr<sir::ExprStmt> thenExpr =

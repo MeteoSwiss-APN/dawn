@@ -216,6 +216,9 @@ void CudaCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
                             stencilProperties);
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
+
     //
     // Run-Method
     //
@@ -693,6 +696,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CUDA");
   //==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set

@@ -70,7 +70,7 @@ We introduce a new compiler framework, consisting of GTClang and Dawn, that deco
 
 If you wish to contribute to dawn or gtclang, please fork this repo into your own GitHub user space first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please ensure that:
 
-* All tests pass via `ctest`. In order to make sure all tests are built, add `-DBUILD_TESTING=ON -DDAWN_REQUIRE_PYTHON_TESTING=ON` to the CMake configure command.
+* All tests pass via `ctest`. In order to make sure all tests are built, add `-DBUILD_TESTING=ON -DDAWN_REQUIRE_PYTHON=ON` to the CMake configure command.
 * The code is properly formatted according to the clang-format rules provided. This can be ensured automatically using the git hook located in scripts. To install it, simply put a symlink into your `.git` directory (usually located in the top level dawn folder, except if using git work trees) to the script as follows:
 
 ```bash

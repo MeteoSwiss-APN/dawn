@@ -38,7 +38,7 @@ class LocalVariableData {
 public:
   /// @brief returns whether the type is set or not
   bool isTypeSet() const { return type_.has_value(); }
-  /// @brief returns whether the variable is adimensional (must be called once the type has
+  /// @brief returns whether the variable is scalar (must be called once the type has
   /// been computed by PassLocalVarType)
   bool isScalar() const;
   /// @brief returns the computed variable type (must be called once the type has

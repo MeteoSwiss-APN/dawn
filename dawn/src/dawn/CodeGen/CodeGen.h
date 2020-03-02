@@ -15,6 +15,7 @@
 #ifndef DAWN_CODEGEN_CODEGEN_H
 #define DAWN_CODEGEN_CODEGEN_H
 
+#include "dawn/AST/GridType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/TranslationUnit.h"
@@ -33,7 +34,7 @@ using stencilInstantiationContext =
 /// @ingroup codegen
 class CodeGen {
 protected:
-  const stencilInstantiationContext context_;
+  const stencilInstantiationContext& context_;
   DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;
@@ -65,6 +66,11 @@ protected:
   void generateGlobalIndices(const iir::Stencil& stencil, Structure& stencilClass,
                              bool genCheckOffset = true) const;
 
+  void
+  generateFieldExtentsInfo(Structure& stencilClass,
+                           IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+                           ast::GridType const& gridType) const;
+
   const std::string tmpStorageTypename_ = "tmp_storage_t";
   const std::string tmpMetadataTypename_ = "tmp_meta_data_t";
   const std::string tmpMetadataName_ = "m_tmp_meta_data";
@@ -72,8 +78,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints)
-      : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
+  CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints);
   virtual ~CodeGen() {}
 
   /// @brief Generate code

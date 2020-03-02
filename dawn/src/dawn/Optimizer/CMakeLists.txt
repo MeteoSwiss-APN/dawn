@@ -17,6 +17,7 @@ add_library(DawnOptimizer
   CreateVersionAndRename.h
   OptimizerContext.cpp
   OptimizerContext.h
+  Options.inc
   Pass.h
   PassComputeStageExtents.cpp
   PassComputeStageExtents.h
@@ -28,8 +29,8 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
-  PassIntervalPartitioner.cpp
-  PassIntervalPartitioner.h
+  PassIntervalPartitioning.cpp
+  PassIntervalPartitioning.h
   PassLocalVarType.h
   PassLocalVarType.cpp
   PassManager.cpp
@@ -38,12 +39,16 @@ add_library(DawnOptimizer
   PassMultiStageSplitter.h
   PassPrintStencilGraph.cpp
   PassPrintStencilGraph.h
+  PassRemoveScalars.h
+  PassRemoveScalars.cpp
   PassSetBlockSize.cpp
   PassSetBlockSize.h
   PassSetBoundaryCondition.cpp
   PassSetBoundaryCondition.h
   PassSetCaches.cpp
   PassSetCaches.h
+  PassSetDependencyGraph.cpp
+  PassSetDependencyGraph.h
   PassSetNonTempCaches.cpp
   PassSetNonTempCaches.h
   PassSetStageGraph.cpp

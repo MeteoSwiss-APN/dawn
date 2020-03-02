@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
@@ -355,6 +356,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     // synchronize storages method
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
+
     //
     // Run-Method
     //
@@ -607,6 +611,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
