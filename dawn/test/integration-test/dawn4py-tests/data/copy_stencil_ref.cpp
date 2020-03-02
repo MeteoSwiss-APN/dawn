@@ -129,6 +129,8 @@ public:
   public:
 
     stencil_11(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_11"), m_dom(dom_){}
+    static constexpr dawn::driver::cartesian_extent in_extent = {1,1, 0,0, 0,0};
+    static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
 
     void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
 

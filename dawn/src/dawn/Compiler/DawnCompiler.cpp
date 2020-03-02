@@ -28,6 +28,7 @@
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
+#include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
@@ -303,7 +304,6 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       optimizer.pushBackPass<PassIntervalPartitioning>();
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
-      optimizer.pushBackPass<PassLocalVarType>();
       // optimizer.pushBackPass<PassFixVersionedInputFields>();
       // validation check
       optimizer.pushBackPass<PassValidation>();

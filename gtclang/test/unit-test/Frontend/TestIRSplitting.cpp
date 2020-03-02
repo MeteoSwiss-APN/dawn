@@ -25,11 +25,6 @@ using namespace gtclang;
 
 namespace {
 
-TEST(IRSplittingTest, Interval) {
-  std::string filename = "input/test_compute_read_access_interval_02.cpp";
-  gtclang::IRSplitter().split(filename);
-}
-
 TEST(IRSplittingTest, FieldVersioning) {
   gtclang::IRSplitter("../../../../dawn/test/unit-test/dawn/Optimizer/Passes", 0)
       .split("RaceCondition03.cpp", {"-freport-pass-field-versioning", "-inline=none"});
@@ -44,6 +39,12 @@ TEST(IRSplittingTest, StageReordering) {
 TEST(IRSplittingTest, CacheTest) {
   gtclang::IRSplitter("../../../dawn/test/unit-test/dawn/Optimizer/Passes", 100)
       .split("PassSetCaches/IJCacheTest02.cpp", {"-freport-pass-set-caches"});
+}
+
+TEST(IRSplittingTest, TemporaryMerger) {
+  gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 3)
+      .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/MergeTest05.cpp",
+             {"-fmerge-temporaries"});
 }
 
 } // anonymous namespace

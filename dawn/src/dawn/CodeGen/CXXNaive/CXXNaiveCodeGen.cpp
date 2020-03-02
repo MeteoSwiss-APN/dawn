@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
@@ -354,6 +355,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
     // virtual dtor
 
     // synchronize storages method
+
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
 
     //
     // Run-Method

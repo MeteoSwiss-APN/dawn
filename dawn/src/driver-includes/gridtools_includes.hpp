@@ -20,6 +20,7 @@
 #include "cxx11_warning.hpp"
 #include "defs.hpp"
 #include "domain.hpp"
+#include "extent.hpp"
 #include "halo.hpp"
 #include "math.hpp"
 #include "param_wrapper.hpp"

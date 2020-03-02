@@ -20,6 +20,7 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include <iostream>
 #include <stack>
 
@@ -368,9 +369,8 @@ public:
     // LHS is a write, we resolve this manually as we only care about FieldAccessExpr and
     // VarAccessExpr. However, if we have an expression `a += 5` we need to register the access as
     // write and read!
-    bool readAndWrite = StringRef(expr->getOp()) == "+=" || StringRef(expr->getOp()) == "-=" ||
-                        StringRef(expr->getOp()) == "/=" || StringRef(expr->getOp()) == "*=" ||
-                        StringRef(expr->getOp()) == "|=" || StringRef(expr->getOp()) == "&=";
+    bool readAndWrite = expr->getOp() == "+=" || expr->getOp() == "-=" || expr->getOp() == "/=" ||
+                        expr->getOp() == "*=" || expr->getOp() == "|=" || expr->getOp() == "&=";
 
     if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
       auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
@@ -450,11 +450,10 @@ public:
 
 } // anonymous namespace
 
-void computeAccesses(iir::StencilInstantiation* instantiation,
+void computeAccesses(const iir::StencilMetaInformation& metadata,
                      ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
   for(const auto& stmt : stmts) {
-    DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), stmt, nullptr);
+    AccessMapper mapper(metadata, stmt, nullptr);
     stmt->accept(mapper);
   }
 }

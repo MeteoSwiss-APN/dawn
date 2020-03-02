@@ -945,6 +945,9 @@ void GTCodeGen::generateStencilClasses(
     // Generate stencil getter
     stencilClass.addMemberFunction(stencilType + "*", "get_stencil")
         .addStatement("return &m_stencil");
+
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
   }
 }
 std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
