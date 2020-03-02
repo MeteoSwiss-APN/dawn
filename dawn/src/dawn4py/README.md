@@ -13,6 +13,7 @@ We thoroughly recommend to create first a Python *virtualenv* for your project:
 python -m venv .project_venv
 source .project_venv/bin/activate
 pip install wheel
+pip install scikit-build
 ```
 Then you can install *dawn4py* directly from the GitHub repository:
 

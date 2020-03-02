@@ -25,7 +25,7 @@ using namespace dawn;
 
 namespace {
 
-/// @brief Convencience graph to test the coloring algorithm
+/// @brief Convenience graph to test the coloring algorithm
 class TestGraph : public iir::DependencyGraphAccesses {
   using Base = iir::DependencyGraphAccesses;
 

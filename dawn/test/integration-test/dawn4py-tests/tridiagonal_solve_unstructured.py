@@ -23,7 +23,7 @@ internal IR.
 The program contains two parts:
     1. construct the HIR of the example
     2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
-       In this example the compiler is configured with the unstrctured naive backend"""
+       In this example the compiler is configured with the unstructured naive backend"""
 
 import argparse
 import os
@@ -80,12 +80,8 @@ def create_vertical_region_stmt2():
 
     body_ast = sir_utils.make_ast(
         [
-            sir_utils.make_var_decl_stmt(
-                sir_utils.make_type(sir_utils.BuiltinType.Float),
-                "m",
-                0,
-                "=",
-                sir_utils.make_expr(
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("m"),
                     sir_utils.make_binary_operator(
                         sir_utils.make_literal_access_expr("1.0", sir_utils.BuiltinType.Float),
                         "/",
@@ -97,18 +93,18 @@ def create_vertical_region_stmt2():
                                 "*",
                                 sir_utils.make_unstructured_field_access_expr(
                                     "c", sir_utils.make_unstructured_offset(False), -1
-                                ),
                             ),
                         ),
                     )
                 ),
+                "=",
             ),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_unstructured_field_access_expr("c"),
                 sir_utils.make_binary_operator(
                     sir_utils.make_unstructured_field_access_expr("c"),
                     "*",
-                    sir_utils.make_var_access_expr("m"),
+                    sir_utils.make_unstructured_field_access_expr("m"),
                 ),
                 "=",
             ),
@@ -127,7 +123,7 @@ def create_vertical_region_stmt2():
                         ),
                     ),
                     "*",
-                    sir_utils.make_var_access_expr("m"),
+                    sir_utils.make_unstructured_field_access_expr("m"),
                 ),
                 "=",
             ),
@@ -203,6 +199,12 @@ def main(args: argparse.Namespace):
                     ),
                     sir_utils.make_field(
                         "d",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "m",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell")], 1
                         ),

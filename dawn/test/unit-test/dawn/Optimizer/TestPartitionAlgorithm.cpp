@@ -22,7 +22,7 @@ using namespace dawn;
 
 namespace {
 
-/// @brief Convencience graph to test the partitioning algorithm
+/// @brief Convenience graph to test the partitioning algorithm
 class TestGraph : public iir::DependencyGraphAccesses {
   using Base = iir::DependencyGraphAccesses;
 
