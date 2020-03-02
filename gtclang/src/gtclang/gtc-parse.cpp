@@ -43,6 +43,8 @@ int main(int argc, char* argv[]) {
     ("o,out", "Output SIR filename. If unset, writes SIR to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Use verbose output. If set, use -o or --out to redirect SIR.")
     ("i,input", "Input DSL file.", cxxopts::value<std::string>())
+    ("dump-ast", "Dump the clang AST.", cxxopts::value<bool>()->default_value("false"))
+    ("dump-pp", "Dump the preprocessed file.", cxxopts::value<bool>()->default_value("false"))
     ("h,help", "Display usage.");
   // clang-format on
   options.parse_positional({"input"});
@@ -66,7 +68,8 @@ int main(int argc, char* argv[]) {
 
   // Set options from cxxopts
   context->getOptions().Verbose = result["verbose"].as<bool>();
-  context->getOptions().SIRFormat = result["format"].as<std::string>();
+  context->getOptions().DumpAST = result["dump-ast"].as<bool>();
+  context->getOptions().DumpPP = result["dump-pp"].as<bool>();
 
   const std::string InputFile = result["input"].as<std::string>();
   llvm::SmallVector<const char*, 4> clangArgs;
