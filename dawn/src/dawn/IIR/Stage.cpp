@@ -341,7 +341,7 @@ bool Stage::isEmptyOrNullStmt() const {
 
 void Stage::setLocationType(ast::LocationType type) { type_ = type; }
 
-ast::LocationType Stage::getLocationType() const { return type_; }
+std::optional<ast::LocationType> Stage::getLocationType() const { return type_; }
 
 void Stage::setIterationSpace(const IterationSpace& value) { iterationSpace_ = value; }
 

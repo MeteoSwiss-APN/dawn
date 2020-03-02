@@ -52,7 +52,7 @@ protected:
 
     auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
     for(auto const& stage : multistage->getChildren()) {
-      DAWN_ASSERT(stage->getLocationType().has_value());
+      DAWN_ASSERT(!stage->getLocationType().has_value());
     }
 
     // ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSplitStageByLocationType>(context_,
@@ -78,12 +78,12 @@ TEST_F(TestPassSplitStageByLocationType, CopyTwoLocationType) {
     EXPECT_EQ(stage->getChild(0)->getAST().getStatements().size(),
               1); // only 1 stage in this DoMethod
     auto firstStatement = getNthStmt(*stage->getChild(0), 0);
-    if(stage->getLocationType() == ast::LocationType::Cells) {
+    if(*stage->getLocationType() == ast::LocationType::Cells) {
       // check assignmnt is out_cell = in_cell
       ASSERT_TRUE(firstStatement->equals(expr(assign(field("out_cell"), field("in_cell"))).get(),
                                          /*compareData = */ false));
     }
-    if(stage->getLocationType() == ast::LocationType::Edges) {
+    if(*stage->getLocationType() == ast::LocationType::Edges) {
       // check assignmnt is out_edge = in_edge
       ASSERT_TRUE(firstStatement->equals(expr(assign(field("out_edge"), field("in_edge"))).get(),
                                          /*compareData = */ false));

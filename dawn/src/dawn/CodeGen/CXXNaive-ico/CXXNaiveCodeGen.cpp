@@ -506,7 +506,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
-                std::string loopCode = getLoop(stage.getLocationType());
+                DAWN_ASSERT_MSG(stage.getLocationType().has_value(),
+                                "Stage must have a location type");
+                std::string loopCode = getLoop(*stage.getLocationType());
                 StencilRunMethod.addBlockStatement(loopCode, [&] {
                   // Generate Do-Method
                   for(const auto& doMethodPtr : stage.getChildren()) {

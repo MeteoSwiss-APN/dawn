@@ -35,7 +35,6 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
-from SIR_pb2.py import _SIR
 
 OUTPUT_NAME = "copy_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -103,7 +102,7 @@ def main(args: argparse.Namespace):
     )
 
     # output SIR to file
-    f = open("../split_stage_by_location_type_test_stencil_01.sir", "w")
+    f = open("split_stage_by_location_type_test_stencil_01.sir", "w")
     f.write(MessageToJson(sir))
     f.close()
 
