@@ -47,6 +47,8 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_os_ostream.h"
+
+#include <algorithm>
 #include <cstdio>
 #include <ctime>
 #include <iostream>
@@ -139,6 +141,34 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   parentAction_->setSIR(SIR);
 
   // Compile the SIR to GridTools
+
+  auto passGroups = dawn::DawnCompiler::defaultPassGroups();
+  if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
+                 [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
+                   return stencilPtr->Attributes.has(dawn::sir::Attr::Kind::MergeTemporaries);
+                 }) ||
+     context_->getOptions().TemporaryMerger) {
+    passGroups.push_back(dawn::PassGroup::TemporaryMerger);
+  }
+
+  if(context_->getOptions().PrintStencilGraph)
+    passGroups.push_back(dawn::PassGroup::PrintStencilGraph);
+
+  if(context_->getOptions().Inlining)
+    passGroups.push_back(dawn::PassGroup::Inlining);
+
+  if(context_->getOptions().IntervalPartitioning)
+    passGroups.push_back(dawn::PassGroup::IntervalPartitioning);
+
+  if(context_->getOptions().TmpToStencilFunction)
+    passGroups.push_back(dawn::PassGroup::TmpToStencilFunction);
+
+  if(context_->getOptions().SetNonTempCaches)
+    passGroups.push_back(dawn::PassGroup::SetNonTempCaches);
+
+  if(context_->getOptions().DataLocalityMetric)
+    passGroups.push_back(dawn::PassGroup::DataLocalityMetric);
+
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
   std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit = Compiler.compile(SIR);
 

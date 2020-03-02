@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
+
 #include <list>
 #include <memory>
 
@@ -74,6 +75,8 @@ public:
   std::unique_ptr<codegen::TranslationUnit>
   generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);
+
+  static std::list<PassGroup> defaultPassGroups();
 
   /// @brief Get options
   const Options& getOptions() const;
