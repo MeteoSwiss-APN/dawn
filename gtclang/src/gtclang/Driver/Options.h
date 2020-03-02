@@ -31,6 +31,7 @@ struct Options {
 #include "dawn/CodeGen/Options.inc"
 #include "dawn/Compiler/Options.inc"
 #include "dawn/Optimizer/Options.inc"
+#include "dawn/Optimizer/PassOptions.inc"
 #include "gtclang/Driver/Options.inc"
 #undef OPT
 };

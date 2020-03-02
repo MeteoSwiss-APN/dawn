@@ -135,17 +135,17 @@ void IRSplitter::optimize() {
   writeIIR(level);
 
   // Pass temporaries to functions
-  // OFF by default (dawn/Optimizer/Options.inc)
+  // OFF by default (dawn/Optimizer/PassOptions.inc)
   //  passTmpToFunction();
   //  level += 1;
   //  writeIIR(level);
 
-  // OFF by default (dawn/Optimizer/Options.inc)
+  // OFF by default (dawn/Optimizer/PassOptions.inc)
   //  setNonTempCaches();
   //  level += 1;
   //  writeIIR(level);
 
-  // OFF by default (dawn/Optimizer/Options.inc)
+  // OFF by default (dawn/Optimizer/PassOptions.inc)
   setCaches();
   level += 1;
   writeIIR(level);

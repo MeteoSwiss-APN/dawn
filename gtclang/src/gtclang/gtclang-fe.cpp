@@ -14,6 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Serialization/SIRSerializer.h"
 #include "gtclang/Driver/CompilerInstance.h"
 #include "gtclang/Driver/Driver.h"
 #include "gtclang/Driver/OptionsParser.h"
@@ -29,6 +30,7 @@
 #include "llvm/Support/Signals.h"
 
 #include <cxxopts.hpp>
+#include <iostream>
 
 int main(int argc, char* argv[]) {
   cxxopts::Options options("gtclang-fe",
@@ -38,16 +40,17 @@ int main(int argc, char* argv[]) {
   // clang-format off
   options.add_options()
     ("f,format", "SIR format [binary,json].", cxxopts::value<std::string>()->default_value("json"))
-    ("o,out", "Output SIR filename. If not set, writes SIR to stdout.", cxxopts::value<std::string>())
+    ("o,out", "Output SIR filename. If unset, writes SIR to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Use verbose output. If set, use -o or --out to redirect SIR.")
     ("i,input", "Input DSL file.", cxxopts::value<std::string>())
     ("h,help", "Display usage.");
   // clang-format on
   options.parse_positional({"input"});
 
+  const int numArgs = argc;
   auto result = options.parse(argc, argv);
 
-  if(result.count("help") || argc == 1) {
+  if(result.count("help") || numArgs == 1) {
     std::cout << options.help() << std::endl;
     return 0;
   }
@@ -104,7 +107,22 @@ int main(int argc, char* argv[]) {
     DAWN_LOG(INFO) << "Compilation finished " << (ret ? "with errors" : "successfully");
   }
 
+  // Parse format to enumeration
+  dawn::SIRSerializer::Format format;
+  if(result["format"].as<std::string>() == "json")
+    format = dawn::SIRSerializer::Format::Json;
+  else if(result["format"].as<std::string>() == "byte")
+    format = dawn::SIRSerializer::Format::Byte;
+  else
+    throw std::runtime_error("Unknown SIR format");
+
   // Write SIR to stdout or file
+  if(result.count("out")) {
+    dawn::SIRSerializer::serialize(result["out"].as<std::string>(), returnSIR.get(), format);
+  } else {
+    const std::string sirString = dawn::SIRSerializer::serializeToString(returnSIR.get(), format);
+    std::cout << sirString << std::endl;
+  }
 
   includeChecker.Restore();
 

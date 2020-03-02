@@ -85,3 +85,15 @@ add_dawn_library(DawnCompiler)
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(Unittest)
 endif()
+
+include(FetchCxxopts)
+
+add_executable(dawn-opt dawn-opt.cpp)
+target_link_libraries(dawn-opt Dawn cxxopts)
+set_target_properties(dawn-opt PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
+install(
+  TARGETS dawn-opt
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

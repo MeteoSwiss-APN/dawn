@@ -47,37 +47,6 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
-OPT(bool, DefaultNone, false, "default-none", "",
-    "Selectively run passes", "", false, true)
-OPT(bool, Parallel, false, "parallel", "",
-    "Run parallel pass group", "", false, true)
-OPT(bool, SSA, false, "ssa", "",
-    "Transform all statements into static single assignment (SSA) form", "", false, false)
-OPT(bool, PrintStencilGraph, false, "print-stencil-graph", "",
-    "Dump the access dependency graph of each stencil to a dot file", "", false, true)
-OPT(bool, SetStageName, false, "set-stage-name", "",
-    "Run print-stage-name pass group", "", false, true)
-OPT(bool, StageReordering, false, "stage-reordering", "",
-    "Run reorder-stages pass group", "", false, true)
-OPT(bool, StageMerger, false, "stage-merger", "",
-    "Merge stages within a multi-stage into the same Do-Method if possible", "", false, true)
-OPT(bool, TemporaryMerger, false, "temporary-merger", "",
-    "Merge temporaries if possible", "", false, true)
-OPT(bool, Inlining, false, "inlining", "",
-    "Run inlining pass group", "", false, true)
-OPT(bool, IntervalPartitioning, false, "interval-partitioning", "",
-    "partitions the intervals so there are no overlapping doMethods anymore", "", false, true)
-OPT(bool, TmpToStencilFunction, false, "tmp-to-stencil-function", "",
-    "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
-OPT(bool, SetNonTempCaches, false, "set-non-temp-caches", "",
-    "Run set-non-temp pass group", "", false, true)
-OPT(bool, SetCaches, false, "set-caches", "",
-    "Run set-caches pass group", "", false, true)
-OPT(bool, SetBlockSize, false, "set-block-size", "",
-    "Run set-block-size pass group", "", false, true)
-OPT(bool, DataLocalityMetric, false, "data-locality-metric", "",
-    "Run data-locality-metric pass group", "", false, true)
-
 OPT(bool, SplitStencils, false, "split-stencils", "",
     "Split stencil whose number of fields exceeds a threshold", "", false, true)
 OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
@@ -95,35 +64,6 @@ OPT(bool, PassVerbose, false, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "",
     "Detailed report on the accesses of each statement", "", false, true)
-OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
-    "Report where boundary conditions are inserted", "", false, true)
-OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
-    "Compute and report the data-locality metric for each stencil", "", false, true)
-OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
-    "Detailed report on the actions taken during the replace temporary by stencil function call pass", "", false, true)
-OPT(bool, ReportPassRemoveScalars, false, "report-pass-remove-scalars", "", 
-    "Report which variables are removed by the scalar removal pass", "", false, true)
-OPT(bool, ReportPassStageSplit, false, "report-pass-stage-split", "",
-    "Detailed report on the actions taken during the stage splitting pass", "", false, true)
-OPT(bool, ReportPassMultiStageSplit, false, "report-pass-multi-stage-split", "",
-    "Detailed report on the actions taken during the multi-stage splitting pass", "", false, true)
-OPT(bool, ReportPassFieldVersioning, false, "report-pass-field-versioning", "",
-    "Report on all field renamings during the field-versioning pass", "", false, true)
-OPT(bool, ReportPassTemporaryMerger, false, "report-pass-temporary-merger", "",
-    "Report which temporaries will be merged during the temporary merger pass. The groups of temporaries, "
-    "which will be merged, are sorted in alphapetical order.", "", false, true)
-OPT(bool, ReportPassTemporaryType, false, "report-pass-temporary-type", "",
-    "Report which variables and temporary fields are promoted/demoted", "", false, true)
-OPT(bool, ReportPassStageReodering, false, "report-pass-stage-reordering", "",
-    "Dump the stencil-instantiation before and after the stage reordering pass to json", "", false, true)
-OPT(bool, ReportPassStageMerger, false, "report-pass-stage-merger", "",
-    "Dump the stencil-instantiation before and after the stage merger pass to JSON", "", false, true)
-OPT(bool, ReportPassSetCaches, false, "report-pass-set-caches", "",
-    "Report which fields are cached for each multi-stage", "", false, true)
-OPT(bool, ReportPassSetBlockSize, false, "report-pass-set-block-size", "",
-    "Report on the pass that sets the block size", "", false, true)
-OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
-    "Report which non temporary fields are cached for each multi-stage", "", false, true)
 
 OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
     "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
