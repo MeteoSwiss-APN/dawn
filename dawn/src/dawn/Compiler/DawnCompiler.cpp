@@ -186,8 +186,8 @@ DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
     optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
     optimizer.pushBackPass<PassFieldVersioning>();
     optimizer.pushBackPass<PassMultiStageSplitter>(mssSplitStrategy);
-    optimizer.pushBackPass<PassLocalVarType>();
-    optimizer.pushBackPass<PassRemoveScalars>();
+    // optimizer.pushBackPass<PassLocalVarType>();
+    // optimizer.pushBackPass<PassRemoveScalars>();
     optimizer.pushBackPass<PassStageSplitter>();
     optimizer.pushBackPass<PassTemporaryType>();
     optimizer.pushBackPass<PassFixVersionedInputFields>();
