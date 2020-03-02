@@ -33,6 +33,7 @@ add_executable(${executable}
   TestPassTemporaryMerger.cpp
   TestPassTemporaryType.cpp
   TestTemporaryToFunction.cpp
+  TestPassSplitStagesByLocationType.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
@@ -43,3 +44,5 @@ file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::Passes::"
   EXTRA_ARGS ${CMAKE_CURRENT_LIST_DIR}
   DISCOVERY_TIMEOUT 30)
+
+add_subdirectory(input/SplitStageByLocationType)

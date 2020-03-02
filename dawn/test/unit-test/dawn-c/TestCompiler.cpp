@@ -38,7 +38,9 @@ static void freeCharArray(char** array, int size) {
   std::free(array);
 }
 
-TEST(CompilerTest, CompileEmptySIR) {
+// TODO empty is not legal anymore as gridtype is required (the default is illegal)
+// remove or refactor test
+TEST(CompilerTest, DISABLED_CompileEmptySIR) {
   std::string sir;
   dawnTranslationUnit_t* TU = dawnCompile(sir.data(), sir.size(), nullptr);
 
