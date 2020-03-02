@@ -33,7 +33,7 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-  cxxopts::Options options("gtclang-fe",
+  cxxopts::Options options("gtc-parse",
                            "Geophysical fluid dynamics DSL frontend for the Dawn toolchain");
   options.positional_help("InputFile").show_positional_help();
 
