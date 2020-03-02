@@ -63,13 +63,11 @@ target_link_libraries(gtclang GTClang)
 
 include(FetchCxxopts)
 
-add_executable(gtclang-fe gtclang-fe.cpp)
-target_link_libraries(gtclang-fe GTClang cxxopts)
-set_target_properties(gtclang-fe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-
-
+add_executable(gtc-parse gtc-parse.cpp)
+target_link_libraries(gtc-parse GTClang cxxopts)
+set_target_properties(gtc-parse PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 install(
-  TARGETS gtclang-fe
+  TARGETS gtc-parse
   EXPORT ${PROJECT_NAME}Targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
