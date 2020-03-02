@@ -49,8 +49,6 @@ OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations
 
 OPT(bool, DefaultNone, false, "default-none", "",
     "Selectively run passes", "", false, true)
-OPT(bool, Debug, false, "debug", "",
-    "Compile to debug backend", "", false, true)
 OPT(bool, Parallel, false, "parallel", "",
     "Run parallel pass group", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
@@ -59,17 +57,17 @@ OPT(bool, PrintStencilGraph, false, "print-stencil-graph", "",
     "Dump the access dependency graph of each stencil to a dot file", "", false, true)
 OPT(bool, SetStageName, false, "set-stage-name", "",
     "Run print-stage-name pass group", "", false, true)
-OPT(bool, ReorderStages, false, "reorder-stages", "",
+OPT(bool, StageReordering, false, "stage-reordering", "",
     "Run reorder-stages pass group", "", false, true)
-OPT(bool, MergeStages, false, "merge-stages", "",
+OPT(bool, StageMerger, false, "stage-merger", "",
     "Merge stages within a multi-stage into the same Do-Method if possible", "", false, true)
-OPT(bool, MergeTemporaries, false, "merge-temporaries", "",
+OPT(bool, TemporaryMerger, false, "temporary-merger", "",
     "Merge temporaries if possible", "", false, true)
 OPT(bool, Inlining, false, "inlining", "",
     "Run inlining pass group", "", false, true)
-OPT(bool, PartitionIntervals, false, "partition-intervals", "",
+OPT(bool, IntervalPartitioning, false, "interval-partitioning", "",
     "partitions the intervals so there are no overlapping doMethods anymore", "", false, true)
-OPT(bool, PassTmpToFunction, false, "pass-tmp-to-function", "",
+OPT(bool, TmpToStencilFunction, false, "tmp-to-stencil-function", "",
     "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
 OPT(bool, SetNonTempCaches, false, "set-non-temp-caches", "",
     "Run set-non-temp pass group", "", false, true)

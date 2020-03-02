@@ -23,9 +23,9 @@ PYBIND11_MODULE(_dawn4py, m) {
                   const std::string& DeserializeIIR, const std::string& IIRFormat,
                   int MaxHaloPoints, const std::string& ReorderStrategy, int MaxFieldsPerStencil,
                   bool MaxCutMSS, int BlockSizeI, int BlockSizeJ, int BlockSizeK, bool DefaultNone,
-                  bool Debug, bool Parallel, bool SSA, bool PrintStencilGraph, bool SetStageName,
-                  bool ReorderStages, bool MergeStages, bool MergeTemporaries, bool Inlining,
-                  bool PartitionIntervals, bool PassTmpToFunction, bool SetNonTempCaches,
+                  bool Parallel, bool SSA, bool PrintStencilGraph, bool SetStageName,
+                  bool StageReordering, bool StageMerger, bool TemporaryMerger, bool Inlining,
+                  bool IntervalPartitioning, bool TmpToStencilFunction, bool SetNonTempCaches,
                   bool SetCaches, bool SetBlockSize, bool DataLocalityMetric, bool SplitStencils,
                   bool MergeDoMethods, bool UseParallelEP, bool DisableKCaches,
                   bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
@@ -56,17 +56,16 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       BlockSizeJ,
                                       BlockSizeK,
                                       DefaultNone,
-                                      Debug,
                                       Parallel,
                                       SSA,
                                       PrintStencilGraph,
                                       SetStageName,
-                                      ReorderStages,
-                                      MergeStages,
-                                      MergeTemporaries,
+                                      StageReordering,
+                                      StageMerger,
+                                      TemporaryMerger,
                                       Inlining,
-                                      PartitionIntervals,
-                                      PassTmpToFunction,
+                                      IntervalPartitioning,
+                                      TmpToStencilFunction,
                                       SetNonTempCaches,
                                       SetCaches,
                                       SetBlockSize,
@@ -107,12 +106,12 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("iir_format") = "json", py::arg("max_halo_points") = 3,
            py::arg("reorder_strategy") = "greedy", py::arg("max_fields_per_stencil") = 40,
            py::arg("max_cut_mss") = false, py::arg("block_size_i") = 0, py::arg("block_size_j") = 0,
-           py::arg("block_size_k") = 0, py::arg("default_none") = false, py::arg("debug") = false,
+           py::arg("block_size_k") = 0, py::arg("default_none") = false,
            py::arg("parallel") = false, py::arg("ssa") = false,
            py::arg("print_stencil_graph") = false, py::arg("set_stage_name") = false,
-           py::arg("reorder_stages") = false, py::arg("merge_stages") = false,
-           py::arg("merge_temporaries") = false, py::arg("inlining") = false,
-           py::arg("partition_intervals") = false, py::arg("pass_tmp_to_function") = false,
+           py::arg("stage_reordering") = false, py::arg("stage_merger") = false,
+           py::arg("temporary_merger") = false, py::arg("inlining") = false,
+           py::arg("interval_partitioning") = false, py::arg("tmp_to_stencil_function") = false,
            py::arg("set_non_temp_caches") = false, py::arg("set_caches") = false,
            py::arg("set_block_size") = false, py::arg("data_locality_metric") = false,
            py::arg("split_stencils") = false, py::arg("merge_do_methods") = true,
@@ -153,11 +152,16 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
       .def_readwrite("default_none", &dawn::Options::DefaultNone)
-      .def_readwrite("debug", &dawn::Options::Debug)
       .def_readwrite("parallel", &dawn::Options::Parallel)
+      .def_readwrite("ssa", &dawn::Options::SSA)
+      .def_readwrite("print_stencil_graph", &dawn::Options::PrintStencilGraph)
+      .def_readwrite("set_stage_name", &dawn::Options::SetStageName)
+      .def_readwrite("stage_reordering", &dawn::Options::StageReordering)
+      .def_readwrite("stage_merger", &dawn::Options::StageMerger)
+      .def_readwrite("temporary_merger", &dawn::Options::TemporaryMerger)
       .def_readwrite("inlining", &dawn::Options::Inlining)
-      .def_readwrite("partition_intervals", &dawn::Options::PartitionIntervals)
-      .def_readwrite("pass_tmp_to_function", &dawn::Options::PassTmpToFunction)
+      .def_readwrite("interval_partitioning", &dawn::Options::IntervalPartitioning)
+      .def_readwrite("tmp_to_stencil_function", &dawn::Options::TmpToStencilFunction)
       .def_readwrite("set_non_temp_caches", &dawn::Options::SetNonTempCaches)
       .def_readwrite("set_caches", &dawn::Options::SetCaches)
       .def_readwrite("set_block_size", &dawn::Options::SetBlockSize)
@@ -220,17 +224,16 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_j=" << self.BlockSizeJ << ",\n    "
            << "block_size_k=" << self.BlockSizeK << ",\n    "
            << "default_none=" << self.DefaultNone << ",\n    "
-           << "debug=" << self.Debug << ",\n    "
            << "parallel=" << self.Parallel << ",\n    "
            << "ssa=" << self.SSA << ",\n    "
            << "print_stencil_graph=" << self.PrintStencilGraph << ",\n    "
            << "set_stage_name=" << self.SetStageName << ",\n    "
-           << "reorder_stages=" << self.ReorderStages << ",\n    "
-           << "merge_stages=" << self.MergeStages << ",\n    "
-           << "merge_temporaries=" << self.MergeTemporaries << ",\n    "
+           << "stage_reordering=" << self.StageReordering << ",\n    "
+           << "stage_merger=" << self.StageMerger << ",\n    "
+           << "temporary_merger=" << self.TemporaryMerger << ",\n    "
            << "inlining=" << self.Inlining << ",\n    "
-           << "partition_intervals=" << self.PartitionIntervals << ",\n    "
-           << "pass_tmp_to_function=" << self.PassTmpToFunction << ",\n    "
+           << "interval_partitioning=" << self.IntervalPartitioning << ",\n    "
+           << "tmp_to_stencil_function=" << self.TmpToStencilFunction << ",\n    "
            << "set_non_temp_caches=" << self.SetNonTempCaches << ",\n    "
            << "set_caches=" << self.SetCaches << ",\n    "
            << "set_block_size=" << self.SetBlockSize << ",\n    "

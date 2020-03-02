@@ -179,14 +179,14 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
 
-  case PassGroup::ReorderStages:
+  case PassGroup::StageReordering:
     addPass<dawn::PassSetStageGraph>(context, passes);
     addPass<dawn::PassStageReordering>(context, passes, reorderStrategy);
     addPass<dawn::PassSetSyncStage>(context, passes);
     addPass<dawn::PassSetStageName>(context, passes);
     break;
 
-  case PassGroup::MergeStages:
+  case PassGroup::StageMerger:
     addPass<dawn::PassStageMerger>(context, passes);
     // since this can change the scope of temporaries ...
     addPass<dawn::PassTemporaryType>(context, passes);
@@ -196,7 +196,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
 
-  case PassGroup::MergeTemporaries:
+  case PassGroup::TemporaryMerger:
     addPass<dawn::PassTemporaryMerger>(context, passes);
     // this should not affect the temporaries but since we're touching them it would probably be a
     // safe idea
@@ -207,13 +207,13 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassInlining>(context, passes, false, inlineOnTheFly);
     break;
 
-  case PassGroup::PartitionIntervals:
+  case PassGroup::IntervalPartitioning:
     addPass<dawn::PassIntervalPartitioning>(context, passes);
     // since this can change the scope of temporaries ...
     addPass<dawn::PassTemporaryType>(context, passes);
     break;
 
-  case PassGroup::PassTmpToFunction:
+  case PassGroup::TmpToStencilFunction:
     addPass<dawn::PassTemporaryToStencilFunction>(context, passes);
     break;
 
@@ -331,7 +331,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     break;
 
-  case PassGroup::ReorderStages:
+  case PassGroup::StageReordering:
     result &= runPass<dawn::PassSetStageName>(context, instantiation);
     result &= runPass<dawn::PassSetStageGraph>(context, instantiation);
     result &= runPass<dawn::PassStageReordering>(context, instantiation, reorderStrategy);
@@ -339,14 +339,14 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassSetStageName>(context, instantiation);
     break;
 
-  case PassGroup::MergeStages:
+  case PassGroup::StageMerger:
     result &= runPass<dawn::PassStageMerger>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
     result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     break;
 
-  case PassGroup::MergeTemporaries:
+  case PassGroup::TemporaryMerger:
     result &= runPass<dawn::PassTemporaryMerger>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
     break;
@@ -355,12 +355,12 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
     break;
 
-  case PassGroup::PartitionIntervals:
+  case PassGroup::IntervalPartitioning:
     result &= runPass<dawn::PassIntervalPartitioning>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
     break;
 
-  case PassGroup::PassTmpToFunction:
+  case PassGroup::TmpToStencilFunction:
     result &= runPass<dawn::PassTemporaryToStencilFunction>(context, instantiation);
     break;
 
