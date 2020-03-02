@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   options.add_options()
     ("f,format", "SIR format [binary,json].", cxxopts::value<std::string>()->default_value("json"))
     ("o,out", "Output SIR filename. If unset, writes SIR to stdout.", cxxopts::value<std::string>())
-    ("v,verbose", "Use verbose output. If set, use -o or --out to redirect SIR.")
+    ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect SIR.")
     ("i,input", "Input DSL file.", cxxopts::value<std::string>())
     ("dump-ast", "Dump the clang AST.", cxxopts::value<bool>()->default_value("false"))
     ("dump-pp", "Dump the preprocessed file.", cxxopts::value<bool>()->default_value("false"))

@@ -96,3 +96,12 @@ install(
   EXPORT ${PROJECT_NAME}Targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+add_executable(dawn-codegen dawn-codegen.cpp)
+target_link_libraries(dawn-codegen Dawn cxxopts)
+set_target_properties(dawn-codegen PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+install(
+  TARGETS dawn-codegen
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

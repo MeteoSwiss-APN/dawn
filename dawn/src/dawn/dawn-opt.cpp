@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     ("f,format", "Input SIR format [json,binary].", cxxopts::value<std::string>()->default_value("json"))
     ("t,type", "Type of input [sir,iir]. Deduced if --format=json.", cxxopts::value<std::string>()->default_value("sir"))
     ("o,out", "Output IIR filename. If unset, writes IIR to stdout.", cxxopts::value<std::string>())
-    ("v,verbose", "Use verbose output. If set, use -o or --out to redirect IIR.")
+    ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect IIR.")
     ("passes", "Ordered list of pass groups to run. See DawnCompiler.h for list.", cxxopts::value<std::vector<std::string>>())
     ("h,help", "Display usage.")
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
