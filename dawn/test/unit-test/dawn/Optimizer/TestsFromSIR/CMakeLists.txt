@@ -16,9 +16,9 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestOptimizerFromSIR)
 add_executable(${executable}
   TestMain.cpp
-  TestComputeMaximumExtent.cpp
-  TestMultiStage.cpp
-  TestStage.cpp
+  # TestComputeMaximumExtent.cpp
+  # TestMultiStage.cpp
+  # TestStage.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
