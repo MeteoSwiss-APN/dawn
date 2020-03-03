@@ -140,37 +140,53 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   parentAction_->setSIR(SIR);
 
-  // Compile the SIR to GridTools
+  // Compile the SIR using Dawn
 
-  auto passGroups = dawn::DawnCompiler::defaultPassGroups();
+  std::list<dawn::PassGroup> PassGroups;
+
+  if(context_->getOptions().SSA)
+    PassGroups.push_back(dawn::PassGroup::SSA);
+
+  if(context_->getOptions().PrintStencilGraph)
+    PassGroups.push_back(dawn::PassGroup::PrintStencilGraph);
+
+  PassGroups.push_back(dawn::PassGroup::SetStageName);
+
+  PassGroups.push_back(dawn::PassGroup::StageReordering);
+
+  if(context_->getOptions().StageMerger)
+    PassGroups.push_back(dawn::PassGroup::StageMerger);
+
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
                  [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
                    return stencilPtr->Attributes.has(dawn::sir::Attr::Kind::MergeTemporaries);
                  }) ||
      context_->getOptions().TemporaryMerger) {
-    passGroups.push_back(dawn::PassGroup::TemporaryMerger);
+    PassGroups.push_back(dawn::PassGroup::TemporaryMerger);
   }
 
-  if(context_->getOptions().PrintStencilGraph)
-    passGroups.push_back(dawn::PassGroup::PrintStencilGraph);
-
   if(context_->getOptions().Inlining)
-    passGroups.push_back(dawn::PassGroup::Inlining);
+    PassGroups.push_back(dawn::PassGroup::Inlining);
 
   if(context_->getOptions().IntervalPartitioning)
-    passGroups.push_back(dawn::PassGroup::IntervalPartitioning);
+    PassGroups.push_back(dawn::PassGroup::IntervalPartitioning);
 
   if(context_->getOptions().TmpToStencilFunction)
-    passGroups.push_back(dawn::PassGroup::TmpToStencilFunction);
+    PassGroups.push_back(dawn::PassGroup::TmpToStencilFunction);
 
   if(context_->getOptions().SetNonTempCaches)
-    passGroups.push_back(dawn::PassGroup::SetNonTempCaches);
+    PassGroups.push_back(dawn::PassGroup::SetNonTempCaches);
+
+  PassGroups.push_back(dawn::PassGroup::SetCaches);
+
+  PassGroups.push_back(dawn::PassGroup::SetBlockSize);
 
   if(context_->getOptions().DataLocalityMetric)
-    passGroups.push_back(dawn::PassGroup::DataLocalityMetric);
+    PassGroups.push_back(dawn::PassGroup::DataLocalityMetric);
 
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
-  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit = Compiler.compile(SIR);
+  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
+      Compiler.compile(SIR, PassGroups);
 
   // Report diagnostics from Dawn
   if(Compiler.getDiagnostics().hasDiags()) {

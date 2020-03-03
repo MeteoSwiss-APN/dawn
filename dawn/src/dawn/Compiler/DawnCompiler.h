@@ -69,7 +69,7 @@ public:
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
   optimize(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap,
-           std::list<PassGroup> groups = {});
+           const std::list<PassGroup>& groups);
 
   /// @brief Generate a translation unit from a set of Stencil Instantiations
   std::unique_ptr<codegen::TranslationUnit>

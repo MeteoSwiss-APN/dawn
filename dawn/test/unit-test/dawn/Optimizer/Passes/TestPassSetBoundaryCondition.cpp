@@ -54,7 +54,8 @@ protected:
       compiler_.getOptions().MaxFieldsPerStencil = maxfields;
 
     // Run the optimization
-    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir));
+    auto stencilInstantiationMap =
+        compiler_.optimize(compiler_.lowerToIIR(sir), dawn::DawnCompiler::defaultPassGroups());
 
     // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {

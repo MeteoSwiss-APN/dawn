@@ -50,8 +50,6 @@ public:
   lower(const std::string& sirFilename,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
         std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
-  static stencilInstantiationContext compile(const std::shared_ptr<SIR>& sir);
-  static stencilInstantiationContext compile(const std::string& sirFile);
   static void clearDiags();
   static void dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);
   static void dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si);

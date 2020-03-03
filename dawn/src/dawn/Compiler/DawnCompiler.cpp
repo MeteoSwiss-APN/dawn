@@ -144,8 +144,8 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
 } // namespace
 
 std::list<PassGroup> DawnCompiler::defaultPassGroups() {
-  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
-          PassGroup::SetCaches, PassGroup::SetBlockSize};
+  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::SetCaches,
+          PassGroup::SetBlockSize};
 }
 
 DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
@@ -196,7 +196,7 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap,
-                       std::list<PassGroup> groups) {
+                       const std::list<PassGroup>& groups) {
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
@@ -225,9 +225,6 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
   // Initialize optimizer
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilInstantiationMap);
-
-  if(groups.empty())
-    groups = defaultPassGroups();
 
   for(auto group : groups) {
     switch(group) {
@@ -427,6 +424,9 @@ std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR, std::list<PassGroup> groups) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
+
+  if(groups.empty())
+    groups = defaultPassGroups();
 
   // Parallelize the SIR
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiation;
