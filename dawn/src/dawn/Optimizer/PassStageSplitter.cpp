@@ -34,7 +34,7 @@ bool PassStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   int numSplit = 0;
   std::deque<int> splitterIndices;
-  std::deque<std::shared_ptr<iir::DependencyGraphAccesses>> graphs;
+  std::deque<iir::DependencyGraphAccesses> graphs;
 
   // Iterate over all stages in all multistages of all stencils
   for(const auto& stencil : stencilInstantiation->getStencils()) {
@@ -52,21 +52,19 @@ bool PassStageSplitter::run(
         splitterIndices.clear();
         graphs.clear();
 
-        std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-        newGraph =
-            std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
-        oldGraph = newGraph->clone();
+        iir::DependencyGraphAccesses newGraph(stencilInstantiation->getMetaData());
+        auto oldGraph = newGraph;
 
         // Build the Dependency graph (bottom to top)
         for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0;
             --stmtIndex) {
           const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
 
-          newGraph->insertStatement(stmt);
+          newGraph.insertStatement(stmt);
 
           // If we have a horizontal read-before-write conflict, we record the current index for
           // splitting
-          if(hasHorizontalReadBeforeWriteConflict(newGraph.get())) {
+          if(hasHorizontalReadBeforeWriteConflict(newGraph)) {
 
             // Check if the conflict is related to a conditional block
             if(isa<iir::IfStmt>(stmt.get())) {
@@ -74,7 +72,7 @@ bool PassStageSplitter::run(
               iir::DependencyGraphAccesses conditionalBlockGraph =
                   iir::DependencyGraphAccesses(stencilInstantiation->getMetaData());
               conditionalBlockGraph.insertStatement(stmt);
-              if(hasHorizontalReadBeforeWriteConflict(&conditionalBlockGraph)) {
+              if(hasHorizontalReadBeforeWriteConflict(conditionalBlockGraph)) {
                 // Since splitting inside a conditional block is not supported, report and return an
                 // error.
                 DiagnosticsBuilder diag(DiagnosticsKind::Error, stmt->getSourceLocation());
@@ -85,7 +83,7 @@ bool PassStageSplitter::run(
             }
 
             if(context_.getOptions().DumpSplitGraphs)
-              oldGraph->toDot(
+              oldGraph.toDot(
                   format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
             // Set the splitter index and assign the *old* graph as the stage dependency graph
@@ -97,17 +95,17 @@ bool PassStageSplitter::run(
                         << ": split:" << stmt->getSourceLocation().Line << "\n";
 
             // Clear the new graph an process the current statements again
-            newGraph->clear();
-            newGraph->insertStatement(stmt);
+            newGraph.clear();
+            newGraph.insertStatement(stmt);
 
             numSplit++;
           }
 
-          oldGraph = newGraph->clone();
+          oldGraph = newGraph;
         }
 
         if(context_.getOptions().DumpSplitGraphs)
-          newGraph->toDot(
+          newGraph.toDot(
               format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
         graphs.push_front(newGraph);

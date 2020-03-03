@@ -66,13 +66,13 @@ public:
 
 protected:
   std::unordered_map<int, Vertex> vertices_;
-  std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
+  std::vector<EdgeList> adjacencyList_;
 
 public:
   /// @brief Get the adjacency list
   /// @{
-  std::vector<std::shared_ptr<EdgeList>>& getAdjacencyList() { return adjacencyList_; }
-  const std::vector<std::shared_ptr<EdgeList>>& getAdjacencyList() const { return adjacencyList_; }
+  std::vector<EdgeList>& getAdjacencyList() { return adjacencyList_; }
+  const std::vector<EdgeList>& getAdjacencyList() const { return adjacencyList_; }
   /// @}
 
   /// @brief Get the vertices
@@ -80,7 +80,6 @@ public:
   std::unordered_map<int, Vertex>& getVertices() { return vertices_; }
   const std::unordered_map<int, Vertex>& getVertices() const { return vertices_; }
   /// @}
-
   //===----------------------------------------------------------------------------------------===//
   //     Graph implementation
   //===----------------------------------------------------------------------------------------===//
@@ -92,7 +91,7 @@ public:
   Vertex& insertNode(int ID) {
     auto insertPair = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
     if(insertPair.second)
-      adjacencyList_.push_back(std::make_shared<EdgeList>());
+      adjacencyList_.push_back(EdgeList());
     return insertPair.first->second;
   }
 
@@ -127,14 +126,14 @@ public:
     const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromValue(vertexValueFrom),
                     getVertexIDFromValue(vertexValueTo)};
 
-    auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
+    auto it = std::find_if(edgeList.begin(), edgeList.end(), [&edge](const Edge& e) {
       return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
     });
 
-    if(it != edgeList->end())
+    if(it != edgeList.end())
       static_cast<Derived*>(this)->edgeAlreadyExists(it->Data, edge.Data);
     else
-      edgeList->push_back(edge);
+      edgeList.push_back(edge);
   }
 
   /// @brief Callback which will be invoked if an edge already exists
@@ -164,11 +163,9 @@ public:
   }
 
   /// @brief Get the list of edges of node given by `ID`
-  EdgeList& edgesOf(int vertexValue) {
-    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
-  }
+  EdgeList& edgesOf(int vertexValue) { return adjacencyList_[getVertexIDFromValue(vertexValue)]; }
   const EdgeList& edgesOf(int vertexValue) const {
-    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
+    return adjacencyList_[getVertexIDFromValue(vertexValue)];
   }
 
   /// @brief Clear the graph
@@ -223,7 +220,7 @@ protected:
   bool hasCycleDependencyImpl(const int targetVertexID, const int seedID,
                               std::set<int>& visited) const {
     // DFS search for cycles on access to ID
-    for(auto& edge : *(getAdjacencyList()[seedID])) {
+    for(auto& edge : getAdjacencyList()[seedID]) {
       if(edge.ToVertexID == targetVertexID) {
         return true;
       }
@@ -254,7 +251,7 @@ protected:
                        "\"");
 
       // Convert edge to dot
-      for(const Edge& edge : *(adjacencyList_[VertexID]))
+      for(const Edge& edge : adjacencyList_[VertexID])
         edgeStrs.emplace(
             "\"" + FromVertexName + "\" -> \"" +
             static_cast<const Derived*>(this)->getVertexNameByVertexID(edge.ToVertexID) + "\"" +

@@ -31,17 +31,17 @@ namespace {
 /// possibly itself.
 template <bool IsVertical>
 class ReadBeforeWriteConflictDetector {
-  const iir::DependencyGraphAccesses* graph_;
+  const iir::DependencyGraphAccesses& graph_;
   iir::LoopOrderKind loopOrder_;
 
 public:
-  ReadBeforeWriteConflictDetector(const iir::DependencyGraphAccesses* graph,
+  ReadBeforeWriteConflictDetector(const iir::DependencyGraphAccesses& graph,
                                   iir::LoopOrderKind loopOrder)
       : graph_(graph), loopOrder_(loopOrder) {}
 
   ReadBeforeWriteConflict check() const {
 
-    std::vector<std::size_t> nodesToVisit = graph_->getOutputVertexIDs();
+    std::vector<std::size_t> nodesToVisit = graph_.getOutputVertexIDs();
     DAWN_ASSERT_MSG(!nodesToVisit.empty(), "invalid graph (probably contains cycles!)");
 
     ReadBeforeWriteConflict conflict;
@@ -62,7 +62,7 @@ private:
 
     std::vector<std::size_t> nodesToVisit;
     std::unordered_set<std::size_t> visitedNodes;
-    const auto& adjacencyList = graph_->getAdjacencyList();
+    const auto& adjacencyList = graph_.getAdjacencyList();
 
     nodesToVisit.push_back(VertexID);
     while(!nodesToVisit.empty()) {
@@ -78,13 +78,13 @@ private:
         visitedNodes.insert(curNode);
 
       // Follow edges of the current node
-      if(!adjacencyList[curNode]->empty()) {
-        for(const auto& edge : *adjacencyList[curNode]) {
+      if(!adjacencyList[curNode].empty()) {
+        for(const auto& edge : adjacencyList[curNode]) {
           const iir::Extents& extent = edge.Data;
 
           if(IsVertical) {
 
-            if(!adjacencyList[edge.ToVertexID]->empty()) {
+            if(!adjacencyList[edge.ToVertexID].empty()) {
 
               // We have an outgoing edge to a non-input field, check the vertical accesses
               auto verticalLoopOrderAccess = extent.getVerticalLoopOrderAccesses(loopOrder_);
@@ -107,7 +107,7 @@ private:
             if(!extent.isHorizontalPointwise()) {
 
               // ... to a non-input field (i.e an intermediate field or variable)
-              if(!adjacencyList[edge.ToVertexID]->empty()) {
+              if(!adjacencyList[edge.ToVertexID].empty()) {
                 // We have a read-after-write conflict -> exit
                 return ReadBeforeWriteConflict(true, true);
               }
@@ -140,12 +140,12 @@ ReadBeforeWriteConflict& ReadBeforeWriteConflict::operator|=(const ReadBeforeWri
 }
 
 ReadBeforeWriteConflict
-hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
+hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses& graph,
                                    iir::LoopOrderKind loopOrder) {
   return ReadBeforeWriteConflictDetector<true>(graph, loopOrder).check();
 }
 
-bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph) {
+bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses& graph) {
   return ReadBeforeWriteConflictDetector<false>(graph, iir::LoopOrderKind::Parallel /* unused */)
       .check()
       .LoopOrderConflict;

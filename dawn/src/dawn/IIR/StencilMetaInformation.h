@@ -96,7 +96,7 @@ class StencilMetaInformation : public NonCopyable {
 
 public:
   StencilMetaInformation(std::shared_ptr<sir::GlobalVariableMap> globalVariables);
-
+  // TODO: delete copy constructor to check
   void clone(const StencilMetaInformation& origin);
 
   /// @brief get the `name` associated with the `accessID` of any access type

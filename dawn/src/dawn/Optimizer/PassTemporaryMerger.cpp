@@ -56,7 +56,7 @@ bool PassTemporaryMerger::run(
     iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation->getMetaData());
     for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
-      AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
+      AccessesDAG.merge(*multiStage.getDependencyGraphOfAxis());
     }
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 
@@ -88,7 +88,7 @@ bool PassTemporaryMerger::run(
           visitedNodes.insert(FromVertexID);
 
         // Follow edges of the current node and update the node extents
-        for(const Edge& edge : *adjacencyList[FromVertexID]) {
+        for(const Edge& edge : adjacencyList[FromVertexID]) {
           std::size_t ToVertexID = edge.ToVertexID;
           int ToAccessID = AccessesDAG.getIDFromVertexID(ToVertexID);
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;

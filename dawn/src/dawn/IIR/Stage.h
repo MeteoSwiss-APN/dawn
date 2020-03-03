@@ -206,9 +206,8 @@ public:
   /// If a vector of graphs is provided, it will be assigned to the new stages.
   ///
   /// @return New stages
-  std::vector<std::unique_ptr<Stage>>
-  split(std::deque<int>& splitterIndices,
-        const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
+  std::vector<std::unique_ptr<Stage>> split(std::deque<int>& splitterIndices,
+                                            const std::deque<DependencyGraphAccesses>* graphs);
 
   /// @brief Get the extent of the stage
   /// @{

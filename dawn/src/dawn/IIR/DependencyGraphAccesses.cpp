@@ -81,33 +81,23 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
 const char* DependencyGraphAccesses::getDotShape() const { return "circle"; }
 
 std::string DependencyGraphAccesses::getVertexNameByVertexID(std::size_t VertexID) const {
-  return metaData_.getFieldNameFromAccessID(getIDFromVertexID(VertexID));
+  return metaData_.get().getFieldNameFromAccessID(getIDFromVertexID(VertexID));
 }
 
-void DependencyGraphAccesses::merge(const DependencyGraphAccesses* other) {
+void DependencyGraphAccesses::merge(const DependencyGraphAccesses& other) {
   // Insert the nodes of `other`
-  for(const auto& AccessIDVertexIDPair : other->getVertices()) {
+  for(const auto& AccessIDVertexIDPair : other.getVertices()) {
     int AccessID = AccessIDVertexIDPair.first;
     insertNode(AccessID);
   }
 
   // Insert the edges of `other`
-  for(std::size_t VertexID = 0; VertexID < other->getAdjacencyList().size(); ++VertexID) {
-    for(const Edge& edge : *(other->getAdjacencyList()[VertexID])) {
-      insertEdge(other->getIDFromVertexID(edge.FromVertexID),
-                 other->getIDFromVertexID(edge.ToVertexID), edge.Data);
+  for(std::size_t VertexID = 0; VertexID < other.getAdjacencyList().size(); ++VertexID) {
+    for(const Edge& edge : (other.getAdjacencyList()[VertexID])) {
+      insertEdge(other.getIDFromVertexID(edge.FromVertexID),
+                 other.getIDFromVertexID(edge.ToVertexID), edge.Data);
     }
   }
-}
-
-std::shared_ptr<DependencyGraphAccesses> DependencyGraphAccesses::clone() const {
-  auto graph = std::make_shared<DependencyGraphAccesses>(metaData_);
-  graph->vertices_ = vertices_;
-  graph->VertexIDToAccessIDMap_ = VertexIDToAccessIDMap_;
-  for(const auto& edgeListPtr : adjacencyList_)
-    graph->adjacencyList_.push_back(edgeListPtr ? std::make_shared<EdgeList>(*edgeListPtr)
-                                                : nullptr);
-  return graph;
 }
 
 std::vector<std::set<std::size_t>> DependencyGraphAccesses::partitionInSubGraphs() const {
@@ -158,7 +148,7 @@ std::vector<std::set<std::size_t>> DependencyGraphAccesses::partitionInSubGraphs
         partition[curNode] = currentPartitionIdx;
       }
 
-      for(const Edge& edge : *adjacencyList_[curNode])
+      for(const Edge& edge : adjacencyList_[curNode])
         nodesToVisit.push_back(edge.ToVertexID);
     }
   }
@@ -196,11 +186,11 @@ void getInputVertexIDsImpl(
   const auto& adjacencyList = graph.getAdjacencyList();
   for(const auto& vertex : vertexList) {
     std::size_t VertexID = getVertexIDFromVertexListElemenFunc(vertex);
-    if(adjacencyList[VertexID]->empty())
+    if(adjacencyList[VertexID].empty())
       inputVertexIDs.push_back(VertexID);
-    else if(adjacencyList[VertexID]->size() == 1) {
+    else if(adjacencyList[VertexID].size() == 1) {
       // We allow self-dependencies!
-      const auto& edge = adjacencyList[VertexID]->front();
+      const auto& edge = adjacencyList[VertexID].front();
       if(edge.FromVertexID == edge.ToVertexID)
         inputVertexIDs.push_back(VertexID);
     }
@@ -222,7 +212,7 @@ void getOutputVertexIDsImpl(
 
   // Construct a set of dependent nodes i.e nodes with edges from other nodes pointing to them
   for(const auto& edgeList : adjacencyList)
-    for(const auto& edge : *edgeList)
+    for(const auto& edge : edgeList)
       // We allow self-dependencies!
       if(edge.FromVertexID != edge.ToVertexID)
         dependentNodes.insert(edge.ToVertexID);
@@ -239,14 +229,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                          vertices);
+    getInputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                           vertices);
+    getOutputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
   }
@@ -330,7 +320,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
         visitedNodes.insert(curNode);
 
       // Follow edges of the current node and update the node extents
-      for(const Edge& edge : *adjacencyList[curNode]) {
+      for(const Edge& edge : adjacencyList[curNode]) {
         nodeExtents.at(edge.ToVertexID).merge(curExtent + edge.Data);
         nodesToVisit.push_back(edge.ToVertexID);
       }
@@ -419,7 +409,7 @@ private:
     index_++;
 
     // Consider successors of the `FromVertex`
-    for(const EdgeType& edge : *graph_->getAdjacencyList()[FromVertexID]) {
+    for(const EdgeType& edge : graph_->getAdjacencyList()[FromVertexID]) {
 
       VertexData& ToVertexData = vertexData_[edge.ToVertexID];
 
@@ -491,7 +481,7 @@ public:
     // Compute the neighbor-list
     std::vector<std::set<std::size_t>> neighborList(numVertices);
     for(std::size_t FromVertexID = 0; FromVertexID < numVertices; ++FromVertexID) {
-      for(const Edge& edge : *adjacencyList[FromVertexID]) {
+      for(const Edge& edge : adjacencyList[FromVertexID]) {
         neighborList[edge.FromVertexID].insert(edge.ToVertexID);
         neighborList[edge.ToVertexID].insert(edge.FromVertexID);
       }
@@ -543,6 +533,8 @@ void DependencyGraphAccesses::clear() {
 }
 
 void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const {
+  StencilMetaInformation const& metaData = metaData_;
+
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
   json::json jgraph;
 
@@ -570,21 +562,21 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
     jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
-    if(metaData_.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
+    if(metaData.isAccessType(iir::FieldAccessType::StencilTemporary, AccessID))
       jvertex["type"] = "field_temporary";
-    else if(metaData_.isAccessType(FieldAccessType::Field, AccessID))
+    else if(metaData.isAccessType(FieldAccessType::Field, AccessID))
       jvertex["type"] = "field";
-    else if(metaData_.isAccessType(FieldAccessType::LocalVariable, AccessID) ||
-            metaData_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
+    else if(metaData.isAccessType(FieldAccessType::LocalVariable, AccessID) ||
+            metaData.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID))
       jvertex["type"] = "variable";
-    else if(metaData_.isAccessType(iir::FieldAccessType::Literal, AccessID))
+    else if(metaData.isAccessType(iir::FieldAccessType::Literal, AccessID))
       jvertex["type"] = "literal";
     else
       dawn_unreachable("invalid vertex type");
 
     jgraph["vertices"][std::to_string(VertexID)] = jvertex;
 
-    for(const Edge& edge : *getAdjacencyList()[VertexID]) {
+    for(const Edge& edge : getAdjacencyList()[VertexID]) {
       json::json jedge;
 
       jedge["from"] = edge.FromVertexID;

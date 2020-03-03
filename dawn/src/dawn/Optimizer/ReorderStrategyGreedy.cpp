@@ -38,7 +38,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 
   // Merge stage into dependency graph
   const iir::DoMethod& doMethod = stage.getSingleDoMethod();
-  multiStageDependencyGraph->merge(doMethod.getDependencyGraph().get());
+  multiStageDependencyGraph->merge(*doMethod.getDependencyGraph());
 
   // Try all possible loop orders while *favoring* a parallel loop order. Note that a parallel loop
   // order can be changed to forward or backward.
@@ -74,7 +74,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 
   // Check all possible loop orders if there aren't any vertical conflicts
   for(auto loopOrder : possibleLoopOrders) {
-    auto conflict = hasVerticalReadBeforeWriteConflict(multiStageDependencyGraph.get(), loopOrder);
+    auto conflict = hasVerticalReadBeforeWriteConflict(*multiStageDependencyGraph, loopOrder);
     if(!conflict.CounterLoopOrderConflict)
       return ReturnType(multiStageDependencyGraph, loopOrder);
   }

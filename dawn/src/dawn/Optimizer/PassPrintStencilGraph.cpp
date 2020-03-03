@@ -33,7 +33,7 @@ bool PassPrintStencilGraph::run(
     // Merge all stages into a single DAG
     int numStages = stencil.getNumStages();
     for(int i = 0; i < numStages; ++i)
-      DAG->merge(stencil.getStage(i)->getSingleDoMethod().getDependencyGraph().get());
+      DAG->merge(*stencil.getStage(i)->getSingleDoMethod().getDependencyGraph());
 
     DAG->toDot("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
                ".dot");

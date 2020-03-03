@@ -81,7 +81,7 @@ Interval& DoMethod::getInterval() { return interval_; }
 
 const Interval& DoMethod::getInterval() const { return interval_; }
 
-void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG) {
+void DoMethod::setDependencyGraph(const DependencyGraphAccesses& DG) {
   derivedInfo_.dependencyGraph_ = DG;
 }
 
@@ -119,14 +119,14 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
 
 void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
-const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
+const std::optional<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return derivedInfo_.dependencyGraph_;
 }
 
 DoMethod::DerivedInfo DoMethod::DerivedInfo::clone() const {
   DerivedInfo clone;
   clone.fields_ = fields_;
-  clone.dependencyGraph_ = dependencyGraph_ ? dependencyGraph_->clone() : nullptr;
+  clone.dependencyGraph_ = dependencyGraph_;
   return clone;
 }
 

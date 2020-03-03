@@ -124,7 +124,7 @@ bool PassFieldVersioning::run(
         // Iterate statements bottom -> top
         for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0;
             --stmtIndex) {
-          oldGraph = newGraph->clone();
+          oldGraph = newGraph;
 
           const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
           newGraph->insertStatement(stmt);
@@ -185,7 +185,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     for(int fromAccessID : scc) {
       std::size_t fromVertexID = graph->getVertexIDFromValue(fromAccessID);
 
-      for(const Edge& edge : *graph->getAdjacencyList()[fromVertexID]) {
+      for(const Edge& edge : graph->getAdjacencyList()[fromVertexID]) {
         if(scc.count(graph->getIDFromVertexID(edge.ToVertexID)) &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
           isStencilSCC = true;
@@ -205,7 +205,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     for(const auto& AccessIDVertexPair : graph->getVertices()) {
       const Vertex& vertex = AccessIDVertexPair.second;
 
-      for(const Edge& edge : *graph->getAdjacencyList()[vertex.VertexID]) {
+      for(const Edge& edge : graph->getAdjacencyList()[vertex.VertexID]) {
         if(edge.FromVertexID == edge.ToVertexID &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
           stencilSCCs->emplace_back(std::set<int>{vertex.value});

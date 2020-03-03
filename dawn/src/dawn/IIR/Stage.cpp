@@ -275,14 +275,13 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
   DAWN_ASSERT_MSG(from->getInterval() == to->getInterval(),
                   "DoMethods have incompatible intervals!");
 
-  to->setDependencyGraph(dependencyGraph);
+  to->setDependencyGraph(*dependencyGraph);
   to->getAST().insert_back(std::make_move_iterator(from->getAST().getStatements().begin()),
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
 std::vector<std::unique_ptr<Stage>>
-Stage::split(std::deque<int>& splitterIndices,
-             const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs) {
+Stage::split(std::deque<int>& splitterIndices, const std::deque<DependencyGraphAccesses>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
