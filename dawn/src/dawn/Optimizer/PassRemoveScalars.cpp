@@ -237,8 +237,8 @@ bool PassRemoveScalars::run(
   // Check if we have unsupported statements. If we do, warn the user and skip the pass execution.
   for(const auto& stmt : iterateIIROverStmt(*stencilInstantiation->getIIR())) {
     if(isStatementUnsupported(stmt, stencilInstantiation->getMetaData())) {
-      DAWN_LOG(WARNING) << "Unsupported statement at line " << stmt->getSourceLocation()
-                        << ". Skipping removal of scalar variables.";
+      DAWN_LOG(INFO) << "Unsupported statement at line " << stmt->getSourceLocation()
+                     << ". Skipping removal of scalar variables.";
       return true;
     }
   }

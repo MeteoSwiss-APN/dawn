@@ -82,10 +82,13 @@ public:
   Logger();
   ~Logger();
 
-  /// @brief Register a Logger (this does @b not take ownership of the object)
+  /// @brief Register a Logger (this does @b not take ownership of the object).
+  ///
+  /// The user is responsible for deleting the default logger if a new one is registered to avoid a
+  /// memory leak.
   void registerLogger(LoggerInterface* logger);
 
-  /// @brief Get the current logger or NULL if no logger is currently registered
+  /// @brief Get the current logger or NULL if no logger is currently registered.
   LoggerInterface* getLogger();
 
   /// @name Start logging
@@ -105,18 +108,15 @@ public:
 
 /// @brief Simple logger
 /// @ingroup support
-class DefaultLogger : public LoggerInterface {
-  int level_;
+class DawnLogger : public LoggerInterface {
+  LoggingLevel level_;
 
 public:
   /// Default logging level: Warning
-  DefaultLogger() : level_(static_cast<int>(LoggingLevel::Warning)) {}
+  DawnLogger(LoggingLevel level = LoggingLevel::Warning);
 
   /// Override log method
   void log(LoggingLevel level, const std::string& message, const char* file, int line) override;
-
-  /// Change the verbosity level
-  void setVerbosity(LoggingLevel level);
 };
 
 /// @macro DAWN_LOG
