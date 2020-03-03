@@ -21,6 +21,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include <algorithm>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -29,7 +30,7 @@ namespace dawn {
 /// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
 /// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
 template <typename ReturnType =
-              std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
+              std::pair<std::optional<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
 ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder,
                       const iir::MultiStage& multiStage) {
   iir::LoopOrderKind multiStageLoopOrder = multiStage.getLoopOrder();
@@ -38,7 +39,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 
   // Merge stage into dependency graph
   const iir::DoMethod& doMethod = stage.getSingleDoMethod();
-  multiStageDependencyGraph->merge(*doMethod.getDependencyGraph());
+  multiStageDependencyGraph.merge(*doMethod.getDependencyGraph());
 
   // Try all possible loop orders while *favoring* a parallel loop order. Note that a parallel loop
   // order can be changed to forward or backward.
@@ -65,21 +66,21 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
   else
     possibleLoopOrders.push_back(stageLoopOrder);
 
-  if(multiStageDependencyGraph->empty())
+  if(multiStageDependencyGraph.empty())
     return ReturnType(multiStageDependencyGraph, possibleLoopOrders.front());
 
   // If the resulting graph isn't a DAG anymore that isn't gonna work
-  if(!multiStageDependencyGraph->isDAG())
-    return ReturnType(nullptr, multiStageLoopOrder);
+  if(!multiStageDependencyGraph.isDAG())
+    return ReturnType(std::nullopt, multiStageLoopOrder);
 
   // Check all possible loop orders if there aren't any vertical conflicts
   for(auto loopOrder : possibleLoopOrders) {
-    auto conflict = hasVerticalReadBeforeWriteConflict(*multiStageDependencyGraph, loopOrder);
+    auto conflict = hasVerticalReadBeforeWriteConflict(multiStageDependencyGraph, loopOrder);
     if(!conflict.CounterLoopOrderConflict)
       return ReturnType(multiStageDependencyGraph, loopOrder);
   }
 
-  return ReturnType(nullptr, multiStageLoopOrder);
+  return ReturnType(std::nullopt, multiStageLoopOrder);
 }
 
 std::unique_ptr<iir::Stencil>

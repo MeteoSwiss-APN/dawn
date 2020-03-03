@@ -56,7 +56,7 @@ bool PassTemporaryMerger::run(
     iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation->getMetaData());
     for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
-      AccessesDAG.merge(*multiStage.getDependencyGraphOfAxis());
+      AccessesDAG.merge(multiStage.getDependencyGraphOfAxis());
     }
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 

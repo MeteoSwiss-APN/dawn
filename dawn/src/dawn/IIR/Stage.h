@@ -196,7 +196,7 @@ public:
   ///
   /// Calls `update()` in the end.
   void appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
-                      const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph);
+                      DependencyGraphAccesses&& dependencyGraph);
 
   /// @brief Split the stage at the given indices into separate stages.
   ///
