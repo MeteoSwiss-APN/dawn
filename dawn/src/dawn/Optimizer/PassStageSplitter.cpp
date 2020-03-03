@@ -108,7 +108,7 @@ bool PassStageSplitter::run(
           newGraph.toDot(
               format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
-        graphs.push_front(newGraph);
+        graphs.push_front(std::move(newGraph));
 
         // Perform the spliting of the stages and insert the stages *before* the stage we processed.
         // Note that the "old" stage will be erased (it was consumed in split(...) anyway)
