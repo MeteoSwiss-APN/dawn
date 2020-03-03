@@ -91,7 +91,7 @@ public:
   Vertex& insertNode(int ID) {
     auto insertPair = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
     if(insertPair.second)
-      adjacencyList_.push_back(EdgeList());
+      adjacencyList_.push_back(std::list<Edge>());
     return insertPair.first->second;
   }
 
