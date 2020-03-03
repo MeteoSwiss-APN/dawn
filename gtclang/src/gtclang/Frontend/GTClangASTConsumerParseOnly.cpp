@@ -14,7 +14,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang/Frontend/GTClangASTConsumerNoCodegen.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/DawnCompiler.h"
@@ -27,6 +26,7 @@
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/Diagnostics.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
+#include "gtclang/Frontend/GTClangASTConsumerParseOnly.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/ClangCompat/FileSystem.h"
@@ -50,7 +50,7 @@
 
 namespace gtclang {
 
-GTClangASTConsumerNoCodegen::GTClangASTConsumerNoCodegen(GTClangContext* context,
+GTClangASTConsumerParseOnly::GTClangASTConsumerParseOnly(GTClangContext* context,
                                                          const std::string& file,
                                                          GTClangASTAction* parentAction)
     : context_(context), file_(file), parentAction_(parentAction) {
@@ -58,7 +58,7 @@ GTClangASTConsumerNoCodegen::GTClangASTConsumerNoCodegen(GTClangContext* context
   visitor_ = std::make_unique<GTClangASTVisitor>(context);
 }
 
-void GTClangASTConsumerNoCodegen::HandleTranslationUnit(clang::ASTContext& ASTContext) {
+void GTClangASTConsumerParseOnly::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   context_->setASTContext(&ASTContext);
   if(!context_->hasDiagnostics())
     context_->setDiagnostics(&ASTContext.getDiagnostics());

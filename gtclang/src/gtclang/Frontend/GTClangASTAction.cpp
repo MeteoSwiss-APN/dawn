@@ -16,7 +16,7 @@
 
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangASTConsumer.h"
-#include "gtclang/Frontend/GTClangASTConsumerNoCodegen.h"
+#include "gtclang/Frontend/GTClangASTConsumerParseOnly.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Frontend/CompilerInstance.h"
 
@@ -30,7 +30,7 @@ GTClangASTAction::CreateASTConsumer(clang::CompilerInstance& compiler, llvm::Str
   if(context_->useDawn()) {
     return std::make_unique<GTClangASTConsumer>(context_, file, this);
   } else {
-    return std::make_unique<GTClangASTConsumerNoCodegen>(context_, file, this);
+    return std::make_unique<GTClangASTConsumerParseOnly>(context_, file, this);
   }
 }
 

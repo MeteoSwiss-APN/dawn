@@ -30,9 +30,9 @@ class GTClangASTAction;
 
 /// @brief Implementation to read ASTs produced by the Clang parser and convert them into SIR
 /// @ingroup frontend
-class GTClangASTConsumerNoCodegen : public clang::ASTConsumer {
+class GTClangASTConsumerParseOnly : public clang::ASTConsumer {
 public:
-  GTClangASTConsumerNoCodegen(GTClangContext* context, const std::string& file,
+  GTClangASTConsumerParseOnly(GTClangContext* context, const std::string& file,
                               gtclang::GTClangASTAction* parentAction);
 
   /// @brief This method translating the AST to SIR and generates code
