@@ -229,8 +229,8 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
   if(groups.empty())
     groups = defaultPassGroups();
 
-  for(auto g : groups) {
-    switch(g) {
+  for(auto group : groups) {
+    switch(group) {
     case PassGroup::SSA:
       DAWN_ASSERT_MSG(false, "The SSA pass is broken.");
       // broken but should run with no prerequisites
