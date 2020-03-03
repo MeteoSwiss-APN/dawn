@@ -81,8 +81,8 @@ Interval& DoMethod::getInterval() { return interval_; }
 
 const Interval& DoMethod::getInterval() const { return interval_; }
 
-void DoMethod::setDependencyGraph(const DependencyGraphAccesses& DG) {
-  derivedInfo_.dependencyGraph_ = DG;
+void DoMethod::setDependencyGraph(DependencyGraphAccesses&& DG) {
+  derivedInfo_.dependencyGraph_ = std::move(DG);
 }
 
 std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {

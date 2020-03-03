@@ -280,8 +280,8 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
-std::vector<std::unique_ptr<Stage>>
-Stage::split(std::deque<int>& splitterIndices, const std::deque<DependencyGraphAccesses>* graphs) {
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int>& splitterIndices,
+                                                 std::deque<DependencyGraphAccesses>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
@@ -305,7 +305,7 @@ Stage::split(std::deque<int>& splitterIndices, const std::deque<DependencyGraphA
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
     if(graphs) {
-      doMethod.setDependencyGraph((*graphs)[i]);
+      doMethod.setDependencyGraph(std::move((*graphs)[i]));
     }
 
     // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)

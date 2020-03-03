@@ -79,7 +79,7 @@ public:
   /// @{
   void setInterval(Interval const& interval);
   void setID(const long unsigned int id) { id_ = id; }
-  void setDependencyGraph(const DependencyGraphAccesses& DG);
+  void setDependencyGraph(DependencyGraphAccesses&& DG);
   /// @}
 
   virtual void clearDerivedInfo() override;

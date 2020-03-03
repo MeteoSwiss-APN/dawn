@@ -93,7 +93,7 @@ void DependencyGraphAccesses::merge(const DependencyGraphAccesses& other) {
 
   // Insert the edges of `other`
   for(std::size_t VertexID = 0; VertexID < other.getAdjacencyList().size(); ++VertexID) {
-    for(const Edge& edge : (other.getAdjacencyList()[VertexID])) {
+    for(const Edge& edge : other.getAdjacencyList()[VertexID]) {
       insertEdge(other.getIDFromVertexID(edge.FromVertexID),
                  other.getIDFromVertexID(edge.ToVertexID), edge.Data);
     }

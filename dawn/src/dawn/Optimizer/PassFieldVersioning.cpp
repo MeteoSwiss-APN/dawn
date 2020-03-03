@@ -111,9 +111,8 @@ bool PassFieldVersioning::run(
       iir::MultiStage& multiStage = (**multiStageRit);
       iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
-      std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph =
-          std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
+      iir::DependencyGraphAccesses newGraph(stencilInstantiation->getMetaData());
+      auto oldGraph = newGraph;
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
@@ -127,11 +126,11 @@ bool PassFieldVersioning::run(
           oldGraph = newGraph;
 
           const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
-          newGraph->insertStatement(stmt);
+          newGraph.insertStatement(stmt);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc = fixRaceCondition(stencilInstantiation, newGraph.get(), stencil, doMethod,
-                                     loopOrder, stageIdx, stmtIndex);
+          auto rc = fixRaceCondition(stencilInstantiation, &newGraph, stencil, doMethod, loopOrder,
+                                     stageIdx, stmtIndex); // TODO fix ptr
 
           if(rc == RCKind::Unresolvable) {
             // Nothing we can do ... bail out
@@ -140,7 +139,7 @@ bool PassFieldVersioning::run(
             // We fixed a race condition (this means some fields have changed and our current graph
             // is invalid)
             newGraph = oldGraph;
-            newGraph->insertStatement(stmt);
+            newGraph.insertStatement(stmt);
           }
           doMethod.update(iir::NodeUpdateType::level);
         }

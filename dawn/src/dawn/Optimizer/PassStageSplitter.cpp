@@ -33,8 +33,6 @@ PassStageSplitter::PassStageSplitter(OptimizerContext& context)
 bool PassStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   int numSplit = 0;
-  std::deque<int> splitterIndices;
-  std::deque<iir::DependencyGraphAccesses> graphs;
 
   // Iterate over all stages in all multistages of all stencils
   for(const auto& stencil : stencilInstantiation->getStencils()) {
@@ -49,8 +47,8 @@ bool PassStageSplitter::run(
         iir::Stage& stage = (**stageIt);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-        splitterIndices.clear();
-        graphs.clear();
+        std::deque<int> splitterIndices;
+        std::deque<iir::DependencyGraphAccesses> graphs;
 
         iir::DependencyGraphAccesses newGraph(stencilInstantiation->getMetaData());
         auto oldGraph = newGraph;
@@ -119,7 +117,7 @@ bool PassStageSplitter::run(
                                      std::make_move_iterator(newStages.end()));
         } else {
           DAWN_ASSERT(graphs.size() == 1);
-          doMethod.setDependencyGraph(graphs.back());
+          doMethod.setDependencyGraph(std::move(graphs.back()));
           stage.update(iir::NodeUpdateType::level);
           ++stageIt;
         }

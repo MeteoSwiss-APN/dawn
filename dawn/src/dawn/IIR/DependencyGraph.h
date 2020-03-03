@@ -89,10 +89,10 @@ public:
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID) {
-    auto insertPair = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
-    if(insertPair.second)
+    auto [iter, inserted] = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
+    if(inserted)
       adjacencyList_.push_back(EdgeList());
-    return insertPair.first->second;
+    return iter->second;
   }
 
   std::set<int> computeIDsWithCycles() const {

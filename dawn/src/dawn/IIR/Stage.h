@@ -207,7 +207,7 @@ public:
   ///
   /// @return New stages
   std::vector<std::unique_ptr<Stage>> split(std::deque<int>& splitterIndices,
-                                            const std::deque<DependencyGraphAccesses>* graphs);
+                                            std::deque<DependencyGraphAccesses>* graphs);
 
   /// @brief Get the extent of the stage
   /// @{

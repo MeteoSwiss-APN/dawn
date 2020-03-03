@@ -50,7 +50,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     auto stencilAxis = stencil.getAxis(false);
 
     // Do we need to run the analysis for this stencil?
-    const std::shared_ptr<iir::DependencyGraphStage>& stageDAG = stencil.getStageDependencyGraph();
+    auto const& stageDAG = *stencil.getStageDependencyGraph();
     bool MergeDoMethodsOfStencil =
         stencil.getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods) || MergeDoMethods;
     bool MergeStagesOfStencil =
@@ -161,7 +161,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             }
 
             // The `curStage` depends on `candidateStage`, we thus cannot go further upwards
-            if(stageDAG->depends(curStage.getStageID(), candidateStage.getStageID())) {
+            if(stageDAG.depends(curStage.getStageID(), candidateStage.getStageID())) {
               break;
             }
           }

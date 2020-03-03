@@ -89,13 +89,13 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
                               OptimizerContext& context) {
   iir::Stencil& stencil = *stencilPtr;
 
-  iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
+  auto const& stageDAG = *stencil.getStageDependencyGraph();
 
   auto& metadata = instantiation->getMetaData();
   std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
       metadata, stencil.getStencilAttributes(), stencilPtr->getStencilID());
 
-  newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
+  newStencil->setStageDependencyGraph(iir::DependencyGraphStage(stageDAG));
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
