@@ -78,13 +78,13 @@ private:
         visitedNodes.insert(curNode);
 
       // Follow edges of the current node
-      if(!adjacencyList[curNode].empty()) {
-        for(const auto& edge : adjacencyList[curNode]) {
+      if(!adjacencyList[curNode]->empty()) {
+        for(const auto& edge : *adjacencyList[curNode]) {
           const iir::Extents& extent = edge.Data;
 
           if(IsVertical) {
 
-            if(!adjacencyList[edge.ToVertexID].empty()) {
+            if(!adjacencyList[edge.ToVertexID]->empty()) {
 
               // We have an outgoing edge to a non-input field, check the vertical accesses
               auto verticalLoopOrderAccess = extent.getVerticalLoopOrderAccesses(loopOrder_);
@@ -107,7 +107,7 @@ private:
             if(!extent.isHorizontalPointwise()) {
 
               // ... to a non-input field (i.e an intermediate field or variable)
-              if(!adjacencyList[edge.ToVertexID].empty()) {
+              if(!adjacencyList[edge.ToVertexID]->empty()) {
                 // We have a read-after-write conflict -> exit
                 return ReadBeforeWriteConflict(true, true);
               }

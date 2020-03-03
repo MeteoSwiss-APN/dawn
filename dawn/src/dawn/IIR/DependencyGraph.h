@@ -57,7 +57,7 @@ public:
     bool operator!=(const Edge& other) const { return !(*this == other); }
   };
 
-  using EdgeList = std::list<Edge>;
+  using EdgeList = std::optional<std::list<Edge>>;
 
   struct Vertex {
     std::size_t VertexID; ///< Unique ID of the Vertex
@@ -125,15 +125,18 @@ public:
     auto& edgeList = adjacencyList_[getVertexIDFromValue(vertexValueFrom)];
     const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromValue(vertexValueFrom),
                     getVertexIDFromValue(vertexValueTo)};
-
-    auto it = std::find_if(edgeList.begin(), edgeList.end(), [&edge](const Edge& e) {
+    // if(edgeList) {
+    auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
       return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
     });
 
-    if(it != edgeList.end())
+    if(it != edgeList->end())
       static_cast<Derived*>(this)->edgeAlreadyExists(it->Data, edge.Data);
     else
-      edgeList.push_back(edge);
+      edgeList->push_back(edge);
+    // }
+    // edgeList = std::list<Edge>();
+    // edgeList->push_back(edge);
   }
 
   /// @brief Callback which will be invoked if an edge already exists
@@ -220,7 +223,7 @@ protected:
   bool hasCycleDependencyImpl(const int targetVertexID, const int seedID,
                               std::set<int>& visited) const {
     // DFS search for cycles on access to ID
-    for(auto& edge : getAdjacencyList()[seedID]) {
+    for(auto& edge : *getAdjacencyList()[seedID]) {
       if(edge.ToVertexID == targetVertexID) {
         return true;
       }
@@ -251,7 +254,7 @@ protected:
                        "\"");
 
       // Convert edge to dot
-      for(const Edge& edge : adjacencyList_[VertexID])
+      for(const Edge& edge : *adjacencyList_[VertexID])
         edgeStrs.emplace(
             "\"" + FromVertexName + "\" -> \"" +
             static_cast<const Derived*>(this)->getVertexNameByVertexID(edge.ToVertexID) + "\"" +

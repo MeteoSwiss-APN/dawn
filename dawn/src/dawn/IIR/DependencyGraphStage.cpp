@@ -25,11 +25,11 @@ void DependencyGraphStage::insertEdge(int StageIDFrom, int StageIDTo) {
 bool DependencyGraphStage::depends(int StageIDFrom, int StageIDTo) const {
   const EdgeList& edgeList = edgesOf(StageIDFrom);
 
-  if(edgeList.empty())
+  if(edgeList->empty())
     return false;
 
   int VertedIDTo = getVertexIDFromValue(StageIDTo);
-  for(const Edge& edge : edgeList)
+  for(const Edge& edge : *edgeList)
     if(edge.ToVertexID == VertedIDTo)
       return true;
   return false;

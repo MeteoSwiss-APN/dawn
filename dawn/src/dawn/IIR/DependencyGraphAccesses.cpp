@@ -93,7 +93,7 @@ void DependencyGraphAccesses::merge(const DependencyGraphAccesses& other) {
 
   // Insert the edges of `other`
   for(std::size_t VertexID = 0; VertexID < other.getAdjacencyList().size(); ++VertexID) {
-    for(const Edge& edge : (other.getAdjacencyList()[VertexID])) {
+    for(const Edge& edge : *(other.getAdjacencyList()[VertexID])) {
       insertEdge(other.getIDFromVertexID(edge.FromVertexID),
                  other.getIDFromVertexID(edge.ToVertexID), edge.Data);
     }
@@ -148,7 +148,7 @@ std::vector<std::set<std::size_t>> DependencyGraphAccesses::partitionInSubGraphs
         partition[curNode] = currentPartitionIdx;
       }
 
-      for(const Edge& edge : adjacencyList_[curNode])
+      for(const Edge& edge : *adjacencyList_[curNode])
         nodesToVisit.push_back(edge.ToVertexID);
     }
   }
@@ -186,11 +186,11 @@ void getInputVertexIDsImpl(
   const auto& adjacencyList = graph.getAdjacencyList();
   for(const auto& vertex : vertexList) {
     std::size_t VertexID = getVertexIDFromVertexListElemenFunc(vertex);
-    if(adjacencyList[VertexID].empty())
+    if(adjacencyList[VertexID]->empty())
       inputVertexIDs.push_back(VertexID);
-    else if(adjacencyList[VertexID].size() == 1) {
+    else if(adjacencyList[VertexID]->size() == 1) {
       // We allow self-dependencies!
-      const auto& edge = adjacencyList[VertexID].front();
+      const auto& edge = adjacencyList[VertexID]->front();
       if(edge.FromVertexID == edge.ToVertexID)
         inputVertexIDs.push_back(VertexID);
     }
@@ -212,7 +212,7 @@ void getOutputVertexIDsImpl(
 
   // Construct a set of dependent nodes i.e nodes with edges from other nodes pointing to them
   for(const auto& edgeList : adjacencyList)
-    for(const auto& edge : edgeList)
+    for(const auto& edge : *edgeList)
       // We allow self-dependencies!
       if(edge.FromVertexID != edge.ToVertexID)
         dependentNodes.insert(edge.ToVertexID);
@@ -320,7 +320,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
         visitedNodes.insert(curNode);
 
       // Follow edges of the current node and update the node extents
-      for(const Edge& edge : adjacencyList[curNode]) {
+      for(const Edge& edge : *adjacencyList[curNode]) {
         nodeExtents.at(edge.ToVertexID).merge(curExtent + edge.Data);
         nodesToVisit.push_back(edge.ToVertexID);
       }
@@ -409,7 +409,7 @@ private:
     index_++;
 
     // Consider successors of the `FromVertex`
-    for(const EdgeType& edge : graph_->getAdjacencyList()[FromVertexID]) {
+    for(const EdgeType& edge : *graph_->getAdjacencyList()[FromVertexID]) {
 
       VertexData& ToVertexData = vertexData_[edge.ToVertexID];
 
@@ -481,7 +481,7 @@ public:
     // Compute the neighbor-list
     std::vector<std::set<std::size_t>> neighborList(numVertices);
     for(std::size_t FromVertexID = 0; FromVertexID < numVertices; ++FromVertexID) {
-      for(const Edge& edge : adjacencyList[FromVertexID]) {
+      for(const Edge& edge : *adjacencyList[FromVertexID]) {
         neighborList[edge.FromVertexID].insert(edge.ToVertexID);
         neighborList[edge.ToVertexID].insert(edge.FromVertexID);
       }
@@ -576,7 +576,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
 
     jgraph["vertices"][std::to_string(VertexID)] = jvertex;
 
-    for(const Edge& edge : getAdjacencyList()[VertexID]) {
+    for(const Edge& edge : *getAdjacencyList()[VertexID]) {
       json::json jedge;
 
       jedge["from"] = edge.FromVertexID;
