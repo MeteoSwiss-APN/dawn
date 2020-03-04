@@ -48,17 +48,8 @@ protected:
     context_->getDiagnostics().clear();
     std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
     EXPECT_TRUE(instantiation->getIIR()->getChildren().size() == 1);
-    const auto& stencil = *instantiation->getIIR()->getChildren().front();
-
-    // temp to function pass expects stmt data to contain the stack trace (can be empty though)
-    for(const auto& multiStage : stencil.getChildren()) {
-      for(const auto& stagePtr : multiStage->getChildren()) {
-        for(const auto& doMethodPtr : stagePtr->getChildren()) {
-          for(const auto& stmt : doMethodPtr->getAST().getStatements()) {
-            stmt->getData<iir::IIRStmtData>().StackTrace = std::vector<dawn::ast::StencilCall*>();
-          }
-        }
-      }
+    for(auto& stmt : iterateIIROverStmt(*instantiation->getIIR())) {
+      stmt->getData<iir::IIRStmtData>().StackTrace = std::vector<dawn::ast::StencilCall*>();
     }
 
     // run temp to function passs
