@@ -91,27 +91,6 @@ CompilerUtil::lower(const std::string& sirFilename,
   return lower(sir, options, context);
 }
 
-stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
-  dawn::Options options;
-  DawnCompiler compiler(options);
-
-  auto SI = compiler.optimize(compiler.lowerToIIR(sir));
-
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    }
-    throw std::runtime_error("Compilation failed");
-  }
-
-  return SI;
-}
-
-stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
-  std::shared_ptr<SIR> sir = load(sirFile);
-  return compile(sir);
-}
-
 void CompilerUtil::clearDiags() { diag_.clear(); }
 
 namespace {

@@ -37,7 +37,6 @@ protected:
   dawn::DiagnosticsEngine diag_;
 
   explicit TestPassTemporaryMerger() {
-    options_.TemporaryMerger = true;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
     dawn::UIDGenerator::getInstance()->reset();

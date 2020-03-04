@@ -33,7 +33,7 @@ internal::LoggerProxy::~LoggerProxy() {
 
 Logger* Logger::instance_ = nullptr;
 
-Logger::Logger() : isDefault_(true) { registerLogger(new DefaultLogger); }
+Logger::Logger() : isDefault_(true) { registerLogger(new DawnLogger); }
 Logger::~Logger() {
   if(isDefault_)
     delete logger_;
@@ -75,10 +75,9 @@ Logger& Logger::getSingleton() {
   return *instance_;
 }
 
-void DefaultLogger::setVerbosity(LoggingLevel level) { level_ = static_cast<int>(level); }
+DawnLogger::DawnLogger(LoggingLevel level) : level_(level) {}
 
-void DefaultLogger::log(LoggingLevel level, const std::string& message, const char* file,
-                        int line) {
+void DawnLogger::log(LoggingLevel level, const std::string& message, const char* file, int line) {
   fs::path filePath(file);
   const std::string fileStr = filePath.stem();
 
@@ -115,15 +114,15 @@ void DefaultLogger::log(LoggingLevel level, const std::string& message, const ch
 
   ss << "] " << message << "\n";
 
-  if(level == LoggingLevel::Fatal && level_ >= static_cast<int>(LoggingLevel::Fatal)) {
+  const int levelInt = static_cast<int>(level_);
+  const bool shouldPrintMessage =
+      (level == LoggingLevel::Fatal && levelInt >= static_cast<int>(LoggingLevel::Fatal)) ||
+      (level == LoggingLevel::Error && levelInt >= static_cast<int>(LoggingLevel::Error)) ||
+      (level == LoggingLevel::Warning && levelInt >= static_cast<int>(LoggingLevel::Warning)) ||
+      (level == LoggingLevel::Info && levelInt >= static_cast<int>(LoggingLevel::Info));
+
+  if(shouldPrintMessage)
     std::cerr << ss.str();
-  } else if(level == LoggingLevel::Error && level_ >= static_cast<int>(LoggingLevel::Error)) {
-    std::cerr << ss.str();
-  } else if(level == LoggingLevel::Warning && level_ >= static_cast<int>(LoggingLevel::Warning)) {
-    std::cout << ss.str();
-  } else if(level == LoggingLevel::Info && level_ >= static_cast<int>(LoggingLevel::Info)) {
-    std::cerr << ss.str();
-  }
 }
 
 } // namespace dawn

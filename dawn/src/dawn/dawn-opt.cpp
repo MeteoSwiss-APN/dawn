@@ -37,6 +37,58 @@ std::string toString(const char* t) { return t; }
 
 std::string toString(const std::string& t) { return t; }
 
+// Parallel,
+// SSA,
+// PrintStencilGraph,
+// SetStageName,
+// StageReordering,
+// StageMerger,
+// TemporaryMerger,
+// Inlining,
+// IntervalPartitioning,
+// TmpToStencilFunction,
+// SetNonTempCaches,
+// SetCaches,
+// SetBlockSize,
+// DataLocalityMetric
+
+dawn::PassGroup parsePassGroup(const std::string& passGroup) {
+  if(passGroup == "parallel")
+    return dawn::PassGroup::Parallel;
+  else if(passGroup == "SSA" || passGroup == "ssa")
+    return dawn::PassGroup::SSA;
+  else if(passGroup == "PrintStencilGraph" || passGroup == "print-stencil-graph")
+    return dawn::PassGroup::PrintStencilGraph;
+  else if(passGroup == "SetStageName" || passGroup == "set-stage-name")
+    return dawn::PassGroup::SetStageName;
+  else if(passGroup == "StageReordering" || passGroup == "stage-reordering")
+    return dawn::PassGroup::StageReordering;
+  else if(passGroup == "StageMerger" || passGroup == "stage-merger")
+    return dawn::PassGroup::StageMerger;
+  else if(passGroup == "TemporaryMerger" || passGroup == "temporary-merger" ||
+          passGroup == "tmp-merger")
+    return dawn::PassGroup::TemporaryMerger;
+  else if(passGroup == "Inlining" || passGroup == "inlining")
+    return dawn::PassGroup::Inlining;
+  else if(passGroup == "IntervalPartitioning" || passGroup == "interval-partitioning")
+    return dawn::PassGroup::IntervalPartitioning;
+  else if(passGroup == "TmpToStencilFunction" || passGroup == "tmp-to-stencil-function" ||
+          passGroup == "tmp-to-stencil-fcn" || passGroup == "tmp-to-function" ||
+          passGroup == "tmp-to-fcn")
+    return dawn::PassGroup::TmpToStencilFunction;
+  else if(passGroup == "SetNonTempCaches" || passGroup == "set-non-tmp-caches" ||
+          passGroup == "set-nontmp-caches")
+    return dawn::PassGroup::SetNonTempCaches;
+  else if(passGroup == "SetCaches" || passGroup == "set-caches")
+    return dawn::PassGroup::SetCaches;
+  else if(passGroup == "SetBlockSize" || passGroup == "set-block-size")
+    return dawn::PassGroup::SetBlockSize;
+  else if(passGroup == "DataLocalityMetric" || passGroup == "data-locality-metric")
+    return dawn::PassGroup::DataLocalityMetric;
+  else
+    throw std::runtime_error(std::string("Unknown pass group: ") + passGroup);
+}
+
 int main(int argc, char* argv[]) {
   cxxopts::Options options("dawn-opt", "Optimizer for the Dawn DSL compiler toolchain");
 
@@ -47,7 +99,7 @@ int main(int argc, char* argv[]) {
     ("t,type", "Type of input [sir,iir]. Deduced if --format=json.", cxxopts::value<std::string>()->default_value("sir"))
     ("o,out", "Output IIR filename. If unset, writes IIR to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect IIR.")
-    ("passes", "Ordered list of pass groups to run. See DawnCompiler.h for list.", cxxopts::value<std::vector<std::string>>())
+    ("p,pass-groups", "Ordered list of pass groups to run. See DawnCompiler.h for list.", cxxopts::value<std::vector<std::string>>())
     ("h,help", "Display usage.")
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   (OPTION, HELP, cxxopts::value<TYPE>()->default_value(toString(DEFAULT_VALUE)))
@@ -96,6 +148,15 @@ int main(int argc, char* argv[]) {
 
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> optimizedSIM;
 
+  std::list<dawn::PassGroup> passGroups;
+  if(result.count("pass-groups") == 0) {
+    passGroups = dawn::DawnCompiler::defaultPassGroups();
+  } else {
+    for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
+      passGroups.push_back(parsePassGroup(pg));
+    }
+  }
+
   // Deserialize
   if(type == IRType::SIR) {
     const dawn::SIRSerializer::Format format = formatString == "json"
@@ -103,7 +164,10 @@ int main(int argc, char* argv[]) {
                                                    : dawn::SIRSerializer::Format::Byte;
     std::shared_ptr<dawn::SIR> stencilIR =
         dawn::SIRSerializer::deserializeFromString(input, format);
-    optimizedSIM = compiler.optimize(compiler.lowerToIIR(stencilIR));
+    auto parallelPos = std::find(passGroups.begin(), passGroups.end(), dawn::PassGroup::Parallel);
+    if(parallelPos != passGroups.end())
+      passGroups.erase(parallelPos);
+    optimizedSIM = compiler.optimize(compiler.lowerToIIR(stencilIR), passGroups);
   } else {
     const dawn::IIRSerializer::Format format = formatString == "json"
                                                    ? dawn::IIRSerializer::Format::Json
@@ -112,7 +176,7 @@ int main(int argc, char* argv[]) {
         dawn::IIRSerializer::deserializeFromString(input, format);
     std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
     stencilInstantiationMap.emplace("restoredIIR", internalIR);
-    optimizedSIM = compiler.optimize(stencilInstantiationMap);
+    optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
   }
 
   for(auto& [name, instantiation] : optimizedSIM) {
