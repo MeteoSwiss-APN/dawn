@@ -149,7 +149,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
   std::vector<std::shared_ptr<Pass>> passes;
   switch(group) {
   case PassGroup::Parallel:
-    addPass<dawn::PassInlining>(context, passes, true, inlineStrategy);
+    addPass<dawn::PassInlining>(context, passes, inlineStrategy);
     addPass<dawn::PassFieldVersioning>(context, passes);
     addPass<dawn::PassSSA>(context, passes); // Did I do this for a reason?
     addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
@@ -185,7 +185,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     break;
 
   case PassGroup::Inlining:
-    addPass<dawn::PassInlining>(context, passes, false, inlineOnTheFly);
+    addPass<dawn::PassInlining>(context, passes, inlineOnTheFly);
     break;
 
   case PassGroup::IntervalPartitioning:
@@ -234,7 +234,7 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
 
   bool result = true;
   if(nPasses > 0)
-    result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineStrategy);
   if(nPasses > 1)
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
   if(nPasses > 2)
@@ -260,7 +260,7 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
   if(nPasses > 12)
     result &= runPass<dawn::PassTemporaryMerger>(context, instantiation);
   if(nPasses > 13)
-    result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineOnTheFly);
   if(nPasses > 14)
     result &= runPass<dawn::PassIntervalPartitioning>(context, instantiation);
   if(nPasses > 15)
@@ -301,7 +301,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
 
   switch(group) {
   case PassGroup::Parallel:
-    result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineStrategy);
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
     result &= runPass<dawn::PassSSA>(context, instantiation);
     result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
@@ -334,7 +334,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     break;
 
   case PassGroup::Inlining:
-    result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineOnTheFly);
     break;
 
   case PassGroup::IntervalPartitioning:
