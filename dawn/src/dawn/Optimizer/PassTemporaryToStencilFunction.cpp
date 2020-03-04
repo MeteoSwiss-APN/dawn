@@ -736,18 +736,20 @@ bool PassTemporaryToStencilFunction::run(
           }
         }
 
-        std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName();
+        if(context_.getOptions().ReportPassTmpToFunction) {
+          std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName()
+                    << "\n";
 
-        if(temporaryFieldExprToFunction.empty())
-          std::cout << "no replacement found";
+          if(temporaryFieldExprToFunction.empty())
+            std::cout << "no replacement found\n";
 
-        for(auto tmpFieldPair : temporaryFieldExprToFunction) {
-          int accessID = tmpFieldPair.first;
-          auto tmpProperties = tmpFieldPair.second;
-          if(context_.getOptions().ReportPassTmpToFunction)
+          for(auto tmpFieldPair : temporaryFieldExprToFunction) {
+            int accessID = tmpFieldPair.first;
+            auto tmpProperties = tmpFieldPair.second;
             std::cout << " [ replace tmp:" << metadata.getFieldNameFromAccessID(accessID)
                       << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                       << " ] ";
+          }
         }
       }
     }

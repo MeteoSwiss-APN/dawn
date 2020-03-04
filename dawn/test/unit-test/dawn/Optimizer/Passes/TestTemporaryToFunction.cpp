@@ -12,11 +12,19 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Compiler/Options.h"
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/LoopOrder.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
+#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -24,43 +32,66 @@ using namespace dawn;
 
 namespace {
 
-class TemporaryToFunction : public ::testing::Test {
-
-  dawn::DawnCompiler compiler_;
+class TestPassTemporaryToFunction : public ::testing::Test {
+public:
+  TestPassTemporaryToFunction() {
+    options_.TmpToStencilFunction = true;
+    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
+  }
 
 protected:
-  TemporaryToFunction() { compiler_.getOptions().TmpToStencilFunction = true; }
-  virtual void SetUp() {}
+  dawn::OptimizerContext::OptimizerContextOptions options_;
+  DiagnosticsEngine diagnostics_;
+  std::unique_ptr<OptimizerContext> context_;
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
-
-    std::string filename = TestEnvironment::path_ + "/" + sirFilename;
-    std::ifstream file(filename);
-    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
-
-    std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-    std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
-
-    auto stencilInstantiationMap =
-        compiler_.optimize(compiler_.lowerToIIR(sir), dawn::DawnCompiler::defaultPassGroups());
-    // Report diagnostics
-    if(compiler_.getDiagnostics().hasDiags()) {
-      for(const auto& diag : compiler_.getDiagnostics().getQueue())
-        std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-      throw std::runtime_error("compilation failed");
+  std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
+    context_->getDiagnostics().clear();
+    std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
+    EXPECT_TRUE(instantiation->getIIR()->getChildren().size() == 1);
+    for(auto& stmt : iterateIIROverStmt(*instantiation->getIIR())) {
+      stmt->getData<iir::IIRStmtData>().StackTrace = std::vector<dawn::ast::StencilCall*>();
     }
 
-    DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
-                    "compute_extent_test_stencil not found in sir");
+    // run temp to function passs
+    PassTemporaryToStencilFunction tmpToFun(*context_);
+    tmpToFun.run(instantiation);
 
-    // // Generate code
-    auto translationUnit = compiler_.generate(stencilInstantiationMap);
-    DAWN_ASSERT(translationUnit);
-
-    return stencilInstantiationMap["compute_extent_test_stencil"];
+    return instantiation;
   }
 };
+
+TEST_F(TestPassTemporaryToFunction, TmpToFunDo) {
+  /*
+    storage in, out;
+    var tmp;
+    void Do() {
+      vertical_region(k_start, k_end) {
+        tmp = in + 1; //to fun here
+        out = tmp[i - 1] + 2;
+      }
+    }
+  */
+  auto instantiation = runPass("input/TestTmpToFunDo.iir");
+  const auto& funs = instantiation->getIIR()->getStencilFunctions();
+  // we expect that one stencil function has been generated
+  ASSERT_TRUE(funs.size() == 1);
+}
+
+TEST_F(TestPassTemporaryToFunction, TmpToFunDont) {
+  /*
+    storage a, b, out;
+    var c;
+    Do {
+      vertical_region(k_start, k_end) {
+        c = a + b;  //does not qualify to be "promoted" function
+        out = c;
+      }
+    }
+  */
+  auto instantiation = runPass("input/TestTmpToFunDont.iir");
+  // we expect that no stencil function has been generated
+  const auto& funs = instantiation->getIIR()->getStencilFunctions();
+  ASSERT_TRUE(funs.size() == 0);
+}
 
 } // anonymous namespace
