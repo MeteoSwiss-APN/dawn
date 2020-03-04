@@ -16,9 +16,9 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageMerger.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
@@ -36,7 +36,6 @@ protected:
   dawn::DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
-    options_.MergeStages = options_.MergeDoMethods = true;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
     dawn::UIDGenerator::getInstance()->reset();
@@ -51,13 +50,13 @@ protected:
       filepath = TestEnvironment::path_ + "/" + filepath;
     auto instantiation = IIRSerializer::deserialize(filepath);
 
-    // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
-    EXPECT_TRUE(stageSplitPass.run(instantiation));
-
     // Run stage graph pass
     PassSetStageGraph stageGraphPass(*context_);
     EXPECT_TRUE(stageGraphPass.run(instantiation));
+
+    // Run dependency graph pass
+    PassSetDependencyGraph dependencyGraphPass(*context_);
+    EXPECT_TRUE(dependencyGraphPass.run(instantiation));
 
     // Expect pass to succeed...
     PassStageMerger stageMergerPass(*context_);
@@ -91,7 +90,7 @@ TEST_F(TestPassStageMerger, MergerTest1) {
     vertical_region(k_start, k_end) {
       field_b1 = field_b0;
     } */
-  runTest("input/StageMergerTest01.iir", 1, {1}, {1}, {1});
+  runTest("input/StageMergerTest01.iir", 1, {1}, {2}, {0});
 }
 
 TEST_F(TestPassStageMerger, MergerTest2) {
@@ -160,7 +159,7 @@ TEST_F(TestPassStageMerger, MergerTest7) {
     vertical_region(k_start, k_end) {
       out = 0;
     } */
-  runTest("input/StageMergerTest07.iir", 1, {1}, {1}, {1});
+  runTest("input/StageMergerTest07.iir", 1, {1}, {2}, {1});
 }
 
 } // anonymous namespace
