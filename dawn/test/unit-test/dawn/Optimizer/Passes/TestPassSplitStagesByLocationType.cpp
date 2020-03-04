@@ -80,16 +80,47 @@ TEST_F(TestPassSplitStageByLocationType, CopyTwoLocationType) {
               1); // only 1 stage in this DoMethod
     auto firstStatement = getNthStmt(*stage->getChild(0), 0);
     if(*stage->getLocationType() == ast::LocationType::Cells) {
-      // check assignmnt is out_cell = in_cell
+      // check assignmeent is out_cell = in_cell
       ASSERT_TRUE(firstStatement->equals(expr(assign(field("out_cell"), field("in_cell"))).get(),
                                          /*compareData = */ false));
     }
     if(*stage->getLocationType() == ast::LocationType::Edges) {
-      // check assignmnt is out_edge = in_edge
+      // check assignment is out_edge = in_edge
       ASSERT_TRUE(firstStatement->equals(expr(assign(field("out_edge"), field("in_edge"))).get(),
                                          /*compareData = */ false));
     }
   }
 }
 
-} // anonymous namespace
+TEST_F(TestPassSplitStageByLocationType, CopyTwoLocationTypeVars) {
+  // field(cells) in_cell;
+  // field(edges) in_edge;
+  // var out_var_cell;
+  // var out_var_edge;
+  // out_var_cell = in_cell;
+  // out_var_edge = in_edge;
+
+  runPass("input/SplitStageByLocationType/split_stage_by_location_type_test_stencil_02.sir");
+
+  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+
+  int expectedNumStages = 4;
+  EXPECT_EQ(expectedNumStages, multistage->getChildren().size());
+
+  const auto& var_decl_cell = multistage->getChild(0);
+  ASSERT_TRUE(var_decl_cell->getLocationType().has_value());
+  ASSERT_EQ(ast::LocationType::Cells, *var_decl_cell->getLocationType());
+
+  const auto& var_decl_edge = multistage->getChild(1);
+  ASSERT_TRUE(var_decl_edge->getLocationType().has_value());
+  ASSERT_EQ(ast::LocationType::Edges, *var_decl_edge->getLocationType());
+
+  const auto& assign_cell = multistage->getChild(2);
+  ASSERT_TRUE(assign_cell->getLocationType().has_value());
+  ASSERT_EQ(ast::LocationType::Cells, *assign_cell->getLocationType());
+
+  const auto& assign_edge = multistage->getChild(3);
+  ASSERT_TRUE(assign_edge->getLocationType().has_value());
+  ASSERT_EQ(ast::LocationType::Edges, *assign_edge->getLocationType());
+}
+} // namespace

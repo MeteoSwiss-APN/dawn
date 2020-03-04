@@ -70,8 +70,12 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
             .getLocationType();
       }
     }
-    // TODO: consider IF case and function call
+  } else if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
+
+    return metaInformation.getLocalVariableDataFromAccessID(iir::getAccessID(varDeclStmt))
+        .getLocationType();
   }
+  // TODO: consider IF case and function call
   dawn_unreachable("Unsupported statement");
 }
 
