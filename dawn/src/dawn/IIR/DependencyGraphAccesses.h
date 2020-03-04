@@ -82,6 +82,10 @@ public:
       merge(g);
   }
 
+  bool operator==(const DependencyGraphAccesses& other) const {
+    return Base::operator==(other) && (VertexIDToAccessIDMap_ == other.VertexIDToAccessIDMap_);
+  }
+
   /// @brief Process the statement and insert it into the current graph
   ///
   /// For each write and read access a node will be inserted. Between each write and read access

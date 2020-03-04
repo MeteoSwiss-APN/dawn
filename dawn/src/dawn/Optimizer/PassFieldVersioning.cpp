@@ -207,7 +207,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       for(const Edge& edge : graph->getAdjacencyList()[vertex.VertexID]) {
         if(edge.FromVertexID == edge.ToVertexID &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
-          stencilSCCs->emplace_back(std::set<int>{vertex.value});
+          stencilSCCs->emplace_back(std::set<int>{vertex.Value});
           break;
         }
       }
