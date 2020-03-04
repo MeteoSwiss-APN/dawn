@@ -253,7 +253,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   // Optimization, step by step
   //===-----------------------------------------------------------------------------------------
   // if(shouldRunPass(options_, options_.SSA)) {
-  //   // broken but should run with no prerequesits
+  //   // broken but should run with no prerequisites
   //   optimizer.pushBackPass<PassSSA>();
   //   // rerun things we might have changed
   //   // optimizer.pushBackPass<PassFixVersionedInputFields>();
@@ -275,7 +275,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     optimizer.pushBackPass<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.ReorderStages)) {
+  if(shouldRunGroup(options_, options_.StageReordering)) {
     optimizer.pushBackPass<PassSetStageGraph>();
     optimizer.pushBackPass<PassSetDependencyGraph>();
     optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
@@ -287,7 +287,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     optimizer.pushBackPass<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.MergeStages)) {
+  if(shouldRunGroup(options_, options_.StageMerger)) {
     // merging requires the stage graph
     optimizer.pushBackPass<PassSetStageGraph>();
     // running the actual pass
@@ -308,21 +308,22 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   // optimizer.pushBackPass<PassStencilSplitter>(maxFields);
   // // but would require a lot
   //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.MergeTemporaries)) {
+  if(shouldRunGroup(options_, options_.TemporaryMerger)) {
     optimizer.pushBackPass<PassTemporaryMerger>();
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
   if(shouldRunGroup(options_, options_.Inlining)) {
-    optimizer.pushBackPass<PassInlining>((getOptions().Inlining || getOptions().PassTmpToFunction),
-                                         PassInlining::InlineStrategy::ComputationsOnTheFly);
+    optimizer.pushBackPass<PassInlining>(
+        (getOptions().Inlining || getOptions().TmpToStencilFunction),
+        PassInlining::InlineStrategy::ComputationsOnTheFly);
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
   //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.PartitionIntervals)) {
-    if(options_.PartitionIntervals) {
+  if(shouldRunGroup(options_, options_.IntervalPartitioning)) {
+    if(options_.IntervalPartitioning) {
       optimizer.pushBackPass<PassIntervalPartitioning>();
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
@@ -332,7 +333,7 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     }
   }
   //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.PassTmpToFunction)) {
+  if(shouldRunGroup(options_, options_.TmpToStencilFunction)) {
     optimizer.pushBackPass<PassTemporaryToStencilFunction>();
     // validation check
     optimizer.pushBackPass<PassValidation>();

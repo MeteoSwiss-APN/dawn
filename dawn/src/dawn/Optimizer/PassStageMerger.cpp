@@ -33,7 +33,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
         sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
-  bool MergeStages = context_.getOptions().MergeStages;
+  bool MergeStages = context_.getOptions().StageMerger;
   bool MergeDoMethods = context_.getOptions().MergeDoMethods;
 
   // ... Nope

@@ -162,23 +162,23 @@ void IRSplitter::optimize() {
 }
 
 void IRSplitter::reorderStages() {
-  CompilerUtil::runGroup(dawn::PassGroup::ReorderStages, context_);
+  CompilerUtil::runGroup(dawn::PassGroup::StageReordering, context_);
 }
 
-void IRSplitter::mergeStages() { CompilerUtil::runGroup(dawn::PassGroup::MergeStages, context_); }
+void IRSplitter::mergeStages() { CompilerUtil::runGroup(dawn::PassGroup::StageMerger, context_); }
 
 void IRSplitter::mergeTemporaries() {
-  CompilerUtil::runGroup(dawn::PassGroup::MergeTemporaries, context_);
+  CompilerUtil::runGroup(dawn::PassGroup::TemporaryMerger, context_);
 }
 
 void IRSplitter::inlining() { CompilerUtil::runGroup(dawn::PassGroup::Inlining, context_); }
 
 void IRSplitter::partitionIntervals() {
-  CompilerUtil::runGroup(dawn::PassGroup::PartitionIntervals, context_);
+  CompilerUtil::runGroup(dawn::PassGroup::IntervalPartitioning, context_);
 }
 
 void IRSplitter::passTmpToFunction() {
-  CompilerUtil::runGroup(dawn::PassGroup::PassTmpToFunction, context_);
+  CompilerUtil::runGroup(dawn::PassGroup::TmpToStencilFunction, context_);
 }
 
 void IRSplitter::setNonTempCaches() {
