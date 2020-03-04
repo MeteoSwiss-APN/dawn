@@ -280,23 +280,30 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
-std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int>& splitterIndices,
-                                                 std::deque<DependencyGraphAccesses>* graphs) {
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
+                                                 std::deque<DependencyGraphAccesses>&& graphs) {
+  DAWN_ASSERT(splitterIndices.size() == graphs.size() - 1);
+  auto newStages = split(splitterIndices);
+  for(std::size_t i = 0; i < newStages.size(); ++i) {
+    DoMethod& doMethod = newStages[i]->getSingleDoMethod();
+    doMethod.setDependencyGraph(std::move(graphs[i]));
+  }
+  return newStages;
+}
+
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
   DAWN_ASSERT(thisDoMethod.getAST().getStatements().size() >= 2);
-  DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
+
+  auto ranges = splitterIndices;
+  ranges.push_back(thisDoMethod.getAST().getStatements().size() - 1);
 
   std::vector<std::unique_ptr<Stage>> newStages;
-
-  splitterIndices.push_back(thisDoMethod.getAST().getStatements().size() - 1);
-  auto prevSplitterIndex = thisDoMethod.getAST().getStatements().begin();
-
-  // Create new stages
-  for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
-    auto nextSplitterIndex =
-        std::next(thisDoMethod.getAST().getStatements().begin(), splitterIndices[i] + 1);
+  auto prevIndex = thisDoMethod.getAST().getStatements().begin();
+  for(std::size_t i = 0; i < ranges.size(); ++i) {
+    auto nextIndex = std::next(thisDoMethod.getAST().getStatements().begin(), ranges[i] + 1);
 
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
@@ -304,18 +311,14 @@ std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int>& splitterIndice
     newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace());
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
-    if(graphs) {
-      doMethod.setDependencyGraph(std::move((*graphs)[i]));
-    }
-
-    // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)
-    doMethod.getAST().insert_back(prevSplitterIndex, nextSplitterIndex);
+    // The new stage contains the statements in the range [prevIndex , nextIndex)
+    doMethod.getAST().insert_back(prevIndex, nextIndex);
 
     // Update the fields of the new doMethod
     doMethod.update(NodeUpdateType::level);
     newStage.update(NodeUpdateType::level);
 
-    prevSplitterIndex = nextSplitterIndex;
+    prevIndex = nextIndex;
   }
 
   return newStages;

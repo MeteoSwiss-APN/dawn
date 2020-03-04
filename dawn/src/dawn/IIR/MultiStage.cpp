@@ -66,7 +66,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
       if(!curStageSplitterIndices.empty()) {
 
         // Split the current stage (we assume the graphs are assigned in the stage splitter pass)
-        auto newStages = (**curStageIt).split(curStageSplitterIndices, nullptr);
+        auto newStages = (**curStageIt).split(curStageSplitterIndices);
 
         // Move the new stages to the new MultiStage
         auto newMultiStageRIt = newMultiStages.rbegin();
