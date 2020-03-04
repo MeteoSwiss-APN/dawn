@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/Iterator.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
@@ -50,15 +51,11 @@ protected:
       filepath = TestEnvironment::path_ + "/" + filepath;
     auto instantiation = IIRSerializer::deserialize(filepath);
 
-    //    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context_, instantiation));
-    //    ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::ReorderStages, context_, instantiation));
-
     // Run stage splitter pass
     PassStageSplitter stageSplitPass(*context_);
     EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
-    // ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSetCaches>(context_, instantiation));
     PassSetCaches setCachesPass(*context_);
     EXPECT_TRUE(setCachesPass.run(instantiation));
 
@@ -69,15 +66,13 @@ protected:
     auto& multiStages = stencil->getChildren();
     ASSERT_EQ(multiStages.size(), nMultiStages);
 
-    int i = 0;
-    for(const auto& multiStage : multiStages) {
-      for(int j = 0; j < fieldNames[i].size(); ++j) {
-        int accessID = stencil->getMetadata().getAccessIDFromName(fieldNames[i][j]);
+    for(auto [i, multiStage] : enumerate(multiStages)) {
+      for(auto [j, fieldName] : enumerate(fieldNames[i])) {
+        int accessID = stencil->getMetadata().getAccessIDFromName(fieldName);
         ASSERT_TRUE(multiStage->isCached(accessID));
         ASSERT_TRUE(multiStage->getCache(accessID).getType() == cacheTypes[i][j]);
         ASSERT_TRUE(multiStage->getCache(accessID).getIOPolicy() == ioPolicies[i][j]);
       }
-      i += 1;
     }
   }
 };

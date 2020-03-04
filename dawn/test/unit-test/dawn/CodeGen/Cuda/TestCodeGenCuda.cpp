@@ -12,41 +12,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CodeGen.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Support/DiagnosticsEngine.h"
-#include "dawn/Support/FileUtil.h"
-#include "dawn/Unittest/CompilerUtil.h"
-#include "dawn/Unittest/IIRBuilder.h"
-
-#include <gtest/gtest.h>
+#include "../TestCodeGen.h"
 
 namespace {
 
-TEST(CodeGenCudaTest, GlobalIndexStencil) {
-  using namespace dawn::iir;
+class TestCodeGenCuda : public TestCodeGen {};
 
-  CartesianIIRBuilder b;
-  auto in_f = b.field("in_field", FieldType::ijk);
-  auto out_f = b.field("out_field", FieldType::ijk);
+TEST_F(TestCodeGenCuda, GlobalIndexStencil) {
+  runTest(this->getGlobalIndexStencil(), "global_indexing.cu");
+}
 
-  auto stencil_instantiation =
-      b.build("generated",
-              b.stencil(b.multistage(
-                  LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
-                  b.stage(1, {0, 2},
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+TEST_F(TestCodeGenCuda, NonOverlappingInterval) {
+  runTest(this->getNonOverlappingInterval(), "nonoverlapping_stencil.cu");
+}
 
-  std::ostringstream oss;
-  dawn::CompilerUtil::dumpCuda(oss, stencil_instantiation);
-  std::string gen = oss.str();
-
-  std::string ref = dawn::readFile("reference/global_indexing.cpp");
-  ASSERT_EQ(gen, ref) << "Generated code does not match reference code";
+TEST_F(TestCodeGenCuda, LaplacianStencil) {
+  runTest(this->getLaplacianStencil(), "laplacian_stencil.cu");
 }
 
 } // anonymous namespace

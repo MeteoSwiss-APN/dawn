@@ -42,10 +42,21 @@ TEST(IRSplittingTest, CacheTest) {
              {"-freport-pass-set-caches"});
 }
 
+TEST(IRSplittingTest, IntervalPartitioning) {
+  gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 3)
+      .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/test_interval_partition.cpp", {});
+}
+
 TEST(IRSplittingTest, TemporaryMerger) {
   gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 3)
       .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/MergeTest05.cpp",
              {"-fmerge-temporaries"});
+}
+
+TEST(IRSplittingTest, StageMerger) {
+  gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 2)
+      .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/StageMergerTest07.cpp",
+             {"-fmerge-stages", "-fmerge-do-methods"});
 }
 
 } // anonymous namespace

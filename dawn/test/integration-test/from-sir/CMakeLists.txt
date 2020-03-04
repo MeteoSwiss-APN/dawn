@@ -13,7 +13,7 @@
 ##===------------------------------------------------------------------------------------------===##
 include(GoogleTest)
 
-set(executable ${PROJECT_NAME}UnittestOptimizerFromSIR)
+set(executable ${PROJECT_NAME}IntegrationTestOptimizerFromSIR)
 add_executable(${executable}
   TestMain.cpp
   TestComputeMaximumExtent.cpp
@@ -25,6 +25,7 @@ target_add_dawn_standard_props(${executable})
 target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
-gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::TestsFromSIR::"
-  EXTRA_ARGS "${CMAKE_CURRENT_LIST_DIR}/../Passes"
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Integration::Optimizer::TestsFromSIR::"
+  EXTRA_ARGS "${CMAKE_CURRENT_BINARY_DIR}/"
   DISCOVERY_TIMEOUT 30)

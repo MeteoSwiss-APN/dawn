@@ -69,8 +69,8 @@ struct ReadBeforeWriteConflict {
 /// @see MultiStage
 ///
 /// @ingroup optimizer
-extern ReadBeforeWriteConflict
-hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
+ReadBeforeWriteConflict
+hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses& graph,
                                    iir::LoopOrderKind loopOrder);
 
 /// @brief Check if the graph contains any horizontal non-pointwise read-before-write conflicts
@@ -103,7 +103,7 @@ hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
 /// @see Stage
 ///
 /// @ingroup optimizer
-extern bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph);
+bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses& graph);
 
 } // namespace dawn
 
