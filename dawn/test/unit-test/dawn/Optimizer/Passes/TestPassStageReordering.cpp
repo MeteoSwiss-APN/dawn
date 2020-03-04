@@ -16,9 +16,9 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
@@ -49,13 +49,13 @@ protected:
 
     auto instantiation = IIRSerializer::deserialize(filepath);
 
-    // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
-    EXPECT_TRUE(stageSplitPass.run(instantiation));
-
     // Run stage graph pass
     PassSetStageGraph stageGraphPass(*context_);
     EXPECT_TRUE(stageGraphPass.run(instantiation));
+
+    // Run dependency graph pass
+    PassSetDependencyGraph dependencyGraphPass(*context_);
+    EXPECT_TRUE(dependencyGraphPass.run(instantiation));
 
     // Collect pre-reordering stage IDs
     std::vector<int> prevStageIDs;

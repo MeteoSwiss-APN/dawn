@@ -47,8 +47,6 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
-OPT(bool, DefaultNone, false, "default-none", "",
-    "Selectively run passes", "", false, true)
 OPT(bool, Parallel, false, "parallel", "",
     "Run parallel pass group", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
@@ -101,7 +99,7 @@ OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
     "Compute and report the data-locality metric for each stencil", "", false, true)
 OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
     "Detailed report on the actions taken during the replace temporary by stencil function call pass", "", false, true)
-OPT(bool, ReportPassRemoveScalars, false, "report-pass-remove-scalars", "", 
+OPT(bool, ReportPassRemoveScalars, false, "report-pass-remove-scalars", "",
     "Report which variables are removed by the scalar removal pass", "", false, true)
 OPT(bool, ReportPassStageSplit, false, "report-pass-stage-split", "",
     "Detailed report on the actions taken during the stage splitting pass", "", false, true)
