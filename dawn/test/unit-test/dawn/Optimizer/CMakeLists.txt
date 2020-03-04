@@ -11,20 +11,6 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
-# include(GoogleTest)
-
-# set(executable ${PROJECT_NAME}UnittestOptimizer)
-# add_executable(${executable}
-#   TestColoringAlgorithm.cpp
-#   TestEnvironment.h
-#   TestGraph.cpp
-#   TestIsDAGAlgorithm.cpp
-#   TestPartitionAlgorithm.cpp
-#   TestSCCAlgorithm.cpp
-# )
-# target_link_libraries(${executable} PRIVATE DawnOptimizer DawnUnittest gtest gtest_main)
-# target_add_dawn_standard_props(${executable})
-# gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::" DISCOVERY_TIMEOUT 30)
 
 add_subdirectory(TestsFromSIR)
 add_subdirectory(Passes)
