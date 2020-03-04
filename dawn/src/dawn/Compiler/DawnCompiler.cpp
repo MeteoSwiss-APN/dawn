@@ -333,7 +333,6 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       DAWN_ASSERT_MSG(false, "The parallel group is only valid for lowering to IIR.");
     }
   }
-
   if(options_.Backend == "cuda" || options_.SerializeIIR) {
     optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::ComputationsOnTheFly);
     // validation check
