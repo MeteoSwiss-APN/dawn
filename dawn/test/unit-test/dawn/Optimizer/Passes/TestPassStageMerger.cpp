@@ -36,6 +36,7 @@ protected:
   dawn::DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
+    options_.StageMerger = options_.MergeDoMethods = true;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
     dawn::UIDGenerator::getInstance()->reset();
@@ -90,7 +91,7 @@ TEST_F(TestPassStageMerger, MergerTest1) {
     vertical_region(k_start, k_end) {
       field_b1 = field_b0;
     } */
-  runTest("input/StageMergerTest01.iir", 1, {1}, {2}, {0});
+  runTest("input/StageMergerTest01.iir", 1, {1}, {1}, {1});
 }
 
 TEST_F(TestPassStageMerger, MergerTest2) {
@@ -159,7 +160,7 @@ TEST_F(TestPassStageMerger, MergerTest7) {
     vertical_region(k_start, k_end) {
       out = 0;
     } */
-  runTest("input/StageMergerTest07.iir", 1, {1}, {2}, {1});
+  runTest("input/StageMergerTest07.iir", 1, {1}, {1}, {1});
 }
 
 } // anonymous namespace
