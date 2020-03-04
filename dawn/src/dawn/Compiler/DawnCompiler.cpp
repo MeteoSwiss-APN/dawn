@@ -165,13 +165,14 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   optimizer.pushBackPass<PassFieldVersioning>();
   optimizer.pushBackPass<PassMultiStageSplitter>(
       options_.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
+  optimizer.pushBackPass<PassLocalVarType>();
+  optimizer.pushBackPass<PassRemoveScalars>();
   optimizer.pushBackPass<PassStageSplitter>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
   optimizer.pushBackPass<PassComputeStageExtents>();
   optimizer.pushBackPass<PassSetSyncStage>();
   // validation checks after parallelisation
-  optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassValidation>();
 
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
@@ -268,6 +269,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
+      optimizer.pushBackPass<PassRemoveScalars>();
       // modify stages and their extents ...
       optimizer.pushBackPass<PassComputeStageExtents>();
       // and changes their dependencies
@@ -280,7 +282,6 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       // this should not affect the temporaries but since we're touching them it would probably be a
       // safe idea
       optimizer.pushBackPass<PassTemporaryType>();
-      optimizer.pushBackPass<PassLocalVarType>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
@@ -310,6 +311,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       // safe idea
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
+      optimizer.pushBackPass<PassRemoveScalars>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
