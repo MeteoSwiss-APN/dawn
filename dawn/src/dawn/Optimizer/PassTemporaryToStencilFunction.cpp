@@ -769,6 +769,6 @@ bool PassTemporaryToStencilFunction::run(
   }
 
   return true;
-} // namespace dawn
+}
 
 } // namespace dawn
