@@ -339,6 +339,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
+
   //===-----------------------------------------------------------------------------------------
 
   int i = 0;
