@@ -154,8 +154,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   PassGroups.push_back(dawn::PassGroup::StageReordering);
 
-  if(context_->getOptions().StageMerger)
-    PassGroups.push_back(dawn::PassGroup::StageMerger);
+  PassGroups.push_back(dawn::PassGroup::StageMerger);
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
                  [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
