@@ -45,7 +45,8 @@ protected:
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
-    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir));
+    auto stencilInstantiationMap =
+        compiler_.optimize(compiler_.lowerToIIR(sir), dawn::DawnCompiler::defaultPassGroups());
     // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
