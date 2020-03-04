@@ -20,6 +20,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
+#include "dawn/Optimizer/PassSplitStageByLocationType.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/UnittestStmtSimplifier.h"
@@ -55,8 +56,8 @@ protected:
       DAWN_ASSERT(!stage->getLocationType().has_value());
     }
 
-    // ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSplitStageByLocationType>(context_,
-    // instantiation));
+    ASSERT_TRUE(
+        CompilerUtil::runPass<dawn::PassSplitStageByLocationType>(context_, instantiation_));
   }
 };
 
