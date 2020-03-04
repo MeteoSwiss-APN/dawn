@@ -60,7 +60,7 @@ multiStageSplitterOptimized() {
       // Conflicts in the loop order will assure us that the multi-stage can't be
       // parallel. A conflict in the counter loop order is more severe and needs the current
       // multistage be split!
-      auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
+      auto conflict = hasVerticalReadBeforeWriteConflict(graph, userSpecifiedLoopOrder);
       if(conflict.CounterLoopOrderConflict) {
 
         // The loop order of the lower part is what we recoreded in the last steps
@@ -143,7 +143,7 @@ multiStageSplitterDebug() {
       graph.insertStatement(stmt);
 
       // Check for read-before-write conflicts in the loop order.
-      auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
+      auto conflict = hasVerticalReadBeforeWriteConflict(graph, userSpecifiedLoopOrder);
       if(conflict.LoopOrderConflict) {
         // We have a conflict in the loop order, the multi-stage cannot be executed in
         // parallel and we use the loop order specified by the user

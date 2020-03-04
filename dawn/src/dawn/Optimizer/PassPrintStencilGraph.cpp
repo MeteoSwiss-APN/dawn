@@ -28,18 +28,18 @@ bool PassPrintStencilGraph::run(
   int stencilIdx = 0;
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
-    auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
+    iir::DependencyGraphAccesses DAG(stencilInstantiation->getMetaData());
 
     // Merge all stages into a single DAG
     int numStages = stencil.getNumStages();
     for(int i = 0; i < numStages; ++i)
-      DAG->merge(stencil.getStage(i)->getSingleDoMethod().getDependencyGraph().get());
+      DAG.merge(*stencil.getStage(i)->getSingleDoMethod().getDependencyGraph());
 
-    DAG->toDot("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
-               ".dot");
-    DAG->toJSON("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
-                    ".json",
-                context_.getDiagnostics());
+    DAG.toDot("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
+              ".dot");
+    DAG.toJSON("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
+                   ".json",
+               context_.getDiagnostics());
 
     stencilIdx++;
   }
