@@ -16,6 +16,7 @@
 #define DAWN_IIR_DOMETHOD_H
 
 #include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -28,7 +29,6 @@ namespace dawn {
 namespace iir {
 
 class Stage;
-class DependencyGraphAccesses;
 class StencilMetaInformation;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific
@@ -40,19 +40,13 @@ class DoMethod : public IIRNode<Stage, DoMethod, void> {
   long unsigned int id_;
 
   struct DerivedInfo {
-    DerivedInfo() : dependencyGraph_(nullptr) {}
-    DerivedInfo(DerivedInfo&&) = default;
-    DerivedInfo(const DerivedInfo&) = default;
-    DerivedInfo& operator=(DerivedInfo&&) = default;
-    DerivedInfo& operator=(const DerivedInfo&) = default;
-
     DerivedInfo clone() const;
 
     void clear();
 
     /// Declaration of the fields of this doMethod
     std::unordered_map<int, Field> fields_;
-    std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
+    std::optional<DependencyGraphAccesses> dependencyGraph_;
   };
 
   const StencilMetaInformation& metaData_;
@@ -78,14 +72,14 @@ public:
   Interval& getInterval();
   const Interval& getInterval() const;
   inline unsigned long int getID() const { return id_; }
-  const std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph() const;
+  const std::optional<DependencyGraphAccesses>& getDependencyGraph() const;
   /// @}
 
   /// @name Setters
   /// @{
   void setInterval(Interval const& interval);
   void setID(const long unsigned int id) { id_ = id; }
-  void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
+  void setDependencyGraph(DependencyGraphAccesses&& DG);
   /// @}
 
   virtual void clearDerivedInfo() override;

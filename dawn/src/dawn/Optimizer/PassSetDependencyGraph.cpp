@@ -24,21 +24,20 @@ PassSetDependencyGraph::PassSetDependencyGraph(OptimizerContext& context)
 bool PassSetDependencyGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& IIR = stencilInstantiation->getIIR();
-  for(const auto& doMethods : iterateIIROver<iir::DoMethod>(*IIR)) {
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*IIR)) {
     // and do the update of the Graphs
-    doMethods->update(iir::NodeUpdateType::levelAndTreeAbove);
-    std::shared_ptr<iir::DependencyGraphAccesses> newGraph;
-    newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
+    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
+    iir::DependencyGraphAccesses newGraph(stencilInstantiation->getMetaData());
     // Build the Dependency graph (bottom to top)
-    for(int stmtIndex = doMethods->getAST().getStatements().size() - 1; stmtIndex >= 0;
+    for(int stmtIndex = doMethod->getAST().getStatements().size() - 1; stmtIndex >= 0;
         --stmtIndex) {
-      const auto& stmt = doMethods->getAST().getStatements()[stmtIndex];
+      const auto& stmt = doMethod->getAST().getStatements()[stmtIndex];
 
-      newGraph->insertStatement(stmt);
-      doMethods->setDependencyGraph(newGraph);
+      newGraph.insertStatement(stmt);
     }
+    doMethod->setDependencyGraph(std::move(newGraph));
     // and do the update
-    doMethods->update(iir::NodeUpdateType::levelAndTreeAbove);
+    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
   return true;
 }

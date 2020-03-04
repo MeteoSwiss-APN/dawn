@@ -67,24 +67,24 @@ bool PassSetStageGraph::run(
     iir::Stencil& stencil = *stencilPtr;
     int numStages = stencil.getNumStages();
 
-    auto stageDAG = std::make_shared<iir::DependencyGraphStage>(stencilInstantiation);
+    auto stageDAG = iir::DependencyGraphStage(stencilInstantiation);
 
     // Build DAG of stages (backward sweep)
     for(int i = numStages - 1; i >= 0; --i) {
       const auto& fromStagePtr = stencil.getStage(i);
-      stageDAG->insertNode(fromStagePtr->getStageID());
+      stageDAG.insertNode(fromStagePtr->getStageID());
       int curStageID = fromStagePtr->getStageID();
 
       for(int j = i - 1; j >= 0; --j) {
         const auto& toStagePtr = stencil.getStage(j);
         if(depends(*fromStagePtr, *toStagePtr))
-          stageDAG->insertEdge(curStageID, toStagePtr->getStageID());
+          stageDAG.insertEdge(curStageID, toStagePtr->getStageID());
       }
     }
 
     if(context_.getOptions().DumpStageGraph)
-      stageDAG->toDot("stage_" + stencilInstantiation->getName() + "_s" +
-                      std::to_string(stencilIdx) + ".dot");
+      stageDAG.toDot("stage_" + stencilInstantiation->getName() + "_s" +
+                     std::to_string(stencilIdx) + ".dot");
 
     stencil.setStageDependencyGraph(std::move(stageDAG));
   }

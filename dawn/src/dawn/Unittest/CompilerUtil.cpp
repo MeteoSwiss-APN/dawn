@@ -27,6 +27,7 @@
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -89,27 +90,6 @@ CompilerUtil::lower(const std::string& sirFilename,
 
   std::shared_ptr<dawn::SIR> sir = load(filename);
   return lower(sir, options, context);
-}
-
-stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
-  dawn::Options options;
-  DawnCompiler compiler(options);
-
-  auto SI = compiler.optimize(compiler.lowerToIIR(sir));
-
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    }
-    throw std::runtime_error("Compilation failed");
-  }
-
-  return SI;
-}
-
-stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
-  std::shared_ptr<SIR> sir = load(sirFile);
-  return compile(sir);
 }
 
 void CompilerUtil::clearDiags() { diag_.clear(); }
@@ -181,6 +161,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
 
   case PassGroup::StageReordering:
     addPass<dawn::PassSetStageGraph>(context, passes);
+    addPass<dawn::PassSetDependencyGraph>(context, passes);
     addPass<dawn::PassStageReordering>(context, passes, reorderStrategy);
     addPass<dawn::PassSetSyncStage>(context, passes);
     addPass<dawn::PassSetStageName>(context, passes);
@@ -334,6 +315,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
   case PassGroup::StageReordering:
     result &= runPass<dawn::PassSetStageName>(context, instantiation);
     result &= runPass<dawn::PassSetStageGraph>(context, instantiation);
+    result &= runPass<dawn::PassSetDependencyGraph>(context, instantiation);
     result &= runPass<dawn::PassStageReordering>(context, instantiation, reorderStrategy);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     result &= runPass<dawn::PassSetStageName>(context, instantiation);

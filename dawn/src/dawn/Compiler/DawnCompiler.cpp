@@ -141,87 +141,65 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   }
   return diag;
 }
-
-static bool shouldRunGroup(const Options& options, bool runSpecificPass) {
-  return !options.DefaultNone || runSpecificPass;
-}
-
 } // namespace
+
+std::list<PassGroup> DawnCompiler::defaultPassGroups() {
+  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
+          PassGroup::SetCaches, PassGroup::SetBlockSize};
+}
 
 DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-DawnCompiler::lowerToIIR(std::shared_ptr<SIR> const& stencilIR) {
+DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
 
-  // -reorder
-  using ReorderStrategyKind = ReorderStrategy::Kind;
-  ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
-                                            .Case("none", ReorderStrategyKind::None)
-                                            .Case("greedy", ReorderStrategyKind::Greedy)
-                                            .Case("scut", ReorderStrategyKind::Partitioning)
-                                            .Default(ReorderStrategyKind::Unknown);
-
-  if(reorderStrategy == ReorderStrategyKind::Unknown) {
-    diagnostics_.report(
-        buildDiag("-reorder", options_.ReorderStrategy, "", {"none", "greedy", "scut"}));
-    throw std::runtime_error("An error occurred.");
-  }
-
-  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-  MultistageSplitStrategy mssSplitStrategy;
-  if(options_.MaxCutMSS) {
-    mssSplitStrategy = MultistageSplitStrategy::MaxCut;
-  } else {
-    mssSplitStrategy = MultistageSplitStrategy::Optimized;
-  }
-
-  // Initialize optimizer
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilIR);
 
-  if(shouldRunGroup(options_, options_.Parallel)) {
-    // required passes to have proper, parallelized IR
-    optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
-    optimizer.pushBackPass<PassFieldVersioning>();
-    optimizer.pushBackPass<PassMultiStageSplitter>(mssSplitStrategy);
-    optimizer.pushBackPass<PassTemporaryType>();
-    optimizer.pushBackPass<PassLocalVarType>();
     optimizer.pushBackPass<PassRemoveScalars>();
-    optimizer.pushBackPass<PassStageSplitter>();
+    optimizer.pushBackPass<PassLocalVarType>();
     optimizer.pushBackPass<PassTemporaryType>();
-    optimizer.pushBackPass<PassFixVersionedInputFields>();
-    optimizer.pushBackPass<PassComputeStageExtents>();
-    optimizer.pushBackPass<PassSetSyncStage>();
-    // validation checks after parallelisation
-    optimizer.pushBackPass<PassValidation>();
-  }
+  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
-  DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
-  for(const auto& a : optimizer.getPassManager().getPasses()) {
-    DAWN_LOG(INFO) << a->getName();
-  }
+  // required passes to have proper, parallelized IR
+  optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+  optimizer.pushBackPass<PassFieldVersioning>();
+  optimizer.pushBackPass<PassMultiStageSplitter>(
+      options_.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
+  optimizer.pushBackPass<PassStageSplitter>();
+  optimizer.pushBackPass<PassTemporaryType>();
+  optimizer.pushBackPass<PassFixVersionedInputFields>();
+  optimizer.pushBackPass<PassComputeStageExtents>();
+  optimizer.pushBackPass<PassSetSyncStage>();
+  // validation checks after parallelisation
+  optimizer.pushBackPass<PassLocalVarType>();
+  optimizer.pushBackPass<PassValidation>();
 
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
     // Run optimization passes
-    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+    auto& instantiation = stencil.second;
 
-    DAWN_LOG(INFO) << "Starting parallelisation passes for `" << instantiation->getName()
+    DAWN_LOG(INFO) << "Starting parallelization passes for `" << instantiation->getName()
                    << "` ...";
     if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
       throw std::runtime_error("An error occurred.");
 
-    DAWN_LOG(INFO) << "Done with parallelisation passes for `" << instantiation->getName() << "`";
+    DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
+
+    if(options_.DumpStencilInstantiation) {
+      instantiation->dump();
+    }
   }
 
-  auto stencilInstantiationMap = optimizer.getStencilInstantiationMap();
-  return stencilInstantiationMap;
+  return optimizer.getStencilInstantiationMap();
 }
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
-                           stencilInstantiationMap) {
+DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+                           stencilInstantiationMap,
+                       const std::list<PassGroup>& groups) {
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_.ReorderStrategy)
@@ -251,125 +229,111 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilInstantiationMap);
 
-  // Optimization, step by step
-  //===-----------------------------------------------------------------------------------------
-  // if(shouldRunPass(options_, options_.SSA)) {
-  //   // broken but should run with no prerequisites
-  //   optimizer.pushBackPass<PassSSA>();
-  //   // rerun things we might have changed
-  //   // optimizer.pushBackPass<PassFixVersionedInputFields>();
-  //   // todo: this does not work since it does not check if it was already run
-  // }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.PrintStencilGraph)) {
-    optimizer.pushBackPass<PassSetDependencyGraph>();
-    // Plain diagnostics, should not even be a pass but is independent
-    optimizer.pushBackPass<PassPrintStencilGraph>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.SetStageName)) {
-    // This is never used but if we want to reenable it, it is independent
-    optimizer.pushBackPass<PassSetStageName>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.StageReordering)) {
-    optimizer.pushBackPass<PassSetStageGraph>();
-    optimizer.pushBackPass<PassSetDependencyGraph>();
-    optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
-    // moved stages around ...
-    optimizer.pushBackPass<PassSetSyncStage>();
-    // if we want this info around, we should probably run this also
-    // optimizer.pushBackPass<PassSetStageName>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.StageMerger)) {
-    // merging requires the stage graph
-    optimizer.pushBackPass<PassSetStageGraph>();
-    optimizer.pushBackPass<PassSetDependencyGraph>();
-    // running the actual pass
-    optimizer.pushBackPass<PassStageMerger>();
-    // since this can change the scope of temporaries ...
-    optimizer.pushBackPass<PassTemporaryType>();
-    optimizer.pushBackPass<PassLocalVarType>();
-    optimizer.pushBackPass<PassRemoveScalars>();
-    // modify stages and their extents ...
-    optimizer.pushBackPass<PassComputeStageExtents>();
-    // and changes their dependencies
-    optimizer.pushBackPass<PassSetSyncStage>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  // // should be irrelevant now
-  // optimizer.pushBackPass<PassStencilSplitter>(maxFields);
-  // // but would require a lot
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.TemporaryMerger)) {
-    optimizer.pushBackPass<PassTemporaryMerger>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.Inlining)) {
-    optimizer.pushBackPass<PassInlining>(
-        (getOptions().Inlining || getOptions().TmpToStencilFunction),
-        PassInlining::InlineStrategy::ComputationsOnTheFly);
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.IntervalPartitioning)) {
-    if(options_.IntervalPartitioning) {
+  for(auto group : groups) {
+    switch(group) {
+    case PassGroup::SSA:
+      DAWN_ASSERT_MSG(false, "The SSA pass is broken.");
+      // broken but should run with no prerequisites
+      optimizer.pushBackPass<PassSSA>();
+      // rerun things we might have changed
+      // optimizer.pushBackPass<PassFixVersionedInputFields>();
+      // todo: this does not work since it does not check if it was already run
+      break;
+    case PassGroup::PrintStencilGraph:
+      optimizer.pushBackPass<PassSetDependencyGraph>();
+      // Plain diagnostics, should not even be a pass but is independent
+      optimizer.pushBackPass<PassPrintStencilGraph>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::SetStageName:
+      // This is never used but if we want to reenable it, it is independent
+      optimizer.pushBackPass<PassSetStageName>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::StageReordering:
+      optimizer.pushBackPass<PassSetStageGraph>();
+      optimizer.pushBackPass<PassSetDependencyGraph>();
+      optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
+      // moved stages around ...
+      optimizer.pushBackPass<PassSetSyncStage>();
+      // if we want this info around, we should probably run this also
+      // optimizer.pushBackPass<PassSetStageName>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::StageMerger:
+      // merging requires the stage graph
+      optimizer.pushBackPass<PassSetStageGraph>();
+      // running the actual pass
+      optimizer.pushBackPass<PassStageMerger>();
+      // since this can change the scope of temporaries ...
+      optimizer.pushBackPass<PassTemporaryType>();
+      optimizer.pushBackPass<PassLocalVarType>();
+      // modify stages and their extents ...
+      optimizer.pushBackPass<PassComputeStageExtents>();
+      // and changes their dependencies
+      optimizer.pushBackPass<PassSetSyncStage>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::TemporaryMerger:
+      optimizer.pushBackPass<PassTemporaryMerger>();
+      // this should not affect the temporaries but since we're touching them it would probably be a
+      // safe idea
+      optimizer.pushBackPass<PassTemporaryType>();
+      optimizer.pushBackPass<PassLocalVarType>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::Inlining:
+      optimizer.pushBackPass<PassInlining>(
+          (getOptions().Inlining || getOptions().TmpToStencilFunction),
+          PassInlining::InlineStrategy::ComputationsOnTheFly);
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::IntervalPartitioning:
       optimizer.pushBackPass<PassIntervalPartitioning>();
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
       // optimizer.pushBackPass<PassFixVersionedInputFields>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
-    }
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.TmpToStencilFunction)) {
-    optimizer.pushBackPass<PassTemporaryToStencilFunction>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.SetNonTempCaches)) {
-    optimizer.pushBackPass<PassSetNonTempCaches>();
-    // this should not affect the temporaries but since we're touching them it would probably be a
-    // safe idea
-    optimizer.pushBackPass<PassTemporaryType>();
-    optimizer.pushBackPass<PassLocalVarType>();
-    optimizer.pushBackPass<PassRemoveScalars>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.SetCaches)) {
-    optimizer.pushBackPass<PassSetCaches>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.SetBlockSize)) {
-    optimizer.pushBackPass<PassSetBlockSize>();
-    // validation check
-    optimizer.pushBackPass<PassValidation>();
-  }
-  //===-----------------------------------------------------------------------------------------
-  if(shouldRunGroup(options_, options_.DataLocalityMetric)) {
-    if(options_.DataLocalityMetric) {
+      break;
+    case PassGroup::TmpToStencilFunction:
+      optimizer.pushBackPass<PassTemporaryToStencilFunction>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::SetNonTempCaches:
+      optimizer.pushBackPass<PassSetNonTempCaches>();
+      // this should not affect the temporaries but since we're touching them it would probably be a
+      // safe idea
+      optimizer.pushBackPass<PassTemporaryType>();
+      optimizer.pushBackPass<PassLocalVarType>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::SetCaches:
+      optimizer.pushBackPass<PassSetCaches>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::SetBlockSize:
+      optimizer.pushBackPass<PassSetBlockSize>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::DataLocalityMetric:
       // Plain diagnostics, should not even be a pass but is independent
       optimizer.pushBackPass<PassDataLocalityMetric>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::Parallel:
+      DAWN_ASSERT_MSG(false, "The parallel group is only valid for lowering to IIR.");
     }
   }
   if(options_.Backend == "cuda" || options_.SerializeIIR) {
@@ -377,12 +341,8 @@ DawnCompiler::optimize(std::map<std::string, std::shared_ptr<iir::StencilInstant
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
-  //===-----------------------------------------------------------------------------------------
 
-  DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
-  for(const auto& a : optimizer.getPassManager().getPasses()) {
-    DAWN_LOG(INFO) << a->getName();
-  }
+  //===-----------------------------------------------------------------------------------------
 
   int i = 0;
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
@@ -464,9 +424,12 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
 }
 
 std::unique_ptr<codegen::TranslationUnit>
-DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
+DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR, std::list<PassGroup> groups) {
   diagnostics_.clear();
   diagnostics_.setFilename(stencilIR->Filename);
+
+  if(groups.empty())
+    groups = defaultPassGroups();
 
   // Parallelize the SIR
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiation;
@@ -483,7 +446,7 @@ DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR) {
   }
 
   // Optimize the IIR
-  auto optimizedStencilInstantiation = optimize(stencilInstantiation);
+  auto optimizedStencilInstantiation = optimize(stencilInstantiation, groups);
 
   if(diagnostics_.hasErrors()) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";

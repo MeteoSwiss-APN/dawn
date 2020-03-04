@@ -61,18 +61,27 @@ public:
 
   struct Vertex {
     std::size_t VertexID; ///< Unique ID of the Vertex
-    int value;            ///< value of the data to be stored
+    int Value;            ///< value of the data to be stored
+
+    bool operator==(const Vertex& other) const {
+      return (VertexID == other.VertexID) && (Value == other.Value);
+    }
   };
 
 protected:
   std::unordered_map<int, Vertex> vertices_;
-  std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
+  std::vector<EdgeList> adjacencyList_;
 
 public:
+  bool operator==(const DependencyGraph& other) const {
+    return (getVertices() == other.getVertices()) &&
+           (getAdjacencyList() == other.getAdjacencyList());
+  }
+
   /// @brief Get the adjacency list
   /// @{
-  std::vector<std::shared_ptr<EdgeList>>& getAdjacencyList() { return adjacencyList_; }
-  const std::vector<std::shared_ptr<EdgeList>>& getAdjacencyList() const { return adjacencyList_; }
+  std::vector<EdgeList>& getAdjacencyList() { return adjacencyList_; }
+  const std::vector<EdgeList>& getAdjacencyList() const { return adjacencyList_; }
   /// @}
 
   /// @brief Get the vertices
@@ -80,7 +89,6 @@ public:
   std::unordered_map<int, Vertex>& getVertices() { return vertices_; }
   const std::unordered_map<int, Vertex>& getVertices() const { return vertices_; }
   /// @}
-
   //===----------------------------------------------------------------------------------------===//
   //     Graph implementation
   //===----------------------------------------------------------------------------------------===//
@@ -90,10 +98,10 @@ public:
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID) {
-    auto insertPair = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
-    if(insertPair.second)
-      adjacencyList_.push_back(std::make_shared<EdgeList>());
-    return insertPair.first->second;
+    auto [iter, inserted] = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
+    if(inserted)
+      adjacencyList_.push_back(EdgeList());
+    return iter->second;
   }
 
   std::set<int> computeIDsWithCycles() const {
@@ -101,8 +109,8 @@ public:
     for(const auto& vertexPair : vertices_) {
       const auto& vertex = vertexPair.second;
 
-      if(hasCycleDependency(vertex.value)) {
-        ids.insert(vertex.value);
+      if(hasCycleDependency(vertex.Value)) {
+        ids.insert(vertex.Value);
       }
     }
     return ids;
@@ -127,14 +135,14 @@ public:
     const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromValue(vertexValueFrom),
                     getVertexIDFromValue(vertexValueTo)};
 
-    auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
+    auto it = std::find_if(edgeList.begin(), edgeList.end(), [&edge](const Edge& e) {
       return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
     });
 
-    if(it != edgeList->end())
+    if(it != edgeList.end())
       static_cast<Derived*>(this)->edgeAlreadyExists(it->Data, edge.Data);
     else
-      edgeList->push_back(edge);
+      edgeList.push_back(edge);
   }
 
   /// @brief Callback which will be invoked if an edge already exists
@@ -142,7 +150,7 @@ public:
   /// This is useful for access graph which want to merge the extents (= EdgeData).
   void edgeAlreadyExists(EdgeData& existingEdge, const EdgeData& newEdge) {}
 
-  /// @brief Get the ID of the Vertex in the graph given the vertex value
+  /// @brief Get the ID of the Vertex in the graph given the vertex.Value
   std::size_t getVertexIDFromValue(int value) const {
     auto it = vertices_.find(value);
     DAWN_ASSERT_MSG(it != vertices_.end(), "Node with given ID does not exist");
@@ -164,11 +172,9 @@ public:
   }
 
   /// @brief Get the list of edges of node given by `ID`
-  EdgeList& edgesOf(int vertexValue) {
-    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
-  }
+  EdgeList& edgesOf(int vertexValue) { return adjacencyList_[getVertexIDFromValue(vertexValue)]; }
   const EdgeList& edgesOf(int vertexValue) const {
-    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
+    return adjacencyList_[getVertexIDFromValue(vertexValue)];
   }
 
   /// @brief Clear the graph
@@ -223,7 +229,7 @@ protected:
   bool hasCycleDependencyImpl(const int targetVertexID, const int seedID,
                               std::set<int>& visited) const {
     // DFS search for cycles on access to ID
-    for(auto& edge : *(getAdjacencyList()[seedID])) {
+    for(auto& edge : getAdjacencyList()[seedID]) {
       if(edge.ToVertexID == targetVertexID) {
         return true;
       }
@@ -254,7 +260,7 @@ protected:
                        "\"");
 
       // Convert edge to dot
-      for(const Edge& edge : *(adjacencyList_[VertexID]))
+      for(const Edge& edge : adjacencyList_[VertexID])
         edgeStrs.emplace(
             "\"" + FromVertexName + "\" -> \"" +
             static_cast<const Derived*>(this)->getVertexNameByVertexID(edge.ToVertexID) + "\"" +
