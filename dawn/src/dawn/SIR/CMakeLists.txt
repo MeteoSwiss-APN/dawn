@@ -23,6 +23,9 @@ dawn_protobuf_generate(
   PACKG SIR
   LANGUAGE cpp
 )
+set(sir_proto_header_files ${sir_proto_cpp_files})
+list(FILTER sir_proto_header_files INCLUDE REGEX ".+\\.h?h$")
+install(FILES ${sir_proto_header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/SIR/SIR)
 
 add_library(DawnSIRProto OBJECT ${sir_proto_cpp_files})
 target_compile_features(DawnSIRProto PUBLIC cxx_std_11)
@@ -55,3 +58,7 @@ add_library(DawnSIR
 
 target_add_dawn_standard_props(DawnSIR)
 target_link_libraries(DawnSIR PUBLIC DawnSupport DawnAST DawnSIRProto)
+# The include path below is necessary for the C++ proto headers
+target_include_directories(DawnSIR
+  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/dawn/SIR>
+)
