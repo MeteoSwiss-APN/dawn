@@ -150,4 +150,25 @@ TEST(GraphTest, computeIDsWithCycle) {
   EXPECT_TRUE((std::equal(ids.begin(), ids.end(), ref.begin())));
 }
 
+TEST(GraphTest, copy) {
+  TestGraph graph;
+
+  graph.insertEdge(3, 5);
+  graph.insertEdge(5, 6);
+  graph.insertEdge(6, 7);
+  graph.insertEdge(7, 8);
+
+  graph.insertEdge(3, 9);
+  graph.insertEdge(9, 10);
+  graph.insertEdge(5, 11);
+  graph.insertEdge(11, 3);
+
+  auto copy = graph;
+
+  auto ids = copy.computeIDsWithCycles();
+  std::vector<int> ref = {3, 5, 11};
+  EXPECT_TRUE((std::equal(ids.begin(), ids.end(), ref.begin())));
+  EXPECT_EQ(graph.getNumVertices(), copy.getNumVertices());
+}
+
 } // anonymous namespace
