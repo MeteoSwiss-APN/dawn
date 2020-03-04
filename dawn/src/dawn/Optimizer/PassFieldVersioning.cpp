@@ -130,7 +130,7 @@ bool PassFieldVersioning::run(
 
           // Try to resolve race-conditions by using double buffering if necessary
           auto rc = fixRaceCondition(stencilInstantiation, newGraph, stencil, doMethod, loopOrder,
-                                     stageIdx, stmtIndex); // TODO fix ptr
+                                     stageIdx, stmtIndex);
 
           if(rc == RCKind::Unresolvable) {
             // Nothing we can do ... bail out
