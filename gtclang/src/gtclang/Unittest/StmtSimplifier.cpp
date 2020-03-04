@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Unittest/UnittestStmtSimplifier.h"
+#include "gtclang/Unittest/StmtSimplifier.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 

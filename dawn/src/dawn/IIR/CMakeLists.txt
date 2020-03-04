@@ -24,6 +24,9 @@ dawn_protobuf_generate(
   PACKG IIR
   LANGUAGE cpp
 )
+set(iir_proto_header_files ${iir_proto_cpp_files})
+list(FILTER iir_proto_header_files INCLUDE REGEX ".+\\.h?h$")
+install(FILES ${iir_proto_header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/IIR/IIR)
 
 add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files})
 target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
@@ -115,6 +118,10 @@ add_library(DawnIIR
 
 target_add_dawn_standard_props(DawnIIR)
 target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
+# The include path below is necessary for the C++ proto headers
+target_include_directories(DawnIIR
+  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/dawn/IIR>
+)
 
 # TODO add this if CLAW needs it (-> Matthias)
 # if(DAWN_JAVA)

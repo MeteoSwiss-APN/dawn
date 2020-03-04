@@ -17,8 +17,6 @@ add_library(DawnUnittest
   CompilerUtil.h
   IIRBuilder.h
   IIRBuilder.cpp
-  UnittestStmtSimplifier.h
-  UnittestStmtSimplifier.cpp
   UnittestUtils.h
   UnittestUtils.cpp
 )
