@@ -211,6 +211,9 @@ public:
 
   std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices);
 
+  std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices,
+                                            std::deque<ast::LocationType>&& locationTypes);
+
   /// @brief Get the extent of the stage
   /// @{
   Extents const& getExtents() const { return derivedInfo_.extents_; }

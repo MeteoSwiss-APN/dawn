@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
@@ -278,6 +279,16 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
   to->setDependencyGraph(std::move(dependencyGraph));
   to->getAST().insert_back(std::make_move_iterator(from->getAST().getStatements().begin()),
                            std::make_move_iterator(from->getAST().getStatements().end()));
+}
+
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
+                                                 std::deque<ast::LocationType>&& locTypes) {
+  DAWN_ASSERT(splitterIndices.size() == locTypes.size() - 1);
+  auto newStages = split(splitterIndices);
+  for(std::size_t i = 0; i < newStages.size(); ++i) {
+    newStages[i]->setLocationType(locTypes[i]);
+  }
+  return newStages;
 }
 
 std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,

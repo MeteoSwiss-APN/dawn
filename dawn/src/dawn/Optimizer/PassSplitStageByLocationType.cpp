@@ -14,73 +14,97 @@
 
 #include "PassSplitStageByLocationType.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Support/Unreachable.h"
 #include <deque>
+#include <memory>
 #include <stdexcept>
 
 namespace dawn {
 namespace {
-class DeduceLocationType : public iir::ASTVisitorDisabled {
-private:
-  iir::StencilMetaInformation const& metaInformation_;
-  std::optional<ast::LocationType> result_;
+// class DeduceLocationType : public iir::ASTVisitor {
+// private:
+//   iir::StencilMetaInformation const& metaInformation_;
+//   std::optional<ast::LocationType> result_;
 
-public:
-  DeduceLocationType(iir::StencilMetaInformation const& metaInformation)
-      : metaInformation_(metaInformation) {}
+// public:
+//   DeduceLocationType(iir::StencilMetaInformation const& metaInformation)
+//       : metaInformation_(metaInformation) {}
 
-  ast::LocationType operator()(const std::shared_ptr<iir::Stmt>& stmt) {
-    stmt->accept(*this);
-    if(!result_)
-      throw std::runtime_error("Couldn't deduce location type.");
-    return *result_;
+//   ast::LocationType operator()(const std::shared_ptr<iir::Stmt>& stmt) {
+//     stmt->accept(*this);
+//     DAWN_ASSERT_MSG(result_.has_value(), "Couldn't deduce location type.");
+//     return *result_;
+//   }
+
+//   // TODO: consider IF case, function call
+
+//   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+//     result_ = metaInformation_.getDenseLocationTypeFromAccessID(iir::getAccessID(expr));
+//   }
+// };
+
+ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
+                                     iir::StencilMetaInformation const& metaInformation) {
+  if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+    if(const auto& assignmentExpr =
+           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+      if(const std::shared_ptr<iir::FieldAccessExpr> fieldAccessExpr =
+             std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignmentExpr->getLeft())) {
+
+        return metaInformation.getDenseLocationTypeFromAccessID(iir::getAccessID(fieldAccessExpr));
+
+      } else if(const std::shared_ptr<iir::VarAccessExpr> varAccessExpr =
+                    std::dynamic_pointer_cast<iir::VarAccessExpr>(assignmentExpr->getLeft())) {
+
+        return metaInformation.getLocalVariableDataFromAccessID(iir::getAccessID(varAccessExpr))
+            .getLocationType();
+      }
+    }
+    // TODO: consider IF case and function call
   }
+  dawn_unreachable("Unsupported statement");
+}
 
-  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
-    stmt->getExpr()->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
-    expr->getLeft()->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    result_ = metaInformation_.getDenseLocationTypeFromAccessID(expr->getID());
-  }
-};
+// TODO check if statements are supported (same as PassRemoveScalars)
 
 } // namespace
 
 bool PassSplitStageByLocationType::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
-    for(const auto& multiStage : stencil->getChildren()) {
-      for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();) {
-        iir::Stage& stage = (**stageIt);
-        iir::DoMethod& doMethod = stage.getSingleDoMethod();
+  for(const auto& multiStage : iterateIIROver<iir::MultiStage>(*stencilInstantiation->getIIR())) {
+    for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();) {
+      iir::Stage& stage = (**stageIt);
+      iir::DoMethod& doMethod = stage.getSingleDoMethod();
+      // TODO: change all deques to vectors otherwise we'll have O(n^2)
+      std::deque<int> splitterIndices;
+      std::deque<ast::LocationType> locationTypes;
+      for(std::size_t i = 0; i < doMethod.getAST().getStatements().size(); ++i) {
+        // auto locType = DeduceLocationType(stencilInstantiation->getMetaData())(
+        //     doMethod.getAST().getStatements()[i]);
+        auto locType = deduceLocationType(doMethod.getAST().getStatements()[i],
+                                          stencilInstantiation->getMetaData());
+        locationTypes.push_back(locType);
 
-        std::deque<int> splitterIndices;
-        for(std::size_t i = 0; i < doMethod.getAST().getStatements().size(); ++i) {
-          auto locType = DeduceLocationType(stencilInstantiation->getMetaData())(
-              doMethod.getAST().getStatements()[i]);
+        if(i == doMethod.getAST().getStatements().size() - 1) // TODO fix this pattern
+          break;
+        splitterIndices.push_back(i);
+      }
 
-          if(i == doMethod.getAST().getStatements().size() - 1) // TODO fix this pattern
-            break;
-          splitterIndices.push_back(i);
-        }
-
-        if(!splitterIndices.empty()) {
-          auto newStages = stage.split(splitterIndices);
-          stageIt = multiStage->childrenErase(stageIt);
-          multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
-                                     std::make_move_iterator(newStages.end()));
-        }
+      if(!splitterIndices.empty()) {
+        auto newStages = stage.split(splitterIndices, std::move(locationTypes));
+        stageIt = multiStage->childrenErase(stageIt);
+        multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
+                                   std::make_move_iterator(newStages.end()));
       }
     }
   }
