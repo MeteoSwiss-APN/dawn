@@ -125,9 +125,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                 auto& candidateDepGraph = candidateDoMethod.getDependencyGraph();
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
-                auto newDepGraph = iir::DependencyGraphAccesses(
-                    stencilInstantiation->getMetaData(), *candidateDepGraph,
-                    *curDepGraph); // TODO remove shared_ptr
+                auto newDepGraph = iir::DependencyGraphAccesses(stencilInstantiation->getMetaData(),
+                                                                *candidateDepGraph, *curDepGraph);
 
                 if(newDepGraph.isDAG() && !hasHorizontalReadBeforeWriteConflict(newDepGraph)) {
 

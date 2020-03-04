@@ -129,7 +129,7 @@ bool PassFieldVersioning::run(
           newGraph.insertStatement(stmt);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc = fixRaceCondition(stencilInstantiation, &newGraph, stencil, doMethod, loopOrder,
+          auto rc = fixRaceCondition(stencilInstantiation, newGraph, stencil, doMethod, loopOrder,
                                      stageIdx, stmtIndex); // TODO fix ptr
 
           if(rc == RCKind::Unresolvable) {
@@ -161,7 +161,7 @@ bool PassFieldVersioning::run(
 
 PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil, iir::DoMethod& doMethod,
+    iir::DependencyGraphAccesses const& graph, iir::Stencil& stencil, iir::DoMethod& doMethod,
     iir::LoopOrderKind loopOrder, int stageIdx, int index) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
@@ -175,17 +175,17 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   // Find all strongly connected components in the graph ...
   auto SCCs = std::make_unique<std::vector<std::set<int>>>();
-  graph->findStronglyConnectedComponents(*SCCs);
+  graph.findStronglyConnectedComponents(*SCCs);
 
   // ... and add those which have at least one stencil access
   for(std::set<int>& scc : *SCCs) {
     bool isStencilSCC = false;
 
     for(int fromAccessID : scc) {
-      std::size_t fromVertexID = graph->getVertexIDFromValue(fromAccessID);
+      std::size_t fromVertexID = graph.getVertexIDFromValue(fromAccessID);
 
-      for(const Edge& edge : graph->getAdjacencyList()[fromVertexID]) {
-        if(scc.count(graph->getIDFromVertexID(edge.ToVertexID)) &&
+      for(const Edge& edge : graph.getAdjacencyList()[fromVertexID]) {
+        if(scc.count(graph.getIDFromVertexID(edge.ToVertexID)) &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
           isStencilSCC = true;
           stencilSCCs->emplace_back(std::move(scc));
@@ -201,13 +201,13 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   if(stencilSCCs->empty()) {
     // Check if we have self dependencies e.g `u = u(i+1)` (Our SCC algorithm does not capture SCCs
     // of size one i.e single nodes)
-    for(const auto& AccessIDVertexPair : graph->getVertices()) {
+    for(const auto& AccessIDVertexPair : graph.getVertices()) {
       const Vertex& vertex = AccessIDVertexPair.second;
 
-      for(const Edge& edge : graph->getAdjacencyList()[vertex.VertexID]) {
+      for(const Edge& edge : graph.getAdjacencyList()[vertex.VertexID]) {
         if(edge.FromVertexID == edge.ToVertexID &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
-          stencilSCCs->emplace_back(std::set<int>{vertex.value});
+          stencilSCCs->emplace_back(std::set<int>{vertex.Value});
           break;
         }
       }
@@ -226,7 +226,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   //  field_b = field_a;
   //
   // ... and then field_b_0 must be initialized from field_b.
-  if(stencilSCCs->empty() && !SCCs->empty() && !graph->isDAG()) {
+  if(stencilSCCs->empty() && !SCCs->empty() && !graph.isDAG()) {
     stencilSCCs->emplace_back(std::move(SCCs->front()));
   }
 
@@ -242,7 +242,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   if(!assignment) {
     if(context_.getOptions().DumpRaceConditionGraph)
-      graph->toDot("rc_" + instantiation->getName() + ".dot");
+      graph.toDot("rc_" + instantiation->getName() + ".dot");
     reportRaceCondition(statement, *instantiation, context_);
     return RCKind::Unresolvable;
   }
@@ -258,7 +258,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
       if(context_.getOptions().DumpRaceConditionGraph)
-        graph->toDot("rc_" + instantiation->getName() + ".dot");
+        graph.toDot("rc_" + instantiation->getName() + ".dot");
       reportRaceCondition(statement, *instantiation, context_);
       return RCKind::Unresolvable;
     }

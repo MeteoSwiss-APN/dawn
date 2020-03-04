@@ -42,7 +42,7 @@ void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& 
 
 DependencyGraphAccesses::Vertex& DependencyGraphAccesses::insertNode(int ID) {
   Vertex& vertex = Base::insertNode(ID);
-  VertexIDToAccessIDMap_.emplace(vertex.VertexID, vertex.value);
+  VertexIDToAccessIDMap_.emplace(vertex.VertexID, vertex.Value);
   return vertex;
 }
 
@@ -229,14 +229,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(
-        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
+                          vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(
-        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
+                           vertices);
     if(vertices.empty())
       return false;
   }
@@ -434,7 +434,7 @@ private:
 
         VertexData& vertexData = vertexData_[VertexID];
         vertexData.OnStack = false;
-        SCC.insert(vertexData.Vertex->value);
+        SCC.insert(vertexData.Vertex->Value);
 
       } while(VertexID != FromVertexID);
 

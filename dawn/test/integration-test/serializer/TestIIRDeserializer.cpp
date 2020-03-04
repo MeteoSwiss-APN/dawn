@@ -145,8 +145,7 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
     const auto& lhsStencil = lhs->getChild(stencils);
     const auto& rhsStencil = rhs->getChild(stencils);
 
-    // EXPECT_EQ(lhsStencil->getStageDependencyGraph(),
-    //           rhsStencil->getStageDependencyGraph()); // TODO
+    EXPECT_EQ(lhsStencil->getStageDependencyGraph(), rhsStencil->getStageDependencyGraph());
     EXPECT_EQ(lhsStencil->getFields(), rhsStencil->getFields());
 
     ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
@@ -184,7 +183,7 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
           const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
 
           ASSERT_EQ(lhsDoMethod->getFields(), rhsDoMethod->getFields());
-          // ASSERT_EQ(lhsDoMethod->getDependencyGraph(), rhsDoMethod->getDependencyGraph()); TODO
+          ASSERT_EQ(lhsDoMethod->getDependencyGraph(), rhsDoMethod->getDependencyGraph());
         }
       }
     }

@@ -61,7 +61,11 @@ public:
 
   struct Vertex {
     std::size_t VertexID; ///< Unique ID of the Vertex
-    int value;            ///< value of the data to be stored
+    int Value;            ///< value of the data to be stored
+
+    bool operator==(const Vertex& other) const {
+      return (VertexID == other.VertexID) && (Value == other.Value);
+    }
   };
 
 protected:
@@ -69,6 +73,11 @@ protected:
   std::vector<EdgeList> adjacencyList_;
 
 public:
+  bool operator==(const DependencyGraph& other) const {
+    return (getVertices() == other.getVertices()) &&
+           (getAdjacencyList() == other.getAdjacencyList());
+  }
+
   /// @brief Get the adjacency list
   /// @{
   std::vector<EdgeList>& getAdjacencyList() { return adjacencyList_; }
@@ -100,8 +109,8 @@ public:
     for(const auto& vertexPair : vertices_) {
       const auto& vertex = vertexPair.second;
 
-      if(hasCycleDependency(vertex.value)) {
-        ids.insert(vertex.value);
+      if(hasCycleDependency(vertex.Value)) {
+        ids.insert(vertex.Value);
       }
     }
     return ids;
@@ -141,7 +150,7 @@ public:
   /// This is useful for access graph which want to merge the extents (= EdgeData).
   void edgeAlreadyExists(EdgeData& existingEdge, const EdgeData& newEdge) {}
 
-  /// @brief Get the ID of the Vertex in the graph given the vertex value
+  /// @brief Get the ID of the Vertex in the graph given the vertex.Value
   std::size_t getVertexIDFromValue(int value) const {
     auto it = vertices_.find(value);
     DAWN_ASSERT_MSG(it != vertices_.end(), "Node with given ID does not exist");

@@ -46,7 +46,7 @@ class DoMethod : public IIRNode<Stage, DoMethod, void> {
 
     /// Declaration of the fields of this doMethod
     std::unordered_map<int, Field> fields_;
-    std::optional<DependencyGraphAccesses> dependencyGraph_; // TODO maybe unique_ptr
+    std::optional<DependencyGraphAccesses> dependencyGraph_;
   };
 
   const StencilMetaInformation& metaData_;
