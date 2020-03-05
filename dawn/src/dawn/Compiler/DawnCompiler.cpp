@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
@@ -38,6 +39,7 @@
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassSetSyncStage.h"
+#include "dawn/Optimizer/PassSplitStageByLocationType.h"
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
@@ -168,7 +170,10 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
-  optimizer.pushBackPass<PassStageSplitter>();
+  if(stencilIR->GridType == ast::GridType::Unstructured)
+    optimizer.pushBackPass<PassSplitStageByLocationType>();
+  else
+    optimizer.pushBackPass<PassStageSplitter>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
   optimizer.pushBackPass<PassComputeStageExtents>();

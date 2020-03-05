@@ -41,6 +41,144 @@ OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
+def create_vertical_region_stmt1():
+    """ create a vertical region statement for the stencil
+    """
+
+    interval = sir_utils.make_interval(
+        sir_utils.Interval.Start, sir_utils.Interval.Start, 0, 0)
+
+    body_ast = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("c"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("c"),
+                    "/",
+                    sir_utils.make_unstructured_field_access_expr("b"),
+                ),
+                "=",
+            ),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("d"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("d"),
+                    "/",
+                    sir_utils.make_unstructured_field_access_expr("b"),
+                ),
+                "=",
+            ),
+        ]
+    )
+
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
+    return vertical_region_stmt
+
+
+def create_vertical_region_stmt2():
+    """ create a vertical region statement for the stencil
+    """
+
+    interval = sir_utils.make_interval(
+        sir_utils.Interval.Start, sir_utils.Interval.End, 1, 0)
+
+    body_ast = sir_utils.make_ast(
+        [
+            sir_utils.make_var_decl_stmt(
+                sir_utils.make_type(sir_utils.BuiltinType.Float),
+                "m",
+                0,
+                "=",
+                sir_utils.make_expr(
+                    sir_utils.make_binary_operator(
+                        sir_utils.make_literal_access_expr(
+                            "1.0", sir_utils.BuiltinType.Float),
+                        "/",
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_unstructured_field_access_expr("b"),
+                            "-",
+                            sir_utils.make_binary_operator(
+                                sir_utils.make_unstructured_field_access_expr(
+                                    "a"),
+                                "*",
+                                sir_utils.make_unstructured_field_access_expr(
+                                    "c", sir_utils.make_unstructured_offset(
+                                        False), -1
+                                ),
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("c"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("c"),
+                    "*",
+                    sir_utils.make_var_access_expr("m"),
+                ),
+                "=",
+            ),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("d"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_binary_operator(
+                        sir_utils.make_unstructured_field_access_expr("d"),
+                        "-",
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_unstructured_field_access_expr("a"),
+                            "*",
+                            sir_utils.make_unstructured_field_access_expr(
+                                "d", sir_utils.make_unstructured_offset(
+                                    False), -1
+                            ),
+                        ),
+                    ),
+                    "*",
+                    sir_utils.make_var_access_expr("m"),
+                ),
+                "=",
+            ),
+        ]
+    )
+
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
+    return vertical_region_stmt
+
+
+def create_vertical_region_stmt3():
+    """ create a vertical region statement for the stencil
+    """
+
+    interval = sir_utils.make_interval(
+        sir_utils.Interval.Start, sir_utils.Interval.End, 0, -1)
+
+    body_ast = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("d"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr("c"),
+                    "*",
+                    sir_utils.make_unstructured_field_access_expr(
+                        "d", sir_utils.make_unstructured_offset(False), 1
+                    ),
+                ),
+                "-=",
+            )
+        ]
+    )
+
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Backward
+    )
+    return vertical_region_stmt
+
+
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
         SIR.Interval.Start, SIR.Interval.End, 0, 0)
@@ -213,6 +351,54 @@ def main(args: argparse.Namespace):
 
     # output SIR to file
     f = open("split_stage_by_location_type_test_stencil_03.sir", "w")
+    f.write(MessageToJson(sir))
+    f.close()
+
+    sir = sir_utils.make_sir(
+        OUTPUT_FILE,
+        SIR.GridType.Value("Unstructured"),
+        [
+            sir_utils.make_stencil(
+                OUTPUT_NAME,
+                sir_utils.make_ast(
+                    [
+                        create_vertical_region_stmt1(),
+                        create_vertical_region_stmt2(),
+                        create_vertical_region_stmt3(),
+                    ]
+                ),
+                [
+                    sir_utils.make_field(
+                        "a",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "b",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "c",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "d",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                ],
+            )
+        ],
+    )
+
+    # output SIR to file
+    f = open("split_stage_by_location_type_test_stencil_tridiagonal.sir", "w")
     f.write(MessageToJson(sir))
     f.close()
 

@@ -155,4 +155,38 @@ TEST_F(TestPassSplitStageByLocationType, IfStmt) {
   ASSERT_TRUE(if_edge->getLocationType().has_value());
   ASSERT_EQ(ast::LocationType::Edges, *if_edge->getLocationType());
 }
+
+TEST_F(TestPassSplitStageByLocationType, Tridiagonal) {
+  // field(cells) in_cell;
+  // field(edges) in_edge;
+  // var out_var_cell;
+  // var out_var_edge;
+  // if(out_var_cell) out_var_cell = in_cell;
+  // if(out_var_edge) out_var_edge = in_edge;
+
+  runPass(
+      "input/SplitStageByLocationType/split_stage_by_location_type_test_stencil_tridiagonal.sir");
+
+  // auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+
+  // int expectedNumStages = 4;
+  // EXPECT_EQ(expectedNumStages, multistage->getChildren().size());
+
+  // const auto& var_decl_cell = multistage->getChild(0);
+  // ASSERT_TRUE(var_decl_cell->getLocationType().has_value());
+  // ASSERT_EQ(ast::LocationType::Cells, *var_decl_cell->getLocationType());
+
+  // const auto& var_decl_edge = multistage->getChild(1);
+  // ASSERT_TRUE(var_decl_edge->getLocationType().has_value());
+  // ASSERT_EQ(ast::LocationType::Edges, *var_decl_edge->getLocationType());
+
+  // const auto& if_cell = multistage->getChild(2);
+  // ASSERT_TRUE(if_cell->getLocationType().has_value());
+  // ASSERT_EQ(ast::LocationType::Cells, *if_cell->getLocationType());
+
+  // const auto& if_edge = multistage->getChild(3);
+  // ASSERT_TRUE(if_edge->getLocationType().has_value());
+  // ASSERT_EQ(ast::LocationType::Edges, *if_edge->getLocationType());
+  CompilerUtil::write()
+}
 } // namespace

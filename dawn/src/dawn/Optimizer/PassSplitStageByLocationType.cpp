@@ -26,6 +26,7 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Unreachable.h"
 #include <deque>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 
@@ -115,8 +116,12 @@ bool PassSplitStageByLocationType::run(
       if(!splitterIndices.empty()) {
         auto newStages = stage.split(splitterIndices, std::move(locationTypes));
         stageIt = multiStage->childrenErase(stageIt);
-        multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
-                                   std::make_move_iterator(newStages.end()));
+        stageIt = multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
+                                             std::make_move_iterator(newStages.end()));
+        std::advance(stageIt, newStages.size());
+      } else {
+        // TODO set location type
+        ++stageIt;
       }
     }
   }
