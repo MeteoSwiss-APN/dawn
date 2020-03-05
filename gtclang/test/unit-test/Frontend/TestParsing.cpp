@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Unittest/UnittestStmtSimplifier.h"
+#include "gtclang/Unittest/UnittestStmtSimplifier.h"
 #include "gtclang/Unittest/ParsingComparison.h"
 #include <fstream>
 #include <gtest/gtest.h>

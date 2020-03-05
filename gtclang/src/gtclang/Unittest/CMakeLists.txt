@@ -30,6 +30,8 @@ add_library(GTClangUnittest
   GTClang.h
   UnittestEnvironment.cpp
   UnittestEnvironment.h
+  UnittestStmtSimplifier.h
+  UnittestStmtSimplifier.cpp
   IRSplitter.cpp
   IRSplitter.h
   ParsingComparison.h
@@ -39,4 +41,4 @@ add_library(GTClangUnittest
 )
 
 target_add_gtclang_standard_props(GTClangUnittest)
-target_link_libraries(GTClangUnittest PUBLIC GTClangSupport GTClangDriver DawnUnittest Dawn::Dawn LLVM::LLVM Clang gtest)
+target_link_libraries(GTClangUnittest PUBLIC GTClangSupport GTClangDriver Dawn::Dawn LLVM::LLVM Clang gtest)
