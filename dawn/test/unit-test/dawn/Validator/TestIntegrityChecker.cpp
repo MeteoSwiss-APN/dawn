@@ -12,16 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Exception.h"
-#include "dawn/Support/FileUtil.h"
-#include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Validator/IntegrityChecker.h"
 
 #include <fstream>
@@ -33,16 +27,10 @@ namespace {
 
 TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
   // Load IIR from file
-  std::unique_ptr<OptimizerContext> context;
-  dawn::OptimizerContext::OptimizerContextOptions options;
-  std::shared_ptr<iir::StencilInstantiation> instantiation =
-      CompilerUtil::load("input/globals_opt_away.sir", options, context);
-
-  // Run parallel group
-  ASSERT_TRUE(CompilerUtil::runGroup(PassGroup::Parallel, context, instantiation));
-
-  // Run validation pass and check for exception
+  auto instantiation = IIRSerializer::deserialize("input/globals_opt_away.iir");
   IntegrityChecker checker(instantiation.get());
+
+  // Run integrity check and succeed if exception is thrown
   try {
     checker.run();
     FAIL() << "Semantic error not thrown";

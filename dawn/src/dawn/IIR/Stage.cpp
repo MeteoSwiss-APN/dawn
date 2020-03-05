@@ -281,27 +281,6 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
-std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
-                                                 std::deque<ast::LocationType>&& locTypes) {
-  DAWN_ASSERT(splitterIndices.size() == locTypes.size() - 1);
-  auto newStages = split(splitterIndices);
-  for(std::size_t i = 0; i < newStages.size(); ++i) {
-    newStages[i]->setLocationType(locTypes[i]);
-  }
-  return newStages;
-}
-
-std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
-                                                 std::deque<DependencyGraphAccesses>&& graphs) {
-  DAWN_ASSERT(splitterIndices.size() == graphs.size() - 1);
-  auto newStages = split(splitterIndices);
-  for(std::size_t i = 0; i < newStages.size(); ++i) {
-    DoMethod& doMethod = newStages[i]->getSingleDoMethod();
-    doMethod.setDependencyGraph(std::move(graphs[i]));
-  }
-  return newStages;
-}
-
 std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
@@ -332,6 +311,27 @@ std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitter
     prevIndex = nextIndex;
   }
 
+  return newStages;
+}
+
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
+                                                 std::deque<DependencyGraphAccesses>&& graphs) {
+  DAWN_ASSERT(splitterIndices.size() == graphs.size() - 1);
+  auto newStages = split(splitterIndices);
+  for(std::size_t i = 0; i < newStages.size(); ++i) {
+    DoMethod& doMethod = newStages[i]->getSingleDoMethod();
+    doMethod.setDependencyGraph(std::move(graphs[i]));
+  }
+  return newStages;
+}
+
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
+                                                 std::deque<ast::LocationType>&& locTypes) {
+  DAWN_ASSERT(splitterIndices.size() == locTypes.size() - 1);
+  auto newStages = split(splitterIndices);
+  for(std::size_t i = 0; i < newStages.size(); ++i) {
+    newStages[i]->setLocationType(locTypes[i]);
+  }
   return newStages;
 }
 

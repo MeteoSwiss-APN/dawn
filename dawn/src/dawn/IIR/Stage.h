@@ -203,14 +203,21 @@ public:
   /// This stage will not be usable after this operations i.e it's members will be moved into the
   /// new stages. This function consumes the input argument `splitterIndices`.
   ///
-  /// If a vector of graphs is provided, it will be assigned to the new stages.
+  /// @return New stages
+  std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices);
+
+  /// @brief Split the stage at the given indices into separate stages and updates the stages with
+  /// graph.
   ///
   /// @return New stages
   std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices,
                                             std::deque<DependencyGraphAccesses>&& graphs);
 
-  std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices);
-
+  /// @brief Split the stage at the given indices into separate stages and assigns the location
+  /// types.
+  ///
+  /// If a vector of graphs is provided, it will be assigned to the new stages.
+  /// @return New stages
   std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices,
                                             std::deque<ast::LocationType>&& locationTypes);
 

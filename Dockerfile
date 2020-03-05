@@ -22,8 +22,9 @@ RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     -DBUILD_SHARED_LIBS=ON \
     -GNinja
 RUN cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc)
-RUN cd /usr/src/protobuf-3.10.1/python python -m pip install .
 RUN rm -rf /usr/src/protobuf-3.10.1/build
+RUN cd /usr/src/protobuf-3.10.1/python && python setup.py build
+RUN mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/lib/google
 RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
     tar -xz -C /usr/src
 RUN mkdir -p /usr/src/gridtools-1.0.4/build

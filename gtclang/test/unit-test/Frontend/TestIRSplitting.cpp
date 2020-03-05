@@ -37,8 +37,9 @@ TEST(IRSplittingTest, StageReordering) {
 }
 
 TEST(IRSplittingTest, CacheTest) {
-  gtclang::IRSplitter("../../../dawn/test/unit-test/dawn/Optimizer/Passes", 100)
-      .split("PassSetCaches/IJCacheTest02.cpp", {"-freport-pass-set-caches"});
+  gtclang::IRSplitter("dawn/test/unit-test/dawn/Optimizer/Passes", 2)
+      .split("dawn/test/unit-test/dawn/Optimizer/Passes/samples/KCacheTest06.cpp",
+             {"-freport-pass-set-caches"});
 }
 
 TEST(IRSplittingTest, IntervalPartitioning) {

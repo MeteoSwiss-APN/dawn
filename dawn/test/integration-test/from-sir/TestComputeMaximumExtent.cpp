@@ -18,6 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>
@@ -29,10 +30,17 @@ using namespace dawn;
 namespace {
 
 class TestComputeMaximumExtent : public ::testing::Test {
+  dawn::OptimizerContext::OptimizerContextOptions options_;
+  DiagnosticsEngine diagnostics_;
   dawn::DawnCompiler compiler_;
+  std::unique_ptr<OptimizerContext> context_;
 
 protected:
   virtual void SetUp() {}
+
+  TestComputeMaximumExtent() {
+    context_ = std::make_unique<dawn::OptimizerContext>(diagnostics_, options_, nullptr);
+  }
 
   std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
@@ -44,9 +52,14 @@ protected:
 
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
+    auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
+    DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
+    CompilerUtil::runGroup(PassGroup::StageReordering, context_,
+                           stencilInstantiationMap.begin()->second);
+    // stage merger segfaults if stage reordering is not run beforehand
+    CompilerUtil::runGroup(PassGroup::StageMerger, context_,
+                           stencilInstantiationMap.begin()->second);
 
-    auto stencilInstantiationMap =
-        compiler_.optimize(compiler_.lowerToIIR(sir), dawn::DawnCompiler::defaultPassGroups());
     // Report diagnostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
