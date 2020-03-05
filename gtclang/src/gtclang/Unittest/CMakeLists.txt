@@ -30,8 +30,8 @@ add_library(GTClangUnittest
   GTClang.h
   UnittestEnvironment.cpp
   UnittestEnvironment.h
-  UnittestStmtSimplifier.h
-  UnittestStmtSimplifier.cpp
+  StmtSimplifier.h
+  StmtSimplifier.cpp
   IRSplitter.cpp
   IRSplitter.h
   ParsingComparison.h
