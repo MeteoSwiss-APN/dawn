@@ -162,17 +162,19 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
   // required passes to have proper, parallelized IR
-  optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+  optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
   optimizer.pushBackPass<PassMultiStageSplitter>(
       options_.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
+  optimizer.pushBackPass<PassTemporaryType>();
+  optimizer.pushBackPass<PassLocalVarType>();
+  optimizer.pushBackPass<PassRemoveScalars>();
   optimizer.pushBackPass<PassStageSplitter>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
   optimizer.pushBackPass<PassComputeStageExtents>();
   optimizer.pushBackPass<PassSetSyncStage>();
   // validation checks after parallelisation
-  optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassValidation>();
 
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
@@ -264,11 +266,13 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     case PassGroup::StageMerger:
       // merging requires the stage graph
       optimizer.pushBackPass<PassSetStageGraph>();
+      optimizer.pushBackPass<PassSetDependencyGraph>();
       // running the actual pass
       optimizer.pushBackPass<PassStageMerger>();
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
+      optimizer.pushBackPass<PassRemoveScalars>();
       // modify stages and their extents ...
       optimizer.pushBackPass<PassComputeStageExtents>();
       // and changes their dependencies
@@ -281,14 +285,11 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       // this should not affect the temporaries but since we're touching them it would probably be a
       // safe idea
       optimizer.pushBackPass<PassTemporaryType>();
-      optimizer.pushBackPass<PassLocalVarType>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::Inlining:
-      optimizer.pushBackPass<PassInlining>(
-          (getOptions().Inlining || getOptions().TmpToStencilFunction),
-          PassInlining::InlineStrategy::ComputationsOnTheFly);
+      optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::ComputationsOnTheFly);
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
@@ -334,12 +335,12 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       DAWN_ASSERT_MSG(false, "The parallel group is only valid for lowering to IIR.");
     }
   }
-
   if(options_.Backend == "cuda" || options_.SerializeIIR) {
-    optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::ComputationsOnTheFly);
+    optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::ComputationsOnTheFly);
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
+
   //===-----------------------------------------------------------------------------------------
 
   int i = 0;
