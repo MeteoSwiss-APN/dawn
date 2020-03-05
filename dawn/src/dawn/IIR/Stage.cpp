@@ -325,16 +325,6 @@ std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitter
   return newStages;
 }
 
-std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
-                                                 std::deque<ast::LocationType>&& locTypes) {
-  DAWN_ASSERT(splitterIndices.size() == locTypes.size() - 1);
-  auto newStages = split(splitterIndices);
-  for(std::size_t i = 0; i < newStages.size(); ++i) {
-    newStages[i]->setLocationType(locTypes[i]);
-  }
-  return newStages;
-}
-
 void Stage::updateFromChildren() {
   updateGlobalVariablesInfo();
 

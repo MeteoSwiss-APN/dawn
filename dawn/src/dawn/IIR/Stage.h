@@ -213,14 +213,6 @@ public:
   std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices,
                                             std::deque<DependencyGraphAccesses>&& graphs);
 
-  /// @brief Split the stage at the given indices into separate stages and assigns the location
-  /// types.
-  ///
-  /// If a vector of graphs is provided, it will be assigned to the new stages.
-  /// @return New stages
-  std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices,
-                                            std::deque<ast::LocationType>&& locationTypes);
-
   /// @brief Get the extent of the stage
   /// @{
   Extents const& getExtents() const { return derivedInfo_.extents_; }

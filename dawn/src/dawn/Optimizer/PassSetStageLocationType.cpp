@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "PassSplitStageByLocationType.h"
+#include "PassSetStageLocationType.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
@@ -96,37 +96,15 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
 
 } // namespace
 
-bool PassSplitStageByLocationType::run(
+bool PassSetStageLocationType::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  for(const auto& multiStage : iterateIIROver<iir::MultiStage>(*stencilInstantiation->getIIR())) {
-    for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();) {
-      iir::Stage& stage = (**stageIt);
-      iir::DoMethod& doMethod = stage.getSingleDoMethod();
-      // TODO: change all deques to vectors otherwise we'll have O(n^2)
-      std::deque<int> splitterIndices;
-      std::deque<ast::LocationType> locationTypes;
-      for(std::size_t i = 0; i < doMethod.getAST().getStatements().size(); ++i) {
-        // auto locType = DeduceLocationType(stencilInstantiation->getMetaData())(
-        //     doMethod.getAST().getStatements()[i]);
-        auto locType = deduceLocationType(doMethod.getAST().getStatements()[i],
-                                          stencilInstantiation->getMetaData());
-        locationTypes.push_back(locType);
-
-        if(i == doMethod.getAST().getStatements().size() - 1) // TODO fix this pattern
-          break;
-        splitterIndices.push_back(i);
-      }
-
-      if(!splitterIndices.empty()) {
-        auto newStages = stage.split(splitterIndices, std::move(locationTypes));
-        stageIt = multiStage->childrenErase(stageIt);
-        stageIt = multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
-                                             std::make_move_iterator(newStages.end()));
-        std::advance(stageIt, newStages.size());
-      } else {
-        // TODO set location type
-        ++stageIt;
-      }
+  for(const auto& stage : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
+    iir::DoMethod& doMethod = stage->getSingleDoMethod();
+    for(const auto& stmt : doMethod.getAST().getStatements()) {
+      // auto locType = DeduceLocationType(stencilInstantiation->getMetaData())(
+      //     doMethod.getAST().getStatements()[i]);
+      auto locType = deduceLocationType(stmt, stencilInstantiation->getMetaData());
+      stage->setLocationType(locType);
     }
   }
 
