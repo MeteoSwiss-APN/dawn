@@ -72,7 +72,11 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
       }
     } else if(const std::shared_ptr<iir::StencilFunCallExpr> stencilFunCallExpr =
                   std::dynamic_pointer_cast<iir::StencilFunCallExpr>(exprStmt->getExpr())) {
-      // TODO support function call
+      const auto& fun = metaInformation.getStencilFunctionInstantiation(stencilFunCallExpr);
+      DAWN_ASSERT(fun);
+      const auto& ast = fun->getDoMethod()->getAST();
+      DAWN_ASSERT(ast.getStatements().size() != 0);
+      return deduceLocationType(ast.getStatements()[0], metaInformation);
     }
   } else if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
 
