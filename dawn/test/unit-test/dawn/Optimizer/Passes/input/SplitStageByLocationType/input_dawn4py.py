@@ -161,6 +161,61 @@ def main(args: argparse.Namespace):
     f.write(MessageToJson(sir))
     f.close()
 
+    body_ast = sir_utils.make_ast(
+        [
+            sir_utils.make_var_decl_stmt(
+                sir_utils.make_type(sir_utils.BuiltinType.Float),
+                "out_var_cell"),
+            sir_utils.make_var_decl_stmt(
+                sir_utils.make_type(sir_utils.BuiltinType.Float),
+                "out_var_edge"),
+            sir_utils.make_if_stmt(sir_utils.make_expr_stmt(sir_utils.make_var_access_expr("out_var_cell")), sir_utils.make_block_stmt(sir_utils.make_assignment_stmt(
+                sir_utils.make_var_access_expr("out_var_cell"),
+                sir_utils.make_field_access_expr("in_cell"),
+                "=",
+            ))),
+            sir_utils.make_if_stmt(sir_utils.make_expr_stmt(sir_utils.make_var_access_expr("out_var_edge")), sir_utils.make_block_stmt(sir_utils.make_assignment_stmt(
+                sir_utils.make_var_access_expr("out_var_edge"),
+                sir_utils.make_field_access_expr("in_edge"),
+                "=",
+            ))),
+        ]
+    )
+
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
+
+    sir = sir_utils.make_sir(
+        OUTPUT_FILE,
+        SIR.GridType.Value("Unstructured"),
+        [
+            sir_utils.make_stencil(
+                OUTPUT_NAME,
+                sir_utils.make_ast([vertical_region_stmt]),
+                [
+                    sir_utils.make_field(
+                        "in_cell",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "in_edge",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Edge")], 1
+                        ),
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    # output SIR to file
+    f = open("split_stage_by_location_type_test_stencil_03.sir", "w")
+    f.write(MessageToJson(sir))
+    f.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

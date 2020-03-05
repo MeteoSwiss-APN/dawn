@@ -31,27 +31,61 @@
 
 namespace dawn {
 namespace {
-// class DeduceLocationType : public iir::ASTVisitor {
-// private:
-//   iir::StencilMetaInformation const& metaInformation_;
-//   std::optional<ast::LocationType> result_;
+class DeduceLocationType : public iir::ASTVisitor {
+private:
+  iir::StencilMetaInformation const& metaInformation_;
+  std::optional<ast::LocationType> result_;
 
-// public:
-//   DeduceLocationType(iir::StencilMetaInformation const& metaInformation)
-//       : metaInformation_(metaInformation) {}
+public:
+  DeduceLocationType(iir::StencilMetaInformation const& metaInformation)
+      : metaInformation_(metaInformation) {}
 
-//   ast::LocationType operator()(const std::shared_ptr<iir::Stmt>& stmt) {
-//     stmt->accept(*this);
-//     DAWN_ASSERT_MSG(result_.has_value(), "Couldn't deduce location type.");
-//     return *result_;
-//   }
+  ast::LocationType operator()(const std::shared_ptr<iir::Stmt>& stmt) {
+    stmt->accept(*this);
+    DAWN_ASSERT_MSG(result_.has_value(), "Couldn't deduce location type.");
+    return *result_;
+  }
+  // Example:
+  // ```
+  // field(vertices) denseL;
+  // field(edges, e->c->v) sparseR;
+  // ...
+  // lhs = denseL + sparseR
+  // if(denseL + sparseR) {
+  //  ... // here we allow only on edges, on vertices, on e->c->v
+  // }
+  // ```
+  // Result of expression (= iteration space) is sparse dimension: e->c->v
+  // CODE GENERATE TO
+  // parfor(e : edges)
+  //    for(v: e->c->v)
+  //        if(denseL(v) + sparseR(e, ++i)) {
+  //              ...
+  //        }
+  // ============
+  // parfor(e,v : edges,vertices)
+  // ============
+  // parfor(e : edges)
+  //    for(v: e->c->v)
+  //        if(denseL(v) + sparseR(e, ++i)) {
+  //              ...
+  //        }
+  //    for(v: e->c->v)
+  //        denseL(v) = sparseR(e, ++i)
 
-//   // TODO: consider IF case, function call
+  void visit(binaryop expr) {
+    visit(left);
+    visit(right);
+  }
 
-//   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-//     result_ = metaInformation_.getDenseLocationTypeFromAccessID(iir::getAccessID(expr));
-//   }
-// };
+  void visit(reduction expr) { expr.lhsLocatintype }
+
+  // TODO: consider IF case, function call
+
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+    result_ = metaInformation_.getDenseLocationTypeFromAccessID(iir::getAccessID(expr));
+  }
+};
 
 ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
                                      iir::StencilMetaInformation const& metaInformation) {
@@ -72,6 +106,9 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
     }
   } else if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
 
+    return metaInformation.getLocalVariableDataFromAccessID(iir::getAccessID(varDeclStmt))
+        .getLocationType();
+  } else if(const auto& ifStmt = std::dynamic_pointer_cast<iir::IfStmt>(stmt)) {
     return metaInformation.getLocalVariableDataFromAccessID(iir::getAccessID(varDeclStmt))
         .getLocationType();
   }
