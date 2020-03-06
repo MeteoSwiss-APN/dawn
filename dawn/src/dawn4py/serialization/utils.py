@@ -595,6 +595,39 @@ def make_fun_call_expr(callee: str, arguments: List[ExprType]) -> FunCallExpr:
     return expr
 
 
+
+
+# message StencilFunctionArg {
+#   // One of Field, Direction or Offset
+#   oneof Arg {
+#     Field field_value = 1;
+#     Direction direction_value = 2;
+#     Offset offset_value = 3;
+#   }
+# }
+def make_stencil_function_arg():
+    if isinstance(expr, UnaryOperator):
+        wrapped_expr.unary_operator.CopyFrom(expr)
+
+# message StencilFunction {
+#   // Name of the stencil function
+#   string name = 5;
+
+#   // Source location of the stencil function
+#   dawn.proto.statements.SourceLocation loc = 4;
+
+#   // Stencil body ASTs
+#   repeated dawn.proto.statements.AST asts = 1;
+
+#   // Associated intervals of the AST
+#   repeated dawn.proto.statements.Interval intervals = 2;
+
+#   // Fields referenced by this stencil
+#   repeated dawn.proto.statements.StencilFunctionArg arguments = 3;
+# }
+
+def make_stencil_function(name: str, asts: List[AST], intervals: List[Interval], arguments: List[]):
+
 def make_stencil_fun_call_expr(callee: str, arguments: List[ExprType]) -> StencilFunCallExpr:
     """ Create a StencilFunCallExpr
 

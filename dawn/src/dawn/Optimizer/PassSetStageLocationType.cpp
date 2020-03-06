@@ -24,6 +24,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Support/Logging.h"
 #include "dawn/Support/Unreachable.h"
 #include <deque>
 #include <iterator>
@@ -32,27 +33,6 @@
 
 namespace dawn {
 namespace {
-// class DeduceLocationType : public iir::ASTVisitor {
-// private:
-//   iir::StencilMetaInformation const& metaInformation_;
-//   std::optional<ast::LocationType> result_;
-
-// public:
-//   DeduceLocationType(iir::StencilMetaInformation const& metaInformation)
-//       : metaInformation_(metaInformation) {}
-
-//   ast::LocationType operator()(const std::shared_ptr<iir::Stmt>& stmt) {
-//     stmt->accept(*this);
-//     DAWN_ASSERT_MSG(result_.has_value(), "Couldn't deduce location type.");
-//     return *result_;
-//   }
-
-//   // TODO: consider IF case, function call
-
-//   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-//     result_ = metaInformation_.getDenseLocationTypeFromAccessID(iir::getAccessID(expr));
-//   }
-// };
 
 ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
                                      iir::StencilMetaInformation const& metaInformation) {
@@ -89,10 +69,10 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
       return deduceLocationType(ifStmt->getElseStmt()->getChildren()[0], metaInformation);
     }
   }
-  dawn_unreachable("Unsupported statement");
+  DAWN_LOG(ERROR) << "Couldn't deduce location type for statement at line "
+                  << stmt->getSourceLocation() << ".";
+  dawn_unreachable("Couldn't deduce location type.");
 }
-
-// TODO check if statements are supported (same as PassRemoveScalars)
 
 } // namespace
 
@@ -100,12 +80,11 @@ bool PassSetStageLocationType::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   for(const auto& stage : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
     iir::DoMethod& doMethod = stage->getSingleDoMethod();
-    for(const auto& stmt : doMethod.getAST().getStatements()) {
-      // auto locType = DeduceLocationType(stencilInstantiation->getMetaData())(
-      //     doMethod.getAST().getStatements()[i]);
-      auto locType = deduceLocationType(stmt, stencilInstantiation->getMetaData());
-      stage->setLocationType(locType);
-    }
+    const auto& stmts = doMethod.getAST().getStatements();
+    DAWN_ASSERT_MSG(stmts.size() == 1, "Only one statement allowed.");
+
+    auto locType = deduceLocationType(stmts[0], stencilInstantiation->getMetaData());
+    stage->setLocationType(locType);
   }
 
   return true;

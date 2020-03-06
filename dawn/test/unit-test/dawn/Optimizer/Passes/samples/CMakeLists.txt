@@ -12,5 +12,4 @@ function(add_dawn4py_target)
     )
 endfunction()
 
-add_dawn4py_target(NAME GenerateSplitStageByLocationType-input SCRIPT input_dawn4py.py)
-message(STATUS "${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}")
+add_dawn4py_target(NAME GenerateSetLocationTypeInput SCRIPT SetLocationType.py)

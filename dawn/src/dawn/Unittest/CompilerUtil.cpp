@@ -155,6 +155,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
     addPass<dawn::PassStageSplitter>(context, passes);
     addPass<dawn::PassTemporaryType>(context, passes);
+    // TODO: update this (missing: PassLocalVarType, PassRemoveScalars, ...)
     addPass<dawn::PassComputeStageExtents>(context, passes);
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
