@@ -12,8 +12,8 @@
  *
 \*===------------------------------------------------------------------------------------------===*/
 
-#ifndef DAWN_TEST_UNITTEST_DAWN_OPTIMIZER_PASSES_TESTENVIRONMENT_H
-#define DAWN_TEST_UNITTEST_DAWN_OPTIMIZER_PASSES_TESTENVIRONMENT_H
+#ifndef DAWN_TEST_UNITTEST_DAWN_OPTIMIZER_TESTENVIRONMENT_H
+#define DAWN_TEST_UNITTEST_DAWN_OPTIMIZER_TESTENVIRONMENT_H
 
 #include <gtest/gtest.h>
 
