@@ -19,7 +19,7 @@
 #include "dawn/SIR/SIR.h"
 #include <memory>
 
-namespace dawn {
+namespace gtclang {
 
 namespace sirgen {
 
@@ -108,8 +108,6 @@ std::shared_ptr<dawn::sir::StencilFunCallExpr> sfcall(const std::string& calee);
 std::shared_ptr<dawn::sir::StencilFunArgExpr> arg(int direction, int offset, int argumentIndex);
 std::shared_ptr<dawn::sir::VarAccessExpr> var(const std::string& name,
                                               std::shared_ptr<dawn::sir::Expr> index = nullptr);
-std::shared_ptr<dawn::sir::VarAccessExpr> global(const std::string& name,
-                                                 std::shared_ptr<dawn::sir::Expr> index = nullptr);
 std::shared_ptr<dawn::sir::FieldAccessExpr> field(const std::string& name);
 std::shared_ptr<dawn::sir::FieldAccessExpr>
 field(const std::string& name, dawn::Array3i offset,
@@ -119,15 +117,9 @@ std::shared_ptr<dawn::sir::LiteralAccessExpr>
 lit(const std::string& value, dawn::BuiltinTypeID builtinType = dawn::BuiltinTypeID::Integer);
 std::shared_ptr<dawn::sir::LiteralAccessExpr>
 lit(const char* value, dawn::BuiltinTypeID builtinType = dawn::BuiltinTypeID::Integer);
-template <typename T>
-std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(T&& value) {
-  return std::make_shared<dawn::sir::LiteralAccessExpr>(
-      std::to_string(std::forward<T>(value)),
-      dawn::sir::Value::typeToBuiltinTypeID(
-          dawn::sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
-}
+
 /// @}
 
 } // namespace sirgen
 
-} // namespace dawn
+} // namespace gtclang

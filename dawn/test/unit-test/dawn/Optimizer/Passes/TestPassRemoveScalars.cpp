@@ -15,14 +15,14 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Unittest/ASTConstructionAliases.h"
 #include "dawn/Unittest/IIRBuilder.h"
-// #include "dawn/Unittest/UnittestStmtSimplifier.h"
 #include "dawn/Unittest/UnittestUtils.h"
 
 #include <gtest/gtest.h>
 
 using namespace dawn;
-// using namespace sirgen;
+using namespace astgen;
 
 namespace {
 
