@@ -21,6 +21,8 @@
 #include <fstream>
 #include <memory>
 
+enum class SerializationFormat { Byte, Json };
+
 // toString is used because #DEFAULT_VALUE in the options does not work consistently for both string
 // and non-string values
 template <typename T>
@@ -81,10 +83,13 @@ int main(int argc, char* argv[]) {
   dawn::DawnCompiler compiler(dawnOptions);
 
   std::shared_ptr<dawn::iir::StencilInstantiation> internalIR;
+
+  SerializationFormat format = SerializationFormat::Byte;
   {
     try {
       internalIR =
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+      format = SerializationFormat::Byte;
     } catch(...) {
       // Do nothing
     }
@@ -93,10 +98,20 @@ int main(int argc, char* argv[]) {
     try {
       internalIR =
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
+      SerializationFormat::Json;
     } catch(...) {
       // Exhausted possibilities, so throw
       throw std::runtime_error("Cannot deserialize input");
     }
+  }
+
+  // Deserialize again, only this time do not catch exceptions
+  if(format == SerializationFormat::Byte) {
+    internalIR =
+        dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+  } else {
+    internalIR =
+        dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
   }
 
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap{

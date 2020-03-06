@@ -28,6 +28,7 @@
 #include <string>
 
 enum class SerializationFormat { Byte, Json };
+enum class IRType { SIR, IIR };
 
 // toString is used because #DEFAULT_VALUE in the options does not work consistently for both string
 // and non-string values
@@ -140,8 +141,10 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<dawn::SIR> stencilIR = nullptr;
   std::shared_ptr<dawn::iir::StencilInstantiation> internalIR = nullptr;
 
-  SerializationFormat format = SerializationFormat::Json;
+  SerializationFormat format = SerializationFormat::Byte;
+
   // Try SIR first
+  IRType type = IRType::SIR;
   {
     try {
       stencilIR =
@@ -162,6 +165,7 @@ int main(int argc, char* argv[]) {
   }
   // Then try IIR
   if(!stencilIR) {
+    type = IRType::IIR;
     try {
       internalIR =
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
@@ -176,9 +180,30 @@ int main(int argc, char* argv[]) {
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
       format = SerializationFormat::Json;
     } catch(...) {
-      // Exhausted possibilities, so throw
-      throw std::runtime_error("Cannot deserialize input");
+      // Do nothing
     }
+  }
+
+  // Deserialize again, only this time do not catch exceptions
+  switch(type) {
+  case IRType::SIR: {
+    if(format == SerializationFormat::Byte) {
+      stencilIR =
+          dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Byte);
+    } else {
+      stencilIR =
+          dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Json);
+    }
+  }
+  case IRType::IIR: {
+    if(format == SerializationFormat::Byte) {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+    } else {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
+    }
+  }
   }
 
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
@@ -189,7 +214,7 @@ int main(int argc, char* argv[]) {
     stencilInstantiationMap.emplace("restoredIIR", internalIR);
   }
 
-  // Call optimizer passes
+  // Call optimizer groups
   optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
 
   if(optimizedSIM.size() > 1) {
