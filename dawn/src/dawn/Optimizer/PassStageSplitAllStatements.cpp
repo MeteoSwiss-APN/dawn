@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "PassSplitStageFineGrained.h"
+#include "PassStageSplitAllStatements.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
@@ -23,7 +23,7 @@
 
 namespace dawn {
 
-bool PassSplitStageFineGrained::run(
+bool PassStageSplitAllStatements::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   for(const auto& multiStage : iterateIIROver<iir::MultiStage>(*stencilInstantiation->getIIR())) {
     for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();

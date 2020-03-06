@@ -1,0 +1,32 @@
+{
+ "metadata": {
+  "accessIDToName": {},
+  "accessIDToType": {},
+  "literalIDToName": {},
+  "fieldAccessIDs": [],
+  "APIFieldIDs": [],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {},
+  "idToStencilCall": {},
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": -1,
+   "Column": -1
+  },
+  "stencilName": "generated"
+ },
+ "internalIR": {
+  "gridType": "Unstructured",
+  "globalVariableToValue": {},
+  "stencils": [],
+  "controlFlowStatements": [],
+  "boundaryConditions": []
+ },
+ "filename": "../input/test_stage_split_all_statements_no_stmt.sir"
+}

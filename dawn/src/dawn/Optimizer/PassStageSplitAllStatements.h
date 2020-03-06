@@ -32,10 +32,10 @@ namespace dawn {
 /// - statement/stage reordering is simple (only on stages; not statements between stages)
 /// - merging after reordering is straight-forward
 // TODO update description
-class PassSplitStageFineGrained : public Pass {
+class PassStageSplitAllStatements : public Pass {
 public:
-  PassSplitStageFineGrained(OptimizerContext& context)
-      : Pass(context, "PassSplitStageFineGrained") {}
+  PassStageSplitAllStatements(OptimizerContext& context)
+      : Pass(context, "PassStageSplitAllStatements") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

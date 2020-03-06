@@ -33,6 +33,7 @@ add_executable(${executable}
   TestPassTemporaryType.cpp
   TestTemporaryToFunction.cpp
   TestPassSetStageLocationType.cpp
+  TestPassStageSplitAllStatements.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})

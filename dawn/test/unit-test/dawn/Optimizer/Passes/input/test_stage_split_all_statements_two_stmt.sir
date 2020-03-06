@@ -1,0 +1,57 @@
+{
+  "gridType": "Unstructured",
+  "filename": "../input/test_stage_split_all_statements_two_stmt.sir",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "varDeclStmt": {
+                                "type": {
+                                  "builtinType": {
+                                    "typeId": "Integer"
+                                  }
+                                },
+                                "name": "a",
+                                "op": "="
+                              }
+                            },
+                            {
+                              "varDeclStmt": {
+                                "type": {
+                                  "builtinType": {
+                                    "typeId": "Integer"
+                                  }
+                                },
+                                "name": "b",
+                                "op": "="
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "generated"
+    }
+  ]
+}

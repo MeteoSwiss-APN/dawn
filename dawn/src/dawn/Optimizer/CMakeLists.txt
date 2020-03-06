@@ -59,8 +59,8 @@ add_library(DawnOptimizer
   PassSetStageName.h
   PassSetSyncStage.cpp
   PassSetSyncStage.h
-  PassSplitStageFineGrained.cpp
-  PassSplitStageFineGrained.h
+  PassStageSplitAllStatements.cpp
+  PassStageSplitAllStatements.h
   PassSSA.cpp
   PassSSA.h
   PassStageMerger.cpp

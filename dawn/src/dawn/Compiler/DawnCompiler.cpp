@@ -40,9 +40,9 @@
 #include "dawn/Optimizer/PassSetStageLocationType.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassSetSyncStage.h"
-#include "dawn/Optimizer/PassSplitStageFineGrained.h"
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
+#include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
@@ -172,7 +172,7 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
   if(stencilIR->GridType == ast::GridType::Unstructured) {
-    optimizer.pushBackPass<PassSplitStageFineGrained>();
+    optimizer.pushBackPass<PassStageSplitAllStatements>();
     optimizer.pushBackPass<PassSetStageLocationType>();
   } else {
     optimizer.pushBackPass<PassStageSplitter>();

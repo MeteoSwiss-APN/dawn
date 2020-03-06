@@ -21,10 +21,9 @@
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSetStageLocationType.h"
-#include "dawn/Optimizer/PassSplitStageFineGrained.h"
+#include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Unittest/CompilerUtil.h"
-#include "dawn/Unittest/UnittestStmtSimplifier.h"
 #include "dawn/Unittest/UnittestUtils.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
@@ -33,7 +32,6 @@
 #include <memory>
 
 using namespace dawn;
-using namespace sirgen;
 
 namespace {
 
@@ -51,7 +49,7 @@ protected:
 
     CompilerUtil::runPass<dawn::PassLocalVarType>(context_, instantiation_);
     CompilerUtil::runPass<dawn::PassRemoveScalars>(context_, instantiation_);
-    CompilerUtil::runPass<dawn::PassSplitStageFineGrained>(context_, instantiation_);
+    CompilerUtil::runPass<dawn::PassStageSplitAllStatements>(context_, instantiation_);
 
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSetStageLocationType>(context_, instantiation_));
   }
