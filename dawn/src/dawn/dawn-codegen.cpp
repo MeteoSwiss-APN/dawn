@@ -21,26 +21,29 @@
 #include <fstream>
 #include <memory>
 
+// toString is used because #DEFAULT_VALUE in the options does not work consistently for both string
+// and non-string values
 template <typename T>
 std::string toString(const T& t) {
   return std::to_string(t);
 }
-
 std::string toString(const char* t) { return t; }
-
 std::string toString(const std::string& t) { return t; }
 
 int main(int argc, char* argv[]) {
   cxxopts::Options options("dawn-codegen", "Code generation for the Dawn DSL compiler toolchain");
+  options.positional_help("[IIR file. If unset, reads from stdin]");
 
   // clang-format off
   options.add_options()
     ("i,input", "Input IIR file. If unset, uses stdin.", cxxopts::value<std::string>())
-    ("f,format", "Input IIR format [json, binary].", cxxopts::value<std::string>()->default_value("json"))
     ("o,out", "Output filename. If unset, writes code to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect code to file.")
-    ("b,backend", "Backend code generator: [gridtools|gt, c++-naive|naive, cxx-naive-ico|naive-ico, cuda, cxx-opt].", cxxopts::value<std::string>()->default_value("c++-naive"))
-    ("h,help", "Display usage.")
+    ("b,backend", "Backend code generator: [gridtools|gt, c++-naive|naive, cxx-naive-ico|naive-ico, cuda, cxx-opt].",
+        cxxopts::value<std::string>()->default_value("c++-naive"))
+    ("h,help", "Display usage.");
+
+    options.add_options("CodeGen")
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   (OPTION, HELP, cxxopts::value<TYPE>()->default_value(toString(DEFAULT_VALUE)))
 #include "dawn/CodeGen/Options.inc"
@@ -48,6 +51,7 @@ int main(int argc, char* argv[]) {
     ;
   // clang-format on
 
+  // This is how the positional argument is specified
   options.parse_positional({"input"});
 
   const int numArgs = argc;
@@ -60,7 +64,7 @@ int main(int argc, char* argv[]) {
 
   // Get input = string
   std::string input;
-  if(result.count("input")) {
+  if(result.count("input") > 0) {
     std::ifstream t(result["input"].as<std::string>());
     input.insert(input.begin(), (std::istreambuf_iterator<char>(t)),
                  std::istreambuf_iterator<char>());
@@ -76,14 +80,28 @@ int main(int argc, char* argv[]) {
   dawnOptions.Backend = result["backend"].as<std::string>();
   dawn::DawnCompiler compiler(dawnOptions);
 
-  const std::string formatString = result["format"].as<std::string>();
-  const dawn::IIRSerializer::Format format = formatString == "json"
-                                                 ? dawn::IIRSerializer::Format::Json
-                                                 : dawn::IIRSerializer::Format::Byte;
-  std::shared_ptr<dawn::iir::StencilInstantiation> internalIR =
-      dawn::IIRSerializer::deserializeFromString(input, format);
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
-  stencilInstantiationMap.emplace("restoredIIR", internalIR);
+  std::shared_ptr<dawn::iir::StencilInstantiation> internalIR;
+  {
+    try {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+    } catch(...) {
+      // Do nothing
+    }
+  }
+  if(!internalIR) {
+    try {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
+    } catch(...) {
+      // Exhausted possibilities, so throw
+      throw std::runtime_error("Cannot deserialize input");
+    }
+  }
+
+  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap{
+      {"restoredIIR", internalIR}};
+
   std::unique_ptr<dawn::codegen::TranslationUnit> translationUnit =
       compiler.generate(stencilInstantiationMap);
 

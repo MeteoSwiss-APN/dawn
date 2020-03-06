@@ -723,6 +723,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
   switch(kind) {
@@ -735,7 +736,7 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   }
   case dawn::IIRSerializer::Format::Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
-      throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
+      throw std::runtime_error("cannot deserialize StencilInstantiation");
     break;
   }
   default:

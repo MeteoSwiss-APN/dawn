@@ -20,42 +20,26 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Json.h"
+#include "dawn/Support/Logging.h"
 
 #include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
 
-enum class IRType { SIR, IIR };
+enum class SerializationFormat { Byte, Json };
 
+// toString is used because #DEFAULT_VALUE in the options does not work consistently for both string
+// and non-string values
 template <typename T>
 std::string toString(const T& t) {
   return std::to_string(t);
 }
-
 std::string toString(const char* t) { return t; }
-
 std::string toString(const std::string& t) { return t; }
 
-// Parallel,
-// SSA,
-// PrintStencilGraph,
-// SetStageName,
-// StageReordering,
-// StageMerger,
-// TemporaryMerger,
-// Inlining,
-// IntervalPartitioning,
-// TmpToStencilFunction,
-// SetNonTempCaches,
-// SetCaches,
-// SetBlockSize,
-// DataLocalityMetric
-
 dawn::PassGroup parsePassGroup(const std::string& passGroup) {
-  if(passGroup == "parallel")
-    return dawn::PassGroup::Parallel;
-  else if(passGroup == "SSA" || passGroup == "ssa")
+  if(passGroup == "SSA" || passGroup == "ssa")
     return dawn::PassGroup::SSA;
   else if(passGroup == "PrintStencilGraph" || passGroup == "print-stencil-graph")
     return dawn::PassGroup::PrintStencilGraph;
@@ -91,16 +75,20 @@ dawn::PassGroup parsePassGroup(const std::string& passGroup) {
 
 int main(int argc, char* argv[]) {
   cxxopts::Options options("dawn-opt", "Optimizer for the Dawn DSL compiler toolchain");
+  options.positional_help("[SIR or IIR file. If unset, reads from stdin]");
 
   // clang-format off
   options.add_options()
-    ("i,input", "Input file. If unset, reads from stdin.", cxxopts::value<std::string>())
-    ("f,format", "Input SIR format [json,binary].", cxxopts::value<std::string>()->default_value("json"))
-    ("t,type", "Type of input [sir,iir]. Deduced if --format=json.", cxxopts::value<std::string>()->default_value("sir"))
+    ("input", "Input file. If unset, reads from stdin.", cxxopts::value<std::string>())
     ("o,out", "Output IIR filename. If unset, writes IIR to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect IIR.")
-    ("p,pass-groups", "Ordered list of pass groups to run. See DawnCompiler.h for list.", cxxopts::value<std::vector<std::string>>())
-    ("h,help", "Display usage.")
+    ("default-groups", "Add default groups before those in --pass-groups.")
+    ("p,pass-groups",
+        "Comma-separated ordered list of pass groups to run. See DawnCompiler.h for list. If unset, runs the basic, default groups.",
+        cxxopts::value<std::vector<std::string>>()->default_value({}))
+    ("h,help", "Display usage.");
+
+    options.add_options("Pass")
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   (OPTION, HELP, cxxopts::value<TYPE>()->default_value(toString(DEFAULT_VALUE)))
 #include "dawn/Optimizer/Options.inc"
@@ -108,6 +96,7 @@ int main(int argc, char* argv[]) {
     ;
   // clang-format on
 
+  // This is how the positional argument is specified
   options.parse_positional({"input"});
 
   const int numArgs = argc;
@@ -118,7 +107,24 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  // Get input = string
+  // Create a dawn::Options struct for the driver
+  dawn::Options dawnOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  dawnOptions.NAME = result[OPTION].as<TYPE>();
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+  dawn::DawnCompiler compiler(dawnOptions);
+
+  // Determine the list of pass groups to run
+  std::list<dawn::PassGroup> passGroups;
+  if(result.count("pass-groups") == 0 || result.count("default-groups") > 0) {
+    passGroups = dawn::DawnCompiler::defaultPassGroups();
+  }
+  for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
+    passGroups.push_back(parsePassGroup(pg));
+  }
+
+  // Get the input from file or stdin
   std::string input;
   if(result.count("input")) {
     std::ifstream t(result["input"].as<std::string>());
@@ -129,59 +135,75 @@ int main(int argc, char* argv[]) {
     input.insert(input.begin(), begin, end);
   }
 
-  // Determine the type (IIR or SIR)
-  const std::string formatString = result["format"].as<std::string>();
-  IRType type = result["type"].as<std::string>() == "sir" ? IRType::SIR : IRType::IIR;
-  if(formatString == "json") {
-    // Deduce representation type
-    auto json = dawn::json::json::parse(input);
-    if(json.count("internalIR") > 0)
-      type = IRType::IIR;
-  }
-
-  dawn::Options dawnOptions;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  dawnOptions.NAME = result[OPTION].as<TYPE>();
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-  dawn::DawnCompiler compiler(dawnOptions);
-
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> optimizedSIM;
 
-  std::list<dawn::PassGroup> passGroups;
-  if(result.count("pass-groups") == 0) {
-    passGroups = dawn::DawnCompiler::defaultPassGroups();
-  } else {
-    for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
-      passGroups.push_back(parsePassGroup(pg));
+  std::shared_ptr<dawn::SIR> stencilIR = nullptr;
+  std::shared_ptr<dawn::iir::StencilInstantiation> internalIR = nullptr;
+
+  SerializationFormat format = SerializationFormat::Json;
+  // Try SIR first
+  {
+    try {
+      stencilIR =
+          dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Byte);
+      format = SerializationFormat::Byte;
+    } catch(...) {
+      // Do nothing
+    }
+  }
+  if(!stencilIR) {
+    try {
+      stencilIR =
+          dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Json);
+      format = SerializationFormat::Json;
+    } catch(...) {
+      // Do nothing
+    }
+  }
+  // Then try IIR
+  if(!stencilIR) {
+    try {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+      format = SerializationFormat::Byte;
+    } catch(...) {
+      // Do nothing
+    }
+  }
+  if(!internalIR && !stencilIR) {
+    try {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
+      format = SerializationFormat::Json;
+    } catch(...) {
+      // Exhausted possibilities, so throw
+      throw std::runtime_error("Cannot deserialize input");
     }
   }
 
-  // Deserialize
-  if(type == IRType::SIR) {
-    const dawn::SIRSerializer::Format format = formatString == "json"
-                                                   ? dawn::SIRSerializer::Format::Json
-                                                   : dawn::SIRSerializer::Format::Byte;
-    std::shared_ptr<dawn::SIR> stencilIR =
-        dawn::SIRSerializer::deserializeFromString(input, format);
-    auto parallelPos = std::find(passGroups.begin(), passGroups.end(), dawn::PassGroup::Parallel);
-    if(parallelPos != passGroups.end())
-      passGroups.erase(parallelPos);
-    optimizedSIM = compiler.optimize(compiler.lowerToIIR(stencilIR), passGroups);
+  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
+  // Fill map either by lowering or adding the single StencilInstantiation (from IIR)
+  if(stencilIR) {
+    stencilInstantiationMap = compiler.lowerToIIR(stencilIR);
   } else {
-    const dawn::IIRSerializer::Format format = formatString == "json"
-                                                   ? dawn::IIRSerializer::Format::Json
-                                                   : dawn::IIRSerializer::Format::Byte;
-    std::shared_ptr<dawn::iir::StencilInstantiation> internalIR =
-        dawn::IIRSerializer::deserializeFromString(input, format);
-    std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
     stencilInstantiationMap.emplace("restoredIIR", internalIR);
-    optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
+  }
+
+  // Call optimizer passes
+  optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
+
+  if(optimizedSIM.size() > 1) {
+    DAWN_LOG(WARNING) << "More than one StencilInstantiation is not supported in IIR";
   }
 
   for(auto& [name, instantiation] : optimizedSIM) {
-    // TODO Check output format here
-    std::cout << dawn::IIRSerializer::serializeToString(instantiation) << std::endl;
+    dawn::IIRSerializer::Format iirFormat = (format == SerializationFormat::Byte)
+                                                ? dawn::IIRSerializer::Format::Byte
+                                                : dawn::IIRSerializer::Format::Json;
+    if(result.count("out"))
+      dawn::IIRSerializer::serialize(result["out"].as<std::string>(), instantiation, iirFormat);
+    else
+      std::cout << dawn::IIRSerializer::serializeToString(instantiation, iirFormat);
   }
 
   return 0;

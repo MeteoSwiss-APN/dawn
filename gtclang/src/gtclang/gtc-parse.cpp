@@ -35,17 +35,20 @@
 int main(int argc, char* argv[]) {
   cxxopts::Options options("gtc-parse",
                            "Geophysical fluid dynamics DSL frontend for the Dawn toolchain");
-  options.positional_help("InputFile").show_positional_help();
+  options.positional_help("[DSL file. If unset, reads from stdin]");
 
   // clang-format off
   options.add_options()
-    ("f,format", "SIR format [binary,json].", cxxopts::value<std::string>()->default_value("json"))
+    ("i,input", "Input DSL file.", cxxopts::value<std::string>())
+    ("f,format", "Output SIR format [json | byte].", cxxopts::value<std::string>()->default_value("json"))
     ("o,out", "Output SIR filename. If unset, writes SIR to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect SIR.")
-    ("i,input", "Input DSL file.", cxxopts::value<std::string>())
-    ("dump-ast", "Dump the clang AST.", cxxopts::value<bool>()->default_value("false"))
-    ("dump-pp", "Dump the preprocessed file.", cxxopts::value<bool>()->default_value("false"))
     ("h,help", "Display usage.");
+
+  options.add_options()
+    ("dump-ast", "Dump the clang AST.", cxxopts::value<bool>()->default_value("false"))
+    ("dump-pp", "Dump the preprocessed file.", cxxopts::value<bool>()->default_value("false"));
+
   // clang-format on
   options.parse_positional({"input"});
 
@@ -112,19 +115,21 @@ int main(int argc, char* argv[]) {
 
   // Parse format to enumeration
   dawn::SIRSerializer::Format format;
-  if(result["format"].as<std::string>() == "json")
+  const std::string sirFormat = result["format"].as<std::string>();
+  if(sirFormat == "json")
     format = dawn::SIRSerializer::Format::Json;
-  else if(result["format"].as<std::string>() == "byte")
+  else if(sirFormat == "byte")
     format = dawn::SIRSerializer::Format::Byte;
   else
-    throw std::runtime_error("Unknown SIR format");
+    throw std::runtime_error(std::string("Unknown SIR format: ") + sirFormat +
+                             ". Options are [json | byte]");
 
   // Write SIR to stdout or file
   if(result.count("out")) {
     dawn::SIRSerializer::serialize(result["out"].as<std::string>(), returnSIR.get(), format);
   } else {
     const std::string sirString = dawn::SIRSerializer::serializeToString(returnSIR.get(), format);
-    std::cout << sirString << std::endl;
+    std::cout << sirString;
   }
 
   includeChecker.Restore();
