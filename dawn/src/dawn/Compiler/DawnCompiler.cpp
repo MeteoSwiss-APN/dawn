@@ -161,13 +161,13 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
   // required passes to have proper, parallelized IR
-  optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+  optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
   optimizer.pushBackPass<PassMultiStageSplitter>(
       options_.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
-  optimizer.pushBackPass<PassRemoveScalars>();
-  optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassTemporaryType>();
+  optimizer.pushBackPass<PassLocalVarType>();
+  optimizer.pushBackPass<PassRemoveScalars>();
   optimizer.pushBackPass<PassStageSplitter>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
@@ -271,6 +271,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       // since this can change the scope of temporaries ...
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
+      optimizer.pushBackPass<PassRemoveScalars>();
       // modify stages and their extents ...
       optimizer.pushBackPass<PassComputeStageExtents>();
       // and changes their dependencies
@@ -287,9 +288,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::Inlining:
-      optimizer.pushBackPass<PassInlining>(
-          (getOptions().Inlining || getOptions().TmpToStencilFunction),
-          PassInlining::InlineStrategy::ComputationsOnTheFly);
+      optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::ComputationsOnTheFly);
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
@@ -336,7 +335,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     }
   }
   if(options_.Backend == "cuda" || options_.SerializeIIR) {
-    optimizer.pushBackPass<PassInlining>(true, PassInlining::InlineStrategy::ComputationsOnTheFly);
+    optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::ComputationsOnTheFly);
     // validation check
     optimizer.pushBackPass<PassValidation>();
   }
