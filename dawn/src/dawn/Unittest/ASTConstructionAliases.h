@@ -17,6 +17,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Field.h"
+#include "dawn/Support/Type.h"
 
 #include <memory>
 
@@ -37,6 +38,7 @@ namespace astgen {
 
 STMT_CONSTRUCTOR_ALIAS(expr, iir::makeExprStmt)
 STMT_CONSTRUCTOR_ALIAS(ifstmt, iir::makeIfStmt)
+STMT_CONSTRUCTOR_ALIAS(vardecl, iir::makeVarDeclStmt)
 
 EXPR_CONSTRUCTOR_ALIAS(assign, iir::AssignmentExpr)
 EXPR_CONSTRUCTOR_ALIAS(binop, iir::BinaryOperator)
@@ -47,6 +49,11 @@ EXPR_CONSTRUCTOR_ALIAS(lit, iir::LiteralAccessExpr)
 template <typename... Stmts>
 decltype(auto) block(Stmts&&... stmts) {
   return iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts)...});
+}
+
+decltype(auto) vardecl(const std::string& name,
+                       dawn::BuiltinTypeID type = dawn::BuiltinTypeID::Float) {
+  return iir::makeVarDeclStmt(type, name, 0);
 }
 
 template <typename T>

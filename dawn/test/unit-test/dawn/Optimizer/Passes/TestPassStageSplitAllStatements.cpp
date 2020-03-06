@@ -38,24 +38,43 @@ protected:
   std::unique_ptr<OptimizerContext> context_;
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
-  virtual void SetUp() { options_.StageMerger = options_.MergeDoMethods = true; }
-
   void runPass(const std::string& filename) {
     dawn::UIDGenerator::getInstance()->reset();
     instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
-
-    CompilerUtil::write(context_, 0, 100, "test");
 
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageSplitAllStatements>(context_, instantiation_));
   }
 };
 
 TEST_F(TestPassStageSplitAllStatements, NoStmt) {
-  runPass("input/test_stage_split_all_statements_no_stmt.sir");
+  runPass("input/test_stage_split_all_statements_no_stmt.iir");
+
+  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  ASSERT_EQ(1, multistage->getChildren().size());
+  ASSERT_EQ(0, multistage->getChild(0)->getSingleDoMethod().getAST().getStatements().size());
 }
 
 TEST_F(TestPassStageSplitAllStatements, OneStmt) {
-  runPass("input/test_stage_split_all_statements_one_stmt.sir");
+  // var a;
+  runPass("input/test_stage_split_all_statements_one_stmt.iir");
+
+  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  ASSERT_EQ(1, multistage->getChildren().size());
+  ASSERT_EQ(1, multistage->getChild(0)->getSingleDoMethod().getAST().getStatements().size());
+}
+
+TEST_F(TestPassStageSplitAllStatements, TwoStmts) {
+  // var a;
+  // var b;
+  runPass("input/test_stage_split_all_statements_two_stmt.iir");
+
+  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  ASSERT_EQ(2, multistage->getChildren().size());
+  auto firstDoMethod = multistage->getChild(0)->getSingleDoMethod().getAST();
+  ASSERT_EQ(1, firstDoMethod.getStatements().size());
+  ASSERT_EQ(firstDoMethod.getStatements()[0], vardecl("a"));
+  auto secondDoMethod = multistage->getChild(1)->getSingleDoMethod().getAST();
+  ASSERT_EQ(1, secondDoMethod.getStatements().size());
 }
 
 } // namespace

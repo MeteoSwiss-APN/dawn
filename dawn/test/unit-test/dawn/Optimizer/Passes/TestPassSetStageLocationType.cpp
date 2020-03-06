@@ -41,8 +41,6 @@ protected:
   std::unique_ptr<OptimizerContext> context_;
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
-  virtual void SetUp() { options_.StageMerger = options_.MergeDoMethods = true; }
-
   void runPass(const std::string& filename) {
     dawn::UIDGenerator::getInstance()->reset();
     instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);

@@ -30,6 +30,9 @@ bool PassStageSplitAllStatements::run(
         ++stageIt) {
       iir::Stage& stage = (**stageIt);
       iir::DoMethod& doMethod = stage.getSingleDoMethod();
+      if(doMethod.getAST().getStatements().size() == 0) {
+        continue;
+      }
       // TODO: change all deques to vectors otherwise we'll have O(n^2)
       std::deque<int> splitterIndices(doMethod.getAST().getStatements().size() - 1);
       std::iota(splitterIndices.begin(), splitterIndices.end(), 0);
