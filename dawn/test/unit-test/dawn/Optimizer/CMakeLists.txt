@@ -11,5 +11,34 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-add_subdirectory(Passes)
+set(executable ${PROJECT_NAME}UnittestOptimizer)
+add_executable(${executable}
+  TestMain.cpp
+  TestComputeMaxExtent.cpp
+  TestFieldAccessIntervals.cpp
+  TestPassCaching.cpp
+  TestPassComputeStageExtents.cpp
+  TestPassLocalVarType.cpp
+  TestPassIntervalPartitioning.cpp
+  TestPassFieldVersioning.cpp
+  TestPassMultiStageSplitter.cpp
+  TestPassRemoveScalars.cpp
+  TestPassSetCaches.cpp
+  TestPassSetNonTempCaches.cpp
+  TestPassStageMerger.cpp
+  TestPassStageReordering.cpp
+  TestPassTemporaryMerger.cpp
+  TestPassTemporaryType.cpp
+  TestTemporaryToFunction.cpp
+)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
+target_add_dawn_standard_props(${executable})
+target_include_directories(${executable}
+  PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+)
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::"
+  EXTRA_ARGS ${CMAKE_CURRENT_LIST_DIR}
+  DISCOVERY_TIMEOUT 30)

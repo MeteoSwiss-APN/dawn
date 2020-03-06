@@ -26,7 +26,7 @@ using namespace dawn;
 
 namespace {
 
-TEST(ComputeStageExtents, test_stencil_01) {
+TEST(TestComputeStageExtents, test_stencil_01) {
   /*
   vertical_region(k_start, k_end) { out = in[i - 1]; }
   */
@@ -43,7 +43,7 @@ TEST(ComputeStageExtents, test_stencil_01) {
   EXPECT_EQ(stencil->getStage(0)->getExtents(), iir::Extents(ast::cartesian));
 }
 
-TEST(ComputeStageExtents, test_stencil_02) {
+TEST(TestComputeStageExtents, test_stencil_02) {
   /*
   vertical_region(k_start, k_end) {
       mid = in[i - 1];
@@ -64,7 +64,7 @@ TEST(ComputeStageExtents, test_stencil_02) {
   EXPECT_EQ(stencil->getStage(1)->getExtents(), iir::Extents(ast::cartesian));
 }
 
-TEST(ComputeStageExtents, test_stencil_03) {
+TEST(TestComputeStageExtents, test_stencil_03) {
   /*
       vertical_region(k_start, k_end) {
       mid = in;
