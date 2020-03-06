@@ -32,12 +32,12 @@ add_library(GTClangUnittest
   UnittestEnvironment.h
   StmtSimplifier.h
   StmtSimplifier.cpp
-  IRSplitter.cpp
-  IRSplitter.h
   ParsingComparison.h
   ParsingComparison.cpp
   ParsedString.h
   ParsedString.cpp
+  StmtSimplifier.h
+  StmtSimplifier.cpp
 )
 
 target_add_gtclang_standard_props(GTClangUnittest)
