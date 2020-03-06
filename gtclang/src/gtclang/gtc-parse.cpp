@@ -116,13 +116,14 @@ int main(int argc, char* argv[]) {
   // Parse format to enumeration
   dawn::SIRSerializer::Format format;
   const std::string sirFormat = result["format"].as<std::string>();
-  if(sirFormat == "json")
+  if(sirFormat == "json") {
     format = dawn::SIRSerializer::Format::Json;
-  else if(sirFormat == "byte")
+  } else if(sirFormat == "byte") {
     format = dawn::SIRSerializer::Format::Byte;
-  else
+  } else {
     throw std::runtime_error(std::string("Unknown SIR format: ") + sirFormat +
                              ". Options are [json | byte]");
+  }
 
   // Write SIR to stdout or file
   if(result.count("out")) {
