@@ -65,7 +65,7 @@ TEST_F(TestPassSetStageLocationType, CopyFieldsLocationTypes) {
   // out_edge = in_edge;
   // out_vertex = in_vertex;
 
-  runPass("samples/test_set_stage_location_type_copy_fields.sir");
+  runPass("input/test_set_stage_location_type_copy_fields.sir");
 
   auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
 
@@ -75,7 +75,7 @@ TEST_F(TestPassSetStageLocationType, CopyFieldsLocationTypes) {
   auto const& secondStage = multistage->getChild(1);
   ASSERT_EQ(secondStage->getLocationType(), ast::LocationType::Edges);
 
-  auto const& thirdStage = multistage->getChild(3);
+  auto const& thirdStage = multistage->getChild(2);
   ASSERT_EQ(thirdStage->getLocationType(), ast::LocationType::Vertices);
 }
 
@@ -90,27 +90,27 @@ TEST_F(TestPassSetStageLocationType, CopyVarsLocationTypes) {
   // out_var_edge = in_edge;
   // out_var_vertex = in_vertex;
 
-  runPass("samples/test_set_stage_location_type_copy_vars.sir");
+  runPass("input/test_set_stage_location_type_copy_vars.sir");
 
   auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
 
-  const auto& var_decl_cell = multistage->getChild(0);
-  ASSERT_EQ(ast::LocationType::Cells, var_decl_cell->getLocationType());
+  const auto& varDeclCell = multistage->getChild(0);
+  ASSERT_EQ(ast::LocationType::Cells, varDeclCell->getLocationType());
 
-  const auto& var_decl_edge = multistage->getChild(1);
-  ASSERT_EQ(ast::LocationType::Edges, var_decl_edge->getLocationType());
+  const auto& varDeclEdge = multistage->getChild(1);
+  ASSERT_EQ(ast::LocationType::Edges, varDeclEdge->getLocationType());
 
-  const auto& var_decl_vertex = multistage->getChild(2);
-  ASSERT_EQ(ast::LocationType::Vertices, var_decl_vertex->getLocationType());
+  const auto& varDeclVertex = multistage->getChild(2);
+  ASSERT_EQ(ast::LocationType::Vertices, varDeclVertex->getLocationType());
 
-  const auto& assign_cell = multistage->getChild(3);
-  ASSERT_EQ(ast::LocationType::Cells, assign_cell->getLocationType());
+  const auto& assignCell = multistage->getChild(3);
+  ASSERT_EQ(ast::LocationType::Cells, assignCell->getLocationType());
 
-  const auto& assign_edge = multistage->getChild(4);
-  ASSERT_EQ(ast::LocationType::Edges, assign_edge->getLocationType());
+  const auto& assignEdge = multistage->getChild(4);
+  ASSERT_EQ(ast::LocationType::Edges, assignEdge->getLocationType());
 
-  const auto& assign_vertex = multistage->getChild(5);
-  ASSERT_EQ(ast::LocationType::Vertices, assign_vertex->getLocationType());
+  const auto& assignVertex = multistage->getChild(5);
+  ASSERT_EQ(ast::LocationType::Vertices, assignVertex->getLocationType());
 }
 
 TEST_F(TestPassSetStageLocationType, IfStmt) {
@@ -118,15 +118,15 @@ TEST_F(TestPassSetStageLocationType, IfStmt) {
   // var out_var_cell;
   // if(out_var_cell) out_var_cell = in_cell;
 
-  runPass("samples/test_set_stage_location_type_if_stmt.sir");
+  runPass("input/test_set_stage_location_type_if_stmt.sir");
 
   auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
 
-  const auto& var_decl_cell = multistage->getChild(0);
-  ASSERT_EQ(ast::LocationType::Cells, var_decl_cell->getLocationType());
+  const auto& varDeclCell = multistage->getChild(0);
+  ASSERT_EQ(ast::LocationType::Cells, varDeclCell->getLocationType());
 
-  const auto& if_cell = multistage->getChild(1);
-  ASSERT_EQ(ast::LocationType::Cells, if_cell->getLocationType());
+  const auto& ifCell = multistage->getChild(1);
+  ASSERT_EQ(ast::LocationType::Cells, ifCell->getLocationType());
 }
 
 TEST_F(TestPassSetStageLocationType, FunctionCall) {
@@ -137,8 +137,12 @@ TEST_F(TestPassSetStageLocationType, FunctionCall) {
   // fields(cells) out_cell;
   // f(out_cells);
 
-  runPass("samples/test_set_stage_location_type_function_call.sir");
-  // TODO
+  runPass("input/test_set_stage_location_type_function_call.sir");
+
+  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+
+  const auto& funCall = multistage->getChild(0);
+  ASSERT_EQ(ast::LocationType::Cells, funCall->getLocationType());
 }
 
 } // namespace

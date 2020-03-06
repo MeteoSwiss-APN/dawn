@@ -63,6 +63,8 @@ __all__ = [
     "make_fun_call_expr",
     "make_stencil_fun_call_expr",
     "make_stencil_fun_arg_expr",
+    "make_stencil_function_arg",
+    "make_stencil_function",
     "make_var_access_expr",
     "make_field_access_expr",
     "make_literal_access_expr",
@@ -177,8 +179,8 @@ def make_type(builtin_type_or_name, is_const: bool = False, is_volatile: bool = 
         )
     return t
 
-def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
+def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
     """ Create FieldDimensions of cartesian type
 
     :param mask: mask to identify which cartesian dimensions are legal (default is [1, 1, 1])
@@ -202,7 +204,6 @@ def make_field_dimensions_unstructured(
     locations: List[LocationTypeValue],
     mask_k: int,
 ) -> FieldDimensions:
-
     """ Create FieldDimensions of unstructured type
 
     :locations:    a list of location types of the field. first entry is the dense part, additional entries are the (optional) sparse part
@@ -223,12 +224,12 @@ def make_field_dimensions_unstructured(
     dims.mask_k = mask_k
     return dims
 
+
 def make_field(
     name: str,
     dimensions: FieldDimensions,
     is_temporary: bool = False
 ) -> Field:
-
     """ Create a Field
 
     :param name:         Name of the field
@@ -449,7 +450,8 @@ def make_vertical_region_decl_stmt(
     :param vertical_region:   Vertical region.
     """
     stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order, IRange, JRange))
+    stmt.vertical_region.CopyFrom(make_vertical_region(
+        ast, interval, loop_order, IRange, JRange))
     return stmt
 
 
@@ -595,8 +597,6 @@ def make_fun_call_expr(callee: str, arguments: List[ExprType]) -> FunCallExpr:
     return expr
 
 
-
-
 # message StencilFunctionArg {
 #   // One of Field, Direction or Offset
 #   oneof Arg {
@@ -605,28 +605,23 @@ def make_fun_call_expr(callee: str, arguments: List[ExprType]) -> FunCallExpr:
 #     Offset offset_value = 3;
 #   }
 # }
-def make_stencil_function_arg():
-    if isinstance(expr, UnaryOperator):
-        wrapped_expr.unary_operator.CopyFrom(expr)
+def make_stencil_function_arg(arg):
+    result = StencilFunctionArg()
+    if isinstance(arg, Field):
+        result.field_value.CopyFrom(arg)
+    else:
+        raise SIRError("arg type not implemented in dawn4py")
+    return result
 
-# message StencilFunction {
-#   // Name of the stencil function
-#   string name = 5;
 
-#   // Source location of the stencil function
-#   dawn.proto.statements.SourceLocation loc = 4;
+def make_stencil_function(name: str, asts: List[AST], intervals: List[Interval], arguments: List[StencilFunctionArg]):
+    result = StencilFunction()
+    result.name = name
+    result.asts.extend(asts)
+    result.intervals.extend(intervals)
+    result.arguments.extend(arguments)
+    return result
 
-#   // Stencil body ASTs
-#   repeated dawn.proto.statements.AST asts = 1;
-
-#   // Associated intervals of the AST
-#   repeated dawn.proto.statements.Interval intervals = 2;
-
-#   // Fields referenced by this stencil
-#   repeated dawn.proto.statements.StencilFunctionArg arguments = 3;
-# }
-
-def make_stencil_function(name: str, asts: List[AST], intervals: List[Interval], arguments: List[]):
 
 def make_stencil_fun_call_expr(callee: str, arguments: List[ExprType]) -> StencilFunCallExpr:
     """ Create a StencilFunCallExpr
@@ -644,6 +639,7 @@ def make_unstructured_offset(has_offset: bool = False) -> UnstructuredOffset:
     unstructured_offset = UnstructuredOffset()
     unstructured_offset.has_offset = has_offset
     return unstructured_offset
+
 
 def make_stencil_fun_arg_expr(
     direction: Dimension.Direction, offset: int = 0, argument_index: int = -1
@@ -678,6 +674,7 @@ def make_unstructured_field_access_expr(
         expr.unstructured_offset.CopyFrom(horizontal_offset)
     expr.vertical_offset = vertical_offset
     return expr
+
 
 def make_field_access_expr(
     name: str,
@@ -770,19 +767,21 @@ def make_weights(weights) -> List[Weight]:
         proto_weight = Weight()
         if type(weight) is int:
             proto_weight.integer_value = weight
-        elif type(weight) is float: # float in python is 64 bits
+        elif type(weight) is float:  # float in python is 64 bits
             proto_weight.double_value = weight
         elif type(weight) is bool:
             proto_weight.boolean_value = weight
         elif type(weight) is str:
             proto_weight.string_value = weight
-        #TODO: would also be nice to map numpy types
+        # TODO: would also be nice to map numpy types
         else:
-            raise SIRError("cannot create Weight from type {}".format(type(weight)))
+            raise SIRError(
+                "cannot create Weight from type {}".format(type(weight)))
 
         proto_weights.append(proto_weight)
 
     return proto_weights
+
 
 def make_reduction_over_neighbor_expr(
     op: str,
@@ -807,7 +806,7 @@ def make_reduction_over_neighbor_expr(
     expr.init.CopyFrom(make_expr(init))
     expr.lhs_location = lhs_location
     expr.rhs_location = rhs_location
-    if weights is not None and len(weights)!=0:
+    if weights is not None and len(weights) != 0:
         expr.weights.extend(weights)
 
     return expr
@@ -1098,7 +1097,8 @@ class SIRPrinter:
         block = stencil.ast.root.block_stmt
         for stmt in block.statements:
             if stmt.WhichOneof("stmt") == "vertical_region_decl_stmt":
-                self.visit_vertical_region(stmt.vertical_region_decl_stmt.vertical_region)
+                self.visit_vertical_region(
+                    stmt.vertical_region_decl_stmt.vertical_region)
 
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
@@ -1140,9 +1140,12 @@ class SIRPrinter:
     def visit_cartesian_field(self, field):
         str_ = field.name + "("
         dims_ = []
-        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1: dims_.append("i")
-        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1: dims_.append("j")
-        if field.field_dimensions.mask_k == 1: dims_.append("k")
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1:
+            dims_.append("i")
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1:
+            dims_.append("j")
+        if field.field_dimensions.mask_k == 1:
+            dims_.append("k")
         str_ += str(dims_) + ")"
         return str_
 
@@ -1170,7 +1173,8 @@ class SIRPrinter:
         print(self.wrapper.fill(str_), file=self.file)
 
     def visit_sir(self, sir):
-        print(self.wrapper.fill("grid_type['{}']".format(str(sir.gridType))), file=self.file)
+        print(self.wrapper.fill("grid_type['{}']".format(
+            str(sir.gridType))), file=self.file)
         for stencil in sir.stencils:
             self.visit_stencil(stencil)
 
