@@ -16,7 +16,6 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestOptimizer)
 add_executable(${executable}
   TestMain.cpp
-  TestComputeMaxExtent.cpp
   TestFieldAccessIntervals.cpp
   TestPassCaching.cpp
   TestPassComputeStageExtents.cpp
