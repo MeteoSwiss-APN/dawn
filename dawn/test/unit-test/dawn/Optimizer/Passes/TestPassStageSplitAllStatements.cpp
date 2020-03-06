@@ -19,6 +19,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/Type.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -60,7 +61,10 @@ TEST_F(TestPassStageSplitAllStatements, OneStmt) {
 
   auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
   ASSERT_EQ(1, multistage->getChildren().size());
-  ASSERT_EQ(1, multistage->getChild(0)->getSingleDoMethod().getAST().getStatements().size());
+  auto firstDoMethod = multistage->getChild(0)->getSingleDoMethod().getAST();
+  ASSERT_EQ(1, firstDoMethod.getStatements().size());
+  ASSERT_TRUE(firstDoMethod.getStatements()[0]->equals(vardecl("a", BuiltinTypeID::Integer).get(),
+                                                       /*compareData = */ false));
 }
 
 TEST_F(TestPassStageSplitAllStatements, TwoStmts) {
@@ -72,9 +76,12 @@ TEST_F(TestPassStageSplitAllStatements, TwoStmts) {
   ASSERT_EQ(2, multistage->getChildren().size());
   auto firstDoMethod = multistage->getChild(0)->getSingleDoMethod().getAST();
   ASSERT_EQ(1, firstDoMethod.getStatements().size());
-  ASSERT_EQ(firstDoMethod.getStatements()[0], vardecl("a"));
+  ASSERT_TRUE(firstDoMethod.getStatements()[0]->equals(vardecl("a", BuiltinTypeID::Integer).get(),
+                                                       /*compareData = */ false));
   auto secondDoMethod = multistage->getChild(1)->getSingleDoMethod().getAST();
   ASSERT_EQ(1, secondDoMethod.getStatements().size());
+  ASSERT_TRUE(secondDoMethod.getStatements()[0]->equals(vardecl("b", BuiltinTypeID::Integer).get(),
+                                                        /*compareData = */ false));
 }
 
 } // namespace
