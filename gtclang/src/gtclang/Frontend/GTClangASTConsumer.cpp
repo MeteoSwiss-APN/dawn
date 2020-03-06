@@ -137,8 +137,11 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   parentAction_->setSIR(SIR);
 
-  // Compile the SIR using Dawn
+  // Return early if not using dawn (gtc-parse)
+  if(context_->useDawn())
+    return;
 
+  // Compile the SIR using Dawn
   std::list<dawn::PassGroup> PassGroups;
 
   if(context_->getOptions().SSA)

@@ -30,8 +30,6 @@ add_library(GTClangFrontend
   GTClangASTAction.h
   GTClangASTConsumer.cpp
   GTClangASTConsumer.h
-  GTClangASTConsumerParseOnly.cpp
-  GTClangASTConsumerParseOnly.h
   GTClangASTVisitor.cpp
   GTClangASTVisitor.h
   GTClangContext.cpp
