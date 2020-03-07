@@ -723,7 +723,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-
   // Decode the string
   proto::iir::StencilInstantiation protoStencilInstantiation;
   switch(kind) {
