@@ -150,11 +150,14 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().PrintStencilGraph)
     PassGroups.push_back(dawn::PassGroup::PrintStencilGraph);
 
-  PassGroups.push_back(dawn::PassGroup::SetStageName);
+  if(!context_->getOptions().DefaultNone)
+    PassGroups.push_back(dawn::PassGroup::SetStageName);
 
-  PassGroups.push_back(dawn::PassGroup::StageReordering);
+  if(!context_->getOptions().DefaultNone)
+    PassGroups.push_back(dawn::PassGroup::StageReordering);
 
-  PassGroups.push_back(dawn::PassGroup::StageMerger);
+  if(!context_->getOptions().DefaultNone)
+    PassGroups.push_back(dawn::PassGroup::StageMerger);
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
                  [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
@@ -176,9 +179,11 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().SetNonTempCaches)
     PassGroups.push_back(dawn::PassGroup::SetNonTempCaches);
 
-  PassGroups.push_back(dawn::PassGroup::SetCaches);
+  if(!context_->getOptions().DefaultNone)
+    PassGroups.push_back(dawn::PassGroup::SetCaches);
 
-  PassGroups.push_back(dawn::PassGroup::SetBlockSize);
+  if(!context_->getOptions().DefaultNone)
+    PassGroups.push_back(dawn::PassGroup::SetBlockSize);
 
   if(context_->getOptions().DataLocalityMetric)
     PassGroups.push_back(dawn::PassGroup::DataLocalityMetric);

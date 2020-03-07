@@ -47,6 +47,8 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
+OPT(bool, DefaultNone, false, "default-none", "",
+    "If true, disables all default pass groups", "", false, false)
 OPT(bool, Parallel, false, "parallel", "",
     "Run parallel pass group", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
