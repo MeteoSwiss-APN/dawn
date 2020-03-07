@@ -138,7 +138,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   parentAction_->setSIR(SIR);
 
   // Return early if not using dawn (gtc-parse)
-  if(context_->useDawn())
+  if(!context_->useDawn())
     return;
 
   // Compile the SIR using Dawn
