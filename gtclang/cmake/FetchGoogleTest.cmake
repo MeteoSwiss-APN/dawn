@@ -1,5 +1,7 @@
 #TODO maybe function
 
+include(FetchContent)
+
 if(NOT TARGET gtest)
   if(NOT FETCHED_GTEST)
     message(STATUS "Fetching GoogleTest...")

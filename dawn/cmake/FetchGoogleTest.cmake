@@ -1,10 +1,12 @@
 #TODO maybe function
 
+include(FetchContent)
+
 if(NOT TARGET gtest)
   if(NOT FETCHED_GTEST)
     message(STATUS "Fetching GoogleTest...")
   endif()
-  set(INSTALL_GTEST ON)
+  set(INSTALL_GTEST OFF)
   set(BUILD_GMOCK OFF)
   FetchContent_Declare(googletest
     URL https://github.com/google/googletest/archive/release-1.10.0.tar.gz
