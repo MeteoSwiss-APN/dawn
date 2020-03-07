@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
 
   // Determine the list of pass groups to run
   std::list<dawn::PassGroup> passGroups;
-  if(result.count("pass-groups") == 0 || result.count("default-groups") > 0) {
+  if(result.count("default-groups") > 0) {
     passGroups = dawn::DawnCompiler::defaultPassGroups();
   }
   for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
