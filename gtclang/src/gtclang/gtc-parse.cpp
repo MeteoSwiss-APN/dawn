@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<dawn::SIR> returnSIR = nullptr;
 
   // Initialize the GTClangContext
-  std::unique_ptr<gtclang::GTClangContext> context = std::make_unique<gtclang::GTClangContext>();
+  auto context = std::make_unique<gtclang::GTClangContext>();
 
   // Skip Dawn
   context->useDawn() = false;
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 
   // Parse format to enumeration
   dawn::SIRSerializer::Format format;
-  const std::string sirFormat = result["format"].as<std::string>();
+  const auto sirFormat = result["format"].as<std::string>();
   if(sirFormat == "json") {
     format = dawn::SIRSerializer::Format::Json;
   } else if(sirFormat == "byte") {

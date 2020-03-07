@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <tuple>
 
 enum class SerializationFormat { Byte, Json };
 enum class IRType { SIR, IIR };
@@ -74,70 +75,9 @@ dawn::PassGroup parsePassGroup(const std::string& passGroup) {
     throw std::runtime_error(std::string("Unknown pass group: ") + passGroup);
 }
 
-int main(int argc, char* argv[]) {
-  cxxopts::Options options("dawn-opt", "Optimizer for the Dawn DSL compiler toolchain");
-  options.positional_help("[SIR or IIR file. If unset, reads from stdin]");
-
-  // clang-format off
-  options.add_options()
-    ("input", "Input file. If unset, reads from stdin.", cxxopts::value<std::string>())
-    ("o,out", "Output IIR filename. If unset, writes IIR to stdout.", cxxopts::value<std::string>())
-    ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect IIR.")
-    ("default-groups", "Add default groups before those in --pass-groups.")
-    ("p,pass-groups",
-        "Comma-separated ordered list of pass groups to run. See DawnCompiler.h for list. If unset, runs the basic, default groups.",
-        cxxopts::value<std::vector<std::string>>()->default_value({}))
-    ("h,help", "Display usage.");
-
-    options.add_options("Pass")
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  (OPTION, HELP, cxxopts::value<TYPE>()->default_value(toString(DEFAULT_VALUE)))
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-    ;
-  // clang-format on
-
-  // This is how the positional argument is specified
-  options.parse_positional({"input"});
-
-  const int numArgs = argc;
-  auto result = options.parse(argc, argv);
-
-  if(result.count("help")) {
-    std::cout << options.help() << std::endl;
-    return 0;
-  }
-
-  // Create a dawn::Options struct for the driver
-  dawn::Options dawnOptions;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  dawnOptions.NAME = result[OPTION].as<TYPE>();
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-  dawn::DawnCompiler compiler(dawnOptions);
-
-  // Determine the list of pass groups to run
-  std::list<dawn::PassGroup> passGroups;
-  if(result.count("pass-groups") == 0 || result.count("default-groups") > 0) {
-    passGroups = dawn::DawnCompiler::defaultPassGroups();
-  }
-  for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
-    passGroups.push_back(parsePassGroup(pg));
-  }
-
-  // Get the input from file or stdin
-  std::string input;
-  if(result.count("input")) {
-    std::ifstream t(result["input"].as<std::string>());
-    input.insert(input.begin(), (std::istreambuf_iterator<char>(t)),
-                 std::istreambuf_iterator<char>());
-  } else {
-    std::istreambuf_iterator<char> begin(std::cin), end;
-    input.insert(input.begin(), begin, end);
-  }
-
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> optimizedSIM;
-
+std::tuple<std::shared_ptr<dawn::SIR>, std::shared_ptr<dawn::iir::StencilInstantiation>,
+           SerializationFormat>
+deserializeInput(const std::string& input) {
   std::shared_ptr<dawn::SIR> stencilIR = nullptr;
   std::shared_ptr<dawn::iir::StencilInstantiation> internalIR = nullptr;
 
@@ -206,8 +146,75 @@ int main(int argc, char* argv[]) {
   }
   }
 
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
+  return {stencilIR, internalIR, format};
+}
+
+int main(int argc, char* argv[]) {
+  cxxopts::Options options("dawn-opt", "Optimizer for the Dawn DSL compiler toolchain");
+  options.positional_help("[SIR or IIR file. If unset, reads from stdin]");
+
+  // clang-format off
+  options.add_options()
+    ("input", "Input file. If unset, reads from stdin.", cxxopts::value<std::string>())
+    ("o,out", "Output IIR filename. If unset, writes IIR to stdout.", cxxopts::value<std::string>())
+    ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect IIR.")
+    ("default-groups", "Add default groups before those in --pass-groups.")
+    ("p,pass-groups",
+        "Comma-separated ordered list of pass groups to run. See DawnCompiler.h for list. If unset, runs the basic, default groups.",
+        cxxopts::value<std::vector<std::string>>()->default_value({}))
+    ("h,help", "Display usage.");
+
+    options.add_options("Pass")
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  (OPTION, HELP, cxxopts::value<TYPE>()->default_value(toString(DEFAULT_VALUE)))
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+    ;
+  // clang-format on
+
+  // This is how the positional argument is specified
+  options.parse_positional({"input"});
+
+  const int numArgs = argc;
+  auto result = options.parse(argc, argv);
+
+  if(result.count("help")) {
+    std::cout << options.help() << std::endl;
+    return 0;
+  }
+
+  // Create a dawn::Options struct for the driver
+  dawn::Options dawnOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  dawnOptions.NAME = result[OPTION].as<TYPE>();
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+  dawn::DawnCompiler compiler(dawnOptions);
+
+  // Determine the list of pass groups to run
+  std::list<dawn::PassGroup> passGroups;
+  if(result.count("pass-groups") == 0 || result.count("default-groups") > 0) {
+    passGroups = dawn::DawnCompiler::defaultPassGroups();
+  }
+  for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
+    passGroups.push_back(parsePassGroup(pg));
+  }
+
+  // Get the input from file or stdin
+  std::string input;
+  if(result.count("input")) {
+    std::ifstream t(result["input"].as<std::string>());
+    input.insert(input.begin(), (std::istreambuf_iterator<char>(t)),
+                 std::istreambuf_iterator<char>());
+  } else {
+    std::istreambuf_iterator<char> begin(std::cin), end;
+    input.insert(input.begin(), begin, end);
+  }
+
+  auto [stencilIR, internalIR, format] = deserializeInput(input);
+
   // Fill map either by lowering or adding the single StencilInstantiation (from IIR)
+  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
   if(stencilIR) {
     stencilInstantiationMap = compiler.lowerToIIR(stencilIR);
   } else {
@@ -215,7 +222,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Call optimizer groups
-  optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
+  auto optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
 
   if(optimizedSIM.size() > 1) {
     DAWN_LOG(WARNING) << "More than one StencilInstantiation is not supported in IIR";

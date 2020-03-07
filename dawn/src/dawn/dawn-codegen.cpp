@@ -32,6 +32,42 @@ std::string toString(const T& t) {
 std::string toString(const char* t) { return t; }
 std::string toString(const std::string& t) { return t; }
 
+std::shared_ptr<dawn::iir::StencilInstantiation> deserializeInput(const std::string& input) {
+  std::shared_ptr<dawn::iir::StencilInstantiation> internalIR = nullptr;
+
+  SerializationFormat format = SerializationFormat::Byte;
+  {
+    try {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+      format = SerializationFormat::Byte;
+    } catch(...) {
+      // Do nothing
+    }
+  }
+  if(!internalIR) {
+    try {
+      internalIR =
+          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
+      SerializationFormat::Json;
+    } catch(...) {
+      // Exhausted possibilities, so throw
+      throw std::runtime_error("Cannot deserialize input");
+    }
+  }
+
+  // Deserialize again, only this time do not catch exceptions
+  if(format == SerializationFormat::Byte) {
+    internalIR =
+        dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
+  } else {
+    internalIR =
+        dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
+  }
+
+  return internalIR;
+}
+
 int main(int argc, char* argv[]) {
   cxxopts::Options options("dawn-codegen", "Code generation for the Dawn DSL compiler toolchain");
   options.positional_help("[IIR file. If unset, reads from stdin]");
@@ -82,43 +118,12 @@ int main(int argc, char* argv[]) {
   dawnOptions.Backend = result["backend"].as<std::string>();
   dawn::DawnCompiler compiler(dawnOptions);
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> internalIR;
-
-  SerializationFormat format = SerializationFormat::Byte;
-  {
-    try {
-      internalIR =
-          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
-      format = SerializationFormat::Byte;
-    } catch(...) {
-      // Do nothing
-    }
-  }
-  if(!internalIR) {
-    try {
-      internalIR =
-          dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
-      SerializationFormat::Json;
-    } catch(...) {
-      // Exhausted possibilities, so throw
-      throw std::runtime_error("Cannot deserialize input");
-    }
-  }
-
-  // Deserialize again, only this time do not catch exceptions
-  if(format == SerializationFormat::Byte) {
-    internalIR =
-        dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
-  } else {
-    internalIR =
-        dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
-  }
+  auto internalIR = deserializeInput(input);
 
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap{
       {"restoredIIR", internalIR}};
 
-  std::unique_ptr<dawn::codegen::TranslationUnit> translationUnit =
-      compiler.generate(stencilInstantiationMap);
+  auto translationUnit = compiler.generate(stencilInstantiationMap);
 
   std::string code;
   for(auto p : translationUnit->getPPDefines())
