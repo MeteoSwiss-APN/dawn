@@ -150,13 +150,13 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().PrintStencilGraph)
     PassGroups.push_back(dawn::PassGroup::PrintStencilGraph);
 
-  if(!context_->getOptions().DefaultNone)
+  if(!context_->getOptions().DisableOptimization)
     PassGroups.push_back(dawn::PassGroup::SetStageName);
 
-  if(!context_->getOptions().DefaultNone)
+  if(!context_->getOptions().DisableOptimization)
     PassGroups.push_back(dawn::PassGroup::StageReordering);
 
-  if(!context_->getOptions().DefaultNone)
+  if(!context_->getOptions().DisableOptimization)
     PassGroups.push_back(dawn::PassGroup::StageMerger);
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
@@ -179,10 +179,10 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().SetNonTempCaches)
     PassGroups.push_back(dawn::PassGroup::SetNonTempCaches);
 
-  if(!context_->getOptions().DefaultNone)
+  if(!context_->getOptions().DisableOptimization)
     PassGroups.push_back(dawn::PassGroup::SetCaches);
 
-  if(!context_->getOptions().DefaultNone)
+  if(!context_->getOptions().DisableOptimization)
     PassGroups.push_back(dawn::PassGroup::SetBlockSize);
 
   if(context_->getOptions().DataLocalityMetric)
