@@ -32,14 +32,14 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
   // dependence of A. This map is from a variable B to all variables that depend on B. A variable
   // cannot depend on itself.
   std::unordered_map<int, std::set<int>> dependencyMap_;
-  // Type inferred from the conditional expression of the if statement we are currently in.
+  // Type inferred from the conditional expressions of the nested if statements we are currently in.
   // Unset if either
   // - we are not inside an if statement or
-  // - no field is accessed in the conditional
+  // - no field is accessed in the conditionals
   std::optional<iir::LocalVariableType> conditionalType_;
-  // Variables read within the conditional expression of the if statement we are currently in.
-  // If we are not inside an if statement it's empty.
-  std::set<int> variablesAccessedInConditional_;
+  // If we are within one or more (nested) if statements, this set will contain the access ids of
+  // all the variables read within the conditional expressions of the ifs.
+  std::set<int> variablesAccessedInConditionals_;
 
   // Sets the type of variable with id `varID` to `newType` if the previous type was scalar or
   // unset. Throws if non-scalar previous type is different from `newType` (mixing different
@@ -167,8 +167,10 @@ public:
     }
   }
   void visit(const std::shared_ptr<iir::IfStmt>& ifStmt) override {
-    // If in the conditional expression we are accessing a field, it means that every statement in
-    // the then and else blocks will have a read-dependency on such field.
+
+    const bool outerIf = !conditionalType_.has_value() && variablesAccessedInConditionals_.empty();
+    // If in the conditional expression we are accessing a field/variable, it means that every
+    // statement in the then and else blocks will have a read-dependency on such field/variable.
     for(const auto& readAccess :
         ifStmt->getCondStmt()->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses()) {
       const int accessID = readAccess.first;
@@ -183,15 +185,17 @@ public:
         // Record the accessed field's location type
         conditionalType_ = inferLocalVarTypeFromField(accessID);
       } else if(metadata_.isAccessType(iir::FieldAccessType::LocalVariable, accessID)) {
-        variablesAccessedInConditional_.insert(accessID);
+        variablesAccessedInConditionals_.insert(accessID);
       }
     }
-    // If we encounter an assignment to a local variable inside the then and else blocks, we should
-    // impose the recorded type.
+    // If we encounter an assignment to a local variable inside the then and else blocks, we
+    // should impose the recorded type.
     ast::ASTVisitorForwarding::visit(ifStmt);
-    // Reset as we are exiting the visit of the if statement
-    conditionalType_ = std::nullopt;
-    variablesAccessedInConditional_ = {};
+    // Reset as we are exiting the visit of the (outermost) if statement
+    if(outerIf) {
+      conditionalType_ = std::nullopt;
+      variablesAccessedInConditionals_ = {};
+    }
   }
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
     // Run only when lhs is a local variable
@@ -209,7 +213,7 @@ public:
       DAWN_ASSERT_MSG(dependencyMap_.count(*curVarID_), "Variable accessed before being declared.");
       // If we are inside an if statement, for each variable accessed in the conditional of the if,
       // we need to record its access as if it happened in the rhs of `expr`.
-      for(int accessedVariableID : variablesAccessedInConditional_) {
+      for(int accessedVariableID : variablesAccessedInConditionals_) {
         recordVariablePair(accessedVariableID, *curVarID_, expr->getSourceLocation());
       }
       // Visit rhs
@@ -236,7 +240,7 @@ public:
     dependencyMap_.emplace(*curVarID_, std::set<int>{});
     // If we are inside an if statement, for each variable accessed in the conditional of the if,
     // we need to record its access as if it happened in the rhs of `stmt`.
-    for(int accessedVariableID : variablesAccessedInConditional_) {
+    for(int accessedVariableID : variablesAccessedInConditionals_) {
       recordVariablePair(accessedVariableID, *curVarID_, stmt->getSourceLocation());
     }
     // Visit rhs
