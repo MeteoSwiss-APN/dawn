@@ -34,6 +34,7 @@ bool PassStageSplitAllStatements::run(
         continue;
       }
       std::deque<int> splitterIndices(doMethod.getAST().getStatements().size() - 1);
+      // Fill splitterIndices with indices from 0 to number of statements - 1
       std::iota(splitterIndices.begin(), splitterIndices.end(), 0);
 
       if(!splitterIndices.empty()) {

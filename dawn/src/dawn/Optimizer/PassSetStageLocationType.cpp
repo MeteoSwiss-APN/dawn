@@ -34,6 +34,13 @@
 namespace dawn {
 namespace {
 
+// Try to deduce the location type of the given statement:
+//  - assignment: location type of the left hand side (variable or field access)
+//  - variable declaration: location type of variable
+//  - stencil function call statement: deduce recursively from first statement of callee
+//  - if statement: deduce recursively from first statement (part of then + else blocks)
+//
+// It is not possible to deduce the location type for any other case, so an error will be triggered.
 ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
                                      iir::StencilMetaInformation const& metaInformation) {
   if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
