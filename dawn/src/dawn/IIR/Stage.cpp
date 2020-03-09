@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -281,34 +282,47 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
+namespace {
+std::deque<std::pair<ast::BlockStmt::StmtConstIterator, ast::BlockStmt::StmtConstIterator>>
+convertSplitterIndicesToRanges(ast::BlockStmt::StmtConstIterator beginIterator,
+                               ast::BlockStmt::StmtConstIterator endIterator,
+                               std::deque<int> const& splitterIndices) {
+  std::deque<std::pair<ast::BlockStmt::StmtConstIterator, ast::BlockStmt::StmtConstIterator>>
+      ranges;
+  auto prevIterator = beginIterator;
+  for(auto splitterIndex : splitterIndices) {
+    auto nextIterator = std::next(beginIterator, splitterIndex + 1);
+    ranges.push_back(std::pair{prevIterator, nextIterator});
+    prevIterator = nextIterator;
+  }
+  ranges.push_back(std::pair{prevIterator, endIterator});
+  return ranges;
+}
+} // namespace
+
 std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
   DAWN_ASSERT(thisDoMethod.getAST().getStatements().size() >= 2);
 
-  auto ranges = splitterIndices;
-  ranges.push_back(thisDoMethod.getAST().getStatements().size() - 1);
+  auto ranges =
+      convertSplitterIndicesToRanges(thisDoMethod.getAST().getStatements().begin(),
+                                     thisDoMethod.getAST().getStatements().end(), splitterIndices);
 
   std::vector<std::unique_ptr<Stage>> newStages;
-  auto prevIndex = thisDoMethod.getAST().getStatements().begin();
-  for(std::size_t i = 0; i < ranges.size(); ++i) {
-    auto nextIndex = std::next(thisDoMethod.getAST().getStatements().begin(), ranges[i] + 1);
-
+  for(auto const& [beginIter, endIter] : ranges) {
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace());
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
-    // The new stage contains the statements in the range [prevIndex , nextIndex)
-    doMethod.getAST().insert_back(prevIndex, nextIndex);
+    doMethod.getAST().insert_back(beginIter, endIter);
 
     // Update the fields of the new doMethod
     doMethod.update(NodeUpdateType::level);
     newStage.update(NodeUpdateType::level);
-
-    prevIndex = nextIndex;
   }
 
   return newStages;

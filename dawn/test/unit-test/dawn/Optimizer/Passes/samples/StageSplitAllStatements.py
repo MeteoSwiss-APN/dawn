@@ -13,7 +13,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""Generate input for SetLocationType tests"""
+"""Generate input for StageSplitAllStatements tests"""
 
 import os
 
@@ -49,12 +49,8 @@ def make_stencil(outputfile, body_ast):
 
 
 if __name__ == "__main__":
-    no_stmt = sir_utils.make_ast(
-        [
-        ]
-    )
-    make_stencil(
-        "../input/test_stage_split_all_statements_no_stmt.sir", no_stmt)
+    # for the "no stmt" test, use the "one stmt" output and delete the statement
+    # (from SIR it is not possible to generate a stage without statements)
 
     one_stmt = sir_utils.make_ast(
         [

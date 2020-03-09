@@ -125,6 +125,7 @@ TEST_F(TestPassSetStageLocationType, IfStmt) {
   ASSERT_EQ(ast::LocationType::Cells, ifCell->getLocationType());
 }
 
+// TODO to run this test from IIR, we need serialization support for stencil functions
 TEST_F(TestPassSetStageLocationType, FunctionCall) {
   // stencil_function f(field(cells) out) {
   //  out = 2.0;
