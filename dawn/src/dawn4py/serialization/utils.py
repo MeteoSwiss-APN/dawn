@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _
-##                         | |
-##                       __| | __ ___      ___ ___
-##                      / _` |/ _` \ \ /\ / / '_  |
-##                     | (_| | (_| |\ V  V /| | | |
-##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+# _
+# | |
+# __| | __ ___      ___ ___
+# / _` |/ _` \ \ /\ / / '_  |
+# | (_| | (_| |\ V  V /| | | |
+# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT).
-##  See LICENSE.txt for details.
+# This file is distributed under the MIT License (MIT).
+# See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
@@ -597,14 +597,6 @@ def make_fun_call_expr(callee: str, arguments: List[ExprType]) -> FunCallExpr:
     return expr
 
 
-# message StencilFunctionArg {
-#   // One of Field, Direction or Offset
-#   oneof Arg {
-#     Field field_value = 1;
-#     Direction direction_value = 2;
-#     Offset offset_value = 3;
-#   }
-# }
 def make_stencil_function_arg(arg):
     result = StencilFunctionArg()
     if isinstance(arg, Field):
