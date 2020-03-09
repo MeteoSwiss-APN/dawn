@@ -19,25 +19,17 @@
 namespace dawn {
 
 /// @brief
-/// * Input:
-/// * Output:
+/// * Input: Any IIR
+/// * Output: same IIR, but with stages split on each statement
 /// @ingroup optimizer
 ///
-/// This pass is necessary to generate legal IIR
+/// This pass is necessary to generate legal IIR for GridType == Unstructured.
 ///
-/// Strategy:
-/// - each statement goes into a single stage with location type inferred
-/// Reasoning:
-/// - this results in the non-optimized baseline
-/// - statement/stage reordering is simple (only on stages; not statements between stages)
-/// - merging after reordering is straight-forward
-// TODO update description
 class PassStageSplitAllStatements : public Pass {
 public:
   PassStageSplitAllStatements(OptimizerContext& context)
       : Pass(context, "PassStageSplitAllStatements") {}
 
-  /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 };
 
