@@ -22,12 +22,12 @@ PYBIND11_MODULE(_dawn4py, m) {
                   const std::string& Backend, const std::string& OutputFile, bool SerializeIIR,
                   const std::string& DeserializeIIR, const std::string& IIRFormat,
                   int MaxHaloPoints, const std::string& ReorderStrategy, int MaxFieldsPerStencil,
-                  bool MaxCutMSS, int BlockSizeI, int BlockSizeJ, int BlockSizeK, bool Parallel,
-                  bool SSA, bool PrintStencilGraph, bool SetStageName, bool StageReordering,
-                  bool StageMerger, bool TemporaryMerger, bool Inlining, bool IntervalPartitioning,
-                  bool TmpToStencilFunction, bool SetNonTempCaches, bool SetCaches,
-                  bool SetBlockSize, bool DataLocalityMetric, bool SplitStencils,
-                  bool MergeDoMethods, bool UseParallelEP, bool DisableKCaches,
+                  bool MaxCutMSS, int BlockSizeI, int BlockSizeJ, int BlockSizeK,
+                  bool DisableOptimization, bool Parallel, bool SSA, bool PrintStencilGraph,
+                  bool SetStageName, bool StageReordering, bool StageMerger, bool TemporaryMerger,
+                  bool Inlining, bool IntervalPartitioning, bool TmpToStencilFunction,
+                  bool SetNonTempCaches, bool SetCaches, bool SetBlockSize, bool DataLocalityMetric,
+                  bool SplitStencils, bool MergeDoMethods, bool UseParallelEP, bool DisableKCaches,
                   bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
                   bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
                   bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
@@ -55,6 +55,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       BlockSizeI,
                                       BlockSizeJ,
                                       BlockSizeK,
+                                      DisableOptimization,
                                       Parallel,
                                       SSA,
                                       PrintStencilGraph,
@@ -105,7 +106,8 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("iir_format") = "json", py::arg("max_halo_points") = 3,
            py::arg("reorder_strategy") = "greedy", py::arg("max_fields_per_stencil") = 40,
            py::arg("max_cut_mss") = false, py::arg("block_size_i") = 0, py::arg("block_size_j") = 0,
-           py::arg("block_size_k") = 0, py::arg("parallel") = false, py::arg("ssa") = false,
+           py::arg("block_size_k") = 0, py::arg("disable_optimization") = false,
+           py::arg("parallel") = false, py::arg("ssa") = false,
            py::arg("print_stencil_graph") = false, py::arg("set_stage_name") = false,
            py::arg("stage_reordering") = false, py::arg("stage_merger") = false,
            py::arg("temporary_merger") = false, py::arg("inlining") = false,
@@ -149,6 +151,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_i", &dawn::Options::BlockSizeI)
       .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
+      .def_readwrite("disable_optimization", &dawn::Options::DisableOptimization)
       .def_readwrite("parallel", &dawn::Options::Parallel)
       .def_readwrite("ssa", &dawn::Options::SSA)
       .def_readwrite("print_stencil_graph", &dawn::Options::PrintStencilGraph)
@@ -220,6 +223,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_i=" << self.BlockSizeI << ",\n    "
            << "block_size_j=" << self.BlockSizeJ << ",\n    "
            << "block_size_k=" << self.BlockSizeK << ",\n    "
+           << "disable_optimization=" << self.DisableOptimization << ",\n    "
            << "parallel=" << self.Parallel << ",\n    "
            << "ssa=" << self.SSA << ",\n    "
            << "print_stencil_graph=" << self.PrintStencilGraph << ",\n    "

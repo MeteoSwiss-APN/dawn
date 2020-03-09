@@ -576,7 +576,7 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
   // Need to check that varA has been flagged as OnCells
   ASSERT_EQ(stencil->getMetaData().getLocalVariableDataFromAccessID(varAID).getLocationType(),
-              ast::LocationType::Cells);
+            ast::LocationType::Cells);
 }
 
 TEST(TestLocalVarType, test_throw_unstructured_01) {
