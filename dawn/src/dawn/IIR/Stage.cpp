@@ -292,10 +292,10 @@ convertSplitterIndicesToRanges(ast::BlockStmt::StmtConstIterator beginIterator,
   auto prevIterator = beginIterator;
   for(auto splitterIndex : splitterIndices) {
     auto nextIterator = std::next(beginIterator, splitterIndex + 1);
-    ranges.push_back(std::pair{prevIterator, nextIterator});
+    ranges.emplace_back(prevIterator, nextIterator);
     prevIterator = nextIterator;
   }
-  ranges.push_back(std::pair{prevIterator, endIterator});
+  ranges.emplace_back(prevIterator, endIterator);
   return ranges;
 }
 } // namespace
