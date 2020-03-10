@@ -10,6 +10,10 @@ module load sarus
 echo $BASEPATH_SCRIPT
 rootdir=$BASEPATH_SCRIPT/../../
 
+image=gtclang/dawn-env-ubuntu19.04
+
+sarus pull $image
+
 export PARALLEL_BUILD_JOBS=24
 srun --job-name=dawn_PR \
      --time=00:45:00 \
@@ -22,7 +26,7 @@ srun --job-name=dawn_PR \
      --account=c14 \
      sarus run \
      --mount=type=bind,source=$SCRATCH,destination=$SCRATCH \
-     gtclang/dawn-env-ubuntu19.04 \
+     $image \
      cmake -S $rootdir -B $rootdir/build \
     -DBUILD_TESTING=ON \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
