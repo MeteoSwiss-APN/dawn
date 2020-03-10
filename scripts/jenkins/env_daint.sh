@@ -1,7 +1,5 @@
 #!/bin/bash
 
-module load daint-gpu
-module load sarus
 # module load CMake/3.14.5
 
 # module swap PrgEnv-cray PrgEnv-gnu

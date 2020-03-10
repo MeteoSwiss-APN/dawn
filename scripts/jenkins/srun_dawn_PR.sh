@@ -4,6 +4,12 @@ set -e
 
 BASEPATH_SCRIPT=$(dirname $(realpath -s $0))
 
+module load daint-gpu
+module load sarus
+
+echo $BASEPATH_SCRIPT
+rootdir=$BASEPATH_SCRIPT/../../
+
 export PARALLEL_BUILD_JOBS=24
 srun --job-name=dawn_PR \
      --time=00:45:00 \
@@ -14,6 +20,15 @@ srun --job-name=dawn_PR \
      --partition=cscsci \
      --constraint=gpu \
      --account=c14 \
-     sarus run jdahm/dawn-gcc9-env python --version
+     sarus run \
+     --mount=type=bind,source=$SCRATCH,destination=$SCRATCH \
+     gtclang/dawn-env-ubuntu19.04 \
+     cmake -S $rootdir -B $rootdir/build \
+    -DBUILD_TESTING=ON \
+    -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DGridTools_DIR=/usr/local/lib/cmake \
+    -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
+    -GNinja
 
 #     $BASEPATH_SCRIPT/dawn_PR.sh "$@"
