@@ -12,7 +12,8 @@ srun --job-name=dawn_PR \
      --ntasks-per-core=2 \
      --cpus-per-task=24 \
      --partition=cscsci \
-     --constraint=gpu \
+     --constraint=mc \
      --account=c14 \
-     $BASEPATH_SCRIPT/dawn_PR.sh "$@"
+     sarus run jdahm/dawn-gcc9-env python --version
 
+#     $BASEPATH_SCRIPT/dawn_PR.sh "$@"
