@@ -38,10 +38,6 @@
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
 
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
-
 //---- Globals ----
 
 //---- Stencils ----

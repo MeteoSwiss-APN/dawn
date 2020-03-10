@@ -304,9 +304,6 @@ PYBIND11_MODULE(_dawn4py, m) {
                  if(export_info)
                    pp_defines_list.append(py::str(macroDefine));
                }
-               ss << "\n//---- Includes ----\n"
-                  << "#include \"driver-includes/gridtools_includes.hpp\"\n"
-                  << "using namespace gridtools::dawn;\n";
                ss << "\n//---- Globals ----\n";
                ss << translationUnit->getGlobals();
                ss << "\n//---- Stencils ----\n";
