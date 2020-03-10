@@ -37,6 +37,7 @@ add_library(DawnOptimizer
   PassManager.h
   PassMultiStageSplitter.cpp
   PassMultiStageSplitter.h
+  PassOptions.inc
   PassPrintStencilGraph.cpp
   PassPrintStencilGraph.h
   PassRemoveScalars.h

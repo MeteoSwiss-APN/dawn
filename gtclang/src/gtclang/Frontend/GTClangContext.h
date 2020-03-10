@@ -42,8 +42,16 @@ class GTClangContext : dawn::NonCopyable {
   // Raw points are always non-owning
   clang::ASTContext* astContext_;
 
+  bool useDawn_;
+
 public:
   GTClangContext();
+
+  /// @name Get/Set useDawn boolean
+  /// @{
+  bool& useDawn();
+  const bool& useDawn() const;
+  /// @}
 
   /// @name Get configuration options parsed from command-line
   /// @{
