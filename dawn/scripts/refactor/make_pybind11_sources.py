@@ -79,6 +79,7 @@ def extract_dawn_compiler_options() -> list:
         os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),
         os.path.join(DAWN_CPP_SRC_ROOT, "Compiler", "Options.inc"),
         os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),
+        os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "PassOptions.inc"),
     ]:
         options_cpp = []
         with open(name, "r") as f:

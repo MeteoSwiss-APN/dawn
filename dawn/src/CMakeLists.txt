@@ -20,7 +20,7 @@ if(ENABLE_PYTHON)
 endif()
 
 # install headers
-foreach(dir IN ITEMS dawn dawn-c)
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${dir} ${CMAKE_CURRENT_BINARY_DIR}/${dir} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+foreach(dir IN ITEMS dawn dawn-c driver-includes)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${dir} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inc")
 endforeach()

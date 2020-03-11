@@ -15,16 +15,28 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestOptimizer)
 add_executable(${executable}
-  TestColoringAlgorithm.cpp
-  TestEnvironment.h
-  TestGraph.cpp
-  TestIsDAGAlgorithm.cpp
-  TestPartitionAlgorithm.cpp
-  TestSCCAlgorithm.cpp
+  TestMain.cpp
+  TestPassCaching.cpp
+  TestPassComputeStageExtents.cpp
+  TestPassLocalVarType.cpp
+  TestPassIntervalPartitioning.cpp
+  TestPassFieldVersioning.cpp
+  TestPassMultiStageSplitter.cpp
+  TestPassRemoveScalars.cpp
+  TestPassSetCaches.cpp
+  TestPassSetNonTempCaches.cpp
+  TestPassStageMerger.cpp
+  TestPassStageReordering.cpp
+  TestPassTemporaryMerger.cpp
+  TestPassTemporaryType.cpp
+  TestTemporaryToFunction.cpp
 )
-target_link_libraries(${executable} PRIVATE DawnOptimizer DawnUnittest gtest gtest_main)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest)
 target_add_dawn_standard_props(${executable})
-gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::" DISCOVERY_TIMEOUT 30)
-
-add_subdirectory(TestsFromSIR)
-add_subdirectory(Passes)
+target_include_directories(${executable}
+  PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+)
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::Optimizer::"
+  EXTRA_ARGS ${CMAKE_CURRENT_LIST_DIR}
+  DISCOVERY_TIMEOUT 30)

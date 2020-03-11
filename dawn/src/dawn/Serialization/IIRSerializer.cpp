@@ -735,7 +735,7 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   }
   case dawn::IIRSerializer::Format::Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
-      throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
+      throw std::runtime_error("cannot deserialize StencilInstantiation");
     break;
   }
   default:

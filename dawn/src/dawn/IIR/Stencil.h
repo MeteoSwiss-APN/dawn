@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_STENCIL_H
 #define DAWN_IIR_STENCIL_H
 
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
@@ -29,7 +30,6 @@ namespace dawn {
 
 namespace iir {
 
-class DependencyGraphStage;
 class IIR;
 class StencilMetaInformation;
 
@@ -62,7 +62,7 @@ public:
 private:
   struct DerivedInfo {
     /// Dependency graph of the stages of this stencil
-    std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
+    std::optional<DependencyGraphStage> stageDependencyGraph_;
     /// field info properties
     std::unordered_map<int, FieldInfo> fields_;
 
@@ -250,8 +250,8 @@ public:
 
   /// @brief Get/Set the dependency graph of the stages
   /// @{
-  const std::shared_ptr<DependencyGraphStage>& getStageDependencyGraph() const;
-  void setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG);
+  const std::optional<DependencyGraphStage>& getStageDependencyGraph() const;
+  void setStageDependencyGraph(DependencyGraphStage&& stageDAG);
   /// @}
 
   /// @brief determines whether the stencil contains redundant computations, i.e. if any of the

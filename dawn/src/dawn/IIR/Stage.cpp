@@ -269,20 +269,19 @@ void Stage::addDoMethod(DoMethodSmartPtr_t&& doMethod) {
 }
 
 void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
-                           const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph) {
+                           DependencyGraphAccesses&& dependencyGraph) {
   DAWN_ASSERT_MSG(std::find(childrenBegin(), childrenEnd(), to) != childrenEnd(),
                   "'to' DoMethod does not exists");
   DAWN_ASSERT_MSG(from->getInterval() == to->getInterval(),
                   "DoMethods have incompatible intervals!");
 
-  to->setDependencyGraph(dependencyGraph);
+  to->setDependencyGraph(std::move(dependencyGraph));
   to->getAST().insert_back(std::make_move_iterator(from->getAST().getStatements().begin()),
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
-std::vector<std::unique_ptr<Stage>>
-Stage::split(std::deque<int>& splitterIndices,
-             const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs) {
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int>& splitterIndices,
+                                                 std::deque<DependencyGraphAccesses>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
@@ -306,7 +305,7 @@ Stage::split(std::deque<int>& splitterIndices,
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
     if(graphs) {
-      doMethod.setDependencyGraph((*graphs)[i]);
+      doMethod.setDependencyGraph(std::move((*graphs)[i]));
     }
 
     // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)

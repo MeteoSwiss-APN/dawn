@@ -27,6 +27,7 @@
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
@@ -91,27 +92,6 @@ CompilerUtil::lower(const std::string& sirFilename,
   return lower(sir, options, context);
 }
 
-stencilInstantiationContext CompilerUtil::compile(const std::shared_ptr<SIR>& sir) {
-  dawn::Options options;
-  DawnCompiler compiler(options);
-
-  auto SI = compiler.optimize(compiler.lowerToIIR(sir));
-
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue()) {
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    }
-    throw std::runtime_error("Compilation failed");
-  }
-
-  return SI;
-}
-
-stencilInstantiationContext CompilerUtil::compile(const std::string& sirFile) {
-  std::shared_ptr<SIR> sir = load(sirFile);
-  return compile(sir);
-}
-
 void CompilerUtil::clearDiags() { diag_.clear(); }
 
 namespace {
@@ -169,7 +149,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
   std::vector<std::shared_ptr<Pass>> passes;
   switch(group) {
   case PassGroup::Parallel:
-    addPass<dawn::PassInlining>(context, passes, true, inlineStrategy);
+    addPass<dawn::PassInlining>(context, passes, inlineStrategy);
     addPass<dawn::PassFieldVersioning>(context, passes);
     addPass<dawn::PassSSA>(context, passes); // Did I do this for a reason?
     addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
@@ -181,6 +161,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
 
   case PassGroup::StageReordering:
     addPass<dawn::PassSetStageGraph>(context, passes);
+    addPass<dawn::PassSetDependencyGraph>(context, passes);
     addPass<dawn::PassStageReordering>(context, passes, reorderStrategy);
     addPass<dawn::PassSetSyncStage>(context, passes);
     addPass<dawn::PassSetStageName>(context, passes);
@@ -204,7 +185,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     break;
 
   case PassGroup::Inlining:
-    addPass<dawn::PassInlining>(context, passes, false, inlineOnTheFly);
+    addPass<dawn::PassInlining>(context, passes, inlineOnTheFly);
     break;
 
   case PassGroup::IntervalPartitioning:
@@ -253,7 +234,7 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
 
   bool result = true;
   if(nPasses > 0)
-    result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineStrategy);
   if(nPasses > 1)
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
   if(nPasses > 2)
@@ -279,7 +260,7 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
   if(nPasses > 12)
     result &= runPass<dawn::PassTemporaryMerger>(context, instantiation);
   if(nPasses > 13)
-    result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineOnTheFly);
   if(nPasses > 14)
     result &= runPass<dawn::PassIntervalPartitioning>(context, instantiation);
   if(nPasses > 15)
@@ -320,7 +301,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
 
   switch(group) {
   case PassGroup::Parallel:
-    result &= runPass<dawn::PassInlining>(context, instantiation, true, inlineStrategy);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineStrategy);
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
     result &= runPass<dawn::PassSSA>(context, instantiation);
     result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
@@ -334,6 +315,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
   case PassGroup::StageReordering:
     result &= runPass<dawn::PassSetStageName>(context, instantiation);
     result &= runPass<dawn::PassSetStageGraph>(context, instantiation);
+    result &= runPass<dawn::PassSetDependencyGraph>(context, instantiation);
     result &= runPass<dawn::PassStageReordering>(context, instantiation, reorderStrategy);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     result &= runPass<dawn::PassSetStageName>(context, instantiation);
@@ -352,7 +334,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     break;
 
   case PassGroup::Inlining:
-    result &= runPass<dawn::PassInlining>(context, instantiation, false, inlineOnTheFly);
+    result &= runPass<dawn::PassInlining>(context, instantiation, inlineOnTheFly);
     break;
 
   case PassGroup::IntervalPartitioning:

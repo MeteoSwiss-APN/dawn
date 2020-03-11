@@ -20,6 +20,7 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/TypeTraits.h"
+#include <functional>
 #include <set>
 #include <unordered_map>
 
@@ -59,7 +60,7 @@ using DependencyGraphAccessesEdgeData = Extents;
 class DependencyGraphAccesses
     : public DependencyGraph<DependencyGraphAccesses, DependencyGraphAccessesEdgeData> {
 
-  const StencilMetaInformation& metaData_;
+  std::reference_wrapper<const StencilMetaInformation> metaData_;
   std::unordered_map<std::size_t, int> VertexIDToAccessIDMap_;
 
 public:
@@ -71,21 +72,24 @@ public:
   /// @brief Construct graph by merging the given `graphs`
   ///
   /// @param graphs       Graphs to merge
-  /// @tparam GraphTypes  Varidaic pack of `std::shared_ptr<DependencyGraphAccesses>`
+  /// @tparam GraphTypes  Variadic pack of `DependencyGraphAccesses`
   template <class... GraphTypes>
   DependencyGraphAccesses(const StencilMetaInformation& metaData, const GraphTypes&... graphs)
       : DependencyGraphAccesses(metaData) {
-    static_assert(
-        and_<std::is_same<GraphTypes, std::shared_ptr<DependencyGraphAccesses>>...>::value,
-        "GraphTypes needs to be a varidaic pack of `std::shared_ptr<DependencyGraphAccesses>`");
+    static_assert(and_<std::is_same<GraphTypes, DependencyGraphAccesses>...>::value,
+                  "GraphTypes needs to be a variadic pack of `DependencyGraphAccesses`");
     for(const auto& g : {graphs...})
-      merge(g.get());
+      merge(g);
+  }
+
+  bool operator==(const DependencyGraphAccesses& other) const {
+    return Base::operator==(other) && (VertexIDToAccessIDMap_ == other.VertexIDToAccessIDMap_);
   }
 
   /// @brief Process the statement and insert it into the current graph
   ///
-  /// For each write and read access a node will be inserted. Between each write and read access an
-  /// edge will be created s.t
+  /// For each write and read access a node will be inserted. Between each write and read access
+  /// an edge will be created s.t
   ///
   /// +-------+           +--------+
   /// | Write | --------> |  Read  |
@@ -116,10 +120,7 @@ public:
   std::string getVertexNameByVertexID(std::size_t VertexID) const;
 
   /// @brief Merge `other` into `this`
-  void merge(const DependencyGraphAccesses* other);
-
-  /// @brief Clone the graph by performing a @b deep copy
-  std::shared_ptr<DependencyGraphAccesses> clone() const;
+  void merge(const DependencyGraphAccesses& other);
 
   /// @brief Partition the graph into the non-connected sub-graphs
   std::vector<std::set<std::size_t>> partitionInSubGraphs() const;
