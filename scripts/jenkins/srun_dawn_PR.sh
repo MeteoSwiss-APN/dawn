@@ -29,6 +29,9 @@ srun --job-name=dawn_PR \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
     -DGridTools_DIR=/usr/local/lib/cmake \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
-    -GNinja
+    -GNinja \
+    && cmake --build /usr/src/dawn/build -j $PARALLEL_BUILD_JOBS --target install \
+    && python -m pip install -e /usr/src/dawn/dawn \
+    && cd /usr/src/dawn/build && ctest -j$(nproc) --progress --output-on-failure
 
 #     $BASEPATH_SCRIPT/dawn_PR.sh "$@"

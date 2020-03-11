@@ -36,7 +36,6 @@ RUN rm -rf /usr/src/gridtools-1.0.4/build
 
 FROM dawn-env AS dawn
 COPY . /usr/src/dawn
-RUN mkdir -p /usr/src/dawn/build
 RUN cmake -S /usr/src/dawn -B /usr/src/dawn/build \
     -DBUILD_TESTING=ON \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
