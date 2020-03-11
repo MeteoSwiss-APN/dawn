@@ -10,7 +10,8 @@ module load daint-gpu
 module load sarus
 
 sarus pull $image
-export PARALLEL_BUILD_JOBS=24
+sarus rmi gtclang/dawn-env-ubuntu19.04
+
 srun --job-name=dawn_PR \
      --time=00:45:00 \
      --nodes=1 \
@@ -30,8 +31,8 @@ srun --job-name=dawn_PR \
     -DGridTools_DIR=/usr/local/lib/cmake \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
     -GNinja \
-    && cmake --build /usr/src/dawn/build -j $PARALLEL_BUILD_JOBS --target install \
+    && cmake --build /usr/src/dawn/build --parallel 24 --target install \
     && python -m pip install -e /usr/src/dawn/dawn \
-    && cd /usr/src/dawn/build && ctest -j$(nproc) --progress --output-on-failure
+    && cd /usr/src/dawn/build && ctest --progress --output-on-failure
 
 #     $BASEPATH_SCRIPT/dawn_PR.sh "$@"
