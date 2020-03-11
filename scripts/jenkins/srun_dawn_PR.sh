@@ -13,7 +13,7 @@ sarus pull $image
 
 if [ -z ${CLANG_GRIDTOOLS_REPOSITORY+x} ]; then
   # ssh port is blocked on compute nodes, go via https port
-  export CLANG_GRIDTOOLS_REPOSITORY=ssh://git@ssh.github.com:443/MeteoSwiss-APN/clang-gridtools.git
+  export CLANG_GRIDTOOLS_REPOSITORY=git@github.com:MeteoSwiss-APN/clang-gridtools.git
 fi
 if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
   export CLANG_GRIDTOOLS_BRANCH=master
