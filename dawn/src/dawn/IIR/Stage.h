@@ -85,9 +85,11 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  Stage(const StencilMetaInformation& metaData, int StageID,
+        IterationSpace iterationspace = {std::optional<Interval>(), std::optional<Interval>()});
+
   Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval,
         IterationSpace iterationspace = {std::optional<Interval>(), std::optional<Interval>()});
-  Stage(const StencilMetaInformation& metaData, int StageID);
 
   Stage(Stage&&) = default;
   /// @}
