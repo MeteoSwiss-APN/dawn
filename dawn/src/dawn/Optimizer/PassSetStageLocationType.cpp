@@ -88,7 +88,6 @@ bool PassSetStageLocationType::run(
   for(const auto& stage : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
     iir::DoMethod& doMethod = stage->getSingleDoMethod();
     const auto& stmts = doMethod.getAST().getStatements();
-    DAWN_ASSERT_MSG(stmts.size() == 1, "Only one statement allowed.");
 
     auto locType = deduceLocationType(stmts[0], stencilInstantiation->getMetaData());
     stage->setLocationType(locType);
