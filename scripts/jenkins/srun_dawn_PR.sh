@@ -2,18 +2,14 @@
 
 set -e
 
-BASEPATH_SCRIPT=$(dirname $(realpath -s $0))
+scriptpath=$(dirname $(realpath -s $0))
+rootdir=$scriptpath/../../
+image=gtclang/dawn-env-ubuntu19.10
 
 module load daint-gpu
 module load sarus
 
-echo $BASEPATH_SCRIPT
-rootdir=$BASEPATH_SCRIPT/../../
-
-image=gtclang/dawn-env-ubuntu19.04
-
 sarus pull $image
-
 export PARALLEL_BUILD_JOBS=24
 srun --job-name=dawn_PR \
      --time=00:45:00 \
@@ -25,9 +21,9 @@ srun --job-name=dawn_PR \
      --constraint=gpu \
      --account=c14 \
      sarus run \
-     --mount=type=bind,source=$SCRATCH,destination=$SCRATCH \
+     --mount=type=bind,source=$rootdir,destination=/usr/src/dawn \
      $image \
-     cmake -S $rootdir -B $rootdir/build \
+     cmake -S /usr/src/dawn -B /usr/src/dawn/build \
     -DBUILD_TESTING=ON \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
