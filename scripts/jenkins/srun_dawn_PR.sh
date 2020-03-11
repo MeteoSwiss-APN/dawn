@@ -9,8 +9,10 @@ image=gtclang/dawn-env-ubuntu19.10
 module load daint-gpu
 module load sarus
 
+sarus images
 sarus pull $image
-sarus rmi gtclang/dawn-env-ubuntu19.04
+#sarus rmi gtclang/dawn-env-ubuntu19.04
+sarus images
 
 srun --job-name=dawn_PR \
      --time=00:45:00 \
