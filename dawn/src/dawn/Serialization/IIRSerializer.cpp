@@ -12,7 +12,9 @@
 //
 //===----------------------------------------TypeKind--------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
+#include "SIR/enums.pb.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -29,6 +31,25 @@
 #include <optional>
 
 namespace dawn {
+
+proto::enums::LocationType
+optionalLocationTypeToProto(std::optional<ast::LocationType> locationType) {
+  if(locationType.has_value()) {
+    return getProtoLocationTypeFromLocationType(*locationType);
+  } else {
+    return proto::enums::LocationTypeUnknown;
+  }
+}
+
+std::optional<ast::LocationType>
+protoLocationTypeToOptional(proto::enums::LocationType protoLocationType) {
+  if(protoLocationType == proto::enums::LocationTypeUnknown) {
+    return std::nullopt;
+  } else {
+    return getLocationTypeFromProtoLocationType(protoLocationType);
+  }
+}
+
 static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   protoCache->set_accessid(cache.getCachedFieldAccessID());
   switch(cache.getIOPolicy()) {
@@ -349,14 +370,14 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         protoMSSCacheMap.insert({IDCachePair.first, protoCache});
       }
       // adding it's children
-      for(const auto& stages : multistages->getChildren()) {
+      for(const auto& stage : multistages->getChildren()) {
         auto protoStage = protoMSS->add_stages();
         // Information other than the children
-        protoStage->set_stageid(stages->getStageID());
+        protoStage->set_stageid(stage->getStageID());
 
         // Add iteration space
-        if(stages->hasIterationSpace()) {
-          auto iterationSpace = stages->getIterationSpace();
+        if(stage->hasIterationSpace()) {
+          auto iterationSpace = stage->getIterationSpace();
           if(iterationSpace[0].has_value()) {
             dawn::sir::Interval interval = iterationSpace[0].value().asSIRInterval();
             setInterval(protoStage->mutable_i_range(), &interval);
@@ -368,7 +389,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         }
 
         // adding it's children
-        for(const auto& domethod : stages->getChildren()) {
+        for(const auto& domethod : stage->getChildren()) {
           auto protoDoMethod = protoStage->add_domethods();
           // Information other than the children
           dawn::sir::Interval interval = domethod->getInterval().asSIRInterval();
@@ -381,6 +402,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
               domethod->getAST()); // TODO takes a copy to allow using shared_from_this()
           ptr->accept(builder);
         }
+        protoStage->set_locationtype(optionalLocationTypeToProto(stage->getLocationType()));
       }
     }
   }
@@ -713,6 +735,11 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
               makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE, maxID));
           DAWN_ASSERT(ast);
           IIRDoMethod->setAST(ast);
+        }
+
+        auto optLocationType = protoLocationTypeToOptional(protoStage.locationtype());
+        if(optLocationType.has_value()) {
+          IIRStage->setLocationType(*optLocationType);
         }
       }
     }

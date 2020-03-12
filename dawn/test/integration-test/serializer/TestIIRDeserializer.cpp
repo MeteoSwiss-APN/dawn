@@ -93,6 +93,7 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
             EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
           }
         }
+        EXPECT_EQ(lhsStage->getLocationType(), rhsStage->getLocationType());
       }
     }
   }
@@ -255,6 +256,21 @@ TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
   // generate IIR in memory
   UIDGenerator::getInstance()->reset();
   auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory(optimizer);
+
+  compareIIRs(from_file, in_memory);
+}
+
+TEST(IIRDeserializerTest, UnstructuredMixedCopies) {
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
+  // read IIR from file
+  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_mixed_copies.iir");
+
+  // generate IIR in memory
+  UIDGenerator::getInstance()->reset();
+  auto in_memory = createUnstructuredMixedCopies(optimizer);
 
   compareIIRs(from_file, in_memory);
 }

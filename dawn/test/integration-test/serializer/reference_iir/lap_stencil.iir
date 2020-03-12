@@ -333,7 +333,8 @@
           }
          }
         ],
-        "stageID": 4
+        "stageID": 4,
+        "locationType": "LocationTypeUnknown"
        },
        {
         "doMethods": [
@@ -581,7 +582,8 @@
           }
          }
         ],
-        "stageID": 5
+        "stageID": 5,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
