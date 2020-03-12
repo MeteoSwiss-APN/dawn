@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
@@ -24,6 +25,20 @@
 
 namespace dawn {
 
+namespace {
+sir::HorizontalFieldDimension
+getHorizontalFieldDimensions(iir::StencilInstantiation const* instantiation, int accessID) {
+  auto cartesian = instantiation->getIIR()->getGridType() == ast::GridType::Cartesian;
+  if(cartesian) {
+    return sir::HorizontalFieldDimension(ast::cartesian, {true, true});
+  } else {
+    auto locType =
+        instantiation->getMetaData().getLocalVariableDataFromAccessID(accessID).getLocationType();
+    return sir::HorizontalFieldDimension(ast::unstructured, locType);
+  }
+}
+} // namespace
+
 void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiation,
                                           iir::Stencil* stencil, int accessID,
                                           const iir::Stencil::Lifetime& lifetime,
@@ -31,12 +46,8 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   std::string varname = instantiation->getMetaData().getFieldNameFromAccessID(accessID);
 
   // Figure out dimensions
-  // TODO sparse_dim: Should be supported: should use same code used for checks on correct
-  // dimensionality in statements.
-  if(instantiation->getIIR()->getGridType() != ast::GridType::Cartesian)
-    dawn_unreachable(
-        "Currently promotion to temporary field is not supported for unstructured grids.");
-  sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true};
+  sir::FieldDimensions fieldDims =
+      sir::FieldDimensions{getHorizontalFieldDimensions(instantiation, accessID), true};
 
   // Compute name of field
   std::string fieldname = iir::InstantiationHelper::makeTemporaryFieldname(

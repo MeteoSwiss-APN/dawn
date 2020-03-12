@@ -111,7 +111,7 @@ bool PassStageSplitter::run(
         // Perform the spliting of the stages and insert the stages *before* the stage we processed.
         // Note that the "old" stage will be erased (it was consumed in split(...) anyway)
         if(!splitterIndices.empty()) {
-          auto newStages = stage.split(splitterIndices, &graphs);
+          auto newStages = stage.split(splitterIndices, std::move(graphs));
           stageIt = multiStage->childrenErase(stageIt);
           multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
                                      std::make_move_iterator(newStages.end()));

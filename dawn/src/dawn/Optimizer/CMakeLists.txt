@@ -54,10 +54,14 @@ add_library(DawnOptimizer
   PassSetNonTempCaches.h
   PassSetStageGraph.cpp
   PassSetStageGraph.h
+  PassSetStageLocationType.cpp
+  PassSetStageLocationType.h
   PassSetStageName.cpp
   PassSetStageName.h
   PassSetSyncStage.cpp
   PassSetSyncStage.h
+  PassStageSplitAllStatements.cpp
+  PassStageSplitAllStatements.h
   PassSSA.cpp
   PassSSA.h
   PassStageMerger.cpp

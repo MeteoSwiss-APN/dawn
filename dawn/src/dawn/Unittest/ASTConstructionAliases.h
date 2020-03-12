@@ -17,6 +17,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Field.h"
+#include "dawn/Support/Type.h"
 
 #include <memory>
 
@@ -47,6 +48,10 @@ EXPR_CONSTRUCTOR_ALIAS(lit, iir::LiteralAccessExpr)
 template <typename... Stmts>
 decltype(auto) block(Stmts&&... stmts) {
   return iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts)...});
+}
+
+inline decltype(auto) vardecl(const std::string& name, BuiltinTypeID type = BuiltinTypeID::Float) {
+  return iir::makeVarDeclStmt(Type(type), name, 0, "=", ast::VarDeclStmt::InitList{});
 }
 
 template <typename T>
