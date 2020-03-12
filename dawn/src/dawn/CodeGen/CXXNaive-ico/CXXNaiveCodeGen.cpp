@@ -455,7 +455,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     StencilRunMethod.startBody();
 
     // TODO the generic deref should be moved to a different namespace
-    StencilRunMethod.addStatement("using dawn::deref;");
+    StencilRunMethod.addStatement("using dawn::deref");
 
     // StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil->getChildren()) {

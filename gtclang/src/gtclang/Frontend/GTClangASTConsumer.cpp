@@ -15,45 +15,41 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GTClangASTConsumer.h"
+#include "dawn/AST/GridType.h"
+#include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Options.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Support/Config.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
+#include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/ClangFormat.h"
+#include "gtclang/Frontend/Diagnostics.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "gtclang/Frontend/GTClangContext.h"
-#include "gtclang/Frontend/GlobalVariableParser.h"
-#include "gtclang/Frontend/StencilParser.h"
 #include "gtclang/Support/ClangCompat/FileSystem.h"
 #include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
 #include "gtclang/Support/Config.h"
 #include "gtclang/Support/FileUtil.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Support/StringUtil.h"
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/FileManager.h"
-#include "clang/Basic/TokenKinds.h"
-#include "clang/Basic/Version.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
-#include "llvm/ADT/StringSwitch.h"
-#include "llvm/Support/FileSystem.h"
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_os_ostream.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <ctime>
 #include <iostream>
 #include <memory>
-#include <system_error>
+#include <string>
 
 namespace gtclang {
 
@@ -75,6 +71,7 @@ static dawn::Options makeDAWNOptions(const Options& options) {
 #include "dawn/CodeGen/Options.inc"
 #include "dawn/Compiler/Options.inc"
 #include "dawn/Optimizer/Options.inc"
+#include "dawn/Optimizer/PassOptions.inc"
 #undef OPT
   return DAWNOptions;
 }
@@ -140,8 +137,11 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   parentAction_->setSIR(SIR);
 
-  // Compile the SIR using Dawn
+  // Return early if not using dawn (gtc-parse)
+  if(!context_->useDawn())
+    return;
 
+  // Compile the SIR using Dawn
   std::list<dawn::PassGroup> PassGroups;
 
   if(context_->getOptions().SSA)

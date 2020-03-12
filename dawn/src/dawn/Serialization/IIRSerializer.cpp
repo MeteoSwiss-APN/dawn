@@ -354,6 +354,19 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         // Information other than the children
         protoStage->set_stageid(stages->getStageID());
 
+        // Add iteration space
+        if(stages->hasIterationSpace()) {
+          auto iterationSpace = stages->getIterationSpace();
+          if(iterationSpace[0].has_value()) {
+            dawn::sir::Interval interval = iterationSpace[0].value().asSIRInterval();
+            setInterval(protoStage->mutable_i_range(), &interval);
+          }
+          if(iterationSpace[1].has_value()) {
+            dawn::sir::Interval interval = iterationSpace[1].value().asSIRInterval();
+            setInterval(protoStage->mutable_j_range(), &interval);
+          }
+        }
+
         // adding it's children
         for(const auto& domethod : stages->getChildren()) {
           auto protoDoMethod = protoStage->add_domethods();
@@ -678,7 +691,14 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         int stageID = protoStage.stageid();
         maxID = std::max(std::abs(stageID), maxID);
 
-        IIRMSS->insertChild(std::make_unique<iir::Stage>(target->getMetaData(), stageID));
+        std::array<std::optional<iir::Interval>, 2> iterationSpace;
+        if(protoStage.has_i_range())
+          iterationSpace[0] = *makeInterval(protoStage.i_range());
+        if(protoStage.has_j_range())
+          iterationSpace[1] = *makeInterval(protoStage.j_range());
+
+        IIRMSS->insertChild(
+            std::make_unique<iir::Stage>(target->getMetaData(), stageID, iterationSpace));
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
@@ -735,7 +755,7 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   }
   case dawn::IIRSerializer::Format::Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
-      throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
+      throw std::runtime_error("cannot deserialize StencilInstantiation");
     break;
   }
   default:

@@ -24,7 +24,6 @@ private:
 
     void run() {
       using dawn::deref;
-      ;
       {
         for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size - 1)) + 0 + 0; ++k) {
           for(auto const& loc : getCells(LibTag{}, m_mesh)) {
