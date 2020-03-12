@@ -32,30 +32,6 @@
 
 namespace {
 
-static void freeCharArray(char** array, int size) {
-  for(int i = 0; i < size; ++i)
-    std::free(array[i]);
-  std::free(array);
-}
-
-// TODO empty is not legal anymore as gridtype is required (the default is illegal)
-// remove or refactor test
-TEST(CompilerTest, DISABLED_CompileEmptySIR) {
-  std::string sir;
-  dawnTranslationUnit_t* TU = dawnCompile(sir.data(), sir.size(), nullptr);
-
-  EXPECT_EQ(dawnTranslationUnitGetStencil(TU, "invalid"), nullptr);
-
-  char** ppDefines;
-  int size;
-  dawnTranslationUnitGetPPDefines(TU, &ppDefines, &size);
-  EXPECT_NE(size, 0);
-  EXPECT_NE(ppDefines, nullptr);
-
-  freeCharArray(ppDefines, size);
-  dawnTranslationUnitDestroy(TU);
-}
-
 TEST(CompilerTest, CompileCopyStencil) {
   using namespace dawn::iir;
 
