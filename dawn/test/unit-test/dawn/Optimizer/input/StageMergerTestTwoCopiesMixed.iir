@@ -1,25 +1,29 @@
 {
  "metadata": {
   "accessIDToName": {
-   "2": "out_field",
-   "4": "cnt",
-   "1": "in_field"
+   "60": "in_cell",
+   "61": "out_cell",
+   "62": "in_edge",
+   "63": "out_edge"
   },
   "accessIDToType": {
-   "1": 6,
-   "2": 6
+   "63": 6,
+   "60": 6,
+   "61": 6,
+   "62": 6
   },
-  "literalIDToName": {
-   "-5": "0.000000",
-   "-20": "10"
-  },
+  "literalIDToName": {},
   "fieldAccessIDs": [
-   1,
-   2
+   60,
+   61,
+   62,
+   63
   ],
   "APIFieldIDs": [
-   1,
-   2
+   60,
+   61,
+   62,
+   63
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -28,14 +32,28 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "2": {
+   "60": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Cell",
      "sparse_part": []
     },
     "mask_k": 1
    },
-   "1": {
+   "61": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Cell",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "62": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "63": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Edge",
      "sparse_part": []
@@ -44,14 +62,14 @@
    }
   },
   "idToStencilCall": {
-   "33": {
+   "64": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_33",
+      "callee": "__code_gen_64",
       "arguments": []
      },
      "loc": {
@@ -59,7 +77,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 34
+     "ID": 65
     }
    }
   },
@@ -91,7 +109,7 @@
                 "assignment_expr": {
                  "left": {
                   "field_access_expr": {
-                   "name": "in_field",
+                   "name": "out_edge",
                    "vertical_offset": 0,
                    "zero_offset": {},
                    "argument_map": [
@@ -110,33 +128,43 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 1
+                    "accessID": 63
                    },
-                   "ID": 38
+                   "ID": 88
                   }
                  },
                  "op": "=",
                  "right": {
-                  "literal_access_expr": {
-                   "value": "10",
-                   "type": {
-                    "type_id": "Integer"
-                   },
+                  "field_access_expr": {
+                   "name": "in_edge",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -20
+                    "accessID": 62
                    },
-                   "ID": 37
+                   "ID": 87
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 39
+                 "ID": 89
                 }
                },
                "loc": {
@@ -146,7 +174,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "1": {
+                  "63": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -155,7 +183,7 @@
                   }
                  },
                  "readAccess": {
-                  "-20": {
+                  "62": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -165,7 +193,7 @@
                  }
                 }
                },
-               "ID": 36
+               "ID": 86
               }
              }
             ],
@@ -174,10 +202,10 @@
              "Column": -1
             },
             "data": {},
-            "ID": 35
+            "ID": 85
            }
           },
-          "doMethodID": 29,
+          "doMethodID": 5,
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -186,7 +214,7 @@
           }
          }
         ],
-        "stageID": 30,
+        "stageID": 82,
         "locationType": "Edge"
        },
        {
@@ -201,7 +229,7 @@
                 "assignment_expr": {
                  "left": {
                   "field_access_expr": {
-                   "name": "out_field",
+                   "name": "out_cell",
                    "vertical_offset": 0,
                    "zero_offset": {},
                    "argument_map": [
@@ -220,69 +248,43 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 2
+                    "accessID": 61
                    },
-                   "ID": 45
+                   "ID": 93
                   }
                  },
                  "op": "=",
                  "right": {
-                  "reduction_over_neighbor_expr": {
-                   "op": "+",
-                   "rhs": {
-                    "field_access_expr": {
-                     "name": "in_field",
-                     "vertical_offset": 0,
-                     "unstructured_offset": {
-                      "has_offset": true
-                     },
-                     "argument_map": [
-                      -1,
-                      -1,
-                      -1
-                     ],
-                     "argument_offset": [
-                      0,
-                      0,
-                      0
-                     ],
-                     "negate_offset": false,
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": 1
-                     },
-                     "ID": 43
-                    }
+                  "field_access_expr": {
+                   "name": "in_cell",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
                    },
-                   "init": {
-                    "literal_access_expr": {
-                     "value": "0.000000",
-                     "type": {
-                      "type_id": "Double"
-                     },
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": -5
-                     },
-                     "ID": 44
-                    }
+                   "data": {
+                    "accessID": 60
                    },
-                   "weights": [],
-                   "lhs_location": "Cell",
-                   "rhs_location": "Edge"
+                   "ID": 92
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 46
+                 "ID": 94
                 }
                },
                "loc": {
@@ -292,7 +294,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "2": {
+                  "61": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -301,16 +303,7 @@
                   }
                  },
                  "readAccess": {
-                  "1": {
-                   "unstructured_extent": {
-                    "has_extent": true
-                   },
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  },
-                  "-5": {
+                  "60": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -320,7 +313,7 @@
                  }
                 }
                },
-               "ID": 41
+               "ID": 91
               }
              }
             ],
@@ -329,10 +322,10 @@
              "Column": -1
             },
             "data": {},
-            "ID": 40
+            "ID": 90
            }
           },
-          "doMethodID": 18,
+          "doMethodID": 4,
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -341,16 +334,16 @@
           }
          }
         ],
-        "stageID": 19,
+        "stageID": 80,
         "locationType": "Cell"
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 32,
+      "multiStageID": 84,
       "Caches": {}
      }
     ],
-    "stencilID": 33,
+    "stencilID": 64,
     "attr": {
      "attributes": []
     }
@@ -364,7 +357,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_33",
+      "callee": "__code_gen_64",
       "arguments": []
      },
      "loc": {
@@ -372,11 +365,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 34
+     "ID": 65
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "\u003cunknown\u003e"
+ "filename": "StageMergerTestTwoCopiesMixed"
 }

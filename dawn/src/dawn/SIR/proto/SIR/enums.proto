@@ -29,7 +29,7 @@ enum GridType {
 }
 
 enum LocationType {
-  LocationTypeUnknown = 0; // don't use!
+  LocationTypeUnknown = 0;
   Vertex = 1;
   Cell = 2;
   Edge = 3;

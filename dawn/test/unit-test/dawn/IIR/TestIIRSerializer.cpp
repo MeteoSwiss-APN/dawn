@@ -92,6 +92,8 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
             IIR_EARLY_EXIT((lhsStmt->equals(rhsStmt.get())));
           }
         }
+
+        IIR_EARLY_EXIT((lhsStage->getLocationType() == rhsStage->getLocationType()));
       }
     }
   }
@@ -251,6 +253,34 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   bcstmt->getFields().push_back("field2");
   referenceInstantiation->getMetaData().addFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+}
+
+TEST_F(IIRSerializerTest, IIRTestsStageLocationType) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_c = b.field("in_c", LocType::Cells);
+  auto out_c = b.field("out_c", LocType::Cells);
+  auto in_v = b.field("in_v", LocType::Vertices);
+  auto out_v = b.field("out_v", LocType::Vertices);
+
+  std::string stencilName("testSerializationStageLocationType");
+
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
+          b.stage(LocType::Vertices,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(b.at(out_v), b.at(in_v))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
 TEST_F(IIRSerializerTest, IIRTestsReduce) {

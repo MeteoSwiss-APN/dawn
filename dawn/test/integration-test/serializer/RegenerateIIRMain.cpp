@@ -39,4 +39,7 @@ int main(int argc, char* argv[]) {
   IIRSerializer::serialize("reference_iir/unstructured_sum_edge_to_cells.iir",
                            createUnstructuredSumEdgeToCellsIIRInMemory(optimizer),
                            IIRSerializer::Format::Json);
+  UIDGenerator::getInstance()->reset();
+  IIRSerializer::serialize("reference_iir/unstructured_mixed_copies.iir",
+                           createUnstructuredMixedCopies(optimizer), IIRSerializer::Format::Json);
 }

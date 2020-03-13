@@ -163,4 +163,20 @@ TEST_F(TestPassStageMerger, MergerTest7) {
   runTest("input/StageMergerTest07.iir", 1, {1}, {1}, {1});
 }
 
+TEST_F(TestPassStageMerger, MergerTestTwoCopies) {
+  /*
+    out_cells_1 = in_cells_1;
+    out_cells_2 = in_cells_2;
+   */
+  runTest("input/StageMergerTestTwoCopies.iir", 1, {1}, {1}, {1});
+}
+
+TEST_F(TestPassStageMerger, MergerTestTwoCopiesMixed) {
+  /*
+    out_cells = in_cells;
+    out_edges = in_edges;
+   */
+  runTest("input/StageMergerTestTwoCopiesMixed.iir", 1, {1}, {2}, {1, 1});
+}
+
 } // anonymous namespace
