@@ -34,7 +34,11 @@ srun --job-name=dawn_PR \
     sarus run --mount=type=bind,source=$root_dir,destination=/usr/src/dawn \
     --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
     $image \
-    /usr/src/dawn/scripts/build-and-test -j $build_jobs -c /usr/src/clang-gridtools \
+    /usr/src/dawn/scripts/build-and-test \
+    --dawn-build-dir /usr/src/dawn-build \
+    --clang-gridtools-source-dir /usr/src/clang-gridtools \
+    --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
+    --parallel $build_jobs \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DGridTools_DIR=/usr/local/lib/cmake \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \

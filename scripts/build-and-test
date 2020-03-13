@@ -13,7 +13,7 @@ build_args=()
 
 while [ "$1" != "" ]; do
     case $1 in
-    -j | --jobs)
+    -j | --parallel)
         build_jobs=$2
         shift
         ;;
@@ -21,11 +21,15 @@ while [ "$1" != "" ]; do
         dawn_build_dir=$2
         shift
         ;;
-    -c | --clang-gridtools)
+    -c | --clang-gridtools-source-dir)
         cg_source_dir=$2
         shift
         ;;
-    -d | --dawn)
+    --clang-gridtools-build-dir)
+        cg_build_dir=$2
+        shift
+        ;;
+    -d | --dawn-source-dir)
         dawn_source_dir=$2
         shift
         ;;
@@ -59,7 +63,9 @@ if [ "$run_tests" == "true" ]; then
 
     # Clang-GridTools
     if [ -n $cg_source_dir ]; then
-        cg_build_dir=$cg_source_dir/build
+        if [ -n $cg_build_dir ]; then
+            cg_build_dir=$cg_source_dir/build
+        fi
 
         cmake -S $cg_source_dir -B $cg_build_dir \
             -DCMAKE_PREFIX_PATH=$dawn_install_dir \

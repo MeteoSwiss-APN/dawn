@@ -34,7 +34,9 @@ RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
 
 FROM dawn-env AS dawn
 COPY . /usr/src/dawn
-RUN /usr/src/dawn/scripts/build-and-test -j $(nproc) -i /usr/local \
+RUN /usr/src/dawn/scripts/build-and-test \
+    --parallel $(nproc) \
+    --install-dir /usr/local \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DGridTools_DIR=/usr/local/lib/cmake \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
