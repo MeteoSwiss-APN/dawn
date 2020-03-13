@@ -30,7 +30,7 @@ srun --job-name=dawn_PR \
     --constraint=gpu \
     --account=c14 \
     sarus run --mount=type=bind,source=$rootdir,destination=/usr/src/dawn \
-        --mount=type=bind,source=clang-gridtools,destination=/usr/src/clang-gridtools \
+        --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
         $image \
         /usr/src/dawn/scripts/build-and-test /usr/src/dawn /usr/src/dawn-build /usr/local clang-gridtools \
             -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
