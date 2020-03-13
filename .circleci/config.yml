@@ -1,45 +1,18 @@
 version: 2
 jobs:
-      dawn:
-            docker:
-                  - image: jdahm/dawn-gcc9-env
-            steps:
-                  - checkout:
-                          path: /usr/src/dawn
-                  - run:
-                          name: Dawn configure
-                          command: |
-                                cmake -S /usr/src/dawn/dawn -B /usr/src/dawn/dawn/build \
-                                -DBUILD_TESTING=ON \
-                                -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
-                                -DCMAKE_INSTALL_PREFIX=/usr/local \
-                                -GNinja
-                  # Compile and install needs to be one step because generated proto files
-                  # in the build directory are otherwise not installed.
-                  - run:
-                          name: Dawn compile and install
-                          command: cmake --build /usr/src/dawn/dawn/build -j $(nproc) --target install
-                  - run:
-                          name: Dawn python module
-                          command: python -m pip install -e /usr/src/dawn/dawn
-                  - run:
-                          name: Dawn tests
-                          working_directory: /usr/src/dawn/dawn/build
-                          command: ctest -j$(nproc) --progress --output-on-failure
-                  - run:
-                          name: GTClang configure
-                          command: |
-                                cmake -S /usr/src/dawn/gtclang -B /usr/src/dawn/gtclang/build \
-                                -DBUILD_TESTING=ON \
-                                -DDawn_DIR=/usr/local/lib/cmake/Dawn \
-                                -DGridTools_DIR=/usr/local/lib/cmake \
-                                -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
-                                -DCMAKE_INSTALL_PREFIX=/usr/local \
-                                -GNinja
-                  - run:
-                          name: GTClang compile and install
-                          command: cmake --build /usr/src/dawn/gtclang/build -j $(nproc) --target install
-                  - run:
-                          name: GTClang tests
-                          working_directory: /usr/src/dawn/dawn/build
-                          command: ctest -j$(nproc) --progress
+        dawn:
+                docker:
+                        - image: gtclang/dawn-env-ubuntu19.10
+                steps:
+                        - checkout:
+                                  path: /usr/src/dawn
+                        - run:
+                                  name: Build and test
+                                  command: |
+                                          /usr/src/dawn/scripts/build-and-test \
+                                          --parallel $(nproc) \
+                                          --install-dir /usr/local \
+                                          -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
+                                          -DGridTools_DIR=/usr/local/lib/cmake \
+                                          -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
+                                          -GNinja
