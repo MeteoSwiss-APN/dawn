@@ -1,5 +1,9 @@
 #!/bin/sh
 
+scriptpath=$(dirname `which $0`)
+rootdir=$scriptpath/../../
+image=gtclang/dawn-env-ubuntu19.10
+
 module load daint-gpu
 module load sarus
 
