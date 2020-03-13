@@ -162,21 +162,15 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilIR);
 
-  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-
   // required passes to have proper, parallelized IR
   optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
-  optimizer.pushBackPass<PassMultiStageSplitter>(
-      options_.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
+  optimizer.pushBackPass<PassStageSplitAllStatements>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
   if(stencilIR->GridType == ast::GridType::Unstructured) {
-    optimizer.pushBackPass<PassStageSplitAllStatements>();
     optimizer.pushBackPass<PassSetStageLocationType>();
-  } else {
-    optimizer.pushBackPass<PassStageSplitter>();
   }
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
