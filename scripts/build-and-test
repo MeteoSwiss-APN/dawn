@@ -8,44 +8,46 @@ dawn_source_dir=$script_path/..
 dawn_build_dir=$dawn_source_dir/build
 dawn_install_dir=/usr/local
 
-while getopts :j:d:c:i: opt; do
-    case $opt in
-    j)
-        build_jobs=$OPTARG
+# Build arguments
+build_args=()
+
+while [ "$1" != "" ]; do
+    case $1 in
+    -j | --jobs)
+        build_jobs=$2
+        shift
         ;;
-    b)
-        dawn_build_dir=$OPTARG
+    -b | --dawn-build-dir)
+        dawn_build_dir=$2
+        shift
         ;;
-    c)
-        cg_source_dir=$OPTARG
+    -c | --clang-gridtools)
+        cg_source_dir=$2
+        shift
         ;;
-    d)
-        dawn_source_dir=$OPTARG
+    -d | --dawn)
+        dawn_source_dir=$2
+        shift
         ;;
-    n)
+    -n | --no-tests)
         run_tests=false
         ;;
-    i)
-        dawn_install_dir=$OPTARG
+    -i | --install-dir)
+        dawn_install_dir=$2
+        shift
         ;;
-    \?)
-        echo "Invalid option: $OPTARG" 1>&2
-        ;;
-    :)
-        echo "Invalid option: $OPTARG requires an argument" 1>&2
+    *)
+        build_args+=($1)
         ;;
     esac
+    shift
 done
-shift $((OPTIND - 1))
-
-# Build arguments
-build_args=$@
 
 # Dawn
 cmake -S $dawn_source_dir -B $dawn_build_dir \
     -DBUILD_TESTING=ON \
     -DCMAKE_INSTALL_PREFIX=$dawn_install_dir \
-    $build_args
+    ${build_args[@]}
 
 cmake --build $dawn_build_dir --parallel $build_jobs --target install
 
@@ -61,7 +63,7 @@ if [ "$run_tests" == "true" ]; then
 
         cmake -S $cg_source_dir -B $cg_build_dir \
             -DCMAKE_PREFIX_PATH=$dawn_install_dir \
-            $build_args
+            ${build_args[@]}
 
         cmake --build $cg_build_dir --config $build_type --parallel $build_jobs
 
