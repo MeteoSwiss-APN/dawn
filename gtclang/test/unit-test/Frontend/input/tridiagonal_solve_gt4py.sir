@@ -1,4 +1,5 @@
 {
+  "gridType": "Cartesian",
   "filename": "<gt4py>",
   "stencils": [
     {

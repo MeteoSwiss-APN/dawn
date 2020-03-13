@@ -387,4 +387,28 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
 }
 
+TEST_F(IIRSerializerTest, IterationSpace) {
+  using namespace dawn::iir;
+
+  CartesianIIRBuilder b;
+  auto in_f = b.field("in_f", FieldType::ijk);
+  auto out_f = b.field("out_f", FieldType::ijk);
+
+  auto instantiation =
+      b.build("iteration_space",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+
+  std::string serializedIIR = IIRSerializer::serializeToString(instantiation);
+  auto deserialized = IIRSerializer::deserializeFromString(serializedIIR);
+  std::string deserializedIIR = IIRSerializer::serializeToString(deserialized);
+
+  IIR_EXPECT_EQ(instantiation, deserialized);
+}
+
 } // anonymous namespace

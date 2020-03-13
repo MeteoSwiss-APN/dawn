@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
+#include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
@@ -32,8 +34,8 @@
 namespace dawn {
 namespace iir {
 
-Stage::Stage(const StencilMetaInformation& metaData, int StageID)
-    : metaData_(metaData), StageID_(StageID), iterationSpace_() {}
+Stage::Stage(const StencilMetaInformation& metaData, int StageID, IterationSpace iterationSpace)
+    : metaData_(metaData), StageID_(StageID), iterationSpace_(iterationSpace) {}
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval,
              IterationSpace iterationSpace)
@@ -280,44 +282,58 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                            std::make_move_iterator(from->getAST().getStatements().end()));
 }
 
-std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int>& splitterIndices,
-                                                 std::deque<DependencyGraphAccesses>* graphs) {
+static std::deque<std::pair<ast::BlockStmt::StmtConstIterator, ast::BlockStmt::StmtConstIterator>>
+convertSplitterIndicesToRanges(ast::BlockStmt::StmtConstIterator beginIterator,
+                               ast::BlockStmt::StmtConstIterator endIterator,
+                               std::deque<int> const& splitterIndices) {
+  std::deque<std::pair<ast::BlockStmt::StmtConstIterator, ast::BlockStmt::StmtConstIterator>>
+      ranges;
+  auto prevIterator = beginIterator;
+  for(auto splitterIndex : splitterIndices) {
+    auto nextIterator = std::next(beginIterator, splitterIndex + 1);
+    ranges.emplace_back(prevIterator, nextIterator);
+    prevIterator = nextIterator;
+  }
+  ranges.emplace_back(prevIterator, endIterator);
+  return ranges;
+}
+
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   const DoMethod& thisDoMethod = getSingleDoMethod();
 
   DAWN_ASSERT(thisDoMethod.getAST().getStatements().size() >= 2);
-  DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
+
+  auto ranges =
+      convertSplitterIndicesToRanges(thisDoMethod.getAST().getStatements().begin(),
+                                     thisDoMethod.getAST().getStatements().end(), splitterIndices);
 
   std::vector<std::unique_ptr<Stage>> newStages;
-
-  splitterIndices.push_back(thisDoMethod.getAST().getStatements().size() - 1);
-  auto prevSplitterIndex = thisDoMethod.getAST().getStatements().begin();
-
-  // Create new stages
-  for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
-    auto nextSplitterIndex =
-        std::next(thisDoMethod.getAST().getStatements().begin(), splitterIndices[i] + 1);
-
+  for(auto const& [beginIter, endIter] : ranges) {
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                                 thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     newStage.setIterationSpace(thisDoMethod.getParent()->getIterationSpace());
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
-    if(graphs) {
-      doMethod.setDependencyGraph(std::move((*graphs)[i]));
-    }
-
-    // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)
-    doMethod.getAST().insert_back(prevSplitterIndex, nextSplitterIndex);
+    doMethod.getAST().insert_back(beginIter, endIter);
 
     // Update the fields of the new doMethod
     doMethod.update(NodeUpdateType::level);
     newStage.update(NodeUpdateType::level);
-
-    prevSplitterIndex = nextSplitterIndex;
   }
 
+  return newStages;
+}
+
+std::vector<std::unique_ptr<Stage>> Stage::split(std::deque<int> const& splitterIndices,
+                                                 std::deque<DependencyGraphAccesses>&& graphs) {
+  DAWN_ASSERT(splitterIndices.size() == graphs.size() - 1);
+  auto newStages = split(splitterIndices);
+  for(std::size_t i = 0; i < newStages.size(); ++i) {
+    DoMethod& doMethod = newStages[i]->getSingleDoMethod();
+    doMethod.setDependencyGraph(std::move(graphs[i]));
+  }
   return newStages;
 }
 
@@ -340,7 +356,7 @@ bool Stage::isEmptyOrNullStmt() const {
 
 void Stage::setLocationType(ast::LocationType type) { type_ = type; }
 
-ast::LocationType Stage::getLocationType() const { return type_; }
+std::optional<ast::LocationType> Stage::getLocationType() const { return type_; }
 
 void Stage::setIterationSpace(const IterationSpace& value) { iterationSpace_ = value; }
 

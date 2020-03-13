@@ -51,14 +51,11 @@ if(eckit_FOUND AND atlas_FOUND)
   add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp)
   target_link_libraries(AtlasIntegrationTestCodeGenerate Dawn DawnUnittest)
 
-  # And run such executable. Outputs are the generated (stencil) codes: generated_*.hpp
-  add_custom_target(AtlasIntegrationTestMkdirGenerated ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory generated
-  )
   add_custom_command(
     OUTPUT ${generated_stencil_codes}
+    COMMAND ${CMAKE_COMMAND} -E make_directory generated
     COMMAND AtlasIntegrationTestCodeGenerate
-    DEPENDS AtlasIntegrationTestMkdirGenerated
+    DEPENDS AtlasIntegrationTestCodeGenerate
     COMMENT "Generating unstructured stencils to be tested"
   )
 
@@ -79,11 +76,14 @@ if(eckit_FOUND AND atlas_FOUND)
     ${reference_stencil_codes}
   )
 
-  add_dependencies(AtlasIntegrationTestCompareOutput AtlasIntegrationTestCopyReferences)
 
-  target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
-  target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
-  target_include_directories(AtlasIntegrationTestCompareOutput PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+
+  add_dependencies(${test_name} AtlasIntegrationTestCopyReferences)
+
+  target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+  target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
+  target_include_directories(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   target_add_dawn_standard_props(${test_name})
   target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest gtest_main)

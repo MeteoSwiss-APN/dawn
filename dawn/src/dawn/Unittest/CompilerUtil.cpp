@@ -22,8 +22,10 @@
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
+#include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
+#include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetCaches.h"
@@ -155,6 +157,9 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
     addPass<dawn::PassStageSplitter>(context, passes);
     addPass<dawn::PassTemporaryType>(context, passes);
+    addPass<dawn::PassLocalVarType>(context, passes);
+    addPass<dawn::PassRemoveScalars>(context, passes);
+    // TODO: how to add grid-dependent passes?: PassStageSplitAllStatements, PassSetLocationType
     addPass<dawn::PassComputeStageExtents>(context, passes);
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
