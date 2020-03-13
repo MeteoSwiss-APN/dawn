@@ -20,6 +20,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Support/SourceLocation.h"
 #include <memory>
 
 namespace dawn {
@@ -58,7 +59,14 @@ private:
   };
 
 public:
-  bool checkDimensionsConsistency(const dawn::SIR&);
-  bool checkDimensionsConsistency(const dawn::iir::IIR&, const iir::StencilMetaInformation&);
+  /// @brief Result of check. First element indicates whether the check passed. When an
+  /// inconsistency is found, the second element indicates its location in the source.
+  using ConsistencyResult = std::tuple<bool, SourceLocation>;
+
+  ConsistencyResult checkDimensionsConsistency(const dawn::SIR&);
+  ConsistencyResult checkDimensionsConsistency(const dawn::iir::IIR&,
+                                               const iir::StencilMetaInformation&);
+  ConsistencyResult checkStageLocTypeConsistency(const dawn::iir::IIR&,
+                                                 const iir::StencilMetaInformation&);
 };
 } // namespace dawn
