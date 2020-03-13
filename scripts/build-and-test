@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
 
-source_dir=$1
-build_dir=$2
-install_dir=$3
-cg_dir=$4
+dawn_source_dir=$1
+dawn_build_dir=$2
+dawn_install_dir=$3
+cg_source_dir=$4
 build_jobs=24
 
 # 1. Dawn
-cmake -S $source_dir -B $build_dir \
+cmake -S $dawn_source_dir -B $dawn_build_dir \
     -DBUILD_TESTING=ON \
-    -DCMAKE_INSTALL_PREFIX=$install_dir \
+    -DCMAKE_INSTALL_PREFIX=$dawn_install_dir \
     ${@:5}
 
-cmake --build $build_dir --parallel $build_jobs --target install
+cmake --build $dawn_build_dir --parallel $build_jobs --target install
 
-python -m pip install -e $source_dir/dawn
+python -m pip install -e $dawn_source_dir/dawn
 
-(cd $build_dir && ctest --output-on-failure --force-new-ctest-process)
+(cd $dawn_build_dir && ctest --output-on-failure --force-new-ctest-process)
 
 # 2. Clang-GridTools
-cmake -S clang-gridtools -B $cg_dir/build \
-    -DCMAKE_PREFIX_PATH=$install_dir \
+cmake -S $cg_source_dir -B $cg_source_dir/build \
+    -DCMAKE_PREFIX_PATH=$dawn_install_dir \
     ${@:5}
 
-cmake --build $cg_dir/build --config $build_type --parallel $build_jobs
+cmake --build $cg_source_dir/build --config $build_type --parallel $build_jobs
 
 # Run tests
-(cd $cg_dir/build && ctest --output-on-failure --force-new-ctest-process)
+(cd $cg_source_dir/build && ctest --output-on-failure --force-new-ctest-process)
