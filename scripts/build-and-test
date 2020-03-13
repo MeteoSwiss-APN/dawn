@@ -1,29 +1,70 @@
 #!/usr/bin/env bash
 
-dawn_source_dir=$1
-dawn_build_dir=$2
-dawn_install_dir=$3
-cg_source_dir=$4
-build_jobs=24
+run_tests=true
+build_jobs=1
 
-# 1. Dawn
+script_path=$(dirname $(which $0))
+dawn_source_dir=$script_path/..
+dawn_build_dir=$dawn_source_dir/build
+dawn_install_dir=/usr/local
+
+while getopts :j:d:c:i: opt; do
+    case $opt in
+    j)
+        build_jobs=$OPTARG
+        ;;
+    b)
+        dawn_build_dir=$OPTARG
+        ;;
+    c)
+        cg_source_dir=$OPTARG
+        ;;
+    d)
+        dawn_source_dir=$OPTARG
+        ;;
+    n)
+        run_tests=false
+        ;;
+    i)
+        dawn_install_dir=$OPTARG
+        ;;
+    \?)
+        echo "Invalid option: $OPTARG" 1>&2
+        ;;
+    :)
+        echo "Invalid option: $OPTARG requires an argument" 1>&2
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+# Build arguments
+build_args=$@
+
+# Dawn
 cmake -S $dawn_source_dir -B $dawn_build_dir \
     -DBUILD_TESTING=ON \
     -DCMAKE_INSTALL_PREFIX=$dawn_install_dir \
-    ${@:5}
+    $build_args
 
 cmake --build $dawn_build_dir --parallel $build_jobs --target install
 
 python -m pip install -e $dawn_source_dir/dawn
 
-(cd $dawn_build_dir && ctest --output-on-failure --force-new-ctest-process)
+# Testing
+if [ "$run_tests" == "true" ]; then
+    (cd $dawn_build_dir && ctest --output-on-failure --force-new-ctest-process)
 
-# 2. Clang-GridTools
-cmake -S $cg_source_dir -B $cg_source_dir/build \
-    -DCMAKE_PREFIX_PATH=$dawn_install_dir \
-    ${@:5}
+    # Clang-GridTools
+    if [ -z $cg_source_dir ]; then
+        cg_build_dir=$cg_source_dir/build
 
-cmake --build $cg_source_dir/build --config $build_type --parallel $build_jobs
+        cmake -S $cg_source_dir -B $cg_build_dir \
+            -DCMAKE_PREFIX_PATH=$dawn_install_dir \
+            $build_args
 
-# Run tests
-(cd $cg_source_dir/build && ctest --output-on-failure --force-new-ctest-process)
+        cmake --build $cg_build_dir --config $build_type --parallel $build_jobs
+
+        (cd $cg_build_dir && ctest --output-on-failure --force-new-ctest-process)
+    fi
+fi
