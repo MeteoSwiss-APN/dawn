@@ -193,13 +193,10 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
       Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), PassGroups));
 
   // Report diagnostics from Dawn
-  if(Compiler.getDiagnostics().hasDiags()) {
+  if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
     for(const auto& diags : Compiler.getDiagnostics().getQueue()) {
       context_->getDiagnostics().report(*diags);
     }
-  }
-
-  if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
     DAWN_LOG(INFO) << "Errors in Dawn. Aborting";
     return;
   }
@@ -243,7 +240,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   std::string code;
   if(context_->getOptions().Serialized) {
     DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
-    std::cout << "Data was loaded from serialized IR, codegen " << std::endl;
 
     code += DawnTranslationUnit->getGlobals();
 
