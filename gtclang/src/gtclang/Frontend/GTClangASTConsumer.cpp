@@ -190,7 +190,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
   std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
-      Compiler.compile(SIR, PassGroups);
+      Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), PassGroups));
 
   // Report diagnostics from Dawn
   if(Compiler.getDiagnostics().hasDiags()) {
