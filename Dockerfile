@@ -5,6 +5,7 @@
 # - boost
 ARG IMAGE_NAME
 FROM ${IMAGE_NAME} AS dawn-env
+# ---------------------- Protobuf ----------------------
 RUN curl -L https://github.com/protocolbuffers/protobuf/releases/download/v3.10.1/protobuf-all-3.10.1.tar.gz | \
     tar -xz -C /usr/src
 RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
@@ -13,13 +14,14 @@ RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     -Dprotobuf_INSTALL_EXAMPLES=OFF \
     -Dprotobuf_BUILD_PROTOC_BINARIES=ON \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/protobuf \
     -DBUILD_SHARED_LIBS=ON \
     -GNinja && \
     cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc) && \
     rm -rf /usr/src/protobuf-3.10.1/build
 RUN cd /usr/src/protobuf-3.10.1/python && python setup.py build && \
     mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/lib/google
+# ---------------------- GridTools ----------------------
 RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
     tar -xz -C /usr/src
 RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
@@ -27,10 +29,28 @@ RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
     -DINSTALL_TOOLS=OFF \
     -DGT_INSTALL_EXAMPLES=OFF \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/gridtools \
     -GNinja && \
     cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
     rm -rf /usr/src/gridtools-1.0.4/build
+# ---------------------- ecKit/Atlas ----------------------
+RUN curl -L https://github.com/ecmwf/ecbuild/archive/3.3.0.tar.gz | \
+    tar -xz -C /usr/src
+ENV ECBUILD_BIN /usr/src/ecbuild-3.3.0/bin/ecbuild
+RUN curl -L https://github.com/ecmwf/eckit/archive/1.4.7.tar.gz | \
+    tar -xz -C /usr/src
+RUN mkdir -p /usr/src/eckit-1.4.7/build && cd /usr/src/eckit-1.4.7/build && \
+    ${ECBUILD_BIN} --prefix=/usr/local/eckit -- ../ && \
+    make install -j $(nproc) && rm -rf /usr/src/eckit-1.4.7/build
+RUN curl -L https://github.com/ecmwf/atlas/archive/0.20.0.tar.gz | \
+    tar -xz -C /usr/src
+RUN mkdir -p /usr/src/atlas-0.20.0/build && cd /usr/src/atlas-0.20.0/build && \
+    ${ECBUILD_BIN} \
+    -DENABLE_ATLAS_RUN=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DECKIT_PATH=/usr/local/eckit \
+    -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/atlas -- ../ && \
+    make install -j $(nproc) && rm -rf /usr/src/atlas-0.20.0/build
 
 FROM dawn-env AS dawn
 COPY . /usr/src/dawn
@@ -38,7 +58,10 @@ RUN /usr/src/dawn/scripts/build-and-test \
     --parallel $(nproc) \
     --install-dir /usr/local \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
-    -DGridTools_DIR=/usr/local/lib/cmake \
+    -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
+    -DGridTools_DIR=/usr/local/gridtools/lib/cmake \
+    -Datlas_DIR=/usr/local/atlas/lib/cmake/atlas \
+    -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit \
     -GNinja
 CMD /bin/bash
