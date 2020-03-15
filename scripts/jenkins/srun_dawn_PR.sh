@@ -11,8 +11,7 @@ module load sarus
 
 # Clone clang-gridtools here because the image does not have the ssh key
 if [ -z ${CLANG_GRIDTOOLS_REPOSITORY+x} ]; then
-    # ssh port is blocked on compute nodes, go via https port
-    CLANG_GRIDTOOLS_REPOSITORY=ssh://git@ssh.github.com:443/MeteoSwiss-APN/clang-gridtools.git
+    CLANG_GRIDTOOLS_REPOSITORY=git@github.com:MeteoSwiss-APN/clang-gridtools.git
 fi
 if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
     CLANG_GRIDTOOLS_BRANCH=master
@@ -39,6 +38,7 @@ srun --job-name=dawn_PR \
     --clang-gridtools-source-dir /usr/src/clang-gridtools \
     --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
     --parallel $build_jobs \
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DGridTools_DIR=/usr/local/lib/cmake \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
