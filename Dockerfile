@@ -60,12 +60,14 @@ RUN mkdir -p /usr/src/atlas-0.19.0/build && cd /usr/src/atlas-0.19.0/build && \
     cmake --build . -j $(nproc) --target install && rm -rf /usr/src/atlas-0.19.0/build
 
 # ---------------------- Dawn ----------------------
+ARG BUILD_TYPE
 FROM dawn-env AS dawn
 COPY . /usr/src/dawn
 RUN /usr/src/dawn/scripts/build-and-test \
+    --dawn-install-dir /usr/local/dawn \
     --parallel $(nproc) \
-    --install-dir /usr/local/dawn \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
     -DGridTools_DIR=/usr/local/gridtools/lib/cmake \

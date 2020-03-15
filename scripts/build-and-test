@@ -36,7 +36,7 @@ while [ "$1" != "" ]; do
     -n | --no-tests)
         run_tests=false
         ;;
-    -i | --install-dir)
+    -i | --dawn-install-dir)
         dawn_install_dir=$2
         shift
         ;;

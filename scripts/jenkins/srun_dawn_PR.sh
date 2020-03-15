@@ -35,11 +35,16 @@ srun --job-name=dawn_PR \
     $image \
     /usr/src/dawn/scripts/build-and-test \
     --dawn-build-dir /usr/src/dawn-build \
+    --dawn-install-dir /usr/local/dawn \
     --clang-gridtools-source-dir /usr/src/clang-gridtools \
     --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
     --parallel $build_jobs \
+    -DCMAKE_BUILD_TYPE=$build_type \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
-    -DGridTools_DIR=/usr/local/lib/cmake \
+    -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
+    -DGridTools_DIR=/usr/local/gridtools/lib/cmake \
+    -Datlas_DIR=/usr/local/atlas/lib/cmake/atlas \
+    -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit \
     -GNinja
