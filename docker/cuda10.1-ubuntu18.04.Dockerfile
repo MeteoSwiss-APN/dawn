@@ -13,13 +13,13 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt update && apt install -y --no-install-recommends \
     build-essential openssh-client git \
     kitware-archive-keyring cmake ninja-build \
-    gcc-9 g++-9 \
+    gcc-8 g++-8 \
     llvm-9-dev libclang-9-dev \
     python3 libpython3-dev python3-pip python3-setuptools python3-wheel \
     libboost-dev && apt clean
 RUN python3 -m pip install --upgrade pip
 # Set defaults
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-9 \
-    --slave /usr/bin/gcov gcov /usr/bin/gcov-9
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-8
