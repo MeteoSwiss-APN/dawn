@@ -9,7 +9,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-if [ $1 == "-s" ]; then
+if [ "$1" = "-s" ]; then
     cmd_prefix="sudo"
     shift
 else
@@ -21,12 +21,12 @@ while [ "$1" != "" ]; do
     c | cpu)
         $cmd_prefix docker build --rm -t gtclang/dawn-env-ubuntu19.10-base -f docker/ubuntu19.10.Dockerfile .
         $cmd_prefix docker build --rm --target dawn-env --build-arg IMAGE_NAME=gtclang/dawn-env-ubuntu19.10-base -t gtclang/dawn-env-ubuntu19.10 .
-        echo "Now run $(docker push gtclang/dawn-env-ubuntu19.10)"
+        echo "Now run:\n\t$cmd_prefix docker push gtclang/dawn-env-ubuntu19.10"
         ;;
     g | gpu)
         $cmd_prefix docker build --rm -t gtclang/dawn-env-cuda10.1-ubuntu18.04-base -f docker/cuda10.1-ubuntu18.04.Dockerfile .
         $cmd_prefix docker build --rm --target dawn-env --build-arg IMAGE_NAME=gtclang/dawn-env-cuda10.1-ubuntu18.04-base -t gtclang/dawn-env-cuda10.1-ubuntu18.04 .
-        echo "Now run $(docker push gtclang/dawn-env-cuda10.1-ubuntu18.04)"
+        echo "Now run:\n\t$cmd_prefix docker push gtclang/dawn-env-cuda10.1-ubuntu18.04"
         ;;
     *)
         usage

@@ -19,7 +19,8 @@ RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     -GNinja && \
     cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc) && \
     rm -rf /usr/src/protobuf-3.10.1/build
-RUN cd /usr/src/protobuf-3.10.1/python && python setup.py build && \
+RUN cd /usr/src/protobuf-3.10.1/python && \
+    PROTOC=/usr/local/protobuf/bin/protoc python setup.py build && \
     mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/lib/google
 # ---------------------- GridTools ----------------------
 RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
@@ -33,30 +34,37 @@ RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
     -GNinja && \
     cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
     rm -rf /usr/src/gridtools-1.0.4/build
-# ---------------------- ecKit/Atlas ----------------------
+# ---------------------- ECBuild ----------------------
 RUN curl -L https://github.com/ecmwf/ecbuild/archive/3.3.0.tar.gz | \
     tar -xz -C /usr/src
 ENV ECBUILD_BIN /usr/src/ecbuild-3.3.0/bin/ecbuild
+# ---------------------- ECKit ----------------------
 RUN curl -L https://github.com/ecmwf/eckit/archive/1.4.7.tar.gz | \
     tar -xz -C /usr/src
 RUN mkdir -p /usr/src/eckit-1.4.7/build && cd /usr/src/eckit-1.4.7/build && \
-    ${ECBUILD_BIN} --prefix=/usr/local/eckit -- ../ && \
-    make install -j $(nproc) && rm -rf /usr/src/eckit-1.4.7/build
-RUN curl -L https://github.com/ecmwf/atlas/archive/0.20.0.tar.gz | \
-    tar -xz -C /usr/src
-RUN mkdir -p /usr/src/atlas-0.20.0/build && cd /usr/src/atlas-0.20.0/build && \
     ${ECBUILD_BIN} \
-    -DENABLE_ATLAS_RUN=OFF \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/eckit \
     -DCMAKE_BUILD_TYPE=Release \
+    -GNinja -- ../ && \
+    cmake --build . -j $(nproc) --target install && rm -rf /usr/src/eckit-1.4.7/build
+# ---------------------- Atlas ----------------------
+RUN curl -L https://github.com/ecmwf/atlas/archive/0.19.0.tar.gz | \
+    tar -xz -C /usr/src
+RUN mkdir -p /usr/src/atlas-0.19.0/build && cd /usr/src/atlas-0.19.0/build && \
+    ${ECBUILD_BIN} \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/atlas \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_ATLAS_RUN=OFF \
     -DECKIT_PATH=/usr/local/eckit \
-    -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/atlas -- ../ && \
-    make install -j $(nproc) && rm -rf /usr/src/atlas-0.20.0/build
+    -GNinja -- ../ && \
+    cmake --build . -j $(nproc) --target install && rm -rf /usr/src/atlas-0.19.0/build
 
+# ---------------------- Dawn ----------------------
 FROM dawn-env AS dawn
 COPY . /usr/src/dawn
 RUN /usr/src/dawn/scripts/build-and-test \
     --parallel $(nproc) \
-    --install-dir /usr/local \
+    --install-dir /usr/local/dawn \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
     -DPROTOBUF_PYTHON_DIR=/usr/local/lib/python3.7/dist-packages \
