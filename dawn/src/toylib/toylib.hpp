@@ -10,7 +10,7 @@
 //  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
-//===------------------------------------------------------------------------------------------===//
+//===------------------------------------------------------------------------------------------===/&
 
 #pragma once
 
@@ -36,7 +36,7 @@ enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 class Vertex {
 public:
   Vertex() = default;
-  Vertex(double x, double y, int id) : x_(x), y_(y), id_(id) {}
+  Vertex(double x, double y, int id) : id_(id), x_(x), y_(y) {}
 
   double x() const { return x_; }
   double y() const { return y_; }
@@ -282,13 +282,13 @@ public:
         //      5   4
         if(i > 0 || periodic) //
           v.add_edge(edge_at(i - 1, j, edge_color::horizontal));
-        if(i > 0 && j > 0 || periodic) //
+        if((i > 0 && j > 0) || periodic) //
           v.add_edge(edge_at(i - 1, j - 1, edge_color::diagonal));
         if(j > 0 || periodic) //
           v.add_edge(edge_at(i, j - 1, edge_color::vertical));
         if(i < nx || periodic) //
           v.add_edge(edge_at(i, j, edge_color::horizontal));
-        if(i < nx && j < ny || periodic) //
+        if((i < nx && j < ny) || periodic) //
           v.add_edge(edge_at(i, j, edge_color::diagonal));
         if(j < ny || periodic) //
           v.add_edge(edge_at(i, j, edge_color::vertical));
@@ -302,17 +302,17 @@ public:
         //   5  | \ 3
         //      |  \
         //        4
-        if(i > 0 && j > 0 || periodic) {
+        if((i > 0 && j > 0) || periodic) {
           v.add_face(face_at(i - 1, j - 1, face_color::upward));
           v.add_face(face_at(i - 1, j - 1, face_color::downward));
         }
-        if(i < nx && j > 0 || periodic) //
+        if((i < nx && j > 0) || periodic) //
           v.add_face(face_at(i, j - 1, face_color::upward));
-        if(i < nx && j < ny || periodic) {
+        if((i < nx && j < ny) || periodic) {
           v.add_face(face_at(i, j, face_color::downward));
           v.add_face(face_at(i, j, face_color::upward));
         }
-        if(i > 0 && j < ny || periodic) {
+        if((i > 0 && j < ny) || periodic) {
           v.add_face(face_at(i - 1, j, face_color::downward));
         }
       }
@@ -432,14 +432,5 @@ std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Gri
                     std::ostream& os = std::cout);
 std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, Grid const& grid,
                     std::ostream& os = std::cout);
-
-namespace {
-bool inner_face(Face const& f) {
-  return (f.color() == face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
-          f.vertex(0).id() < f.vertex(2).id()) ||
-         (f.color() == face_color::upward && f.vertex(1).id() > f.vertex(0).id() &&
-          f.vertex(1).id() > f.vertex(2).id());
-}
-} // namespace
 
 } // namespace toylib

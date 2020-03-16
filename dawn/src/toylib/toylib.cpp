@@ -16,6 +16,15 @@
 
 #include "../interface/toylib_interface.hpp"
 
+namespace {
+bool inner_face(toylib::Face const& f) {
+  return (f.color() == toylib::face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
+          f.vertex(0).id() < f.vertex(2).id()) ||
+         (f.color() == toylib::face_color::upward && f.vertex(1).id() > f.vertex(0).id() &&
+          f.vertex(1).id() > f.vertex(2).id());
+}
+} // namespace
+
 namespace toylib {
 
 Edge const& Vertex::edge(size_t i) const { return *edges_[i]; }
