@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
@@ -36,10 +37,12 @@
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
+#include "dawn/Optimizer/PassSetStageLocationType.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassSetSyncStage.h"
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
+#include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
@@ -169,7 +172,12 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
-  optimizer.pushBackPass<PassStageSplitter>();
+  if(stencilIR->GridType == ast::GridType::Unstructured) {
+    optimizer.pushBackPass<PassStageSplitAllStatements>();
+    optimizer.pushBackPass<PassSetStageLocationType>();
+  } else {
+    optimizer.pushBackPass<PassStageSplitter>();
+  }
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
   optimizer.pushBackPass<PassComputeStageExtents>();
@@ -424,35 +432,28 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
 
 std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR, std::list<PassGroup> groups) {
-  diagnostics_.clear();
-  diagnostics_.setFilename(stencilIR->Filename);
-
   if(groups.empty())
     groups = defaultPassGroups();
 
   // Parallelize the SIR
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiation;
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> SIM, optimizedSIM;
   try {
-    stencilInstantiation = lowerToIIR(stencilIR);
+    SIM = lowerToIIR(stencilIR);
   } catch(...) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
     return nullptr;
   }
 
-  if(diagnostics_.hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
-    return nullptr;
-  }
-
   // Optimize the IIR
-  auto optimizedStencilInstantiation = optimize(stencilInstantiation, groups);
-
-  if(diagnostics_.hasErrors()) {
+  try {
+    optimizedSIM = optimize(SIM, groups);
+  } catch(...) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
   }
+
   // Generate the Code
-  return generate(optimizedStencilInstantiation);
+  return generate(optimizedSIM);
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }

@@ -92,6 +92,8 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
             IIR_EARLY_EXIT((lhsStmt->equals(rhsStmt.get())));
           }
         }
+
+        IIR_EARLY_EXIT((lhsStage->getLocationType() == rhsStage->getLocationType()));
       }
     }
   }
@@ -253,6 +255,34 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 }
 
+TEST_F(IIRSerializerTest, IIRTestsStageLocationType) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_c = b.field("in_c", LocType::Cells);
+  auto out_c = b.field("out_c", LocType::Cells);
+  auto in_v = b.field("in_v", LocType::Vertices);
+  auto out_v = b.field("out_v", LocType::Vertices);
+
+  std::string stencilName("testSerializationStageLocationType");
+
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
+          b.stage(LocType::Vertices,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(b.at(out_v), b.at(in_v))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
+}
+
 TEST_F(IIRSerializerTest, IIRTestsReduce) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
@@ -385,6 +415,30 @@ TEST_F(IIRSerializerTest, IIRTests) {
       std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
   deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
+}
+
+TEST_F(IIRSerializerTest, IterationSpace) {
+  using namespace dawn::iir;
+
+  CartesianIIRBuilder b;
+  auto in_f = b.field("in_f", FieldType::ijk);
+  auto out_f = b.field("out_f", FieldType::ijk);
+
+  auto instantiation =
+      b.build("iteration_space",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+
+  std::string serializedIIR = IIRSerializer::serializeToString(instantiation);
+  auto deserialized = IIRSerializer::deserializeFromString(serializedIIR);
+  std::string deserializedIIR = IIRSerializer::serializeToString(deserialized);
+
+  IIR_EXPECT_EQ(instantiation, deserialized);
 }
 
 } // anonymous namespace

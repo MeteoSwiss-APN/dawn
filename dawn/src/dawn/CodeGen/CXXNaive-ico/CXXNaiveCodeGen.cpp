@@ -455,7 +455,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     StencilRunMethod.startBody();
 
     // TODO the generic deref should be moved to a different namespace
-    StencilRunMethod.addStatement("using dawn::deref;");
+    StencilRunMethod.addStatement("using dawn::deref");
 
     // StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil->getChildren()) {
@@ -506,7 +506,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
-                std::string loopCode = getLoop(stage.getLocationType());
+                DAWN_ASSERT_MSG(stage.getLocationType().has_value(),
+                                "Stage must have a location type");
+                std::string loopCode = getLoop(*stage.getLocationType());
                 StencilRunMethod.addBlockStatement(loopCode, [&] {
                   // Generate Do-Method
                   for(const auto& doMethodPtr : stage.getChildren()) {

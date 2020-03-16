@@ -22,8 +22,10 @@
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
+#include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
+#include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetCaches.h"
@@ -123,6 +125,8 @@ void CompilerUtil::dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInsta
   auto ctx = siToContext(si);
   dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(ctx, diagnostics, 0);
   dump(generator, os);
+  if(Verbose)
+    dump(generator, std::cerr);
 }
 
 void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
@@ -130,6 +134,8 @@ void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilIn
   auto ctx = siToContext(si);
   dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(ctx, diagnostics, 0);
   dump(generator, os);
+  if(Verbose)
+    dump(generator, std::cerr);
 }
 
 void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
@@ -137,6 +143,8 @@ void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstan
   auto ctx = siToContext(si);
   dawn::codegen::cuda::CudaCodeGen generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
   dump(generator, os);
+  if(Verbose)
+    dump(generator, std::cerr);
 }
 
 std::vector<std::shared_ptr<Pass>>
@@ -155,6 +163,9 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
     addPass<dawn::PassStageSplitter>(context, passes);
     addPass<dawn::PassTemporaryType>(context, passes);
+    addPass<dawn::PassLocalVarType>(context, passes);
+    addPass<dawn::PassRemoveScalars>(context, passes);
+    // TODO: how to add grid-dependent passes?: PassStageSplitAllStatements, PassSetLocationType
     addPass<dawn::PassComputeStageExtents>(context, passes);
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;

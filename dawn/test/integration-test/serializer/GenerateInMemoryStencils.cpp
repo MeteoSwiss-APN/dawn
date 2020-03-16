@@ -353,3 +353,25 @@ createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
                                                   b.lit(0.), LocType::Cells, LocType::Edges))))))));
   return stencil_instantiation;
 }
+
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createUnstructuredMixedCopies(dawn::OptimizerContext& optimizer) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_c = b.field("in_c", LocType::Cells);
+  auto out_c = b.field("out_c", LocType::Cells);
+  auto in_e = b.field("in_e", LocType::Edges);
+  auto out_e = b.field("out_e", LocType::Edges);
+
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Forward,
+          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
+          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(out_e), b.at(in_e))))))));
+  return stencil_instantiation;
+}

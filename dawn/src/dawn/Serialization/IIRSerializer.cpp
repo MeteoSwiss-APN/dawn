@@ -12,7 +12,9 @@
 //
 //===----------------------------------------TypeKind--------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
+#include "SIR/enums.pb.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -29,6 +31,25 @@
 #include <optional>
 
 namespace dawn {
+
+proto::enums::LocationType
+optionalLocationTypeToProto(std::optional<ast::LocationType> locationType) {
+  if(locationType.has_value()) {
+    return getProtoLocationTypeFromLocationType(*locationType);
+  } else {
+    return proto::enums::LocationTypeUnknown;
+  }
+}
+
+std::optional<ast::LocationType>
+protoLocationTypeToOptional(proto::enums::LocationType protoLocationType) {
+  if(protoLocationType == proto::enums::LocationTypeUnknown) {
+    return std::nullopt;
+  } else {
+    return getLocationTypeFromProtoLocationType(protoLocationType);
+  }
+}
+
 static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   protoCache->set_accessid(cache.getCachedFieldAccessID());
   switch(cache.getIOPolicy()) {
@@ -349,13 +370,26 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         protoMSSCacheMap.insert({IDCachePair.first, protoCache});
       }
       // adding it's children
-      for(const auto& stages : multistages->getChildren()) {
+      for(const auto& stage : multistages->getChildren()) {
         auto protoStage = protoMSS->add_stages();
         // Information other than the children
-        protoStage->set_stageid(stages->getStageID());
+        protoStage->set_stageid(stage->getStageID());
+
+        // Add iteration space
+        if(stage->hasIterationSpace()) {
+          auto iterationSpace = stage->getIterationSpace();
+          if(iterationSpace[0].has_value()) {
+            dawn::sir::Interval interval = iterationSpace[0].value().asSIRInterval();
+            setInterval(protoStage->mutable_i_range(), &interval);
+          }
+          if(iterationSpace[1].has_value()) {
+            dawn::sir::Interval interval = iterationSpace[1].value().asSIRInterval();
+            setInterval(protoStage->mutable_j_range(), &interval);
+          }
+        }
 
         // adding it's children
-        for(const auto& domethod : stages->getChildren()) {
+        for(const auto& domethod : stage->getChildren()) {
           auto protoDoMethod = protoStage->add_domethods();
           // Information other than the children
           dawn::sir::Interval interval = domethod->getInterval().asSIRInterval();
@@ -368,6 +402,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
               domethod->getAST()); // TODO takes a copy to allow using shared_from_this()
           ptr->accept(builder);
         }
+        protoStage->set_locationtype(optionalLocationTypeToProto(stage->getLocationType()));
       }
     }
   }
@@ -587,25 +622,25 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Global>(sir::Value::Kind::Boolean);
+        value = std::make_shared<sir::Global>((bool)GlobalToValue.second.value());
       } else {
-        value = std::make_shared<sir::Global>(GlobalToValue.second.value());
+        value = std::make_shared<sir::Global>(sir::Value::Kind::Boolean);
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Global>(sir::Value::Kind::Integer);
-      } else {
         // the explicit cast is needed since in this case GlobalToValue.second.value()
         // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
         value = std::make_shared<sir::Global>((int)GlobalToValue.second.value());
+      } else {
+        value = std::make_shared<sir::Global>(sir::Value::Kind::Integer);
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Global>(sir::Value::Kind::Double);
-      } else {
         value = std::make_shared<sir::Global>((double)GlobalToValue.second.value());
+      } else {
+        value = std::make_shared<sir::Global>(sir::Value::Kind::Double);
       }
       break;
     default:
@@ -678,7 +713,14 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         int stageID = protoStage.stageid();
         maxID = std::max(std::abs(stageID), maxID);
 
-        IIRMSS->insertChild(std::make_unique<iir::Stage>(target->getMetaData(), stageID));
+        std::array<std::optional<iir::Interval>, 2> iterationSpace;
+        if(protoStage.has_i_range())
+          iterationSpace[0] = *makeInterval(protoStage.i_range());
+        if(protoStage.has_j_range())
+          iterationSpace[1] = *makeInterval(protoStage.j_range());
+
+        IIRMSS->insertChild(
+            std::make_unique<iir::Stage>(target->getMetaData(), stageID, iterationSpace));
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
@@ -693,6 +735,11 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
               makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE, maxID));
           DAWN_ASSERT(ast);
           IIRDoMethod->setAST(ast);
+        }
+
+        auto optLocationType = protoLocationTypeToOptional(protoStage.locationtype());
+        if(optLocationType.has_value()) {
+          IIRStage->setLocationType(*optLocationType);
         }
       }
     }

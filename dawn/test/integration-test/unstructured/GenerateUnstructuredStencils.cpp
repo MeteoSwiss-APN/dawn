@@ -14,8 +14,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/IIR/LocalVariable.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -34,10 +36,11 @@ int main() {
     auto out_f = b.field("out_field", LocType::Cells);
 
     auto stencil_instantiation = b.build(
-        "copyCell", b.stencil(b.multistage(
-                        LoopOrderKind::Parallel,
-                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                           b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+        "copyCell",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyCell.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
@@ -70,14 +73,15 @@ int main() {
     auto in_f = b.field("in_field", LocType::Edges);
     auto out_f = b.field("out_field", LocType::Cells);
 
-    auto stencil_instantiation =
-        b.build("accumulateEdgeToCell",
-                b.stencil(b.multistage(
-                    LoopOrderKind::Parallel,
-                    b.stage(b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                        b.stmt(b.assignExpr(b.at(out_f),
-                                            b.reduceOverNeighborExpr(
+    auto stencil_instantiation = b.build(
+        "accumulateEdgeToCell",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(out_f), b.reduceOverNeighborExpr(
                                                 Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                 b.lit(0.), LocType::Cells, LocType::Edges))))))));
 
@@ -178,29 +182,31 @@ int main() {
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
     auto out_f = b.field("out_field", LocType::Cells);
-    auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
+    auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer, {}, LocalVariableType::OnCells);
 
     auto stencil_instantiation = b.build(
         "diffusion",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
-            b.stage(b.doMethod(
-                dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
-                b.stmt(b.assignExpr(b.at(cnt),
-                                    b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
-                                                             dawn::ast::LocationType::Cells,
-                                                             dawn::ast::LocationType::Cells))),
-                b.stmt(b.assignExpr(
-                    b.at(out_f),
-                    b.reduceOverNeighborExpr(
-                        Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                        b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
-                                     b.at(in_f, HOffsetType::withOffset, 0), Op::multiply),
-                        dawn::ast::LocationType::Cells, dawn::ast::LocationType::Cells))),
-                b.stmt(b.assignExpr(
-                    b.at(out_f),
-                    b.binaryExpr(b.at(in_f), b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
-                                 Op::plus))))))));
+            b.stage(LocType::Cells,
+                    b.doMethod(
+                        dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
+                        b.stmt(b.assignExpr(
+                            b.at(cnt), b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
+                                                                dawn::ast::LocationType::Cells,
+                                                                dawn::ast::LocationType::Cells))),
+                        b.stmt(b.assignExpr(
+                            b.at(out_f),
+                            b.reduceOverNeighborExpr(
+                                Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
+                                             b.at(in_f, HOffsetType::withOffset, 0), Op::multiply),
+                                dawn::ast::LocationType::Cells, dawn::ast::LocationType::Cells))),
+                        b.stmt(b.assignExpr(
+                            b.at(out_f),
+                            b.binaryExpr(b.at(in_f),
+                                         b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
+                                         Op::plus))))))));
 
     std::ofstream of("generated/generated_diffusion.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);

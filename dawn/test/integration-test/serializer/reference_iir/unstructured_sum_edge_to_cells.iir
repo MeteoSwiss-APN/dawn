@@ -28,16 +28,16 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "1": {
+   "2": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
+     "dense_location_type": "Cell",
      "sparse_part": []
     },
     "mask_k": 1
    },
-   "2": {
+   "1": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Cell",
+     "dense_location_type": "Edge",
      "sparse_part": []
     },
     "mask_k": 1
@@ -186,7 +186,8 @@
           }
          }
         ],
-        "stageID": 30
+        "stageID": 30,
+        "locationType": "Edge"
        },
        {
         "doMethods": [
@@ -340,7 +341,8 @@
           }
          }
         ],
-        "stageID": 19
+        "stageID": 19,
+        "locationType": "Cell"
        }
       ],
       "loopOrder": "Parallel",
