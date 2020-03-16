@@ -1,22 +1,33 @@
 #include "UnstructuredDimensionChecker.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/Support/SourceLocation.h"
 
 namespace dawn {
 
-bool UnstructuredDimensionChecker::checkDimensionsConsistency(
-    const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
-  for(const auto& doMethodPtr : iterateIIROver<iir::DoMethod>(iir)) {
-    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
-        doMethodPtr->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
-    const auto& ast = doMethodPtr->getASTPtr();
-    ast->accept(checker);
-    if(!checker.isConsistent()) {
-      return false;
-    }
-  }
-  return true;
+static const sir::UnstructuredFieldDimension& getUnstructuredDim(const sir::FieldDimensions& dims) {
+  return sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+      dims.getHorizontalFieldDimension());
 }
 
-bool UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
+UnstructuredDimensionChecker::ConsistencyResult
+UnstructuredDimensionChecker::checkDimensionsConsistency(
+    const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(iir)) {
+    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
+        doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
+    for(const auto& stmt : doMethod->getAST().getStatements()) {
+      stmt->accept(checker);
+      if(!checker.isConsistent()) {
+        return {false, stmt->getSourceLocation()};
+      }
+    }
+  }
+  return {true, SourceLocation()};
+}
+
+UnstructuredDimensionChecker::ConsistencyResult
+UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
   // check type consistency of stencil functions
   for(auto const& stenFunIt : SIR.StencilFunctions) {
     std::unordered_map<std::string, sir::FieldDimensions> argumentFieldDimensions;
@@ -26,12 +37,14 @@ bool UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& S
         argumentFieldDimensions.insert({argField->Name, argField->Dimensions});
       }
     }
-    for(const auto& astIt : stenFunIt->Asts) {
+    for(const auto& ast : stenFunIt->Asts) {
       UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
           argumentFieldDimensions);
-      astIt->accept(checker);
-      if(!checker.isConsistent()) {
-        return false;
+      for(const auto& stmt : ast->getRoot()->getChildren()) {
+        stmt->accept(checker);
+        if(!checker.isConsistent()) {
+          return {false, stmt->getSourceLocation()};
+        }
       }
     }
   }
@@ -45,24 +58,39 @@ bool UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& S
     }
     const auto& stencilAst = stencil->StencilDescAst;
     UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(stencilFieldDims);
-    stencilAst->accept(checker);
-    if(!checker.isConsistent()) {
-      return false;
+    for(const auto& stmt : stencilAst->getRoot()->getChildren()) {
+      stmt->accept(checker);
+      if(!checker.isConsistent()) {
+        return {false, stmt->getSourceLocation()};
+      }
     }
   }
 
-  return true;
+  return {true, SourceLocation()};
 }
 
-///@brief Helper functions
-namespace {
+UnstructuredDimensionChecker::ConsistencyResult
+UnstructuredDimensionChecker::checkStageLocTypeConsistency(
+    const iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
+  for(const auto& stage : iterateIIROver<iir::Stage>(iir)) {
+    DAWN_ASSERT_MSG(stage->getLocationType().has_value(), "Location type of stage is unset.");
+    auto stageLocationType = *stage->getLocationType();
 
-const sir::UnstructuredFieldDimension& getUnstructuredDim(const sir::FieldDimensions& dims) {
-  return sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
-      dims.getHorizontalFieldDimension());
+    for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stage)) {
+      for(const auto& stmt : doMethod->getAST().getStatements()) {
+        UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
+            doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
+        stmt->accept(checker);
+        if(!(checker.hasDimensions() &&
+             stageLocationType ==
+                 getUnstructuredDim(checker.getDimensions()).getDenseLocationType())) {
+          return {false, stmt->getSourceLocation()};
+        }
+      }
+    }
+  }
+  return {true, SourceLocation()};
 }
-
-} // namespace
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap)

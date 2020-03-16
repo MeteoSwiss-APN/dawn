@@ -426,35 +426,28 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
 
 std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::compile(const std::shared_ptr<SIR>& stencilIR, std::list<PassGroup> groups) {
-  diagnostics_.clear();
-  diagnostics_.setFilename(stencilIR->Filename);
-
   if(groups.empty())
     groups = defaultPassGroups();
 
   // Parallelize the SIR
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiation;
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> SIM, optimizedSIM;
   try {
-    stencilInstantiation = lowerToIIR(stencilIR);
+    SIM = lowerToIIR(stencilIR);
   } catch(...) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
     return nullptr;
   }
 
-  if(diagnostics_.hasErrors()) {
-    DAWN_LOG(INFO) << "Errors occurred. Skipping optimisation and code generation.";
-    return nullptr;
-  }
-
   // Optimize the IIR
-  auto optimizedStencilInstantiation = optimize(stencilInstantiation, groups);
-
-  if(diagnostics_.hasErrors()) {
+  try {
+    optimizedSIM = optimize(SIM, groups);
+  } catch(...) {
     DAWN_LOG(INFO) << "Errors occurred. Skipping code generation.";
     return nullptr;
   }
+
   // Generate the Code
-  return generate(optimizedStencilInstantiation);
+  return generate(optimizedSIM);
 }
 
 const DiagnosticsEngine& DawnCompiler::getDiagnostics() const { return diagnostics_; }

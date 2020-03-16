@@ -35,7 +35,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase0_0) {
                           b.stage(b.doMethod(
                               dawn::sir::Interval::Start, dawn::sir::Interval::End,
                               b.stmt(b.assignExpr(b.at(sparse_field1), b.at(sparse_field2)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, AssignmentCase0_1) {
   using namespace dawn::iir;
@@ -51,7 +51,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase0_1) {
                           b.stage(b.doMethod(
                               dawn::sir::Interval::Start, dawn::sir::Interval::End,
                               b.stmt(b.assignExpr(b.at(sparse_field1), b.at(sparse_field2)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, AssignmentCase1_0) {
   using namespace dawn::iir;
@@ -68,7 +68,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase1_0) {
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                  b.stmt(b.assignExpr(b.at(sparse_field), b.at(dense_field)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, AssignmentCase2_0) {
   using namespace dawn::iir;
@@ -83,7 +83,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase2_0) {
                           LoopOrderKind::Parallel,
                           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                              b.stmt(b.assignExpr(b.at(cell_f), b.at(edge_f)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, AssignmentNoCase_0) {
   using namespace dawn::iir;
@@ -100,7 +100,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentNoCase_0) {
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                  b.stmt(b.assignExpr(b.at(dense_field), b.at(sparse_field)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0_0) {
   using namespace dawn::iir;
@@ -118,7 +118,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0_0) {
                   b.stage(b.doMethod(
                       dawn::sir::Interval::Start, dawn::sir::Interval::End,
                       b.stmt(b.binaryExpr(b.at(sparse_field1), b.at(sparse_field2), Op::plus))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0_1) {
   using namespace dawn::iir;
@@ -135,7 +135,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0_1) {
                   b.stage(b.doMethod(
                       dawn::sir::Interval::Start, dawn::sir::Interval::End,
                       b.stmt(b.binaryExpr(b.at(sparse_field1), b.at(sparse_field2), Op::plus))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, BinaryOpCase1_0) {
   using namespace dawn::iir;
@@ -152,7 +152,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase1_0) {
                   b.stage(b.doMethod(
                       dawn::sir::Interval::Start, dawn::sir::Interval::End,
                       b.stmt(b.binaryExpr(b.at(dense_field), b.at(sparse_field), Op::plus))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, BinaryOpCase2_0) {
   using namespace dawn::iir;
@@ -168,7 +168,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase2_0) {
                           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                              b.stmt(b.binaryExpr(b.at(sparse_field),
                                                                  b.at(dense_field), Op::plus))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, BinaryOpCase3_0) {
   using namespace dawn::iir;
@@ -185,7 +185,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase3_0) {
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                  b.stmt(b.binaryExpr(b.at(cell_f), b.at(edge_f), Op::plus))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceDense_0) {
   using namespace dawn::iir;
@@ -205,7 +205,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense_0) {
                                          b.reduceOverNeighborExpr(
                                              Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
                                              b.lit(0.), LocType::Edges, LocType::Cells)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceDense_1) {
   using namespace dawn::iir;
@@ -225,7 +225,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense_1) {
                                          b.reduceOverNeighborExpr(
                                              Op::plus, b.at(cell_field, HOffsetType::withOffset, 0),
                                              b.lit(0.), LocType::Cells, LocType::Edges)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceSparse_0) {
   using namespace dawn::iir;
@@ -246,7 +246,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse_0) {
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(sparse_field, HOffsetType::withOffset, 0),
                                           b.lit(0.), LocType::Cells, LocType::Vertices)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceSparse_1) {
   using namespace dawn::iir;
@@ -267,6 +267,63 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse_1) {
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(sparse_field, HOffsetType::withOffset, 0),
                                           b.lit(0.), LocType::Edges, LocType::Cells)))))))),
-      ".*checkDimensionsConsistency.*");
+      ".*Dimensions consistency check failed.*");
+}
+TEST(UnstructuredDimensionCheckerTest, StageLocType_1) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto f_c_in = b.field("f_c_in", LocType::Cells);
+  auto f_c_out = b.field("f_c_out", LocType::Cells);
+
+  auto stencil = b.build(
+      "fail",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c_in))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(false, dawn::SourceLocation()));
+}
+TEST(UnstructuredDimensionCheckerTest, StageLocType_2) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto f_c_in = b.field("f_c_in", LocType::Cells);
+  auto f_c_out = b.field("f_c_out", LocType::Cells);
+  auto f_e_in = b.field("f_e_in", LocType::Edges);
+  auto f_e_out = b.field("f_e_out", LocType::Edges);
+
+  auto stencil = b.build(
+      "fail",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c_in))),
+                                             b.stmt(b.assignExpr(b.at(f_e_out), b.at(f_e_in))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(false, dawn::SourceLocation()));
+}
+TEST(UnstructuredDimensionCheckerTest, StageLocType_3) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto f_v_in = b.field("f_v_in", LocType::Vertices);
+  auto f_v_out = b.field("f_v_out", LocType::Vertices);
+
+  auto stencil =
+      b.build("pass", b.stencil(b.multistage(
+                          LoopOrderKind::Parallel,
+                          b.stage(LocType::Vertices,
+                                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(f_v_out), b.at(f_v_in))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
 }
 } // namespace
