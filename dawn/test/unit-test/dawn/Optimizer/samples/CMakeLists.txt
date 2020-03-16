@@ -14,3 +14,4 @@ endfunction()
 
 add_dawn4py_target(NAME GenerateSetLocationTypeInput SCRIPT SetLocationType.py)
 add_dawn4py_target(NAME GenerateStageSplitAllStatements SCRIPT StageSplitAllStatements.py)
+add_dawn4py_target(NAME GenerateStageMergerUnstructured SCRIPT StageMergerUnstructured.py)

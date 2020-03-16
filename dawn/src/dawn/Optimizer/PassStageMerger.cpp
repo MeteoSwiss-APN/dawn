@@ -96,6 +96,11 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             if(candidateStage.getIterationSpace() != curStage.getIterationSpace()) {
               continue;
             }
+            // can only merge stages with same location type (for Cartesian they are both
+            // std::nullopt)
+            if(candidateStage.getLocationType() != curStage.getLocationType()) {
+              continue;
+            }
 
             // Does the interval of `curDoMethod` overlap with any DoMethod interval in
             // `candidateStage`?

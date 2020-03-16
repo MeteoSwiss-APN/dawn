@@ -36,7 +36,6 @@ from .. import utils
 __all__ = [
     "make_sir",
     "make_stencil",
-    "make_stencil",
     "make_type",
     "make_field_dimensions_cartesian",
     "make_field_dimensions_unstructured",

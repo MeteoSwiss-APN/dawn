@@ -192,7 +192,8 @@
           }
          }
         ],
-        "stageID": 21
+        "stageID": 21,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
