@@ -16,8 +16,7 @@
 
 #include "AtlasCartesianWrapper.h"
 #include "AtlasVerifier.h"
-#include "atlas/functionspace/CellColumns.h"
-#include "atlas/functionspace/EdgeColumns.h"
+
 #include "atlas/grid.h"
 #include "atlas/mesh/actions/BuildCellCentres.h"
 #include "atlas/mesh/actions/BuildEdges.h"
@@ -31,7 +30,6 @@
 #include <field/Field.h>
 #include <gtest/gtest.h>
 
-#include <generated_copyCell.hpp>
 #include <sstream>
 #include <tuple>
 namespace {
@@ -198,8 +196,10 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
 
   for(int cellIdx = 0, size = mesh.cells().size(); cellIdx < size; ++cellIdx) {
     auto [cartX, cartY] = atlasToCartesianMapper.cellMidpoint(mesh, cellIdx);
-    in_v_ref(cellIdx, 0) = (cartX > 0.375 && cartX < 0.625) ? 1 : 0;
-    in_v_gen(cellIdx, 0) = (cartX > 0.375 && cartX < 0.625) ? 1 : 0;
+    bool inX = cartX > 0.375 && cartX < 0.625;
+    bool inY = cartY > 0.375 && cartY < 0.625;
+    in_v_ref(cellIdx, 0) = (inX && inY) ? 1 : 0;
+    in_v_gen(cellIdx, 0) = (inX && inY) ? 1 : 0;
   }
 
   for(int i = 0; i < 5; ++i) {
@@ -387,8 +387,8 @@ TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
 
   int nb_levels = 1;
   auto [cells, v_cells] = MakeAtlasField("cells", mesh.cells().size(), nb_levels);
-  auto [edges, v_edges] = MakeAtlasField("cells", mesh.edges().size(), nb_levels);
-  auto [nodes, v_nodes] = MakeAtlasField("cells", mesh.nodes().size(), nb_levels);
+  auto [edges, v_edges] = MakeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes, v_nodes] = MakeAtlasField("nodes", mesh.nodes().size(), nb_levels);
 
   InitField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
 
@@ -413,8 +413,8 @@ TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
 
   int nb_levels = 1;
   auto [cells, v_cells] = MakeAtlasField("cells", mesh.cells().size(), nb_levels);
-  auto [edges, v_edges] = MakeAtlasField("cells", mesh.edges().size(), nb_levels);
-  auto [nodes, v_nodes] = MakeAtlasField("cells", mesh.nodes().size(), nb_levels);
+  auto [edges, v_edges] = MakeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes, v_nodes] = MakeAtlasField("nodes", mesh.nodes().size(), nb_levels);
 
   InitField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
   InitField(v_edges, mesh.edges().size(), nb_levels, 200.);
