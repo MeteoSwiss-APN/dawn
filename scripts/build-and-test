@@ -59,7 +59,7 @@ python -m pip install -e $dawn_source_dir/dawn
 
 # Testing
 if [ "$run_tests" == "true" ]; then
-    (cd $dawn_build_dir && ctest --output-on-failure --force-new-ctest-process)
+    (cd $dawn_build_dir && ctest --output-on-failure --force-new-ctest-process --quiet --max-width 80)
 
     # Clang-GridTools
     if [ -n "$cg_source_dir" ]; then
@@ -73,6 +73,6 @@ if [ "$run_tests" == "true" ]; then
 
         cmake --build $cg_build_dir --config $build_type --parallel $build_jobs
 
-        (cd $cg_build_dir && ctest --output-on-failure --force-new-ctest-process)
+        (cd $cg_build_dir && ctest --output-on-failure --force-new-ctest-process --quiet --max-width 80)
     fi
 fi
