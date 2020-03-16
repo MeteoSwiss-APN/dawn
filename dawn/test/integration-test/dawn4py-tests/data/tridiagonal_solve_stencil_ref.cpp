@@ -43,11 +43,12 @@ using namespace gridtools::dawn;
 //---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms105_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms116_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, const int tmpBeginIIndex, const int tmpBeginJIndex, const int jstride_tmp, const int kstride_tmp, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d, ::dawn::float_type * const __tmp_m_100) {
 
   // Start kernel
   ::dawn::float_type c_kcache[2];
   ::dawn::float_type d_kcache[2];
+  ::dawn::float_type __tmp_m_100_kcache[1];
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
@@ -129,12 +130,14 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
 c_kcache[1] = (c_kcache[1] / __ldg(&(b[idx111])));
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-int __local_m_100 = ((::dawn::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
-c_kcache[1] = (c_kcache[1] * __local_m_100);
-d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_100);
+__tmp_m_100_kcache[0] = ((::dawn::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __tmp_m_100_kcache[0]);
   }
     // Flush of kcaches
-
+  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+      __tmp_m_100[idx111]= __tmp_m_100_kcache[0];
+  }
     // Flush of kcaches
   if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
       c[idx111+stride_111_2*-1]= c_kcache[0];
@@ -155,10 +158,88 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
       d[idx111+stride_111_2*-1]= d_kcache[0];
   }}
   // Final flush of kcaches
+if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+}
+  // Final flush of kcaches
+}
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms117_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, const int tmpBeginIIndex, const int tmpBeginJIndex, const int jstride_tmp, const int kstride_tmp, ::dawn::float_type * const c, ::dawn::float_type * const __tmp_m_100) {
+
+  // Start kernel
+  ::dawn::float_type c_kcache[1];
+  ::dawn::float_type __tmp_m_100_kcache[1];
+  const unsigned int nx = isize;
+  const unsigned int ny = jsize;
+  const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
+  const int block_size_j = (blockIdx.y + 1) * 1 < ny ? 1 : ny - blockIdx.y * 1;
+
+  // computing the global position in the physical domain
+
+  // In a typical cuda block we have the following regions
+
+  // aa bbbbbbbb cc
+
+  // aa bbbbbbbb cc
+
+  // hh dddddddd ii
+
+  // hh dddddddd ii
+
+  // hh dddddddd ii
+
+  // hh dddddddd ii
+
+  // ee ffffffff gg
+
+  // ee ffffffff gg
+
+  // Regions b,d,f have warp (or multiple of warp size)
+
+  // Size of regions a, c, h, i, e, g are determined by max_extent_t
+
+  // Regions b,d,f are easily executed by dedicated warps (one warp for each line)
+
+  // Regions (a,h,e) and (c,i,g) are executed by two specialized warp
+  int iblock = 0 - 1;
+  int jblock = 0 - 1;
+if(threadIdx.y < +1) {
+    iblock = threadIdx.x;
+    jblock = (int)threadIdx.y + 0;
+}
+  // initialized iterators
+  int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*1+jblock)*stride_111_1;
+
+  // jump iterators to match the beginning of next interval
+  idx111 += stride_111_2*(1);
+
+  // Pre-fill of kcaches
+for(int k = 1+0; k <=  ksize - 1 + 0+0; ++k) {
+
+    // Head fill of kcaches
+  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+      c_kcache[0] =c[idx111];
+      __tmp_m_100_kcache[0] =__ldg(&(__tmp_m_100[idx111]));
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+c_kcache[0] = (c_kcache[0] * __tmp_m_100_kcache[0]);
+  }
+    // Flush of kcaches
+
+    // Flush of kcaches
+  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+      c[idx111]= c_kcache[0];
+  }
+    // Slide kcaches
+
+    // increment iterators
+    idx111+=stride_111_2;
+}
+  // Final flush of kcaches
+if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
+}
+  // Final flush of kcaches
 
   // Final flush of kcaches
 }
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms118_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
   ::dawn::float_type d_kcache[2];
@@ -261,9 +342,13 @@ public:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
     const gridtools::dawn::domain m_dom;
+
+    // temporary storage declarations
+    tmp_meta_data_t m_tmp_meta_data;
+    tmp_storage_t m___tmp_m_100;
   public:
 
-    stencil_49(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_49"), m_dom(dom_){}
+    stencil_49(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_49"), m_dom(dom_), m_tmp_meta_data(32+0, 1+0, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 1 - 1) / 1, dom_.ksize() + 2 * 0), m___tmp_m_100(m_tmp_meta_data){}
     static constexpr dawn::driver::cartesian_extent a_extent = {0,0, 0,0, 0,0};
     static constexpr dawn::driver::cartesian_extent b_extent = {0,0, 0,0, 0,0};
     static constexpr dawn::driver::cartesian_extent c_extent = {0,0, 0,0, -1,0};
@@ -278,6 +363,7 @@ public:
       gridtools::data_view<storage_ijk_t> b= gridtools::make_device_view(b_ds);
       gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
       gridtools::data_view<storage_ijk_t> d= gridtools::make_device_view(d_ds);
+      gridtools::data_view<tmp_storage_t> __tmp_m_100= gridtools::make_device_view( m___tmp_m_100);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
@@ -286,7 +372,20 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil_stencil49_ms105_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil_stencil49_ms116_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],m___tmp_m_100.get_storage_info_ptr()->template begin<0>(),m___tmp_m_100.get_storage_info_ptr()->template begin<1>(),m___tmp_m_100.get_storage_info_ptr()->template stride<1>(),m___tmp_m_100.get_storage_info_ptr()->template stride<4>(),(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )), (__tmp_m_100.data()+ m___tmp_m_100.get_storage_info_ptr()->index(__tmp_m_100.begin<0>(), __tmp_m_100.begin<1>(),__tmp_m_100.begin<2>(),__tmp_m_100.begin<3>(), 0)));
+      };
+      {;
+      gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
+      gridtools::data_view<tmp_storage_t> __tmp_m_100= gridtools::make_device_view( m___tmp_m_100);
+      const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
+      const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
+      const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
+      dim3 threads(32,1+0,1);
+      const unsigned int nbx = (nx + 32 - 1) / 32;
+      const unsigned int nby = (ny + 1 - 1) / 1;
+      const unsigned int nbz = 1;
+      dim3 blocks(nbx, nby, nbz);
+      tridiagonal_solve_stencil_stencil49_ms117_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],m___tmp_m_100.get_storage_info_ptr()->template begin<0>(),m___tmp_m_100.get_storage_info_ptr()->template begin<1>(),m___tmp_m_100.get_storage_info_ptr()->template stride<1>(),m___tmp_m_100.get_storage_info_ptr()->template stride<4>(),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )), (__tmp_m_100.data()+ m___tmp_m_100.get_storage_info_ptr()->index(__tmp_m_100.begin<0>(), __tmp_m_100.begin<1>(),__tmp_m_100.begin<2>(),__tmp_m_100.begin<3>(), 0)));
       };
       {;
       gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
@@ -299,7 +398,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil_stencil49_ms106_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil_stencil49_ms118_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
 
       // stopping timers

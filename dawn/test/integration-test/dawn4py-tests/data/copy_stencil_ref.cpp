@@ -87,19 +87,28 @@ if(threadIdx.y < +1) {
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*1+jblock)*stride_111_1;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
-  idx111 += max(0, blockIdx.z * 4) * stride_111_2;
-  int kleg_lower_bound = max(0,blockIdx.z*4);
-  int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
-for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
+  // Pre-fill of kcaches
+for(int k = 0+0; k <=  ksize - 1 + 0+0; ++k) {
+
+    // Head fill of kcaches
   if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
 out[idx111] = __ldg(&(in[idx111+1*1]));
   }
+    // Flush of kcaches
+
+    // Flush of kcaches
+
     // Slide kcaches
 
     // increment iterators
     idx111+=stride_111_2;
-}}
+}
+  // Final flush of kcaches
+
+  // Final flush of kcaches
+
+  // Final flush of kcaches
+}
 
 class copy_stencil {
 public:
@@ -141,7 +150,7 @@ public:
       dim3 threads(32,1+0,1);
       const unsigned int nbx = (nx + 32 - 1) / 32;
       const unsigned int nby = (ny + 1 - 1) / 1;
-      const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
+      const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
       copy_stencil_stencil11_ms23_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
       };
