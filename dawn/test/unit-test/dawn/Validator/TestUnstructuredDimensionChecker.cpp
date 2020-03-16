@@ -269,4 +269,61 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse_1) {
                                           b.lit(0.), LocType::Edges, LocType::Cells)))))))),
       ".*Dimensions consistency check failed.*");
 }
+TEST(UnstructuredDimensionCheckerTest, StageLocType_1) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto f_c_in = b.field("f_c_in", LocType::Cells);
+  auto f_c_out = b.field("f_c_out", LocType::Cells);
+
+  auto stencil = b.build(
+      "fail",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c_in))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(false, dawn::SourceLocation()));
+}
+TEST(UnstructuredDimensionCheckerTest, StageLocType_2) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto f_c_in = b.field("f_c_in", LocType::Cells);
+  auto f_c_out = b.field("f_c_out", LocType::Cells);
+  auto f_e_in = b.field("f_e_in", LocType::Edges);
+  auto f_e_out = b.field("f_e_out", LocType::Edges);
+
+  auto stencil = b.build(
+      "fail",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c_in))),
+                                             b.stmt(b.assignExpr(b.at(f_e_out), b.at(f_e_in))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(false, dawn::SourceLocation()));
+}
+TEST(UnstructuredDimensionCheckerTest, StageLocType_3) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto f_v_in = b.field("f_v_in", LocType::Vertices);
+  auto f_v_out = b.field("f_v_out", LocType::Vertices);
+
+  auto stencil =
+      b.build("pass", b.stencil(b.multistage(
+                          LoopOrderKind::Parallel,
+                          b.stage(LocType::Vertices,
+                                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(f_v_out), b.at(f_v_in))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
 } // namespace
