@@ -63,10 +63,10 @@ public:
   /// inconsistency is found, the second element indicates its location in the source.
   using ConsistencyResult = std::tuple<bool, SourceLocation>;
 
-  ConsistencyResult checkDimensionsConsistency(const dawn::SIR&);
-  ConsistencyResult checkDimensionsConsistency(const dawn::iir::IIR&,
-                                               const iir::StencilMetaInformation&);
-  ConsistencyResult checkStageLocTypeConsistency(const dawn::iir::IIR&,
-                                                 const iir::StencilMetaInformation&);
+  static ConsistencyResult checkDimensionsConsistency(const dawn::SIR&);
+  static ConsistencyResult checkDimensionsConsistency(const dawn::iir::IIR&,
+                                                      const iir::StencilMetaInformation&);
+  static ConsistencyResult checkStageLocTypeConsistency(const dawn::iir::IIR&,
+                                                        const iir::StencilMetaInformation&);
 };
 } // namespace dawn

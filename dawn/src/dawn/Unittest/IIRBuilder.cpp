@@ -94,14 +94,12 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
-  UnstructuredDimensionChecker dimensionsChecker;
-  GridTypeChecker gridTypeChecker;
   if(new_si->getIIR()->getGridType() == ast::GridType::Unstructured) {
-    auto [checkResult, errorLoc] = dimensionsChecker.checkDimensionsConsistency(
+    auto [checkResult, errorLoc] = UnstructuredDimensionChecker::checkDimensionsConsistency(
         *new_si->getIIR().get(), new_si->getMetaData());
     DAWN_ASSERT_MSG(checkResult, "Dimensions consistency check failed.");
   }
-  DAWN_ASSERT(gridTypeChecker.checkGridTypeConsistency(*new_si->getIIR().get()));
+  DAWN_ASSERT(GridTypeChecker::checkGridTypeConsistency(*new_si->getIIR().get()));
 
   dawn::codegen::stencilInstantiationContext map;
   return new_si;
