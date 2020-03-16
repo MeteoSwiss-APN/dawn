@@ -11,6 +11,7 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 if(DAWN_REQUIRE_UNSTRUCTURED_TESTING)
   find_package(eckit REQUIRED)
@@ -92,8 +93,8 @@ if(eckit_FOUND AND atlas_FOUND)
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
   )
 
-  add_test(NAME ${test_name}
-    COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
+  gtest_discover_tests(${test_name} TEST_PREFIX "Dawn::Integration::Unstructured::"
+    DISCOVERY_TIMEOUT 30
   )
 
 else()
