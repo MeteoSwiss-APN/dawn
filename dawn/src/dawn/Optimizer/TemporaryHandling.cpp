@@ -27,7 +27,7 @@ namespace dawn {
 
 namespace {
 sir::HorizontalFieldDimension
-getHorizontalFieldDimensions(iir::StencilInstantiation const* instantiation, int accessID) {
+getHorizontalFieldDimensionFromVar(iir::StencilInstantiation const* instantiation, int accessID) {
   auto cartesian = instantiation->getIIR()->getGridType() == ast::GridType::Cartesian;
   if(cartesian) {
     return sir::HorizontalFieldDimension(ast::cartesian, {true, true});
@@ -47,7 +47,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
 
   // Figure out dimensions
   sir::FieldDimensions fieldDims =
-      sir::FieldDimensions{getHorizontalFieldDimensions(instantiation, accessID), true};
+      sir::FieldDimensions{getHorizontalFieldDimensionFromVar(instantiation, accessID), true};
 
   // Compute name of field
   std::string fieldname = iir::InstantiationHelper::makeTemporaryFieldname(
