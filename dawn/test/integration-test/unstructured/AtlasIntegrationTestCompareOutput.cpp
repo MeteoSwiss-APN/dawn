@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "AtlasCartesianWrapper.h"
-#include "AtlasVerifier.h"
+#include "UnstructuredVerifier.h"
 
 #include "atlas/grid.h"
 #include "atlas/mesh/actions/BuildCellCentres.h"
@@ -26,7 +26,6 @@
 #include "atlas/output/Gmsh.h"
 #include "interface/atlas_interface.hpp"
 
-#include <array/native/NativeArrayView.h>
 #include <field/Field.h>
 #include <gtest/gtest.h>
 
@@ -34,7 +33,7 @@
 #include <tuple>
 namespace {
 
-atlas::Mesh GenerateMesh(size_t nx, size_t ny) {
+atlas::Mesh generateMesh(size_t nx, size_t ny) {
   std::stringstream configStr;
   configStr << "L" << nx << "x" << ny;
   atlas::StructuredGrid structuredGrid = atlas::Grid(configStr.str());
@@ -47,7 +46,7 @@ atlas::Mesh GenerateMesh(size_t nx, size_t ny) {
   return mesh;
 }
 
-std::tuple<atlas::Field, atlasInterface::Field<double>> MakeAtlasField(const std::string& name,
+std::tuple<atlas::Field, atlasInterface::Field<double>> makeAtlasField(const std::string& name,
                                                                        size_t size, size_t kSize) {
   atlas::Field field_F{name, atlas::array::DataType::real64(),
                        atlas::array::make_shape(size, kSize)};
@@ -55,14 +54,14 @@ std::tuple<atlas::Field, atlasInterface::Field<double>> MakeAtlasField(const std
 }
 
 std::tuple<atlas::Field, atlasInterface::SparseDimension<double>>
-MakeAtlasSparseField(const std::string& name, size_t size, size_t sparseSize, int kSize) {
+makeAtlasSparseField(const std::string& name, size_t size, size_t sparseSize, int kSize) {
   atlas::Field field_F{name, atlas::array::DataType::real64(),
                        atlas::array::make_shape(size, kSize, sparseSize)};
   return {field_F, atlas::array::make_view<double, 3>(field_F)};
 }
 
 template <typename T>
-void InitField(atlasInterface::Field<T>& field, size_t numEl, size_t kSize, T val) {
+void initField(atlasInterface::Field<T>& field, size_t numEl, size_t kSize, T val) {
   for(int level = 0; level < kSize; ++level) {
     for(int elIdx = 0; elIdx < numEl; ++elIdx) {
       field(elIdx, level) = val;
@@ -71,7 +70,7 @@ void InitField(atlasInterface::Field<T>& field, size_t numEl, size_t kSize, T va
 }
 
 template <typename T>
-void InitSparseField(atlasInterface::SparseDimension<T>& sparseField, size_t numEl, size_t kSize,
+void initSparseField(atlasInterface::SparseDimension<T>& sparseField, size_t numEl, size_t kSize,
                      size_t sparseSize, T val) {
   for(int level = 0; level < kSize; ++level) {
     for(int elIdx = 0; elIdx < numEl; ++elIdx) {
@@ -86,16 +85,16 @@ namespace {
 #include <generated_copyCell.hpp>
 TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
   // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  auto mesh = GenerateMesh(32, 32);
+  auto mesh = generateMesh(32, 32);
   // We only need one vertical level
   size_t nb_levels = 1;
 
-  auto [in_F, in_v] = MakeAtlasField("in", mesh.cells().size(), nb_levels);
-  auto [out_F, out_v] = MakeAtlasField("out", mesh.cells().size(), nb_levels);
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
 
   // Initialize fields with data
-  InitField(in_v, mesh.cells().size(), nb_levels, 1.0);
-  InitField(out_v, mesh.cells().size(), nb_levels, -1.0);
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
 
   // Run the stencil
   dawn_generated::cxxnaiveico::copyCell<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
@@ -111,14 +110,14 @@ TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
 namespace {
 #include <generated_copyEdge.hpp>
 TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
-  auto mesh = GenerateMesh(32, 32);
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 1;
 
-  auto [in_F, in_v] = MakeAtlasField("in", mesh.edges().size(), nb_levels);
-  auto [out_F, out_v] = MakeAtlasField("out", mesh.edges().size(), nb_levels);
+  auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.edges().size(), nb_levels);
 
-  InitField(in_v, mesh.edges().size(), nb_levels, 1.0);
-  InitField(out_v, mesh.edges().size(), nb_levels, -1.0);
+  initField(in_v, mesh.edges().size(), nb_levels, 1.0);
+  initField(out_v, mesh.edges().size(), nb_levels, -1.0);
 
   dawn_generated::cxxnaiveico::copyEdge<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
                                                                   in_v, out_v)
@@ -132,15 +131,15 @@ TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
 namespace {
 #include <generated_verticalSum.hpp>
 TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
-  auto mesh = GenerateMesh(32, 32);
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 5; // must be >= 3
 
-  auto [in_F, in_v] = MakeAtlasField("in", mesh.edges().size(), nb_levels);
-  auto [out_F, out_v] = MakeAtlasField("out", mesh.edges().size(), nb_levels);
+  auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.edges().size(), nb_levels);
 
   double initValue = 10.;
-  InitField(in_v, mesh.cells().size(), nb_levels, initValue);
-  InitField(out_v, mesh.cells().size(), nb_levels, -1.0);
+  initField(in_v, mesh.cells().size(), nb_levels, initValue);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
 
   // Run verticalSum, which just copies the values in the cells above and below into the current
   // level and adds them up
@@ -159,14 +158,14 @@ TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
 namespace {
 #include <generated_accumulateEdgeToCell.hpp>
 TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
-  auto mesh = GenerateMesh(32, 32);
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 1;
 
-  auto [in_F, in_v] = MakeAtlasField("in", mesh.edges().size(), nb_levels);
-  auto [out_F, out_v] = MakeAtlasField("out", mesh.cells().size(), nb_levels);
+  auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
 
-  InitField(in_v, mesh.edges().size(), nb_levels, 1.0);
-  InitField(out_v, mesh.cells().size(), nb_levels, -1.0);
+  initField(in_v, mesh.edges().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
 
   dawn_generated::cxxnaiveico::accumulateEdgeToCell<atlasInterface::atlasTag>(
       mesh, static_cast<int>(nb_levels), in_v, out_v)
@@ -183,14 +182,14 @@ namespace {
 #include <generated_diffusion.hpp>
 #include <reference_diffusion.hpp>
 TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
-  auto mesh = GenerateMesh(32, 32);
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 1;
 
   // Create input (on cells) and output (on cells) fields for generated and reference stencils
-  auto [in_ref, in_v_ref] = MakeAtlasField("in_v_ref", mesh.cells().size(), nb_levels);
-  auto [in_gen, in_v_gen] = MakeAtlasField("in_v_gen", mesh.cells().size(), nb_levels);
-  auto [out_ref, out_v_ref] = MakeAtlasField("out_v_ref", mesh.cells().size(), nb_levels);
-  auto [out_gen, out_v_gen] = MakeAtlasField("out_v_gen", mesh.cells().size(), nb_levels);
+  auto [in_ref, in_v_ref] = makeAtlasField("in_v_ref", mesh.cells().size(), nb_levels);
+  auto [in_gen, in_v_gen] = makeAtlasField("in_v_gen", mesh.cells().size(), nb_levels);
+  auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.cells().size(), nb_levels);
+  auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.cells().size(), nb_levels);
 
   AtlasToCartesian atlasToCartesianMapper(mesh);
 
@@ -294,17 +293,17 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
 
   // apparently, one needs to be added to the second dimension in order to get a
   // square mesh, or we are mis-interpreting the output
-  auto mesh = GenerateMesh(numCell, numCell + 1);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   AtlasToCartesian atlasToCartesianMapper(mesh);
   build_periodic_edges(mesh, numCell, numCell, atlasToCartesianMapper);
 
   int nb_levels = 1;
 
-  auto [ref_cells, ref_cells_v] = MakeAtlasField("ref_cells", mesh.cells().size(), nb_levels);
-  auto [ref_edges, ref_edges_v] = MakeAtlasField("ref_edges", mesh.edges().size(), nb_levels);
-  auto [gen_cells, gen_cells_v] = MakeAtlasField("gen_cells", mesh.cells().size(), nb_levels);
-  auto [gen_edges, gen_edges_v] = MakeAtlasField("gen_edges", mesh.edges().size(), nb_levels);
+  auto [ref_cells, ref_cells_v] = makeAtlasField("ref_cells", mesh.cells().size(), nb_levels);
+  auto [ref_edges, ref_edges_v] = makeAtlasField("ref_edges", mesh.edges().size(), nb_levels);
+  auto [gen_cells, gen_cells_v] = makeAtlasField("gen_cells", mesh.cells().size(), nb_levels);
+  auto [gen_edges, gen_edges_v] = makeAtlasField("gen_edges", mesh.edges().size(), nb_levels);
 
   for(int cellIdx = 0, size = mesh.cells().size(); cellIdx < size; ++cellIdx) {
     auto [cartX, cartY] = atlasToCartesianMapper.cellMidpoint(mesh, cellIdx);
@@ -342,16 +341,16 @@ TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
 
   // apparently, one needs to be added to the second dimension in order to get a
   // square mesh, or we are mis-interpreting the output
-  auto mesh = GenerateMesh(numCell, numCell + 1);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   // the 4 fields required for the thomas algorithm
   //  c.f.
   //  https://en.wikibooks.org/wiki/Algorithm_Implementation/Linear_Algebra/Tridiagonal_matrix_algorithm#C
   int nb_levels = 5;
-  auto [a_f, a_v] = MakeAtlasField("a", mesh.cells().size(), nb_levels);
-  auto [b_f, b_v] = MakeAtlasField("b", mesh.cells().size(), nb_levels);
-  auto [c_f, c_v] = MakeAtlasField("c", mesh.cells().size(), nb_levels);
-  auto [d_f, d_v] = MakeAtlasField("d", mesh.cells().size(), nb_levels);
+  auto [a_f, a_v] = makeAtlasField("a", mesh.cells().size(), nb_levels);
+  auto [b_f, b_v] = makeAtlasField("b", mesh.cells().size(), nb_levels);
+  auto [c_f, c_v] = makeAtlasField("c", mesh.cells().size(), nb_levels);
+  auto [d_f, d_v] = makeAtlasField("d", mesh.cells().size(), nb_levels);
 
   // solution to this problem will be [1,2,3,4,5] at each cell location
   for(int cell = 0; cell < mesh.cells().size(); ++cell) {
@@ -383,14 +382,14 @@ namespace {
 #include <generated_NestedSimple.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
   const int numCell = 10;
-  auto mesh = GenerateMesh(numCell, numCell + 1);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   int nb_levels = 1;
-  auto [cells, v_cells] = MakeAtlasField("cells", mesh.cells().size(), nb_levels);
-  auto [edges, v_edges] = MakeAtlasField("edges", mesh.edges().size(), nb_levels);
-  auto [nodes, v_nodes] = MakeAtlasField("nodes", mesh.nodes().size(), nb_levels);
+  auto [cells, v_cells] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges, v_edges] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes, v_nodes] = makeAtlasField("nodes", mesh.nodes().size(), nb_levels);
 
-  InitField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
+  initField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
 
   dawn_generated::cxxnaiveico::nestedSimple<atlasInterface::atlasTag>(mesh, nb_levels, v_cells,
                                                                       v_edges, v_nodes)
@@ -409,15 +408,15 @@ namespace {
 #include <generated_NestedWithField.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
   const int numCell = 10;
-  auto mesh = GenerateMesh(numCell, numCell + 1);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   int nb_levels = 1;
-  auto [cells, v_cells] = MakeAtlasField("cells", mesh.cells().size(), nb_levels);
-  auto [edges, v_edges] = MakeAtlasField("edges", mesh.edges().size(), nb_levels);
-  auto [nodes, v_nodes] = MakeAtlasField("nodes", mesh.nodes().size(), nb_levels);
+  auto [cells, v_cells] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges, v_edges] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes, v_nodes] = makeAtlasField("nodes", mesh.nodes().size(), nb_levels);
 
-  InitField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
-  InitField(v_edges, mesh.edges().size(), nb_levels, 200.);
+  initField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
+  initField(v_edges, mesh.edges().size(), nb_levels, 200.);
 
   dawn_generated::cxxnaiveico::nestedWithField<atlasInterface::atlasTag>(mesh, nb_levels, v_cells,
                                                                          v_edges, v_nodes)
@@ -436,17 +435,17 @@ TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
 namespace {
 #include <generated_sparseDimension.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
-  auto mesh = GenerateMesh(10, 11);
+  auto mesh = generateMesh(10, 11);
   const int edgesPerCell = 4;
   const int nb_levels = 1;
 
-  auto [cells_F, cells_v] = MakeAtlasField("cells", mesh.cells().size(), nb_levels);
-  auto [edges_F, edges_v] = MakeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [cells_F, cells_v] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges_F, edges_v] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
   auto [sparseDim_F, sparseDim_v] =
-      MakeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
 
-  InitSparseField(sparseDim_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
-  InitField(edges_v, mesh.edges().size(), nb_levels, 1.);
+  initSparseField(sparseDim_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
+  initField(edges_v, mesh.edges().size(), nb_levels, 1.);
 
   dawn_generated::cxxnaiveico::sparseDimension<atlasInterface::atlasTag>(mesh, nb_levels, cells_v,
                                                                          edges_v, sparseDim_v)
@@ -464,17 +463,17 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
 namespace {
 #include <generated_sparseDimensionTwice.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
-  auto mesh = GenerateMesh(10, 11);
+  auto mesh = generateMesh(10, 11);
   const int edgesPerCell = 4;
   const int nb_levels = 1;
 
-  auto [cells_F, cells_v] = MakeAtlasField("cells", mesh.cells().size(), nb_levels);
-  auto [edges_F, edges_v] = MakeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [cells_F, cells_v] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges_F, edges_v] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
   auto [sparseDim_F, sparseDim_v] =
-      MakeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
 
-  InitSparseField(sparseDim_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
-  InitField(edges_v, mesh.edges().size(), nb_levels, 1.);
+  initSparseField(sparseDim_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
+  initField(edges_v, mesh.edges().size(), nb_levels, 1.);
 
   dawn_generated::cxxnaiveico::sparseDimensionTwice<atlasInterface::atlasTag>(
       mesh, nb_levels, cells_v, edges_v, sparseDim_v)

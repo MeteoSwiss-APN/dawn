@@ -21,7 +21,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "AtlasVerifier.h"
+#include "UnstructuredVerifier.h"
 #include "interface/toylib_interface.hpp"
 #include "toylib/toylib.hpp"
 
@@ -191,7 +191,7 @@ TEST(ToylibIntegrationTestCompareOutput, Gradient) {
 
   for(const auto& f : mesh.faces()) {
     auto [x, y] = cellMidpoint(f);
-    double val = sin(x) * sin(y); // periodic signal fitting periodic boundaries
+    double val = sin(x) * sin(y);
     ref_cells(f, 0) = val;
     gen_cells(f, 0) = val;
   }

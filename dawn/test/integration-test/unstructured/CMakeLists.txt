@@ -71,7 +71,7 @@ if(eckit_FOUND AND atlas_FOUND)
   set(test_name AtlasIntegrationTestCompareOutput)
   add_executable(${test_name}
     AtlasIntegrationTestCompareOutput.cpp
-    AtlasVerifier.h
+    UnstructuredVerifier.h
     AtlasCartesianWrapper.h
     AtlasCartesianWrapper.cpp
     ${generated_stencil_codes}
@@ -100,7 +100,7 @@ if(eckit_FOUND AND atlas_FOUND)
   set(test_name ToylibIntegrationTestCompareOutput)
   add_executable(${test_name}
     ToylibIntegrationTestCompareOutput.cpp
-    AtlasVerifier.h    
+    UnstructuredVerifier.h    
     ${generated_stencil_codes}
     ${reference_stencil_codes}
   )
