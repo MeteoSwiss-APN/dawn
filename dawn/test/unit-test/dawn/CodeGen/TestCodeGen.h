@@ -111,6 +111,14 @@ protected:
     return stencil_inst;
   }
 
+  std::shared_ptr<dawn::iir::StencilInstantiation> getConditionalStencil() {
+    dawn::OptimizerContext::OptimizerContextOptions options;
+    std::unique_ptr<dawn::OptimizerContext> context;
+    dawn::UIDGenerator::getInstance()->reset();
+
+    return dawn::CompilerUtil::load("../input/conditional_stencil.iir", options, context);
+  }
+
   void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencil_inst,
                const std::string& ref_file) {
     std::ostringstream oss;
