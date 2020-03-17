@@ -29,3 +29,5 @@ file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Integration::Optimizer::TestsFromSIR::"
   EXTRA_ARGS "${CMAKE_CURRENT_BINARY_DIR}/"
   DISCOVERY_TIMEOUT 30)
+
+add_subdirectory(samples)
