@@ -18,7 +18,14 @@
 #include "atlas/mesh.h"
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <iterator>
+#include <set>
+#include <tuple>
+#include <unordered_map>
+#include <variant>
+
+#include "../driver-includes/unstructured_interface.hpp"
 
 namespace utility {
 namespace impl_ {
@@ -190,6 +197,183 @@ std::vector<int> const nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx
     }
   }
   return neighs;
+}
+
+// NOT working with std::variant
+//  - connectivity tables are returned as refs
+//  - refs are not allowed as variants
+//  - variants need to be default constructible, reference_wrappers are not
+// class ConnInterface {
+// private:
+//   std::variant<atlas::mesh::HybridElements::Connectivity*, atlas::mesh::Nodes::Connectivity*>
+//       nbhTable_;
+
+// public:
+//   ConnInterface(atlas::mesh::HybridElements::Connectivity* nbhTable) : nbhTable_(nbhTable){};
+//   ConnInterface(atlas::mesh::Nodes::Connectivity* nbhTable) : nbhTable_(nbhTable){};
+
+//   size_t cols(size_t idx) {
+//     if(auto pval = std::get_if<atlas::mesh::HybridElements::Connectivity*>(&nbhTable_)) {
+//       return (*pval)->cols(idx);
+//     } else if(auto pval = std::get_if<atlas::mesh::Nodes::Connectivity*>(&nbhTable_)) {
+//       return (*pval)->cols(idx);
+//     } else {
+//       assert(false);
+//     }
+//   }
+//   size_t operator()(size_t elem_idx, size_t nbh_idx) {
+//     if(auto pval = std::get_if<atlas::mesh::HybridElements::Connectivity*>(&nbhTable_)) {
+//       return (**pval)(elem_idx, nbh_idx);
+//     } else if(auto pval = std::get_if<atlas::mesh::Nodes::Connectivity*>(&nbhTable_)) {
+//       return (**pval)(elem_idx, nbh_idx);
+//     } else {
+//       assert(false);
+//     }
+//   }
+// };
+
+class ConnInterface {
+private:
+  enum class ConnType { Nodes, Hybrid };
+  ConnType connType_;
+  // can't store a reference dirctly because reference members need all be set upon creaton of the
+  // object
+  // can't use a reference wrapper directly because they are not default constructible
+  // pointers to references are illegal
+  // so here goes optional reference wrappers, I guess?
+  std::optional<std::reference_wrapper<const atlas::mesh::Nodes::Connectivity>> nodesTable_;
+  std::optional<std::reference_wrapper<const atlas::mesh::HybridElements::Connectivity>>
+      hybridTable_;
+
+public:
+  ConnInterface(const atlas::mesh::HybridElements::Connectivity& nbhTable)
+      : hybridTable_(nbhTable) {
+    connType_ = ConnType::Hybrid;
+  };
+  ConnInterface(const atlas::mesh::Nodes::Connectivity& nbhTable) : nodesTable_(nbhTable) {
+    connType_ = ConnType::Nodes;
+  };
+
+  size_t cols(size_t idx) {
+    switch(connType_) {
+    case ConnType::Nodes:
+      return (*nodesTable_).get().cols(idx);
+    case ConnType::Hybrid:
+      return (*hybridTable_).get().cols(idx);
+    }
+    throw std::runtime_error("unreachable");
+  }
+
+  size_t operator()(size_t elem_idx, size_t nbh_idx) {
+    switch(connType_) {
+    case ConnType::Nodes:
+      return (*nodesTable_).get()(elem_idx, nbh_idx);
+    case ConnType::Hybrid:
+      return (*hybridTable_).get()(elem_idx, nbh_idx);
+    }
+    throw std::runtime_error("unreachable");
+  }
+};
+
+// neighbor tables, adressable by two location types (from -> to)
+typedef std::tuple<dawn::LocationType, dawn::LocationType> key_t;
+
+struct key_hash : public std::unary_function<key_t, std::size_t> {
+  std::size_t operator()(const key_t& k) const {
+    return size_t(std::get<0>(k)) ^ size_t(std::get<1>(k));
+  }
+};
+
+struct key_equal : public std::binary_function<key_t, key_t, bool> {
+  bool operator()(const key_t& v0, const key_t& v1) const {
+    return (std::get<0>(v0) == std::get<0>(v1) && std::get<1>(v0) == std::get<1>(v1));
+  }
+};
+
+// recursive function collecting neighbors succesively
+void getNeighborsImpl(
+    const std::unordered_map<key_t, ConnInterface, key_hash, key_equal>& nbhTables,
+    std::vector<dawn::LocationType>& chain, dawn::LocationType targetType, std::vector<int> front,
+    std::set<int>& result) {
+  dawn::LocationType from = chain.back();
+  chain.pop_back();
+  dawn::LocationType to = chain.back();
+
+  auto table = nbhTables.at({from, to});
+
+  std::vector<int> newFront;
+  for(auto idx : front) {
+    for(int nbhIdx = 0; nbhIdx < table.cols(idx); nbhIdx++) {
+      newFront.push_back(table(idx, nbhIdx));
+    }
+  }
+
+  if(to == targetType) {
+    std::copy(newFront.begin(), newFront.end(), std::inserter(result, result.end()));
+  }
+
+  if(chain.size() >= 2) {
+    getNeighborsImpl(nbhTables, chain, targetType, newFront, result);
+  }
+}
+
+// entry point, kicks off the recursive function above if required
+std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::LocationType> chain,
+                              int idx) {
+
+  // target type is at the end of the chain (we collect all neighbors of this type "along" the
+  // chain)
+  dawn::LocationType targetType = chain.back();
+
+  // lets revert s.t. we can use the standard std::vector interface (pop_back() and back())
+  std::reverse(std::begin(chain), std::end(chain));
+
+  // convenience wrapper for all neighbor tables
+  std::unordered_map<key_t, ConnInterface, key_hash, key_equal> nbhTables;
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Cells, dawn::LocationType::Edges),
+                    ConnInterface(mesh.cells().edge_connectivity()));
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Cells, dawn::LocationType::Vertices),
+                    ConnInterface(mesh.cells().node_connectivity()));
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Edges, dawn::LocationType::Vertices),
+                    ConnInterface(mesh.edges().cell_connectivity()));
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Edges, dawn::LocationType::Vertices),
+                    ConnInterface(mesh.edges().node_connectivity()));
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Vertices, dawn::LocationType::Cells),
+                    ConnInterface(mesh.nodes().cell_connectivity()));
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Vertices, dawn::LocationType::Edges),
+                    ConnInterface(mesh.nodes().edge_connectivity()));
+
+  // consume first element in chain (where we currently are, "from")
+  dawn::LocationType from = chain.back();
+  chain.pop_back();
+
+  // look at next element
+  dawn::LocationType to = chain.back();
+
+  // retrieve from->to nbh table
+  auto table = nbhTables.at({from, to});
+
+  // update the current from (the neighbors we can reach from the current index)
+  std::vector<int> front;
+  for(int nbhIdx = 0; nbhIdx < table.cols(idx); nbhIdx++) {
+    front.push_back(table(idx, nbhIdx));
+  }
+
+  // result set
+  std::set<int> result;
+
+  // if next element is of target type we collect the current front into the result
+  if(to == targetType) {
+    std::copy(front.begin(), front.end(), std::inserter(result, result.end()));
+  }
+
+  // if there are two or more elements in the chain remaining, we need to recursively keep
+  // collecting neighbors
+  if(chain.size() >= 2) {
+    getNeighborsImpl(nbhTables, chain, targetType, front, result);
+  }
+
+  return std::vector<int>(result.begin(), result.end());
 }
 
 //===------------------------------------------------------------------------------------------===//
