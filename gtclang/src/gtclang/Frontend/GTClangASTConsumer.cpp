@@ -188,6 +188,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().DataLocalityMetric)
     PassGroups.push_back(dawn::PassGroup::DataLocalityMetric);
 
+  if(!context_->getOptions().DisableOptimization)
+    PassGroups.push_back(dawn::PassGroup::SetLoopOrder);
+
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
   std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
       Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), PassGroups));

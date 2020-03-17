@@ -43,7 +43,8 @@ enum class PassGroup {
   SetNonTempCaches,
   SetCaches,
   SetBlockSize,
-  DataLocalityMetric
+  DataLocalityMetric,
+  SetLoopOrder,
 };
 
 /// @brief The DawnCompiler class
