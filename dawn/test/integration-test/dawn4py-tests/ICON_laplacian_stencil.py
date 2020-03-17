@@ -26,7 +26,9 @@ from google.protobuf.json_format import MessageToJson, Parse
 
 
 def main():
-    outputfile = "../input/test_ICON_laplacian_stencil.sir"
+    stencil_name = "ICON_laplacian_stencil"
+    gen_outputfile = f"{stencil_name}.cpp"
+    sir_outputfile = f"{stencil_name}.sir"
     
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
@@ -119,11 +121,11 @@ def main():
     )
 
     sir = sir_utils.make_sir(
-        outputfile,
+        gen_outputfile,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                "icon",
+                stencil_name,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field(
@@ -197,9 +199,18 @@ def main():
         ],
     )
 
-    f = open(outputfile, "w")
+    # write SIR to file (for debugging purposes)
+    f = open(sir_outputfile, "w")
     f.write(MessageToJson(sir))
     f.close()
+
+    # compile
+    code = dawn4py.compile(sir, backend="c++-naive-ico")
+
+    # write to file
+    print(f"Writing generated code to '{gen_outputfile}'")
+    with open(gen_outputfile, "w") as f:
+        f.write(code)
 
 
 if __name__ == "__main__":

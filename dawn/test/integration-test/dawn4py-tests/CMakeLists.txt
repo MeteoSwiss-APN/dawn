@@ -43,3 +43,4 @@ add_python_example(NAME tridiagonal_solve_stencil VERIFY)
 add_python_example(NAME tridiagonal_solve_unstructured)
 add_python_example(NAME global_index_stencil)
 add_python_example(NAME unstructured_stencil)
+add_python_example(NAME ICON_laplacian_stencil) #TODO verify
