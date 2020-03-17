@@ -108,9 +108,9 @@ def main():
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("nabla2_vec"),
                 sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("nabla2t1_vec"),
+                    sir_utils.make_field_access_expr("nabla2t2_vec"),
                     "-",
-                    sir_utils.make_field_access_expr("nabla2t2_vec")),
+                    sir_utils.make_field_access_expr("nabla2t1_vec")),
                 "=",
             ),
         ]
