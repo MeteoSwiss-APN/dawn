@@ -27,8 +27,8 @@ from google.protobuf.json_format import MessageToJson, Parse
 
 def main():
     outputfile = "../input/test_ICON_laplacian_stencil.sir"
+    
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
-
 
     body_ast = sir_utils.make_ast(
         [
@@ -68,7 +68,7 @@ def main():
                     rhs=sir_utils.make_field_access_expr("rot_vec"),
                     lhs_location=SIR.LocationType.Value("Edge"),
                     rhs_location=SIR.LocationType.Value("Vertex"),
-                    weights=make_weights([-1.0, 1.0])
+                    weights=sir_utils.make_weights([-1.0, 1.0])
                 ),
                 "=",
             ),
@@ -91,7 +91,7 @@ def main():
                     rhs=sir_utils.make_field_access_expr("div_vec"),
                     lhs_location=SIR.LocationType.Value("Edge"),
                     rhs_location=SIR.LocationType.Value("Cell"),
-                    weights=make_weights([-1.0, 1.0])
+                    weights=sir_utils.make_weights([-1.0, 1.0])
                 ),
                 "=",
             ),
@@ -119,11 +119,11 @@ def main():
     )
 
     sir = sir_utils.make_sir(
-        OUTPUT_FILE,
+        outputfile,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                OUTPUT_NAME,
+                "icon",
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field(
