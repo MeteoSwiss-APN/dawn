@@ -334,7 +334,7 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
                     ConnInterface(mesh.cells().edge_connectivity()));
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Cells, dawn::LocationType::Vertices),
                     ConnInterface(mesh.cells().node_connectivity()));
-  nbhTables.emplace(std::make_tuple(dawn::LocationType::Edges, dawn::LocationType::Vertices),
+  nbhTables.emplace(std::make_tuple(dawn::LocationType::Edges, dawn::LocationType::Cells),
                     ConnInterface(mesh.edges().cell_connectivity()));
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Edges, dawn::LocationType::Vertices),
                     ConnInterface(mesh.edges().node_connectivity()));
