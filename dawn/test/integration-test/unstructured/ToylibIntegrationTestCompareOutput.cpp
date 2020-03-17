@@ -182,6 +182,14 @@ TEST(ToylibIntegrationTestCompareOutput, Gradient) {
                    M_PI); // periodic seems bugged in toylib, but boundaries are simply cut off.
                           // since our boundaries are 0 this seems not too bad of a compromise
 
+  // boundary edges in toylib have only one entry in their cell neighbors list; the cell inside the
+  // domain. Hence the domain can be said to be "cut off" there. For the gradient test case we have
+  // zero boundaries. So this kinda works out.
+
+  // In atlas we have two entries. Instead of deleting one entry the domain is wrapped
+  // around. But again, we have zero boundaries, so a boundary edge "sees" another zero on the other
+  // end of the domain.
+
   const int nb_levels = 1;
 
   toylib::FaceData<double> ref_cells(mesh, nb_levels);
