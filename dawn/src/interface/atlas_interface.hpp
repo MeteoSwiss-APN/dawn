@@ -295,21 +295,29 @@ void getNeighborsImpl(
     const std::unordered_map<key_t, ConnInterface, key_hash, key_equal>& nbhTables,
     std::vector<dawn::LocationType>& chain, dawn::LocationType targetType, std::vector<int> front,
     std::set<int>& result) {
+
+  assert(chain.size() >= 2);
+
   dawn::LocationType from = chain.back();
   chain.pop_back();
   dawn::LocationType to = chain.back();
 
-  auto table = nbhTables.at({from, to});
+  const auto& tableFront = nbhTables.at({from, to});
+  bool isNeighborOfTarget = nbhTables.count({from, targetType});
 
   std::vector<int> newFront;
   for(auto idx : front) {
-    for(int nbhIdx = 0; nbhIdx < table.cols(idx); nbhIdx++) {
-      newFront.push_back(table(idx, nbhIdx));
+    // Build up new front for next recursive call
+    for(int nbhIdx = 0; nbhIdx < tableFront.cols(idx); nbhIdx++) {
+      newFront.push_back(tableFront(idx, nbhIdx));
     }
-  }
-
-  if(to == targetType) {
-    std::copy(newFront.begin(), newFront.end(), std::inserter(result, result.end()));
+    if(isNeighborOfTarget) {
+      const auto& tableTarget = nbhTables.at({from, targetType});
+      // Add to result set the neighbors (of target type) of current (idx)
+      for(int nbhIdx = 0; nbhIdx < tableTarget.cols(idx); nbhIdx++) {
+        result.push_back(tableTarget(idx, nbhIdx));
+      }
+    }
   }
 
   if(chain.size() >= 2) {
@@ -318,8 +326,8 @@ void getNeighborsImpl(
 }
 
 // entry point, kicks off the recursive function above if required
-std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::LocationType> chain,
-                              int idx) {
+std::set<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::LocationType> chain,
+                           int idx) {
 
   // target type is at the end of the chain (we collect all neighbors of this type "along" the
   // chain)
@@ -343,37 +351,13 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Vertices, dawn::LocationType::Edges),
                     ConnInterface(mesh.nodes().edge_connectivity()));
 
-  // consume first element in chain (where we currently are, "from")
-  dawn::LocationType from = chain.back();
-  chain.pop_back();
-
-  // look at next element
-  dawn::LocationType to = chain.back();
-
-  // retrieve from->to nbh table
-  auto table = nbhTables.at({from, to});
-
-  // update the current from (the neighbors we can reach from the current index)
-  std::vector<int> front;
-  for(int nbhIdx = 0; nbhIdx < table.cols(idx); nbhIdx++) {
-    front.push_back(table(idx, nbhIdx));
-  }
-
-  // result set
+  // result set (ordered)
   std::set<int> result;
 
-  // if next element is of target type we collect the current front into the result
-  if(to == targetType) {
-    std::copy(front.begin(), front.end(), std::inserter(result, result.end()));
-  }
+  // start recursion
+  getNeighborsImpl(nbhTables, chain, targetType, front, result);
 
-  // if there are two or more elements in the chain remaining, we need to recursively keep
-  // collecting neighbors
-  if(chain.size() >= 2) {
-    getNeighborsImpl(nbhTables, chain, targetType, front, result);
-  }
-
-  return std::vector<int>(result.begin(), result.end());
+  return result;
 }
 
 //===------------------------------------------------------------------------------------------===//
