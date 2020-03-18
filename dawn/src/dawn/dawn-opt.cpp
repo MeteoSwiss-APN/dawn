@@ -191,6 +191,8 @@ int main(int argc, char* argv[]) {
   dawnOptions.NAME = result[OPTION].as<TYPE>();
 #include "dawn/Optimizer/Options.inc"
 #undef OPT
+  // Never serialize IIR here
+  dawnOptions.SerializeIIR = false;
   dawn::DawnCompiler compiler(dawnOptions);
 
   // Determine the list of pass groups to run
