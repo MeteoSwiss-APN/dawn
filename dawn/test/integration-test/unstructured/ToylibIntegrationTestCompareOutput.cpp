@@ -51,8 +51,117 @@ std::tuple<double, double> cellMidpoint(const toylib::Face& f) {
   double x = f.vertices()[0]->x() + f.vertices()[1]->x() + f.vertices()[2]->x();
   double y = f.vertices()[0]->y() + f.vertices()[1]->y() + f.vertices()[2]->y();
   return {x / 3., y / 3.};
-};
+}
+std::tuple<double, double> edgeMidpoint(const toylib::Edge& e) {
+  double x = e.vertices()[0]->x() + e.vertices()[1]->x();
+  double y = e.vertices()[0]->y() + e.vertices()[1]->y();
+  return {x / 2., y / 2.};
+}
 
+void debugDumpMesh(const toylib::Grid& mesh, const std::string prefix) {
+  {
+    char buf[256];
+    sprintf(buf, "%sT.txt", prefix.c_str());
+    FILE* fp = fopen(buf, "w+");
+    for(const auto& cellIt : mesh.faces()) {
+      int nodeIdx0 = cellIt.vertices()[0]->id();
+      int nodeIdx1 = cellIt.vertices()[1]->id();
+      int nodeIdx2 = cellIt.vertices()[2]->id();
+      fprintf(fp, "%d %d %d\n", nodeIdx0, nodeIdx1, nodeIdx2);
+    }
+    fclose(fp);
+  }
+
+  {
+    char buf[256];
+    sprintf(buf, "%sP.txt", prefix.c_str());
+    FILE* fp = fopen(buf, "w+");
+    for(const auto& nodeIt : mesh.vertices()) {
+      fprintf(fp, "%f %f \n", nodeIt.x(), nodeIt.y());
+    }
+    fclose(fp);
+  }
+}
+
+} // namespace
+
+namespace {
+TEST(ToylibIntegrationTestCompareOutput, NbhTestTEMP) {
+  int w = 10;
+  toylib::Grid mesh(w, w, false, 1., 1., true);
+  debugDumpMesh(mesh, "nbhToy");
+
+  {
+    std::vector<dawn::LocationType> chain{dawn::LocationType::Edges, dawn::LocationType::Cells,
+                                          dawn::LocationType::Vertices};
+    int testIdx = w * w / 2 + w / 2;
+    toylib::Edge e = mesh.edges()[testIdx];
+    auto [ex, ey] = edgeMidpoint(e);
+    printf("%f %f\n", ex, ey);
+    printf("-----\n");
+    std::vector<const toylib::ToylibElement*> diamond =
+        toylibInterface::getNeighbors(mesh, chain, &e);
+    for(const auto it : diamond) {
+      const toylib::Vertex* v = static_cast<const toylib::Vertex*>(it);
+      printf("%f %f\n", v->x(), v->y());
+    }
+    printf("\n");
+  }
+
+  // {
+  //   std::vector<dawn::LocationType> chain{
+  //       dawn::LocationType::Vertices,
+  //       dawn::LocationType::Cells,
+  //       dawn::LocationType::Edges,
+  //       dawn::LocationType::Cells,
+  //   };
+  //   int testIdx = nx * ny / 2 + ny / 2;
+  //   printf("%f %f\n", xy(testIdx, atlas::LON), xy(testIdx, atlas::LAT));
+  //   printf("-----\n");
+  //   std::vector<int> star = atlasInterface::getNeighbors(mesh, chain, testIdx);
+  //   for(const auto it : star) {
+  //     auto [x, y] = cellMidpoint(mesh, it);
+  //     printf("%f %f\n", x, y);
+  //   }
+  //   printf("\n");
+  // }
+
+  // {
+  //   std::vector<dawn::LocationType> chain{
+  //       dawn::LocationType::Vertices,
+  //       dawn::LocationType::Cells,
+  //       dawn::LocationType::Edges,
+  //   };
+  //   int testIdx = (nx + 3) * ny / 2 + ny / 2 + 4;
+  //   printf("%f %f\n", xy(testIdx, atlas::LON), xy(testIdx, atlas::LAT));
+  //   printf("-----\n");
+  //   std::vector<int> fan = atlasInterface::getNeighbors(mesh, chain, testIdx);
+  //   for(const auto it : fan) {
+  //     auto [x, y] = edgeMidpoint(mesh, it);
+  //     printf("%f %f\n", x, y);
+  //   }
+  //   printf("\n");
+  // }
+
+  // {
+  //   std::vector<dawn::LocationType> chain{dawn::LocationType::Cells, dawn::LocationType::Edges,
+  //                                         dawn::LocationType::Cells, dawn::LocationType::Edges,
+  //                                         dawn::LocationType::Cells};
+  //   int testIdx = 4 * nx;
+  //   auto [x, y] = cellMidpoint(mesh, testIdx);
+  //   printf("%f %f\n", x, y);
+  //   printf("-----\n");
+  //   std::vector<int> intp = atlasInterface::getNeighbors(mesh, chain, testIdx);
+  //   for(const auto it : intp) {
+  //     if(it == -1) {
+  //       continue;
+  //     }
+  //     auto [x, y] = cellMidpoint(mesh, it);
+  //     printf("%f %f\n", x, y);
+  //   }
+  //   printf("\n");
+  // }
+}
 } // namespace
 
 namespace {
