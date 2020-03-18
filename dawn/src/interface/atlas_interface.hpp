@@ -218,7 +218,7 @@ struct key_equal : public std::binary_function<key_t, key_t, bool> {
 void getNeighborsImpl(const std::unordered_map<key_t, std::function<std::vector<int>(int)>,
                                                key_hash, key_equal>& nbhTables,
                       std::vector<dawn::LocationType>& chain, dawn::LocationType targetType,
-                      std::vector<int> front, std::set<int>& result) {
+                      std::vector<int> front, std::list<int>& result) {
   assert(chain.size() >= 2);
   dawn::LocationType from = chain.back();
   chain.pop_back();
@@ -243,6 +243,16 @@ void getNeighborsImpl(const std::unordered_map<key_t, std::function<std::vector<
     getNeighborsImpl(nbhTables, chain, targetType, newFront, result);
   }
 }
+
+template <typename T>
+struct NotDuplicate {
+  bool operator()(const T& element) {
+    return s_.insert(element).second; // true if s_.insert(element);
+  }
+
+private:
+  std::set<T> s_;
+};
 
 // entry point, kicks off the recursive function above if required
 std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::LocationType> chain,
@@ -302,12 +312,15 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   std::vector<int> front = nbhTables.at({from, to})(idx);
 
   // result set
-  std::set<int> result;
+  std::list<int> result;
 
   // start recursion
   getNeighborsImpl(nbhTables, chain, targetType, front, result);
 
-  return std::vector<int>(result.begin(), result.end());
+  std::vector<int> resultUnique;
+  NotDuplicate<int> pred;
+  std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
+  return resultUnique;
 }
 
 //===------------------------------------------------------------------------------------------===//

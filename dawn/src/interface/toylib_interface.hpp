@@ -17,6 +17,7 @@
 #include "../driver-includes/unstructured_interface.hpp"
 #include "../toylib/toylib.hpp"
 #include <functional>
+#include <list>
 #include <set>
 #include <unordered_map>
 
@@ -76,7 +77,7 @@ inline void getNeighborsImpl(
         key_hash, key_equal>& nbhTables,
     std::vector<dawn::LocationType>& chain, dawn::LocationType targetType,
     std::vector<const toylib::ToylibElement*> front,
-    std::set<const toylib::ToylibElement*>& result) {
+    std::list<const toylib::ToylibElement*>& result) {
   dawn::LocationType from = chain.back();
   chain.pop_back();
   dawn::LocationType to = chain.back();
@@ -100,6 +101,16 @@ inline void getNeighborsImpl(
     getNeighborsImpl(nbhTables, chain, targetType, newFront, result);
   }
 }
+
+template <typename T>
+struct NotDuplicate {
+  bool operator()(const T& element) {
+    return s_.insert(element).second; // true if s_.insert(element);
+  }
+
+private:
+  std::set<T> s_;
+};
 
 inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid& mesh,
                                                               std::vector<dawn::LocationType> chain,
@@ -211,12 +222,15 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
   std::vector<const toylib::ToylibElement*> front = nbhTables.at({from, to})(elem);
 
   // result set
-  std::set<const toylib::ToylibElement*> result;
+  std::list<const toylib::ToylibElement*> result;
 
   // start recursion
   getNeighborsImpl(nbhTables, chain, targetType, front, result);
 
-  return std::vector<const toylib::ToylibElement*>(result.begin(), result.end());
+  std::vector<const toylib::ToylibElement*> resultUnique;
+  NotDuplicate<const toylib::ToylibElement*> pred;
+  std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
+  return resultUnique;
 }
 
 //===------------------------------------------------------------------------------------------===//
