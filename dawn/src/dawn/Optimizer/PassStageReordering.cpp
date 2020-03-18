@@ -32,7 +32,7 @@ bool PassStageReordering::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   std::string filenameWE =
       getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
-  if(context_.getOptions().ReportPassStageReodering)
+  if(context_.getOptions().ReportPassStageReordering)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -42,10 +42,10 @@ bool PassStageReordering::run(
     std::unique_ptr<ReorderStrategy> strategy;
     switch(strategy_) {
     case ReorderStrategy::Kind::Greedy:
-      strategy = std::make_unique<ReoderStrategyGreedy>();
+      strategy = std::make_unique<ReorderStrategyGreedy>();
       break;
     case ReorderStrategy::Kind::Partitioning:
-      strategy = std::make_unique<ReoderStrategyPartitioning>();
+      strategy = std::make_unique<ReorderStrategyPartitioning>();
       break;
     default:
       dawn_unreachable("invalid reorder strategy");
@@ -61,7 +61,7 @@ bool PassStageReordering::run(
     if(!stencilPtr)
       return false;
   }
-  if(context_.getOptions().ReportPassStageReodering)
+  if(context_.getOptions().ReportPassStageReordering)
     stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;

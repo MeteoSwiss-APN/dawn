@@ -30,13 +30,14 @@ PYBIND11_MODULE(_dawn4py, m) {
                   bool DefaultNone, bool Parallel, bool SSA, bool PrintStencilGraph,
                   bool SetStageName, bool StageReordering, bool StageMerger, bool TemporaryMerger,
                   bool Inlining, bool IntervalPartitioning, bool TmpToStencilFunction,
-                  bool SetNonTempCaches, bool SetCaches, bool SetBlockSize, bool DataLocalityMetric,
-                  bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
-                  bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
-                  bool ReportPassStageSplit, bool ReportPassMultiStageSplit,
-                  bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
-                  bool ReportPassTemporaryType, bool ReportPassStageReodering,
-                  bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
+                  bool SetNonTempCaches, bool SetCaches, bool SetBlockSize, bool SetLoopOrder,
+                  bool DataLocalityMetric, bool ReportBoundaryConditions,
+                  bool ReportDataLocalityMetric, bool ReportPassTmpToFunction,
+                  bool ReportPassRemoveScalars, bool ReportPassStageSplit,
+                  bool ReportPassMultiStageSplit, bool ReportPassFieldVersioning,
+                  bool ReportPassTemporaryMerger, bool ReportPassTemporaryType,
+                  bool ReportPassStageReordering, bool ReportPassStageMerger,
+                  bool ReportPassSetCaches, bool ReportPassSetBlockSize,
                   bool ReportPassSetNonTempCaches) {
                  return dawn::Options{MaxBlocksPerSM,
                                       nsms,
@@ -83,6 +84,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       SetNonTempCaches,
                                       SetCaches,
                                       SetBlockSize,
+                                      SetLoopOrder,
                                       DataLocalityMetric,
                                       ReportBoundaryConditions,
                                       ReportDataLocalityMetric,
@@ -93,7 +95,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       ReportPassFieldVersioning,
                                       ReportPassTemporaryMerger,
                                       ReportPassTemporaryType,
-                                      ReportPassStageReodering,
+                                      ReportPassStageReordering,
                                       ReportPassStageMerger,
                                       ReportPassSetCaches,
                                       ReportPassSetBlockSize,
@@ -120,8 +122,8 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("temporary_merger") = false, py::arg("inlining") = false,
            py::arg("interval_partitioning") = false, py::arg("tmp_to_stencil_function") = false,
            py::arg("set_non_temp_caches") = false, py::arg("set_caches") = false,
-           py::arg("set_block_size") = false, py::arg("data_locality_metric") = false,
-           py::arg("report_boundary_conditions") = false,
+           py::arg("set_block_size") = false, py::arg("set_loop_order") = false,
+           py::arg("data_locality_metric") = false, py::arg("report_boundary_conditions") = false,
            py::arg("report_data_locality_metric") = false,
            py::arg("report_pass_tmp_to_function") = false,
            py::arg("report_pass_remove_scalars") = false,
@@ -130,7 +132,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("report_pass_field_versioning") = false,
            py::arg("report_pass_temporary_merger") = false,
            py::arg("report_pass_temporary_type") = false,
-           py::arg("report_pass_stage_reodering") = false,
+           py::arg("report_pass_stage_reordering") = false,
            py::arg("report_pass_stage_merger") = false, py::arg("report_pass_set_caches") = false,
            py::arg("report_pass_set_block_size") = false,
            py::arg("report_pass_set_non_temp_caches") = false)
@@ -179,6 +181,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("set_non_temp_caches", &dawn::Options::SetNonTempCaches)
       .def_readwrite("set_caches", &dawn::Options::SetCaches)
       .def_readwrite("set_block_size", &dawn::Options::SetBlockSize)
+      .def_readwrite("set_loop_order", &dawn::Options::SetLoopOrder)
       .def_readwrite("data_locality_metric", &dawn::Options::DataLocalityMetric)
       .def_readwrite("report_boundary_conditions", &dawn::Options::ReportBoundaryConditions)
       .def_readwrite("report_data_locality_metric", &dawn::Options::ReportDataLocalityMetric)
@@ -189,7 +192,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("report_pass_field_versioning", &dawn::Options::ReportPassFieldVersioning)
       .def_readwrite("report_pass_temporary_merger", &dawn::Options::ReportPassTemporaryMerger)
       .def_readwrite("report_pass_temporary_type", &dawn::Options::ReportPassTemporaryType)
-      .def_readwrite("report_pass_stage_reodering", &dawn::Options::ReportPassStageReodering)
+      .def_readwrite("report_pass_stage_reordering", &dawn::Options::ReportPassStageReordering)
       .def_readwrite("report_pass_stage_merger", &dawn::Options::ReportPassStageMerger)
       .def_readwrite("report_pass_set_caches", &dawn::Options::ReportPassSetCaches)
       .def_readwrite("report_pass_set_block_size", &dawn::Options::ReportPassSetBlockSize)
@@ -251,6 +254,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "set_non_temp_caches=" << self.SetNonTempCaches << ",\n    "
            << "set_caches=" << self.SetCaches << ",\n    "
            << "set_block_size=" << self.SetBlockSize << ",\n    "
+           << "set_loop_order=" << self.SetLoopOrder << ",\n    "
            << "data_locality_metric=" << self.DataLocalityMetric << ",\n    "
            << "report_boundary_conditions=" << self.ReportBoundaryConditions << ",\n    "
            << "report_data_locality_metric=" << self.ReportDataLocalityMetric << ",\n    "
@@ -261,7 +265,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "report_pass_field_versioning=" << self.ReportPassFieldVersioning << ",\n    "
            << "report_pass_temporary_merger=" << self.ReportPassTemporaryMerger << ",\n    "
            << "report_pass_temporary_type=" << self.ReportPassTemporaryType << ",\n    "
-           << "report_pass_stage_reodering=" << self.ReportPassStageReodering << ",\n    "
+           << "report_pass_stage_reordering=" << self.ReportPassStageReordering << ",\n    "
            << "report_pass_stage_merger=" << self.ReportPassStageMerger << ",\n    "
            << "report_pass_set_caches=" << self.ReportPassSetCaches << ",\n    "
            << "report_pass_set_block_size=" << self.ReportPassSetBlockSize << ",\n    "
@@ -275,52 +279,56 @@ PYBIND11_MODULE(_dawn4py, m) {
       }))
       .def_property_readonly("options", (dawn::Options & (dawn::DawnCompiler::*)()) &
                                             dawn::DawnCompiler::getOptions)
-      .def("compile",
-           [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
-              py::object unit_info_obj) {
-             auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-             auto translationUnit = self.compile(inMemorySIR);
+      .def(
+          "compile",
+          [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
+             py::object unit_info_obj) {
+            auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
+            auto translationUnit = self.compile(inMemorySIR);
 
-             auto result = py::none();
-             auto export_info = false;
-             auto pp_defines_list = py::list();
-             auto stencils_dict = py::dict();
+            auto result = py::none();
+            auto export_info = false;
+            auto pp_defines_list = py::list();
+            auto stencils_dict = py::dict();
 
-             if(translationUnit) {
-               export_info = true;
-               if(!unit_info_obj.is_none()) {
-                 auto unit_info_dict = unit_info_obj.cast<py::dict>();
-                 export_info = true;
-                 unit_info_dict["filename"] = py::str(translationUnit->getFilename());
-                 unit_info_dict["pp_defines"] = pp_defines_list;
-                 unit_info_dict["stencils"] = stencils_dict;
-                 unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
-               }
+            if(translationUnit) {
+              export_info = true;
+              if(!unit_info_obj.is_none()) {
+                auto unit_info_dict = unit_info_obj.cast<py::dict>();
+                export_info = true;
+                unit_info_dict["filename"] = py::str(translationUnit->getFilename());
+                unit_info_dict["pp_defines"] = pp_defines_list;
+                unit_info_dict["stencils"] = stencils_dict;
+                unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
+              }
 
-               std::ostringstream ss;
-               ss << "//---- Preprocessor defines ----\n";
-               for(const auto& macroDefine : translationUnit->getPPDefines()) {
-                 ss << macroDefine << "\n";
-                 if(export_info)
-                   pp_defines_list.append(py::str(macroDefine));
-               }
-               ss << "\n//---- Globals ----\n";
-               ss << translationUnit->getGlobals();
-               ss << "\n//---- Stencils ----\n";
-               for(const auto& sItem : translationUnit->getStencils()) {
-                 ss << sItem.second;
-                 if(export_info)
-                   stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
-               }
-               result = py::str(ss.str());
-             }
+              std::ostringstream ss;
+              ss << "//---- Preprocessor defines ----\n";
+              for(const auto& macroDefine : translationUnit->getPPDefines()) {
+                ss << macroDefine << "\n";
+                if(export_info)
+                  pp_defines_list.append(py::str(macroDefine));
+              }
+              ss << "\n//---- Includes ----\n"
+                 << "#include \"driver-includes/gridtools_includes.hpp\"\n"
+                 << "using namespace gridtools::dawn;\n";
+              ss << "\n//---- Globals ----\n";
+              ss << translationUnit->getGlobals();
+              ss << "\n//---- Stencils ----\n";
+              for(const auto& sItem : translationUnit->getStencils()) {
+                ss << sItem.second;
+                if(export_info)
+                  stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
+              }
+              result = py::str(ss.str());
+            }
 
-             return result;
-           },
-           "Compile the provided SIR object.\n\n"
-           "Returns a `str` with the compiled source code` on success or `None` otherwise.",
-           "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
-           "members on it.",
-           py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
-           py::arg("unit_info") = nullptr);
+            return result;
+          },
+          "Compile the provided SIR object.\n\n"
+          "Returns a `str` with the compiled source code` on success or `None` otherwise.",
+          "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
+          "members on it.",
+          py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
+          py::arg("unit_info") = nullptr);
 };
