@@ -23,7 +23,11 @@ while [ "$1" != "" ]; do
         dawn_build_dir=$2
         shift
         ;;
-    -c | --clang-gridtools-source-dir)
+    -c | --config)
+        build_type=$2
+        shift
+        ;;
+    --clang-gridtools-source-dir)
         cg_source_dir=$2
         shift
         ;;
@@ -55,7 +59,7 @@ cmake -S $dawn_source_dir -B $dawn_build_dir \
     -DCMAKE_INSTALL_PREFIX=$dawn_install_dir \
     ${build_args[@]}
 
-cmake --build $dawn_build_dir --parallel $build_jobs --target install
+cmake --build $dawn_build_dir --config $build_type --parallel $build_jobs --target install
 
 python -m pip install -e $dawn_source_dir/dawn
 
