@@ -302,8 +302,8 @@ void getNeighborsImpl(
   chain.pop_back();
   dawn::LocationType to = chain.back();
 
-  auto tableFront = nbhTables.at({from, to});
-  auto tableTarget = nbhTables.at({from, targetType});
+  const auto& tableFront = nbhTables.at({from, to});
+  bool isNeighborOfTarget = nbhTables.count({from, targetType});
 
   std::vector<int> newFront;
   for(auto idx : front) {
@@ -311,9 +311,12 @@ void getNeighborsImpl(
     for(int nbhIdx = 0; nbhIdx < tableFront.cols(idx); nbhIdx++) {
       newFront.push_back(tableFront(idx, nbhIdx));
     }
-    // Add to result set the neighbors (of target type) of current (idx)
-    for(int nbhIdx = 0; nbhIdx < tableTarget.cols(idx); nbhIdx++) {
-      result.push_back(tableTarget(idx, nbhIdx));
+    if(isNeighborOfTarget) {
+      const auto& tableTarget = nbhTables.at({from, targetType});
+      // Add to result set the neighbors (of target type) of current (idx)
+      for(int nbhIdx = 0; nbhIdx < tableTarget.cols(idx); nbhIdx++) {
+        result.push_back(tableTarget(idx, nbhIdx));
+      }
     }
   }
 
