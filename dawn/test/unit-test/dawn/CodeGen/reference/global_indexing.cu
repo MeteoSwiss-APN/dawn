@@ -155,8 +155,16 @@ public:
       const unsigned int nbx = (nx + 32 - 1) / 32;
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
+      int* d_stage14GlobalJIndices;
+      cudaMalloc(&d_stage14GlobalJIndices, sizeof(int) * stage14GlobalJIndices.size());
+      cudaMemcpy(d_stage14GlobalJIndices, stage14GlobalJIndices.data(), sizeof(int) * stage14GlobalJIndices.size(), cudaMemcpyHostToDevice);
+      unsigned* d_globalOffsets;
+      cudaMalloc(&d_globalOffsets, sizeof(unsigned) * globalOffsets.size());
+      cudaMemcpy(d_globalOffsets, globalOffsets.data(), sizeof(unsigned) * globalOffsets.size(), cudaMemcpyHostToDevice);
       dim3 blocks(nbx, nby, nbz);
-      generated_stencil28_ms27_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )), stage14GlobalJIndices.data(), globalOffsets.data());
+      generated_stencil28_ms27_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )), d_stage14GlobalJIndices, d_globalOffsets);
+      cudaFree(d_stage14GlobalJIndices);
+      cudaFree(d_globalOffsets);
       };
 
       // stopping timers
