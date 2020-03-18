@@ -50,8 +50,8 @@ OPT(bool, ReportPassPreprocessor, false, "report-pass-preprocessor", "",
     "Print each line of the preprocessed source prepended by the line number (comments and indentation are removed)", "", false, true)
 OPT(bool, Serialized, false, "loaded-serialized", "", "is the passed file serialized data", "", false, true)
 OPT(bool, DisableOptimization, false, "no-opt", "",
-    "Disables all optimisation", "", false, true)
+    "Disables all optimisation", "", false, false)
 OPT(bool, DefaultOptimization, false, "default-opt", "",
-    "Runs all the default optimization", "", false, true)
+    "Runs all the default optimization", "", false, false)
 
 // clang-format on
