@@ -81,14 +81,19 @@ inline void getNeighborsImpl(
   chain.pop_back();
   dawn::LocationType to = chain.back();
 
-  std::vector<const toylib::ToylibElement*> newFront;
-  for(auto elem : front) {
-    auto nextElems = nbhTables.at({from, to})(elem);
-    newFront.insert(std::end(newFront), std::begin(nextElems), std::end(nextElems));
-  }
+  bool isNeighborOfTarget = nbhTables.count({from, targetType});
 
-  if(to == targetType) {
-    std::copy(newFront.begin(), newFront.end(), std::inserter(result, result.end()));
+  std::vector<const toylib::ToylibElement*> newFront;
+  for(auto idx : front) {
+    // Build up new front for next recursive call
+    auto nextElems = nbhTables.at({from, to})(idx);
+    newFront.insert(std::end(newFront), std::begin(nextElems), std::end(nextElems));
+
+    if(isNeighborOfTarget) {
+      const auto& targetElems = nbhTables.at({from, targetType})(idx);
+      // Add to result set the neighbors (of target type) of current (idx)
+      std::copy(targetElems.begin(), targetElems.end(), std::inserter(result, result.end()));
+    }
   }
 
   if(chain.size() >= 2) {
@@ -105,13 +110,6 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
 
   // lets revert s.t. we can use the standard std::vector interface (pop_back() and back())
   std::reverse(std::begin(chain), std::end(chain));
-
-  // consume first element in chain (where we currently are, "from")
-  dawn::LocationType from = chain.back();
-  chain.pop_back();
-
-  // look at next element
-  dawn::LocationType to = chain.back();
 
   auto cellsFromEdge =
       [](const toylib::ToylibElement* elem) -> std::vector<const toylib::ToylibElement*> {
@@ -202,22 +200,21 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Vertices, dawn::LocationType::Edges),
                     edgesFromVertex);
 
+  // consume first element in chain (where we currently are, "from")
+  dawn::LocationType from = chain.back();
+  chain.pop_back();
+
+  // look at next element
+  dawn::LocationType to = chain.back();
+
   // update the current from (the neighbors we can reach from the current index)
   std::vector<const toylib::ToylibElement*> front = nbhTables.at({from, to})(elem);
 
   // result set
   std::set<const toylib::ToylibElement*> result;
 
-  // if next element is of target type we collect the current front into the result
-  if(to == targetType) {
-    std::copy(front.begin(), front.end(), std::inserter(result, result.end()));
-  }
-
-  // if there are two or more elements in the chain remaining, we need to recursively keep
-  // collecting neighbors
-  if(chain.size() >= 2) {
-    getNeighborsImpl(nbhTables, chain, targetType, front, result);
-  }
+  // start recursion
+  getNeighborsImpl(nbhTables, chain, targetType, front, result);
 
   return std::vector<const toylib::ToylibElement*>(result.begin(), result.end());
 }
