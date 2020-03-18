@@ -11,6 +11,7 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 if(DAWN_REQUIRE_UNSTRUCTURED_TESTING)
   find_package(eckit REQUIRED)
@@ -66,18 +67,17 @@ if(eckit_FOUND AND atlas_FOUND)
 
   add_custom_target(AtlasIntegrationTestCopyReferences ALL SOURCES ${reference_stencil_codes})
 
+  # Atlas Tests
+
   set(test_name AtlasIntegrationTestCompareOutput)
   add_executable(${test_name}
     AtlasIntegrationTestCompareOutput.cpp
-    AtlasVerifier.h
+    UnstructuredVerifier.h
     AtlasCartesianWrapper.h
     AtlasCartesianWrapper.cpp
     ${generated_stencil_codes}
     ${reference_stencil_codes}
   )
-
-
-
 
   add_dependencies(${test_name} AtlasIntegrationTestCopyReferences)
 
@@ -94,6 +94,33 @@ if(eckit_FOUND AND atlas_FOUND)
 
   add_test(NAME ${test_name}
     COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
+  )
+
+  # Toylib Tests
+
+  set(test_name ToylibIntegrationTestCompareOutput)
+  add_executable(${test_name}
+    ToylibIntegrationTestCompareOutput.cpp
+    UnstructuredVerifier.h    
+    ${generated_stencil_codes}
+    ${reference_stencil_codes}
+  )
+
+  add_dependencies(${test_name} AtlasIntegrationTestCopyReferences)
+
+  target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+  target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
+  target_include_directories(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+  target_add_dawn_standard_props(${test_name})
+  target_link_libraries(${test_name} ${PROJECT_NAME} toylib eckit atlas gtest gtest_main) #need atlas here unfortunately because of the verifier
+
+  set_target_properties(${test_name} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
+  )
+
+  gtest_discover_tests(${test_name} TEST_PREFIX "Dawn::Integration::Unstructured::"
+    DISCOVERY_TIMEOUT 30
   )
 
 else()

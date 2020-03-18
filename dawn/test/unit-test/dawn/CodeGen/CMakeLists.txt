@@ -12,6 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(Cuda)
 add_subdirectory(Naive)

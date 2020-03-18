@@ -30,4 +30,8 @@ TEST_F(TestCodeGenNaive, LaplacianStencil) {
   runTest(this->getLaplacianStencil(), "laplacian_stencil.cpp");
 }
 
+TEST_F(TestCodeGenNaive, ConditionalStencil) {
+  runTest(this->getConditionalStencil(), "conditional_stencil.cpp");
+}
+
 } // anonymous namespace

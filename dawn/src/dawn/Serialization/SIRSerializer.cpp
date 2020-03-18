@@ -26,6 +26,7 @@
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>
+#include <memory>
 #include <stack>
 #include <tuple>
 
@@ -739,6 +740,9 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
         break;
       case sir::proto::GlobalVariableValue::kIntegerValue:
         value = std::make_shared<Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
+        break;
+      case sir::proto::GlobalVariableValue::kFloatValue:
+        value = std::make_shared<Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
         value = std::make_shared<Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
