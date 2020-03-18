@@ -49,7 +49,9 @@ OPT(bool, ClangFormat, true, "clang-format", "", "Run clang-format on the genera
 OPT(bool, ReportPassPreprocessor, false, "report-pass-preprocessor", "",
     "Print each line of the preprocessed source prepended by the line number (comments and indentation are removed)", "", false, true)
 OPT(bool, Serialized, false, "loaded-serialized", "", "is the passed file serialized data", "", false, true)
-OPT(bool, DisableOptimization, false, "disable-optimization", "",
-    "If true, disables all default pass groups", "", false, false)
+OPT(bool, DisableOptimization, false, "no-opt", "",
+    "Disables all optimisation", "", false, true)
+OPT(bool, DefaultOptimization, false, "default-opt", "",
+    "Runs all the default optimization", "", false, true)
 
 // clang-format on
