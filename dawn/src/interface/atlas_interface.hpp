@@ -173,7 +173,7 @@ std::vector<int> const cellNeighboursOfNode(atlas::Mesh const& m, int const& idx
 }
 
 std::vector<int> const edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
-  return getNeighs(m.cells().edge_connectivity(), idx);
+  return getNeighs(m.nodes().edge_connectivity(), idx);
 }
 
 std::vector<int> const nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
