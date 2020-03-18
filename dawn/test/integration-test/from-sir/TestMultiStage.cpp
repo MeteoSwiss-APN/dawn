@@ -75,7 +75,7 @@ protected:
   }
 };
 
-TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
+TEST_F(MultiStageTest, DISABLED_test_compute_ordered_do_methods) {
   //    Stencil_0
   //    {
   //      MultiStage_0 [forward]
@@ -211,7 +211,7 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   EXPECT_EQ(orderedDoMethods[7]->getID(), do2_0->getID());
 }
 
-TEST_F(MultiStageTest, test_compute_read_access_interval) {
+TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval) {
 
   //    Stencil_0
   //    {
@@ -329,7 +329,7 @@ TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval_02) {
                                 iir::Interval{sir::Interval::End - 2, sir::Interval::End + 1}}));
 }
 
-TEST_F(MultiStageTest, test_field_access_interval_04) {
+TEST_F(MultiStageTest, DISABLED_test_field_access_interval_04) {
 
   //    Stencil_0
   //    {
@@ -393,7 +393,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{4, 14}}));
 }
 
-TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
+TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval_03) {
   //    Stencil_0
   //    {
   //      MultiStage_0 [forward]
@@ -476,7 +476,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
 
   EXPECT_EQ(interval1, (iir::MultiInterval{iir::Interval{sir::Interval::End, sir::Interval::End}}));
 }
-TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
+TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval_04) {
 
   // Stencil_0
   //{
