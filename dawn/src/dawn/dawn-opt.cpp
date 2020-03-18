@@ -91,7 +91,7 @@ deserializeInput(const std::string& input) {
           dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Byte);
       format = SerializationFormat::Byte;
     } catch(...) {
-      // Do nothing
+      stencilIR = nullptr;
     }
   }
   if(!stencilIR) {
@@ -100,7 +100,7 @@ deserializeInput(const std::string& input) {
           dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Json);
       format = SerializationFormat::Json;
     } catch(...) {
-      // Do nothing
+      stencilIR = nullptr;
     }
   }
   // Then try IIR
@@ -111,7 +111,7 @@ deserializeInput(const std::string& input) {
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
       format = SerializationFormat::Byte;
     } catch(...) {
-      // Do nothing
+      internalIR = nullptr;
     }
   }
   if(!internalIR && !stencilIR) {
@@ -120,7 +120,7 @@ deserializeInput(const std::string& input) {
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
       format = SerializationFormat::Json;
     } catch(...) {
-      // Do nothing
+      internalIR = nullptr;
     }
   }
 
@@ -134,6 +134,7 @@ deserializeInput(const std::string& input) {
       stencilIR =
           dawn::SIRSerializer::deserializeFromString(input, dawn::SIRSerializer::Format::Json);
     }
+    break;
   }
   case IRType::IIR: {
     if(format == SerializationFormat::Byte) {
@@ -143,6 +144,7 @@ deserializeInput(const std::string& input) {
       internalIR =
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
     }
+    break;
   }
   }
 
