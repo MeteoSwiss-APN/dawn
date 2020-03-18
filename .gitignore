@@ -24,6 +24,3 @@ _local_/*
 
 # Ignore python editable installs
 *.egg-info/
-
-# Python venvs
-.venv/
