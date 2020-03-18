@@ -16,6 +16,8 @@
 
 #include "../interface/toylib_interface.hpp"
 
+toylib::ToylibElement::~ToylibElement() {}
+
 namespace {
 bool inner_face(toylib::Face const& f) {
   return (f.color() == toylib::face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&

@@ -21,6 +21,14 @@
 #include <vector>
 
 namespace toylib {
+class ToylibElement {
+protected:
+  ToylibElement() = default;
+  ToylibElement(int id) : id_(id) {}
+  virtual ~ToylibElement() = 0;
+  int id_ = -1;
+};
+
 class Vertex;
 class Edge;
 class Face;
@@ -33,10 +41,11 @@ class Face;
 enum face_color { upward = 0, downward = 1 };
 enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 
-class Vertex {
+class Vertex : public ToylibElement {
 public:
   Vertex() = default;
-  Vertex(double x, double y, int id) : id_(id), x_(x), y_(y) {}
+  Vertex(double x, double y, int id) : ToylibElement(id), x_(x), y_(y) {}
+  ~Vertex() {}
 
   double x() const { return x_; }
   double y() const { return y_; }
@@ -53,17 +62,17 @@ public:
   void add_face(Face& f) { faces_.push_back(&f); }
 
 private:
-  int id_;
   double x_;
   double y_;
 
   std::vector<Edge*> edges_;
   std::vector<Face*> faces_;
 };
-class Face {
+class Face : public ToylibElement {
 public:
   Face() = default;
-  Face(int id, face_color color) : id_(id), color_(color) {}
+  Face(int id, face_color color) : ToylibElement(id), color_(color) {}
+  ~Face(){};
 
   int id() const { return id_; }
   face_color color() const { return color_; }
@@ -79,16 +88,16 @@ public:
   void add_vertex(Vertex& v) { vertices_.push_back(&v); }
 
 private:
-  int id_;
   face_color color_;
 
   std::vector<Edge*> edges_;
   std::vector<Vertex*> vertices_;
 };
-class Edge {
+class Edge : public ToylibElement {
 public:
   Edge() = default;
-  Edge(int id, edge_color color) : id_(id), color_(color) {}
+  Edge(int id, edge_color color) : ToylibElement(id), color_(color) {}
+  ~Edge() {}
 
   int id() const { return id_; }
   edge_color color() const { return color_; }
@@ -110,7 +119,6 @@ public:
   }
 
 private:
-  int id_ = -1;
   edge_color color_;
 
   std::vector<Vertex*> vertices_;
