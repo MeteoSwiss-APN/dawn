@@ -15,9 +15,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "AtlasCartesianWrapper.h"
-#include "AtlasVerifier.h"
-#include "atlas/functionspace/CellColumns.h"
-#include "atlas/functionspace/EdgeColumns.h"
+#include "UnstructuredVerifier.h"
+
 #include "atlas/grid.h"
 #include "atlas/mesh/actions/BuildCellCentres.h"
 #include "atlas/mesh/actions/BuildEdges.h"
@@ -27,33 +26,75 @@
 #include "atlas/output/Gmsh.h"
 #include "interface/atlas_interface.hpp"
 
+#include <field/Field.h>
 #include <gtest/gtest.h>
 
-#include <generated_copyCell.hpp>
+#include <sstream>
+#include <tuple>
 namespace {
-TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
-  // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
+
+atlas::Mesh generateMesh(size_t nx, size_t ny) {
+  std::stringstream configStr;
+  configStr << "L" << nx << "x" << ny;
+  atlas::StructuredGrid structuredGrid = atlas::Grid(configStr.str());
   atlas::StructuredMeshGenerator generator;
   auto mesh = generator.generate(structuredGrid);
+  atlas::mesh::actions::build_edges(
+      mesh, atlas::util::Config("pole_edges", false)); // work around to eliminate pole edges
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+  return mesh;
+}
 
+std::tuple<atlas::Field, atlasInterface::Field<double>> makeAtlasField(const std::string& name,
+                                                                       size_t size, size_t kSize) {
+  atlas::Field field_F{name, atlas::array::DataType::real64(),
+                       atlas::array::make_shape(size, kSize)};
+  return {field_F, atlas::array::make_view<double, 2>(field_F)};
+}
+
+std::tuple<atlas::Field, atlasInterface::SparseDimension<double>>
+makeAtlasSparseField(const std::string& name, size_t size, size_t sparseSize, int kSize) {
+  atlas::Field field_F{name, atlas::array::DataType::real64(),
+                       atlas::array::make_shape(size, kSize, sparseSize)};
+  return {field_F, atlas::array::make_view<double, 3>(field_F)};
+}
+
+template <typename T>
+void initField(atlasInterface::Field<T>& field, size_t numEl, size_t kSize, T val) {
+  for(int level = 0; level < kSize; ++level) {
+    for(int elIdx = 0; elIdx < numEl; ++elIdx) {
+      field(elIdx, level) = val;
+    }
+  }
+}
+
+template <typename T>
+void initSparseField(atlasInterface::SparseDimension<T>& sparseField, size_t numEl, size_t kSize,
+                     size_t sparseSize, T val) {
+  for(int level = 0; level < kSize; ++level) {
+    for(int elIdx = 0; elIdx < numEl; ++elIdx) {
+      for(int nbhIdx = 0; nbhIdx < sparseSize; nbhIdx++) {
+        sparseField(elIdx, nbhIdx, level) = val;
+      }
+    }
+  }
+}
+
+namespace {
+#include <generated_copyCell.hpp>
+TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
+  // Setup a 32 by 32 grid of quads and generate a mesh out of it
+  auto mesh = generateMesh(32, 32);
   // We only need one vertical level
   size_t nb_levels = 1;
 
-  // Create input (on cells) and output (on cells) fields
-  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
-  atlas::Field in{fs_cells.createField<double>(atlas::option::name("in"))};
-  atlas::Field out{fs_cells.createField<double>(atlas::option::name("out"))};
-
-  // Make views on the fields (needed to access the field like an array)
-  atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
-  atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
 
   // Initialize fields with data
-  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
-    in_v(cell_idx, 0) = 1.0;
-    out_v(cell_idx, 0) = -1.0;
-  }
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
 
   // Run the stencil
   dawn_generated::cxxnaiveico::copyCell<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
@@ -66,72 +107,39 @@ TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
 }
 } // namespace
 
-#include <generated_copyEdge.hpp>
 namespace {
+#include <generated_copyEdge.hpp>
 TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
-  // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-  // Add edges to mesh.edges()
-  atlas::mesh::actions::build_edges(mesh);
-
-  // We only need one vertical level
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 1;
 
-  // Create input (on edges) and output (on edges) fields
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field in{fs_edges.createField<double>(atlas::option::name("in"))};
-  atlas::Field out{fs_edges.createField<double>(atlas::option::name("out"))};
+  auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.edges().size(), nb_levels);
 
-  // Make views on the fields (needed to access the field like an array)
-  atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
-  atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
+  initField(in_v, mesh.edges().size(), nb_levels, 1.0);
+  initField(out_v, mesh.edges().size(), nb_levels, -1.0);
 
-  // Initialize fields with data
-  for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx) {
-    in_v(edge_idx, 0) = 1.0;
-    out_v(edge_idx, 0) = -1.0;
-  }
-
-  // Run the stencil
   dawn_generated::cxxnaiveico::copyEdge<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
                                                                   in_v, out_v)
       .run();
 
-  // Check correctness of the output
   for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
     ASSERT_EQ(out_v(edge_idx, 0), 1.0);
 }
 } // namespace
 
-#include <generated_verticalSum.hpp>
 namespace {
+#include <generated_verticalSum.hpp>
 TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
-  // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
+  auto mesh = generateMesh(32, 32);
+  size_t nb_levels = 5; // must be >= 3
 
-  // We use 5 levels, but any number >= 3 is fine
-  size_t nb_levels = 1;
+  auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.edges().size(), nb_levels);
 
-  // We construct an in and out Field on cells
-  atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
-  atlas::Field out{fs.createField<double>(atlas::option::name("out"))};
-  atlas::Field in{fs.createField<double>(atlas::option::name("in"))};
-
-  // Make views on the fields (needed to access the field like an array)
-  atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
-  atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
-
-  // Initialize input
-  double init_value = 10;
-  for(int level = 0; level < nb_levels; ++level) {
-    for(int cell = 0; cell < mesh.cells().size(); ++cell) {
-      in_v(cell, level) = init_value;
-    }
-  }
+  double initValue = 10.;
+  initField(in_v, mesh.cells().size(), nb_levels, initValue);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
 
   // Run verticalSum, which just copies the values in the cells above and below into the current
   // level and adds them up
@@ -141,47 +149,24 @@ TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
   // Thats why we expct all the levels except the top and bottom one to hold twice the initial value
   for(int level = 1; level < nb_levels - 1; ++level) {
     for(int cell = 0; cell < mesh.cells().size(); ++cell) {
-      ASSERT_EQ(out_v(cell, level), 2 * init_value);
+      ASSERT_EQ(out_v(cell, level), 2 * initValue);
     }
   }
 }
 } // namespace
 
-#include <generated_accumulateEdgeToCell.hpp>
 namespace {
+#include <generated_accumulateEdgeToCell.hpp>
 TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
-  // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-
-  // Add edges to mesh.edges()
-  atlas::mesh::actions::build_edges(mesh);
-  // Build connectivity matrix for cells-edges
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-
-  // We only need one vertical level
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 1;
 
-  // Create input (on edges) and output (on cells) fields
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field in{fs_edges.createField<double>(atlas::option::name("in"))};
+  auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
 
-  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
-  atlas::Field out{fs_cells.createField<double>(atlas::option::name("out"))};
+  initField(in_v, mesh.edges().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
 
-  // Make views on the fields (needed to access the field like an array)
-  atlasInterface::Field<double> in_v = atlas::array::make_view<double, 2>(in);
-  atlasInterface::Field<double> out_v = atlas::array::make_view<double, 2>(out);
-
-  // Initialize fields with data
-  for(int edge_idx = 0; edge_idx < mesh.edges().size(); ++edge_idx)
-    in_v(edge_idx, 0) = 1.0;
-
-  for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx)
-    out_v(cell_idx, 0) = -1.0;
-
-  // Run the stencil
   dawn_generated::cxxnaiveico::accumulateEdgeToCell<atlasInterface::atlasTag>(
       mesh, static_cast<int>(nb_levels), in_v, out_v)
       .run();
@@ -193,67 +178,30 @@ TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
 }
 } // namespace
 
+namespace {
 #include <generated_diffusion.hpp>
 #include <reference_diffusion.hpp>
-namespace {
 TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
-  // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L32x32");
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-  // Add edges to mesh.edges()
-  atlas::mesh::actions::build_edges(mesh);
-  // Build connectivity matrix for cells-edges
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-
-  // We only need one vertical level
+  auto mesh = generateMesh(32, 32);
   size_t nb_levels = 1;
 
   // Create input (on cells) and output (on cells) fields for generated and reference stencils
-  atlas::functionspace::CellColumns fs(mesh, atlas::option::levels(nb_levels));
-  atlas::Field out_ref{fs.createField<double>(atlas::option::name("out"))};
-  atlas::Field out_gen{fs.createField<double>(atlas::option::name("out"))};
+  auto [in_ref, in_v_ref] = makeAtlasField("in_v_ref", mesh.cells().size(), nb_levels);
+  auto [in_gen, in_v_gen] = makeAtlasField("in_v_gen", mesh.cells().size(), nb_levels);
+  auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.cells().size(), nb_levels);
+  auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.cells().size(), nb_levels);
 
-  atlas::Field in_ref{fs.createField<double>(atlas::option::name("in"))};
-  atlas::Field in_gen{fs.createField<double>(atlas::option::name("in"))};
+  AtlasToCartesian atlasToCartesianMapper(mesh);
 
-  // Initialize fields with data
-  {
-    // Make views on the fields (needed to access the field like an array)
-    auto in_v_ref = atlas::array::make_view<double, 2>(in_ref);
-    auto in_v_gen = atlas::array::make_view<double, 2>(in_gen);
-    auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
-    auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
-
-    auto const& node_connectivity = mesh.cells().node_connectivity();
-    const double rpi = 2.0 * asin(1.0);
-    const double deg2rad = rpi / 180.;
-    auto lonlat = atlas::array::make_view<double, 2>(mesh.nodes().lonlat());
-
-    auto lon0 = lonlat(node_connectivity(0, 0), 0);
-    auto lat0 = lonlat(node_connectivity(0, 0), 1);
-    auto lon1 = lonlat(node_connectivity(mesh.cells().size() - 1, 0), 0);
-    auto lat1 = lonlat(node_connectivity(mesh.cells().size() - 1, 0), 1);
-    for(int jCell = 0, size = mesh.cells().size(); jCell < size; ++jCell) {
-      double center_x =
-          (lonlat(node_connectivity(jCell, 0), 0) - lon0 + (lon0 - lon1) / 2.f) * deg2rad;
-      double center_y =
-          (lonlat(node_connectivity(jCell, 0), 1) - lat0 + (lat0 - lat1) / 2.f) * deg2rad;
-      in_v_ref(jCell, 0) = std::abs(center_x) < .5 && std::abs(center_y) < .5 ? 1 : 0;
-      in_v_gen(jCell, 0) = std::abs(center_x) < .5 && std::abs(center_y) < .5 ? 1 : 0;
-      out_v_ref(jCell, 0) = -1.0;
-      out_v_gen(jCell, 0) = -1.0;
-    }
+  for(int cellIdx = 0, size = mesh.cells().size(); cellIdx < size; ++cellIdx) {
+    auto [cartX, cartY] = atlasToCartesianMapper.cellMidpoint(mesh, cellIdx);
+    bool inX = cartX > 0.375 && cartX < 0.625;
+    bool inY = cartY > 0.375 && cartY < 0.625;
+    in_v_ref(cellIdx, 0) = (inX && inY) ? 1 : 0;
+    in_v_gen(cellIdx, 0) = (inX && inY) ? 1 : 0;
   }
 
   for(int i = 0; i < 5; ++i) {
-
-    // Make views on the fields (needed to access the field like an array)
-    atlasInterface::Field<double> in_v_ref = atlas::array::make_view<double, 2>(in_ref);
-    atlasInterface::Field<double> in_v_gen = atlas::array::make_view<double, 2>(in_gen);
-    atlasInterface::Field<double> out_v_ref = atlas::array::make_view<double, 2>(out_ref);
-    atlasInterface::Field<double> out_v_gen = atlas::array::make_view<double, 2>(out_gen);
-
     // Run the stencils
     dawn_generated::cxxnaiveico::reference_diffusion<atlasInterface::atlasTag>(
         mesh, static_cast<int>(nb_levels), in_v_ref, out_v_ref)
@@ -278,9 +226,9 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
 }
 } // namespace
 
+namespace {
 #include <generated_gradient.hpp>
 #include <reference_gradient.hpp>
-namespace {
 
 void build_periodic_edges(atlas::Mesh& mesh, int nx, int ny, const AtlasToCartesian& atlasMapper) {
   atlas::mesh::HybridElements::Connectivity& edgeCellConnectivity =
@@ -345,31 +293,17 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
 
   // apparently, one needs to be added to the second dimension in order to get a
   // square mesh, or we are mis-interpreting the output
-  atlas::StructuredGrid structuredGrid =
-      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-  atlas::mesh::actions::build_edges(
-      mesh, atlas::util::Config("pole_edges", false)); // work around to eliminate pole edges
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   AtlasToCartesian atlasToCartesianMapper(mesh);
   build_periodic_edges(mesh, numCell, numCell, atlasToCartesianMapper);
 
   int nb_levels = 1;
-  atlas::functionspace::CellColumns fs_cols(mesh, atlas::option::levels(nb_levels));
-  atlas::Field ref_cells_f{fs_cols.createField<double>(atlas::option::name("ref_cells"))};
-  atlas::Field gen_cells_f{fs_cols.createField<double>(atlas::option::name("gen_cells"))};
 
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field ref_edges_f{fs_edges.createField<double>(atlas::option::name("ref_edges"))};
-  atlas::Field gen_edges_f{fs_edges.createField<double>(atlas::option::name("gen_edges"))};
-
-  atlasInterface::Field<double> ref_cells_v = atlas::array::make_view<double, 2>(ref_cells_f);
-  atlasInterface::Field<double> gen_cells_v = atlas::array::make_view<double, 2>(gen_cells_f);
-  atlasInterface::Field<double> ref_edges_v = atlas::array::make_view<double, 2>(ref_edges_f);
-  atlasInterface::Field<double> gen_edges_v = atlas::array::make_view<double, 2>(gen_edges_f);
+  auto [ref_cells, ref_cells_v] = makeAtlasField("ref_cells", mesh.cells().size(), nb_levels);
+  auto [ref_edges, ref_edges_v] = makeAtlasField("ref_edges", mesh.edges().size(), nb_levels);
+  auto [gen_cells, gen_cells_v] = makeAtlasField("gen_cells", mesh.cells().size(), nb_levels);
+  auto [gen_edges, gen_edges_v] = makeAtlasField("gen_edges", mesh.edges().size(), nb_levels);
 
   for(int cellIdx = 0, size = mesh.cells().size(); cellIdx < size; ++cellIdx) {
     auto [cartX, cartY] = atlasToCartesianMapper.cellMidpoint(mesh, cellIdx);
@@ -388,8 +322,8 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
 
   // Check correctness of the output
   {
-    auto ref_cells_v = atlas::array::make_view<double, 2>(ref_cells_f);
-    auto gen_cells_v = atlas::array::make_view<double, 2>(gen_cells_f);
+    auto ref_cells_v = atlas::array::make_view<double, 2>(ref_cells);
+    auto gen_cells_v = atlas::array::make_view<double, 2>(gen_cells);
     AtlasVerifier v;
     EXPECT_TRUE(v.compareArrayView(ref_cells_v, gen_cells_v))
         << "while comparing output (on cells)";
@@ -397,8 +331,8 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
 }
 } // namespace
 
-#include <generated_verticalSolver.hpp>
 namespace {
+#include <generated_verticalSolver.hpp>
 TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
   const int numCell = 5;
 
@@ -407,25 +341,16 @@ TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
 
   // apparently, one needs to be added to the second dimension in order to get a
   // square mesh, or we are mis-interpreting the output
-  atlas::StructuredGrid structuredGrid =
-      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   // the 4 fields required for the thomas algorithm
   //  c.f.
   //  https://en.wikibooks.org/wiki/Algorithm_Implementation/Linear_Algebra/Tridiagonal_matrix_algorithm#C
   int nb_levels = 5;
-  atlas::functionspace::CellColumns fs_cols(mesh, atlas::option::levels(nb_levels));
-  atlas::Field a_f{fs_cols.createField<double>(atlas::option::name("a_cells"))};
-  atlas::Field b_f{fs_cols.createField<double>(atlas::option::name("b_cells"))};
-  atlas::Field c_f{fs_cols.createField<double>(atlas::option::name("c_cells"))};
-  atlas::Field d_f{fs_cols.createField<double>(atlas::option::name("d_cells"))};
-
-  atlasInterface::Field<double> a_v = atlas::array::make_view<double, 2>(a_f);
-  atlasInterface::Field<double> b_v = atlas::array::make_view<double, 2>(b_f);
-  atlasInterface::Field<double> c_v = atlas::array::make_view<double, 2>(c_f);
-  atlasInterface::Field<double> d_v = atlas::array::make_view<double, 2>(d_f);
+  auto [a_f, a_v] = makeAtlasField("a", mesh.cells().size(), nb_levels);
+  auto [b_f, b_v] = makeAtlasField("b", mesh.cells().size(), nb_levels);
+  auto [c_f, c_v] = makeAtlasField("c", mesh.cells().size(), nb_levels);
+  auto [d_f, d_v] = makeAtlasField("d", mesh.cells().size(), nb_levels);
 
   // solution to this problem will be [1,2,3,4,5] at each cell location
   for(int cell = 0; cell < mesh.cells().size(); ++cell) {
@@ -453,42 +378,21 @@ TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
   }
 }
 
-#include <generated_NestedSimple.hpp>
 namespace {
+#include <generated_NestedSimple.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
   const int numCell = 10;
-
-  // apparently, one needs to be added to the second dimension in order to get a
-  // square mesh, or we are mis-interpreting the output
-  atlas::StructuredGrid structuredGrid =
-      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-
-  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   int nb_levels = 1;
-  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
-  atlas::Field f_cells{fs_cells.createField<double>(atlas::option::name("cells"))};
+  auto [cells, v_cells] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges, v_edges] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes, v_nodes] = makeAtlasField("nodes", mesh.nodes().size(), nb_levels);
 
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field f_edges{fs_edges.createField<double>(atlas::option::name("edges"))};
-
-  atlas::functionspace::EdgeColumns fs_vertices(mesh, atlas::option::levels(nb_levels));
-  atlas::Field f_vertices{fs_vertices.createField<double>(atlas::option::name("vertices"))};
-
-  atlasInterface::Field<double> v_cells = atlas::array::make_view<double, 2>(f_cells);
-  atlasInterface::Field<double> v_edges = atlas::array::make_view<double, 2>(f_edges);
-  atlasInterface::Field<double> v_vertices = atlas::array::make_view<double, 2>(f_vertices);
-
-  for(int i = 0; i < mesh.nodes().size(); i++) {
-    v_vertices(i, 0) = 1;
-  }
+  initField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
 
   dawn_generated::cxxnaiveico::nestedSimple<atlasInterface::atlasTag>(mesh, nb_levels, v_cells,
-                                                                      v_edges, v_vertices)
+                                                                      v_edges, v_nodes)
       .run();
 
   // each vertex stores value 1                 1
@@ -500,46 +404,22 @@ TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
 }
 } // namespace
 
-#include <generated_NestedWithField.hpp>
 namespace {
+#include <generated_NestedWithField.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
   const int numCell = 10;
-
-  // apparently, one needs to be added to the second dimension in order to get a
-  // square mesh, or we are mis-interpreting the output
-  atlas::StructuredGrid structuredGrid =
-      atlas::Grid("L" + std::to_string(numCell) + "x" + std::to_string(numCell + 1));
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-
-  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+  auto mesh = generateMesh(numCell, numCell + 1);
 
   int nb_levels = 1;
-  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
-  atlas::Field f_cells{fs_cells.createField<double>(atlas::option::name("cells"))};
+  auto [cells, v_cells] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges, v_edges] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes, v_nodes] = makeAtlasField("nodes", mesh.nodes().size(), nb_levels);
 
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field f_edges{fs_edges.createField<double>(atlas::option::name("edges"))};
-
-  atlas::functionspace::EdgeColumns fs_vertices(mesh, atlas::option::levels(nb_levels));
-  atlas::Field f_vertices{fs_vertices.createField<double>(atlas::option::name("edges"))};
-
-  atlasInterface::Field<double> v_cells = atlas::array::make_view<double, 2>(f_cells);
-  atlasInterface::Field<double> v_edges = atlas::array::make_view<double, 2>(f_edges);
-  atlasInterface::Field<double> v_vertices = atlas::array::make_view<double, 2>(f_vertices);
-
-  for(int i = 0; i < mesh.nodes().size(); i++) {
-    v_vertices(i, 0) = 1;
-  }
-
-  for(int i = 0; i < mesh.edges().size(); i++) {
-    v_edges(i, 0) = 200;
-  }
+  initField(v_nodes, mesh.nodes().size(), nb_levels, 1.);
+  initField(v_edges, mesh.edges().size(), nb_levels, 200.);
 
   dawn_generated::cxxnaiveico::nestedWithField<atlasInterface::atlasTag>(mesh, nb_levels, v_cells,
-                                                                         v_edges, v_vertices)
+                                                                         v_edges, v_nodes)
       .run();
 
   // each vertex stores value 1                 1
@@ -552,43 +432,20 @@ TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
 }
 } // namespace
 
-#include <generated_sparseDimension.hpp>
 namespace {
+#include <generated_sparseDimension.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L10x11");
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
-
+  auto mesh = generateMesh(10, 11);
   const int edgesPerCell = 4;
+  const int nb_levels = 1;
 
-  int nb_levels = 1;
-  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
-  atlas::Field cellsField{fs_cells.createField<double>(atlas::option::name("cells"))};
-  atlas::Field sparseDimension{fs_cells.createField<double>(
-      atlas::option::name("sparseDimension") | atlas::option::variables(edgesPerCell))};
+  auto [cells_F, cells_v] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges_F, edges_v] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [sparseDim_F, sparseDim_v] =
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
 
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field edgesField{fs_edges.createField<double>(atlas::option::name("edges"))};
-
-  atlasInterface::Field<double> cells_v = atlas::array::make_view<double, 2>(cellsField);
-  atlasInterface::Field<double> edges_v = atlas::array::make_view<double, 2>(edgesField);
-  atlasInterface::SparseDimension<double> sparseDim_v =
-      atlas::array::make_view<double, 3>(sparseDimension);
-
-  const int level = 0;
-  for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
-    cells_v(iCell, level) = 0;
-    for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
-      sparseDim_v(iCell, jNbh, level) = 200;
-    }
-  }
-
-  for(int iEdge = 0; iEdge < mesh.edges().size(); iEdge++) {
-    edges_v(iEdge, level) = 1;
-  }
+  initSparseField(sparseDim_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
+  initField(edges_v, mesh.edges().size(), nb_levels, 1.);
 
   dawn_generated::cxxnaiveico::sparseDimension<atlasInterface::atlasTag>(mesh, nb_levels, cells_v,
                                                                          edges_v, sparseDim_v)
@@ -603,45 +460,20 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
 }
 } // namespace
 
-#include <generated_sparseDimensionTwice.hpp>
 namespace {
+#include <generated_sparseDimensionTwice.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
-  // The purpose of this test is to ensure that the sparse index is handled correctly
-  // across multiple reductions
-  atlas::StructuredGrid structuredGrid = atlas::Grid("L10x11");
-  atlas::StructuredMeshGenerator generator;
-  auto mesh = generator.generate(structuredGrid);
-  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
-  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
-  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
-
+  auto mesh = generateMesh(10, 11);
   const int edgesPerCell = 4;
+  const int nb_levels = 1;
 
-  int nb_levels = 1;
-  atlas::functionspace::CellColumns fs_cells(mesh, atlas::option::levels(nb_levels));
-  atlas::Field cellsField{fs_cells.createField<double>(atlas::option::name("cells"))};
-  atlas::Field sparseDimension{fs_cells.createField<double>(
-      atlas::option::name("sparseDimension") | atlas::option::variables(edgesPerCell))};
+  auto [cells_F, cells_v] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges_F, edges_v] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [sparseDim_F, sparseDim_v] =
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
 
-  atlas::functionspace::EdgeColumns fs_edges(mesh, atlas::option::levels(nb_levels));
-  atlas::Field edgesField{fs_edges.createField<double>(atlas::option::name("edges"))};
-
-  atlasInterface::Field<double> cells_v = atlas::array::make_view<double, 2>(cellsField);
-  atlasInterface::Field<double> edges_v = atlas::array::make_view<double, 2>(edgesField);
-  atlasInterface::SparseDimension<double> sparseDim_v =
-      atlas::array::make_view<double, 3>(sparseDimension);
-
-  const int level = 0;
-  for(int iCell = 0; iCell < mesh.cells().size(); iCell++) {
-    cells_v(iCell, level) = 0;
-    for(int jNbh = 0; jNbh < edgesPerCell; jNbh++) {
-      sparseDim_v(iCell, jNbh, level) = 200;
-    }
-  }
-
-  for(int iEdge = 0; iEdge < mesh.edges().size(); iEdge++) {
-    edges_v(iEdge, level) = 1;
-  }
+  initSparseField(sparseDim_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
+  initField(edges_v, mesh.edges().size(), nb_levels, 1.);
 
   dawn_generated::cxxnaiveico::sparseDimensionTwice<atlasInterface::atlasTag>(
       mesh, nb_levels, cells_v, edges_v, sparseDim_v)
@@ -657,5 +489,5 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
   // "+=" in the IIRBuilder currently
 }
 } // namespace
-
+} // namespace
 } // namespace

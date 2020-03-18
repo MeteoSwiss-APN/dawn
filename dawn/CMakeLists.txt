@@ -100,6 +100,7 @@ add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # Would like to remove
+add_cxx_compiler_flag_if_supported("-Wno-comment" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
 
 # Target properties

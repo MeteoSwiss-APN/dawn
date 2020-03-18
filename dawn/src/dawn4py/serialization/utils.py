@@ -348,9 +348,9 @@ def make_stmt(stmt: StmtType):
     elif isinstance(stmt, VerticalRegionDeclStmt):
         wrapped_stmt.vertical_region_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, StencilCallDeclStmt):
-        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+        wrapped_stmt.stencil_call_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, BoundaryConditionDeclStmt):
-        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+        wrapped_stmt.boundary_condition_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, IfStmt):
         wrapped_stmt.if_stmt.CopyFrom(stmt)
     else:
