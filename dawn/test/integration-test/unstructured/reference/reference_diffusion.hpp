@@ -33,11 +33,14 @@ private:
                                                          dawn::LocationType::Edges,
                                                          dawn::LocationType::Cells},
                          [&](auto& lhs, auto const& red_loc) { return lhs += (int)1; });
-            m_out_field(deref(LibTag{}, loc), k + 0) = reduceCellToCell(
-                LibTag{}, m_mesh, loc, ((-cnt) * m_in_field(deref(LibTag{}, loc), k + 0)),
-                [&](auto& lhs, auto const& red_loc) {
-                  return lhs += m_in_field(deref(LibTag{}, red_loc), k + 0);
-                });
+            m_out_field(deref(LibTag{}, loc), k + 0) =
+                reduce(LibTag{}, m_mesh, loc, ((-cnt) * m_in_field(deref(LibTag{}, loc), k + 0)),
+                       std::vector<dawn::LocationType>{dawn::LocationType::Cells,
+                                                       dawn::LocationType::Edges,
+                                                       dawn::LocationType::Cells},
+                       [&](auto& lhs, auto const& red_loc) {
+                         return lhs += m_in_field(deref(LibTag{}, red_loc), k + 0);
+                       });
             m_out_field(deref(LibTag{}, loc), k + 0) =
                 (m_in_field(deref(LibTag{}, loc), k + 0) +
                  ((::dawn::float_type)0.100000 * m_out_field(deref(LibTag{}, loc), k + 0)));
