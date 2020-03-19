@@ -281,13 +281,13 @@ auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* id
   for(auto ptr : getNeighbors(grid, chain, idx)) {
     switch(chain.back()) {
     case dawn::LocationType::Cells:
-      op(init, *static_cast<const toylib::Face*>(ptr));
+      op(init, static_cast<const toylib::Face*>(ptr));
       break;
     case dawn::LocationType::Edges:
-      op(init, *static_cast<const toylib::Face*>(ptr));
+      op(init, static_cast<const toylib::Edge*>(ptr));
       break;
     case dawn::LocationType::Vertices:
-      op(init, *static_cast<const toylib::Face*>(ptr));
+      op(init, static_cast<const toylib::Vertex*>(ptr));
       break;
     }
   }
@@ -355,13 +355,13 @@ auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* id
   for(auto ptr : getNeighbors(grid, chain, idx)) {
     switch(chain.back()) {
     case dawn::LocationType::Cells:
-      op(init, *static_cast<const toylib::Face*>(ptr), weights[i++]);
+      op(init, static_cast<const toylib::Face*>(ptr), weights[i++]);
       break;
     case dawn::LocationType::Edges:
-      op(init, *static_cast<const toylib::Face*>(ptr), weights[i++]);
+      op(init, static_cast<const toylib::Edge*>(ptr), weights[i++]);
       break;
     case dawn::LocationType::Vertices:
-      op(init, *static_cast<const toylib::Face*>(ptr), weights[i++]);
+      op(init, static_cast<const toylib::Vertex*>(ptr), weights[i++]);
       break;
     }
   }

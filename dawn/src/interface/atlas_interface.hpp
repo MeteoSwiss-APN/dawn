@@ -328,8 +328,8 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op, typename WeightT>
-auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-            std::vector<dawn::LocationType> chain, std::vector<WeightT>&& weights) {
+auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
+            std::vector<dawn::LocationType> chain, Op&& op, std::vector<WeightT>&& weights) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
   for(auto&& objIdx : getNeighbors(m, chain, idx))
