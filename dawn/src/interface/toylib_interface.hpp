@@ -16,6 +16,7 @@
 
 #include "../driver-includes/unstructured_interface.hpp"
 #include "../toylib/toylib.hpp"
+#include <assert.h>
 #include <functional>
 #include <list>
 #include <set>
@@ -26,6 +27,7 @@ namespace toylibInterface {
 struct toylibTag {};
 
 toylib::Grid meshType(toylibTag);
+const toylib::ToylibElement* indexType(toylibTag);
 template <typename T>
 toylib::FaceData<T> cellFieldType(toylibTag);
 template <typename T>
@@ -63,18 +65,12 @@ struct key_hash : public std::unary_function<key_t, std::size_t> {
   }
 };
 
-struct key_equal : public std::binary_function<key_t, key_t, bool> {
-  bool operator()(const key_t& v0, const key_t& v1) const {
-    return (std::get<0>(v0) == std::get<0>(v1) && std::get<1>(v0) == std::get<1>(v1));
-  }
-};
-
 // recursive function collecting neighbors succesively
 inline void getNeighborsImpl(
     const std::unordered_map<
         key_t,
         std::function<std::vector<const toylib::ToylibElement*>(const toylib::ToylibElement*)>,
-        key_hash, key_equal>& nbhTables,
+        key_hash>& nbhTables,
     std::vector<dawn::LocationType>& chain, dawn::LocationType targetType,
     std::vector<const toylib::ToylibElement*> front,
     std::list<const toylib::ToylibElement*>& result) {
@@ -96,7 +92,6 @@ inline void getNeighborsImpl(
       std::copy(targetElems.begin(), targetElems.end(), std::inserter(result, result.end()));
     }
   }
-
   if(chain.size() >= 2) {
     getNeighborsImpl(nbhTables, chain, targetType, newFront, result);
   }
@@ -114,7 +109,18 @@ private:
 
 inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid& mesh,
                                                               std::vector<dawn::LocationType> chain,
-                                                              toylib::ToylibElement* elem) {
+                                                              const toylib::ToylibElement* elem) {
+  switch(chain.front()) {
+  case dawn::LocationType::Cells:
+    assert(dynamic_cast<const toylib::Face*>(elem) != nullptr);
+    break;
+  case dawn::LocationType::Edges:
+    assert(dynamic_cast<const toylib::Edge*>(elem) != nullptr);
+    break;
+  case dawn::LocationType::Vertices:
+    assert(dynamic_cast<const toylib::Vertex*>(elem) != nullptr);
+    break;
+  }
   // target type is at the end of the chain (we collect all neighbors of this type "along" the
   // chain)
   dawn::LocationType targetType = chain.back();
@@ -193,7 +199,7 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
 
   std::unordered_map<
       key_t, std::function<std::vector<const toylib::ToylibElement*>(const toylib::ToylibElement*)>,
-      key_hash, key_equal>
+      key_hash>
       nbhTables;
 
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Edges, dawn::LocationType::Cells),
@@ -238,9 +244,29 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Objs, typename Init, typename Op>
-auto reduce(Objs&& objs, Init init, Op&& op) {
+auto reduce(Objs&& objs, Init init, std::vector<dawn::LocationType> chain, Op&& op) {
   for(auto&& obj : objs)
     op(init, *obj);
+  return init;
+}
+
+template <typename Init, typename Op>
+auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* idx, Init init,
+            std::vector<dawn::LocationType> chain, Op&& op) {
+  for(auto ptr : getNeighbors(grid, chain, idx)) {
+    switch(chain.back()) {
+    case dawn::LocationType::Cells:
+      op(init, *static_cast<const toylib::Face*>(ptr));
+      break;
+    case dawn::LocationType::Edges:
+      op(init, *static_cast<const toylib::Face*>(ptr));
+      break;
+    case dawn::LocationType::Vertices:
+      op(init, *static_cast<const toylib::Face*>(ptr));
+      break;
+    }
+  }
+
   return init;
 }
 
@@ -294,6 +320,27 @@ auto reduce(Objs&& objs, Init init, Op&& op, std::vector<Weight>&& weights) {
   int i = 0;
   for(auto&& obj : objs)
     op(init, *obj, weights[i++]);
+  return init;
+}
+
+template <typename Init, typename Op>
+auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* idx, Init init,
+            std::vector<dawn::LocationType> chain, Op&& op, std::vector<Weight>&& weights) {
+  int i = 0;
+  for(auto ptr : getNeighbors(grid, chain, idx)) {
+    switch(chain.back()) {
+    case dawn::LocationType::Cells:
+      op(init, *static_cast<const toylib::Face*>(ptr), weights[i++]);
+      break;
+    case dawn::LocationType::Edges:
+      op(init, *static_cast<const toylib::Face*>(ptr), weights[i++]);
+      break;
+    case dawn::LocationType::Vertices:
+      op(init, *static_cast<const toylib::Face*>(ptr), weights[i++]);
+      break;
+    }
+  }
+
   return init;
 }
 

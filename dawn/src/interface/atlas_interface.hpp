@@ -118,6 +118,8 @@ SparseDimension<T> sparseVertexFieldType(atlasTag);
 
 atlas::Mesh meshType(atlasTag);
 
+int indexType(atlasTag);
+
 auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
 auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
 auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
@@ -208,17 +210,11 @@ struct key_hash : public std::unary_function<key_t, std::size_t> {
   }
 };
 
-struct key_equal : public std::binary_function<key_t, key_t, bool> {
-  bool operator()(const key_t& v0, const key_t& v1) const {
-    return (std::get<0>(v0) == std::get<0>(v1) && std::get<1>(v0) == std::get<1>(v1));
-  }
-};
-
 // recursive function collecting neighbors succesively
-void getNeighborsImpl(const std::unordered_map<key_t, std::function<std::vector<int>(int)>,
-                                               key_hash, key_equal>& nbhTables,
-                      std::vector<dawn::LocationType>& chain, dawn::LocationType targetType,
-                      std::vector<int> front, std::list<int>& result) {
+void getNeighborsImpl(
+    const std::unordered_map<key_t, std::function<std::vector<int>(int)>, key_hash>& nbhTables,
+    std::vector<dawn::LocationType>& chain, dawn::LocationType targetType, std::vector<int> front,
+    std::list<int>& result) {
   assert(chain.size() >= 2);
   dawn::LocationType from = chain.back();
   chain.pop_back();
@@ -287,7 +283,7 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   };
 
   // convenience wrapper for all neighbor tables
-  std::unordered_map<key_t, std::function<std::vector<int>(int)>, key_hash, key_equal> nbhTables;
+  std::unordered_map<key_t, std::function<std::vector<int>(int)>, key_hash> nbhTables;
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Cells, dawn::LocationType::Edges),
                     edgesFromCell);
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Cells, dawn::LocationType::Vertices),
@@ -328,6 +324,16 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op, typename WeightT>
+auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
+            std::vector<dawn::LocationType> chain, std::vector<WeightT>&& weights) {
+  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
+  int i = 0;
+  for(auto&& objIdx : getNeighbors(m, chain, idx))
+    op(init, objIdx, weights[i++]);
+  return init;
+}
+
+template <typename Init, typename Op, typename WeightT>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
                       std::vector<WeightT>&& weights) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
@@ -336,6 +342,7 @@ auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& o
     op(init, objIdx, weights[i++]);
   return init;
 }
+
 template <typename Init, typename Op, typename WeightT>
 auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
                       std::vector<WeightT>&& weights) {
@@ -407,11 +414,20 @@ auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op>
+auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
+            std::vector<dawn::LocationType> chain, Op&& op) {
+  for(auto&& objIdx : getNeighbors(m, chain, idx))
+    op(init, objIdx);
+  return init;
+}
+
+template <typename Init, typename Op>
 auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
   for(auto&& objIdx : cellNeighboursOfCell(m, idx))
     op(init, objIdx);
   return init;
 }
+
 template <typename Init, typename Op>
 auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
   for(auto&& objIdx : edgeNeighboursOfCell(m, idx))

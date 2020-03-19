@@ -29,7 +29,7 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaiveico {
 
-// Requirement for the atlas interface:
+// Requirement for a interface:
 //
 // - Tag: No requirement on the tag. Might be used for ADL.
 //
