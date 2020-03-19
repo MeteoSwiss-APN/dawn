@@ -27,17 +27,16 @@ PYBIND11_MODULE(_dawn4py, m) {
                   bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
                   bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
                   bool DumpRaceConditionGraph, bool DumpStencilInstantiation, bool DumpStencilGraph,
-                  bool DefaultNone, bool Parallel, bool SSA, bool PrintStencilGraph,
-                  bool SetStageName, bool StageReordering, bool StageMerger, bool TemporaryMerger,
-                  bool Inlining, bool IntervalPartitioning, bool TmpToStencilFunction,
-                  bool SetNonTempCaches, bool SetCaches, bool SetBlockSize, bool SetLoopOrder,
-                  bool DataLocalityMetric, bool ReportBoundaryConditions,
-                  bool ReportDataLocalityMetric, bool ReportPassTmpToFunction,
-                  bool ReportPassRemoveScalars, bool ReportPassStageSplit,
-                  bool ReportPassMultiStageSplit, bool ReportPassFieldVersioning,
-                  bool ReportPassTemporaryMerger, bool ReportPassTemporaryType,
-                  bool ReportPassStageReordering, bool ReportPassStageMerger,
-                  bool ReportPassSetCaches, bool ReportPassSetBlockSize,
+                  bool SSA, bool PrintStencilGraph, bool SetStageName, bool StageReordering,
+                  bool StageMerger, bool TemporaryMerger, bool Inlining, bool IntervalPartitioning,
+                  bool TmpToStencilFunction, bool SetNonTempCaches, bool SetCaches,
+                  bool SetBlockSize, bool SetLoopOrder, bool DataLocalityMetric,
+                  bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
+                  bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
+                  bool ReportPassStageSplit, bool ReportPassMultiStageSplit,
+                  bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
+                  bool ReportPassTemporaryType, bool ReportPassStageReordering,
+                  bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
                   bool ReportPassSetNonTempCaches) {
                  return dawn::Options{MaxBlocksPerSM,
                                       nsms,
@@ -70,8 +69,6 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       DumpRaceConditionGraph,
                                       DumpStencilInstantiation,
                                       DumpStencilGraph,
-                                      DefaultNone,
-                                      Parallel,
                                       SSA,
                                       PrintStencilGraph,
                                       SetStageName,
@@ -116,14 +113,14 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
            py::arg("dump_race_condition_graph") = false,
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false,
-           py::arg("default_none") = false, py::arg("parallel") = false, py::arg("ssa") = false,
-           py::arg("print_stencil_graph") = false, py::arg("set_stage_name") = false,
-           py::arg("stage_reordering") = false, py::arg("stage_merger") = false,
-           py::arg("temporary_merger") = false, py::arg("inlining") = false,
-           py::arg("interval_partitioning") = false, py::arg("tmp_to_stencil_function") = false,
-           py::arg("set_non_temp_caches") = false, py::arg("set_caches") = false,
-           py::arg("set_block_size") = false, py::arg("set_loop_order") = false,
-           py::arg("data_locality_metric") = false, py::arg("report_boundary_conditions") = false,
+           py::arg("ssa") = false, py::arg("print_stencil_graph") = false,
+           py::arg("set_stage_name") = false, py::arg("stage_reordering") = false,
+           py::arg("stage_merger") = false, py::arg("temporary_merger") = false,
+           py::arg("inlining") = false, py::arg("interval_partitioning") = false,
+           py::arg("tmp_to_stencil_function") = false, py::arg("set_non_temp_caches") = false,
+           py::arg("set_caches") = false, py::arg("set_block_size") = false,
+           py::arg("set_loop_order") = false, py::arg("data_locality_metric") = false,
+           py::arg("report_boundary_conditions") = false,
            py::arg("report_data_locality_metric") = false,
            py::arg("report_pass_tmp_to_function") = false,
            py::arg("report_pass_remove_scalars") = false,
@@ -167,8 +164,6 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("dump_race_condition_graph", &dawn::Options::DumpRaceConditionGraph)
       .def_readwrite("dump_stencil_instantiation", &dawn::Options::DumpStencilInstantiation)
       .def_readwrite("dump_stencil_graph", &dawn::Options::DumpStencilGraph)
-      .def_readwrite("default_none", &dawn::Options::DefaultNone)
-      .def_readwrite("parallel", &dawn::Options::Parallel)
       .def_readwrite("ssa", &dawn::Options::SSA)
       .def_readwrite("print_stencil_graph", &dawn::Options::PrintStencilGraph)
       .def_readwrite("set_stage_name", &dawn::Options::SetStageName)
@@ -240,8 +235,6 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph << ",\n    "
-           << "default_none=" << self.DefaultNone << ",\n    "
-           << "parallel=" << self.Parallel << ",\n    "
            << "ssa=" << self.SSA << ",\n    "
            << "print_stencil_graph=" << self.PrintStencilGraph << ",\n    "
            << "set_stage_name=" << self.SetStageName << ",\n    "
@@ -279,56 +272,55 @@ PYBIND11_MODULE(_dawn4py, m) {
       }))
       .def_property_readonly("options", (dawn::Options & (dawn::DawnCompiler::*)()) &
                                             dawn::DawnCompiler::getOptions)
-      .def(
-          "compile",
-          [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
-             py::object unit_info_obj) {
-            auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-            auto translationUnit = self.compile(inMemorySIR);
+      .def("compile",
+           [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
+              py::object unit_info_obj) {
+             auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
+             auto translationUnit = self.compile(inMemorySIR);
 
-            auto result = py::none();
-            auto export_info = false;
-            auto pp_defines_list = py::list();
-            auto stencils_dict = py::dict();
+             auto result = py::none();
+             auto export_info = false;
+             auto pp_defines_list = py::list();
+             auto stencils_dict = py::dict();
 
-            if(translationUnit) {
-              export_info = true;
-              if(!unit_info_obj.is_none()) {
-                auto unit_info_dict = unit_info_obj.cast<py::dict>();
-                export_info = true;
-                unit_info_dict["filename"] = py::str(translationUnit->getFilename());
-                unit_info_dict["pp_defines"] = pp_defines_list;
-                unit_info_dict["stencils"] = stencils_dict;
-                unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
-              }
+             if(translationUnit) {
+               export_info = true;
+               if(!unit_info_obj.is_none()) {
+                 auto unit_info_dict = unit_info_obj.cast<py::dict>();
+                 export_info = true;
+                 unit_info_dict["filename"] = py::str(translationUnit->getFilename());
+                 unit_info_dict["pp_defines"] = pp_defines_list;
+                 unit_info_dict["stencils"] = stencils_dict;
+                 unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
+               }
 
-              std::ostringstream ss;
-              ss << "//---- Preprocessor defines ----\n";
-              for(const auto& macroDefine : translationUnit->getPPDefines()) {
-                ss << macroDefine << "\n";
-                if(export_info)
-                  pp_defines_list.append(py::str(macroDefine));
-              }
-              ss << "\n//---- Includes ----\n"
-                 << "#include \"driver-includes/gridtools_includes.hpp\"\n"
-                 << "using namespace gridtools::dawn;\n";
-              ss << "\n//---- Globals ----\n";
-              ss << translationUnit->getGlobals();
-              ss << "\n//---- Stencils ----\n";
-              for(const auto& sItem : translationUnit->getStencils()) {
-                ss << sItem.second;
-                if(export_info)
-                  stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
-              }
-              result = py::str(ss.str());
-            }
+               std::ostringstream ss;
+               ss << "//---- Preprocessor defines ----\n";
+               for(const auto& macroDefine : translationUnit->getPPDefines()) {
+                 ss << macroDefine << "\n";
+                 if(export_info)
+                   pp_defines_list.append(py::str(macroDefine));
+               }
+               ss << "\n//---- Includes ----\n"
+                  << "#include \"driver-includes/gridtools_includes.hpp\"\n"
+                  << "using namespace gridtools::dawn;\n";
+               ss << "\n//---- Globals ----\n";
+               ss << translationUnit->getGlobals();
+               ss << "\n//---- Stencils ----\n";
+               for(const auto& sItem : translationUnit->getStencils()) {
+                 ss << sItem.second;
+                 if(export_info)
+                   stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
+               }
+               result = py::str(ss.str());
+             }
 
-            return result;
-          },
-          "Compile the provided SIR object.\n\n"
-          "Returns a `str` with the compiled source code` on success or `None` otherwise.",
-          "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
-          "members on it.",
-          py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
-          py::arg("unit_info") = nullptr);
+             return result;
+           },
+           "Compile the provided SIR object.\n\n"
+           "Returns a `str` with the compiled source code` on success or `None` otherwise.",
+           "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
+           "members on it.",
+           py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
+           py::arg("unit_info") = nullptr);
 };

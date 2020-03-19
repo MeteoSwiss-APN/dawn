@@ -165,13 +165,13 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   // required passes to have proper, parallelized IR
   optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
-  optimizer.pushBackPass<PassStageSplitAllStatements>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
   if(stencilIR->GridType == ast::GridType::Unstructured) {
     optimizer.pushBackPass<PassSetStageLocationType>();
   }
+  optimizer.pushBackPass<PassStageSplitAllStatements>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
   optimizer.pushBackPass<PassComputeStageExtents>();
