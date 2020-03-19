@@ -436,14 +436,10 @@ void CudaCodeGen::generateStencilWrapperRun(
   RunMethod.commit();
 }
 
-void CudaCodeGen::addCudaCopyBlock(MemberFunction& runMethod, const std::string& hostName,
-                                   const std::string dataType) const {
-  std::string deviceName = "d_" + hostName;
-  runMethod.addStatement(dataType + "* " + deviceName);
-  runMethod.addStatement("cudaMalloc(&" + deviceName + ", sizeof(" + dataType + ") * " + hostName +
-                         ".size())");
-  runMethod.addStatement("cudaMemcpy(" + deviceName + ", " + hostName + ".data(), sizeof(" +
-                         dataType + ") * " + hostName + ".size(), cudaMemcpyHostToDevice)");
+void CudaCodeGen::addCudaCopySymbol(MemberFunction& runMethod, const std::string& arrName,
+                                    const std::string dataType) const {
+  runMethod.addStatement("cudaMemcpyToSymbol(" + arrName + "_, " + arrName + ".data(), sizeof(" +
+                         dataType + ") * " + arrName + ".size())");
 }
 
 void CudaCodeGen::generateStencilRunMethod(
@@ -565,11 +561,11 @@ void CudaCodeGen::generateStencilRunMethod(
           if(interval.has_value()) {
             std::string hostName = "stage" + std::to_string(stage->getStageID()) + "Global" +
                                    iterators.at(index) + "Indices";
-            addCudaCopyBlock(stencilRunMethod, hostName, "int");
+            addCudaCopySymbol(stencilRunMethod, hostName, "int");
           }
         }
       }
-      addCudaCopyBlock(stencilRunMethod, "globalOffsets", "unsigned");
+      addCudaCopySymbol(stencilRunMethod, "globalOffsets", "unsigned");
     }
 
     stencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
@@ -589,7 +585,6 @@ void CudaCodeGen::generateStencilRunMethod(
         return true;
       if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
         return false;
-
       return true;
     });
 
@@ -625,37 +620,8 @@ void CudaCodeGen::generateStencilRunMethod(
 
     DAWN_ASSERT(!strides.empty());
 
-    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args;
-
-    if(iterationSpaceSet_) {
-      std::string iterators = "IJ";
-      for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-        for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
-          if(interval.has_value()) {
-            kernelCall += ", d_stage" + std::to_string(stage->getStageID()) + "Global" +
-                          iterators.at(index) + "Indices";
-          }
-        }
-      }
-      kernelCall += ", d_globalOffsets";
-    }
-
-    kernelCall += ")";
+    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
     stencilRunMethod.addStatement(kernelCall);
-
-    if(iterationSpaceSet_) {
-      std::string iterators = "IJ";
-      for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-        for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
-          if(interval.has_value()) {
-            stencilRunMethod.addStatement("cudaFree(d_stage" + std::to_string(stage->getStageID()) +
-                                          "Global" + iterators.at(index) + "Indices)");
-          }
-        }
-      }
-      stencilRunMethod.addStatement("cudaFree(d_globalOffsets)");
-    }
-
     stencilRunMethod.addStatement("}");
   }
 
