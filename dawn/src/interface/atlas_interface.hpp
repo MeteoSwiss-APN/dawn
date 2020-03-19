@@ -124,6 +124,10 @@ auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cell
 auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
 auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
 
+auto getCellsNew(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
+auto getEdgesNew(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
+auto getVerticesNew(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
+
 std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {

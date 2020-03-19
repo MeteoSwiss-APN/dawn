@@ -48,6 +48,31 @@ inline decltype(auto) getCells(toylibTag, toylib::Grid const& m) { return m.face
 inline decltype(auto) getEdges(toylibTag, toylib::Grid const& m) { return m.edges(); }
 inline decltype(auto) getVertices(toylibTag, toylib::Grid const& m) { return m.vertices(); }
 
+inline std::vector<const toylib::ToylibElement*> getCellsNew(toylibTag, toylib::Grid const& m) {
+  std::vector<const toylib::ToylibElement*> ret;
+  std::transform(m.faces().begin(), m.faces().end(), std::back_inserter(ret),
+                 [](const toylib::Face& in) -> const toylib::ToylibElement* {
+                   return static_cast<const toylib::ToylibElement*>(&in);
+                 });
+  return ret;
+}
+inline std::vector<const toylib::ToylibElement*> getEdgesNew(toylibTag, toylib::Grid const& m) {
+  std::vector<const toylib::ToylibElement*> ret;
+  std::transform(m.edges().begin(), m.edges().end(), std::back_inserter(ret),
+                 [](const toylib::Edge& in) -> const toylib::ToylibElement* {
+                   return static_cast<const toylib::ToylibElement*>(&in);
+                 });
+  return ret;
+}
+inline std::vector<const toylib::ToylibElement*> getVerticesNew(toylibTag, toylib::Grid const& m) {
+  std::vector<const toylib::ToylibElement*> ret;
+  std::transform(m.vertices().begin(), m.vertices().end(), std::back_inserter(ret),
+                 [](const toylib::Vertex& in) -> const toylib::ToylibElement* {
+                   return static_cast<const toylib::ToylibElement*>(&in);
+                 });
+  return ret;
+}
+
 // Specialized to deref the reference_wrapper
 inline toylib::Edge const& deref(toylibTag, std::reference_wrapper<toylib::Edge> const& e) {
   return e; // implicit conversion
