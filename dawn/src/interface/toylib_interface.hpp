@@ -244,7 +244,7 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Objs, typename Init, typename Op>
-auto reduce(Objs&& objs, Init init, std::vector<dawn::LocationType> chain, Op&& op) {
+auto reduce(Objs&& objs, Init init, Op&& op) {
   for(auto&& obj : objs)
     op(init, *obj);
   return init;
@@ -323,7 +323,7 @@ auto reduce(Objs&& objs, Init init, Op&& op, std::vector<Weight>&& weights) {
   return init;
 }
 
-template <typename Init, typename Op>
+template <typename Init, typename Op, typename Weight>
 auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* idx, Init init,
             std::vector<dawn::LocationType> chain, Op&& op, std::vector<Weight>&& weights) {
   int i = 0;
