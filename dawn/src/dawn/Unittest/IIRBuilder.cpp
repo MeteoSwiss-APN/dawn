@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 //
 // TODO there are death tests which rely on the following code to die, needs refactoring
+#include "dawn/AST/LocationType.h"
 #ifdef NDEBUG
 #undef NDEBUG
 #define HAD_NDEBUG
@@ -112,7 +113,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
                                                               ast::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), lhs_location, rhs_location);
+      std::move(init), lhs_location, std::vector<ast::LocationType>{rhs_location});
   expr->setID(si_->nextUID());
   return expr;
 }

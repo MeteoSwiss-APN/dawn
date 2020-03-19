@@ -74,7 +74,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
   };
 
-  std::string typeStringRHS = getLocationTypeString(expr->getRhsLocation());
+  DAWN_ASSERT(expr->getRhsLocation().size() == 1); // TO BE LIFTED
+  std::string typeStringRHS = getLocationTypeString(expr->getRhsLocation().back());
   std::string typeStringLHS = getLocationTypeString(expr->getLhsLocation());
 
   bool hasWeights = expr->getWeights().has_value();

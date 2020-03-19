@@ -172,8 +172,16 @@ public:
 
     ss_ << "Reduce (" << expr->getOp() << ", init = ";
     expr->getInit()->accept(*this);
-    ss_ << ", location = ";
-    ss_ << getLocationTypeString(expr->getRhsLocation());
+    ss_ << ", location = {";
+    bool first = true;
+    for(const auto& loc : expr->getRhsLocation()) {
+      if(!first) {
+        ss_ << ", ";
+      }
+      ss_ << getLocationTypeString(loc);
+      first = false;
+    }
+    ss_ << "}";
     ss_ << "): ";
     expr->getRhs()->accept(*this);
   }

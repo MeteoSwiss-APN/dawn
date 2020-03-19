@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_IIRBUILDER_H
 #define DAWN_IIR_IIRBUILDER_H
 
+#include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
@@ -145,7 +146,8 @@ public:
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
         toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}),
-        std::move(rhs), std::move(init), vWeights, lhs_location, rhs_location);
+        std::move(rhs), std::move(init), vWeights, lhs_location,
+        std::vector<ast::LocationType>{rhs_location});
     expr->setID(si_->nextUID());
 
     return expr;
