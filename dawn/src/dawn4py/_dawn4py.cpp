@@ -27,16 +27,16 @@ PYBIND11_MODULE(_dawn4py, m) {
                   bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
                   bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
                   bool DumpRaceConditionGraph, bool DumpStencilInstantiation, bool DumpStencilGraph,
-                  bool DefaultNone, bool Parallel, bool SSA, bool PrintStencilGraph,
-                  bool SetStageName, bool StageReordering, bool StageMerger, bool TemporaryMerger,
-                  bool Inlining, bool IntervalPartitioning, bool TmpToStencilFunction,
-                  bool SetNonTempCaches, bool SetCaches, bool SetBlockSize, bool DataLocalityMetric,
-                  bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
-                  bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
-                  bool ReportPassStageSplit, bool ReportPassMultiStageSplit,
-                  bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
-                  bool ReportPassTemporaryType, bool ReportPassStageReodering,
-                  bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
+                  bool SSA, bool PrintStencilGraph, bool SetStageName, bool StageReordering,
+                  bool StageMerger, bool TemporaryMerger, bool Inlining, bool IntervalPartitioning,
+                  bool TmpToStencilFunction, bool SetNonTempCaches, bool SetCaches,
+                  bool SetBlockSize, bool DataLocalityMetric, bool ReportBoundaryConditions,
+                  bool ReportDataLocalityMetric, bool ReportPassTmpToFunction,
+                  bool ReportPassRemoveScalars, bool ReportPassStageSplit,
+                  bool ReportPassMultiStageSplit, bool ReportPassFieldVersioning,
+                  bool ReportPassTemporaryMerger, bool ReportPassTemporaryType,
+                  bool ReportPassStageReodering, bool ReportPassStageMerger,
+                  bool ReportPassSetCaches, bool ReportPassSetBlockSize,
                   bool ReportPassSetNonTempCaches) {
                  return dawn::Options{MaxBlocksPerSM,
                                       nsms,
@@ -69,8 +69,6 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       DumpRaceConditionGraph,
                                       DumpStencilInstantiation,
                                       DumpStencilGraph,
-                                      DefaultNone,
-                                      Parallel,
                                       SSA,
                                       PrintStencilGraph,
                                       SetStageName,
@@ -114,14 +112,13 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
            py::arg("dump_race_condition_graph") = false,
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false,
-           py::arg("default_none") = false, py::arg("parallel") = false, py::arg("ssa") = false,
-           py::arg("print_stencil_graph") = false, py::arg("set_stage_name") = false,
-           py::arg("stage_reordering") = false, py::arg("stage_merger") = false,
-           py::arg("temporary_merger") = false, py::arg("inlining") = false,
-           py::arg("interval_partitioning") = false, py::arg("tmp_to_stencil_function") = false,
-           py::arg("set_non_temp_caches") = false, py::arg("set_caches") = false,
-           py::arg("set_block_size") = false, py::arg("data_locality_metric") = false,
-           py::arg("report_boundary_conditions") = false,
+           py::arg("ssa") = false, py::arg("print_stencil_graph") = false,
+           py::arg("set_stage_name") = false, py::arg("stage_reordering") = false,
+           py::arg("stage_merger") = false, py::arg("temporary_merger") = false,
+           py::arg("inlining") = false, py::arg("interval_partitioning") = false,
+           py::arg("tmp_to_stencil_function") = false, py::arg("set_non_temp_caches") = false,
+           py::arg("set_caches") = false, py::arg("set_block_size") = false,
+           py::arg("data_locality_metric") = false, py::arg("report_boundary_conditions") = false,
            py::arg("report_data_locality_metric") = false,
            py::arg("report_pass_tmp_to_function") = false,
            py::arg("report_pass_remove_scalars") = false,
@@ -165,8 +162,6 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("dump_race_condition_graph", &dawn::Options::DumpRaceConditionGraph)
       .def_readwrite("dump_stencil_instantiation", &dawn::Options::DumpStencilInstantiation)
       .def_readwrite("dump_stencil_graph", &dawn::Options::DumpStencilGraph)
-      .def_readwrite("default_none", &dawn::Options::DefaultNone)
-      .def_readwrite("parallel", &dawn::Options::Parallel)
       .def_readwrite("ssa", &dawn::Options::SSA)
       .def_readwrite("print_stencil_graph", &dawn::Options::PrintStencilGraph)
       .def_readwrite("set_stage_name", &dawn::Options::SetStageName)
@@ -237,8 +232,6 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph << ",\n    "
-           << "default_none=" << self.DefaultNone << ",\n    "
-           << "parallel=" << self.Parallel << ",\n    "
            << "ssa=" << self.SSA << ",\n    "
            << "print_stencil_graph=" << self.PrintStencilGraph << ",\n    "
            << "set_stage_name=" << self.SetStageName << ",\n    "
@@ -304,6 +297,9 @@ PYBIND11_MODULE(_dawn4py, m) {
                  if(export_info)
                    pp_defines_list.append(py::str(macroDefine));
                }
+               ss << "\n//---- Includes ----\n"
+                  << "#include \"driver-includes/gridtools_includes.hpp\"\n"
+                  << "using namespace gridtools::dawn;\n";
                ss << "\n//---- Globals ----\n";
                ss << translationUnit->getGlobals();
                ss << "\n//---- Stencils ----\n";
