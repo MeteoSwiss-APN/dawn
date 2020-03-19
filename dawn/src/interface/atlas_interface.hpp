@@ -140,67 +140,6 @@ std::vector<int> getNeighs(const atlas::mesh::Nodes::Connectivity& conn, int idx
   return neighs;
 }
 
-std::vector<int> const cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
-  const auto& conn = m.cells().edge_connectivity();
-  auto neighs = std::vector<int>{};
-  for(int n = 0; n < conn.cols(idx); ++n) {
-    int initialEdge = conn(idx, n);
-    for(int c1 = 0; c1 < m.cells().size(); ++c1) {
-      for(int n1 = 0; n1 < conn.cols(c1); ++n1) {
-        int compareEdge = conn(c1, n1);
-        if(initialEdge == compareEdge && c1 != idx) {
-          neighs.emplace_back(c1);
-        }
-      }
-    }
-  }
-  return neighs;
-}
-
-std::vector<int> const edgeNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
-  return getNeighs(m.cells().edge_connectivity(), idx);
-}
-
-std::vector<int> const nodeNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
-  return getNeighs(m.cells().node_connectivity(), idx);
-}
-
-std::vector<int> const cellNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
-  auto neighs = getNeighs(m.edges().cell_connectivity(), idx);
-  assert(neighs.size() == 2);
-  return neighs;
-}
-
-std::vector<int> const nodeNeighboursOfEdge(atlas::Mesh const& m, int const& idx) {
-  auto neighs = getNeighs(m.edges().node_connectivity(), idx);
-  assert(neighs.size() == 2);
-  return neighs;
-}
-
-std::vector<int> const cellNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
-  return getNeighs(m.nodes().cell_connectivity(), idx);
-}
-
-std::vector<int> const edgeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
-  return getNeighs(m.cells().edge_connectivity(), idx);
-}
-
-std::vector<int> const nodeNeighboursOfNode(atlas::Mesh const& m, int const& idx) {
-  const auto& conn_nodes_to_edge = m.nodes().edge_connectivity();
-  auto neighs = std::vector<int>{};
-  for(int ne = 0; ne < conn_nodes_to_edge.cols(idx); ++ne) {
-    int nbh_edge_idx = conn_nodes_to_edge(idx, ne);
-    const auto& conn_edge_to_nodes = m.edges().node_connectivity();
-    for(int nn = 0; nn < conn_edge_to_nodes.cols(nbh_edge_idx); ++nn) {
-      int nbhNode = conn_edge_to_nodes(idx, nn);
-      if(nbhNode != idx) {
-        neighs.emplace_back(nbhNode);
-      }
-    }
-  }
-  return neighs;
-}
-
 // neighbor tables, adressable by two location types (from -> to)
 typedef std::tuple<dawn::LocationType, dawn::LocationType> key_t;
 
@@ -323,142 +262,14 @@ auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
   return init;
 }
 
-template <typename Init, typename Op, typename WeightT>
-auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                      std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : cellNeighboursOfCell(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-
-template <typename Init, typename Op, typename WeightT>
-auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                      std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : edgeNeighboursOfCell(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-template <typename Init, typename Op, typename WeightT>
-auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : nodeNeighboursOfCell(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-
-template <typename Init, typename Op, typename WeightT>
-auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                      std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : cellNeighboursOfEdge(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-template <typename Init, typename Op, typename WeightT>
-auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : nodeNeighboursOfEdge(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-
-template <typename Init, typename Op, typename WeightT>
-auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : cellNeighboursOfNode(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-template <typename Init, typename Op, typename WeightT>
-auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                        std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : edgeNeighboursOfNode(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-template <typename Init, typename Op, typename WeightT>
-auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op,
-                          std::vector<WeightT>&& weights) {
-  static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
-  int i = 0;
-  for(auto&& objIdx : nodeNeighboursOfNode(m, idx))
-    op(init, objIdx, weights[i++]);
-  return init;
-}
-
 //===------------------------------------------------------------------------------------------===//
-// unweighted versions
+// unweighted version
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op>
 auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
             std::vector<dawn::LocationType> chain, Op&& op) {
   for(auto&& objIdx : getNeighbors(m, chain, idx))
-    op(init, objIdx);
-  return init;
-}
-
-template <typename Init, typename Op>
-auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : cellNeighboursOfCell(m, idx))
-    op(init, objIdx);
-  return init;
-}
-
-template <typename Init, typename Op>
-auto reduceEdgeToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : edgeNeighboursOfCell(m, idx))
-    op(init, objIdx);
-  return init;
-}
-template <typename Init, typename Op>
-auto reduceVertexToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : nodeNeighboursOfCell(m, idx))
-    op(init, objIdx);
-  return init;
-}
-
-template <typename Init, typename Op>
-auto reduceCellToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : cellNeighboursOfEdge(m, idx))
-    op(init, objIdx);
-  return init;
-}
-template <typename Init, typename Op>
-auto reduceVertexToEdge(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : nodeNeighboursOfEdge(m, idx))
-    op(init, objIdx);
-  return init;
-}
-
-template <typename Init, typename Op>
-auto reduceCellToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : cellNeighboursOfNode(m, idx))
-    op(init, objIdx);
-  return init;
-}
-template <typename Init, typename Op>
-auto reduceEdgeToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : edgeNeighboursOfNode(m, idx))
-    op(init, objIdx);
-  return init;
-}
-template <typename Init, typename Op>
-auto reduceVertexToVertex(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
-  for(auto&& objIdx : nodeNeighboursOfNode(m, idx))
     op(init, objIdx);
   return init;
 }
