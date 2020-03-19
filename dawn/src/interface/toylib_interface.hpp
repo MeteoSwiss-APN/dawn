@@ -44,11 +44,7 @@ toylib::SparseVertexData<T> sparseVertexFieldType(toylibTag);
 
 using Mesh = toylib::Grid;
 
-inline decltype(auto) getCells(toylibTag, toylib::Grid const& m) { return m.faces(); }
-inline decltype(auto) getEdges(toylibTag, toylib::Grid const& m) { return m.edges(); }
-inline decltype(auto) getVertices(toylibTag, toylib::Grid const& m) { return m.vertices(); }
-
-inline std::vector<const toylib::ToylibElement*> getCellsNew(toylibTag, toylib::Grid const& m) {
+inline std::vector<const toylib::ToylibElement*> getCells(toylibTag, toylib::Grid const& m) {
   std::vector<const toylib::ToylibElement*> ret;
   std::transform(m.faces().begin(), m.faces().end(), std::back_inserter(ret),
                  [](const toylib::Face& in) -> const toylib::ToylibElement* {
@@ -56,7 +52,7 @@ inline std::vector<const toylib::ToylibElement*> getCellsNew(toylibTag, toylib::
                  });
   return ret;
 }
-inline std::vector<const toylib::ToylibElement*> getEdgesNew(toylibTag, toylib::Grid const& m) {
+inline std::vector<const toylib::ToylibElement*> getEdges(toylibTag, toylib::Grid const& m) {
   std::vector<const toylib::ToylibElement*> ret;
   std::transform(m.edges().begin(), m.edges().end(), std::back_inserter(ret),
                  [](const toylib::Edge& in) -> const toylib::ToylibElement* {
@@ -64,7 +60,7 @@ inline std::vector<const toylib::ToylibElement*> getEdgesNew(toylibTag, toylib::
                  });
   return ret;
 }
-inline std::vector<const toylib::ToylibElement*> getVerticesNew(toylibTag, toylib::Grid const& m) {
+inline std::vector<const toylib::ToylibElement*> getVertices(toylibTag, toylib::Grid const& m) {
   std::vector<const toylib::ToylibElement*> ret;
   std::transform(m.vertices().begin(), m.vertices().end(), std::back_inserter(ret),
                  [](const toylib::Vertex& in) -> const toylib::ToylibElement* {
@@ -242,21 +238,11 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Vertices, dawn::LocationType::Edges),
                     edgesFromVertex);
 
-  // consume first element in chain (where we currently are, "from")
-  dawn::LocationType from = chain.back();
-  chain.pop_back();
-
-  // look at next element
-  dawn::LocationType to = chain.back();
-
-  // update the current from (the neighbors we can reach from the current index)
-  std::vector<const toylib::ToylibElement*> front = nbhTables.at({from, to})(elem);
-
   // result set
   std::list<const toylib::ToylibElement*> result;
 
   // start recursion
-  getNeighborsImpl(nbhTables, chain, targetType, front, result);
+  getNeighborsImpl(nbhTables, chain, targetType, {elem}, result);
 
   std::vector<const toylib::ToylibElement*> resultUnique;
   NotDuplicate<const toylib::ToylibElement*> pred;

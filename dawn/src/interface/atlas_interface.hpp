@@ -124,10 +124,6 @@ auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cell
 auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
 auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
 
-auto getCellsNew(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
-auto getEdgesNew(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
-auto getVerticesNew(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
-
 std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {
@@ -301,21 +297,11 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   nbhTables.emplace(std::make_tuple(dawn::LocationType::Vertices, dawn::LocationType::Edges),
                     edgesFromNode);
 
-  // consume first element in chain (where we currently are, "from")
-  dawn::LocationType from = chain.back();
-  chain.pop_back();
-
-  // look at next element
-  dawn::LocationType to = chain.back();
-
-  // update the current from (the neighbors we can reach from the current index)
-  std::vector<int> front = nbhTables.at({from, to})(idx);
-
   // result set
   std::list<int> result;
 
   // start recursion
-  getNeighborsImpl(nbhTables, chain, targetType, front, result);
+  getNeighborsImpl(nbhTables, chain, targetType, {idx}, result);
 
   std::vector<int> resultUnique;
   NotDuplicate<int> pred;

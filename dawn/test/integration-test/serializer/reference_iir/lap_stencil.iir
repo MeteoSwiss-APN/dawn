@@ -1,14 +1,14 @@
 {
  "metadata": {
   "accessIDToName": {
+   "32": "out",
    "30": "in",
-   "31": "tmp",
-   "32": "out"
+   "31": "tmp"
   },
   "accessIDToType": {
+   "32": 6,
    "30": 6,
-   "31": 3,
-   "32": 6
+   "31": 3
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -29,6 +29,13 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
+   "32": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   },
    "30": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
@@ -37,13 +44,6 @@
     "mask_k": 1
    },
    "31": {
-    "cartesian_horizontal_dimension": {
-     "mask_cart_i": 1,
-     "mask_cart_j": 1
-    },
-    "mask_k": 1
-   },
-   "32": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1

@@ -293,15 +293,16 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
 
   std::string stencilName("testSerializationReduce");
 
-  auto stencil_instantiation = b.build(
-      stencilName.c_str(),
-      b.stencil(b.multistage(
-          LoopOrderKind::Parallel,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                             b.stmt(b.assignExpr(
-                                 b.at(out_f), b.reduceOverNeighborExpr(
-                                                  Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                                  b.lit(0.), LocType::Cells, LocType::Edges))))))));
+  auto stencil_instantiation =
+      b.build(stencilName.c_str(),
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.stmt(b.assignExpr(b.at(out_f),
+                                          b.reduceOverNeighborExpr(
+                                              Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                              b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
   auto deserializedAndSerialized =
       IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
@@ -327,15 +328,15 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
               dawn::sir::Interval::Start, dawn::sir::Interval::End,
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                                   b.lit(0.), LocType::Cells, LocType::Edges,
+                                                   b.lit(0.), {LocType::Cells, LocType::Edges},
                                                    std::vector<float>({1., 2., 3., 4.})))),
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                                   b.lit(0.), LocType::Cells, LocType::Edges,
+                                                   b.lit(0.), {LocType::Cells, LocType::Edges},
                                                    std::vector<double>({1., 2., 3., 4.})))),
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                                   b.lit(0.), LocType::Cells, LocType::Edges,
+                                                   b.lit(0.), {LocType::Cells, LocType::Edges},
                                                    std::vector<int>({1, 2, 3, 4})))))))));
 
   auto deserializedAndSerialized =

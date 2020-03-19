@@ -998,9 +998,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID),
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()), rhsLocs,
-          makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), rhsLocs, makeLocation(exprProto));
       return expr;
     } else {
       std::vector<sir::Value> deserializedWeights;
@@ -1028,8 +1026,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       }
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights,
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()), rhsLocs,
+          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, rhsLocs,
           makeLocation(exprProto));
       return expr;
     }

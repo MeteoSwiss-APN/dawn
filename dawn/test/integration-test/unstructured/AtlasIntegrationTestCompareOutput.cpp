@@ -414,7 +414,7 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
   {
     auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
     auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
   }
 }
@@ -518,7 +518,7 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
   {
     auto ref_cells_v = atlas::array::make_view<double, 2>(ref_cells);
     auto gen_cells_v = atlas::array::make_view<double, 2>(gen_cells);
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareArrayView(ref_cells_v, gen_cells_v))
         << "while comparing output (on cells)";
   }

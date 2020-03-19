@@ -536,13 +536,11 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
 
     if(weights.size() > 0) {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights,
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()), rhsLocs,
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, rhsLocs,
           makeLocation(exprProto));
     } else {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()),
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()), rhsLocs,
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), rhsLocs,
           makeLocation(exprProto));
     }
   }

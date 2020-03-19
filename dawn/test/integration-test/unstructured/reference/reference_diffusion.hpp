@@ -26,7 +26,7 @@ private:
       using dawn::deref;
       {
         for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size - 1)) + 0 + 0; ++k) {
-          for(auto loc : getCellsNew(LibTag{}, m_mesh)) {
+          for(auto loc : getCells(LibTag{}, m_mesh)) {
             int cnt;
             cnt = reduce(LibTag{}, m_mesh, loc, (int)0,
                          std::vector<dawn::LocationType>{dawn::LocationType::Cells,

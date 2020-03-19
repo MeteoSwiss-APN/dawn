@@ -280,7 +280,7 @@ TEST(ToylibIntegrationTestCompareOutput, Diffusion) {
   }
 
   {
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareToylibField(mesh.faces(), in_ref, in_gen, nb_levels))
         << "while comparing output (on cells)";
   }
@@ -317,15 +317,15 @@ TEST(ToylibIntegrationTestCompareOutput, Gradient) {
     gen_cells(f, 0) = val;
   }
 
-  dawn_generated::cxxnaiveico::reference_gradient<toylibInterface::toylibTag>(mesh, nb_levels,
-                                                                              ref_cells, ref_edges)
-      .run();
   dawn_generated::cxxnaiveico::gradient<toylibInterface::toylibTag>(mesh, nb_levels, gen_cells,
                                                                     gen_edges)
       .run();
+  dawn_generated::cxxnaiveico::reference_gradient<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                              ref_cells, ref_edges)
+      .run();
 
   {
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareToylibField(mesh.faces(), ref_cells, gen_cells, nb_levels))
         << "while comparing output (on cells)";
   }

@@ -63,20 +63,16 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   auto getLocationTypeString = [](ast::LocationType type) {
     switch(type) {
     case ast::LocationType::Cells:
-      return "Cell";
+      return "dawn::LocationType::Cells";
     case ast::LocationType::Edges:
-      return "Edge";
+      return "dawn::LocationType::Edges";
     case ast::LocationType::Vertices:
-      return "Vertex";
+      return "dawn::LocationType::Vertices";
     default:
       dawn_unreachable("unknown location type");
       return "";
     }
   };
-
-  DAWN_ASSERT(expr->getRhsLocation().size() == 1); // TO BE LIFTED
-  std::string typeStringRHS = getLocationTypeString(expr->getRhsLocation().back());
-  std::string typeStringLHS = getLocationTypeString(expr->getLhsLocation());
 
   bool hasWeights = expr->getWeights().has_value();
 
@@ -84,15 +80,25 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       (parentIsReduction_)
           ? "red_loc"
           : "loc"; // does stage or parent reduceOverNeighborExpr determine argname?
-  ss_ << std::string(indent_, ' ')
-      << "reduce" + typeStringRHS + "To" + typeStringLHS + "(LibTag{}, m_mesh," << sigArg << ", ";
+  ss_ << std::string(indent_, ' ') << "reduce(LibTag{}, m_mesh," << sigArg << ", ";
   expr->getInit()->accept(*this);
+
+  ss_ << ", std::vector<dawn::LocationType>{";
+  bool first = true;
+  for(const auto& loc : expr->getRhsLocation()) {
+    if(!first) {
+      ss_ << ", ";
+    }
+    ss_ << getLocationTypeString(loc);
+    first = false;
+  }
+  ss_ << "}";
   if(hasWeights) {
-    ss_ << ", [&](auto& lhs, auto const& red_loc, auto const& weight) {\n";
+    ss_ << ", [&](auto& lhs, auto red_loc, auto const& weight) {\n";
     ss_ << "lhs " << expr->getOp() << "= ";
     ss_ << "weight * ";
   } else {
-    ss_ << ", [&](auto& lhs, auto const& red_loc) { lhs " << expr->getOp() << "= ";
+    ss_ << ", [&](auto& lhs, auto red_loc) { lhs " << expr->getOp() << "= ";
   }
 
   auto argName = denseArgName_;

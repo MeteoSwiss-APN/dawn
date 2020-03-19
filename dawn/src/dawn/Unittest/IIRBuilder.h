@@ -133,10 +133,10 @@ public:
                     std::optional<LocalVariableType> localVarType = std::nullopt);
 
   template <class TWeight>
-  std::shared_ptr<iir::Expr>
-  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                         std::shared_ptr<iir::Expr>&& init, ast::LocationType lhs_location,
-                         ast::LocationType rhs_location, const std::vector<TWeight>&& weights) {
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                                    std::shared_ptr<iir::Expr>&& init,
+                                                    const std::vector<ast::LocationType>& chain,
+                                                    const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
     std::vector<sir::Value> vWeights;
@@ -146,8 +146,7 @@ public:
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
         toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}),
-        std::move(rhs), std::move(init), vWeights, lhs_location,
-        std::vector<ast::LocationType>{rhs_location});
+        std::move(rhs), std::move(init), vWeights, chain);
     expr->setID(si_->nextUID());
 
     return expr;
@@ -155,8 +154,7 @@ public:
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    ast::LocationType lhs_location,
-                                                    ast::LocationType rhs_location);
+                                                    const std::vector<ast::LocationType>& chain);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);

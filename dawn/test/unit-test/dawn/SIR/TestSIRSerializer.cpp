@@ -96,7 +96,8 @@ TEST_P(StencilTest, AST_Reduction) {
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
       std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
-      ast::LocationType::Cells, std::vector<ast::LocationType>{ast::LocationType::Cells});
+      std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
+                                     ast::LocationType::Cells});
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
@@ -110,7 +111,8 @@ TEST_P(StencilTest, AST_ReductionWeighted) {
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
       std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights,
-      ast::LocationType::Cells, std::vector<ast::LocationType>{ast::LocationType::Cells});
+      std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
+                                     ast::LocationType::Cells});
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));

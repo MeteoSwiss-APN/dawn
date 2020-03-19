@@ -414,6 +414,12 @@ public:
   T const& operator()(const O& elem, size_t sparse_idx, size_t k_level) const {
     return data_[k_level][elem.id()][sparse_idx];
   }
+  T& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) {
+    return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
+  }
+  T const& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) const {
+    return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
+  }
   int k_size() const { return data_.size(); }
 
 private:

@@ -452,26 +452,26 @@ bool LiteralAccessExpr::equals(const Expr* other, bool compareData) const {
 //     ReductionOverNeighborExpr
 //===------------------------------------------------------------------------------------------===//
 
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(
-    std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    ast::LocationType lhs_location, std::vector<ast::LocationType> rhs_location, SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), lhs_location_(lhs_location),
-      rhs_location_(rhs_location), operands_{rhs, init} {}
+ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
+                                                     std::shared_ptr<Expr> const& rhs,
+                                                     std::shared_ptr<Expr> const& init,
+                                                     std::vector<ast::LocationType> chain,
+                                                     SourceLocation loc)
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), lhs_location_(chain.front()),
+      chain_(chain), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(
     std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    std::vector<sir::Value> weights, ast::LocationType lhs_location,
-    std::vector<ast::LocationType> rhs_location, SourceLocation loc)
+    std::vector<sir::Value> weights, std::vector<ast::LocationType> chain, SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
-      lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {
+      lhs_location_(chain.front()), chain_(chain), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
       weights_(expr.getWeights()), lhs_location_(expr.getLhsLocation()),
-      rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
-                                                      expr.getInit()->clone()} {}
+      chain_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(), expr.getInit()->clone()} {}
 
 ReductionOverNeighborExpr&
 ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
@@ -479,7 +479,7 @@ ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
   op_ = expr.op_;
   operands_[Rhs] = expr.getRhs();
   operands_[Init] = expr.getInit();
-  rhs_location_ = expr.getRhsLocation();
+  chain_ = expr.getRhsLocation();
   lhs_location_ = expr.getLhsLocation();
   weights_ = expr.getWeights();
   return *this;

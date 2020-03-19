@@ -415,7 +415,6 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
                reductionExpr->getRhsLocation().back() &&
            rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation());
     } else {
-      DAWN_ASSERT(reductionExpr->getRhsLocation().size() == 1);
       dimensionsConsistent_ =
           (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getRhsLocation().back());
     }
