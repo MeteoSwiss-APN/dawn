@@ -25,6 +25,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
@@ -435,6 +436,12 @@ void CudaCodeGen::generateStencilWrapperRun(
   RunMethod.commit();
 }
 
+void CudaCodeGen::addCudaCopySymbol(MemberFunction& runMethod, const std::string& arrName,
+                                    const std::string dataType) const {
+  runMethod.addStatement("cudaMemcpyToSymbol(" + arrName + "_, " + arrName + ".data(), sizeof(" +
+                         dataType + ") * " + arrName + ".size())");
+}
+
 void CudaCodeGen::generateStencilRunMethod(
     Structure& stencilClass, const iir::Stencil& stencil,
     const std::shared_ptr<StencilProperties>& stencilProperties,
@@ -546,6 +553,21 @@ void CudaCodeGen::generateStencilRunMethod(
     } else {
       stencilRunMethod.addStatement("const unsigned int nbz = 1");
     }
+
+    if(iterationSpaceSet_) {
+      std::string iterators = "IJ";
+      for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+        for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
+          if(interval.has_value()) {
+            std::string hostName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                   iterators.at(index) + "Indices";
+            addCudaCopySymbol(stencilRunMethod, hostName, "int");
+          }
+        }
+      }
+      addCudaCopySymbol(stencilRunMethod, "globalOffsets", "unsigned");
+    }
+
     stencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
     std::string kernelCall =
         CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, multiStagePtr) +
@@ -563,7 +585,6 @@ void CudaCodeGen::generateStencilRunMethod(
         return true;
       if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
         return false;
-
       return true;
     });
 
@@ -572,7 +593,6 @@ void CudaCodeGen::generateStencilRunMethod(
     int idx = 0;
     for(const auto& fieldPair : msNonTempFields) {
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-
       args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + fieldName +
              "_ds.get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
              ".begin<1>(),0 ))";
@@ -600,24 +620,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
     DAWN_ASSERT(!strides.empty());
 
-    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args;
-
-    if(iterationSpaceSet_) {
-      std::string iterators = "IJ";
-      for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-        int index = 0;
-        for(const auto& interval : stage->getIterationSpace()) {
-          if(interval.has_value()) {
-            kernelCall += ", stage" + std::to_string(stage->getStageID()) + "Global" +
-                          iterators.at(index) + "Indices.data()";
-          }
-          index += 1;
-        }
-      }
-      kernelCall += ", globalOffsets.data()";
-    }
-
-    kernelCall += ")";
+    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
     stencilRunMethod.addStatement(kernelCall);
     stencilRunMethod.addStatement("}");
   }
