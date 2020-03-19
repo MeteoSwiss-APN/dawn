@@ -701,6 +701,17 @@ void MSCodeGen::generateCudaKernelCode() {
   });
 
   if(iterationSpaceSet_) {
+    std::string iterators = "IJ";
+    for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
+      for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
+        if(interval.has_value()) {
+          ss_ << "__constant__ int stage" << stage->getStageID() << "Global" << iterators.at(index)
+              << "Indices_[2];\n";
+        }
+      }
+    }
+    ss_ << "__constant__ unsigned globalOffsets_[2];\n";
+
     MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
     offsetFunc.addArg("unsigned int min");
     offsetFunc.addArg("unsigned int max");
@@ -771,21 +782,6 @@ void MSCodeGen::generateCudaKernelCode() {
       cudaKernel.addArg("::dawn::float_type * const " +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
-  }
-
-  if(iterationSpaceSet_) {
-    std::string iterators = "IJ";
-    for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
-      std::string prefix = "int* const stage" + std::to_string(stage->getStageID()) + "Global";
-      int index = 0;
-      for(const auto& interval : stage->getIterationSpace()) {
-        if(interval.has_value()) {
-          cudaKernel.addArg(prefix + iterators.at(index) + "Indices");
-        }
-        index += 1;
-      }
-    }
-    cudaKernel.addArg("unsigned* const globalOffsets");
   }
 
   DAWN_ASSERT(fields.size() > 0);
@@ -1059,15 +1055,13 @@ void MSCodeGen::generateCudaKernelCode() {
           std::string iterators = "IJ";
           for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
             std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
-            int index = 0;
-            for(const auto& interval : stage->getIterationSpace()) {
+            for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
               if(interval.has_value()) {
                 std::string arrName = prefix + iterators.at(index) + "Indices";
-                guard += " && checkOffset(" + arrName + "[0], " + arrName + "[1], globalOffsets[" +
-                         std::to_string(index) + "] + " + (char)std::tolower(iterators.at(index)) +
-                         "block)";
+                guard += " && checkOffset(" + arrName + "_[0], " + arrName +
+                         "_[1], globalOffsets_[" + std::to_string(index) + "] + " +
+                         (char)std::tolower(iterators.at(index)) + "block)";
               }
-              index += 1;
             }
           }
         }
