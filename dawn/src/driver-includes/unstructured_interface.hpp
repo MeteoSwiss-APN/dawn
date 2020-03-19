@@ -66,4 +66,10 @@ template <typename Tag, typename LocationType>
 auto deref(Tag, LocationType const& l) -> LocationType const& {
   return l;
 }
+
+template <typename Tag, typename LocationType>
+auto deref(Tag, LocationType const* l) -> LocationType const* {
+  return l;
+}
+
 } // namespace dawn

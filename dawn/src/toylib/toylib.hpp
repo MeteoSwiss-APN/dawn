@@ -368,6 +368,12 @@ public:
       : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
   T& operator()(O const& f, size_t k_level) { return data_[k_level][f.id()]; }
   T const& operator()(O const& f, size_t k_level) const { return data_[k_level][f.id()]; }
+  T& operator()(ToylibElement const* f, size_t k_level) {
+    return data_[k_level][static_cast<const O*>(f)->id()];
+  }
+  T const& operator()(ToylibElement const* f, size_t k_level) const {
+    return data_[k_level][static_cast<const O*>(f)->id()];
+  }
   auto begin() { return data_.begin(); }
   auto end() { return data_.end(); }
 
