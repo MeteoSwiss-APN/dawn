@@ -31,7 +31,7 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <variant>
 #include <vector>
 
@@ -559,7 +559,8 @@ public:
   Global(Kind type) : Value(type) {}
 };
 
-using GlobalVariableMap = std::unordered_map<std::string, Global>;
+// Using ordered map to guarantee the same backend code will be generated
+using GlobalVariableMap = std::map<std::string, Global>;
 
 } // namespace sir
 
