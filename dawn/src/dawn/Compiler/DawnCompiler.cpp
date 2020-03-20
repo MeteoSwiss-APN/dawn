@@ -168,10 +168,10 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
+  optimizer.pushBackPass<PassStageSplitAllStatements>();
   if(stencilIR->GridType == ast::GridType::Unstructured) {
     optimizer.pushBackPass<PassSetStageLocationType>();
   }
-  optimizer.pushBackPass<PassStageSplitAllStatements>();
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
   optimizer.pushBackPass<PassComputeStageExtents>();
@@ -189,10 +189,6 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
       throw std::runtime_error("An error occurred.");
 
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
-
-    if(options_.DumpStencilInstantiation) {
-      instantiation->dump();
-    }
   }
 
   return optimizer.getStencilInstantiationMap();

@@ -29,6 +29,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 
 namespace dawn {
 
@@ -74,8 +75,6 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   case iir::Cache::IOPolicy::unknown:
     protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Unknown);
     break;
-  default:
-    dawn_unreachable("unknown cache policy");
   }
   switch(cache.getType()) {
   case iir::Cache::CacheType::bypass:
@@ -90,8 +89,6 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   case iir::Cache::CacheType::K:
     protoCache->set_type(proto::iir::Cache_CacheType_CT_K);
     break;
-  default:
-    dawn_unreachable("unknown cache type");
   }
   if(cache.getInterval()) {
     auto sirInterval = cache.getInterval()->asSIRInterval();
@@ -128,7 +125,7 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
     cacheType = iir::Cache::CacheType::K;
     break;
   default:
-    dawn_unreachable("unknow cache type");
+    throw std::out_of_range("unknown cache type");
   }
   switch(protoCache->policy()) {
   case proto::iir::Cache_CachePolicy_CP_BPFill:
@@ -153,7 +150,7 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
     cachePolicy = iir::Cache::IOPolicy::unknown;
     break;
   default:
-    dawn_unreachable("unknown cache policy");
+    throw std::out_of_range("unknown cache policy");
   }
   if(protoCache->has_interval()) {
     interval = std::make_optional(*makeInterval(protoCache->interval()));
@@ -283,8 +280,6 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   case ast::GridType::Unstructured:
     protoIIR->set_gridtype(proto::enums::GridType::Unstructured);
     break;
-  default:
-    dawn_unreachable("invalid grid type");
   }
 
   auto& protoGlobalVariableMap = *protoIIR->mutable_globalvariabletovalue();
@@ -315,7 +310,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Double);
       break;
     default:
-      dawn_unreachable("non-supported global type");
+      throw std::invalid_argument("unsupported global type");
     }
 
     protoGlobalToStore.set_valueisset(valueIsSet);
@@ -495,8 +490,6 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
       throw std::runtime_error(dawn::format("cannot serialize IIR:"));
     break;
   }
-  default:
-    dawn_unreachable("invalid SerializationKind");
   }
 
   return str;
@@ -644,7 +637,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       }
       break;
     default:
-      dawn_unreachable("unsupported type");
+      throw std::out_of_range("unsupported type");
     }
 
     target->getIIR()->insertGlobalVariable(std::string(GlobalToValue.first),
@@ -785,8 +778,6 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
       throw std::runtime_error("cannot deserialize StencilInstantiation");
     break;
   }
-  default:
-    dawn_unreachable("invalid SerializationKind");
   }
 
   std::shared_ptr<iir::StencilInstantiation> target;
@@ -799,7 +790,7 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
     target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Unstructured);
     break;
   default:
-    dawn_unreachable("unknown grid type");
+    throw std::out_of_range("unknown grid type");
   }
 
   int maxID = 0;
