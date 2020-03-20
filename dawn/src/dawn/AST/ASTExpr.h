@@ -638,9 +638,9 @@ private:
 
   std::string op_ = "+";
   std::optional<std::vector<sir::Value>> weights_;
-  ast::LocationType lhs_location_;
   std::vector<ast::LocationType> chain_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
+  bool chainIsValid();
 
 public:
   /// @name Constructor & Destructor
@@ -661,8 +661,8 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  std::vector<ast::LocationType> getRhsLocation() const { return chain_; };
-  ast::LocationType getLhsLocation() const { return lhs_location_; };
+  std::vector<ast::LocationType> getNbhChain() const { return chain_; };
+  ast::LocationType getLhsLocation() const { return chain_.front(); };
   const std::optional<std::vector<sir::Value>>& getWeights() const { return weights_; };
 
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }

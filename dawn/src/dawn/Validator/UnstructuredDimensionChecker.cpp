@@ -411,12 +411,11 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const auto& rhsUnstructuredDim = getUnstructuredDim(ops.getDimensions());
     if(rhsUnstructuredDim.isSparse()) {
       dimensionsConsistent_ =
-          (rhsUnstructuredDim.getLastSparseLocationType() ==
-               reductionExpr->getRhsLocation().back() &&
+          (rhsUnstructuredDim.getLastSparseLocationType() == reductionExpr->getNbhChain().back() &&
            rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation());
     } else {
       dimensionsConsistent_ =
-          (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getRhsLocation().back());
+          (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getNbhChain().back());
     }
   }
 

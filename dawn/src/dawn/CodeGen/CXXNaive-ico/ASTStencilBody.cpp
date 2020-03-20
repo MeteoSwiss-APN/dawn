@@ -85,7 +85,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
 
   ss_ << ", std::vector<dawn::LocationType>{";
   bool first = true;
-  for(const auto& loc : expr->getRhsLocation()) {
+  for(const auto& loc : expr->getNbhChain()) {
     if(!first) {
       ss_ << ", ";
     }

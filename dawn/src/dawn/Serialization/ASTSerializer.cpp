@@ -667,7 +667,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
   protoExpr->set_op(expr->getOp());
 
   auto protoRhsLocs = protoExpr->mutable_rhs_location();
-  for(const auto& rhsLoc : expr->getRhsLocation()) {
+  for(const auto& rhsLoc : expr->getNbhChain()) {
     protoRhsLocs->Add(getProtoLocationTypeFromLocationType(rhsLoc));
   }
 

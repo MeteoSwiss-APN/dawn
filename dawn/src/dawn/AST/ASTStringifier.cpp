@@ -174,7 +174,7 @@ public:
     expr->getInit()->accept(*this);
     ss_ << ", location = {";
     bool first = true;
-    for(const auto& loc : expr->getRhsLocation()) {
+    for(const auto& loc : expr->getNbhChain()) {
       if(!first) {
         ss_ << ", ";
       }
