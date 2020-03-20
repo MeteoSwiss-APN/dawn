@@ -529,18 +529,18 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
       }
     }
 
-    std::vector<ast::LocationType> rhsLocs;
-    for(int rhsIdx = 0; rhsIdx < exprProto.rhs_location().size(); rhsIdx++) {
-      rhsLocs.push_back(getLocationTypeFromProtoLocationType(exprProto.rhs_location(rhsIdx)));
+    ast::NeighborChain chain;
+    for(int i = 0; i < exprProto.chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
     }
 
     if(weights.size() > 0) {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, rhsLocs,
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, chain,
           makeLocation(exprProto));
     } else {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), rhsLocs,
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), chain,
           makeLocation(exprProto));
     }
   }

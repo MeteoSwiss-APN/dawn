@@ -14,6 +14,7 @@
 
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
@@ -666,12 +667,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
-  auto protoRhsLocs = protoExpr->mutable_rhs_location();
-  for(const auto& rhsLoc : expr->getNbhChain()) {
-    protoRhsLocs->Add(getProtoLocationTypeFromLocationType(rhsLoc));
+  auto protoChain = protoExpr->mutable_chain();
+  for(const auto& loc : expr->getNbhChain()) {
+    protoChain->Add(getProtoLocationTypeFromLocationType(loc));
   }
-
-  protoExpr->set_lhs_location(getProtoLocationTypeFromLocationType(expr->getLhsLocation()));
 
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
@@ -990,15 +989,15 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
     auto weights = exprProto.weights();
 
-    std::vector<ast::LocationType> rhsLocs;
-    for(int rhsIdx = 0; rhsIdx < exprProto.rhs_location().size(); rhsIdx++) {
-      rhsLocs.push_back(getLocationTypeFromProtoLocationType(exprProto.rhs_location(rhsIdx)));
+    ast::NeighborChain chain;
+    for(int i = 0; i < exprProto.chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
     }
 
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), rhsLocs, makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), chain, makeLocation(exprProto));
       return expr;
     } else {
       std::vector<sir::Value> deserializedWeights;
@@ -1026,7 +1025,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       }
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, rhsLocs,
+          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
           makeLocation(exprProto));
       return expr;
     }

@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
-   "4": "cnt",
    "1": "in_field",
-   "2": "out_field"
+   "2": "out_field",
+   "4": "cnt"
   },
   "accessIDToType": {
    "1": 6,
@@ -274,8 +274,7 @@
                     }
                    },
                    "weights": [],
-                   "lhs_location": "Cell",
-                   "rhs_location": [
+                   "chain": [
                     "Cell",
                     "Edge"
                    ]

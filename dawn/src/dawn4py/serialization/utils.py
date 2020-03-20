@@ -795,8 +795,7 @@ def make_reduction_over_neighbor_expr(
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
-    expr.lhs_location = chain[0]
-    expr.rhs_location.extend(chain)
+    expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend(weights)
 
