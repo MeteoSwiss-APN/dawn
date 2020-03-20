@@ -189,10 +189,6 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
       throw std::runtime_error("An error occurred.");
 
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
-
-    if(options_.DumpStencilInstantiation) {
-      instantiation->dump();
-    }
   }
 
   return optimizer.getStencilInstantiationMap();
