@@ -49,8 +49,9 @@ Edge const& Face::edge(size_t i) const { return *edges_[i]; }
 std::vector<const Face*> Face::faces() const {
   std::vector<const Face*> ret;
   for(auto& e : edges_)
-    if(&e->face(0) && &e->face(1))
+    if(e->faces().size() == 2) {
       ret.push_back(e->face(0).id() == id() ? &e->face(1) : &e->face(0));
+    }
   return ret;
 }
 

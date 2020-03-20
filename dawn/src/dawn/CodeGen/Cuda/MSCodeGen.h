@@ -23,6 +23,7 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/Support/IndexRange.h"
+#include "dawn/Support/Iterator.h"
 
 namespace dawn {
 namespace iir {

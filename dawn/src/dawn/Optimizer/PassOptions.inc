@@ -34,10 +34,6 @@
 
 // Boolean parameters that turn on and off passes and specific pass reports. These will be removed.
 
-OPT(bool, DefaultNone, false, "default-none", "",
-    "Selectively run passes", "", false, true)
-OPT(bool, Parallel, false, "parallel", "",
-    "Run parallel pass group", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assignment (SSA) form", "", false, false)
 OPT(bool, PrintStencilGraph, false, "print-stencil-graph", "",
