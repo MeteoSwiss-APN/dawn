@@ -129,162 +129,22 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
         if(thisMS->getID() != otherMS->getID() &&
            loopOrdersAreCompatible(thisMS->getLoopOrder(), otherMS->getLoopOrder())) {
 
-          // 2) Can we merge the stage without violating vertical dependencies?
-          auto dependencyGraphLoopOrderPair =
-              isMergable(*thisMS, *otherMS); // otherStage, thisLoopOrder, *thisMS);
-          auto multiStageDependencyGraph = dependencyGraphLoopOrderPair.first;
-          if(multiStageDependencyGraph &&
-             !multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent)) {
-            int stop = 1;
+          bool dependsOn = multiStageDependsOn(thisMS, otherMS, stageDAG);
+          bool doMerge = !dependsOn;
+          if(dependsOn) {
+            // 2) Can we merge the stage without violating vertical dependencies?
+            auto dependencyGraphLoopOrderPair = isMergable(*thisMS, *otherMS);
+            auto multiStageDependencyGraph = dependencyGraphLoopOrderPair.first;
+            DAWN_ASSERT_MSG(multiStageDependencyGraph,
+                            "We have a dependence but no dependency graph?");
+            doMerge = !(multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent));
           }
 
-          //          bool dependsOn = multiStageDependsOn(thisMS, otherMS, stageDAG);
-          //          bool doMerge = !dependsOn;
-          //
-          //          if(dependsOn) {
-          //            // Do loop order analysis...
-          //          }
+          if(doMerge) {
+            int stop = 1;
+          }
         }
       }
-      // Iterate stages backwards (bottom -> top)
-      //      for(auto curStageIt = multiStage.childrenRBegin(); curStageIt !=
-      //      multiStage.childrenREnd();) {
-      //
-      //        iir::Stage& curStage = **curStageIt;
-      //
-      //        bool updateFields = false;
-      //
-      //        // If our Do-Methods already spans the entire axis, we don't want to destroy that
-      //        property bool MergeDoMethodsOfStage = curStage.getEnclosingInterval() !=
-      //        stencilAxis; if(!MergeDoMethodsOfStage && !MergeDoMethodsOfStencil) {
-      //          continue;
-      //        }
-      //
-      //        // Try to merge each Do-Method of our `curStage`
-      //        for(auto curDoMethodIt = curStage.childrenBegin();
-      //            curDoMethodIt != curStage.childrenEnd();) {
-      //          iir::DoMethod& curDoMethod = **curDoMethodIt;
-      //
-      //          bool mergedDoMethod = false;
-      //
-      //          // Start from the next stage and iterate upwards (i.e backwards) to find a
-      //          suitable
-      //          // stage to merge
-      //          for(auto candidateStageIt = std::next(curStageIt);
-      //              candidateStageIt != multiStage.childrenREnd(); ++candidateStageIt) {
-      //            iir::Stage& candidateStage = **candidateStageIt;
-      //
-      //            // do the iterationspaces match?
-      //            if(candidateStage.getIterationSpace() != curStage.getIterationSpace()) {
-      //              continue;
-      //            }
-      //            // can only merge stages with same location type (for Cartesian they are both
-      //            // std::nullopt)
-      //            if(candidateStage.getLocationType() != curStage.getLocationType()) {
-      //              continue;
-      //            }
-      //
-      //            // Does the interval of `curDoMethod` overlap with any DoMethod interval in
-      //            // `candidateStage`?
-      //            auto candidateDoMethodIt = std::find_if(
-      //                candidateStage.childrenBegin(), candidateStage.childrenEnd(),
-      //                [&](const iir::Stage::DoMethodSmartPtr_t& doMethodPtr) {
-      //                  return doMethodPtr->getInterval().overlaps(curDoMethod.getInterval());
-      //                });
-      //
-      //            if(candidateDoMethodIt != candidateStage.childrenEnd()) {
-      //
-      //              // Check if our interval exists (Note that if we overlap with a DoMethod but
-      //              our
-      //              // interval does not exists, we cannot merge ourself into this stage).
-      //              candidateDoMethodIt =
-      //                  std::find_if(candidateStage.childrenBegin(), candidateStage.childrenEnd(),
-      //                               [&](const iir::Stage::child_smartptr_t<iir::DoMethod>&
-      //                               doMethodPtr) {
-      //                                 return doMethodPtr->getInterval() ==
-      //                                 curDoMethod.getInterval();
-      //                               });
-      //
-      //              if(candidateDoMethodIt != candidateStage.childrenEnd()) {
-      //
-      //                // Check if we can append our `curDoMethod` to that `candidateDoMethod`. We
-      //                need
-      //                // to check if the resulting dep. graph is a DAG and does not contain any
-      //                horizontal
-      //                // dependencies
-      //                iir::DoMethod& candidateDoMethod = **candidateDoMethodIt;
-      //
-      //                auto& candidateDepGraph = candidateDoMethod.getDependencyGraph();
-      //                auto& curDepGraph = curDoMethod.getDependencyGraph();
-      //
-      //                auto newDepGraph =
-      //                iir::DependencyGraphAccesses(stencilInstantiation->getMetaData(),
-      //                                                                *candidateDepGraph,
-      //                                                                *curDepGraph);
-      //
-      //                if(newDepGraph.isDAG() &&
-      //                !hasHorizontalReadBeforeWriteConflict(newDepGraph)) {
-      //
-      //                  if(MergeStagesOfStencil) {
-      //                    candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
-      //                                                  std::move(newDepGraph));
-      //                    for(auto& doMethod : candidateStage.getChildren()) {
-      //                      doMethod->update(iir::NodeUpdateType::level);
-      //                    }
-      //                    candidateStage.update(iir::NodeUpdateType::level);
-      //                    mergedDoMethod = true;
-      //
-      //                    // We moved one Do-Method away and thus broke our full axis
-      //                    MergeDoMethodsOfStage = true;
-      //                    break;
-      //                  }
-      //                }
-      //              }
-      //            } else {
-      //              // Interval does not exists in `candidateStage`, just insert our DoMethod
-      //              if(MergeDoMethodsOfStencil && MergeDoMethodsOfStage) {
-      //                candidateStage.addDoMethod(std::move(*curDoMethodIt));
-      //                // CARTO
-      //                for(auto& doMethod : candidateStage.getChildren()) {
-      //                  doMethod->update(iir::NodeUpdateType::level);
-      //                }
-      //                candidateStage.update(iir::NodeUpdateType::level);
-      //                mergedDoMethod = true;
-      //                break;
-      //              }
-      //            }
-      //
-      //            // The `curStage` depends on `candidateStage`, we thus cannot go further upwards
-      //            if(stageDAG.depends(curStage.getStageID(), candidateStage.getStageID())) {
-      //              break;
-      //            }
-      //          }
-      //
-      //          if(mergedDoMethod) {
-      //            curDoMethodIt = curStage.childrenErase(curDoMethodIt);
-      //            updateFields = true;
-      //          } else
-      //            curDoMethodIt++;
-      //        }
-      //
-      //        if(updateFields) {
-      //          for(auto& doMethod : curStage.getChildren()) {
-      //            doMethod->update(iir::NodeUpdateType::level);
-      //          }
-      //
-      //          curStage.update(iir::NodeUpdateType::level);
-      //        }
-      //        curStageIt++;
-      //      }
-      //
-      //      // remote empty stages
-      //      for(auto curStageIt = multiStage.childrenBegin(); curStageIt !=
-      //      multiStage.childrenEnd();) {
-      //        if((*curStageIt)->childrenEmpty()) {
-      //          curStageIt = multiStage.childrenErase(curStageIt);
-      //        } else
-      //          curStageIt++;
-      //      }
     }
   }
 
