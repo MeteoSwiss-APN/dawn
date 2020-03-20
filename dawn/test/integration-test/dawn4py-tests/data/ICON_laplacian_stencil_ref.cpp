@@ -4,6 +4,10 @@
 #define DAWN_BACKEND_T CXXNAIVEICO
 #include <driver-includes/unstructured_interface.hpp>
 
+//---- Includes ----
+#include "driver-includes/gridtools_includes.hpp"
+using namespace gridtools::dawn;
+
 //---- Globals ----
 
 //---- Stencils ----
