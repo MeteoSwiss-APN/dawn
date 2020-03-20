@@ -252,6 +252,89 @@ int main() {
     UnstructuredIIRBuilder b;
     auto cell_f = b.field("cell_field", LocType::Cells);
     auto edge_f = b.field("edge_field", LocType::Edges);
+
+    auto stencil_instantiation = b.build(
+        "gradient",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Edges,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(edge_f), b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), {LocType::Edges, LocType::Cells},
+                                                 std::vector<float>({1., -1.})))))),
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(cell_f), b.reduceOverNeighborExpr<float>(
+                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
+                                                 b.lit(0.), {LocType::Cells, LocType::Edges},
+                                                 std::vector<float>({0.5, 0., 0., 0.5})))))))));
+
+    std::ofstream of("generated/generated_gradient.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto edge_f = b.field("edge_field", LocType::Edges);
+    auto node_f = b.field("vertex_field", LocType::Vertices);
+
+    auto stencil_instantiation = b.build(
+        "diamond",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Edges,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(edge_f),
+                               b.reduceOverNeighborExpr(
+                                   Op::plus, b.at(node_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                   {LocType::Edges, LocType::Cells, LocType::Vertices}))))))));
+
+    std::ofstream of("generated/generated_diamond.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto in_f = b.field("in", LocType::Cells);
+    auto out_f = b.field("out", LocType::Cells);
+
+    auto stencil_instantiation = b.build(
+        "intp",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(LocType::Cells,
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(
+                                   b.at(out_f),
+                                   b.reduceOverNeighborExpr(
+                                       Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                       {LocType::Cells, LocType::Edges, LocType::Cells,
+                                        LocType::Edges, LocType::Cells}))))))));
+
+    std::ofstream of("generated/generated_intp.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto cell_f = b.field("cell_field", LocType::Cells);
+    auto edge_f = b.field("edge_field", LocType::Edges);
     auto sparse_f = b.field("sparse_dim", {LocType::Cells, LocType::Edges});
 
     // stencil consuming a sparse dimension and a weight

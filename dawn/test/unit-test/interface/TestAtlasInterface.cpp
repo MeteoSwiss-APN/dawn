@@ -12,8 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
-
 #include <algorithm>
 #include <gtest/gtest.h>
 
@@ -134,7 +132,6 @@ TEST_F(TestAtlasInterface, Diamond) {
 
   std::vector<int> diamondLoRef = {getMesh().edges().node_connectivity()(testIdx(), 0),
                                    getMesh().edges().node_connectivity()(testIdx(), 1)};
-  ASSERT_TRUE(nbhsValidAndEqual(diamondLoRef, diamondLo));
 
   std::vector<int> diamondHiRef;
   const int nodesPerCell = 3;
@@ -153,6 +150,7 @@ TEST_F(TestAtlasInterface, Diamond) {
     }
   }
 
+  ASSERT_TRUE(nbhsValidAndEqual(diamondLoRef, diamondLo));
   ASSERT_TRUE(nbhsValidAndEqual(diamondHiRef, diamondHi));
 }
 
@@ -176,8 +174,6 @@ TEST_F(TestAtlasInterface, Star) {
     starLoRef.push_back(getMesh().nodes().cell_connectivity()(testIdx(), nbhIter));
   }
 
-  ASSERT_TRUE(nbhsValidAndEqual(starLoRef, starLo));
-
   const int edgesPerCell = 3;
   for(int cellLo : starLoRef) {
     for(int nbhEdge = 0; nbhEdge < edgesPerCell; nbhEdge++) {
@@ -195,6 +191,7 @@ TEST_F(TestAtlasInterface, Star) {
     }
   }
 
+  ASSERT_TRUE(nbhsValidAndEqual(starLoRef, starLo));
   ASSERT_TRUE(nbhsValidAndEqual(starHiRef, starHi));
 }
 
@@ -217,7 +214,6 @@ TEST_F(TestAtlasInterface, Fan) {
     fanLoRef.push_back(getMesh().nodes().edge_connectivity()(testIdx(), nbhIter));
   }
 
-  ASSERT_TRUE(nbhsValidAndEqual(fanLoRef, fanLo));
   const int cellsPerVertex = 6;
   const int edgesPerCell = 3;
   for(int nbhIter = 0; nbhIter < cellsPerVertex; nbhIter++) {
@@ -230,6 +226,8 @@ TEST_F(TestAtlasInterface, Fan) {
       }
     }
   }
+
+  ASSERT_TRUE(nbhsValidAndEqual(fanLoRef, fanLo));
   ASSERT_TRUE(nbhsValidAndEqual(fanHiRef, fanHi));
 }
 
@@ -252,7 +250,6 @@ TEST_F(TestAtlasInterface, Intp) {
                             ? getMesh().edges().cell_connectivity()(edgeIdx, 1)
                             : getMesh().edges().cell_connectivity()(edgeIdx, 0));
   }
-  ASSERT_TRUE(nbhsValidAndEqual(intpLoRef, intpLo));
 
   for(int cIdx : intpLo) {
     for(int nbhIter = 0; nbhIter < edgesPerCell; nbhIter++) {
@@ -269,6 +266,7 @@ TEST_F(TestAtlasInterface, Intp) {
     }
   }
 
+  ASSERT_TRUE(nbhsValidAndEqual(intpLoRef, intpLo));
   ASSERT_TRUE(nbhsValidAndEqual(intpHiRef, intpHi));
 }
 } // namespace

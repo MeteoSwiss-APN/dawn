@@ -36,6 +36,7 @@ bool nbhsValidAndEqual(std::vector<const toylib::ToylibElement*> a,
             [](const toylib::ToylibElement* left, const toylib::ToylibElement* right) {
               return left->id() < right->id();
             });
+
   if(!(a == b)) {
     return false;
   }
@@ -66,10 +67,10 @@ TEST(TestToylibInterface, Diamond) {
   std::vector<const toylib::ToylibElement*> diamondLoRef{e.vertices()[0], e.vertices()[1]};
   std::vector<const toylib::ToylibElement*> diamondHiRef;
   for(auto f : e.faces()) {
-    for(auto vPtr : f->vertices()) {
-      if(find(diamondLoRef.begin(), diamondLoRef.end(), vPtr) == diamondLoRef.end() &&
-         find(diamondHiRef.begin(), diamondHiRef.end(), vPtr) == diamondHiRef.end()) {
-        diamondHiRef.push_back(vPtr);
+    for(auto v : f->vertices()) {
+      if(find(diamondLoRef.begin(), diamondLoRef.end(), v) == diamondLoRef.end() &&
+         find(diamondHiRef.begin(), diamondHiRef.end(), v) == diamondHiRef.end()) {
+        diamondHiRef.push_back(v);
       }
     }
   }
@@ -94,18 +95,16 @@ TEST(TestToylibInterface, Star) {
   std::vector<const toylib::ToylibElement*> starLo{star.begin(), star.begin() + 6};
   std::vector<const toylib::ToylibElement*> starHi{star.begin() + 6, star.end()};
 
-  // not working, but why?
-  // std::vector<const toylib::ToylibElement*> starLoRef{v.faces().begin(), v.faces().end()};
   std::vector<const toylib::ToylibElement*> starLoRef;
   for(auto f : v.faces()) {
     starLoRef.push_back(f);
   }
   std::vector<const toylib::ToylibElement*> starHiRef;
-  for(auto fPtr : v.faces()) {
-    for(auto innerfPtr : fPtr->faces()) {
-      if(find(starLoRef.begin(), starLoRef.end(), innerfPtr) == starLoRef.end() &&
-         find(starHiRef.begin(), starHiRef.end(), innerfPtr) == starHiRef.end()) {
-        starHiRef.push_back(innerfPtr);
+  for(auto f : v.faces()) {
+    for(auto innerF : f->faces()) {
+      if(find(starLoRef.begin(), starLoRef.end(), innerF) == starLoRef.end() &&
+         find(starHiRef.begin(), starHiRef.end(), innerF) == starHiRef.end()) {
+        starHiRef.push_back(innerF);
       }
     }
   }
@@ -164,16 +163,16 @@ TEST(TestToylibInterface, Intp) {
   std::vector<const toylib::ToylibElement*> intpHi{intp.begin() + 3, intp.end()};
 
   std::vector<const toylib::ToylibElement*> intpLoRef;
-  for(auto cPtr : c.faces()) {
-    intpLoRef.push_back(cPtr);
+  for(auto f : c.faces()) {
+    intpLoRef.push_back(f);
   }
   std::vector<const toylib::ToylibElement*> intpHiRef;
-  for(auto cPtr : c.faces()) {
-    for(auto innerCPtr : cPtr->faces()) {
-      if(find(intpLoRef.begin(), intpLoRef.end(), innerCPtr) == intpLoRef.end() &&
-         find(intpHiRef.begin(), intpHiRef.end(), innerCPtr) == intpHiRef.end()) {
-        if(innerCPtr->id() != c.id()) {
-          intpHiRef.push_back(innerCPtr);
+  for(auto f : c.faces()) {
+    for(auto innerF : f->faces()) {
+      if(find(intpLoRef.begin(), intpLoRef.end(), innerF) == intpLoRef.end() &&
+         find(intpHiRef.begin(), intpHiRef.end(), innerF) == intpHiRef.end()) {
+        if(innerF->id() != c.id()) {
+          intpHiRef.push_back(innerF);
         }
       }
     }

@@ -127,7 +127,10 @@ auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.n
 std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {
-    neighs.emplace_back(conn(idx, n));
+    int nbhIdx = conn(idx, n);
+    if(nbhIdx != conn.missing_value()) {
+      neighs.emplace_back(nbhIdx);
+    }
   }
   return neighs;
 }
@@ -135,7 +138,10 @@ std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn
 std::vector<int> getNeighs(const atlas::mesh::Nodes::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {
-    neighs.emplace_back(conn(idx, n));
+    int nbhIdx = conn(idx, n);
+    if(nbhIdx != conn.missing_value()) {
+      neighs.emplace_back(nbhIdx);
+    }
   }
   return neighs;
 }
@@ -180,10 +186,11 @@ void getNeighborsImpl(
 }
 
 template <typename T>
-struct NotDuplicateNotOrigin {
-  NotDuplicateNotOrigin(T origin) : origin_(origin){};
+struct NotDuplicateOrOrigin {
+  NotDuplicateOrOrigin(){};
+  NotDuplicateOrOrigin(T origin) : origin_(origin) { compOrigin = true; };
   bool operator()(const T& element) {
-    if(element == origin_) {
+    if(compOrigin && element == origin_) {
       return false;
     }
     return s_.insert(element).second; // true if s_.insert(element);
@@ -191,6 +198,8 @@ struct NotDuplicateNotOrigin {
 
 private:
   std::set<T> s_;
+  // optional only available in C++17, but we compile generated code with C++11
+  bool compOrigin = false;
   T origin_;
 };
 
@@ -243,11 +252,20 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   // result set
   std::list<int> result;
 
+  // we want to exclude the original element from the neighborhood obtained we can compare by
+  // the id, but only if targetType = startOfChain, since ids may be duplicated amongst different
+  // element types; e.g. there may be a vertex and an edge with the same id.
+  NotDuplicateOrOrigin<int> pred;
+  if(chain.front() == chain.back()) {
+    pred = NotDuplicateOrOrigin<int>(idx);
+  } else {
+    pred = NotDuplicateOrOrigin<int>();
+  }
+
   // start recursion
   getNeighborsImpl(nbhTables, chain, targetType, {idx}, result);
 
   std::vector<int> resultUnique;
-  NotDuplicateNotOrigin<int> pred(idx);
   std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
   return resultUnique;
 }

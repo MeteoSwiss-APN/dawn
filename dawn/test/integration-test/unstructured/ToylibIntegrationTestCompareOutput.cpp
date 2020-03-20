@@ -52,120 +52,6 @@ std::tuple<double, double> cellMidpoint(const toylib::Face& f) {
   double y = f.vertices()[0]->y() + f.vertices()[1]->y() + f.vertices()[2]->y();
   return {x / 3., y / 3.};
 }
-std::tuple<double, double> edgeMidpoint(const toylib::Edge& e) {
-  double x = e.vertices()[0]->x() + e.vertices()[1]->x();
-  double y = e.vertices()[0]->y() + e.vertices()[1]->y();
-  return {x / 2., y / 2.};
-}
-
-void debugDumpMesh(const toylib::Grid& mesh, const std::string prefix) {
-  {
-    char buf[256];
-    sprintf(buf, "%sT.txt", prefix.c_str());
-    FILE* fp = fopen(buf, "w+");
-    for(const auto& cellIt : mesh.faces()) {
-      int nodeIdx0 = cellIt.vertices()[0]->id() + 1;
-      int nodeIdx1 = cellIt.vertices()[1]->id() + 1;
-      int nodeIdx2 = cellIt.vertices()[2]->id() + 1;
-      fprintf(fp, "%d %d %d\n", nodeIdx0, nodeIdx1, nodeIdx2);
-    }
-    fclose(fp);
-  }
-
-  {
-    char buf[256];
-    sprintf(buf, "%sP.txt", prefix.c_str());
-    FILE* fp = fopen(buf, "w+");
-    for(const auto& nodeIt : mesh.vertices()) {
-      fprintf(fp, "%f %f \n", nodeIt.x(), nodeIt.y());
-    }
-    fclose(fp);
-  }
-}
-
-} // namespace
-
-namespace {
-TEST(ToylibIntegrationTestCompareOutput, NbhTestTEMP) {
-  int w = 10;
-  toylib::Grid mesh(w, w, false, 1., 1., true);
-  debugDumpMesh(mesh, "nbhToy");
-
-  {
-    std::vector<dawn::LocationType> chain{dawn::LocationType::Edges, dawn::LocationType::Cells,
-                                          dawn::LocationType::Vertices};
-    int testIdx = w * w / 2 + w / 2;
-    toylib::Edge e = mesh.edges()[testIdx];
-    auto [ex, ey] = edgeMidpoint(e);
-    printf("%f %f\n", ex, ey);
-    printf("-----\n");
-    std::vector<const toylib::ToylibElement*> diamond =
-        toylibInterface::getNeighbors(mesh, chain, &e);
-    for(const auto it : diamond) {
-      const toylib::Vertex* v = static_cast<const toylib::Vertex*>(it);
-      printf("%f %f\n", v->x(), v->y());
-    }
-    printf("\n");
-  }
-
-  {
-    std::vector<dawn::LocationType> chain{
-        dawn::LocationType::Vertices,
-        dawn::LocationType::Cells,
-        dawn::LocationType::Edges,
-        dawn::LocationType::Cells,
-    };
-    int testIdx = w * w / 2 + w;
-    toylib::Vertex v = mesh.vertices()[testIdx];
-    printf("%f %f\n", v.x(), v.y());
-    printf("-----\n");
-    std::vector<const toylib::ToylibElement*> star = toylibInterface::getNeighbors(mesh, chain, &v);
-    for(const auto it : star) {
-      const toylib::Face* c = static_cast<const toylib::Face*>(it);
-      auto [x, y] = cellMidpoint(*c);
-      printf("%f %f\n", x, y);
-    }
-    printf("\n");
-  }
-
-  {
-    std::vector<dawn::LocationType> chain{
-        dawn::LocationType::Vertices,
-        dawn::LocationType::Cells,
-        dawn::LocationType::Edges,
-    };
-    int testIdx = (w + 3) * w / 2 + w / 2 + 4;
-    toylib::Vertex v = mesh.vertices()[testIdx];
-    printf("%f %f\n", v.x(), v.y());
-    printf("-----\n");
-    std::vector<const toylib::ToylibElement*> fan = toylibInterface::getNeighbors(mesh, chain, &v);
-    for(const auto it : fan) {
-      const toylib::Edge* e = static_cast<const toylib::Edge*>(it);
-      auto [x, y] = edgeMidpoint(*e);
-      printf("%f %f\n", x, y);
-    }
-    printf("\n");
-  }
-
-  {
-    std::vector<dawn::LocationType> chain{dawn::LocationType::Cells, dawn::LocationType::Edges,
-                                          dawn::LocationType::Cells, dawn::LocationType::Edges,
-                                          dawn::LocationType::Cells};
-    int testIdx = 4 * w + w / 2;
-
-    toylib::Face c = mesh.faces()[testIdx];
-    auto [x, y] = cellMidpoint(c);
-    printf("%f %f\n", x, y);
-    printf("-----\n");
-    std::vector<const toylib::ToylibElement*> intp = toylibInterface::getNeighbors(mesh, chain, &c);
-    for(const auto it : intp) {
-      const toylib::Face* c = static_cast<const toylib::Face*>(it);
-      auto [x, y] = cellMidpoint(*c);
-      printf("%f %f\n", x, y);
-    }
-    printf("\n");
-  }
-}
 } // namespace
 
 namespace {
@@ -327,6 +213,70 @@ TEST(ToylibIntegrationTestCompareOutput, Gradient) {
   {
     UnstructuredVerifier v;
     EXPECT_TRUE(v.compareToylibField(mesh.faces(), ref_cells, gen_cells, nb_levels))
+        << "while comparing output (on cells)";
+  }
+}
+
+#include <generated_diamond.hpp>
+#include <reference_diamond.hpp>
+TEST(ToylibIntegrationTestCompareOutput, Diamond) {
+  const int numCell = 10;
+  auto mesh = toylib::Grid(numCell, numCell, false, M_PI, M_PI, true);
+  const int nb_levels = 1;
+
+  toylib::VertexData<double> ref_nodes(mesh, nb_levels);
+  toylib::EdgeData<double> ref_edges(mesh, nb_levels);
+  toylib::VertexData<double> gen_nodes(mesh, nb_levels);
+  toylib::EdgeData<double> gen_edges(mesh, nb_levels);
+
+  for(const auto& v : mesh.vertices()) {
+    double val = sin(v.x()) * sin(v.y());
+    ref_nodes(v, 0) = val;
+    gen_nodes(v, 0) = val;
+  }
+
+  dawn_generated::cxxnaiveico::diamond<toylibInterface::toylibTag>(mesh, nb_levels, gen_edges,
+                                                                   gen_nodes)
+      .run();
+  dawn_generated::cxxnaiveico::reference_diamond<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             ref_edges, ref_nodes)
+      .run();
+
+  {
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareToylibField(mesh.all_edges(), ref_edges, gen_edges, nb_levels))
+        << "while comparing output (on cells)";
+  }
+}
+
+#include <generated_intp.hpp>
+#include <reference_intp.hpp>
+TEST(ToylibIntegrationTestCompareOutput, Intp) {
+  const int numCell = 10;
+  auto mesh = toylib::Grid(numCell, numCell, false, M_PI, M_PI, true);
+  const int nb_levels = 1;
+
+  toylib::FaceData<double> ref_in(mesh, nb_levels);
+  toylib::FaceData<double> gen_in(mesh, nb_levels);
+  toylib::FaceData<double> ref_out(mesh, nb_levels);
+  toylib::FaceData<double> gen_out(mesh, nb_levels);
+
+  for(const auto& f : mesh.faces()) {
+    auto [x, y] = cellMidpoint(f);
+    double val = sin(x) * sin(y);
+    ref_in(f, 0) = val;
+    gen_in(f, 0) = val;
+  }
+
+  dawn_generated::cxxnaiveico::intp<toylibInterface::toylibTag>(mesh, nb_levels, gen_in, gen_out)
+      .run();
+  dawn_generated::cxxnaiveico::reference_intp<toylibInterface::toylibTag>(mesh, nb_levels, ref_in,
+                                                                          ref_out)
+      .run();
+
+  {
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareToylibField(mesh.faces(), ref_out, gen_out, nb_levels))
         << "while comparing output (on cells)";
   }
 }

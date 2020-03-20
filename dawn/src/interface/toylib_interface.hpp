@@ -16,6 +16,7 @@
 
 #include "../driver-includes/unstructured_interface.hpp"
 #include "../toylib/toylib.hpp"
+
 #include <assert.h>
 #include <functional>
 #include <list>
@@ -120,9 +121,10 @@ inline void getNeighborsImpl(
 
 template <typename T>
 struct NotDuplicateOrOrigin {
-  NotDuplicateOrOrigin(T origin) : origin_(origin){};
+  NotDuplicateOrOrigin(){};
+  NotDuplicateOrOrigin(T origin) : origin_(origin) { compOrigin = true; };
   bool operator()(const T& element) {
-    if(element->id() == origin_->id()) {
+    if(compOrigin && element->id() == origin_->id()) {
       return false;
     }
     return s_.insert(element).second; // true if s_.insert(element);
@@ -130,6 +132,8 @@ struct NotDuplicateOrOrigin {
 
 private:
   std::set<T> s_;
+  // optional only available in C++17, but we compile generated code with C++11
+  bool compOrigin = false;
   T origin_;
 };
 
@@ -246,11 +250,21 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
   // result set
   std::list<const toylib::ToylibElement*> result;
 
+  // we want to exclude the original element from the neighborhood obtained. We the value of elem*
+  // since this might be the adress of a temporary assigned by the user. However, we can compare by
+  // the id, but only if targetType = startOfChain, since ids may be duplicated amongst different
+  // element types; e.g. there may be a vertex and an edge with the same id.
+  NotDuplicateOrOrigin<const toylib::ToylibElement*> pred;
+  if(chain.front() == chain.back()) {
+    pred = NotDuplicateOrOrigin<const toylib::ToylibElement*>(elem);
+  } else {
+    pred = NotDuplicateOrOrigin<const toylib::ToylibElement*>();
+  }
+
   // start recursion
   getNeighborsImpl(nbhTables, chain, targetType, {elem}, result);
 
   std::vector<const toylib::ToylibElement*> resultUnique;
-  NotDuplicateOrOrigin<const toylib::ToylibElement*> pred(elem);
   std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
   return resultUnique;
 }
