@@ -15,6 +15,8 @@
 #ifndef DAWN_OPTIMIZER_PASSMULTISTAGEMERGER_H
 #define DAWN_OPTIMIZER_PASSMULTISTAGEMERGER_H
 
+#include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
@@ -34,6 +36,11 @@ public:
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+
+private:
+  bool multiStageDependsOn(const std::unique_ptr<dawn::iir::MultiStage>& thisMS,
+                           const std::unique_ptr<dawn::iir::MultiStage>& otherMS,
+                           const dawn::iir::DependencyGraphStage& stageDag);
 };
 
 } // namespace dawn

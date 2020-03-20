@@ -35,6 +35,8 @@ add_library(DawnOptimizer
   PassLocalVarType.cpp
   PassManager.cpp
   PassManager.h
+  PassMultiStageMerger.cpp
+  PassMultiStageMerger.h
   PassOptions.inc
   PassPrintStencilGraph.cpp
   PassPrintStencilGraph.h
