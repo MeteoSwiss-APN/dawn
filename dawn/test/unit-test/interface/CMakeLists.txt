@@ -47,7 +47,7 @@ if(eckit_FOUND AND atlas_FOUND)
   target_include_directories(${ToylibExecutable} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   target_link_libraries(${AtlasExecutable} atlas eckit gtest gtest_main)
-  target_link_libraries(${ToylibExecutable} gtest gtest_main)
+  target_link_libraries(${ToylibExecutable} toylib gtest gtest_main)
 
   gtest_discover_tests(${AtlasExecutable} TEST_PREFIX "Dawn::Unit::Interface::" DISCOVERY_TIMEOUT 30)
   gtest_discover_tests(${ToylibExecutable} TEST_PREFIX "Dawn::Unit::Interface::" DISCOVERY_TIMEOUT 30)

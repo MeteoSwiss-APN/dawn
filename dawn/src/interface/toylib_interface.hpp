@@ -119,13 +119,18 @@ inline void getNeighborsImpl(
 }
 
 template <typename T>
-struct NotDuplicate {
+struct NotDuplicateOrOrigin {
+  NotDuplicateOrOrigin(T origin) : origin_(origin){};
   bool operator()(const T& element) {
+    if(element->id() == origin_->id()) {
+      return false;
+    }
     return s_.insert(element).second; // true if s_.insert(element);
   }
 
 private:
   std::set<T> s_;
+  T origin_;
 };
 
 inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid& mesh,
@@ -245,7 +250,7 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
   getNeighborsImpl(nbhTables, chain, targetType, {elem}, result);
 
   std::vector<const toylib::ToylibElement*> resultUnique;
-  NotDuplicate<const toylib::ToylibElement*> pred;
+  NotDuplicateOrOrigin<const toylib::ToylibElement*> pred(elem);
   std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
   return resultUnique;
 }

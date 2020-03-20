@@ -27,6 +27,9 @@ protected:
   ToylibElement(int id) : id_(id) {}
   virtual ~ToylibElement() = 0;
   int id_ = -1;
+
+public:
+  int id() const { return id_; }
 };
 
 class Vertex;
@@ -49,7 +52,6 @@ public:
 
   double x() const { return x_; }
   double y() const { return y_; }
-  int id() const { return id_; }
 
   Edge const& edge(size_t i) const;
   Face const& face(size_t i) const;
@@ -74,7 +76,6 @@ public:
   Face(int id, face_color color) : ToylibElement(id), color_(color) {}
   ~Face(){};
 
-  int id() const { return id_; }
   face_color color() const { return color_; }
 
   Vertex const& vertex(size_t i) const;
@@ -99,7 +100,6 @@ public:
   Edge(int id, edge_color color) : ToylibElement(id), color_(color) {}
   ~Edge() {}
 
-  int id() const { return id_; }
   edge_color color() const { return color_; }
 
   Vertex const& vertex(size_t i) const;
