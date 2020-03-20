@@ -697,9 +697,10 @@ message ReductionOverNeighborExpr {
   Expr init = 3; // Initial value of reduction
   repeated Weight weights =
       4; // weights (required to be of equal type, e.g. just floats)
-  dawn.proto.enums.LocationType lhs_location = 5;
-  repeated dawn.proto.enums.LocationType rhs_location = 6;
-  SourceLocation loc = 7;
+  repeated dawn.proto.enums.LocationType chain = 
+      5; // Neighbor chain definining the neighbors to reduce from and the 
+         // location type to reduce to (first element)
+  SourceLocation loc = 6;
 }
 
 // @brief Abstract syntax tree of the SIR
