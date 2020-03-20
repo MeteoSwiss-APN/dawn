@@ -203,7 +203,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   if(!context_->getOptions().DisableOptimization)
-    PassGroups.push_back(dawn::PassGroup::SetLoopOrder);
+    passGroup.push_back(dawn::PassGroup::SetLoopOrder);
 
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
   std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
