@@ -180,13 +180,18 @@ void getNeighborsImpl(
 }
 
 template <typename T>
-struct NotDuplicate {
+struct NotDuplicateNotOrigin {
+  NotDuplicateNotOrigin(T origin) : origin_(origin){};
   bool operator()(const T& element) {
+    if(element == origin_) {
+      return false;
+    }
     return s_.insert(element).second; // true if s_.insert(element);
   }
 
 private:
   std::set<T> s_;
+  T origin_;
 };
 
 // entry point, kicks off the recursive function above if required
@@ -213,7 +218,6 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   auto edgesFromNode = [&](int nodeIdx) -> std::vector<int> {
     return getNeighs(mesh.nodes().edge_connectivity(), nodeIdx);
   };
-
   auto nodesFromCell = [&](int nodeIdx) -> std::vector<int> {
     return getNeighs(mesh.cells().node_connectivity(), nodeIdx);
   };
@@ -243,7 +247,7 @@ std::vector<int> getNeighbors(atlas::Mesh const& mesh, std::vector<dawn::Locatio
   getNeighborsImpl(nbhTables, chain, targetType, {idx}, result);
 
   std::vector<int> resultUnique;
-  NotDuplicate<int> pred;
+  NotDuplicateNotOrigin<int> pred(idx);
   std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
   return resultUnique;
 }
