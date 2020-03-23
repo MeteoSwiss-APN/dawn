@@ -18,7 +18,6 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -49,10 +48,6 @@ protected:
     if(!TestEnvironment::path_.empty())
       filepath = TestEnvironment::path_ + "/" + filepath;
     auto instantiation = IIRSerializer::deserialize(filepath);
-
-    // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
-    EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
     PassTemporaryMerger tempMergerPass(*context_);

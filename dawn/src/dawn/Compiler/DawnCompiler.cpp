@@ -43,7 +43,6 @@
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"

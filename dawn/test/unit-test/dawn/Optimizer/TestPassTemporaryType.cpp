@@ -17,7 +17,6 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -48,10 +47,6 @@ protected:
     if(!TestEnvironment::path_.empty() && filepath.find('/') != 0)
       filepath = TestEnvironment::path_ + "/" + filepath;
     auto instantiation = IIRSerializer::deserialize(filepath);
-
-    // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
-    EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
     PassTemporaryType tempTypePass(*context_);

@@ -68,8 +68,6 @@ add_library(DawnOptimizer
   PassStageMerger.h
   PassStageReordering.cpp
   PassStageReordering.h
-  PassStageSplitter.cpp
-  PassStageSplitter.h
   PassStencilSplitter.cpp
   PassStencilSplitter.h
   PassTemporaryFirstAccess.cpp

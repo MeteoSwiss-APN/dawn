@@ -35,7 +35,6 @@
 #include "dawn/Optimizer/PassSetSyncStage.h"
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
-#include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
@@ -158,7 +157,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassInlining>(context, passes, inlineStrategy);
     addPass<dawn::PassFieldVersioning>(context, passes);
     addPass<dawn::PassSSA>(context, passes); // Did I do this for a reason?
-    addPass<dawn::PassStageSplitter>(context, passes);
+    addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
     addPass<dawn::PassTemporaryType>(context, passes);
     addPass<dawn::PassLocalVarType>(context, passes);
     addPass<dawn::PassRemoveScalars>(context, passes);
@@ -248,7 +247,7 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
   if(nPasses > 2)
     result &= runPass<dawn::PassSSA>(context, instantiation);
   if(nPasses > 3)
-    result &= runPass<dawn::PassStageSplitter>(context, instantiation);
+    result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
   if(nPasses > 4)
     result &= runPass<dawn::PassPrintStencilGraph>(context, instantiation);
   if(nPasses > 5)
@@ -309,7 +308,7 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassInlining>(context, instantiation, inlineStrategy);
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
     result &= runPass<dawn::PassSSA>(context, instantiation);
-    result &= runPass<dawn::PassStageSplitter>(context, instantiation);
+    result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
     result &= runPass<dawn::PassPrintStencilGraph>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
     result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
