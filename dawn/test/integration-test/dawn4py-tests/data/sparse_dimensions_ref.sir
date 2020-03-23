@@ -1,0 +1,145 @@
+{
+  "gridType": "Unstructured",
+  "filename": "sparse_dimensions.sir",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "out",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "reductionOverNeighborExpr": {
+                                        "op": "+",
+                                        "rhs": {
+                                          "binaryOperator": {
+                                            "left": {
+                                              "fieldAccessExpr": {
+                                                "name": "sparse_CE",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "fieldAccessExpr": {
+                                                "name": "in",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "init": {
+                                          "literalAccessExpr": {
+                                            "value": "1.0",
+                                            "type": {
+                                              "typeId": "Float"
+                                            }
+                                          }
+                                        },
+                                        "lhsLocation": "Cell",
+                                        "rhsLocation": "Edge"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "in",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "sparse_CE",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell",
+              "sparsePart": [
+                "Cell",
+                "Edge"
+              ]
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "out",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        }
+      ],
+      "name": "sparse_dimensions"
+    }
+  ]
+}

@@ -14,17 +14,10 @@
 #
 # ===------------------------------------------------------------------------------------------===##
 
-"""Generator for a stencil using global indices
+"""Global indexing SIR generator
 
-This program creates the HIR using the Python API of the HIR.
-The code is meant as an example for high-level DSLs that could generate HIR from their own
-internal IR.
-The program contains two parts:
-    1. construct the HIR of the example
-    2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
-       In this example the compiler is configured with the CUDA backend, therefore will code
-       generate an optimized CUDA implementation.
-
+This program creates the SIR corresponding to an example usage of global indexing
+using the SIR serialization Python API.
 """
 
 import argparse
@@ -33,10 +26,10 @@ import os.path
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from google.protobuf.json_format import MessageToJson
 
-OUTPUT_NAME = "global_index_stencil"
-OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
-OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
+stencil_name = "global_index_stencil"
+output_file = f"{stencil_name}.sir"
 
 
 def create_vertical_region_stmt() -> SIR.VerticalRegionDeclStmt:
@@ -45,7 +38,7 @@ def create_vertical_region_stmt() -> SIR.VerticalRegionDeclStmt:
 
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    # create the out = in[i+1] statement
+    # create the out = in statement
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
@@ -79,11 +72,11 @@ def create_boundary_correction_region(value="0", i_interval=None, j_interval=Non
 
 def main(args: argparse.Namespace):
     sir = sir_utils.make_sir(
-        OUTPUT_FILE,
+        output_file,
         SIR.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
-                "global_indexing",
+                stencil_name,
                 sir_utils.make_ast(
                     [
                         create_vertical_region_stmt(),
@@ -130,17 +123,13 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    # compile
-    code = dawn4py.compile(sir, backend="c++-naive")
-
-    # write to file
-    print(f"Writing generated code to '{OUTPUT_PATH}'")
-    with open(OUTPUT_PATH, "w") as f:
-        f.write(code)
+    f = open(output_file, "w")
+    f.write(MessageToJson(sir))
+    f.close()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a simple copy-shift stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(description="Generate the SIR of a simple stencil that uses global indexing")
     parser.add_argument(
         "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
     )

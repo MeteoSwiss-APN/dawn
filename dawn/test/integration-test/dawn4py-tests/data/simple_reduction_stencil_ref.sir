@@ -1,0 +1,111 @@
+{
+  "gridType": "Unstructured",
+  "filename": "simple_reduction_stencil.sir",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "out",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "reductionOverNeighborExpr": {
+                                        "op": "+",
+                                        "rhs": {
+                                          "fieldAccessExpr": {
+                                            "name": "in",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "init": {
+                                          "literalAccessExpr": {
+                                            "value": "1.0",
+                                            "type": {
+                                              "typeId": "Float"
+                                            }
+                                          }
+                                        },
+                                        "lhsLocation": "Edge",
+                                        "rhsLocation": "Cell"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "in",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "out",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        }
+      ],
+      "name": "simple_reduction_stencil"
+    }
+  ]
+}

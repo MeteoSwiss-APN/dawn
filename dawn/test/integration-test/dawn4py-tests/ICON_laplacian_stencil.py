@@ -14,7 +14,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""Generate input for the ICON Laplacian stencil test"""
+"""ICON Laplacian SIR generator
+
+Generate input for the ICON Laplacian stencil test
+"""
 
 import os
 
@@ -27,8 +30,7 @@ from google.protobuf.json_format import MessageToJson, Parse
 
 def main():
     stencil_name = "ICON_laplacian_stencil"
-    gen_outputfile = f"{stencil_name}.cpp"
-    sir_outputfile = f"{stencil_name}.sir"
+    output_file = f"{stencil_name}.sir"
     
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
@@ -121,7 +123,7 @@ def main():
     )
 
     sir = sir_utils.make_sir(
-        gen_outputfile,
+        output_file,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
@@ -199,18 +201,9 @@ def main():
         ],
     )
 
-    # write SIR to file (for debugging purposes)
-    f = open(sir_outputfile, "w")
+    f = open(output_file, "w")
     f.write(MessageToJson(sir))
     f.close()
-
-    # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico")
-
-    # write to file
-    print(f"Writing generated code to '{gen_outputfile}'")
-    with open(gen_outputfile, "w") as f:
-        f.write(code)
 
 
 if __name__ == "__main__":

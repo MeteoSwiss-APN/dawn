@@ -14,7 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""Sparse Dimensions stencil HIR generator
+"""Sparse Dimensions stencil SIR generator
 
 This program creates the HIR corresponding to an unstructured stencil including sparse dimensions
 using the SIR serialization Python API."""
@@ -25,11 +25,10 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from google.protobuf.json_format import MessageToJson
 
-OUTPUT_NAME = "sparse_dimensions"
-OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
-OUTPUT_PATH = os.path.join(os.path.dirname(
-    __file__), "data", f"{OUTPUT_NAME}.cpp")
+stencil_name = "sparse_dimensions"
+output_file = f"{stencil_name}.sir"
 
 
 def main(args: argparse.Namespace):
@@ -43,9 +42,9 @@ def main(args: argparse.Namespace):
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
-                    sir_utils.make_binary_operator(
+                    rhs=sir_utils.make_binary_operator(
                         sir_utils.make_field_access_expr("sparse_CE"), "*", sir_utils.make_field_access_expr("in")),
-                    sir_utils.make_literal_access_expr(
+                    init=sir_utils.make_literal_access_expr(
                         "1.0", SIR.BuiltinType.Float),
                     lhs_location=SIR.LocationType.Value('Cell'),
                     rhs_location=SIR.LocationType.Value('Edge')
@@ -59,11 +58,11 @@ def main(args: argparse.Namespace):
         body_ast, interval, SIR.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
-        OUTPUT_FILE,
+        output_file,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                OUTPUT_NAME,
+                stencil_name,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(
@@ -81,18 +80,14 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico")
-
-    # write to file
-    print(f"Writing generated code to '{OUTPUT_PATH}'")
-    with open(OUTPUT_PATH, "w") as f:
-        f.write(code)
+    f = open(output_file, "w")
+    f.write(MessageToJson(sir))
+    f.close()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate a simple unstructured copy stencil using Dawn compiler")
+        description="Generate the SIR of a simple unstructured sparse stencil")
     parser.add_argument(
         "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
     )

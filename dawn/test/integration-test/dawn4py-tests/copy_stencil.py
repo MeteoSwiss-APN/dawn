@@ -16,16 +16,7 @@
 
 """Copy stencil SIR generator
 
-This program creates the SIR corresponding to a copy stencil using the SIR serialization Python API.
-The copy stencil is a 'hello world' for stencil computations.
-The code is meant as an example for high-level DSLs that could generate SIR from their own
-internal IR.
-The program contains two parts:
-    1. construct the SIR of the example
-    2. pass the SIR to the dawn compiler in order to run all optimizer passes and code generation.
-       In this example the compiler is configured with the CUDA backend, therefore will code
-       generate an optimized CUDA implementation.
-
+This program creates the SIR corresponding to a copy-shift stencil using the SIR serialization Python API.
 """
 
 import argparse
@@ -34,11 +25,10 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from google.protobuf.json_format import MessageToJson
 
-OUTPUT_NAME = "copy_stencil"
-OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
-OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
-
+stencil_name = "copy_stencil"
+output_file = f"{stencil_name}.sir"
 
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
@@ -57,11 +47,11 @@ def main(args: argparse.Namespace):
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
-        OUTPUT_FILE,
+        output_file,
         SIR.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
-                OUTPUT_NAME,
+                stencil_name,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())],
             )
@@ -72,17 +62,13 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    # compile
-    code = dawn4py.compile(sir, backend="cuda")
-
-    # write to file
-    print(f"Writing generated code to '{OUTPUT_PATH}'")
-    with open(OUTPUT_PATH, "w") as f:
-        f.write(code)
+    f = open(output_file, "w")
+    f.write(MessageToJson(sir))
+    f.close()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a simple copy-shift stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(description="Generate the SIR of a simple copy-shift stencil")
     parser.add_argument(
         "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
     )

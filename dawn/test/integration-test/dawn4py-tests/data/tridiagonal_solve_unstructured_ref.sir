@@ -1,0 +1,349 @@
+{
+  "gridType": "Unstructured",
+  "filename": "tridiagonal_solve_unstructured.sir",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "c",
+                                        "unstructuredOffset": {}
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "fieldAccessExpr": {
+                                            "name": "c",
+                                            "unstructuredOffset": {}
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "fieldAccessExpr": {
+                                            "name": "b",
+                                            "unstructuredOffset": {}
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "d",
+                                        "unstructuredOffset": {}
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "fieldAccessExpr": {
+                                            "name": "d",
+                                            "unstructuredOffset": {}
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "fieldAccessExpr": {
+                                            "name": "b",
+                                            "unstructuredOffset": {}
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "Start"
+                    }
+                  }
+                }
+              },
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "varDeclStmt": {
+                                "type": {
+                                  "builtinType": {
+                                    "typeId": "Float"
+                                  }
+                                },
+                                "name": "m",
+                                "op": "=",
+                                "initList": [
+                                  {
+                                    "binaryOperator": {
+                                      "left": {
+                                        "literalAccessExpr": {
+                                          "value": "1.0",
+                                          "type": {
+                                            "typeId": "Float"
+                                          }
+                                        }
+                                      },
+                                      "op": "/",
+                                      "right": {
+                                        "binaryOperator": {
+                                          "left": {
+                                            "fieldAccessExpr": {
+                                              "name": "b",
+                                              "unstructuredOffset": {}
+                                            }
+                                          },
+                                          "op": "-",
+                                          "right": {
+                                            "binaryOperator": {
+                                              "left": {
+                                                "fieldAccessExpr": {
+                                                  "name": "a",
+                                                  "unstructuredOffset": {}
+                                                }
+                                              },
+                                              "op": "*",
+                                              "right": {
+                                                "fieldAccessExpr": {
+                                                  "name": "c",
+                                                  "verticalOffset": -1,
+                                                  "unstructuredOffset": {}
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "c",
+                                        "unstructuredOffset": {}
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "fieldAccessExpr": {
+                                            "name": "c",
+                                            "unstructuredOffset": {}
+                                          }
+                                        },
+                                        "op": "*",
+                                        "right": {
+                                          "varAccessExpr": {
+                                            "name": "m"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "d",
+                                        "unstructuredOffset": {}
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "binaryOperator": {
+                                            "left": {
+                                              "fieldAccessExpr": {
+                                                "name": "d",
+                                                "unstructuredOffset": {}
+                                              }
+                                            },
+                                            "op": "-",
+                                            "right": {
+                                              "binaryOperator": {
+                                                "left": {
+                                                  "fieldAccessExpr": {
+                                                    "name": "a",
+                                                    "unstructuredOffset": {}
+                                                  }
+                                                },
+                                                "op": "*",
+                                                "right": {
+                                                  "fieldAccessExpr": {
+                                                    "name": "d",
+                                                    "verticalOffset": -1,
+                                                    "unstructuredOffset": {}
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "op": "*",
+                                        "right": {
+                                          "varAccessExpr": {
+                                            "name": "m"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End",
+                      "lowerOffset": 1
+                    }
+                  }
+                }
+              },
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "d",
+                                        "unstructuredOffset": {}
+                                      }
+                                    },
+                                    "op": "-=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "fieldAccessExpr": {
+                                            "name": "c",
+                                            "unstructuredOffset": {}
+                                          }
+                                        },
+                                        "op": "*",
+                                        "right": {
+                                          "fieldAccessExpr": {
+                                            "name": "d",
+                                            "verticalOffset": 1,
+                                            "unstructuredOffset": {}
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End",
+                      "upperOffset": -1
+                    },
+                    "loopOrder": "Backward"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "a",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "b",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "c",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "d",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        }
+      ],
+      "name": "tridiagonal_solve_unstructured"
+    }
+  ]
+}

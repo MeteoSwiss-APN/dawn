@@ -15,8 +15,10 @@
 
 find_program(SH_PROGRAM sh)
 
-function(add_python_example)
-  set(options VERIFY)
+#TODO: move to unit tests (and change ::Integration:: below)
+#TODO: move *_ref.cpp to CodeGen test refs
+
+function(add_dawn4py_test)
   set(oneValueArgs NAME)
   set(multiValueArgs)
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -25,22 +27,22 @@ function(add_python_example)
     COMMAND ${CMAKE_COMMAND} -E env
     PYTHONPATH=${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_NAME}.py
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
 
-  if(ARG_VERIFY)
-    add_test(NAME Dawn4Py::Integration::${ARG_NAME}-verify
-      COMMAND ${CMAKE_COMMAND} -E compare_files ${ARG_NAME}.cpp ${CMAKE_CURRENT_SOURCE_DIR}/data/${ARG_NAME}_ref.cpp
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
-    )
-    set_tests_properties(Dawn4Py::Integration::${ARG_NAME}-verify PROPERTIES DEPENDS Dawn4Py::Integration::${ARG_NAME})
-  endif()
+  add_test(NAME Dawn4Py::Integration::${ARG_NAME}-verify
+    COMMAND ${CMAKE_COMMAND} -E compare_files ${ARG_NAME}.sir ${CMAKE_CURRENT_SOURCE_DIR}/data/${ARG_NAME}_ref.sir
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  set_tests_properties(Dawn4Py::Integration::${ARG_NAME}-verify PROPERTIES DEPENDS Dawn4Py::Integration::${ARG_NAME})
+
 endfunction()
 
-add_python_example(NAME copy_stencil VERIFY)
-add_python_example(NAME hori_diff_stencil VERIFY)
-add_python_example(NAME tridiagonal_solve_stencil VERIFY)
-add_python_example(NAME ICON_laplacian_stencil VERIFY)
-add_python_example(NAME tridiagonal_solve_unstructured)
-add_python_example(NAME global_index_stencil)
-add_python_example(NAME unstructured_stencil)
+add_dawn4py_test(NAME copy_stencil)
+add_dawn4py_test(NAME hori_diff_stencil)
+add_dawn4py_test(NAME tridiagonal_solve_stencil)
+add_dawn4py_test(NAME ICON_laplacian_stencil)
+add_dawn4py_test(NAME tridiagonal_solve_unstructured)
+add_dawn4py_test(NAME global_index_stencil)
+add_dawn4py_test(NAME simple_reduction_stencil)
+add_dawn4py_test(NAME sparse_dimensions)

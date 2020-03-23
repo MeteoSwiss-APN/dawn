@@ -1,0 +1,633 @@
+{
+  "gridType": "Unstructured",
+  "filename": "ICON_laplacian_stencil.sir",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "rot_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "reductionOverNeighborExpr": {
+                                        "op": "+",
+                                        "rhs": {
+                                          "binaryOperator": {
+                                            "left": {
+                                              "fieldAccessExpr": {
+                                                "name": "vec",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "fieldAccessExpr": {
+                                                "name": "geofac_rot",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "init": {
+                                          "literalAccessExpr": {
+                                            "value": "0.0",
+                                            "type": {
+                                              "typeId": "Double"
+                                            }
+                                          }
+                                        },
+                                        "lhsLocation": "Vertex",
+                                        "rhsLocation": "Edge"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "div_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "reductionOverNeighborExpr": {
+                                        "op": "+",
+                                        "rhs": {
+                                          "binaryOperator": {
+                                            "left": {
+                                              "fieldAccessExpr": {
+                                                "name": "vec",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "fieldAccessExpr": {
+                                                "name": "geofac_div",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "init": {
+                                          "literalAccessExpr": {
+                                            "value": "0.0",
+                                            "type": {
+                                              "typeId": "Double"
+                                            }
+                                          }
+                                        },
+                                        "lhsLocation": "Cell",
+                                        "rhsLocation": "Edge"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "nabla2t1_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "reductionOverNeighborExpr": {
+                                        "op": "+",
+                                        "rhs": {
+                                          "fieldAccessExpr": {
+                                            "name": "rot_vec",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "init": {
+                                          "literalAccessExpr": {
+                                            "value": "0.0",
+                                            "type": {
+                                              "typeId": "Double"
+                                            }
+                                          }
+                                        },
+                                        "weights": [
+                                          {
+                                            "doubleValue": -1.0
+                                          },
+                                          {
+                                            "doubleValue": 1.0
+                                          }
+                                        ],
+                                        "lhsLocation": "Edge",
+                                        "rhsLocation": "Vertex"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "nabla2t1_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "binaryOperator": {
+                                            "left": {
+                                              "fieldAccessExpr": {
+                                                "name": "tangent_orientation",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            },
+                                            "op": "*",
+                                            "right": {
+                                              "fieldAccessExpr": {
+                                                "name": "nabla2t1_vec",
+                                                "zeroOffset": {},
+                                                "argumentMap": [
+                                                  -1,
+                                                  -1,
+                                                  -1
+                                                ],
+                                                "argumentOffset": [
+                                                  0,
+                                                  0,
+                                                  0
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "fieldAccessExpr": {
+                                            "name": "primal_edge_length",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "nabla2t2_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "reductionOverNeighborExpr": {
+                                        "op": "+",
+                                        "rhs": {
+                                          "fieldAccessExpr": {
+                                            "name": "div_vec",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "init": {
+                                          "literalAccessExpr": {
+                                            "value": "0.0",
+                                            "type": {
+                                              "typeId": "Double"
+                                            }
+                                          }
+                                        },
+                                        "weights": [
+                                          {
+                                            "doubleValue": -1.0
+                                          },
+                                          {
+                                            "doubleValue": 1.0
+                                          }
+                                        ],
+                                        "lhsLocation": "Edge",
+                                        "rhsLocation": "Cell"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "nabla2t2_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "fieldAccessExpr": {
+                                            "name": "nabla2t2_vec",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "/",
+                                        "right": {
+                                          "fieldAccessExpr": {
+                                            "name": "dual_edge_length",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "assignmentExpr": {
+                                    "left": {
+                                      "fieldAccessExpr": {
+                                        "name": "nabla2_vec",
+                                        "zeroOffset": {},
+                                        "argumentMap": [
+                                          -1,
+                                          -1,
+                                          -1
+                                        ],
+                                        "argumentOffset": [
+                                          0,
+                                          0,
+                                          0
+                                        ]
+                                      }
+                                    },
+                                    "op": "=",
+                                    "right": {
+                                      "binaryOperator": {
+                                        "left": {
+                                          "fieldAccessExpr": {
+                                            "name": "nabla2t2_vec",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        },
+                                        "op": "-",
+                                        "right": {
+                                          "fieldAccessExpr": {
+                                            "name": "nabla2t1_vec",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "vec",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "div_vec",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "rot_vec",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Vertex"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "nabla2t1_vec",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "nabla2t2_vec",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "nabla2_vec",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "primal_edge_length",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "dual_edge_length",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "tangent_orientation",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "geofac_rot",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Vertex",
+              "sparsePart": [
+                "Vertex",
+                "Edge"
+              ]
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "geofac_div",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell",
+              "sparsePart": [
+                "Cell",
+                "Edge"
+              ]
+            },
+            "maskK": 1
+          }
+        }
+      ],
+      "name": "ICON_laplacian_stencil"
+    }
+  ]
+}
