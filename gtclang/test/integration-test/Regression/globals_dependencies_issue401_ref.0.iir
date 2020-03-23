@@ -6,9 +6,9 @@
    "31": "out_field"
   },
   "accessIDToType": {
-   "31": 6,
    "29": 0,
-   "30": 6
+   "30": 6,
+   "31": 6
   },
   "literalIDToName": {
    "-61": "0",
@@ -47,24 +47,6 @@
    }
   },
   "idToStencilCall": {
-   "62": {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_62",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 63
-    }
-   },
    "67": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
@@ -81,6 +63,24 @@
      },
      "data": {},
      "ID": 68
+    }
+   },
+   "62": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_62",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 63
     }
    }
   },
@@ -258,7 +258,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 75,
       "Caches": {}
      }
@@ -424,7 +424,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 76,
       "Caches": {}
      }
@@ -597,5 +597,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }

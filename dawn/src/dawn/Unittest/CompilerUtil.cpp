@@ -157,7 +157,6 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassInlining>(context, passes, inlineStrategy);
     addPass<dawn::PassFieldVersioning>(context, passes);
     addPass<dawn::PassSSA>(context, passes); // Did I do this for a reason?
-    addPass<dawn::PassMultiStageSplitter>(context, passes, mssSplitStrategy);
     addPass<dawn::PassTemporaryType>(context, passes);
     addPass<dawn::PassLocalVarType>(context, passes);
     addPass<dawn::PassRemoveScalars>(context, passes);
@@ -247,42 +246,40 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
   if(nPasses > 2)
     result &= runPass<dawn::PassSSA>(context, instantiation);
   if(nPasses > 3)
-    result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
-  if(nPasses > 4)
     result &= runPass<dawn::PassPrintStencilGraph>(context, instantiation);
+  if(nPasses > 4)
+    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
   if(nPasses > 5)
-    result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-  if(nPasses > 6)
     result &= runPass<dawn::PassSetStageName>(context, instantiation);
-  if(nPasses > 7)
+  if(nPasses > 6)
     result &= runPass<dawn::PassSetStageGraph>(context, instantiation);
-  if(nPasses > 8)
+  if(nPasses > 7)
     result &= runPass<dawn::PassStageReordering>(context, instantiation, reorderStrategy);
-  if(nPasses > 9)
+  if(nPasses > 8)
     result &= runPass<dawn::PassStageMerger>(context, instantiation);
-  if(nPasses > 10)
+  if(nPasses > 9)
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-  if(nPasses > 11)
+  if(nPasses > 10)
     result &= runPass<dawn::PassTemporaryMerger>(context, instantiation);
-  if(nPasses > 12)
+  if(nPasses > 11)
     result &= runPass<dawn::PassInlining>(context, instantiation, inlineOnTheFly);
-  if(nPasses > 13)
+  if(nPasses > 12)
     result &= runPass<dawn::PassIntervalPartitioning>(context, instantiation);
-  if(nPasses > 14)
+  if(nPasses > 13)
     result &= runPass<dawn::PassTemporaryToStencilFunction>(context, instantiation);
-  if(nPasses > 15)
+  if(nPasses > 14)
     result &= runPass<dawn::PassSetNonTempCaches>(context, instantiation);
-  if(nPasses > 16)
+  if(nPasses > 15)
     result &= runPass<dawn::PassSetCaches>(context, instantiation);
-  if(nPasses > 17)
+  if(nPasses > 16)
     result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
-  if(nPasses > 18)
+  if(nPasses > 17)
     result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
-  if(nPasses > 19) // if(getOptions().Backend == "cuda") {
+  if(nPasses > 18) // if(getOptions().Backend == "cuda") {
     result &= runPass<dawn::PassSetBlockSize>(context, instantiation);
-  if(nPasses > 20)
+  if(nPasses > 19)
     result &= runPass<dawn::PassDataLocalityMetric>(context, instantiation);
-  if(nPasses > 21)
+  if(nPasses > 20)
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
 
   return result;
@@ -308,7 +305,6 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassInlining>(context, instantiation, inlineStrategy);
     result &= runPass<dawn::PassFieldVersioning>(context, instantiation);
     result &= runPass<dawn::PassSSA>(context, instantiation);
-    result &= runPass<dawn::PassMultiStageSplitter>(context, instantiation, mssSplitStrategy);
     result &= runPass<dawn::PassPrintStencilGraph>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
     result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);

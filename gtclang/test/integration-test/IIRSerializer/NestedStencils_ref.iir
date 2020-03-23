@@ -196,7 +196,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 108,
       "Caches": {}
      }
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }
