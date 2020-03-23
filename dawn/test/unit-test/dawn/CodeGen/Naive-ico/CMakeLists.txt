@@ -11,9 +11,10 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-add_subdirectory(Cuda)
-add_subdirectory(Naive)
-add_subdirectory(Naive-ico)
+set(executable ${PROJECT_NAME}UnittestCodeGenNaiveIco)
+add_executable(${executable} TestCodeGenNaiveIco.cpp)
+target_add_dawn_standard_props(${executable})
+target_link_libraries(${executable} DawnOptimizer DawnCompiler DawnUnittest gtest gtest_main)
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::CodeGen::NaiveIco::" DISCOVERY_TIMEOUT 30)

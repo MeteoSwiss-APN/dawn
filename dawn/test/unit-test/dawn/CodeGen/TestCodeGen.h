@@ -12,8 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/GridType.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/FileUtil.h"
+#include "dawn/Support/NonCopyable.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -111,24 +113,32 @@ protected:
     return stencil_inst;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getConditionalStencil() {
+  std::shared_ptr<dawn::iir::StencilInstantiation> getStencilFromIIRFile(const std::string& file) {
     dawn::OptimizerContext::OptimizerContextOptions options;
     std::unique_ptr<dawn::OptimizerContext> context;
     dawn::UIDGenerator::getInstance()->reset();
 
-    return dawn::CompilerUtil::load("../input/conditional_stencil.iir", options, context);
+    return dawn::CompilerUtil::load(file, options, context);
   }
 
-  void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencil_inst,
-               const std::string& ref_file) {
+  void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencilInst,
+               const std::string& refFile) {
     std::ostringstream oss;
-    if(ref_file.find(".cu") != std::string::npos) {
-      dawn::CompilerUtil::dumpCuda(oss, stencil_inst);
+    if(refFile.find(".cu") != std::string::npos) {
+      dawn::CompilerUtil::dumpCuda(oss, stencilInst);
     } else {
-      dawn::CompilerUtil::dumpNaive(oss, stencil_inst);
+      if(stencilInst->getIIR()->getGridType() == dawn::ast::GridType::Cartesian) {
+        dawn::CompilerUtil::dumpNaive(oss, stencilInst);
+      } else {
+        dawn::CompilerUtil::dumpNaiveIco(oss, stencilInst);
+      }
     }
+    // write to file for debugging
+    std::ofstream debugOutput(refFile);
+    debugOutput << oss.str();
+    debugOutput.close();
 
-    std::string ref = dawn::readFile("../reference/" + ref_file);
+    std::string ref = dawn::readFile("../reference/" + refFile);
     ASSERT_EQ(oss.str(), ref) << "Generated code does not match reference code";
   }
 };

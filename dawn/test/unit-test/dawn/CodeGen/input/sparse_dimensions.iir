@@ -1,0 +1,324 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "25": "in",
+   "26": "sparse_CE",
+   "27": "out"
+  },
+  "accessIDToType": {
+   "25": 6,
+   "26": 6,
+   "27": 6
+  },
+  "literalIDToName": {
+   "-44": "1.0"
+  },
+  "fieldAccessIDs": [
+   25,
+   26,
+   27
+  ],
+  "APIFieldIDs": [
+   25,
+   26,
+   27
+  ],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {
+   "25": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "26": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Cell",
+     "sparse_part": [
+      "Cell",
+      "Cell",
+      "Edge"
+     ]
+    },
+    "mask_k": 1
+   },
+   "27": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Cell",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   }
+  },
+  "idToStencilCall": {
+   "28": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_28",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 29
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": -1,
+   "Column": -1
+  },
+  "stencilName": "sparse_dimensions"
+ },
+ "internalIR": {
+  "gridType": "Unstructured",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "out",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
+                   },
+                   "data": {
+                    "accessID": 27
+                   },
+                   "ID": 52
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "reduction_over_neighbor_expr": {
+                   "op": "+",
+                   "rhs": {
+                    "binary_operator": {
+                     "left": {
+                      "field_access_expr": {
+                       "name": "sparse_CE",
+                       "vertical_offset": 0,
+                       "zero_offset": {},
+                       "argument_map": [
+                        -1,
+                        -1,
+                        -1
+                       ],
+                       "argument_offset": [
+                        0,
+                        0,
+                        0
+                       ],
+                       "negate_offset": false,
+                       "loc": {
+                        "Line": -1,
+                        "Column": -1
+                       },
+                       "data": {
+                        "accessID": 26
+                       },
+                       "ID": 49
+                      }
+                     },
+                     "op": "*",
+                     "right": {
+                      "field_access_expr": {
+                       "name": "in",
+                       "vertical_offset": 0,
+                       "zero_offset": {},
+                       "argument_map": [
+                        -1,
+                        -1,
+                        -1
+                       ],
+                       "argument_offset": [
+                        0,
+                        0,
+                        0
+                       ],
+                       "negate_offset": false,
+                       "loc": {
+                        "Line": -1,
+                        "Column": -1
+                       },
+                       "data": {
+                        "accessID": 25
+                       },
+                       "ID": 50
+                      }
+                     },
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "ID": 48
+                    }
+                   },
+                   "init": {
+                    "literal_access_expr": {
+                     "value": "1.0",
+                     "type": {
+                      "type_id": "Float"
+                     },
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "data": {
+                      "accessID": -44
+                     },
+                     "ID": 51
+                    }
+                   },
+                   "weights": [],
+                   "lhs_location": "Cell",
+                   "rhs_location": "Edge"
+                  }
+                 },
+                 "loc": {
+                  "Line": -1,
+                  "Column": -1
+                 },
+                 "ID": 53
+                }
+               },
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "27": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "26": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "-44": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "25": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 46
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 45
+           }
+          },
+          "doMethodID": 0,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 42,
+        "locationType": "Cell"
+       }
+      ],
+      "loopOrder": "Parallel",
+      "multiStageID": 41,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 28,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_28",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 29
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "sparse_dimensions.sir"
+}

@@ -49,7 +49,7 @@ std::shared_ptr<dawn::iir::StencilInstantiation> deserializeInput(const std::str
     try {
       internalIR =
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
-      SerializationFormat::Json;
+      format = SerializationFormat::Json;
     } catch(...) {
       // Exhausted possibilities, so throw
       throw std::runtime_error("Cannot deserialize input");

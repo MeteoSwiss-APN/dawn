@@ -18,6 +18,24 @@ namespace {
 
 class TestCodeGenNaive : public TestCodeGen {};
 
+TEST_F(TestCodeGenNaive, CopyStencil) {
+  runTest(this->getStencilFromIIRFile("../input/copy_stencil.iir"), "copy_stencil.cpp");
+}
+
+TEST_F(TestCodeGenNaive, GlobalIndexStencilFromFile) {
+  runTest(this->getStencilFromIIRFile("../input/global_index_stencil.iir"),
+          "global_index_stencil.cpp");
+}
+
+TEST_F(TestCodeGenNaive, HoriDiffStencil) {
+  runTest(this->getStencilFromIIRFile("../input/hori_diff_stencil.iir"), "hori_diff_stencil.cpp");
+}
+
+TEST_F(TestCodeGenNaive, TridiagonalSolveStencil) {
+  runTest(this->getStencilFromIIRFile("../input/tridiagonal_solve_stencil.iir"),
+          "tridiagonal_solve_stencil.cpp");
+}
+
 TEST_F(TestCodeGenNaive, GlobalIndexStencil) {
   runTest(this->getGlobalIndexStencil(), "global_indexing.cpp");
 }
@@ -31,7 +49,8 @@ TEST_F(TestCodeGenNaive, LaplacianStencil) {
 }
 
 TEST_F(TestCodeGenNaive, ConditionalStencil) {
-  runTest(this->getConditionalStencil(), "conditional_stencil.cpp");
+  runTest(this->getStencilFromIIRFile("../input/conditional_stencil.iir"),
+          "conditional_stencil.cpp");
 }
 
 } // anonymous namespace
