@@ -8,6 +8,8 @@ FROM $IMAGE
 # ---------------------- Protobuf ----------------------
 RUN curl -L https://github.com/protocolbuffers/protobuf/releases/download/v3.10.1/protobuf-all-3.10.1.tar.gz | \
     tar -xz -C /usr/src
+# These files seem to have a high UID/GID by default, so update this
+RUN chown root:root /usr/src/protobuf-3.10.1 -R
 RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     -Dprotobuf_BUILD_EXAMPLES=OFF \
     -Dprotobuf_BUILD_TESTS=OFF \
