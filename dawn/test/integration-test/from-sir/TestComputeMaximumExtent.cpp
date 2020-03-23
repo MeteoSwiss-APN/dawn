@@ -81,11 +81,9 @@ TEST_F(TestComputeMaximumExtent, DISABLED_test_field_access_interval_02) {
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() ==
-               iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));
+  ASSERT_TRUE((stencil->getNumStages() == 1));
   ASSERT_TRUE(
-      (stencil->getStage(1)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
+      (stencil->getStage(0)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 
@@ -98,7 +96,7 @@ TEST_F(TestComputeMaximumExtent, DISABLED_test_field_access_interval_02) {
 
   const auto& doMethod1 = stage1->getChildren().at(0);
 
-  ASSERT_TRUE((doMethod1->getAST().getStatements().size() == 1));
+  ASSERT_TRUE((doMethod1->getAST().getStatements().size() == 2));
   const auto& stmt = doMethod1->getAST().getStatements()[0];
   ASSERT_TRUE((iir::computeMaximumExtents(*stmt, metadata.getAccessIDFromName("u")) ==
                iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0)));

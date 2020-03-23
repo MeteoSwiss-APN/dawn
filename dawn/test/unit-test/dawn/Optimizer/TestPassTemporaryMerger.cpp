@@ -17,6 +17,7 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -48,6 +49,9 @@ protected:
     if(!TestEnvironment::path_.empty())
       filepath = TestEnvironment::path_ + "/" + filepath;
     auto instantiation = IIRSerializer::deserialize(filepath);
+
+    PassSetDependencyGraph setDependencyGraph(*context_);
+    EXPECT_TRUE(setDependencyGraph.run(instantiation));
 
     // Expect pass to succeed...
     PassTemporaryMerger tempMergerPass(*context_);

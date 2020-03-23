@@ -183,7 +183,7 @@ add_codegen_test(TEST tridiagonal_solve)
 add_codegen_test(TEST stencil_desc_ast)
 add_codegen_test(TEST kparallel_solver)
 add_codegen_test(TEST asymmetric)
-add_codegen_test(TEST p_grad_c)
+# add_codegen_test(TEST p_grad_c)
 # add_codegen_test(TEST boundary_condition FLAGS -max-fields=2 -fsplit-stencils)
 # add_codegen_test(TEST boundary_condition_2 FLAGS -max-fields=2 -fsplit-stencils)
 
