@@ -110,6 +110,11 @@ public:
   template <typename ValT, typename iteratorT, template <typename> class FieldT>
   bool compareToylibField(const iteratorT& iter, FieldT<ValT>& lhs, FieldT<ValT>& rhs, size_t kSize,
                           int max_erros = 10) {
+
+    if(use_default_precision_) {
+      setDefaultPrecision<ValT>();
+    }
+
     bool verified = true;
     for(size_t level = 0; level < kSize; level++) {
       for(const auto& e : iter) {
