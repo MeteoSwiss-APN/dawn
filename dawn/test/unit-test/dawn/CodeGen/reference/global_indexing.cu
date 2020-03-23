@@ -38,10 +38,12 @@
 using namespace gridtools::dawn;
 namespace dawn_generated{
 namespace cuda{
+__constant__ int stage14GlobalJIndices_[2];
+__constant__ unsigned globalOffsets_[2];
 __device__ bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
   return (min <= val && val < max);
 }
-__global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in_field, ::dawn::float_type * const out_field, int* const stage14GlobalJIndices, unsigned* const globalOffsets) {
+__global__ void __launch_bounds__(128)  generated_stencil28_ms27_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in_field, ::dawn::float_type * const out_field) {
 
   // Start kernel
   const unsigned int nx = isize;
@@ -94,7 +96,7 @@ for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
 {
   out_field[idx111] = __ldg(&(in_field[idx111]));
 }
-  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset(stage14GlobalJIndices[0], stage14GlobalJIndices[1], globalOffsets[1] + jblock)) {
+  }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0 && checkOffset(stage14GlobalJIndices_[0], stage14GlobalJIndices_[1], globalOffsets_[1] + jblock)) {
 {
   out_field[idx111] = (int) 10;
 }
@@ -155,8 +157,10 @@ public:
       const unsigned int nbx = (nx + 32 - 1) / 32;
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
+      cudaMemcpyToSymbol(stage14GlobalJIndices_, stage14GlobalJIndices.data(), sizeof(int) * stage14GlobalJIndices.size());
+      cudaMemcpyToSymbol(globalOffsets_, globalOffsets.data(), sizeof(unsigned) * globalOffsets.size());
       dim3 blocks(nbx, nby, nbz);
-      generated_stencil28_ms27_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )), stage14GlobalJIndices.data(), globalOffsets.data());
+      generated_stencil28_ms27_kernel<<<blocks, threads>>>(nx,ny,nz,in_field_ds.strides()[1],in_field_ds.strides()[2],(in_field.data()+in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(), in_field.begin<1>(),0 )),(out_field.data()+out_field_ds.get_storage_info_ptr()->index(out_field.begin<0>(), out_field.begin<1>(),0 )));
       };
 
       // stopping timers

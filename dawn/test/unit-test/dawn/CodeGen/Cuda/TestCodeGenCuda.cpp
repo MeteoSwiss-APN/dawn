@@ -30,4 +30,8 @@ TEST_F(TestCodeGenCuda, LaplacianStencil) {
   runTest(this->getLaplacianStencil(), "laplacian_stencil.cu");
 }
 
+TEST_F(TestCodeGenCuda, ConditionalStencil) {
+  runTest(this->getConditionalStencil(), "conditional_stencil.cu");
+}
+
 } // anonymous namespace

@@ -1,4 +1,3 @@
-//---- Preprocessor defines ----
 #define DAWN_GENERATED 1
 #undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CUDA
@@ -9,7 +8,7 @@
  #define BOOST_NO_CXX11_DECLTYPE 1
 #endif
 #ifndef GRIDTOOLS_DAWN_HALO_EXTENT
- #define GRIDTOOLS_DAWN_HALO_EXTENT 3
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 0
 #endif
 #ifndef BOOST_PP_VARIADICS
  #define BOOST_PP_VARIADICS 1
@@ -37,20 +36,23 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
-
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
-
-//---- Globals ----
-
-//---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(256)  hori_diff_stencil_stencil41_ms87_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out, ::dawn::float_type * const coeff) {
+
+struct globals {
+  int var1;
+  bool var2;
+
+  globals() : var1(1){
+  }
+};
+} // namespace cuda
+} // namespace dawn_generated
+namespace dawn_generated{
+namespace cuda{
+__global__ void __launch_bounds__(128)  conditional_stencil_stencil21_ms41_kernel(globals globals_, const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
 
   // Start kernel
-  __shared__ ::dawn::float_type lap_ijcache[34*6];
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
@@ -83,41 +85,45 @@ __global__ void __launch_bounds__(256)  hori_diff_stencil_stencil41_ms87_kernel(
   // Regions b,d,f are easily executed by dedicated warps (one warp for each line)
 
   // Regions (a,h,e) and (c,i,g) are executed by two specialized warp
-  int iblock = -1 - 1;
-  int jblock = -1 - 1;
-if(threadIdx.y < +6) {
+  int iblock = 0 - 1;
+  int jblock = 0 - 1;
+if(threadIdx.y < +4) {
     iblock = threadIdx.x;
-    jblock = (int)threadIdx.y + -1;
-}else if(threadIdx.y < +7) {
-    iblock = -1 + (int)threadIdx.x % 1;
-    jblock = (int)threadIdx.x / 1+-1;
-}else if(threadIdx.y < 8) {
-    iblock = threadIdx.x % 1 + 32;
-    jblock = (int)threadIdx.x / 1+-1;
+    jblock = (int)threadIdx.y + 0;
 }
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
-  int ijcacheindex= iblock + 1 + (jblock + 1)*34;
 
   // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
 for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
-  if(iblock >= -1 && iblock <= block_size_i -1 + 1 && jblock >= -1 && jblock <= block_size_j -1 + 1) {
-lap_ijcache[ijcacheindex] = (((::dawn::float_type) -4.0 * __ldg(&(in[idx111]))) + (__ldg(&(coeff[idx111])) * (__ldg(&(in[idx111+1*1])) + (__ldg(&(in[idx111+1*-1])) + (__ldg(&(in[idx111+stride_111_1*1])) + __ldg(&(in[idx111+stride_111_1*-1])))))));
-  }    __syncthreads();
   if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-out[idx111] = (((::dawn::float_type) -4.0 * lap_ijcache[ijcacheindex]) + (__ldg(&(coeff[idx111])) * (lap_ijcache[ijcacheindex+1] + (lap_ijcache[ijcacheindex+-1] + (lap_ijcache[ijcacheindex+1*34] + lap_ijcache[ijcacheindex+-1*34])))));
-  }    __syncthreads();
-
+if((globals_.var1 == (int) 1))
+{
+  out[idx111] = __ldg(&(in[idx111+1*1]));
+}
+else
+{
+  out[idx111] = __ldg(&(in[idx111+1*-1]));
+}
+if((globals_.var1 == (int) 1))
+{
+  out[idx111] = __ldg(&(in[idx111+stride_111_1*1]));
+}
+else
+{
+  out[idx111] = __ldg(&(in[idx111+stride_111_1*-1]));
+}
+  }
     // Slide kcaches
 
     // increment iterators
     idx111+=stride_111_2;
 }}
 
-class hori_diff_stencil {
+class conditional_stencil {
 public:
 
   struct sbase : public timer_cuda {
@@ -129,60 +135,74 @@ public:
     }
   };
 
-  struct stencil_41 : public sbase {
+  struct stencil_21 : public sbase {
 
     // Members
 
     // Temporary storage typedefs
-    using tmp_halo_t = gridtools::halo< 1,1, 0, 0, 0>;
+    using tmp_halo_t = gridtools::halo< 0,0, 0, 0, 0>;
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
+    globals& m_globals;
     const gridtools::dawn::domain m_dom;
-
-    // temporary storage declarations
-    tmp_meta_data_t m_tmp_meta_data;
-    tmp_storage_t m_lap;
   public:
 
-    stencil_41(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
-    static constexpr dawn::driver::cartesian_extent in_extent = {-2,2, -2,2, 0,0};
+    stencil_21(const gridtools::dawn::domain& dom_, globals& globals_, int rank, int xcols, int ycols) : sbase("stencil_21"), m_dom(dom_), m_globals(globals_){}
+    static constexpr dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
     static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
-    static constexpr dawn::driver::cartesian_extent coeff_extent = {-1,1, -1,1, 0,0};
 
-    void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
+    void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
 
       // starting timers
       start();
       {;
       gridtools::data_view<storage_ijk_t> in= gridtools::make_device_view(in_ds);
       gridtools::data_view<storage_ijk_t> out= gridtools::make_device_view(out_ds);
-      gridtools::data_view<storage_ijk_t> coeff= gridtools::make_device_view(coeff_ds);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
-      dim3 threads(32,4+4,1);
+      dim3 threads(32,4+0,1);
       const unsigned int nbx = (nx + 32 - 1) / 32;
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      hori_diff_stencil_stencil41_ms87_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+coeff_ds.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
+      conditional_stencil_stencil21_ms41_kernel<<<blocks, threads>>>(m_globals,nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
       };
 
       // stopping timers
       pause();
     }
   };
-  static constexpr const char* s_name = "hori_diff_stencil";
-  stencil_41 m_stencil_41;
+  static constexpr const char* s_name = "conditional_stencil";
+  stencil_21 m_stencil_21;
 public:
 
-  hori_diff_stencil(const hori_diff_stencil&) = delete;
+  conditional_stencil(const conditional_stencil&) = delete;
 
   // Members
 
   // Stencil-Data
+  globals m_globals;
 
-  hori_diff_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_41(dom, rank, xcols, ycols){}
+  conditional_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_21(dom,m_globals, rank, xcols, ycols){}
+
+  // Access-wrapper for globally defined variables
+
+  int get_var1() {
+    return m_globals.var1;
+  }
+
+  void set_var1(int var1) {
+    m_globals.var1=var1;
+  }
+
+  bool get_var2() {
+    return m_globals.var2;
+  }
+
+  void set_var2(bool var2) {
+    m_globals.var2=var2;
+  }
 
   template<typename S>
   void sync_storages(S field) {
@@ -195,11 +215,11 @@ public:
     sync_storages(fields...);
   }
 
-  void run(storage_ijk_t in, storage_ijk_t out, storage_ijk_t coeff) {
-    sync_storages(in,out,coeff);
-    m_stencil_41.run(in,out,coeff);
+  void run(storage_ijk_t in, storage_ijk_t out) {
+    sync_storages(in,out);
+    m_stencil_21.run(in,out);
 ;
-    sync_storages(in,out,coeff);
+    sync_storages(in,out);
   }
 
   std::string get_name()  const {
@@ -207,11 +227,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_41.reset();  }
+m_stencil_21.reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_41.get_time();
+    res +=m_stencil_21.get_time();
     return res;
   }
 };

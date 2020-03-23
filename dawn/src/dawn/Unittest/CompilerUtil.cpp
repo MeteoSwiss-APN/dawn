@@ -125,6 +125,8 @@ void CompilerUtil::dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInsta
   auto ctx = siToContext(si);
   dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(ctx, diagnostics, 0);
   dump(generator, os);
+  if(Verbose)
+    dump(generator, std::cerr);
 }
 
 void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
@@ -132,6 +134,8 @@ void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilIn
   auto ctx = siToContext(si);
   dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(ctx, diagnostics, 0);
   dump(generator, os);
+  if(Verbose)
+    dump(generator, std::cerr);
 }
 
 void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
@@ -139,6 +143,8 @@ void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstan
   auto ctx = siToContext(si);
   dawn::codegen::cuda::CudaCodeGen generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
   dump(generator, os);
+  if(Verbose)
+    dump(generator, std::cerr);
 }
 
 std::vector<std::shared_ptr<Pass>>

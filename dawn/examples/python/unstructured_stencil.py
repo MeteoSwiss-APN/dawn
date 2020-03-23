@@ -36,7 +36,6 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    # create the out = in[i+1] statement
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(

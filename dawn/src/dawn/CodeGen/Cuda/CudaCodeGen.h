@@ -59,6 +59,9 @@ private:
       MemberFunction& ctr, iir::Stencil const& stencil,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const override;
 
+  void addCudaCopySymbol(MemberFunction& runMethod, const std::string& arrName,
+                         const std::string dataType) const;
+
   void
   generateCudaKernelCode(std::stringstream& ssSW,
                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
