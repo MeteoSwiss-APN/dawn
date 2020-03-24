@@ -1,30 +1,30 @@
 {
  "metadata": {
   "accessIDToName": {
-   "113": "in",
-   "114": "out"
+   "57": "in",
+   "58": "out"
   },
   "accessIDToType": {
-   "113": 6,
-   "114": 6
+   "57": 6,
+   "58": 6
   },
   "literalIDToName": {
-   "-190": "2",
-   "-206": "5",
-   "-186": "6",
-   "-202": "7",
-   "-198": "3",
-   "-182": "8",
-   "-194": "1",
-   "-178": "4"
+   "-142": "3",
+   "-126": "8",
+   "-138": "1",
+   "-122": "4",
+   "-134": "2",
+   "-150": "5",
+   "-130": "6",
+   "-146": "7"
   },
   "fieldAccessIDs": [
-   113,
-   114
+   57,
+   58
   ],
   "APIFieldIDs": [
-   113,
-   114
+   57,
+   58
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -33,14 +33,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "113": {
+   "57": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "114": {
+   "58": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -49,14 +49,14 @@
    }
   },
   "idToStencilCall": {
-   "115": {
+   "59": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_115",
+      "callee": "__code_gen_59",
       "arguments": []
      },
      "loc": {
@@ -64,7 +64,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 116
+     "ID": 60
     }
    }
   },
@@ -115,9 +115,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 210
+                   "ID": 163
                   }
                  },
                  "op": "=",
@@ -142,16 +142,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 113
+                    "accessID": 57
                    },
-                   "ID": 209
+                   "ID": 162
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 211
+                 "ID": 164
                 }
                },
                "loc": {
@@ -161,7 +161,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -170,7 +170,7 @@
                   }
                  },
                  "readAccess": {
-                  "113": {
+                  "57": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -180,7 +180,7 @@
                  }
                 }
                },
-               "ID": 208
+               "ID": 161
               }
              }
             ],
@@ -189,7 +189,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 207
+            "ID": 160
            }
           },
           "doMethodID": 0,
@@ -201,16 +201,9 @@
           }
          }
         ],
-        "stageID": 173,
+        "stageID": 117,
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 172,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -242,9 +235,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 215
+                   "ID": 168
                   }
                  },
                  "op": "=",
@@ -259,16 +252,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -178
+                    "accessID": -122
                    },
-                   "ID": 214
+                   "ID": 167
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 216
+                 "ID": 169
                 }
                },
                "loc": {
@@ -278,7 +271,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -287,7 +280,7 @@
                   }
                  },
                  "readAccess": {
-                  "-178": {
+                  "-122": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -297,7 +290,7 @@
                  }
                 }
                },
-               "ID": 213
+               "ID": 166
               }
              }
             ],
@@ -306,7 +299,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 212
+            "ID": 165
            }
           },
           "doMethodID": 1,
@@ -318,7 +311,7 @@
           }
          }
         ],
-        "stageID": 176,
+        "stageID": 120,
         "i_range": {
          "lower_offset": -1,
          "upper_offset": 0,
@@ -326,14 +319,7 @@
          "special_upper_level": "End"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 175,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -365,9 +351,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 220
+                   "ID": 173
                   }
                  },
                  "op": "=",
@@ -382,16 +368,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -182
+                    "accessID": -126
                    },
-                   "ID": 219
+                   "ID": 172
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 221
+                 "ID": 174
                 }
                },
                "loc": {
@@ -401,7 +387,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -410,7 +396,7 @@
                   }
                  },
                  "readAccess": {
-                  "-182": {
+                  "-126": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -420,7 +406,7 @@
                  }
                 }
                },
-               "ID": 218
+               "ID": 171
               }
              }
             ],
@@ -429,7 +415,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 217
+            "ID": 170
            }
           },
           "doMethodID": 2,
@@ -441,7 +427,7 @@
           }
          }
         ],
-        "stageID": 180,
+        "stageID": 124,
         "i_range": {
          "lower_offset": 0,
          "upper_offset": 1,
@@ -449,14 +435,7 @@
          "special_upper_level": "Start"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 179,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -488,9 +467,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 225
+                   "ID": 178
                   }
                  },
                  "op": "=",
@@ -505,16 +484,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -186
+                    "accessID": -130
                    },
-                   "ID": 224
+                   "ID": 177
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 226
+                 "ID": 179
                 }
                },
                "loc": {
@@ -524,7 +503,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -533,7 +512,7 @@
                   }
                  },
                  "readAccess": {
-                  "-186": {
+                  "-130": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -543,7 +522,7 @@
                  }
                 }
                },
-               "ID": 223
+               "ID": 176
               }
              }
             ],
@@ -552,7 +531,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 222
+            "ID": 175
            }
           },
           "doMethodID": 3,
@@ -564,7 +543,7 @@
           }
          }
         ],
-        "stageID": 184,
+        "stageID": 128,
         "j_range": {
          "lower_offset": -1,
          "upper_offset": 0,
@@ -572,14 +551,7 @@
          "special_upper_level": "End"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 183,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -611,9 +583,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 230
+                   "ID": 183
                   }
                  },
                  "op": "=",
@@ -628,16 +600,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -190
+                    "accessID": -134
                    },
-                   "ID": 229
+                   "ID": 182
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 231
+                 "ID": 184
                 }
                },
                "loc": {
@@ -647,7 +619,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -656,7 +628,7 @@
                   }
                  },
                  "readAccess": {
-                  "-190": {
+                  "-134": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -666,7 +638,7 @@
                  }
                 }
                },
-               "ID": 228
+               "ID": 181
               }
              }
             ],
@@ -675,7 +647,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 227
+            "ID": 180
            }
           },
           "doMethodID": 4,
@@ -687,7 +659,7 @@
           }
          }
         ],
-        "stageID": 188,
+        "stageID": 132,
         "j_range": {
          "lower_offset": 0,
          "upper_offset": 1,
@@ -695,14 +667,7 @@
          "special_upper_level": "Start"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 187,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -734,9 +699,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 235
+                   "ID": 188
                   }
                  },
                  "op": "=",
@@ -751,16 +716,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -194
+                    "accessID": -138
                    },
-                   "ID": 234
+                   "ID": 187
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 236
+                 "ID": 189
                 }
                },
                "loc": {
@@ -770,7 +735,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -779,7 +744,7 @@
                   }
                  },
                  "readAccess": {
-                  "-194": {
+                  "-138": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -789,7 +754,7 @@
                  }
                 }
                },
-               "ID": 233
+               "ID": 186
               }
              }
             ],
@@ -798,7 +763,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 232
+            "ID": 185
            }
           },
           "doMethodID": 5,
@@ -810,7 +775,7 @@
           }
          }
         ],
-        "stageID": 192,
+        "stageID": 136,
         "i_range": {
          "lower_offset": 0,
          "upper_offset": 1,
@@ -824,14 +789,7 @@
          "special_upper_level": "Start"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 191,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -863,9 +821,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 240
+                   "ID": 193
                   }
                  },
                  "op": "=",
@@ -880,16 +838,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -198
+                    "accessID": -142
                    },
-                   "ID": 239
+                   "ID": 192
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 241
+                 "ID": 194
                 }
                },
                "loc": {
@@ -899,7 +857,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -908,7 +866,7 @@
                   }
                  },
                  "readAccess": {
-                  "-198": {
+                  "-142": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -918,7 +876,7 @@
                  }
                 }
                },
-               "ID": 238
+               "ID": 191
               }
              }
             ],
@@ -927,7 +885,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 237
+            "ID": 190
            }
           },
           "doMethodID": 6,
@@ -939,7 +897,7 @@
           }
          }
         ],
-        "stageID": 196,
+        "stageID": 140,
         "i_range": {
          "lower_offset": -1,
          "upper_offset": 0,
@@ -953,14 +911,7 @@
          "special_upper_level": "Start"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 195,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -992,9 +943,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 245
+                   "ID": 198
                   }
                  },
                  "op": "=",
@@ -1009,16 +960,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -202
+                    "accessID": -146
                    },
-                   "ID": 244
+                   "ID": 197
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 246
+                 "ID": 199
                 }
                },
                "loc": {
@@ -1028,7 +979,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -1037,7 +988,7 @@
                   }
                  },
                  "readAccess": {
-                  "-202": {
+                  "-146": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -1047,7 +998,7 @@
                  }
                 }
                },
-               "ID": 243
+               "ID": 196
               }
              }
             ],
@@ -1056,7 +1007,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 242
+            "ID": 195
            }
           },
           "doMethodID": 7,
@@ -1068,7 +1019,7 @@
           }
          }
         ],
-        "stageID": 200,
+        "stageID": 144,
         "i_range": {
          "lower_offset": 0,
          "upper_offset": 1,
@@ -1082,14 +1033,7 @@
          "special_upper_level": "End"
         },
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 199,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -1121,9 +1065,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 114
+                    "accessID": 58
                    },
-                   "ID": 250
+                   "ID": 203
                   }
                  },
                  "op": "=",
@@ -1138,16 +1082,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": -206
+                    "accessID": -150
                    },
-                   "ID": 249
+                   "ID": 202
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 251
+                 "ID": 204
                 }
                },
                "loc": {
@@ -1157,7 +1101,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "114": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -1166,7 +1110,7 @@
                   }
                  },
                  "readAccess": {
-                  "-206": {
+                  "-150": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -1176,7 +1120,7 @@
                  }
                 }
                },
-               "ID": 248
+               "ID": 201
               }
              }
             ],
@@ -1185,7 +1129,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 247
+            "ID": 200
            }
           },
           "doMethodID": 8,
@@ -1197,7 +1141,7 @@
           }
          }
         ],
-        "stageID": 204,
+        "stageID": 148,
         "i_range": {
          "lower_offset": -1,
          "upper_offset": 0,
@@ -1214,11 +1158,11 @@
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 203,
+      "multiStageID": 151,
       "Caches": {}
      }
     ],
-    "stencilID": 115,
+    "stencilID": 59,
     "attr": {
      "attributes": []
     }
@@ -1232,7 +1176,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_115",
+      "callee": "__code_gen_59",
       "arguments": []
      },
      "loc": {
@@ -1240,11 +1184,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 116
+     "ID": 60
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "global_index_stencil.sir"
+ "filename": "global_index_stencil.cpp"
 }

@@ -1,32 +1,32 @@
 {
  "metadata": {
   "accessIDToName": {
-   "144": "__local_m_144",
-   "89": "a",
-   "90": "b",
-   "91": "c",
-   "92": "d"
+   "45": "a",
+   "46": "b",
+   "47": "c",
+   "48": "d",
+   "100": "__local_m_100"
   },
   "accessIDToType": {
-   "89": 6,
-   "90": 6,
-   "91": 6,
-   "92": 6
+   "45": 6,
+   "46": 6,
+   "47": 6,
+   "48": 6
   },
   "literalIDToName": {
-   "-145": "1.0"
+   "-101": "1.0"
   },
   "fieldAccessIDs": [
-   89,
-   90,
-   91,
-   92
+   45,
+   46,
+   47,
+   48
   ],
   "APIFieldIDs": [
-   89,
-   90,
-   91,
-   92
+   45,
+   46,
+   47,
+   48
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -35,28 +35,28 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "90": {
+   "45": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "91": {
+   "46": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "92": {
+   "47": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "89": {
+   "48": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -65,14 +65,14 @@
    }
   },
   "idToStencilCall": {
-   "93": {
+   "49": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_93",
+      "callee": "__code_gen_49",
       "arguments": []
      },
      "loc": {
@@ -80,7 +80,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 94
+     "ID": 50
     }
    }
   },
@@ -131,9 +131,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 91
+                    "accessID": 47
                    },
-                   "ID": 154
+                   "ID": 205
                   }
                  },
                  "op": "=",
@@ -160,9 +160,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 91
+                      "accessID": 47
                      },
-                     "ID": 152
+                     "ID": 203
                     }
                    },
                    "op": "/",
@@ -187,23 +187,23 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 90
+                      "accessID": 46
                      },
-                     "ID": 153
+                     "ID": 204
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 151
+                   "ID": 202
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 155
+                 "ID": 206
                 }
                },
                "loc": {
@@ -213,7 +213,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "91": {
+                  "47": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -222,14 +222,14 @@
                   }
                  },
                  "readAccess": {
-                  "90": {
+                  "47": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "91": {
+                  "46": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -239,7 +239,7 @@
                  }
                 }
                },
-               "ID": 150
+               "ID": 201
               }
              }
             ],
@@ -248,7 +248,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 149
+            "ID": 200
            }
           },
           "doMethodID": 0,
@@ -260,16 +260,9 @@
           }
          }
         ],
-        "stageID": 139,
+        "stageID": 95,
         "locationType": "LocationTypeUnknown"
-       }
-      ],
-      "loopOrder": "Parallel",
-      "multiStageID": 138,
-      "Caches": {}
-     },
-     {
-      "stages": [
+       },
        {
         "doMethods": [
          {
@@ -285,7 +278,7 @@
                 "is_const": false,
                 "is_volatile": false
                },
-               "name": "__local_m_144",
+               "name": "__local_m_100",
                "dimension": 0,
                "op": "=",
                "init_list": [
@@ -302,9 +295,9 @@
                      "Column": -1
                     },
                     "data": {
-                     "accessID": -145
+                     "accessID": -101
                     },
-                    "ID": 159
+                    "ID": 210
                    }
                   },
                   "op": "/",
@@ -331,9 +324,9 @@
                        "Column": -1
                       },
                       "data": {
-                       "accessID": 90
+                       "accessID": 46
                       },
-                      "ID": 161
+                      "ID": 212
                      }
                     },
                     "op": "-",
@@ -360,9 +353,9 @@
                          "Column": -1
                         },
                         "data": {
-                         "accessID": 89
+                         "accessID": 45
                         },
-                        "ID": 163
+                        "ID": 214
                        }
                       },
                       "op": "*",
@@ -387,30 +380,30 @@
                          "Column": -1
                         },
                         "data": {
-                         "accessID": 91
+                         "accessID": 47
                         },
-                        "ID": 164
+                        "ID": 215
                        }
                       },
                       "loc": {
                        "Line": -1,
                        "Column": -1
                       },
-                      "ID": 162
+                      "ID": 213
                      }
                     },
                     "loc": {
                      "Line": -1,
                      "Column": -1
                     },
-                    "ID": 160
+                    "ID": 211
                    }
                   },
                   "loc": {
                    "Line": -1,
                    "Column": -1
                   },
-                  "ID": 158
+                  "ID": 209
                  }
                 }
                ],
@@ -421,7 +414,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "144": {
+                  "100": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -430,41 +423,41 @@
                   }
                  },
                  "readAccess": {
-                  "89": {
+                  "-101": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "90": {
+                  "45": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "91": {
+                  "46": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "47": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": -1,
                     "plus": -1
-                   }
-                  },
-                  "-145": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
                    }
                   }
                  }
                 }
                },
                "var_decl_stmt_data": {
-                "accessID": 144
+                "accessID": 100
                },
-               "ID": 157
+               "ID": 208
               }
              },
              {
@@ -492,9 +485,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 91
+                    "accessID": 47
                    },
-                   "ID": 169
+                   "ID": 220
                   }
                  },
                  "op": "=",
@@ -521,38 +514,38 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 91
+                      "accessID": 47
                      },
-                     "ID": 167
+                     "ID": 218
                     }
                    },
                    "op": "*",
                    "right": {
                     "var_access_expr": {
-                     "name": "__local_m_144",
+                     "name": "__local_m_100",
                      "is_external": false,
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 144
+                      "accessID": 100
                      },
-                     "ID": 168
+                     "ID": 219
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 166
+                   "ID": 217
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 170
+                 "ID": 221
                 }
                },
                "loc": {
@@ -562,7 +555,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "91": {
+                  "47": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -571,14 +564,14 @@
                   }
                  },
                  "readAccess": {
-                  "91": {
+                  "100": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "144": {
+                  "47": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -588,7 +581,7 @@
                  }
                 }
                },
-               "ID": 165
+               "ID": 216
               }
              },
              {
@@ -616,9 +609,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 92
+                    "accessID": 48
                    },
-                   "ID": 179
+                   "ID": 230
                   }
                  },
                  "op": "=",
@@ -647,9 +640,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 92
+                        "accessID": 48
                        },
-                       "ID": 174
+                       "ID": 225
                       }
                      },
                      "op": "-",
@@ -676,9 +669,9 @@
                           "Column": -1
                          },
                          "data": {
-                          "accessID": 89
+                          "accessID": 45
                          },
-                         "ID": 176
+                         "ID": 227
                         }
                        },
                        "op": "*",
@@ -703,52 +696,52 @@
                           "Column": -1
                          },
                          "data": {
-                          "accessID": 92
+                          "accessID": 48
                          },
-                         "ID": 177
+                         "ID": 228
                         }
                        },
                        "loc": {
                         "Line": -1,
                         "Column": -1
                        },
-                       "ID": 175
+                       "ID": 226
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 173
+                     "ID": 224
                     }
                    },
                    "op": "*",
                    "right": {
                     "var_access_expr": {
-                     "name": "__local_m_144",
+                     "name": "__local_m_100",
                      "is_external": false,
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 144
+                      "accessID": 100
                      },
-                     "ID": 178
+                     "ID": 229
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 172
+                   "ID": 223
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 180
+                 "ID": 231
                 }
                },
                "loc": {
@@ -758,7 +751,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "92": {
+                  "48": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -767,21 +760,21 @@
                   }
                  },
                  "readAccess": {
-                  "144": {
+                  "100": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "89": {
+                  "45": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "92": {
+                  "48": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": -1,
@@ -791,7 +784,7 @@
                  }
                 }
                },
-               "ID": 171
+               "ID": 222
               }
              }
             ],
@@ -800,7 +793,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 156
+            "ID": 207
            }
           },
           "doMethodID": 1,
@@ -812,13 +805,48 @@
           }
          }
         ],
-        "stageID": 142,
+        "stageID": 98,
         "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 141,
-      "Caches": {}
+      "multiStageID": 105,
+      "Caches": {
+       "47": {
+        "type": "CT_K",
+        "policy": "CP_FillFlush",
+        "accessID": 47,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        }
+       },
+       "48": {
+        "type": "CT_K",
+        "policy": "CP_FillFlush",
+        "accessID": 48,
+        "interval": {
+         "lower_offset": 1,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        }
+       }
+      }
      },
      {
       "stages": [
@@ -853,9 +881,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 92
+                    "accessID": 48
                    },
-                   "ID": 186
+                   "ID": 237
                   }
                  },
                  "op": "-=",
@@ -882,9 +910,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 91
+                      "accessID": 47
                      },
-                     "ID": 184
+                     "ID": 235
                     }
                    },
                    "op": "*",
@@ -909,23 +937,23 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 92
+                      "accessID": 48
                      },
-                     "ID": 185
+                     "ID": 236
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 183
+                   "ID": 234
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 187
+                 "ID": 238
                 }
                },
                "loc": {
@@ -935,7 +963,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "92": {
+                  "48": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -944,14 +972,14 @@
                   }
                  },
                  "readAccess": {
-                  "91": {
+                  "47": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "92": {
+                  "48": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -961,7 +989,7 @@
                  }
                 }
                },
-               "ID": 182
+               "ID": 233
               }
              }
             ],
@@ -970,7 +998,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 181
+            "ID": 232
            }
           },
           "doMethodID": 2,
@@ -982,16 +1010,34 @@
           }
          }
         ],
-        "stageID": 147,
+        "stageID": 103,
         "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Backward",
-      "multiStageID": 146,
-      "Caches": {}
+      "multiStageID": 106,
+      "Caches": {
+       "48": {
+        "type": "CT_K",
+        "policy": "CP_FillFlush",
+        "accessID": 48,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": -1,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        }
+       }
+      }
      }
     ],
-    "stencilID": 93,
+    "stencilID": 49,
     "attr": {
      "attributes": []
     }
@@ -1005,7 +1051,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_93",
+      "callee": "__code_gen_49",
       "arguments": []
      },
      "loc": {
@@ -1013,11 +1059,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 94
+     "ID": 50
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "tridiagonal_solve_stencil.sir"
+ "filename": "tridiagonal_solve_stencil.cpp"
 }

@@ -1,21 +1,21 @@
 {
  "metadata": {
   "accessIDToName": {
-   "17": "in",
-   "18": "out"
+   "9": "in",
+   "10": "out"
   },
   "accessIDToType": {
-   "17": 6,
-   "18": 6
+   "9": 6,
+   "10": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
-   17,
-   18
+   9,
+   10
   ],
   "APIFieldIDs": [
-   17,
-   18
+   9,
+   10
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -24,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "17": {
+   "9": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "18": {
+   "10": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -40,14 +40,14 @@
    }
   },
   "idToStencilCall": {
-   "19": {
+   "11": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_19",
+      "callee": "__code_gen_11",
       "arguments": []
      },
      "loc": {
@@ -55,7 +55,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 20
+     "ID": 12
     }
    }
   },
@@ -106,9 +106,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 18
+                    "accessID": 10
                    },
-                   "ID": 34
+                   "ID": 27
                   }
                  },
                  "op": "=",
@@ -136,16 +136,16 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 17
+                    "accessID": 9
                    },
-                   "ID": 33
+                   "ID": 26
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 35
+                 "ID": 28
                 }
                },
                "loc": {
@@ -155,7 +155,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "18": {
+                  "10": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -164,7 +164,7 @@
                   }
                  },
                  "readAccess": {
-                  "17": {
+                  "9": {
                    "cartesian_extent": {
                     "i_extent": {
                      "minus": 1,
@@ -183,7 +183,7 @@
                  }
                 }
                },
-               "ID": 32
+               "ID": 25
               }
              }
             ],
@@ -192,7 +192,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 31
+            "ID": 24
            }
           },
           "doMethodID": 0,
@@ -204,16 +204,16 @@
           }
          }
         ],
-        "stageID": 29,
+        "stageID": 21,
         "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 28,
+      "multiStageID": 23,
       "Caches": {}
      }
     ],
-    "stencilID": 19,
+    "stencilID": 11,
     "attr": {
      "attributes": []
     }
@@ -227,7 +227,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_19",
+      "callee": "__code_gen_11",
       "arguments": []
      },
      "loc": {
@@ -235,11 +235,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 20
+     "ID": 12
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "copy_stencil.sir"
+ "filename": "copy_stencil.cpp"
 }

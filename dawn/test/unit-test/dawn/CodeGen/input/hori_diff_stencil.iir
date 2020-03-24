@@ -1,34 +1,34 @@
 {
  "metadata": {
   "accessIDToName": {
-   "73": "in",
-   "74": "out",
-   "75": "coeff",
-   "76": "lap"
+   "40": "lap",
+   "37": "in",
+   "38": "out",
+   "39": "coeff"
   },
   "accessIDToType": {
-   "75": 6,
-   "76": 3,
-   "73": 6,
-   "74": 6
+   "37": 6,
+   "38": 6,
+   "39": 6,
+   "40": 3
   },
   "literalIDToName": {
-   "-118": "-4.0",
-   "-117": "-4.0"
+   "-82": "-4.0",
+   "-81": "-4.0"
   },
   "fieldAccessIDs": [
-   73,
-   74,
-   75,
-   76
+   37,
+   38,
+   39,
+   40
   ],
   "APIFieldIDs": [
-   73,
-   74,
-   75
+   37,
+   38,
+   39
   ],
   "temporaryFieldIDs": [
-   76
+   40
   ],
   "globalVariableIDs": [],
   "versionedFields": {
@@ -36,28 +36,28 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "74": {
+   "40": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "75": {
+   "37": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "76": {
+   "38": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "73": {
+   "39": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -66,14 +66,14 @@
    }
   },
   "idToStencilCall": {
-   "77": {
+   "41": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_77",
+      "callee": "__code_gen_41",
       "arguments": []
      },
      "loc": {
@@ -81,7 +81,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 78
+     "ID": 42
     }
    }
   },
@@ -132,9 +132,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 76
+                    "accessID": 40
                    },
-                   "ID": 138
+                   "ID": 103
                   }
                  },
                  "op": "=",
@@ -153,9 +153,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": -117
+                        "accessID": -81
                        },
-                       "ID": 127
+                       "ID": 92
                       }
                      },
                      "op": "*",
@@ -180,16 +180,16 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 73
+                        "accessID": 37
                        },
-                       "ID": 128
+                       "ID": 93
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 126
+                     "ID": 91
                     }
                    },
                    "op": "+",
@@ -216,9 +216,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 75
+                        "accessID": 39
                        },
-                       "ID": 130
+                       "ID": 95
                       }
                      },
                      "op": "*",
@@ -248,9 +248,9 @@
                           "Column": -1
                          },
                          "data": {
-                          "accessID": 73
+                          "accessID": 37
                          },
-                         "ID": 132
+                         "ID": 97
                         }
                        },
                        "op": "+",
@@ -280,9 +280,9 @@
                             "Column": -1
                            },
                            "data": {
-                            "accessID": 73
+                            "accessID": 37
                            },
-                           "ID": 134
+                           "ID": 99
                           }
                          },
                          "op": "+",
@@ -312,9 +312,9 @@
                               "Column": -1
                              },
                              "data": {
-                              "accessID": 73
+                              "accessID": 37
                              },
-                             "ID": 136
+                             "ID": 101
                             }
                            },
                            "op": "+",
@@ -342,51 +342,51 @@
                               "Column": -1
                              },
                              "data": {
-                              "accessID": 73
+                              "accessID": 37
                              },
-                             "ID": 137
+                             "ID": 102
                             }
                            },
                            "loc": {
                             "Line": -1,
                             "Column": -1
                            },
-                           "ID": 135
+                           "ID": 100
                           }
                          },
                          "loc": {
                           "Line": -1,
                           "Column": -1
                          },
-                         "ID": 133
+                         "ID": 98
                         }
                        },
                        "loc": {
                         "Line": -1,
                         "Column": -1
                        },
-                       "ID": 131
+                       "ID": 96
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 129
+                     "ID": 94
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 125
+                   "ID": 90
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 139
+                 "ID": 104
                 }
                },
                "loc": {
@@ -396,7 +396,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "76": {
+                  "40": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -405,7 +405,7 @@
                   }
                  },
                  "readAccess": {
-                  "73": {
+                  "37": {
                    "cartesian_extent": {
                     "i_extent": {
                      "minus": -1,
@@ -421,14 +421,14 @@
                     "plus": 0
                    }
                   },
-                  "-117": {
+                  "-81": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "75": {
+                  "39": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -438,7 +438,7 @@
                  }
                 }
                },
-               "ID": 124
+               "ID": 89
               }
              }
             ],
@@ -447,7 +447,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 123
+            "ID": 88
            }
           },
           "doMethodID": 1,
@@ -459,7 +459,7 @@
           }
          }
         ],
-        "stageID": 119,
+        "stageID": 83,
         "locationType": "LocationTypeUnknown"
        },
        {
@@ -493,9 +493,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 74
+                    "accessID": 38
                    },
-                   "ID": 155
+                   "ID": 120
                   }
                  },
                  "op": "=",
@@ -514,9 +514,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": -118
+                        "accessID": -82
                        },
-                       "ID": 144
+                       "ID": 109
                       }
                      },
                      "op": "*",
@@ -541,16 +541,16 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 76
+                        "accessID": 40
                        },
-                       "ID": 145
+                       "ID": 110
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 143
+                     "ID": 108
                     }
                    },
                    "op": "+",
@@ -577,9 +577,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 75
+                        "accessID": 39
                        },
-                       "ID": 147
+                       "ID": 112
                       }
                      },
                      "op": "*",
@@ -609,9 +609,9 @@
                           "Column": -1
                          },
                          "data": {
-                          "accessID": 76
+                          "accessID": 40
                          },
-                         "ID": 149
+                         "ID": 114
                         }
                        },
                        "op": "+",
@@ -641,9 +641,9 @@
                             "Column": -1
                            },
                            "data": {
-                            "accessID": 76
+                            "accessID": 40
                            },
-                           "ID": 151
+                           "ID": 116
                           }
                          },
                          "op": "+",
@@ -673,9 +673,9 @@
                               "Column": -1
                              },
                              "data": {
-                              "accessID": 76
+                              "accessID": 40
                              },
-                             "ID": 153
+                             "ID": 118
                             }
                            },
                            "op": "+",
@@ -703,51 +703,51 @@
                               "Column": -1
                              },
                              "data": {
-                              "accessID": 76
+                              "accessID": 40
                              },
-                             "ID": 154
+                             "ID": 119
                             }
                            },
                            "loc": {
                             "Line": -1,
                             "Column": -1
                            },
-                           "ID": 152
+                           "ID": 117
                           }
                          },
                          "loc": {
                           "Line": -1,
                           "Column": -1
                          },
-                         "ID": 150
+                         "ID": 115
                         }
                        },
                        "loc": {
                         "Line": -1,
                         "Column": -1
                        },
-                       "ID": 148
+                       "ID": 113
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 146
+                     "ID": 111
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 142
+                   "ID": 107
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 156
+                 "ID": 121
                 }
                },
                "loc": {
@@ -757,7 +757,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "74": {
+                  "38": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -766,21 +766,21 @@
                   }
                  },
                  "readAccess": {
-                  "-118": {
+                  "-82": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "75": {
+                  "39": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "76": {
+                  "40": {
                    "cartesian_extent": {
                     "i_extent": {
                      "minus": -1,
@@ -799,7 +799,7 @@
                  }
                 }
                },
-               "ID": 141
+               "ID": 106
               }
              }
             ],
@@ -808,7 +808,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 140
+            "ID": 105
            }
           },
           "doMethodID": 2,
@@ -820,16 +820,22 @@
           }
          }
         ],
-        "stageID": 121,
+        "stageID": 85,
         "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 114,
-      "Caches": {}
+      "multiStageID": 87,
+      "Caches": {
+       "40": {
+        "type": "CT_IJ",
+        "policy": "CP_Local",
+        "accessID": 40
+       }
+      }
      }
     ],
-    "stencilID": 77,
+    "stencilID": 41,
     "attr": {
      "attributes": []
     }
@@ -843,7 +849,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_77",
+      "callee": "__code_gen_41",
       "arguments": []
      },
      "loc": {
@@ -851,11 +857,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 78
+     "ID": 42
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "hori_diff_stencil.sir"
+ "filename": "hori_diff_stencil.cpp"
 }

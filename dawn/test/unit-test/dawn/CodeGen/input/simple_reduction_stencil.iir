@@ -1,23 +1,23 @@
 {
  "metadata": {
   "accessIDToName": {
-   "21": "in",
-   "22": "out"
+   "11": "in",
+   "12": "out"
   },
   "accessIDToType": {
-   "21": 6,
-   "22": 6
+   "11": 6,
+   "12": 6
   },
   "literalIDToName": {
-   "-37": "1.0"
+   "-27": "1.0"
   },
   "fieldAccessIDs": [
-   21,
-   22
+   11,
+   12
   ],
   "APIFieldIDs": [
-   21,
-   22
+   11,
+   12
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -26,14 +26,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "21": {
+   "11": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Cell",
      "sparse_part": []
     },
     "mask_k": 1
    },
-   "22": {
+   "12": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Edge",
      "sparse_part": []
@@ -42,14 +42,14 @@
    }
   },
   "idToStencilCall": {
-   "23": {
+   "13": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_23",
+      "callee": "__code_gen_13",
       "arguments": []
      },
      "loc": {
@@ -57,7 +57,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 24
+     "ID": 14
     }
    }
   },
@@ -108,9 +108,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 22
+                    "accessID": 12
                    },
-                   "ID": 43
+                   "ID": 34
                   }
                  },
                  "op": "=",
@@ -138,9 +138,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 21
+                      "accessID": 11
                      },
-                     "ID": 41
+                     "ID": 32
                     }
                    },
                    "init": {
@@ -154,9 +154,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": -37
+                      "accessID": -27
                      },
-                     "ID": 42
+                     "ID": 33
                     }
                    },
                    "weights": [],
@@ -168,7 +168,7 @@
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 44
+                 "ID": 35
                 }
                },
                "loc": {
@@ -178,7 +178,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "22": {
+                  "12": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -187,14 +187,14 @@
                   }
                  },
                  "readAccess": {
-                  "-37": {
+                  "-27": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "21": {
+                  "11": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -204,7 +204,7 @@
                  }
                 }
                },
-               "ID": 39
+               "ID": 30
               }
              }
             ],
@@ -213,7 +213,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 38
+            "ID": 29
            }
           },
           "doMethodID": 0,
@@ -225,16 +225,16 @@
           }
          }
         ],
-        "stageID": 35,
+        "stageID": 25,
         "locationType": "Edge"
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 34,
+      "multiStageID": 28,
       "Caches": {}
      }
     ],
-    "stencilID": 23,
+    "stencilID": 13,
     "attr": {
      "attributes": []
     }
@@ -248,7 +248,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_23",
+      "callee": "__code_gen_13",
       "arguments": []
      },
      "loc": {
@@ -256,11 +256,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 24
+     "ID": 14
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "simple_reduction_stencil.sir"
+ "filename": "simple_reduction_stencil.cpp"
 }
