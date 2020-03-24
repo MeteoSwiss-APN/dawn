@@ -36,11 +36,6 @@ public:
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
-
-private:
-  bool multiStageDependsOn(const std::unique_ptr<dawn::iir::MultiStage>& thisMS,
-                           const std::unique_ptr<dawn::iir::MultiStage>& otherMS,
-                           const dawn::iir::DependencyGraphStage& stageDag);
 };
 
 } // namespace dawn

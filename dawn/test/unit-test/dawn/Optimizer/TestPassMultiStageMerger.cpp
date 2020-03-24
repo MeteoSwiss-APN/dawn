@@ -71,7 +71,7 @@ protected:
     // Expect pass to succeed...
     PassMultiStageMerger multiStageMerger(*context_);
     EXPECT_TRUE(multiStageMerger.run(instantiation));
-    dawn::IIRSerializer::serialize(filename + "~", instantiation);
+    dawn::IIRSerializer::serialize(filename + "_2", instantiation);
 
     // Collect post-merging multi-stage counts
     std::vector<int> postNumMultiStages;
@@ -85,7 +85,7 @@ protected:
   }
 };
 
-TEST_F(TestPassMultiStageMerger, MergeTest4) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest1) {
   /*
      vertical_region(k_end - 1, k_start + 1) {
        field_b1 = field_b0;
