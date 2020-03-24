@@ -19,9 +19,9 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Support/FileUtil.h"
+#include "dawn/Support/Iterator.h"
 
-#include <unordered_map>
+#include <map>
 
 namespace dawn {
 
@@ -132,59 +132,74 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
     if(stencil->getChildren().size() < 2)
       continue;
 
-    auto& metadata = instantiation->getMetaData();
-    std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
-        metadata, stencil->getStencilAttributes(), stencil->getStencilID());
-    std::unordered_map<int, bool> mergedMultiStages;
-
+    std::map<int, int> mergedMultiStages;
     const auto& stageDAG = stencil->getStageDependencyGraph().value();
 
     // Note that the underlying assumption is that stages in the same multi-stage are guaranteed to
     // have no counter loop-oorder vertical dependencies. We can thus treat each multi-stage in
     // isolation!
-    for(const auto& thisMS : stencil->getChildren()) {
-      auto thisLoopOrder = thisMS->getLoopOrder();
-      for(const auto& otherMS : stencil->getChildren()) {
-        auto otherLoopOrder = otherMS->getLoopOrder();
-
-        // 1) Are the loop orders compatible?
-        if(thisMS->getID() != otherMS->getID() &&
-           mergedMultiStages.find(otherMS->getID()) == mergedMultiStages.end() &&
-           loopOrdersAreCompatible(thisLoopOrder, otherLoopOrder)) {
-
-          bool dependsOn = multiStageDependsOn(thisMS, otherMS, stageDAG);
-          bool doMerge = !dependsOn;
-          if(dependsOn) {
-            // 2) Can we merge the stage without violating vertical dependencies?
-            auto dependencyGraphLoopOrderPair = isMergable(*thisMS, *otherMS);
-            auto multiStageDependencyGraph = dependencyGraphLoopOrderPair.first;
-            doMerge = !(multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent));
-          }
-
-          if(doMerge) {
-            unsigned nMultiStages = newStencil->getChildren().size();
-            if(mergedMultiStages.find(thisMS->getID()) == mergedMultiStages.end()) {
-              newStencil->insertChild(std::make_unique<iir::MultiStage>(metadata, thisLoopOrder));
-              for(auto& thisStage : thisMS->getChildren()) {
-                iir::Stencil::StagePosition pos(nMultiStages, -1);
-                newStencil->insertStage(pos, std::move(thisStage));
-              }
-              mergedMultiStages[thisMS->getID()] = true;
+    for(auto [thisIdx, thisMS] : enumerate(stencil->getChildren())) {
+      if(mergedMultiStages.find(thisIdx) == mergedMultiStages.end()) {
+        for(auto [otherIdx, otherMS] : enumerate(stencil->getChildren())) {
+          // 1) Are the loop orders compatible?
+          if(thisIdx != otherIdx && mergedMultiStages.find(otherIdx) == mergedMultiStages.end() &&
+             loopOrdersAreCompatible(thisMS->getLoopOrder(), otherMS->getLoopOrder())) {
+            bool dependsOn = multiStageDependsOn(thisMS, otherMS, stageDAG);
+            bool doMerge = !dependsOn;
+            if(dependsOn) {
+              // 2) Can we merge the stage without violating vertical dependencies?
+              auto dependencyGraphLoopOrderPair = isMergable(*thisMS, *otherMS);
+              auto multiStageDependencyGraph = dependencyGraphLoopOrderPair.first;
+              doMerge = !(multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent));
+              if(dependencyGraphLoopOrderPair.second != otherMS->getLoopOrder())
+                int stop = 1;
             }
-
-            int nStages = thisMS->getChildren().size();
-            for(auto& otherStage : otherMS->getChildren()) {
-              iir::Stencil::StagePosition pos(nMultiStages, nStages - 1);
-              newStencil->insertStage(pos, std::move(otherStage));
-            }
-            mergedMultiStages[otherMS->getID()] = true;
+            if(doMerge)
+              mergedMultiStages[otherIdx] = thisIdx;
           }
         }
       }
     }
 
-    if(!mergedMultiStages.empty())
+    if(!mergedMultiStages.empty()) {
+      auto& metadata = instantiation->getMetaData();
+      std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
+          metadata, stencil->getStencilAttributes(), stencil->getStencilID());
+
+      std::map<int, int> newMultiStageIndices;
+      for(auto msPair : mergedMultiStages) {
+        int otherIdx = msPair.first;
+        int thisIdx = msPair.second;
+        int newIdx;
+
+        if(newMultiStageIndices.find(thisIdx) == newMultiStageIndices.end()) {
+          newIdx = newStencil->getChildren().size();
+          const auto& thisMS = stencil->getMultiStageFromMultiStageIndex(thisIdx);
+          newStencil->insertChild(
+              std::make_unique<iir::MultiStage>(metadata, thisMS->getLoopOrder()));
+          for(auto& thisStage : thisMS->getChildren()) {
+            iir::Stencil::StagePosition pos(newIdx, -1);
+            newStencil->insertStage(pos, std::move(thisStage));
+          }
+          newMultiStageIndices[thisIdx] = newIdx;
+        } else {
+          newIdx = newMultiStageIndices[thisIdx];
+        }
+
+        const auto& newMS = newStencil->getMultiStageFromMultiStageIndex(newIdx);
+        int stageIdx = newMS->getChildren().size() - 1;
+
+        const auto& otherMS = stencil->getMultiStageFromMultiStageIndex(otherIdx);
+        for(auto& otherStage : otherMS->getChildren()) {
+          iir::Stencil::StagePosition pos(newIdx, stageIdx);
+          newStencil->insertStage(pos, std::move(otherStage));
+          stageIdx += 1;
+        }
+        newMultiStageIndices[otherIdx] = newIdx;
+      }
+
       instantiation->getIIR()->replace(stencil, newStencil, instantiation->getIIR());
+    }
   }
 
   return true;

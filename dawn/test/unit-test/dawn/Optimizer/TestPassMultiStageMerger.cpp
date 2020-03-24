@@ -44,13 +44,8 @@ protected:
 
   void runTest(const std::string& filename, const std::vector<unsigned>& nMultiStages) {
     std::string filepath = filename;
-    if(!TestEnvironment::path_.empty()) {
+    if(!TestEnvironment::path_.empty())
       filepath = TestEnvironment::path_ + "/" + filepath;
-    }
-
-    //    auto instMap = dawn::CompilerUtil::lower(filepath, options_, context_);
-    //    dawn::IIRSerializer::serialize(filename + ".new", instMap.begin()->second);
-
     auto instantiation = IIRSerializer::deserialize(filepath);
 
     // Run stage graph pass
@@ -60,13 +55,6 @@ protected:
     // Run dependency graph pass
     PassSetDependencyGraph dependencyGraphPass(*context_);
     EXPECT_TRUE(dependencyGraphPass.run(instantiation));
-
-    // Collect pre-merging multi-stage counts
-    std::vector<int> prevNumMultiStages;
-    for(const auto& stencil : instantiation->getStencils())
-      prevNumMultiStages.push_back(stencil->getChildren().size());
-
-    EXPECT_EQ(nMultiStages.size(), prevNumMultiStages.size());
 
     // Expect pass to succeed...
     PassMultiStageMerger multiStageMerger(*context_);
@@ -78,7 +66,7 @@ protected:
     for(const auto& stencil : instantiation->getStencils())
       postNumMultiStages.push_back(stencil->getChildren().size());
 
-    ASSERT_EQ(prevNumMultiStages.size(), postNumMultiStages.size());
+    ASSERT_EQ(nMultiStages.size(), postNumMultiStages.size());
     for(int i = 0; i < nMultiStages.size(); i++) {
       ASSERT_EQ(postNumMultiStages[i], nMultiStages[i]);
     }
@@ -86,6 +74,13 @@ protected:
 };
 
 TEST_F(TestPassMultiStageMerger, MultiStageMergeTest1) {
+  /*
+     vertical_region(k_end, k_start) { field_a1 = field_a0; }
+   */
+  runTest("input/ReorderTest01.iir", {1});
+}
+
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest2) {
   /*
      vertical_region(k_end - 1, k_start + 1) {
        field_b1 = field_b0;
@@ -97,21 +92,14 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest1) {
   runTest("input/MultiStageMergeTest01.iir", {1});
 }
 
-TEST_F(TestPassMultiStageMerger, ReorderTest1) {
-  /*
-     vertical_region(k_end, k_start) { field_a1 = field_a0; }
-   */
-  runTest("input/ReorderTest01.iir", {0});
-}
-
-TEST_F(TestPassMultiStageMerger, ReorderTest2) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest3) {
   /*
     vertical_region(k_end, k_start) { field_b1 = field_b0; }
     vertical_region(k_start, k_end) { field_a1 = field_a0; }
     vertical_region(k_end, k_start) { field_b2 = field_b1; }
     vertical_region(k_start, k_end) { field_a2 = field_a1; }
    */
-  runTest("input/ReorderTest02.iir", {1, 3, 0, 2});
+  runTest("input/ReorderTest02.iir", {1});
 }
 
 TEST_F(TestPassMultiStageMerger, ReorderTest3) {
