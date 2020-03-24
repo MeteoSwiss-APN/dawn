@@ -12,9 +12,9 @@ if [ -z ${myhost+x} ]; then
   exit 1
 fi
 
-SCRIPT=`basename $0`
+SCRIPT=$(basename $0)
 
-function help {
+function help() {
   echo -e "Basic usage:$SCRIPT "\\n
   echo -e "The following switches are recognized. $OFF "
   echo -e "-r clang gridtools repository to use"
@@ -24,28 +24,28 @@ function help {
   echo -e "-h shows this help"
   exit 1
 }
-echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
+echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=$(date '+%D %H:%M:%S'))"
 while getopts b:r:g:ph flag; do
   case $flag in
-    r)
-      CLANG_GRIDTOOLS_REPOSITORY=$OPTARG
-      ;;
-    b)
-      CLANG_GRIDTOOLS_BRANCH=$OPTARG
-      ;;
-    g)
-      GTCLANG_INSTALL_DIR=$OPTARG
-      ;;
-    p)
-      RUN_PERFTETS=true
-      ;;
-    h)
-      help
-      ;;
-    \?) #unrecognized option - show help
-      echo -e \\n"Option -${BOLD}$OPTARG${OFF} not allowed."
-      help
-      ;;
+  r)
+    CLANG_GRIDTOOLS_REPOSITORY=$OPTARG
+    ;;
+  b)
+    CLANG_GRIDTOOLS_BRANCH=$OPTARG
+    ;;
+  g)
+    GTCLANG_INSTALL_DIR=$OPTARG
+    ;;
+  p)
+    RUN_PERFTETS=true
+    ;;
+  h)
+    help
+    ;;
+  \?) #unrecognized option - show help
+    echo -e \\n"Option -${BOLD}$OPTARG${OFF} not allowed."
+    help
+    ;;
   esac
 done
 
@@ -70,9 +70,8 @@ if [ -z ${GTCLANG_INSTALL_DIR+x} ]; then
 fi
 
 if [ -z ${PROTOBUFDIR+x} ]; then
- echo "PROTOBUFDIR needs to be set in the machine env"
+  echo "PROTOBUFDIR needs to be set in the machine env"
 fi
-
 
 cmake_args="-DCMAKE_BUILD_TYPE=$build_type \
             -DCMAKE_PREFIX_PATH=$GTCLANG_INSTALL_DIR \
@@ -88,10 +87,10 @@ if [ -z ${PARALLEL_BUILD_JOBS+x} ]; then
 fi
 
 echo "Building with $parallel_build_jobs jobs."
-cmake --build $build_dir --config $build_type --parallel $parallel_build_jobs
+time cmake --build $build_dir --config $build_type --parallel $parallel_build_jobs
 
 # Run unittests
-(cd $build_dir && ctest --output-on-failure --force-new-ctest-process)
+(cd $build_dir && time ctest --output-on-failure --force-new-ctest-process)
 
 if [ -z ${RUN_PERFTETS+x} ]; then
   echo "do not run performance tests"
@@ -101,6 +100,6 @@ else
   else
     export ENABLE_GT_GPU=true
   fi
- cd $source_dir
- bash scripts/jenkins/run_perftests.sh -b $build_dir
+  cd $source_dir
+  bash scripts/jenkins/run_perftests.sh -b $build_dir
 fi

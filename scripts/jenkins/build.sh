@@ -11,28 +11,28 @@ if [ -z ${myhost+x} ]; then
   exit 1
 fi
 
-SCRIPT=`basename $0`
+SCRIPT=$(basename $0)
 
-function help {
+function help() {
   echo -e "Basic usage:$SCRIPT "\\n
   echo -e "The following switches are recognized. $OFF "
   echo -e "-i sets the installation directory"
   echo -e "-h Shows this help"
   exit 1
 }
-echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
+echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=$(date '+%D %H:%M:%S'))"
 while getopts i: flag; do
   case $flag in
-    i)
-      INSTALL_DIR=$OPTARG
-      ;;
-    h)
-      help
-      ;;
-    \?) #unrecognized option - show help
-      echo -e \\n"Option -${BOLD}$OPTARG${OFF} not allowed."
-      help
-      ;;
+  i)
+    INSTALL_DIR=$OPTARG
+    ;;
+  h)
+    help
+    ;;
+  \?) #unrecognized option - show help
+    echo -e \\n"Option -${BOLD}$OPTARG${OFF} not allowed."
+    help
+    ;;
   esac
 done
 
@@ -42,7 +42,7 @@ build_dir=$base_dir/build
 mkdir -p $build_dir
 
 if [ -z ${PROTOBUFDIR+x} ]; then
- echo "PROTOBUFDIR needs to be set in the machine env"
+  echo "PROTOBUFDIR needs to be set in the machine env"
 fi
 
 #TODO -DDAWN_BUNDLE_JAVA=ON
@@ -68,13 +68,13 @@ if [ -z ${PARALLEL_BUILD_JOBS+x} ]; then
 fi
 
 echo "Building with $PARALLEL_BUILD_JOBS jobs."
-cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS
+time cmake --build $build_dir --config $build_type --parallel $PARALLEL_BUILD_JOBS
 
 # Run tests -- this also runs python tests
-(cd $build_dir && ctest --output-on-failure --force-new-ctest-process)
+(cd $build_dir && time ctest --output-on-failure --force-new-ctest-process)
 
 # Test installation
-cmake --build $build_dir --parallel $PARALLEL_BUILD_JOBS --target install
+time cmake --build $build_dir --parallel $PARALLEL_BUILD_JOBS --target install
 
 # Python
 python -m venv dawn_venv
