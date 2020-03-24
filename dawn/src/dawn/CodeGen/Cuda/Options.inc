@@ -32,7 +32,11 @@
 //                  command-line target will be generated which allows to negate the option i.e
 //
 
-OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
-    "Make use of the parallel execution policy", "", false, true)
+OPT(int, MaxBlocksPerSM, 0, "max-blocks-sm", "",
+    "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
+OPT(int, nsms, 0, "nsms", "", "Number of (CUDA) SMs", "<nsms>", true, false)
+OPT(int, DomainSizeI, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeJ, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
+OPT(int, DomainSizeK, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
 
 // clang-format on
