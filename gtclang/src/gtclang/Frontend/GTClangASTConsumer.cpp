@@ -105,7 +105,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   DAWN_LOG(INFO) << "Done parsing translation unit";
 
   if(context_->getASTContext().getDiagnostics().hasErrorOccurred()) {
-    DAWN_LOG(INFO) << "Erros occurred. Aborting";
+    DAWN_LOG(INFO) << "Errors occurred. Aborting";
     return;
   }
 

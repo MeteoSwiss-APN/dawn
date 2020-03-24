@@ -19,7 +19,9 @@
 
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
+#include "gtclang/Driver/Options.h"
 #include "llvm/ADT/SmallVector.h"
+#include <list>
 #include <string>
 #include <vector>
 
@@ -43,6 +45,10 @@ struct Driver : public dawn::NonCopyable {
 
   static bool isInitialized;
 };
+
+/// @brief Driver for the gtclang parser
+/// @ingroup driver
+std::shared_ptr<dawn::SIR> run(const std::string& fileName, ParseOptions options);
 
 } // namespace gtclang
 

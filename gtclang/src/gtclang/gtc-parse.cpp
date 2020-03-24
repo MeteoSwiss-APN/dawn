@@ -17,6 +17,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "gtclang/Driver/CompilerInstance.h"
 #include "gtclang/Driver/Driver.h"
+#include "gtclang/Driver/Options.h"
 #include "gtclang/Driver/OptionsParser.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangContext.h"
@@ -60,24 +61,12 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  // Create SIR as return value
-  std::shared_ptr<dawn::SIR> returnSIR = nullptr;
-
-  // Initialize the GTClangContext
-  auto context = std::make_unique<gtclang::GTClangContext>();
-
-  // Skip Dawn
-  context->useDawn() = false;
+  gtclang::ParseOptions parseOptions;
 
   // Set options from cxxopts
-  context->getOptions().Verbose = result["verbose"].as<bool>();
-  context->getOptions().DumpAST = result["dump-ast"].as<bool>();
-  context->getOptions().DumpPP = result["dump-pp"].as<bool>();
-
-  const std::string InputFile = result["input"].as<std::string>();
-  llvm::SmallVector<const char*, 4> clangArgs;
-  clangArgs.push_back(argv[0]);
-  clangArgs.push_back(InputFile.c_str());
+  parseOptions.Verbose = result["verbose"].as<bool>();
+  parseOptions.DumpAST = result["dump-ast"].as<bool>();
+  parseOptions.DumpPP = result["dump-pp"].as<bool>();
 
   // we must call this only once
   llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
@@ -86,32 +75,8 @@ int main(int argc, char* argv[]) {
   // Call llvm_shutdown() on exit
   llvm::llvm_shutdown_obj Y;
 
-  // Initialize the Logger
-  auto logger = std::make_unique<gtclang::Logger>();
-  if(context->getOptions().Verbose)
-    dawn::Logger::getSingleton().registerLogger(logger.get());
-
-  gtclang::GTClangIncludeChecker includeChecker;
-  if(clangArgs.size() > 1)
-    includeChecker.Update(clangArgs[1]);
-
-  // Create GTClang
-  std::unique_ptr<clang::CompilerInstance> GTClang(gtclang::createCompilerInstance(clangArgs));
-
-  int ret = 0;
-  if(GTClang) {
-    std::unique_ptr<clang::FrontendAction> PPAction(
-        new gtclang::GTClangPreprocessorAction(context.get()));
-    ret |= !GTClang->ExecuteAction(*PPAction);
-
-    if(ret == 0) {
-      std::unique_ptr<gtclang::GTClangASTAction> ASTAction(
-          new gtclang::GTClangASTAction(context.get()));
-      ret |= !GTClang->ExecuteAction(*ASTAction);
-      returnSIR = ASTAction->getSIR();
-    }
-    DAWN_LOG(INFO) << "Compilation finished " << (ret ? "with errors" : "successfully");
-  }
+  // Create SIR as return value
+  std::shared_ptr<dawn::SIR> returnSIR = run(result["input"].as<std::string>(), parseOptions);
 
   // Parse format to enumeration
   dawn::SIRSerializer::Format format;
@@ -132,8 +97,6 @@ int main(int argc, char* argv[]) {
     const std::string sirString = dawn::SIRSerializer::serializeToString(returnSIR.get(), format);
     std::cout << sirString;
   }
-
-  includeChecker.Restore();
 
   return 0;
 }
