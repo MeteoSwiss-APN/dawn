@@ -33,6 +33,25 @@ class Stencil;
 namespace codegen {
 namespace gt {
 
+/// @brief Options for GridTools code generation
+struct Options {
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  TYPE NAME = DEFAULT_VALUE;
+  // clang-format off
+OPT(int, MaxHaloPoints, 3, "max-halo", "",
+    "Set the maximum number of allowed halo points", "<N>", true, false)
+OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
+    "Make use of the parallel execution policy", "", false, true)
+  // clang-format on
+#undef OPT
+};
+
+/// @brief Run the GridTools code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options = {});
+
 /// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup gt
 class GTCodeGen : public CodeGen {

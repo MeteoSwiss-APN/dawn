@@ -394,26 +394,27 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
   try {
     switch(backend) {
     case BackendType::GridTools: {
-      codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
-                                options_.MaxHaloPoints);
-      return CG.generateCode();
+      codegen::gt::Options options{options_.MaxHaloPoints, options_.UseParallelEP};
+      return codegen::gt::run(stencilInstantiationMap, options);
     }
     case BackendType::CXXNaive: {
-      codegen::cxxnaive::CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics_,
-                                            options_.MaxHaloPoints);
-      return CG.generateCode();
+      codegen::cxxnaive::Options options{options_.MaxHaloPoints};
+      return codegen::cxxnaive::run(stencilInstantiationMap, options);
     }
     case BackendType::CUDA: {
+      codegen::cuda::Options options{
+          options_.MaxHaloPoints, options_.UseParallelEP, options_.MaxBlocksPerSM, options_.nsms,
+          options_.DomainSizeI,   options_.DomainSizeJ,   options_.DomainSizeK};
+      return codegen::cuda::run(stencilInstantiationMap, options);
+
       const Array3i domain_size{options_.DomainSizeI, options_.DomainSizeJ, options_.DomainSizeK};
       codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
                                     options_.nsms, options_.MaxBlocksPerSM, domain_size);
       return CG.generateCode();
     }
     case BackendType::CXXNaiveIco: {
-      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics_,
-                                                  options_.MaxHaloPoints);
-
-      return CG.generateCode();
+      codegen::cxxnaiveico::Options options{options_.MaxHaloPoints};
+      return codegen::cxxnaiveico::run(stencilInstantiationMap, options);
     }
     case BackendType::CXXOpt:
       dawn_unreachable("GTClangOptCXX not supported yet");

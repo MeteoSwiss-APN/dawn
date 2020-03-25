@@ -32,6 +32,23 @@ class StencilInstantiation;
 namespace codegen {
 namespace cxxnaive {
 
+/// @brief Options for cxx-naive code generation
+struct Options {
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  TYPE NAME = DEFAULT_VALUE;
+  // clang-format off
+OPT(int, MaxHaloPoints, 3, "max-halo", "",
+    "Set the maximum number of allowed halo points", "<N>", true, false)
+  // clang-format on
+#undef OPT
+};
+
+/// @brief Run the cxx-naive code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options = {});
+
 /// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup cxxnaive
 class CXXNaiveCodeGen : public CodeGen {
