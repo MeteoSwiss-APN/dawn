@@ -105,10 +105,10 @@ void dump(CG& generator, std::ostream& os) {
   for(auto const& macroDefine : tu->getPPDefines())
     ss << macroDefine << "\n";
 
-  ss << tu->getGlobals();
+  ss << tu->getGlobals() << "\n\n";
   for(auto const& s : tu->getStencils())
     ss << s.second;
-  os << ss.str();
+  os << ss.str() << std::endl;
 }
 
 dawn::codegen::stencilInstantiationContext
@@ -123,7 +123,7 @@ siToContext(std::shared_ptr<iir::StencilInstantiation> si) {
 void CompilerUtil::dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
   auto ctx = siToContext(si);
-  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(ctx, diagnostics, 0);
+  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(ctx, diagnostics, 3);
   dump(generator, os);
   if(Verbose)
     dump(generator, std::cerr);
@@ -132,7 +132,7 @@ void CompilerUtil::dumpNaive(std::ostream& os, std::shared_ptr<iir::StencilInsta
 void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
   auto ctx = siToContext(si);
-  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(ctx, diagnostics, 0);
+  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(ctx, diagnostics, 3);
   dump(generator, os);
   if(Verbose)
     dump(generator, std::cerr);
@@ -141,7 +141,7 @@ void CompilerUtil::dumpNaiveIco(std::ostream& os, std::shared_ptr<iir::StencilIn
 void CompilerUtil::dumpCuda(std::ostream& os, std::shared_ptr<iir::StencilInstantiation> si) {
   dawn::DiagnosticsEngine diagnostics;
   auto ctx = siToContext(si);
-  dawn::codegen::cuda::CudaCodeGen generator(ctx, diagnostics, 0, 0, 0, {0, 0, 0});
+  dawn::codegen::cuda::CudaCodeGen generator(ctx, diagnostics, 3, 0, 0, {0, 0, 0});
   dump(generator, os);
   if(Verbose)
     dump(generator, std::cerr);

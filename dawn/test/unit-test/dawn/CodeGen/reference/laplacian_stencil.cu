@@ -8,7 +8,7 @@
  #define BOOST_NO_CXX11_DECLTYPE 1
 #endif
 #ifndef GRIDTOOLS_DAWN_HALO_EXTENT
- #define GRIDTOOLS_DAWN_HALO_EXTENT 0
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 3
 #endif
 #ifndef BOOST_PP_VARIADICS
  #define BOOST_PP_VARIADICS 1
@@ -36,6 +36,8 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
+
+
 namespace dawn_generated{
 namespace cuda{
 __global__ void __launch_bounds__(128)  generated_stencil47_ms46_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
@@ -193,3 +195,4 @@ m_stencil_47.reset();  }
 };
 } // namespace cuda
 } // namespace dawn_generated
+

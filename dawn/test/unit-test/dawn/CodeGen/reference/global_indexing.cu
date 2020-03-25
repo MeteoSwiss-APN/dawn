@@ -8,7 +8,7 @@
  #define BOOST_NO_CXX11_DECLTYPE 1
 #endif
 #ifndef GRIDTOOLS_DAWN_HALO_EXTENT
- #define GRIDTOOLS_DAWN_HALO_EXTENT 0
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 3
 #endif
 #ifndef BOOST_PP_VARIADICS
  #define BOOST_PP_VARIADICS 1
@@ -36,6 +36,8 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
+
+
 namespace dawn_generated{
 namespace cuda{
 __constant__ int stage14GlobalJIndices_[2];
@@ -212,3 +214,4 @@ m_stencil_28.reset();  }
 };
 } // namespace cuda
 } // namespace dawn_generated
+
