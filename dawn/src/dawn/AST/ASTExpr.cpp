@@ -452,35 +452,47 @@ bool LiteralAccessExpr::equals(const Expr* other, bool compareData) const {
 //     ReductionOverNeighborExpr
 //===------------------------------------------------------------------------------------------===//
 
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(
-    std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    ast::LocationType lhs_location, ast::LocationType rhs_location, SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), lhs_location_(lhs_location),
-      rhs_location_(rhs_location), operands_{rhs, init} {}
+bool ReductionOverNeighborExpr::chainIsValid() {
+  for(int chainIdx = 0; chainIdx < chain_.size() - 1; chainIdx++) {
+    if(chain_[chainIdx] == chain_[chainIdx + 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
+                                                     std::shared_ptr<Expr> const& rhs,
+                                                     std::shared_ptr<Expr> const& init,
+                                                     std::vector<ast::LocationType> chain,
+                                                     SourceLocation loc)
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), chain_(chain), operands_{rhs, init} {
+  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
+                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
+}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(
     std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    std::vector<sir::Value> weights, ast::LocationType lhs_location, ast::LocationType rhs_location,
-    SourceLocation loc)
+    std::vector<sir::Value> weights, std::vector<ast::LocationType> chain, SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
-      lhs_location_(lhs_location), rhs_location_(rhs_location), operands_{rhs, init} {
+      chain_(chain), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
+  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
+                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
-      weights_(expr.getWeights()), lhs_location_(expr.getLhsLocation()),
-      rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
-                                                      expr.getInit()->clone()} {}
+      weights_(expr.getWeights()),
+      chain_(expr.getNbhChain()), operands_{expr.getRhs()->clone(), expr.getInit()->clone()} {}
 
-ReductionOverNeighborExpr& ReductionOverNeighborExpr::
-operator=(ReductionOverNeighborExpr const& expr) {
+ReductionOverNeighborExpr&
+ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
   assign(expr);
   op_ = expr.op_;
   operands_[Rhs] = expr.getRhs();
   operands_[Init] = expr.getInit();
-  rhs_location_ = expr.getRhsLocation();
-  lhs_location_ = expr.getLhsLocation();
+  chain_ = expr.getNbhChain();
   weights_ = expr.getWeights();
   return *this;
 }
@@ -508,8 +520,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
 
   return otherPtr && otherPtr->getInit()->equals(getInit().get(), compareData) &&
          otherPtr->getOp() == getOp() && otherPtr->getRhs()->equals(getRhs().get(), compareData) &&
-         otherPtr->getRhsLocation() == getRhsLocation() &&
-         otherPtr->getLhsLocation() == getLhsLocation();
+         otherPtr->getNbhChain() == getNbhChain();
 }
 
 } // namespace ast

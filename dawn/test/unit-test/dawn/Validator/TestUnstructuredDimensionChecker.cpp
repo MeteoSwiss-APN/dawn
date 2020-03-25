@@ -204,7 +204,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense_0) {
                                          b.at(cell_field),
                                          b.reduceOverNeighborExpr(
                                              Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
-                                             b.lit(0.), LocType::Edges, LocType::Cells)))))))),
+                                             b.lit(0.), {LocType::Edges, LocType::Cells})))))))),
       ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceDense_1) {
@@ -224,7 +224,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense_1) {
                                          b.at(edge_field),
                                          b.reduceOverNeighborExpr(
                                              Op::plus, b.at(cell_field, HOffsetType::withOffset, 0),
-                                             b.lit(0.), LocType::Cells, LocType::Edges)))))))),
+                                             b.lit(0.), {LocType::Cells, LocType::Edges})))))))),
       ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceSparse_0) {
@@ -245,7 +245,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse_0) {
                   b.stmt(b.assignExpr(b.at(cell_field),
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(sparse_field, HOffsetType::withOffset, 0),
-                                          b.lit(0.), LocType::Cells, LocType::Vertices)))))))),
+                                          b.lit(0.), {LocType::Cells, LocType::Vertices})))))))),
       ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, ReduceSparse_1) {
@@ -266,7 +266,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse_1) {
                   b.stmt(b.assignExpr(b.at(edge_field),
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(sparse_field, HOffsetType::withOffset, 0),
-                                          b.lit(0.), LocType::Edges, LocType::Cells)))))))),
+                                          b.lit(0.), {LocType::Edges, LocType::Cells})))))))),
       ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, StageLocType_1) {

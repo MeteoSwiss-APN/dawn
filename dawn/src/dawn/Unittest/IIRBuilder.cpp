@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 //
 // TODO there are death tests which rely on the following code to die, needs refactoring
+#include "dawn/AST/LocationType.h"
 #ifdef NDEBUG
 #undef NDEBUG
 #define HAD_NDEBUG
@@ -105,14 +106,13 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return new_si;
 }
 
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(Op operation,
-                                                              std::shared_ptr<iir::Expr>&& rhs,
-                                                              std::shared_ptr<iir::Expr>&& init,
-                                                              ast::LocationType lhs_location,
-                                                              ast::LocationType rhs_location) {
+std::shared_ptr<iir::Expr>
+IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                   std::shared_ptr<iir::Expr>&& init,
+                                   const std::vector<ast::LocationType>& chain) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), lhs_location, rhs_location);
+      std::move(init), chain);
   expr->setID(si_->nextUID());
   return expr;
 }

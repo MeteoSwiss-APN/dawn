@@ -21,6 +21,17 @@
 #include <vector>
 
 namespace toylib {
+class ToylibElement {
+protected:
+  ToylibElement() = default;
+  ToylibElement(int id) : id_(id) {}
+  virtual ~ToylibElement() = 0;
+  int id_ = -1;
+
+public:
+  int id() const { return id_; }
+};
+
 class Vertex;
 class Edge;
 class Face;
@@ -33,14 +44,14 @@ class Face;
 enum face_color { upward = 0, downward = 1 };
 enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 
-class Vertex {
+class Vertex : public ToylibElement {
 public:
   Vertex() = default;
-  Vertex(double x, double y, int id) : id_(id), x_(x), y_(y) {}
+  Vertex(double x, double y, int id) : ToylibElement(id), x_(x), y_(y) {}
+  ~Vertex() {}
 
   double x() const { return x_; }
   double y() const { return y_; }
-  int id() const { return id_; }
 
   Edge const& edge(size_t i) const;
   Face const& face(size_t i) const;
@@ -53,19 +64,18 @@ public:
   void add_face(Face& f) { faces_.push_back(&f); }
 
 private:
-  int id_;
   double x_;
   double y_;
 
   std::vector<Edge*> edges_;
   std::vector<Face*> faces_;
 };
-class Face {
+class Face : public ToylibElement {
 public:
   Face() = default;
-  Face(int id, face_color color) : id_(id), color_(color) {}
+  Face(int id, face_color color) : ToylibElement(id), color_(color) {}
+  ~Face(){};
 
-  int id() const { return id_; }
   face_color color() const { return color_; }
 
   Vertex const& vertex(size_t i) const;
@@ -79,18 +89,17 @@ public:
   void add_vertex(Vertex& v) { vertices_.push_back(&v); }
 
 private:
-  int id_;
   face_color color_;
 
   std::vector<Edge*> edges_;
   std::vector<Vertex*> vertices_;
 };
-class Edge {
+class Edge : public ToylibElement {
 public:
   Edge() = default;
-  Edge(int id, edge_color color) : id_(id), color_(color) {}
+  Edge(int id, edge_color color) : ToylibElement(id), color_(color) {}
+  ~Edge() {}
 
-  int id() const { return id_; }
   edge_color color() const { return color_; }
 
   Vertex const& vertex(size_t i) const;
@@ -110,7 +119,6 @@ public:
   }
 
 private:
-  int id_ = -1;
   edge_color color_;
 
   std::vector<Vertex*> vertices_;
@@ -360,6 +368,12 @@ public:
       : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
   T& operator()(O const& f, size_t k_level) { return data_[k_level][f.id()]; }
   T const& operator()(O const& f, size_t k_level) const { return data_[k_level][f.id()]; }
+  T& operator()(ToylibElement const* f, size_t k_level) {
+    return data_[k_level][static_cast<const O*>(f)->id()];
+  }
+  T const& operator()(ToylibElement const* f, size_t k_level) const {
+    return data_[k_level][static_cast<const O*>(f)->id()];
+  }
   auto begin() { return data_.begin(); }
   auto end() { return data_.end(); }
 
@@ -399,6 +413,12 @@ public:
   }
   T const& operator()(const O& elem, size_t sparse_idx, size_t k_level) const {
     return data_[k_level][elem.id()][sparse_idx];
+  }
+  T& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) {
+    return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
+  }
+  T const& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) const {
+    return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
   }
   int k_size() const { return data_.size(); }
 

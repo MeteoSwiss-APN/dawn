@@ -41,9 +41,11 @@ if(eckit_FOUND AND atlas_FOUND)
     generated_NestedWithField.hpp
     generated_sparseDimension.hpp
     generated_sparseDimensionTwice.hpp
+    generated_intp.hpp
+    generated_diamond.hpp
   )
   set(reference_stencil_codes reference_diffusion.hpp
-    reference_gradient.hpp
+    reference_gradient.hpp reference_intp.hpp reference_diamond.hpp
   )
   list(TRANSFORM generated_stencil_codes PREPEND generated/)
   list(TRANSFORM reference_stencil_codes PREPEND reference/)
