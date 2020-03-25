@@ -95,6 +95,15 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest3) {
   /*
      vertical_region(k_end - 1, k_start + 1) {
        field_b1 = field_b0;
+       field_b2 = field_b1(k - 1);
+     } */
+  runTest("input/ReorderTest03.iir", {2});
+}
+
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest4) {
+  /*
+     vertical_region(k_end - 1, k_start + 1) {
+       field_b1 = field_b0;
        field_b2 = field_b1(k - 1);  }
      vertical_region(k_start + 1, k_end - 1) {
        field_a1 = field_a0;
@@ -103,25 +112,15 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest3) {
   runTest("input/ReorderTest04.iir", {3, 1});
 }
 
-TEST_F(TestPassMultiStageMerger, ReorderTest3) {
-  /*
-     vertical_region(k_end - 1, k_start + 1) {
-       field_b1 = field_b0;
-       field_b2 = field_b1(k - 1);
-     }
-   */
-  runTest("input/ReorderTest03.iir", {0, 1});
-}
-
-TEST_F(TestPassMultiStageMerger, ReorderTest5) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest5) {
   /*
    vertical_region(k_start, k_start) { field_a1 = field_a0(k + 1); }
    vertical_region(k_start + 2, k_end - 1) { field_a2 = field_a1(k + 1); }
    */
-  runTest("input/ReorderTest05.iir", {1, 0});
+  runTest("input/ReorderTest05.iir", {2});
 }
 
-TEST_F(TestPassMultiStageMerger, ReorderTest6) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest6) {
   /*
    vertical_region(k_start + 1, k_start + 1) {
      field_a1 = field_a0(k + 1);
@@ -130,10 +129,10 @@ TEST_F(TestPassMultiStageMerger, ReorderTest6) {
      field_a2 = field_a1(k + 1);
      field_b2 = field_b1(k - 1);  }
    */
-  runTest("input/ReorderTest06.iir", {0, 1});
+  runTest("input/ReorderTest06.iir", {1, 1});
 }
 
-TEST_F(TestPassMultiStageMerger, ReorderTest7) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest7) {
   /*
     vertical_region(k_start, k_end) {
       field_a1 = field_a0(i + 1);
@@ -145,7 +144,7 @@ TEST_F(TestPassMultiStageMerger, ReorderTest7) {
       field_a7 = field_a6(i + 1);
     }
    */
-  runTest("input/ReorderTest07.iir", {0, 1, 2, 3, 4, 5, 6});
+  runTest("input/ReorderTest07.iir", {7});
 }
 
 } // anonymous namespace
