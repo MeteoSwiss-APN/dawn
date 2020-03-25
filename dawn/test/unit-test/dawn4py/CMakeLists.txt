@@ -13,28 +13,23 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_program(SH_PROGRAM sh)
-
-#TODO: move to unit tests (and change ::Integration:: below)
-#TODO: move *_ref.cpp to CodeGen test refs
-
 function(add_dawn4py_test)
   set(oneValueArgs NAME)
   set(multiValueArgs)
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  add_test(NAME Dawn4Py::Integration::${ARG_NAME}
+  add_test(NAME Dawn4Py::Unit::${ARG_NAME}
     COMMAND ${CMAKE_COMMAND} -E env
     PYTHONPATH=${DAWN4PY_MODULE_DIR}:${PROTOBUF_PYTHON_DIR}
     ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_NAME}.py
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
 
-  add_test(NAME Dawn4Py::Integration::${ARG_NAME}-verify
+  add_test(NAME Dawn4Py::Unit::${ARG_NAME}-verify
     COMMAND ${CMAKE_COMMAND} -E compare_files ${ARG_NAME}.sir ${CMAKE_CURRENT_SOURCE_DIR}/data/${ARG_NAME}_ref.sir
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-  set_tests_properties(Dawn4Py::Integration::${ARG_NAME}-verify PROPERTIES DEPENDS Dawn4Py::Integration::${ARG_NAME})
+  set_tests_properties(Dawn4Py::Unit::${ARG_NAME}-verify PROPERTIES DEPENDS Dawn4Py::Unit::${ARG_NAME})
 
 endfunction()
 
