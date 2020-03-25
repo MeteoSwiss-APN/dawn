@@ -42,7 +42,7 @@ protected:
     dawn::UIDGenerator::getInstance()->reset();
   }
 
-  void runTest(const std::string& filename, const std::vector<unsigned>& nMultiStages) {
+  void runTest(const std::string& filename, const std::vector<unsigned>& expNumStages) {
     std::string filepath = filename;
     if(!TestEnvironment::path_.empty())
       filepath = TestEnvironment::path_ + "/" + filepath;
@@ -62,13 +62,14 @@ protected:
     dawn::IIRSerializer::serialize(filename + "_2", instantiation);
 
     // Collect post-merging multi-stage counts
-    std::vector<int> postNumMultiStages;
+    std::vector<int> postNumStages;
     for(const auto& stencil : instantiation->getStencils())
-      postNumMultiStages.push_back(stencil->getChildren().size());
+      for(const auto& multistage : stencil->getChildren())
+        postNumStages.push_back(multistage->getChildren().size());
 
-    ASSERT_EQ(nMultiStages.size(), postNumMultiStages.size());
-    for(int i = 0; i < nMultiStages.size(); i++) {
-      ASSERT_EQ(postNumMultiStages[i], nMultiStages[i]);
+    ASSERT_EQ(expNumStages.size(), postNumStages.size());
+    for(int i = 0; i < expNumStages.size(); i++) {
+      ASSERT_EQ(postNumStages[i], expNumStages[i]);
     }
   }
 };
@@ -82,6 +83,16 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest1) {
 
 TEST_F(TestPassMultiStageMerger, MultiStageMergeTest2) {
   /*
+    vertical_region(k_end, k_start) { field_b1 = field_b0; }
+    vertical_region(k_start, k_end) { field_a1 = field_a0; }
+    vertical_region(k_end, k_start) { field_b2 = field_b1; }
+    vertical_region(k_start, k_end) { field_a2 = field_a1; }
+   */
+  runTest("input/ReorderTest02.iir", {4});
+}
+
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest3) {
+  /*
      vertical_region(k_end - 1, k_start + 1) {
        field_b1 = field_b0;
        field_b2 = field_b1(k - 1);  }
@@ -89,17 +100,7 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest2) {
        field_a1 = field_a0;
        field_a2 = field_a1(k + 1);  }
    */
-  runTest("input/MultiStageMergeTest01.iir", {1});
-}
-
-TEST_F(TestPassMultiStageMerger, MultiStageMergeTest3) {
-  /*
-    vertical_region(k_end, k_start) { field_b1 = field_b0; }
-    vertical_region(k_start, k_end) { field_a1 = field_a0; }
-    vertical_region(k_end, k_start) { field_b2 = field_b1; }
-    vertical_region(k_start, k_end) { field_a2 = field_a1; }
-   */
-  runTest("input/ReorderTest02.iir", {1});
+  runTest("input/ReorderTest04.iir", {3, 1});
 }
 
 TEST_F(TestPassMultiStageMerger, ReorderTest3) {
