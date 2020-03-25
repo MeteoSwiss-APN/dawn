@@ -1,4 +1,3 @@
-//---- Preprocessor defines ----
 #define DAWN_GENERATED 1
 #undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CUDA
@@ -38,22 +37,16 @@
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
 
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
 
-//---- Globals ----
-
-//---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
+__global__ void __launch_bounds__(128)  copy_stencil_stencil11_ms23_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
 
   // Start kernel
   const unsigned int nx = isize;
   const unsigned int ny = jsize;
   const int block_size_i = (blockIdx.x + 1) * 32 < nx ? 32 : nx - blockIdx.x * 32;
-  const int block_size_j = (blockIdx.y + 1) * 1 < ny ? 1 : ny - blockIdx.y * 1;
+  const int block_size_j = (blockIdx.y + 1) * 4 < ny ? 4 : ny - blockIdx.y * 4;
 
   // computing the global position in the physical domain
 
@@ -84,12 +77,12 @@ __global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms23_kernel(const 
   // Regions (a,h,e) and (c,i,g) are executed by two specialized warp
   int iblock = 0 - 1;
   int jblock = 0 - 1;
-if(threadIdx.y < +1) {
+if(threadIdx.y < +4) {
     iblock = threadIdx.x;
     jblock = (int)threadIdx.y + 0;
 }
   // initialized iterators
-  int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*1+jblock)*stride_111_1;
+  int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
   // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
@@ -142,9 +135,9 @@ public:
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
-      dim3 threads(32,1+0,1);
+      dim3 threads(32,4+0,1);
       const unsigned int nbx = (nx + 32 - 1) / 32;
-      const unsigned int nby = (ny + 1 - 1) / 1;
+      const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
       copy_stencil_stencil11_ms23_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
@@ -199,3 +192,4 @@ m_stencil_11.reset();  }
 };
 } // namespace cuda
 } // namespace dawn_generated
+

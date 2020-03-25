@@ -71,9 +71,10 @@ enum class BackendType { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
 BackendType parseBackendString(const std::string& backendStr) {
   if(backendStr == "gt" || backendStr == "gridtools") {
     return BackendType::GridTools;
-  } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
+  } else if(backendStr == "naive" || backendStr == "cxx-naive" || backendStr == "c++-naive") {
     return BackendType::CXXNaive;
-  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
+  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico" ||
+            backendStr == "cxx-naive-ico") {
     return BackendType::CXXNaiveIco;
   } else if(backendStr == "cuda" || backendStr == "CUDA") {
     return BackendType::CUDA;

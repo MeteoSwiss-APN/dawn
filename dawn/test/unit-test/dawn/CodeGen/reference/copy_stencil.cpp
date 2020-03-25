@@ -36,27 +36,15 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
-namespace dawn_generated{
-namespace cxxnaive{
-
-struct globals {
-  int var1;
-  bool var2;
-
-  globals() : var1(1){
-  }
-};
-} // namespace cxxnaive
-} // namespace dawn_generated
 
 
 namespace dawn_generated{
 namespace cxxnaive{
 
-class conditional_stencil {
+class copy_stencil {
 private:
 
-  struct stencil_21 {
+  struct stencil_11 {
 
     // Members
 
@@ -65,13 +53,12 @@ private:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
     const gridtools::dawn::domain m_dom;
-    const globals& m_globals;
 
     // Input/Output storages
   public:
 
-    stencil_21(const gridtools::dawn::domain& dom_, const globals& globals_, int rank, int xcols, int ycols) : m_dom(dom_), m_globals(globals_){}
-    static constexpr dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
+    stencil_11(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : m_dom(dom_){}
+    static constexpr dawn::driver::cartesian_extent in_extent = {1,1, 0,0, 0,0};
     static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
 
     void run(storage_ijk_t& in_, storage_ijk_t& out_) {
@@ -90,60 +77,26 @@ private:
     for(int k = kMin + 0+0; k <= kMax + 0+0; ++k) {
       for(int i = iMin+0; i  <=  iMax+0; ++i) {
         for(int j = jMin+0; j  <=  jMax+0; ++j) {
-if((m_globals.var1 == (int) 1))
-{
-  out(i+0, j+0, k+0) = in(i+1, j+0, k+0);
-}
-else
-{
-  out(i+0, j+0, k+0) = in(i+-1, j+0, k+0);
-}
-if((m_globals.var1 == (int) 1))
-{
-  out(i+0, j+0, k+0) = in(i+0, j+1, k+0);
-}
-else
-{
-  out(i+0, j+0, k+0) = in(i+0, j+-1, k+0);
-}
+out(i+0, j+0, k+0) = in(i+1, j+0, k+0);
         }      }    }}      in_.sync();
       out_.sync();
     }
   };
-  static constexpr const char* s_name = "conditional_stencil";
-  globals m_globals;
-  stencil_21 m_stencil_21;
+  static constexpr const char* s_name = "copy_stencil";
+  stencil_11 m_stencil_11;
 public:
 
-  conditional_stencil(const conditional_stencil&) = delete;
+  copy_stencil(const copy_stencil&) = delete;
 
-  conditional_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_21(dom, m_globals, rank, xcols, ycols){
+  copy_stencil(const gridtools::dawn::domain& dom, int rank = 1, int xcols = 1, int ycols = 1) : m_stencil_11(dom, rank, xcols, ycols){
     assert(dom.isize() >= dom.iminus() + dom.iplus());
     assert(dom.jsize() >= dom.jminus() + dom.jplus());
     assert(dom.ksize() >= dom.kminus() + dom.kplus());
     assert(dom.ksize() >= 1);
   }
 
-  // Access-wrapper for globally defined variables
-
-  int get_var1() {
-    return m_globals.var1;
-  }
-
-  void set_var1(int var1) {
-    m_globals.var1=var1;
-  }
-
-  bool get_var2() {
-    return m_globals.var2;
-  }
-
-  void set_var2(bool var2) {
-    m_globals.var2=var2;
-  }
-
   void run(storage_ijk_t in, storage_ijk_t out) {
-    m_stencil_21.run(in,out);
+    m_stencil_11.run(in,out);
   }
 };
 } // namespace cxxnaive
