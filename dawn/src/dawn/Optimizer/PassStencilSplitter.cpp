@@ -49,9 +49,6 @@ PassStencilSplitter::PassStencilSplitter(OptimizerContext& context, int maxNumbe
 
 bool PassStencilSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  if(!context_.getOptions().SplitStencils)
-    return true;
-
   // If we split a stencil, we need to recompute the stage graphs
   bool rerunPassSetStageGraph = false;
 

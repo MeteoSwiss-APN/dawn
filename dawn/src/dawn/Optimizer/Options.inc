@@ -47,8 +47,6 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
-OPT(bool, SplitStencils, false, "split-stencils", "",
-    "Split stencil whose number of fields exceeds a threshold", "", false, true)
 OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
 OPT(bool, UseParallelEP, false, "use-parallel-ep", "",

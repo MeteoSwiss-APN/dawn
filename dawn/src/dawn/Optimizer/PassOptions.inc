@@ -61,6 +61,9 @@ OPT(bool, SetBlockSize, false, "set-block-size", "",
 OPT(bool, DataLocalityMetric, false, "data-locality-metric", "",
     "Run data-locality-metric pass group", "", false, true)
 
+OPT(bool, StencilSplitter, false, "stencil-splitter", "",
+    "Split stencils whose number of fields exceeds a threshold", "", false, true)
+
 OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
     "Report where boundary conditions are inserted", "", false, true)
 OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
