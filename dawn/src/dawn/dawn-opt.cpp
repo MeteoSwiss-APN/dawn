@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
 #include "dawn/Optimizer/Options.inc"
 #undef OPT
 
-  // Fill map either by lowering or adding the single StencilInstantiation (from IIR)
+  // Call optimizer
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> optimizedSIM;
   if(stencilIR) {
     optimizedSIM = dawn::run(stencilIR, passGroups, optimizerOptions);
