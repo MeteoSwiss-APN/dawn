@@ -185,16 +185,6 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  // Create a dawn::Options struct for the driver
-  dawn::Options dawnOptions;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  dawnOptions.NAME = result[OPTION].as<TYPE>();
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-  // Never serialize IIR here
-  dawnOptions.SerializeIIR = false;
-  dawn::DawnCompiler compiler(dawnOptions);
-
   // Determine the list of pass groups to run
   std::list<dawn::PassGroup> passGroups;
   if(result.count("default-groups") > 0) {
@@ -217,16 +207,22 @@ int main(int argc, char* argv[]) {
 
   auto [stencilIR, internalIR, format] = deserializeInput(input);
 
-  // Fill map either by lowering or adding the single StencilInstantiation (from IIR)
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap;
-  if(stencilIR) {
-    stencilInstantiationMap = compiler.lowerToIIR(stencilIR);
-  } else {
-    stencilInstantiationMap.emplace("restoredIIR", internalIR);
-  }
+  // Create a dawn::OptimizerOptions struct for the driver
+  dawn::OptimizerOptions optimizerOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  optimizerOptions.NAME = result[OPTION].as<TYPE>();
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
 
-  // Call optimizer groups
-  auto optimizedSIM = compiler.optimize(stencilInstantiationMap, passGroups);
+  // Fill map either by lowering or adding the single StencilInstantiation (from IIR)
+  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> optimizedSIM;
+  if(stencilIR) {
+    optimizedSIM = dawn::run(stencilIR, passGroups, optimizerOptions);
+  } else {
+    std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap{
+        {"restoredIIR", internalIR}};
+    optimizedSIM = dawn::run(stencilInstantiationMap, passGroups, optimizerOptions);
+  }
 
   if(optimizedSIM.size() > 1) {
     DAWN_LOG(WARNING) << "More than one StencilInstantiation is not supported in IIR";

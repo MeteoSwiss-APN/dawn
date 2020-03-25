@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Options.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 
@@ -86,6 +87,17 @@ public:
   const DiagnosticsEngine& getDiagnostics() const;
   DiagnosticsEngine& getDiagnostics();
 };
+
+/// @brief Lower to IIR and run groups
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
+    const OptimizerOptions& options = {});
+
+/// @brief Run groups
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
 
 } // namespace dawn
 
