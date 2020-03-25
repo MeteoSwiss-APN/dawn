@@ -76,7 +76,6 @@ def extract_dawn_compiler_options() -> list:
 
     # Extract info from .cpp files -- note that this order must match that in Compiler/Options.h
     for name in [
-        os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Cuda", "Options.inc"),
         os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),
         os.path.join(DAWN_CPP_SRC_ROOT, "Compiler", "Options.inc"),
         os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),

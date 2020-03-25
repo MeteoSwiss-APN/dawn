@@ -37,7 +37,6 @@ const dawnOptionsEntry_t* OptionsWrapper::getOption(std::string name) const noex
 void OptionsWrapper::setDawnOptions(dawn::Options* options) const noexcept {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   options->NAME = OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second);
-#include "dawn/CodeGen/Cuda/Options.inc"
 #include "dawn/CodeGen/Options.inc"
 #include "dawn/Compiler/Options.inc"
 #include "dawn/Optimizer/Options.inc"
@@ -49,7 +48,6 @@ char* OptionsWrapper::toString() const {
   std::stringstream ss;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   ss << #NAME " = " << OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second) << "\n";
-#include "dawn/CodeGen/Cuda/Options.inc"
 #include "dawn/CodeGen/Options.inc"
 #include "dawn/Compiler/Options.inc"
 #include "dawn/Optimizer/Options.inc"
