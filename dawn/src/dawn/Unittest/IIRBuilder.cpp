@@ -102,7 +102,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   }
   DAWN_ASSERT(GridTypeChecker::checkGridTypeConsistency(*new_si->getIIR().get()));
 
-  dawn::codegen::stencilInstantiationContext map;
+  dawn::codegen::StencilInstantiationContext map;
   return new_si;
 }
 

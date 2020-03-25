@@ -69,7 +69,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   return CG.generateCode();
 }
 
-CudaCodeGen::CudaCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                          int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
     : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
 

@@ -99,7 +99,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   return CG.generateCode();
 }
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+CXXNaiveCodeGen::CXXNaiveCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                                  int maxHaloPoint)
     : CodeGen(ctx, engine, maxHaloPoint) {}
 

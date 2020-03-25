@@ -49,7 +49,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   return CG.generateCode();
 }
 
-GTCodeGen::GTCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                      bool useParallelEP, int maxHaloPoints)
     : CodeGen(ctx, engine, maxHaloPoints),
       mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}
