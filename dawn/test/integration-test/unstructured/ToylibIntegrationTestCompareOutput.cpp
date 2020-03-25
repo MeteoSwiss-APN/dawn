@@ -51,8 +51,7 @@ std::tuple<double, double> cellMidpoint(const toylib::Face& f) {
   double x = f.vertices()[0]->x() + f.vertices()[1]->x() + f.vertices()[2]->x();
   double y = f.vertices()[0]->y() + f.vertices()[1]->y() + f.vertices()[2]->y();
   return {x / 3., y / 3.};
-};
-
+}
 } // namespace
 
 namespace {
@@ -167,7 +166,7 @@ TEST(ToylibIntegrationTestCompareOutput, Diffusion) {
   }
 
   {
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareToylibField(mesh.faces(), in_ref, in_gen, nb_levels))
         << "while comparing output (on cells)";
   }
@@ -204,16 +203,80 @@ TEST(ToylibIntegrationTestCompareOutput, Gradient) {
     gen_cells(f, 0) = val;
   }
 
-  dawn_generated::cxxnaiveico::reference_gradient<toylibInterface::toylibTag>(mesh, nb_levels,
-                                                                              ref_cells, ref_edges)
-      .run();
   dawn_generated::cxxnaiveico::gradient<toylibInterface::toylibTag>(mesh, nb_levels, gen_cells,
                                                                     gen_edges)
       .run();
+  dawn_generated::cxxnaiveico::reference_gradient<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                              ref_cells, ref_edges)
+      .run();
 
   {
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareToylibField(mesh.faces(), ref_cells, gen_cells, nb_levels))
+        << "while comparing output (on cells)";
+  }
+}
+
+#include <generated_diamond.hpp>
+#include <reference_diamond.hpp>
+TEST(ToylibIntegrationTestCompareOutput, Diamond) {
+  const int numCell = 10;
+  auto mesh = toylib::Grid(numCell, numCell, false, M_PI, M_PI, true);
+  const int nb_levels = 1;
+
+  toylib::VertexData<double> ref_nodes(mesh, nb_levels);
+  toylib::EdgeData<double> ref_edges(mesh, nb_levels);
+  toylib::VertexData<double> gen_nodes(mesh, nb_levels);
+  toylib::EdgeData<double> gen_edges(mesh, nb_levels);
+
+  for(const auto& v : mesh.vertices()) {
+    double val = sin(v.x()) * sin(v.y());
+    ref_nodes(v, 0) = val;
+    gen_nodes(v, 0) = val;
+  }
+
+  dawn_generated::cxxnaiveico::diamond<toylibInterface::toylibTag>(mesh, nb_levels, gen_edges,
+                                                                   gen_nodes)
+      .run();
+  dawn_generated::cxxnaiveico::reference_diamond<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             ref_edges, ref_nodes)
+      .run();
+
+  {
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareToylibField(mesh.all_edges(), ref_edges, gen_edges, nb_levels))
+        << "while comparing output (on cells)";
+  }
+}
+
+#include <generated_intp.hpp>
+#include <reference_intp.hpp>
+TEST(ToylibIntegrationTestCompareOutput, Intp) {
+  const int numCell = 10;
+  auto mesh = toylib::Grid(numCell, numCell, false, M_PI, M_PI, true);
+  const int nb_levels = 1;
+
+  toylib::FaceData<double> ref_in(mesh, nb_levels);
+  toylib::FaceData<double> gen_in(mesh, nb_levels);
+  toylib::FaceData<double> ref_out(mesh, nb_levels);
+  toylib::FaceData<double> gen_out(mesh, nb_levels);
+
+  for(const auto& f : mesh.faces()) {
+    auto [x, y] = cellMidpoint(f);
+    double val = sin(x) * sin(y);
+    ref_in(f, 0) = val;
+    gen_in(f, 0) = val;
+  }
+
+  dawn_generated::cxxnaiveico::intp<toylibInterface::toylibTag>(mesh, nb_levels, gen_in, gen_out)
+      .run();
+  dawn_generated::cxxnaiveico::reference_intp<toylibInterface::toylibTag>(mesh, nb_levels, ref_in,
+                                                                          ref_out)
+      .run();
+
+  {
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareToylibField(mesh.faces(), ref_out, gen_out, nb_levels))
         << "while comparing output (on cells)";
   }
 }
