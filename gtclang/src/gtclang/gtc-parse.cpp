@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect SIR.")
     ("h,help", "Display usage.");
 
-  options.add_options()
+  options.add_options("Frontend")
     ("dump-ast", "Dump the clang AST.", cxxopts::value<bool>()->default_value("false"))
     ("dump-pp", "Dump the preprocessed file.", cxxopts::value<bool>()->default_value("false"));
 
