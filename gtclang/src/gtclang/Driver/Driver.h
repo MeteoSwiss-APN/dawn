@@ -48,7 +48,7 @@ struct Driver : public dawn::NonCopyable {
 
 /// @brief Driver for the gtclang parser
 /// @ingroup driver
-std::shared_ptr<dawn::SIR> run(const std::string& fileName, ParseOptions options);
+std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& options = {});
 
 } // namespace gtclang
 

@@ -86,7 +86,7 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   return ReturnValue{ret, returnSIR};
 }
 
-std::shared_ptr<dawn::SIR> run(const std::string& fileName, ParseOptions options) {
+std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& options) {
   // Initialize the GTClangContext
   auto context = std::make_unique<gtclang::GTClangContext>();
 
