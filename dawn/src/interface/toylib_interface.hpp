@@ -270,7 +270,7 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
 }
 
 //===------------------------------------------------------------------------------------------===//
-// unweighted versions
+// unweighted version
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op>
@@ -294,7 +294,7 @@ auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* id
 }
 
 //===------------------------------------------------------------------------------------------===//
-// weighted versions
+// weighted version
 //===------------------------------------------------------------------------------------------===//
 
 template <typename Init, typename Op, typename Weight>

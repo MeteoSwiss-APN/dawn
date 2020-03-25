@@ -23,7 +23,6 @@
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Unreachable.h"
-#include "driver-includes/unstructured_interface.hpp"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>

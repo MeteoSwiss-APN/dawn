@@ -1,5 +1,4 @@
-/*===------------------------------------------------------------------------------*-
-proto -*-===*\
+/*===------------------------------------------------------------------------------*-proto -*-===*\
  *                          _
  *                         | |
  *                       __| | __ ___      ___ ___
@@ -50,9 +49,8 @@ message CartesianDimension {
 // @ingroup sir_proto
 message UnstructuredDimension {
   dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-  repeated dawn.proto.enums.LocationType sparse_part =
-      2; // neighbor chain encoding sparse part when the field has a sparse
-         // dimension
+  // neighbor chain encoding sparse part when the field has a sparse dimension         
+  repeated dawn.proto.enums.LocationType sparse_part = 2; 
 }
 
 // @brief Dimensions spanned by a field
@@ -211,8 +209,8 @@ message VerticalRegion {
 message StencilCall {
   SourceLocation loc = 1; // Source location of the stencil call
   string callee = 2;      // Name of the called stencil (i.e callee)
-  repeated string arguments =
-      3; // Fields passed as arguments during the stencil call
+  // Fields passed as arguments during the stencil call
+  repeated string arguments = 3; 
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
