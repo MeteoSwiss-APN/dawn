@@ -27,6 +27,7 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
+#include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -253,6 +254,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     case PassGroup::StageReordering:
       optimizer.pushBackPass<PassSetStageGraph>();
       optimizer.pushBackPass<PassSetDependencyGraph>();
+      optimizer.pushBackPass<PassMultiStageMerger>();
       optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
       // moved stages around ...
       optimizer.pushBackPass<PassSetSyncStage>();
