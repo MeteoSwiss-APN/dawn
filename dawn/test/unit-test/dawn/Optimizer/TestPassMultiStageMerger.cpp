@@ -59,7 +59,6 @@ protected:
     // Expect pass to succeed...
     PassMultiStageMerger multiStageMerger(*context_);
     EXPECT_TRUE(multiStageMerger.run(instantiation));
-    dawn::IIRSerializer::serialize(filename + "_2", instantiation);
 
     // Collect post-merging multi-stage counts
     std::vector<int> postNumStages;

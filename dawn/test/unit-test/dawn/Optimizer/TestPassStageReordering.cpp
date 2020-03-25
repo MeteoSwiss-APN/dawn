@@ -16,6 +16,7 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
@@ -56,6 +57,10 @@ protected:
     // Run dependency graph pass
     PassSetDependencyGraph dependencyGraphPass(*context_);
     EXPECT_TRUE(dependencyGraphPass.run(instantiation));
+
+    // Run multistage merger pass
+    PassMultiStageMerger multiStageMerger(*context_);
+    EXPECT_TRUE(multiStageMerger.run(instantiation));
 
     // Collect pre-reordering stage IDs
     std::vector<int> prevStageIDs;
