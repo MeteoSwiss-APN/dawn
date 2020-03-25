@@ -406,11 +406,6 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
           options_.MaxHaloPoints, options_.UseParallelEP, options_.MaxBlocksPerSM, options_.nsms,
           options_.DomainSizeI,   options_.DomainSizeJ,   options_.DomainSizeK};
       return codegen::cuda::run(stencilInstantiationMap, options);
-
-      const Array3i domain_size{options_.DomainSizeI, options_.DomainSizeJ, options_.DomainSizeK};
-      codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
-                                    options_.nsms, options_.MaxBlocksPerSM, domain_size);
-      return CG.generateCode();
     }
     case BackendType::CXXNaiveIco: {
       codegen::cxxnaiveico::Options options{options_.MaxHaloPoints};
