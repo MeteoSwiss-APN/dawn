@@ -1,62 +1,62 @@
 {
  "metadata": {
   "accessIDToName": {
-   "110": "nabla2_vec",
-   "111": "primal_edge_length",
-   "112": "dual_edge_length",
-   "113": "tangent_orientation",
-   "114": "geofac_rot",
-   "115": "geofac_div",
-   "105": "vec",
-   "106": "div_vec",
-   "107": "rot_vec",
-   "108": "nabla2t1_vec",
-   "109": "nabla2t2_vec"
+   "55": "rot_vec",
+   "56": "nabla2t1_vec",
+   "57": "nabla2t2_vec",
+   "58": "nabla2_vec",
+   "59": "primal_edge_length",
+   "60": "dual_edge_length",
+   "61": "tangent_orientation",
+   "62": "geofac_rot",
+   "63": "geofac_div",
+   "53": "vec",
+   "54": "div_vec"
   },
   "accessIDToType": {
-   "110": 6,
-   "111": 6,
-   "112": 6,
-   "113": 6,
-   "114": 6,
-   "115": 6,
-   "105": 6,
-   "106": 6,
-   "107": 6,
-   "108": 6,
-   "109": 6
+   "55": 6,
+   "56": 6,
+   "57": 6,
+   "58": 6,
+   "59": 6,
+   "60": 6,
+   "61": 6,
+   "62": 6,
+   "63": 6,
+   "53": 6,
+   "54": 6
   },
   "literalIDToName": {
-   "-172": "0.0",
-   "-175": "0.0",
-   "-174": "0.0",
-   "-173": "0.0"
+   "-123": "0.0",
+   "-122": "0.0",
+   "-121": "0.0",
+   "-120": "0.0"
   },
   "fieldAccessIDs": [
-   105,
-   106,
-   107,
-   108,
-   109,
-   110,
-   111,
-   112,
-   113,
-   114,
-   115
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63
   ],
   "APIFieldIDs": [
-   105,
-   106,
-   107,
-   108,
-   109,
-   110,
-   111,
-   112,
-   113,
-   114,
-   115
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63
   ],
   "temporaryFieldIDs": [],
   "globalVariableIDs": [],
@@ -65,7 +65,53 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "115": {
+   "57": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "58": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "59": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "60": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "61": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Edge",
+     "sparse_part": []
+    },
+    "mask_k": 1
+   },
+   "62": {
+    "unstructured_horizontal_dimension": {
+     "dense_location_type": "Vertex",
+     "sparse_part": [
+      "Vertex",
+      "Vertex",
+      "Edge"
+     ]
+    },
+    "mask_k": 1
+   },
+   "63": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Cell",
      "sparse_part": [
@@ -76,90 +122,44 @@
     },
     "mask_k": 1
    },
-   "105": {
+   "53": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Edge",
      "sparse_part": []
     },
     "mask_k": 1
    },
-   "106": {
+   "54": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Cell",
      "sparse_part": []
     },
     "mask_k": 1
    },
-   "107": {
+   "55": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Vertex",
      "sparse_part": []
     },
     "mask_k": 1
    },
-   "108": {
+   "56": {
     "unstructured_horizontal_dimension": {
      "dense_location_type": "Edge",
      "sparse_part": []
-    },
-    "mask_k": 1
-   },
-   "109": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
-    },
-    "mask_k": 1
-   },
-   "110": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
-    },
-    "mask_k": 1
-   },
-   "111": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
-    },
-    "mask_k": 1
-   },
-   "112": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
-    },
-    "mask_k": 1
-   },
-   "113": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
-    },
-    "mask_k": 1
-   },
-   "114": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Vertex",
-     "sparse_part": [
-      "Vertex",
-      "Vertex",
-      "Edge"
-     ]
     },
     "mask_k": 1
    }
   },
   "idToStencilCall": {
-   "116": {
+   "64": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
       "loc": {
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_116",
+      "callee": "__code_gen_64",
       "arguments": []
      },
      "loc": {
@@ -167,7 +167,7 @@
       "Column": -1
      },
      "data": {},
-     "ID": 117
+     "ID": 65
     }
    }
   },
@@ -199,200 +199,6 @@
                 "assignment_expr": {
                  "left": {
                   "field_access_expr": {
-                   "name": "rot_vec",
-                   "vertical_offset": 0,
-                   "zero_offset": {},
-                   "argument_map": [
-                    -1,
-                    -1,
-                    -1
-                   ],
-                   "argument_offset": [
-                    0,
-                    0,
-                    0
-                   ],
-                   "negate_offset": false,
-                   "loc": {
-                    "Line": -1,
-                    "Column": -1
-                   },
-                   "data": {
-                    "accessID": 107
-                   },
-                   "ID": 197
-                  }
-                 },
-                 "op": "=",
-                 "right": {
-                  "reduction_over_neighbor_expr": {
-                   "op": "+",
-                   "rhs": {
-                    "binary_operator": {
-                     "left": {
-                      "field_access_expr": {
-                       "name": "vec",
-                       "vertical_offset": 0,
-                       "zero_offset": {},
-                       "argument_map": [
-                        -1,
-                        -1,
-                        -1
-                       ],
-                       "argument_offset": [
-                        0,
-                        0,
-                        0
-                       ],
-                       "negate_offset": false,
-                       "loc": {
-                        "Line": -1,
-                        "Column": -1
-                       },
-                       "data": {
-                        "accessID": 105
-                       },
-                       "ID": 194
-                      }
-                     },
-                     "op": "*",
-                     "right": {
-                      "field_access_expr": {
-                       "name": "geofac_rot",
-                       "vertical_offset": 0,
-                       "zero_offset": {},
-                       "argument_map": [
-                        -1,
-                        -1,
-                        -1
-                       ],
-                       "argument_offset": [
-                        0,
-                        0,
-                        0
-                       ],
-                       "negate_offset": false,
-                       "loc": {
-                        "Line": -1,
-                        "Column": -1
-                       },
-                       "data": {
-                        "accessID": 114
-                       },
-                       "ID": 195
-                      }
-                     },
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "ID": 193
-                    }
-                   },
-                   "init": {
-                    "literal_access_expr": {
-                     "value": "0.0",
-                     "type": {
-                      "type_id": "Double"
-                     },
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": -172
-                     },
-                     "ID": 196
-                    }
-                   },
-                   "weights": [],
-                   "lhs_location": "Vertex",
-                   "rhs_location": "Edge"
-                  }
-                 },
-                 "loc": {
-                  "Line": -1,
-                  "Column": -1
-                 },
-                 "ID": 198
-                }
-               },
-               "loc": {
-                "Line": -1,
-                "Column": -1
-               },
-               "data": {
-                "accesses": {
-                 "writeAccess": {
-                  "107": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  }
-                 },
-                 "readAccess": {
-                  "105": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  },
-                  "114": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  },
-                  "-172": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  }
-                 }
-                }
-               },
-               "ID": 191
-              }
-             }
-            ],
-            "loc": {
-             "Line": -1,
-             "Column": -1
-            },
-            "data": {},
-            "ID": 190
-           }
-          },
-          "doMethodID": 1,
-          "interval": {
-           "lower_offset": 0,
-           "upper_offset": 0,
-           "special_lower_level": "Start",
-           "special_upper_level": "End"
-          }
-         }
-        ],
-        "stageID": 176,
-        "locationType": "Vertex"
-       },
-       {
-        "doMethods": [
-         {
-          "ast": {
-           "block_stmt": {
-            "statements": [
-             {
-              "expr_stmt": {
-               "expr": {
-                "assignment_expr": {
-                 "left": {
-                  "field_access_expr": {
                    "name": "div_vec",
                    "vertical_offset": 0,
                    "zero_offset": {},
@@ -412,9 +218,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 106
+                    "accessID": 54
                    },
-                   "ID": 206
+                   "ID": 394
                   }
                  },
                  "op": "=",
@@ -444,9 +250,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 105
+                        "accessID": 53
                        },
-                       "ID": 203
+                       "ID": 391
                       }
                      },
                      "op": "*",
@@ -471,16 +277,16 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 115
+                        "accessID": 63
                        },
-                       "ID": 204
+                       "ID": 392
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 202
+                     "ID": 390
                     }
                    },
                    "init": {
@@ -494,21 +300,23 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": -173
+                      "accessID": -121
                      },
-                     "ID": 205
+                     "ID": 393
                     }
                    },
                    "weights": [],
-                   "lhs_location": "Cell",
-                   "rhs_location": "Edge"
+                   "chain": [
+                    "Cell",
+                    "Edge"
+                   ]
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 207
+                 "ID": 395
                 }
                },
                "loc": {
@@ -518,7 +326,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "106": {
+                  "54": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -527,21 +335,21 @@
                   }
                  },
                  "readAccess": {
-                  "105": {
+                  "53": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "115": {
+                  "63": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "-173": {
+                  "-121": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -551,7 +359,7 @@
                  }
                 }
                },
-               "ID": 200
+               "ID": 388
               }
              }
             ],
@@ -560,7 +368,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 199
+            "ID": 387
            }
           },
           "doMethodID": 2,
@@ -572,8 +380,527 @@
           }
          }
         ],
-        "stageID": 178,
+        "stageID": 126,
         "locationType": "Cell"
+       },
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "nabla2t2_vec",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
+                   },
+                   "data": {
+                    "accessID": 57
+                   },
+                   "ID": 401
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "reduction_over_neighbor_expr": {
+                   "op": "+",
+                   "rhs": {
+                    "field_access_expr": {
+                     "name": "div_vec",
+                     "vertical_offset": 0,
+                     "zero_offset": {},
+                     "argument_map": [
+                      -1,
+                      -1,
+                      -1
+                     ],
+                     "argument_offset": [
+                      0,
+                      0,
+                      0
+                     ],
+                     "negate_offset": false,
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "data": {
+                      "accessID": 54
+                     },
+                     "ID": 399
+                    }
+                   },
+                   "init": {
+                    "literal_access_expr": {
+                     "value": "0.0",
+                     "type": {
+                      "type_id": "Double"
+                     },
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "data": {
+                      "accessID": -123
+                     },
+                     "ID": 400
+                    }
+                   },
+                   "weights": [
+                    {
+                     "double_value": -1
+                    },
+                    {
+                     "double_value": 1
+                    }
+                   ],
+                   "chain": [
+                    "Edge",
+                    "Cell"
+                   ]
+                  }
+                 },
+                 "loc": {
+                  "Line": -1,
+                  "Column": -1
+                 },
+                 "ID": 402
+                }
+               },
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "57": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "-123": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "54": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 397
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 396
+           }
+          },
+          "doMethodID": 5,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 132,
+        "locationType": "Edge"
+       },
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "nabla2t2_vec",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
+                   },
+                   "data": {
+                    "accessID": 57
+                   },
+                   "ID": 408
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "binary_operator": {
+                   "left": {
+                    "field_access_expr": {
+                     "name": "nabla2t2_vec",
+                     "vertical_offset": 0,
+                     "zero_offset": {},
+                     "argument_map": [
+                      -1,
+                      -1,
+                      -1
+                     ],
+                     "argument_offset": [
+                      0,
+                      0,
+                      0
+                     ],
+                     "negate_offset": false,
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "data": {
+                      "accessID": 57
+                     },
+                     "ID": 406
+                    }
+                   },
+                   "op": "/",
+                   "right": {
+                    "field_access_expr": {
+                     "name": "dual_edge_length",
+                     "vertical_offset": 0,
+                     "zero_offset": {},
+                     "argument_map": [
+                      -1,
+                      -1,
+                      -1
+                     ],
+                     "argument_offset": [
+                      0,
+                      0,
+                      0
+                     ],
+                     "negate_offset": false,
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "data": {
+                      "accessID": 60
+                     },
+                     "ID": 407
+                    }
+                   },
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
+                   },
+                   "ID": 405
+                  }
+                 },
+                 "loc": {
+                  "Line": -1,
+                  "Column": -1
+                 },
+                 "ID": 409
+                }
+               },
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "57": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "57": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "60": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 404
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 403
+           }
+          },
+          "doMethodID": 6,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 134,
+        "locationType": "Edge"
+       },
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "rot_vec",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": -1,
+                    "Column": -1
+                   },
+                   "data": {
+                    "accessID": 55
+                   },
+                   "ID": 417
+                  }
+                 },
+                 "op": "=",
+                 "right": {
+                  "reduction_over_neighbor_expr": {
+                   "op": "+",
+                   "rhs": {
+                    "binary_operator": {
+                     "left": {
+                      "field_access_expr": {
+                       "name": "vec",
+                       "vertical_offset": 0,
+                       "zero_offset": {},
+                       "argument_map": [
+                        -1,
+                        -1,
+                        -1
+                       ],
+                       "argument_offset": [
+                        0,
+                        0,
+                        0
+                       ],
+                       "negate_offset": false,
+                       "loc": {
+                        "Line": -1,
+                        "Column": -1
+                       },
+                       "data": {
+                        "accessID": 53
+                       },
+                       "ID": 414
+                      }
+                     },
+                     "op": "*",
+                     "right": {
+                      "field_access_expr": {
+                       "name": "geofac_rot",
+                       "vertical_offset": 0,
+                       "zero_offset": {},
+                       "argument_map": [
+                        -1,
+                        -1,
+                        -1
+                       ],
+                       "argument_offset": [
+                        0,
+                        0,
+                        0
+                       ],
+                       "negate_offset": false,
+                       "loc": {
+                        "Line": -1,
+                        "Column": -1
+                       },
+                       "data": {
+                        "accessID": 62
+                       },
+                       "ID": 415
+                      }
+                     },
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "ID": 413
+                    }
+                   },
+                   "init": {
+                    "literal_access_expr": {
+                     "value": "0.0",
+                     "type": {
+                      "type_id": "Double"
+                     },
+                     "loc": {
+                      "Line": -1,
+                      "Column": -1
+                     },
+                     "data": {
+                      "accessID": -120
+                     },
+                     "ID": 416
+                    }
+                   },
+                   "weights": [],
+                   "chain": [
+                    "Vertex",
+                    "Edge"
+                   ]
+                  }
+                 },
+                 "loc": {
+                  "Line": -1,
+                  "Column": -1
+                 },
+                 "ID": 418
+                }
+               },
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "55": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "62": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "-120": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "53": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 411
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 410
+           }
+          },
+          "doMethodID": 1,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 124,
+        "locationType": "Vertex"
        },
        {
         "doMethods": [
@@ -606,9 +933,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 108
+                    "accessID": 56
                    },
-                   "ID": 213
+                   "ID": 424
                   }
                  },
                  "op": "=",
@@ -636,9 +963,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 107
+                      "accessID": 55
                      },
-                     "ID": 211
+                     "ID": 422
                     }
                    },
                    "init": {
@@ -652,9 +979,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": -174
+                      "accessID": -122
                      },
-                     "ID": 212
+                     "ID": 423
                     }
                    },
                    "weights": [
@@ -665,15 +992,17 @@
                      "double_value": 1
                     }
                    ],
-                   "lhs_location": "Edge",
-                   "rhs_location": "Vertex"
+                   "chain": [
+                    "Edge",
+                    "Vertex"
+                   ]
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 214
+                 "ID": 425
                 }
                },
                "loc": {
@@ -683,7 +1012,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "108": {
+                  "56": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -692,14 +1021,14 @@
                   }
                  },
                  "readAccess": {
-                  "-174": {
+                  "55": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "107": {
+                  "-122": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -709,7 +1038,7 @@
                  }
                 }
                },
-               "ID": 209
+               "ID": 420
               }
              }
             ],
@@ -718,7 +1047,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 208
+            "ID": 419
            }
           },
           "doMethodID": 3,
@@ -730,7 +1059,7 @@
           }
          }
         ],
-        "stageID": 180,
+        "stageID": 128,
         "locationType": "Edge"
        },
        {
@@ -764,9 +1093,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 108
+                    "accessID": 56
                    },
-                   "ID": 222
+                   "ID": 433
                   }
                  },
                  "op": "=",
@@ -795,9 +1124,9 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 113
+                        "accessID": 61
                        },
-                       "ID": 219
+                       "ID": 430
                       }
                      },
                      "op": "*",
@@ -822,16 +1151,16 @@
                         "Column": -1
                        },
                        "data": {
-                        "accessID": 108
+                        "accessID": 56
                        },
-                       "ID": 220
+                       "ID": 431
                       }
                      },
                      "loc": {
                       "Line": -1,
                       "Column": -1
                      },
-                     "ID": 218
+                     "ID": 429
                     }
                    },
                    "op": "/",
@@ -856,23 +1185,23 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 111
+                      "accessID": 59
                      },
-                     "ID": 221
+                     "ID": 432
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 217
+                   "ID": 428
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 223
+                 "ID": 434
                 }
                },
                "loc": {
@@ -882,7 +1211,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "108": {
+                  "56": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -891,21 +1220,21 @@
                   }
                  },
                  "readAccess": {
-                  "111": {
+                  "59": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "113": {
+                  "61": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "108": {
+                  "56": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -915,7 +1244,7 @@
                  }
                 }
                },
-               "ID": 216
+               "ID": 427
               }
              }
             ],
@@ -924,7 +1253,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 215
+            "ID": 426
            }
           },
           "doMethodID": 4,
@@ -936,328 +1265,7 @@
           }
          }
         ],
-        "stageID": 182,
-        "locationType": "Edge"
-       },
-       {
-        "doMethods": [
-         {
-          "ast": {
-           "block_stmt": {
-            "statements": [
-             {
-              "expr_stmt": {
-               "expr": {
-                "assignment_expr": {
-                 "left": {
-                  "field_access_expr": {
-                   "name": "nabla2t2_vec",
-                   "vertical_offset": 0,
-                   "zero_offset": {},
-                   "argument_map": [
-                    -1,
-                    -1,
-                    -1
-                   ],
-                   "argument_offset": [
-                    0,
-                    0,
-                    0
-                   ],
-                   "negate_offset": false,
-                   "loc": {
-                    "Line": -1,
-                    "Column": -1
-                   },
-                   "data": {
-                    "accessID": 109
-                   },
-                   "ID": 229
-                  }
-                 },
-                 "op": "=",
-                 "right": {
-                  "reduction_over_neighbor_expr": {
-                   "op": "+",
-                   "rhs": {
-                    "field_access_expr": {
-                     "name": "div_vec",
-                     "vertical_offset": 0,
-                     "zero_offset": {},
-                     "argument_map": [
-                      -1,
-                      -1,
-                      -1
-                     ],
-                     "argument_offset": [
-                      0,
-                      0,
-                      0
-                     ],
-                     "negate_offset": false,
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": 106
-                     },
-                     "ID": 227
-                    }
-                   },
-                   "init": {
-                    "literal_access_expr": {
-                     "value": "0.0",
-                     "type": {
-                      "type_id": "Double"
-                     },
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": -175
-                     },
-                     "ID": 228
-                    }
-                   },
-                   "weights": [
-                    {
-                     "double_value": -1
-                    },
-                    {
-                     "double_value": 1
-                    }
-                   ],
-                   "lhs_location": "Edge",
-                   "rhs_location": "Cell"
-                  }
-                 },
-                 "loc": {
-                  "Line": -1,
-                  "Column": -1
-                 },
-                 "ID": 230
-                }
-               },
-               "loc": {
-                "Line": -1,
-                "Column": -1
-               },
-               "data": {
-                "accesses": {
-                 "writeAccess": {
-                  "109": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  }
-                 },
-                 "readAccess": {
-                  "-175": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  },
-                  "106": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  }
-                 }
-                }
-               },
-               "ID": 225
-              }
-             }
-            ],
-            "loc": {
-             "Line": -1,
-             "Column": -1
-            },
-            "data": {},
-            "ID": 224
-           }
-          },
-          "doMethodID": 5,
-          "interval": {
-           "lower_offset": 0,
-           "upper_offset": 0,
-           "special_lower_level": "Start",
-           "special_upper_level": "End"
-          }
-         }
-        ],
-        "stageID": 184,
-        "locationType": "Edge"
-       },
-       {
-        "doMethods": [
-         {
-          "ast": {
-           "block_stmt": {
-            "statements": [
-             {
-              "expr_stmt": {
-               "expr": {
-                "assignment_expr": {
-                 "left": {
-                  "field_access_expr": {
-                   "name": "nabla2t2_vec",
-                   "vertical_offset": 0,
-                   "zero_offset": {},
-                   "argument_map": [
-                    -1,
-                    -1,
-                    -1
-                   ],
-                   "argument_offset": [
-                    0,
-                    0,
-                    0
-                   ],
-                   "negate_offset": false,
-                   "loc": {
-                    "Line": -1,
-                    "Column": -1
-                   },
-                   "data": {
-                    "accessID": 109
-                   },
-                   "ID": 236
-                  }
-                 },
-                 "op": "=",
-                 "right": {
-                  "binary_operator": {
-                   "left": {
-                    "field_access_expr": {
-                     "name": "nabla2t2_vec",
-                     "vertical_offset": 0,
-                     "zero_offset": {},
-                     "argument_map": [
-                      -1,
-                      -1,
-                      -1
-                     ],
-                     "argument_offset": [
-                      0,
-                      0,
-                      0
-                     ],
-                     "negate_offset": false,
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": 109
-                     },
-                     "ID": 234
-                    }
-                   },
-                   "op": "/",
-                   "right": {
-                    "field_access_expr": {
-                     "name": "dual_edge_length",
-                     "vertical_offset": 0,
-                     "zero_offset": {},
-                     "argument_map": [
-                      -1,
-                      -1,
-                      -1
-                     ],
-                     "argument_offset": [
-                      0,
-                      0,
-                      0
-                     ],
-                     "negate_offset": false,
-                     "loc": {
-                      "Line": -1,
-                      "Column": -1
-                     },
-                     "data": {
-                      "accessID": 112
-                     },
-                     "ID": 235
-                    }
-                   },
-                   "loc": {
-                    "Line": -1,
-                    "Column": -1
-                   },
-                   "ID": 233
-                  }
-                 },
-                 "loc": {
-                  "Line": -1,
-                  "Column": -1
-                 },
-                 "ID": 237
-                }
-               },
-               "loc": {
-                "Line": -1,
-                "Column": -1
-               },
-               "data": {
-                "accesses": {
-                 "writeAccess": {
-                  "109": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  }
-                 },
-                 "readAccess": {
-                  "112": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  },
-                  "109": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  }
-                 }
-                }
-               },
-               "ID": 232
-              }
-             }
-            ],
-            "loc": {
-             "Line": -1,
-             "Column": -1
-            },
-            "data": {},
-            "ID": 231
-           }
-          },
-          "doMethodID": 6,
-          "interval": {
-           "lower_offset": 0,
-           "upper_offset": 0,
-           "special_lower_level": "Start",
-           "special_upper_level": "End"
-          }
-         }
-        ],
-        "stageID": 186,
+        "stageID": 130,
         "locationType": "Edge"
        },
        {
@@ -1291,9 +1299,9 @@
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 110
+                    "accessID": 58
                    },
-                   "ID": 243
+                   "ID": 440
                   }
                  },
                  "op": "=",
@@ -1320,9 +1328,9 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 109
+                      "accessID": 57
                      },
-                     "ID": 241
+                     "ID": 438
                     }
                    },
                    "op": "-",
@@ -1347,23 +1355,23 @@
                       "Column": -1
                      },
                      "data": {
-                      "accessID": 108
+                      "accessID": 56
                      },
-                     "ID": 242
+                     "ID": 439
                     }
                    },
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
-                   "ID": 240
+                   "ID": 437
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 244
+                 "ID": 441
                 }
                },
                "loc": {
@@ -1373,7 +1381,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "110": {
+                  "58": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -1382,14 +1390,14 @@
                   }
                  },
                  "readAccess": {
-                  "108": {
+                  "56": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "109": {
+                  "57": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -1399,7 +1407,7 @@
                  }
                 }
                },
-               "ID": 239
+               "ID": 436
               }
              }
             ],
@@ -1408,7 +1416,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 238
+            "ID": 435
            }
           },
           "doMethodID": 7,
@@ -1420,16 +1428,101 @@
           }
          }
         ],
-        "stageID": 188,
+        "stageID": 136,
         "locationType": "Edge"
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 169,
-      "Caches": {}
+      "multiStageID": 138,
+      "Caches": {
+       "56": {
+        "type": "CT_K",
+        "policy": "CP_Flush",
+        "accessID": 56,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "cacheWindow": {
+         "minus": 0,
+         "plus": 0
+        }
+       },
+       "57": {
+        "type": "CT_K",
+        "policy": "CP_Flush",
+        "accessID": 57,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "cacheWindow": {
+         "minus": 0,
+         "plus": 0
+        }
+       },
+       "54": {
+        "type": "CT_K",
+        "policy": "CP_Flush",
+        "accessID": 54,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "cacheWindow": {
+         "minus": 0,
+         "plus": 0
+        }
+       },
+       "55": {
+        "type": "CT_K",
+        "policy": "CP_Flush",
+        "accessID": 55,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "cacheWindow": {
+         "minus": 0,
+         "plus": 0
+        }
+       }
+      }
      }
     ],
-    "stencilID": 116,
+    "stencilID": 64,
     "attr": {
      "attributes": []
     }
@@ -1443,7 +1536,7 @@
        "Line": -1,
        "Column": -1
       },
-      "callee": "__code_gen_116",
+      "callee": "__code_gen_64",
       "arguments": []
      },
      "loc": {
@@ -1451,11 +1544,11 @@
       "Column": -1
      },
      "data": {},
-     "ID": 117
+     "ID": 65
     }
    }
   ],
   "boundaryConditions": []
  },
- "filename": "ICON_laplacian_stencil.sir"
+ "filename": "ICON_laplacian_stencil.cpp"
 }

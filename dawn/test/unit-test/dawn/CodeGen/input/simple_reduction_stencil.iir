@@ -160,8 +160,10 @@
                     }
                    },
                    "weights": [],
-                   "lhs_location": "Edge",
-                   "rhs_location": "Cell"
+                   "chain": [
+                    "Edge",
+                    "Cell"
+                   ]
                   }
                  },
                  "loc": {
@@ -187,14 +189,14 @@
                   }
                  },
                  "readAccess": {
-                  "-27": {
+                  "11": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "11": {
+                  "-27": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,

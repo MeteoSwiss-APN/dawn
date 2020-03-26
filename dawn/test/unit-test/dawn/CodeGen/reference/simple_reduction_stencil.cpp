@@ -33,7 +33,7 @@ private:
     for(int k = 0+0; k <= ( m_k_size == 0 ? 0 : (m_k_size - 1)) + 0+0; ++k) {
       for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
 int m_sparse_dimension_idx = 0;
-m_out(deref(LibTag{}, loc),k+0) = reduceCellToEdge(LibTag{}, m_mesh,loc, (::dawn::float_type) 1.0, [&](auto& lhs, auto const& red_loc) { lhs += m_in(deref(LibTag{}, red_loc),k+0);
+m_out(deref(LibTag{}, loc),k+0) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 1.0, std::vector<dawn::LocationType>{dawn::LocationType::Edges, dawn::LocationType::Cells}, [&](auto& lhs, auto red_loc) { lhs += m_in(deref(LibTag{}, red_loc),k+0);
 m_sparse_dimension_idx++;
 return lhs;
 });

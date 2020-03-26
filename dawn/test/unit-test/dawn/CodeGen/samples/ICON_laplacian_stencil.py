@@ -24,7 +24,7 @@ from google.protobuf.json_format import MessageToJson, Parse
 
 
 
-def main():
+if __name__ == "__main__":
     stencil_name = "ICON_laplacian_stencil"
     output_file = f"{stencil_name}.cpp"
     

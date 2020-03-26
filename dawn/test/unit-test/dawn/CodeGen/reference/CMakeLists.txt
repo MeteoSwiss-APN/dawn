@@ -6,6 +6,7 @@ function(add_update_codegen_reference_target)
 
     set(inputDir ${CMAKE_CURRENT_SOURCE_DIR}/../input)
     set(refsDir ${CMAKE_CURRENT_SOURCE_DIR}/../reference)
+    set(refsBuildDir ${CMAKE_CURRENT_BINARY_DIR}/../reference)
 
     if(${ARG_BACKEND} STREQUAL cuda)
         set(extension cu)
@@ -15,6 +16,7 @@ function(add_update_codegen_reference_target)
 
     add_custom_target(${ARG_NAME} 
         COMMAND dawn-codegen ${inputDir}/${ARG_STENCIL}.iir -o ${refsDir}/${ARG_STENCIL}.${extension} --backend=${ARG_BACKEND}
+        COMMAND ${CMAKE_COMMAND} -E copy ${refsDir}/${ARG_STENCIL}.${extension} ${refsBuildDir}/${ARG_STENCIL}.${extension}
         DEPENDS dawn-codegen)
 endfunction()
 

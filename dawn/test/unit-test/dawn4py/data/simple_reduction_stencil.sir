@@ -62,8 +62,10 @@
                                             }
                                           }
                                         },
-                                        "lhsLocation": "Edge",
-                                        "rhsLocation": "Cell"
+                                        "chain": [
+                                          "Edge",
+                                          "Cell"
+                                        ]
                                       }
                                     }
                                   }

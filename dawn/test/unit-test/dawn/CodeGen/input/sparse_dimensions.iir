@@ -1,14 +1,14 @@
 {
  "metadata": {
   "accessIDToName": {
+   "13": "in",
    "14": "sparse_CE",
-   "15": "out",
-   "13": "in"
+   "15": "out"
   },
   "accessIDToType": {
+   "15": 6,
    "13": 6,
-   "14": 6,
-   "15": 6
+   "14": 6
   },
   "literalIDToName": {
    "-32": "1.0"
@@ -211,8 +211,10 @@
                     }
                    },
                    "weights": [],
-                   "lhs_location": "Cell",
-                   "rhs_location": "Edge"
+                   "chain": [
+                    "Cell",
+                    "Edge"
+                   ]
                   }
                  },
                  "loc": {
