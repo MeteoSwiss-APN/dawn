@@ -114,6 +114,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(Python3 COMPONENTS Interpreter)
 
+# Set PYTHON_EXECUTABLE to the Python3_EXECUTABLE if not manually specified,
+# otherwise pybind11 may find the wrong python library.
+if (Python3_EXECUTABLE AND NOT PYTHON_EXECUTABLE)
+  set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+endif()
+
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
   target_include_directories(${target}
