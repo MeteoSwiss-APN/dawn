@@ -42,6 +42,9 @@ enum class PassGroup {
   DataLocalityMetric
 };
 
+/// @brief List of default optimizer pass groups.
+std::list<PassGroup> defaultPassGroups();
+
 /// @brief Lower to IIR and run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,

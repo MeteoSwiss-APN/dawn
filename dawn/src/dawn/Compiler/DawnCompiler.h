@@ -61,8 +61,6 @@ public:
   generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);
 
-  static std::list<PassGroup> defaultPassGroups();
-
   /// @brief Get options
   const Options& getOptions() const;
   Options& getOptions();
