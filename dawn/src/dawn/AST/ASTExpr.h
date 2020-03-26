@@ -638,19 +638,19 @@ private:
 
   std::string op_ = "+";
   std::optional<std::vector<sir::Value>> weights_;
-  ast::LocationType lhs_location_;
-  ast::LocationType rhs_location_;
+  std::vector<ast::LocationType> chain_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
+  bool chainIsValid();
 
 public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init, ast::LocationType lhs_location,
-                            ast::LocationType rhs_location, SourceLocation loc = SourceLocation());
+                            std::shared_ptr<Expr> const& init, std::vector<ast::LocationType> chain,
+                            SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init, std::vector<sir::Value> weights,
-                            ast::LocationType lhs_location, ast::LocationType rhs_location,
+                            std::vector<ast::LocationType> chain,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -661,8 +661,8 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  ast::LocationType getRhsLocation() const { return rhs_location_; };
-  ast::LocationType getLhsLocation() const { return lhs_location_; };
+  std::vector<ast::LocationType> getNbhChain() const { return chain_; };
+  ast::LocationType getLhsLocation() const { return chain_.front(); };
   const std::optional<std::vector<sir::Value>>& getWeights() const { return weights_; };
 
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }
