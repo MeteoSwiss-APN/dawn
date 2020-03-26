@@ -63,19 +63,6 @@ static const std::string currentDateTime() {
   return buf;
 }
 
-/// @brief Extract the DAWN options from the GTClang options
-static dawn::Options makeDAWNOptions(const Options& options) {
-  dawn::Options DAWNOptions;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  DAWNOptions.NAME = options.NAME;
-#include "dawn/CodeGen/Options.inc"
-#include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/Options.inc"
-#include "dawn/Optimizer/PassOptions.inc"
-#undef OPT
-  return DAWNOptions;
-}
-
 } // anonymous namespace
 
 GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, const std::string& file,
@@ -198,22 +185,25 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   if(context_->getOptions().DisableOptimization && passGroup.size() > 0) {
-    DAWN_ASSERT_MSG(false,
-                    "Inconsistent arguments: no optimisation as well as optimization specified");
+    DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
   }
 
-  dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
-  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
-      Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), passGroup));
+  dawn::OptimizerOptions optimizerOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  optimizerOptions.NAME = context_->getOptions().NAME;
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+  dawn::codegen::Options codegenOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME = context_->getOptions().NAME;
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
 
-  // Report diagnostics from Dawn
-  if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
-    for(const auto& diags : Compiler.getDiagnostics().getQueue()) {
-      context_->getDiagnostics().report(*diags);
-    }
-    DAWN_LOG(INFO) << "Errors in Dawn. Aborting";
-    return;
-  }
+  const dawn::codegen::Backend backend =
+      dawn::codegen::parseBackendString(context_->getOptions().Backend);
+
+  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
+  auto DawnTranslationUnit = dawn::codegen::run(stencilInstantiationMap, backend, codegenOptions);
 
   // Determine filename of generated file (by default we append "_gen" to the filename)
   std::string generatedFileName;
