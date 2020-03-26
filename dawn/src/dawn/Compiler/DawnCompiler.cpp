@@ -65,18 +65,15 @@ namespace dawn {
 
 namespace {
 
-// CodeGen backends
-enum class BackendType { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
-
-BackendType parseBackendString(const std::string& backendStr) {
+codegen::Backend parseBackendString(const std::string& backendStr) {
   if(backendStr == "gt" || backendStr == "gridtools") {
-    return BackendType::GridTools;
+    return codegen::Backend::GridTools;
   } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
-    return BackendType::CXXNaive;
+    return codegen::Backend::CXXNaive;
   } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
-    return BackendType::CXXNaiveIco;
+    return codegen::Backend::CXXNaiveIco;
   } else if(backendStr == "cuda" || backendStr == "CUDA") {
-    return BackendType::CUDA;
+    return codegen::Backend::CUDA;
   } else {
     throw CompileError("Backend not supported");
   }
@@ -381,7 +378,7 @@ std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
   // Generate code
-  BackendType backend;
+  codegen::Backend backend;
   try {
     backend = parseBackendString(options_.Backend);
   } catch(CompileError& e) {
@@ -392,28 +389,12 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
     return nullptr;
   }
   try {
-    switch(backend) {
-    case BackendType::GridTools: {
-      codegen::gt::Options options{options_.MaxHaloPoints, options_.UseParallelEP};
-      return codegen::gt::run(stencilInstantiationMap, options);
-    }
-    case BackendType::CXXNaive: {
-      codegen::cxxnaive::Options options{options_.MaxHaloPoints};
-      return codegen::cxxnaive::run(stencilInstantiationMap, options);
-    }
-    case BackendType::CUDA: {
-      codegen::cuda::Options options{
-          options_.MaxHaloPoints, options_.UseParallelEP, options_.MaxBlocksPerSM, options_.nsms,
-          options_.DomainSizeI,   options_.DomainSizeJ,   options_.DomainSizeK};
-      return codegen::cuda::run(stencilInstantiationMap, options);
-    }
-    case BackendType::CXXNaiveIco: {
-      codegen::cxxnaiveico::Options options{options_.MaxHaloPoints};
-      return codegen::cxxnaiveico::run(stencilInstantiationMap, options);
-    }
-    case BackendType::CXXOpt:
-      dawn_unreachable("GTClangOptCXX not supported yet");
-    }
+    codegen::Options codegenOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME = options_.NAME;
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
+    return codegen::run(stencilInstantiationMap, backend, codegenOptions);
   } catch(...) {
     DiagnosticsBuilder diag(DiagnosticsKind::Error);
     diag << "code generation for backend `" << options_.Backend << "` failed";
@@ -482,5 +463,28 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   DawnCompiler compiler(dawnOptions);
   return compiler.optimize(stencilInstantiationMap, groups);
 }
+
+namespace codegen {
+
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
+    Backend backend, const Options& options) {
+  switch(backend) {
+  case Backend::CUDA:
+    return cuda::run(context, options);
+  case Backend::CXXNaive:
+    return cxxnaive::run(context, options);
+  case Backend::CXXNaiveIco:
+    return cxxnaiveico::run(context, options);
+  case Backend::GridTools:
+    return gt::run(context, options);
+  case Backend::CXXOpt:
+    throw std::invalid_argument("Backend not supported");
+  }
+  // This line should not be needed but the compiler seems to complain if it is not present.
+  return nullptr;
+}
+
+} // namespace codegen
 
 } // namespace dawn

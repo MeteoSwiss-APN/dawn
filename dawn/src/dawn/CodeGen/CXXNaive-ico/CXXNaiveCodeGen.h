@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
@@ -31,17 +32,6 @@ class StencilInstantiation;
 
 namespace codegen {
 namespace cxxnaiveico {
-
-/// @brief Options for cxx-naive-ico code generation
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-  // clang-format off
-OPT(int, MaxHaloPoints, 3, "max-halo", "",
-    "Set the maximum number of allowed halo points", "<N>", true, false)
-  // clang-format on
-#undef OPT
-};
 
 /// @brief Run the cxx-naive-ico code generation
 std::unique_ptr<TranslationUnit>

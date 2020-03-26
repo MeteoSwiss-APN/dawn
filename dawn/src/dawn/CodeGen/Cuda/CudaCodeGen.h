@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
 #include <unordered_map>
@@ -29,25 +30,6 @@ class StencilInstantiation;
 
 namespace codegen {
 namespace cuda {
-
-/// @brief Options for Cuda code generation
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-  // clang-format off
-OPT(int, MaxHaloPoints, 3, "max-halo", "",
-    "Set the maximum number of allowed halo points", "<N>", true, false)
-OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
-    "Make use of the parallel execution policy", "", false, true)
-OPT(int, MaxBlocksPerSM, 0, "max-blocks-sm", "",
-    "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
-OPT(int, nsms, 0, "nsms", "", "Number of (CUDA) SMs", "<nsms>", true, false)
-OPT(int, DomainSizeI, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
-OPT(int, DomainSizeJ, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
-OPT(int, DomainSizeK, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
-  // clang-format on
-#undef OPT
-};
 
 /// @brief Run the Cuda code generation
 std::unique_ptr<TranslationUnit>

@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/IIR/Interval.h"
 #include <set>
 #include <unordered_map>
@@ -32,19 +33,6 @@ class Stencil;
 
 namespace codegen {
 namespace gt {
-
-/// @brief Options for GridTools code generation
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-  // clang-format off
-OPT(int, MaxHaloPoints, 3, "max-halo", "",
-    "Set the maximum number of allowed halo points", "<N>", true, false)
-OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
-    "Make use of the parallel execution policy", "", false, true)
-  // clang-format on
-#undef OPT
-};
 
 /// @brief Run the GridTools code generation
 std::unique_ptr<TranslationUnit>

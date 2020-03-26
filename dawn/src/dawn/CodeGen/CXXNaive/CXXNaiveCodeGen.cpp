@@ -89,7 +89,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
   DiagnosticsEngine diagnostics;
-  CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloPoints);
+  CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloSize);
   if(diagnostics.hasDiags()) {
     for(const auto& diag : diagnostics.getQueue())
       DAWN_LOG(INFO) << diag->getMessage();

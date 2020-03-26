@@ -39,7 +39,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
   DiagnosticsEngine diagnostics;
-  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloPoints);
+  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize);
   if(diagnostics.hasDiags()) {
     for(const auto& diag : diagnostics.getQueue())
       DAWN_LOG(INFO) << diag->getMessage();

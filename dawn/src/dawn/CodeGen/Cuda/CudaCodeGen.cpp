@@ -58,7 +58,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     const Options& options) {
   DiagnosticsEngine diagnostics;
   const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
-  CudaCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloPoints, options.nsms,
+  CudaCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloSize, options.nsms,
                  options.MaxBlocksPerSM, domain_size);
   if(diagnostics.hasDiags()) {
     for(const auto& diag : diagnostics.getQueue())
