@@ -14,6 +14,7 @@
 
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
@@ -665,8 +666,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
-  protoExpr->set_rhs_location(getProtoLocationTypeFromLocationType(expr->getRhsLocation()));
-  protoExpr->set_lhs_location(getProtoLocationTypeFromLocationType(expr->getLhsLocation()));
+  auto protoChain = protoExpr->mutable_chain();
+  for(const auto& loc : expr->getNbhChain()) {
+    protoChain->Add(getProtoLocationTypeFromLocationType(loc));
+  }
 
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
@@ -984,12 +987,16 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
   case proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
     auto weights = exprProto.weights();
+
+    ast::NeighborChain chain;
+    for(int i = 0; i < exprProto.chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
+    }
+
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID),
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), chain, makeLocation(exprProto));
       return expr;
     } else {
       std::vector<sir::Value> deserializedWeights;
@@ -1017,9 +1024,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       }
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights,
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
+          makeLocation(exprProto));
       return expr;
     }
   }

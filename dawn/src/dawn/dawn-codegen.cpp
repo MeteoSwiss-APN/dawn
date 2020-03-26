@@ -42,7 +42,7 @@ std::shared_ptr<dawn::iir::StencilInstantiation> deserializeInput(const std::str
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
       format = SerializationFormat::Byte;
     } catch(...) {
-      // Do nothing
+      internalIR = nullptr;
     }
   }
   if(!internalIR) {

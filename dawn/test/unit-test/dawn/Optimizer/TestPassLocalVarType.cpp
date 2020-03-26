@@ -659,10 +659,10 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
                   dawn::iir::LoopOrderKind::Forward,
                   b.stage(b.doMethod(
                       dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
-                      b.stmt(b.assignExpr(b.at(varA),
-                                          b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
-                                                                   ast::LocationType::Cells,
-                                                                   ast::LocationType::Edges))))))));
+                      b.stmt(b.assignExpr(
+                          b.at(varA), b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
+                                                               {ast::LocationType::Cells,
+                                                                ast::LocationType::Edges}))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
 
@@ -881,8 +881,8 @@ TEST(TestLocalVarType, test_throw_unstructured_06) {
                            dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
                            b.stmt(b.assignExpr(
                                b.at(varA), b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
-                                                                    ast::LocationType::Cells,
-                                                                    ast::LocationType::Edges))),
+                                                                    {ast::LocationType::Cells,
+                                                                     ast::LocationType::Edges}))),
                            b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;

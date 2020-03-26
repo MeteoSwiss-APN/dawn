@@ -29,7 +29,7 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaiveico {
 
-// Requirement for the atlas interface:
+// Requirement for a interface:
 //
 // - Tag: No requirement on the tag. Might be used for ADL.
 //
@@ -52,13 +52,15 @@ namespace cxxnaiveico {
 // - A function `<Location>Type const& deref(X const& x)` should be defined,
 //   where X is decltype(*get<Locations>(...).begin())
 //
-// - The following combinatorial of functions should be defined, where Weight is an arithmetic type:
+// - The following functions should be defined, where Weight is an arithmetic type:
 //
 //   template<typename Init, typename Op>
-//   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op)
+//   Init reduce(Tag, MeshType, reduceTo, Init,
+//   std::vector<dawn::LocationType>, Op)
 //
 //   template<typename Init, typename Op, typename Weight>
-//   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op, std::vector<Weight>)
+//   Init reduce(Tag, MeshType, reduceTo, Init,
+//   std::vector<dawn::LocationType>, Op, std::vector<Weight>)
 //
 //   where Op must be callable as
 //     Op(Init, ValueType);

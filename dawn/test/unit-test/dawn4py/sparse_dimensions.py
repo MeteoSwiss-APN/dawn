@@ -46,8 +46,7 @@ def main(args: argparse.Namespace):
                         sir_utils.make_field_access_expr("sparse_CE"), "*", sir_utils.make_field_access_expr("in")),
                     init=sir_utils.make_literal_access_expr(
                         "1.0", SIR.BuiltinType.Float),
-                    lhs_location=SIR.LocationType.Value('Cell'),
-                    rhs_location=SIR.LocationType.Value('Edge')
+                    chain=[SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')]
                 ),
                 "=",
             )
