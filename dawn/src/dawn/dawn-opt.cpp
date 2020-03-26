@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect IIR.")
     ("default-opt", "Add default groups before those in --pass-groups.")
     ("p,pass-groups",
-        "Comma-separated ordered list of pass groups to run. See DawnCompiler.h for list. If unset, runs the basic, default groups.",
+        "Comma-separated ordered list of pass groups to run. See dawn/Compiler/Driver.h for list. If unset and --default-opts is not passed, only lowers to IIR.",
         cxxopts::value<std::vector<std::string>>()->default_value({}))
     ("h,help", "Display usage.");
 

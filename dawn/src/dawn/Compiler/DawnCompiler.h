@@ -15,12 +15,11 @@
 #ifndef DAWN_COMPILER_DAWNCOMPILER_H
 #define DAWN_COMPILER_DAWNCOMPILER_H
 
-#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/OptimizerOptions.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 
@@ -31,26 +30,6 @@
 namespace dawn {
 
 struct SIR;
-
-/// @brief Enumeration of all pass groups
-enum class PassGroup {
-  Parallel,
-  SSA,
-  PrintStencilGraph,
-  SetStageName,
-  StageReordering,
-  StageMerger,
-  TemporaryMerger,
-  Inlining,
-  IntervalPartitioning,
-  TmpToStencilFunction,
-  SetNonTempCaches,
-  SetCaches,
-  SetBlockSize,
-  DataLocalityMetric
-};
-
-std::list<PassGroup> defaultPassGroups();
 
 /// @brief The DawnCompiler class
 /// @ingroup compiler
@@ -90,17 +69,6 @@ public:
   const DiagnosticsEngine& getDiagnostics() const;
   DiagnosticsEngine& getDiagnostics();
 };
-
-/// @brief Lower to IIR and run groups
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
-    const OptimizerOptions& options = {});
-
-/// @brief Run groups
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-        stencilInstantiationMap,
-    const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
 
 } // namespace dawn
 

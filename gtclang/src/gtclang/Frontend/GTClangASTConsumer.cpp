@@ -16,9 +16,9 @@
 
 #include "gtclang/Frontend/GTClangASTConsumer.h"
 #include "dawn/AST/GridType.h"
+#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
