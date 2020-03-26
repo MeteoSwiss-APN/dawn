@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Support/Logging.h"
