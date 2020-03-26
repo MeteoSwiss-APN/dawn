@@ -74,7 +74,7 @@ if [ -z "${NO_CLANG_GRIDTOOLS}" ]; then
   # else
   #   performance_checks="-p"
   # fi
-    ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir} ${performance_checks}
+    # ./scripts/jenkins/build_clang_gridtools.sh ${clang_gridtools_args} -g ${install_dir} ${performance_checks}
   ret=$((ret || $? ))
 fi
 
