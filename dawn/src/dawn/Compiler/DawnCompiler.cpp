@@ -65,20 +65,6 @@ namespace dawn {
 
 namespace {
 
-codegen::Backend parseBackendString(const std::string& backendStr) {
-  if(backendStr == "gt" || backendStr == "gridtools") {
-    return codegen::Backend::GridTools;
-  } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
-    return codegen::Backend::CXXNaive;
-  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
-    return codegen::Backend::CXXNaiveIco;
-  } else if(backendStr == "cuda" || backendStr == "CUDA") {
-    return codegen::Backend::CUDA;
-  } else {
-    throw CompileError("Backend not supported");
-  }
-}
-
 /// @brief Make a suggestion to the user if there is a small typo (only works with string options)
 template <class T>
 struct ComputeEditDistance {
@@ -380,7 +366,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
   // Generate code
   codegen::Backend backend;
   try {
-    backend = parseBackendString(options_.Backend);
+    backend = codegen::parseBackendString(options_.Backend);
   } catch(CompileError& e) {
     diagnostics_.report(buildDiag("-backend", options_.Backend,
                                   "backend options must be : " +
@@ -465,6 +451,20 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 }
 
 namespace codegen {
+
+codegen::Backend parseBackendString(const std::string& backendStr) {
+  if(backendStr == "gt" || backendStr == "gridtools") {
+    return codegen::Backend::GridTools;
+  } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
+    return codegen::Backend::CXXNaive;
+  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
+    return codegen::Backend::CXXNaiveIco;
+  } else if(backendStr == "cuda" || backendStr == "CUDA") {
+    return codegen::Backend::CUDA;
+  } else {
+    throw CompileError("Backend not supported");
+  }
+}
 
 std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,

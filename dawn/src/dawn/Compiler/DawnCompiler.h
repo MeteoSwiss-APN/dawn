@@ -103,8 +103,11 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 namespace codegen {
 // TODO Move this elsewhere
 
-// CodeGen backends
+/// @brief CodeGen backends
 enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+
+/// @brief Parse the backend string to enumeration
+Backend parseBackendString(const std::string& backendStr);
 
 /// @brief Run the code generation
 std::unique_ptr<TranslationUnit>
