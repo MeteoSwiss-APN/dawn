@@ -27,7 +27,6 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
-#include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -35,6 +34,7 @@
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
+#include "dawn/Optimizer/PassSetLoopOrder.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageLocationType.h"
@@ -162,21 +162,15 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   OptimizerContext optimizer(getDiagnostics(), createOptimizerOptionsFromAllOptions(options_),
                              stencilIR);
 
-  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-
   // required passes to have proper, parallelized IR
   optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
-  optimizer.pushBackPass<PassMultiStageSplitter>(
-      options_.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassLocalVarType>();
   optimizer.pushBackPass<PassRemoveScalars>();
+  optimizer.pushBackPass<PassStageSplitAllStatements>();
   if(stencilIR->GridType == ast::GridType::Unstructured) {
-    optimizer.pushBackPass<PassStageSplitAllStatements>();
     optimizer.pushBackPass<PassSetStageLocationType>();
-  } else {
-    optimizer.pushBackPass<PassStageSplitter>();
   }
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
@@ -332,6 +326,12 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     case PassGroup::DataLocalityMetric:
       // Plain diagnostics, should not even be a pass but is independent
       optimizer.pushBackPass<PassDataLocalityMetric>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::SetLoopOrder:
+      // Plain diagnostics, should not even be a pass but is independent
+      optimizer.pushBackPass<PassSetLoopOrder>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;

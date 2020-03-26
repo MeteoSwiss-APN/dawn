@@ -74,7 +74,7 @@ protected:
   }
 };
 
-TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
+TEST_F(ComputeEnclosingAccessInterval, DISABLED_test_field_access_interval_01) {
   auto stencilInstantiation = loadTest("input/test_field_access_interval_01.sir");
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
@@ -127,7 +127,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   EXPECT_EQ(*intervalLap2, (iir::Interval{0, sir::Interval::End, 11, 0}));
 }
 
-TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
+TEST_F(ComputeEnclosingAccessInterval, DISABLED_test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("input/test_field_access_interval_02.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();

@@ -99,11 +99,10 @@ if(threadIdx.y < +6) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int ijcacheindex= iblock + 1 + (jblock + 1)*34;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
-  idx111 += max(0, blockIdx.z * 4) * stride_111_2;
-  int kleg_lower_bound = max(0,blockIdx.z*4);
-  int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
-for(int k = kleg_lower_bound+0; k <= kleg_upper_bound+0; ++k) {
+  // Pre-fill of kcaches
+for(int k = 0+0; k <=  ksize - 1 + 0+0; ++k) {
+
+    // Head fill of kcaches
   if(iblock >= -1 && iblock <= block_size_i -1 + 1 && jblock >= -1 && jblock <= block_size_j -1 + 1) {
 lap_ijcache[ijcacheindex] = (((::dawn::float_type) -4.0 * __ldg(&(in[idx111]))) + (__ldg(&(coeff[idx111])) * (__ldg(&(in[idx111+1*1])) + (__ldg(&(in[idx111+1*-1])) + (__ldg(&(in[idx111+stride_111_1*1])) + __ldg(&(in[idx111+stride_111_1*-1])))))));
   }    __syncthreads();
@@ -111,11 +110,21 @@ lap_ijcache[ijcacheindex] = (((::dawn::float_type) -4.0 * __ldg(&(in[idx111]))) 
 out[idx111] = (((::dawn::float_type) -4.0 * lap_ijcache[ijcacheindex]) + (__ldg(&(coeff[idx111])) * (lap_ijcache[ijcacheindex+1] + (lap_ijcache[ijcacheindex+-1] + (lap_ijcache[ijcacheindex+1*34] + lap_ijcache[ijcacheindex+-1*34])))));
   }    __syncthreads();
 
+    // Flush of kcaches
+
+    // Flush of kcaches
+
     // Slide kcaches
 
     // increment iterators
     idx111+=stride_111_2;
-}}
+}
+  // Final flush of kcaches
+
+  // Final flush of kcaches
+
+  // Final flush of kcaches
+}
 
 class hori_diff_stencil {
 public:
@@ -163,7 +172,7 @@ public:
       dim3 threads(32,4+4,1);
       const unsigned int nbx = (nx + 32 - 1) / 32;
       const unsigned int nby = (ny + 4 - 1) / 4;
-      const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
+      const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
       hori_diff_stencil_stencil41_ms87_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+coeff_ds.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
       };

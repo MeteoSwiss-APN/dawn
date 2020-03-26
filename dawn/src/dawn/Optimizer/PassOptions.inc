@@ -58,6 +58,8 @@ OPT(bool, SetCaches, false, "set-caches", "",
     "Run set-caches pass group", "", false, true)
 OPT(bool, SetBlockSize, false, "set-block-size", "",
     "Run set-block-size pass group", "", false, true)
+OPT(bool, SetLoopOrder, false, "opt-loop-order", "",
+    "Optimizes loop order to be parallel if possible", "", false, true)    
 OPT(bool, DataLocalityMetric, false, "data-locality-metric", "",
     "Run data-locality-metric pass group", "", false, true)
 
