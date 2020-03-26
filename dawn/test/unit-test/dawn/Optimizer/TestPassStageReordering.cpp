@@ -38,7 +38,7 @@ protected:
   explicit TestPassStageReordering() {
     context_ = std::make_unique<OptimizerContext>(diag_, options_,
                                                   std::make_shared<SIR>(ast::GridType::Cartesian));
-    dawn::UIDGenerator::getInstance()->reset();
+    UIDGenerator::getInstance()->reset();
   }
 
   void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {

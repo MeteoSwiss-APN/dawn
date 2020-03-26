@@ -42,7 +42,7 @@ protected:
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
   void runPass(const std::string& filename) {
-    dawn::UIDGenerator::getInstance()->reset();
+    UIDGenerator::getInstance()->reset();
     instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     CompilerUtil::runPass<dawn::PassLocalVarType>(context_, instantiation_);
