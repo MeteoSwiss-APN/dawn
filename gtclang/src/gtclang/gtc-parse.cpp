@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
 
   // Write SIR to stdout or file
   if(result.count("DumpAST") > 0 || result.count("DumpPP") > 0) {
-    DAWN_INFO(WARN) << "dump-ast or dump-pp present. Skipping serialization.";
+    DAWN_LOG(WARNING) << "dump-ast or dump-pp present. Skipping serialization.";
   } else if(result.count("out")) {
     dawn::SIRSerializer::serialize(result["out"].as<std::string>(), returnSIR.get(), format);
   } else {
