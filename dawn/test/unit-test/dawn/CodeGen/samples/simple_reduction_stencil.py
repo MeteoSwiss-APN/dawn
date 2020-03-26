@@ -37,8 +37,7 @@ if __name__ == "__main__":
                     "+",
                     rhs=sir_utils.make_field_access_expr("in"),
                     init=sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
-                    lhs_location=SIR.LocationType.Value("Edge"),
-                    rhs_location=SIR.LocationType.Value("Cell"),
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")]
                 ),
                 "=",
             )

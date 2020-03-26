@@ -41,8 +41,7 @@ def main():
                         sir_utils.make_field_access_expr("vec"), 
                         "*", 
                         sir_utils.make_field_access_expr("geofac_rot")),
-                    lhs_location=SIR.LocationType.Value("Vertex"),
-                    rhs_location=SIR.LocationType.Value("Edge"),
+                    chain=[SIR.LocationType.Value("Vertex"), SIR.LocationType.Value("Edge")]
                 ),
                 "=",
             ),
@@ -55,8 +54,7 @@ def main():
                         sir_utils.make_field_access_expr("vec"), 
                         "*", 
                         sir_utils.make_field_access_expr("geofac_div")),
-                    lhs_location=SIR.LocationType.Value("Cell"),
-                    rhs_location=SIR.LocationType.Value("Edge"),
+                    chain=[SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")]
                 ),
                 "=",
             ),
@@ -66,8 +64,7 @@ def main():
                     op="+",
                     init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("rot_vec"),
-                    lhs_location=SIR.LocationType.Value("Edge"),
-                    rhs_location=SIR.LocationType.Value("Vertex"),
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Vertex")],
                     weights=sir_utils.make_weights([-1.0, 1.0])
                 ),
                 "=",
@@ -89,8 +86,7 @@ def main():
                     op="+",
                     init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("div_vec"),
-                    lhs_location=SIR.LocationType.Value("Edge"),
-                    rhs_location=SIR.LocationType.Value("Cell"),
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
                     weights=sir_utils.make_weights([-1.0, 1.0])
                 ),
                 "=",
