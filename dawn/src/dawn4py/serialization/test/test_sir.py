@@ -345,8 +345,7 @@ class TestExpr(ExprTestBase):
                     "+",
                     rhs = make_field_access_expr("cell_field"),
                     init = make_literal_access_expr("1.0", BuiltinType.Float),
-                    lhs_location = LocationType.Value('Edge'),
-                    rhs_location = LocationType.Value('Cell'),
+                    chain = [LocationType.Value('Edge'), LocationType.Value('Cell')],
                     weights = make_weights([0.1, 0.2])
                 )
         self.assertEqual(expr.op, "+")

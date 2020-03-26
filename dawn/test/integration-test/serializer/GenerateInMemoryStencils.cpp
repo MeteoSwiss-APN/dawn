@@ -345,12 +345,13 @@ createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
           LoopOrderKind::Parallel,
           b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                              b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
-          b.stage(LocType::Cells,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                             b.stmt(b.assignExpr(
-                                 b.at(out_f), b.reduceOverNeighborExpr(
-                                                  Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                                  b.lit(0.), LocType::Cells, LocType::Edges))))))));
+          b.stage(
+              LocType::Cells,
+              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                         b.stmt(b.assignExpr(
+                             b.at(out_f), b.reduceOverNeighborExpr(
+                                              Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                              b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
   return stencil_instantiation;
 }
 

@@ -16,6 +16,8 @@
 
 #include "../interface/toylib_interface.hpp"
 
+toylib::ToylibElement::~ToylibElement() {}
+
 namespace {
 bool inner_face(toylib::Face const& f) {
   return (f.color() == toylib::face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
@@ -126,8 +128,9 @@ std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Gri
 
   for(int k_level = 0; k_level < f_data.k_size(); ++k_level) {
     for(const auto& cell : grid.faces()) {
-      f_data(cell, k_level) = toylibInterface::reduceEdgeToCell(
-          toylibInterface::toylibTag{}, grid, cell, 0,
+      f_data(cell, k_level) = toylibInterface::reduce(
+          toylibInterface::toylibTag{}, grid, &cell, 0,
+          std::vector<dawn::LocationType>{dawn::LocationType::Cells, dawn::LocationType::Edges},
           [&](auto& lhs, const auto& rhs) { lhs += f_data(cell, k_level); });
     }
   }
@@ -140,8 +143,9 @@ std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, G
 
   for(int k_level = 0; k_level < f_data.k_size(); ++k_level) {
     for(auto& cell : grid.faces()) {
-      f_data(cell, k_level) = toylibInterface::reduceVertexToCell(
-          toylibInterface::toylibTag{}, grid, cell, 0,
+      f_data(cell, k_level) = toylibInterface::reduce(
+          toylibInterface::toylibTag{}, grid, &cell, 0,
+          std::vector<dawn::LocationType>{dawn::LocationType::Cells, dawn::LocationType::Vertices},
           [&](auto& lhs, const auto& rhs) { lhs += f_data(cell, k_level); });
     }
   }
