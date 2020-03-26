@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
+#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
@@ -420,34 +421,5 @@ DiagnosticsEngine& DawnCompiler::getDiagnostics() { return diagnostics_; }
 
 const Options& DawnCompiler::getOptions() const { return options_; }
 Options& DawnCompiler::getOptions() { return options_; }
-
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
-    const OptimizerOptions& options) {
-  // Put all options there
-  dawn::Options dawnOptions;
-  // Copy over options passed in
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  dawnOptions.NAME = options.NAME;
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-  DawnCompiler compiler(dawnOptions);
-  return compiler.optimize(compiler.lowerToIIR(stencilIR), groups);
-}
-
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-        stencilInstantiationMap,
-    const std::list<PassGroup>& groups, const OptimizerOptions& options) {
-  // Put all options there
-  dawn::Options dawnOptions;
-  // Copy over options passed in
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  dawnOptions.NAME = options.NAME;
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-  DawnCompiler compiler(dawnOptions);
-  return compiler.optimize(stencilInstantiationMap, groups);
-}
 
 } // namespace dawn

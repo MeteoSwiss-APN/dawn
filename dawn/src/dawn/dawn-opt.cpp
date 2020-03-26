@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
                                                 : dawn::IIRSerializer::Format::Json;
     if(result.count("out"))
       dawn::IIRSerializer::serialize(result["out"].as<std::string>(), instantiation, iirFormat);
-    else if(!dawnOptions.DumpStencilInstantiation) {
+    else if(!optimizerOptions.DumpStencilInstantiation) {
 
       std::cout << dawn::IIRSerializer::serializeToString(instantiation, iirFormat);
     } else {
