@@ -242,7 +242,7 @@ int main(int argc, char* argv[]) {
 
       std::cout << dawn::IIRSerializer::serializeToString(instantiation, iirFormat);
     } else {
-      DAWN_LOG(INFO) << "Option dump-si was present. Skipping serialization...";
+      DAWN_LOG(INFO) << "dump-si present. Skipping serialization.";
     }
   }
 
