@@ -17,7 +17,7 @@ add_library(DawnOptimizer
   CreateVersionAndRename.h
   OptimizerContext.cpp
   OptimizerContext.h
-  Options.h
+  OptimizerOptions.h
   Options.inc
   Pass.h
   PassComputeStageExtents.cpp

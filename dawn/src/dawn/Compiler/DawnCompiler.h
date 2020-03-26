@@ -20,7 +20,7 @@
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/Options.h"
+#include "dawn/Optimizer/OptimizerOptions.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 
