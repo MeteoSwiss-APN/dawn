@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/GridType.h"
+#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/AccessComputation.h"
@@ -214,8 +215,8 @@ void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
 
 TEST(IIRDeserializerTest, CopyStencil) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  dawn::DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // read IIR from file
@@ -230,8 +231,8 @@ TEST(IIRDeserializerTest, CopyStencil) {
 
 TEST(IIRDeserializerTest, LapStencil) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  dawn::DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // read IIR from file
@@ -246,8 +247,8 @@ TEST(IIRDeserializerTest, LapStencil) {
 
 TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  dawn::DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
   // read IIR from file
   auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
@@ -261,8 +262,8 @@ TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
 
 TEST(IIRDeserializerTest, UnstructuredMixedCopies) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  dawn::DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  DawnCompiler compiler;
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
   // read IIR from file
   auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_mixed_copies.iir");
