@@ -84,7 +84,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 }
 
 std::unique_ptr<iir::Stencil>
-ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
+ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
                               const std::unique_ptr<iir::Stencil>& stencilPtr,
                               OptimizerContext& context) {
   iir::Stencil& stencil = *stencilPtr;

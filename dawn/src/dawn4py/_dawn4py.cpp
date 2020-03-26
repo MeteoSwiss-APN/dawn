@@ -30,13 +30,13 @@ PYBIND11_MODULE(_dawn4py, m) {
                   bool SSA, bool PrintStencilGraph, bool SetStageName, bool StageReordering,
                   bool StageMerger, bool TemporaryMerger, bool Inlining, bool IntervalPartitioning,
                   bool TmpToStencilFunction, bool SetNonTempCaches, bool SetCaches,
-                  bool SetBlockSize, bool SetLoopOrder, bool DataLocalityMetric,
-                  bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
-                  bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
-                  bool ReportPassStageSplit, bool ReportPassMultiStageSplit,
-                  bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
-                  bool ReportPassTemporaryType, bool ReportPassStageReordering,
-                  bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
+                  bool SetBlockSize, bool DataLocalityMetric, bool ReportBoundaryConditions,
+                  bool ReportDataLocalityMetric, bool ReportPassTmpToFunction,
+                  bool ReportPassRemoveScalars, bool ReportPassStageSplit,
+                  bool ReportPassMultiStageSplit, bool ReportPassFieldVersioning,
+                  bool ReportPassTemporaryMerger, bool ReportPassTemporaryType,
+                  bool ReportPassStageReodering, bool ReportPassStageMerger,
+                  bool ReportPassSetCaches, bool ReportPassSetBlockSize,
                   bool ReportPassSetNonTempCaches) {
                  return dawn::Options{MaxBlocksPerSM,
                                       nsms,
@@ -81,7 +81,6 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       SetNonTempCaches,
                                       SetCaches,
                                       SetBlockSize,
-                                      SetLoopOrder,
                                       DataLocalityMetric,
                                       ReportBoundaryConditions,
                                       ReportDataLocalityMetric,
@@ -92,7 +91,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       ReportPassFieldVersioning,
                                       ReportPassTemporaryMerger,
                                       ReportPassTemporaryType,
-                                      ReportPassStageReordering,
+                                      ReportPassStageReodering,
                                       ReportPassStageMerger,
                                       ReportPassSetCaches,
                                       ReportPassSetBlockSize,
@@ -119,8 +118,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("inlining") = false, py::arg("interval_partitioning") = false,
            py::arg("tmp_to_stencil_function") = false, py::arg("set_non_temp_caches") = false,
            py::arg("set_caches") = false, py::arg("set_block_size") = false,
-           py::arg("set_loop_order") = false, py::arg("data_locality_metric") = false,
-           py::arg("report_boundary_conditions") = false,
+           py::arg("data_locality_metric") = false, py::arg("report_boundary_conditions") = false,
            py::arg("report_data_locality_metric") = false,
            py::arg("report_pass_tmp_to_function") = false,
            py::arg("report_pass_remove_scalars") = false,
@@ -129,7 +127,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("report_pass_field_versioning") = false,
            py::arg("report_pass_temporary_merger") = false,
            py::arg("report_pass_temporary_type") = false,
-           py::arg("report_pass_stage_reordering") = false,
+           py::arg("report_pass_stage_reodering") = false,
            py::arg("report_pass_stage_merger") = false, py::arg("report_pass_set_caches") = false,
            py::arg("report_pass_set_block_size") = false,
            py::arg("report_pass_set_non_temp_caches") = false)
@@ -176,7 +174,6 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("set_non_temp_caches", &dawn::Options::SetNonTempCaches)
       .def_readwrite("set_caches", &dawn::Options::SetCaches)
       .def_readwrite("set_block_size", &dawn::Options::SetBlockSize)
-      .def_readwrite("set_loop_order", &dawn::Options::SetLoopOrder)
       .def_readwrite("data_locality_metric", &dawn::Options::DataLocalityMetric)
       .def_readwrite("report_boundary_conditions", &dawn::Options::ReportBoundaryConditions)
       .def_readwrite("report_data_locality_metric", &dawn::Options::ReportDataLocalityMetric)
@@ -187,7 +184,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("report_pass_field_versioning", &dawn::Options::ReportPassFieldVersioning)
       .def_readwrite("report_pass_temporary_merger", &dawn::Options::ReportPassTemporaryMerger)
       .def_readwrite("report_pass_temporary_type", &dawn::Options::ReportPassTemporaryType)
-      .def_readwrite("report_pass_stage_reordering", &dawn::Options::ReportPassStageReordering)
+      .def_readwrite("report_pass_stage_reodering", &dawn::Options::ReportPassStageReodering)
       .def_readwrite("report_pass_stage_merger", &dawn::Options::ReportPassStageMerger)
       .def_readwrite("report_pass_set_caches", &dawn::Options::ReportPassSetCaches)
       .def_readwrite("report_pass_set_block_size", &dawn::Options::ReportPassSetBlockSize)
@@ -247,7 +244,6 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "set_non_temp_caches=" << self.SetNonTempCaches << ",\n    "
            << "set_caches=" << self.SetCaches << ",\n    "
            << "set_block_size=" << self.SetBlockSize << ",\n    "
-           << "set_loop_order=" << self.SetLoopOrder << ",\n    "
            << "data_locality_metric=" << self.DataLocalityMetric << ",\n    "
            << "report_boundary_conditions=" << self.ReportBoundaryConditions << ",\n    "
            << "report_data_locality_metric=" << self.ReportDataLocalityMetric << ",\n    "
@@ -258,7 +254,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "report_pass_field_versioning=" << self.ReportPassFieldVersioning << ",\n    "
            << "report_pass_temporary_merger=" << self.ReportPassTemporaryMerger << ",\n    "
            << "report_pass_temporary_type=" << self.ReportPassTemporaryType << ",\n    "
-           << "report_pass_stage_reordering=" << self.ReportPassStageReordering << ",\n    "
+           << "report_pass_stage_reodering=" << self.ReportPassStageReodering << ",\n    "
            << "report_pass_stage_merger=" << self.ReportPassStageMerger << ",\n    "
            << "report_pass_set_caches=" << self.ReportPassSetCaches << ",\n    "
            << "report_pass_set_block_size=" << self.ReportPassSetBlockSize << ",\n    "
