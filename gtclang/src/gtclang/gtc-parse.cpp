@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
   llvm::llvm_shutdown_obj Y;
 
   // Create SIR as return value
-  std::shared_ptr<dawn::SIR> returnSIR = run(result["input"].as<std::string>(), parseOptions);
+  auto returnSIR = run(result["input"].as<std::string>(), parseOptions);
 
   // Parse format to enumeration
   dawn::SIRSerializer::Format format;
