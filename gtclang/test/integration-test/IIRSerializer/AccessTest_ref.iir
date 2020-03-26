@@ -400,7 +400,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 43,
       "Caches": {}
      }

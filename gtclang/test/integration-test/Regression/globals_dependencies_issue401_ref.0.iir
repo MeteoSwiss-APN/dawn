@@ -258,7 +258,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 75,
       "Caches": {}
      }
@@ -424,7 +424,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 76,
       "Caches": {}
      }
