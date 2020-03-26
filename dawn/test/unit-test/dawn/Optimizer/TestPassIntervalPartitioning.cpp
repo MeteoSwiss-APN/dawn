@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -29,7 +29,7 @@ using namespace dawn;
 
 class TestPassIntervalPartitioning : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
   std::unordered_set<iir::Interval> expected_;
 
@@ -56,11 +56,11 @@ TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
 
   const auto& stencils = instantiation->getIIR()->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
-  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
+  const auto& stencil = stencils[0];
   ASSERT_TRUE(stencil->getNumStages() == 3);
 
   const auto& multiStage = stencil->getChildren().begin()->get();
-  std::unordered_set<iir::Interval> intervals = multiStage->getIntervals();
+  auto intervals = multiStage->getIntervals();
 
   ASSERT_TRUE(intervals.size() == expected_.size());
   for(const auto& interval : expected_) {
