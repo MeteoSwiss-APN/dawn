@@ -12,11 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_OPTIONS_H
-#define DAWN_OPTIMIZER_OPTIONS_H
+#ifndef DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
+#define DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 
 namespace dawn {
 
+// TODO Rename this to dawn::Options after the larger dawn::Options is removed
 struct OptimizerOptions {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   TYPE NAME = DEFAULT_VALUE;
