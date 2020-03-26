@@ -68,9 +68,8 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -125,9 +124,8 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   int varBID = metadata.getAccessIDFromName("varB");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -176,9 +174,8 @@ TEST(TestRemoveScalars, test_cartesian_scalar_01) {
   int varBID = metadata.getAccessIDFromName("varB");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -227,9 +224,8 @@ TEST(TestRemoveScalars, test_cartesian_scalar_02) {
   int varBID = metadata.getAccessIDFromName("varB");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -278,9 +274,8 @@ TEST(TestRemoveScalars, test_global_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -328,9 +323,8 @@ TEST(TestRemoveScalars, test_if_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -382,9 +376,8 @@ TEST(TestRemoveScalars, test_if_02) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -440,9 +433,8 @@ TEST(TestRemoveScalars, test_else_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -496,9 +488,8 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
                                      b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassRemoveScalars) and expect info in output
@@ -537,9 +528,8 @@ TEST(TestRemoveScalars, warn_increment) {
                              b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassRemoveScalars) and expect info in output
@@ -581,9 +571,8 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassRemoveScalars) and expect info in output
@@ -625,9 +614,8 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassRemoveScalars) and expect info in output
@@ -671,9 +659,8 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
                       b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassRemoveScalars) and expect info in output
