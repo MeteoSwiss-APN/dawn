@@ -17,7 +17,7 @@
 
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
-#include "dawn/iir/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <map>
 #include <memory>
 #include <string>
