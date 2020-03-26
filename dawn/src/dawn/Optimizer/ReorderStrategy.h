@@ -25,7 +25,7 @@ class StencilInstantiation;
 class DependencyGraphStage;
 } // namespace iir
 
-/// @brief Abstract class for various reordering strategies
+/// @brief Abstract class for various reodering strategies
 /// @ingroup optimizer
 class ReorderStrategy {
 public:

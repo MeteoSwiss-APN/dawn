@@ -29,7 +29,7 @@ class ReorderStrategyGreedy : public ReorderStrategy {
 public:
   /// @brief Apply the reordering strategy and return stencil
   virtual std::unique_ptr<iir::Stencil> reorder(iir::StencilInstantiation* instantiation,
-                                                const std::unique_ptr<iir::Stencil>& stencilPtr,
+                                                const std::unique_ptr<iir::Stencil>& stencil,
                                                 OptimizerContext& context) override;
 };
 
