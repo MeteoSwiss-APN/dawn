@@ -31,9 +31,9 @@ namespace {
 
 class TestPassStageReordering : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
-  dawn::DiagnosticsEngine diag_;
+  DiagnosticsEngine diag_;
 
   explicit TestPassStageReordering() {
     context_ = std::make_unique<OptimizerContext>(diag_, options_,

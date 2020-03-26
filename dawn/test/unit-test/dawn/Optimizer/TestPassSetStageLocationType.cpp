@@ -37,7 +37,7 @@ namespace {
 
 class TestPassSetStageLocationType : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
 

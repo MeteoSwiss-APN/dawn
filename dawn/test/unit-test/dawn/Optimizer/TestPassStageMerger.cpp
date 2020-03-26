@@ -31,9 +31,9 @@ namespace {
 
 class TestPassStageMerger : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
-  dawn::DiagnosticsEngine diag_;
+  DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
     options_.StageMerger = options_.MergeDoMethods = true;
