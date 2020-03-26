@@ -14,7 +14,6 @@
 
 #include "GenerateInMemoryStencils.h"
 
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
