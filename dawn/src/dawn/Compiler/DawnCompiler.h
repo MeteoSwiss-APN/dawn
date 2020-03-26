@@ -48,6 +48,8 @@ enum class PassGroup {
   DataLocalityMetric
 };
 
+std::list<PassGroup> defaultPassGroups();
+
 /// @brief The DawnCompiler class
 /// @ingroup compiler
 class DawnCompiler : NonCopyable {
@@ -77,8 +79,6 @@ public:
   std::unique_ptr<codegen::TranslationUnit>
   generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);
-
-  static std::list<PassGroup> defaultPassGroups();
 
   /// @brief Get options
   const Options& getOptions() const;

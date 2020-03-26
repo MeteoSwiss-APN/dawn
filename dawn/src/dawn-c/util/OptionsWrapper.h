@@ -149,7 +149,7 @@ struct ValueGetter<std::string> {
 
 } // namespace internal
 
-/// @brief Warpper for dawnOptionsEntry_t`
+/// @brief Wrapper for dawnOptionsEntry_t`
 /// @ingroup dawn_c_util
 struct OptionsEntryWrapper {
   OptionsEntryWrapper() = delete;
@@ -166,9 +166,9 @@ struct OptionsEntryWrapper {
   }
 
   /// @brief Deallocate `dawnOptionsEntry_t`
-  static void destroy(dawnOptionsEntry_t* entry) {
-    std::free(entry->Value);
-    std::free(entry);
+  static void destroy(const dawnOptionsEntry_t* entry) {
+    std::free((void*)entry->Value);
+    std::free((void*)entry);
   }
 
   /// @brief Copy construct `dawnOptionsEntry_t`

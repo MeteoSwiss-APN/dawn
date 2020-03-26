@@ -32,7 +32,7 @@ dawnOptionsEntry_t* dawnOptionsEntryCreateString(const char* value) {
   return OptionsEntryWrapper::construct(value);
 }
 
-int* dawnOptionsEntryGetInteger(dawnOptionsEntry_t* entry) {
+int* dawnOptionsEntryGetInteger(const dawnOptionsEntry_t* entry) {
   if(entry->Type == DT_Integer) {
     void* value = std::malloc(entry->SizeInBytes);
     std::memcpy(value, entry->Value, entry->SizeInBytes);
@@ -41,7 +41,7 @@ int* dawnOptionsEntryGetInteger(dawnOptionsEntry_t* entry) {
   return nullptr;
 }
 
-double* dawnOptionsEntryGetDouble(dawnOptionsEntry_t* entry) {
+double* dawnOptionsEntryGetDouble(const dawnOptionsEntry_t* entry) {
   if(entry->Type == DT_Double) {
     void* value = std::malloc(entry->SizeInBytes);
     std::memcpy(value, entry->Value, entry->SizeInBytes);
@@ -50,7 +50,7 @@ double* dawnOptionsEntryGetDouble(dawnOptionsEntry_t* entry) {
   return nullptr;
 }
 
-char* dawnOptionsEntryGetString(dawnOptionsEntry_t* entry) {
+char* dawnOptionsEntryGetString(const dawnOptionsEntry_t* entry) {
   if(entry->Type == DT_Char) {
     void* value = std::malloc(entry->SizeInBytes);
     std::memcpy(value, entry->Value, entry->SizeInBytes);
@@ -59,7 +59,9 @@ char* dawnOptionsEntryGetString(dawnOptionsEntry_t* entry) {
   return nullptr;
 }
 
-void dawnOptionsEntryDestroy(dawnOptionsEntry_t* entry) { OptionsEntryWrapper::destroy(entry); }
+void dawnOptionsEntryDestroy(const dawnOptionsEntry_t* entry) {
+  OptionsEntryWrapper::destroy(entry);
+}
 
 dawnOptions_t* dawnOptionsCreate() {
   auto wrapper = new OptionsWrapper;

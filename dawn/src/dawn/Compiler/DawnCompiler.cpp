@@ -130,7 +130,7 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
 }
 } // namespace
 
-std::list<PassGroup> DawnCompiler::defaultPassGroups() {
+std::list<PassGroup> defaultPassGroups() {
   return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
           PassGroup::SetCaches, PassGroup::SetBlockSize};
 }

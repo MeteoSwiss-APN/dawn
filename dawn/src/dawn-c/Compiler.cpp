@@ -14,9 +14,11 @@
 
 #include "dawn-c/Compiler.h"
 #include "dawn-c/ErrorHandling.h"
+#include "dawn-c/Options.h"
 #include "dawn-c/util/Allocate.h"
 #include "dawn-c/util/CompilerWrapper.h"
 #include "dawn-c/util/OptionsWrapper.h"
+#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/Unreachable.h"
@@ -70,36 +72,39 @@ void dawnInstallDiagnosticsHandler(dawnDiagnosticsHandler_t handler) {
 dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptions_t* options) {
   dawnTranslationUnit_t* translationUnit = nullptr;
 
+  // TODO This has no way of running pass groups other than the defaults
   // Deserialize the SIR
+  dawn::codegen::Backend backend = dawn::codegen::Backend::GridTools;
   try {
     std::string sirStr(SIR, size);
     auto inMemorySIR =
         dawn::SIRSerializer::deserializeFromString(sirStr, dawn::SIRSerializer::Format::Byte);
 
     // Prepare options
-    dawn::Options compileOptions;
-    if(options)
-      toConstOptionsWrapper(options)->setDawnOptions(&compileOptions);
-
-    // Run the compiler
-    dawn::DawnCompiler compiler(compileOptions);
-    auto TU = compiler.compile(inMemorySIR);
-
-    // Report diganostics
-    if(compiler.getDiagnostics().hasDiags()) {
-      for(const auto& diag : compiler.getDiagnostics().getQueue())
-        dawnReportDiagnostic(getDawnDiagnosticsKind(diag->getDiagKind()),
-                             diag->getSourceLocation().Line, diag->getSourceLocation().Column,
-                             diag->getFilename().c_str(), diag->getMessage().c_str());
+    dawn::OptimizerOptions optimizerOptions;
+    dawn::codegen::Options codegenOptions;
+    if(options) {
+      backend = dawn::codegen::parseBackendString(
+          dawnOptionsEntryGetString(toConstOptionsWrapper(options)->getOption("Backend")));
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  optimizerOptions.NAME =                                                                          \
+      *static_cast<TYPE*>(toConstOptionsWrapper(options)->getOption(#NAME)->Value);
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME =                                                                            \
+      *static_cast<TYPE*>(toConstOptionsWrapper(options)->getOption(#NAME)->Value);
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
     }
 
-    if(!TU || compiler.getDiagnostics().hasErrors())
-      throw std::runtime_error("compilation failed");
+    // Run the compiler
+    auto optimizedSIM = dawn::run(inMemorySIR, dawn::defaultPassGroups(), optimizerOptions);
+    auto TU = dawn::codegen::run(optimizedSIM, backend, codegenOptions);
 
     translationUnit = allocate<dawnTranslationUnit_t>();
     translationUnit->Impl = new dawn::codegen::TranslationUnit(std::move(*TU.get()));
     translationUnit->OwnsData = 1;
-
   } catch(std::exception& e) {
     dawnFatalError(e.what());
   }
