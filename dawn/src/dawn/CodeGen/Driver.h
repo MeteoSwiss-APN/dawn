@@ -12,24 +12,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_OPTIONS_H
-#define DAWN_CODEGEN_OPTIONS_H
+#ifndef DAWN_CODEGEN_DRIVER_H
+#define DAWN_CODEGEN_DRIVER_H
+
+#include "dawn/CodeGen/Options.h"
+#include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/iir/StencilInstantiation.h"
+#include <map>
+#include <memory>
+#include <string>
 
 namespace dawn {
 namespace codegen {
 
-/// @brief CodeGen backends
-enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+/// @brief Parse the backend string to enumeration
+Backend parseBackendString(const std::string& backendStr);
 
-/// @brief Options for all codegen backends combined.
-///
-/// These have to be disjoint from the options for other dawn and gtc-parse components.
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/CodeGen/Options.inc"
-#undef OPT
-};
+/// @brief Run the code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
+    Backend backend, const Options& options);
 
 } // namespace codegen
 } // namespace dawn

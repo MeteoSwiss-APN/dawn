@@ -15,6 +15,7 @@
 #ifndef DAWN_COMPILER_DAWNCOMPILER_H
 #define DAWN_COMPILER_DAWNCOMPILER_H
 
+#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/Options.h"
@@ -25,6 +26,7 @@
 
 #include <list>
 #include <memory>
+#include <string>
 
 namespace dawn {
 
@@ -99,22 +101,6 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
-
-namespace codegen {
-// TODO Move this elsewhere
-
-/// @brief CodeGen backends
-enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
-
-/// @brief Parse the backend string to enumeration
-Backend parseBackendString(const std::string& backendStr);
-
-/// @brief Run the code generation
-std::unique_ptr<TranslationUnit>
-run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
-    Backend backend, const Options& options);
-
-} // namespace codegen
 
 } // namespace dawn
 
