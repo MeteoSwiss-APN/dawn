@@ -126,8 +126,10 @@ int main(int argc, char* argv[]) {
   }
 
   // Write SIR to stdout or file
-  if(result.count("out")) {
+  if(result.count("out") > 0) {
     dawn::SIRSerializer::serialize(result["out"].as<std::string>(), returnSIR.get(), format);
+  } else if(result.count("dump-ast") > 0 || result.count("dump-pp") > 0) {
+    DAWN_LOG(INFO) << "dump-ast or dump-pp present. Skipping serialization.";
   } else {
     const std::string sirString = dawn::SIRSerializer::serializeToString(returnSIR.get(), format);
     std::cout << sirString;
