@@ -391,6 +391,21 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
+
+  // Run compute stage extents pass on each stencil...
+  std::unique_ptr<OptimizerContext> context;
+  PassComputeStageExtents pass(*context);
+  for(auto& stencil : stencilInstantiationMap) {
+    auto& instantiation = stencil.second;
+    bool result = pass.run(instantiation);
+    if(!result) {
+      diagnostics_.report(
+          buildDiag("-backend", options_.Backend,
+                    "error running compute stage extents pass on stencil '" + stencil.first + "'"));
+      return nullptr;
+    }
+  }
+
   try {
     switch(backend) {
     case BackendType::GridTools: {
@@ -423,6 +438,7 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
     diag << "code generation for backend `" << options_.Backend << "` failed";
     diagnostics_.report(diag);
   }
+
   return nullptr;
 }
 
