@@ -142,7 +142,7 @@ public:
 
     std::vector<ast::Expr> vWeights;
     for(const auto& it : weights) {
-      vWeights.push_back(ast::LiteralAccessExpr(sir::Value(it)));
+      vWeights.push_back(ast::LiteralAccessExpr(std::to_string(it), Type::TypeInfo<TWeight>::Type));
     }
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
