@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/Driver.h"
+#include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
 
@@ -50,6 +51,14 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 #undef OPT
   DawnCompiler compiler(dawnOptions);
   return compiler.optimize(stencilInstantiationMap, groups);
+}
+
+std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR,
+                                                  codegen::Backend backend,
+                                                  const OptimizerOptions& optimizerOptions,
+                                                  const codegen::Options& codegenOptions) {
+  return codegen::run(run(stencilIR, defaultPassGroups(), optimizerOptions), backend,
+                      codegenOptions);
 }
 
 } // namespace dawn
