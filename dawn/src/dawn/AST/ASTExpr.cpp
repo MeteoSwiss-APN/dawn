@@ -471,9 +471,12 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
 }
 
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(
-    std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    std::vector<sir::Value> weights, std::vector<ast::LocationType> chain, SourceLocation loc)
+ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
+                                                     std::shared_ptr<Expr> const& rhs,
+                                                     std::shared_ptr<Expr> const& init,
+                                                     std::vector<std::shared_ptr<Expr>> weights,
+                                                     std::vector<ast::LocationType> chain,
+                                                     SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
       chain_(chain), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
@@ -512,7 +515,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
       return false;
     }
     for(int i = 0; i < weights_->size(); i++) {
-      if(!weights_->at(i).comparison(otherPtr->getWeights()->at(i))) {
+      if(*weights_.value().at(i) != *otherPtr->getWeights().value().at(i)) {
         return false;
       }
     }
