@@ -338,8 +338,26 @@ void CodeGen::addTmpStorageInit(
     MemberFunction& ctr, iir::Stencil const& stencil,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
-    ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
-                std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
+    iir::Extents maxExtents{ast::cartesian};
+    for(const auto& multiStage : stencil.getChildren())
+      for(const auto& stage : multiStage->getChildren())
+        maxExtents.merge(stage->getExtents());
+
+    const auto& hMaxExtents =
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+    int iMax = hMaxExtents.iPlus();
+    int jMax = hMaxExtents.jPlus();
+
+    std::string tmpMetadataInit = tmpMetadataName_ + "(dom_.isize()";
+    if(iMax > 0)
+      tmpMetadataInit += " + " + std::to_string(iMax);
+    tmpMetadataInit += ", dom_.jsize()";
+    if(jMax > 0)
+      tmpMetadataInit += " + " + std::to_string(jMax);
+    tmpMetadataInit +=
+        ", dom_.ksize() + 2*" + std::to_string(getVerticalTmpHaloSize(stencil)) + ")";
+
+    ctr.addInit(tmpMetadataInit);
     for(const auto& field : tempFields) {
       ctr.addInit("m_" + field.second.Name + "(" + tmpMetadataName_ + ")");
     }
