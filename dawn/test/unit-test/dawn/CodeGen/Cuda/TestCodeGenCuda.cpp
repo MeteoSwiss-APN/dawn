@@ -34,4 +34,8 @@ TEST_F(TestCodeGenCuda, ConditionalStencil) {
   runTest(this->getConditionalStencil(), "conditional_stencil.cu");
 }
 
+TEST_F(TestCodeGenCuda, DzCStencil) {
+  runTest(this->getStencilFromIIR("update_dz_c"), "update_dz_c.cu");
+}
+
 } // anonymous namespace

@@ -12,6 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
@@ -22,13 +24,14 @@
 
 namespace {
 
+using namespace dawn;
 using namespace dawn::iir;
 using SInterval = dawn::sir::Interval;
 
 class TestCodeGen : public ::testing::Test {
 protected:
-  std::shared_ptr<dawn::iir::StencilInstantiation> getGlobalIndexStencil() {
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getGlobalIndexStencil() {
+    UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in_f = b.field("in_field", FieldType::ijk);
@@ -38,22 +41,22 @@ protected:
         b.build("generated",
                 b.stencil(b.multistage(
                     LoopOrderKind::Parallel,
-                    b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.stage(b.doMethod(SInterval::Start, SInterval::End,
                                        b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                     b.stage(1, {0, 2},
-                            b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                            b.doMethod(SInterval::Start, SInterval::End,
                                        b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
     return stencil_inst;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getLaplacianStencil() {
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getLaplacianStencil() {
+    UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in = b.field("in", FieldType::ijk);
     auto out = b.field("out", FieldType::ijk);
-    auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+    auto dx = b.localvar("dx", BuiltinTypeID::Double);
 
     auto stencil_inst = b.build(
         "generated",
@@ -78,13 +81,13 @@ protected:
     return stencil_inst;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getNonOverlappingInterval() {
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getNonOverlappingInterval() {
+    UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in = b.field("in", FieldType::ijk);
     auto out = b.field("out", FieldType::ijk);
-    auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+    auto dx = b.localvar("dx", BuiltinTypeID::Double);
 
     auto stencil_inst = b.build(
         "generated",
@@ -111,24 +114,33 @@ protected:
     return stencil_inst;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getConditionalStencil() {
-    dawn::OptimizerContext::OptimizerContextOptions options;
-    std::unique_ptr<dawn::OptimizerContext> context;
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getStencilFromIIR(const std::string& name) {
+    OptimizerContext::OptimizerContextOptions options;
+    std::unique_ptr<OptimizerContext> context;
+    UIDGenerator::getInstance()->reset();
 
-    return dawn::CompilerUtil::load("../input/conditional_stencil.iir", options, context);
+    return CompilerUtil::load("../input/" + name + ".iir", options, context);
   }
 
-  void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencil_inst,
+  std::shared_ptr<StencilInstantiation> getConditionalStencil() {
+    return getStencilFromIIR("conditional_stencil");
+  }
+
+  void runTest(const std::shared_ptr<StencilInstantiation> stencil_inst,
                const std::string& ref_file) {
+    // Run compute stage extents pass...
+    std::unique_ptr<OptimizerContext> context;
+    PassComputeStageExtents pass(*context);
+    EXPECT_TRUE(pass.run(stencil_inst));
+
     std::ostringstream oss;
     if(ref_file.find(".cu") != std::string::npos) {
-      dawn::CompilerUtil::dumpCuda(oss, stencil_inst);
+      CompilerUtil::dumpCuda(oss, stencil_inst);
     } else {
-      dawn::CompilerUtil::dumpNaive(oss, stencil_inst);
+      CompilerUtil::dumpNaive(oss, stencil_inst);
     }
 
-    std::string ref = dawn::readFile("../reference/" + ref_file);
+    std::string ref = readFile("../reference/" + ref_file);
     ASSERT_EQ(oss.str(), ref) << "Generated code does not match reference code";
   }
 };
