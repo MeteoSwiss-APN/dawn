@@ -409,11 +409,14 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   // declared rhs and lhs location types
   if(ops.hasDimensions()) {
     const auto& rhsUnstructuredDim = getUnstructuredDim(ops.getDimensions());
-    dimensionsConsistent_ =
-        rhsUnstructuredDim.isSparse()
-            ? (rhsUnstructuredDim.getLastSparseLocationType() == reductionExpr->getRhsLocation() &&
-               rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation())
-            : (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getRhsLocation());
+    if(rhsUnstructuredDim.isSparse()) {
+      dimensionsConsistent_ =
+          (rhsUnstructuredDim.getLastSparseLocationType() == reductionExpr->getNbhChain().back() &&
+           rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation());
+    } else {
+      dimensionsConsistent_ =
+          (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getNbhChain().back());
+    }
   }
 
   if(!dimensionsConsistent_) {

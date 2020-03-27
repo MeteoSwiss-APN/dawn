@@ -779,8 +779,7 @@ def make_reduction_over_neighbor_expr(
     op: str,
     rhs: ExprType,
     init: ExprType,
-    lhs_location: LocationTypeValue,
-    rhs_location: LocationTypeValue,
+    chain: List[LocationTypeValue],
     weights: List[Weight] = None
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
@@ -788,16 +787,15 @@ def make_reduction_over_neighbor_expr(
     :param op:              Reduction operation performed for each neighbor
     :param rhs:             Operation to be performed for each neighbor before reducing
     :param init:            Initial value for reduction operation
-    :param lhs_location:    Location type of left hand side
-    :param rhs_location:    Location type of right hand side
+    :param chain:           Neighbor chain definining the neighbors to reduce from and 
+                            the location type to reduce to (first element)
     :param weights:         Weights on neighbors (required to be of equal type)
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
-    expr.lhs_location = lhs_location
-    expr.rhs_location = rhs_location
+    expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend(weights)
 
