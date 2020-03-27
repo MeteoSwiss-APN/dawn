@@ -17,6 +17,25 @@
 
 namespace dawn {
 
+// TODO This will be moved to Compiler/Driver.h when
+/// @brief Enumeration of all pass groups
+enum class PassGroup {
+  Parallel,
+  SSA,
+  PrintStencilGraph,
+  SetStageName,
+  StageReordering,
+  StageMerger,
+  TemporaryMerger,
+  Inlining,
+  IntervalPartitioning,
+  TmpToStencilFunction,
+  SetNonTempCaches,
+  SetCaches,
+  SetBlockSize,
+  DataLocalityMetric
+};
+
 // TODO Rename this to dawn::Options after the larger dawn::Options is removed
 struct OptimizerOptions {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \

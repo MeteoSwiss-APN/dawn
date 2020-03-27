@@ -31,7 +31,7 @@ Backend parseBackendString(const std::string& backendStr);
 /// @brief Run the code generation
 std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
-    Backend backend, const Options& options);
+    Backend backend, const Options& options = {});
 
 } // namespace codegen
 } // namespace dawn

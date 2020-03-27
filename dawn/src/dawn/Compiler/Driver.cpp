@@ -54,11 +54,11 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 }
 
 std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR,
-                                                  codegen::Backend backend,
+                                                  const std::list<PassGroup>& passGroups,
                                                   const OptimizerOptions& optimizerOptions,
+                                                  codegen::Backend backend,
                                                   const codegen::Options& codegenOptions) {
-  return codegen::run(run(stencilIR, defaultPassGroups(), optimizerOptions), backend,
-                      codegenOptions);
+  return codegen::run(run(stencilIR, passGroups, optimizerOptions), backend, codegenOptions);
 }
 
 } // namespace dawn
