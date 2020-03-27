@@ -43,7 +43,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
 // }
 
-/// @brief Compile SIR using default pass groups
+/// @brief Compile SIR to a translation unit
 std::unique_ptr<codegen::TranslationUnit>
 compile(const std::shared_ptr<SIR>& stencilIR,
         const std::list<PassGroup>& passGroups = defaultPassGroups(),
