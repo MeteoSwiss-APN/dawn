@@ -15,6 +15,9 @@
 #ifndef DAWN_COMPILER_DRIVER_H
 #define DAWN_COMPILER_DRIVER_H
 
+#include "dawn/CodeGen/Driver.h"
+#include "dawn/CodeGen/Options.h"
+#include "dawn/Codegen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerOptions.h"
 #include <list>
@@ -55,6 +58,12 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
+
+/// @brief Compile SIR using default pass groups
+std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR,
+                                                  codegen::Backend backend,
+                                                  const OptimizerOptions& optimizerOptions = {},
+                                                  const codegen::Options& codegenOptions = {});
 
 } // namespace dawn
 
