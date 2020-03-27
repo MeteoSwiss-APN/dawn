@@ -17,7 +17,7 @@
 
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
-#include "dawn/Codegen/TranslationUnit.h"
+#include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerOptions.h"
 #include <list>
