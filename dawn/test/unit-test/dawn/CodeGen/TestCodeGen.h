@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
+//#include "dawn/Optimizer/OptimizerContext.h"
+//#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
@@ -128,11 +128,6 @@ protected:
 
   void runTest(const std::shared_ptr<StencilInstantiation> stencil_inst,
                const std::string& ref_file) {
-    // Run compute stage extents pass...
-    std::unique_ptr<OptimizerContext> context;
-    PassComputeStageExtents pass(*context);
-    EXPECT_TRUE(pass.run(stencil_inst));
-
     std::ostringstream oss;
     if(ref_file.find(".cu") != std::string::npos) {
       CompilerUtil::dumpCuda(oss, stencil_inst);

@@ -170,6 +170,9 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
   for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
+
+  // Populate horizontal stage extents...
+  target->computeStageExtents();
 }
 
 void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,

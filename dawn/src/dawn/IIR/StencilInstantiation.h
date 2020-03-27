@@ -118,6 +118,12 @@ public:
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;
+
+  /// @brief This method computes the extents (associated to redundant computations) of each stage
+  /// The pass takes as input a collection of stages of each multi-stage from the
+  /// StencilInstantation and stores the computation in the `Extent` member of the Stage (@see
+  /// Stage)
+  void computeStageExtents();
 };
 } // namespace iir
 } // namespace dawn
