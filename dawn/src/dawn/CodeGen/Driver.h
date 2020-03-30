@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -32,6 +33,11 @@ Backend parseBackendString(const std::string& backendStr);
 std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
     Backend backend, const Options& options = {});
+
+std::string run(const std::map<std::string, std::string>& stencilInstantiationMap,
+                IIRSerializer::Format format = IIRSerializer::Format::Json,
+                dawn::codegen::Backend backend = codegen::Backend::GridTools,
+                const dawn::codegen::Options& options = {});
 
 } // namespace codegen
 } // namespace dawn

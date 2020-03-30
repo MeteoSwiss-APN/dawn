@@ -12,7 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"

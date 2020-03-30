@@ -184,9 +184,10 @@ else()
 endif()
 mark_as_advanced(${PROJECT_NAME}_EXAMPLES)
 
-if(${PROJECT_NAME}_EXAMPLES)
-  add_subdirectory(examples)
-endif()
+# Currently there are no examples for CMake to build
+# if(${PROJECT_NAME}_EXAMPLES)
+#   add_subdirectory(examples)
+# endif()
 
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)

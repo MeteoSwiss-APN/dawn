@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/LocationType.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"

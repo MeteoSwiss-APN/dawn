@@ -35,10 +35,8 @@
 OPT(int, MaxHaloPoints, 3, "max-halo", "",
     "Set the maximum number of allowed halo points", "<N>", true, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
-    "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:"
-    "\n - none   = Disable reordering"
-    "\n - greedy = Use greedy fusing"
-    "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
+    "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:\n - none   = Disable reordering\n - greedy = Use greedy fusing\n - scut   = Use S-cut graph partitioning\n",
+    "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
 OPT(bool, MaxCutMSS, false, "max-cut-mss", "",

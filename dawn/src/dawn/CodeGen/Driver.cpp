@@ -55,5 +55,23 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& con
   return nullptr;
 }
 
+std::string run(const std::map<std::string, std::string>& stencilInstantiationMap,
+                IIRSerializer::Format format, dawn::codegen::Backend backend,
+                const dawn::codegen::Options& options) {
+  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
+  for(auto [name, instStr] : stencilInstantiationMap) {
+    internalMap.insert(
+        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
+  }
+  auto translationUnit = dawn::codegen::run(internalMap, backend, options);
+  std::string code;
+  for(auto p : translationUnit->getPPDefines())
+    code += p + "\n";
+  code += translationUnit->getGlobals() + "\n\n";
+  for(auto p : translationUnit->getStencils())
+    code += p.second;
+  return code;
+}
+
 } // namespace codegen
 } // namespace dawn

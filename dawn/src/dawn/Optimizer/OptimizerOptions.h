@@ -15,6 +15,8 @@
 #ifndef DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 #define DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 
+#include <string>
+
 namespace dawn {
 
 // TODO This will be moved to Compiler/Driver.h when

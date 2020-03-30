@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/Driver.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -193,6 +192,9 @@ int main(int argc, char* argv[]) {
   for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
     passGroups.push_back(parsePassGroup(pg));
   }
+
+  // Until stencil functions are added to the IIR...
+  passGroups.push_back(dawn::PassGroup::Inlining);
 
   // Get the input from file or stdin
   std::string input;

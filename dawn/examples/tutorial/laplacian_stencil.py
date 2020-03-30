@@ -54,7 +54,9 @@ def main(args: argparse.Namespace):
                         sir_utils.make_binary_operator(
                             sir_utils.make_field_access_expr("in", [0, 0, 0]),
                             "*",
-                            sir_utils.make_literal_access_expr("-4.0", sir_utils.BuiltinType.Float),
+                            sir_utils.make_literal_access_expr(
+                                "-4.0", sir_utils.BuiltinType.Float
+                            ),
                         ),
                         "+",
                         sir_utils.make_binary_operator(
@@ -83,7 +85,9 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     stencils_globals = sir_utils.GlobalVariableMap()
     stencils_globals.map["dx"].double_value = 0.0
@@ -111,7 +115,7 @@ def main(args: argparse.Namespace):
     sir_file.close()
 
     # compile
-    code = dawn4py.compile(sir, backend="c++-naive")
+    code = dawn4py.compile_sir(sir, dawn4py.SIRSerializerFormat.Byte, backend="c++-naive")
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
@@ -120,8 +124,15 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a simple laplace stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(
+        description="Generate a simple laplace stencil using Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

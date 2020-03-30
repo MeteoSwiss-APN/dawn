@@ -16,7 +16,6 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
-#include "dawn/Compiler/Driver.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
