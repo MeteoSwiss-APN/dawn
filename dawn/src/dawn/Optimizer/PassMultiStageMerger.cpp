@@ -104,7 +104,7 @@ PassMultiStageMerger::PassMultiStageMerger(OptimizerContext& context)
 
 bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   const int maxBoundaryExtent = context_.getOptions().MaxHaloPoints;
-  for(const auto& stencil : stencils) {
+  for(const auto& stencil : instantiation->getStencils()) {
     if(stencil->getChildren().size() < 2)
       continue;
 
