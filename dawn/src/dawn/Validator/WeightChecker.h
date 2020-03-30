@@ -38,6 +38,7 @@ private:
   class WeightCheckerImpl : public dawn::ast::ASTVisitorForwarding {
   private:
     bool weightsValid_ = true;
+    bool parentIsWeight_ = false;
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
 

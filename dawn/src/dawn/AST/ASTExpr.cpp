@@ -482,6 +482,7 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
   DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
+  operands_.insert(operands_.end(), weights.begin(), weights.end());
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
@@ -503,6 +504,10 @@ ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
 std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
   return std::make_shared<ReductionOverNeighborExpr>(*this);
 }
+
+ArrayRef<std::shared_ptr<Expr>> ReductionOverNeighborExpr::getChildren() {
+  return ExprRangeType(operands_);
+} // namespace ast
 
 bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);

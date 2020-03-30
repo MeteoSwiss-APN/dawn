@@ -639,7 +639,7 @@ private:
   std::string op_ = "+";
   std::optional<std::vector<std::shared_ptr<Expr>>> weights_;
   std::vector<ast::LocationType> chain_;
-  std::array<std::shared_ptr<Expr>, 2> operands_;
+  std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
   bool chainIsValid() const;
 
 public:
@@ -666,7 +666,7 @@ public:
   ast::LocationType getLhsLocation() const { return chain_.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
 
-  ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  ExprRangeType getChildren() override;
 
   static bool classof(const Expr* expr) {
     return expr->getKind() == Kind::ReductionOverNeighborExpr;

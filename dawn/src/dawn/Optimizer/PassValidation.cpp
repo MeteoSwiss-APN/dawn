@@ -17,7 +17,7 @@
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
-#include "dawn/Validator/WeightsChecker.h"
+#include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 
@@ -89,7 +89,7 @@ bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
         UnstructuredDimensionChecker::checkDimensionsConsistency(*sir);
     DAWN_ASSERT_MSG(
         checkResultWeights,
-        ("Invalid weights found at line " + std::to_string(errorLocationWeights.Line)).c_str());
+        ("Found invalid weights at line " + std::to_string(errorLocationWeights.Line)).c_str());
   }
 
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*sir),

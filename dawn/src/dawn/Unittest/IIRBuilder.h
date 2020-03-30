@@ -154,6 +154,12 @@ public:
     return expr;
   }
 
+  std::shared_ptr<iir::Expr>
+  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                         std::shared_ptr<iir::Expr>&& init,
+                         const std::vector<ast::LocationType>& chain,
+                         const std::vector<std::shared_ptr<iir::Expr>>&& weights);
+
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
                                                     const std::vector<ast::LocationType>& chain);

@@ -31,7 +31,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
-#include "dawn/Validator/WeightsChecker.h"
+#include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -103,7 +103,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
     DAWN_ASSERT_MSG(checkResultDimensions, "Dimensions consistency check failed.");
     auto [checkResultWeights, errorLocWeights] =
         WeightChecker::CheckWeights(*new_si->getIIR().get(), new_si->getMetaData());
-    DAWN_ASSERT_MSG(checkResultWeights, "Weight check failed.");
+    DAWN_ASSERT_MSG(checkResultWeights, "Found invalid weights");
   }
   DAWN_ASSERT(GridTypeChecker::checkGridTypeConsistency(*new_si->getIIR().get()));
 
@@ -118,6 +118,18 @@ IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rh
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), chain);
+  expr->setID(si_->nextUID());
+  return expr;
+}
+
+std::shared_ptr<iir::Expr>
+IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                   std::shared_ptr<iir::Expr>&& init,
+                                   const std::vector<ast::LocationType>& chain,
+                                   const std::vector<std::shared_ptr<iir::Expr>>&& weights) {
+  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+      toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
+      std::move(init), move(weights), chain);
   expr->setID(si_->nextUID());
   return expr;
 }
