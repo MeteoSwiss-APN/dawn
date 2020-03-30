@@ -231,7 +231,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperSyncMethod(stencilWrapperClass);
 
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, true);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, false);
 
   if(!globalsMap.empty()) {
     generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
@@ -284,7 +285,7 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
 void GTCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const CodeGenProperties& codeGenProperties) const {
+    const CodeGenProperties& codeGenProperties, bool withSync) const {
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   // Create the StencilID -> stencil name map
@@ -312,7 +313,8 @@ void GTCodeGen::generateStencilWrapperRun(
   }
 
   // Generate the run method by generate code for the stencil description AST
-  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
+  std::string methodName = withSync ? "run" : "runWithoutSync";
+  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", methodName);
 
   std::vector<std::string> apiFieldNames;
 
@@ -329,7 +331,9 @@ void GTCodeGen::generateStencilWrapperRun(
   RunMethod.startBody();
 
   RangeToString apiFieldArgs(",", "", "");
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
 
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
                                       stencilIDToRunArguments);
@@ -340,7 +344,9 @@ void GTCodeGen::generateStencilWrapperRun(
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   RunMethod.commit();
 }
 void GTCodeGen::generateStencilWrapperCtr(

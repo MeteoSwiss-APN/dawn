@@ -54,39 +54,38 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     )
   endif()
 
-  # TODO test this set with all supported LLVM versions
-  # 6: done
-  # 7: done
-  # 8: done
-  # 9
-  # 10 (master):
-  set(clang_libnames
-    clangFrontend
-    clangARCMigrate
-    clangASTMatchers
-    clangAnalysis
-    clangCodeGen
-    clangDriver
-    clangEdit
-    clangFormat
-    clangFrontendTool
-    clangIndex
-    clangParse
-    clangRewrite
-    clangRewriteFrontend
-    clangSema
-    clangAnalysis
-    clangSerialization
-    clangStaticAnalyzerCheckers
-    clangStaticAnalyzerCore
-    clangTooling
-    clangToolingCore
-    clangAST
-    clangLex
-    clangBasic
-  )
-  if(${LLVM_VERSION} VERSION_GREATER_EQUAL 7.0.0)
-    list(APPEND clang_libnames clangToolingInclusions)
+  if(${LLVM_VERSION} VERSION_GREATER_EQUAL 9.0.0)
+    set(clang_libnames clang)
+    set(clang_libnames clang-cpp)
+  else()
+    set(clang_libnames
+      clangFrontend
+      clangARCMigrate
+      clangASTMatchers
+      clangAnalysis
+      clangCodeGen
+      clangDriver
+      clangEdit
+      clangFormat
+      clangFrontendTool
+      clangIndex
+      clangParse
+      clangRewrite
+      clangRewriteFrontend
+      clangSema
+      clangAnalysis
+      clangSerialization
+      clangStaticAnalyzerCheckers
+      clangStaticAnalyzerCore
+      clangTooling
+      clangToolingCore
+      clangAST
+      clangLex
+      clangBasic
+    )
+    if(${LLVM_VERSION} VERSION_GREATER_EQUAL 7.0.0)
+      list(APPEND clang_libnames clangToolingInclusions)
+    endif()
   endif()
 
   add_library(Clang INTERFACE IMPORTED GLOBAL)

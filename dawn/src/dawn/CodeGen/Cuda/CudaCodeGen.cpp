@@ -119,7 +119,8 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperSyncMethod(stencilWrapperClass);
 
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, true);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, false);
 
   generateStencilWrapperPublicMemberFunctions(stencilWrapperClass, codeGenProperties);
 
@@ -402,10 +403,11 @@ void CudaCodeGen::generateStencilWrapperMembers(
 void CudaCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const CodeGenProperties& codeGenProperties) const {
+    const CodeGenProperties& codeGenProperties, bool withSync) const {
   const auto& metadata = stencilInstantiation->getMetaData();
   // Generate the run method by generate code for the stencil description AST
-  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
+  std::string methodName = withSync ? "run" : "runWithoutSync";
+  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", methodName, "");
   std::vector<std::string> apiFieldNames;
 
   for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
@@ -422,7 +424,9 @@ void CudaCodeGen::generateStencilWrapperRun(
 
   RangeToString apiFieldArgs(",", "", "");
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
@@ -432,7 +436,9 @@ void CudaCodeGen::generateStencilWrapperRun(
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   RunMethod.commit();
 }
 

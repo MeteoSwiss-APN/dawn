@@ -100,7 +100,7 @@ private:
   void
   generateStencilWrapperRun(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties) const;
+                            const CodeGenProperties& codeGenProperties, bool withSync = true) const;
 
   void
   generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass,
