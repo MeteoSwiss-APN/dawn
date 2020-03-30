@@ -59,8 +59,7 @@ std::list<PassGroup> defaultPassGroups() {
 
 namespace {
 
-OptimizerContext::OptimizerContextOptions
-createOptimizerOptionsFromOptions(const OptimizerOptions& options) {
+OptimizerContext::OptimizerContextOptions createOptionsFromOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   retval.NAME = options.NAME;
@@ -73,11 +72,11 @@ createOptimizerOptionsFromOptions(const OptimizerOptions& options) {
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
-    const OptimizerOptions& options) {
+    const Options& options) {
   DiagnosticsEngine diag;
   diag.setFilename(stencilIR->Filename);
 
-  OptimizerContext optimizer(diag, createOptimizerOptionsFromOptions(options), stencilIR);
+  OptimizerContext optimizer(diag, createOptionsFromOptions(options), stencilIR);
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
@@ -120,7 +119,7 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
-    const std::list<PassGroup>& groups, const OptimizerOptions& options) {
+    const std::list<PassGroup>& groups, const Options& options) {
   DiagnosticsEngine diag;
 
   // -reorder
@@ -137,8 +136,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   }
 
   // Initialize optimizer
-  OptimizerContext optimizer(diag, createOptimizerOptionsFromOptions(options),
-                             stencilInstantiationMap);
+  OptimizerContext optimizer(diag, createOptionsFromOptions(options), stencilInstantiationMap);
 
   for(auto group : groups) {
     switch(group) {
@@ -272,7 +270,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 
 std::map<std::string, std::string> run(const std::string& sir, SIRSerializer::Format format,
                                        const std::list<dawn::PassGroup>& groups,
-                                       const OptimizerOptions& options) {
+                                       const Options& options) {
   auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
   auto optimizedSIM = dawn::run(stencilIR, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
@@ -286,7 +284,7 @@ std::map<std::string, std::string> run(const std::string& sir, SIRSerializer::Fo
 std::map<std::string, std::string>
 run(const std::map<std::string, std::string>& stencilInstantiationMap,
     dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-    const dawn::OptimizerOptions& options) {
+    const dawn::Options& options) {
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
   for(auto [name, instStr] : stencilInstantiationMap) {
     internalMap.insert(
@@ -304,16 +302,15 @@ run(const std::map<std::string, std::string>& stencilInstantiationMap,
 
 std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR,
                                                   const std::list<PassGroup>& passGroups,
-                                                  const OptimizerOptions& optimizerOptions,
+                                                  const Options& optimizerOptions,
                                                   codegen::Backend backend,
                                                   const codegen::Options& codegenOptions) {
   return codegen::run(run(stencilIR, passGroups, optimizerOptions), backend, codegenOptions);
 }
 
 std::string compile(const std::string& sir, SIRSerializer::Format format,
-                    const std::list<PassGroup>& passGroups,
-                    const OptimizerOptions& optimizerOptions, codegen::Backend backend,
-                    const codegen::Options& codegenOptions) {
+                    const std::list<PassGroup>& passGroups, const Options& optimizerOptions,
+                    codegen::Backend backend, const codegen::Options& codegenOptions) {
   auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
   return codegen::run(run(sir, format, passGroups, optimizerOptions),
                       dawn::IIRSerializer::Format::Json, backend, codegenOptions);

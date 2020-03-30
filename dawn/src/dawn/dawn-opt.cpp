@@ -209,8 +209,8 @@ int main(int argc, char* argv[]) {
 
   auto [stencilIR, internalIR, format] = deserializeInput(input);
 
-  // Create a dawn::OptimizerOptions struct for the driver
-  dawn::OptimizerOptions optimizerOptions;
+  // Create a dawn::Options struct for the driver
+  dawn::Options optimizerOptions;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   optimizerOptions.NAME = result[OPTION].as<TYPE>();
 #include "dawn/Optimizer/Options.inc"

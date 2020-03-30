@@ -1,0 +1,87 @@
+#include "dawn/Optimizer/Options.h"
+// TODO Rename this to Optimizer/Options.h now that DawnCompiler is gone
+#include "dawn/Compiler/Driver.h"
+
+#include "dawn/CodeGen/Driver.h"
+#include "dawn/CodeGen/Options.h"
+
+#include "dawn/SIR/SIR.h"
+#include "dawn/IIR/StencilInstantiation.h"
+
+#include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Serialization/IIRSerializer.h"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include <sstream>
+#include <string>
+
+namespace py = ::pybind11;
+
+PYBIND11_MODULE(_dawn4py, m) {
+  m.doc() = "Dawn DSL toolchain"; // optional module docstring
+
+  // Enumerations
+  {{ SIRSerializerFormat }}
+  {{ IIRSerializerFormat }}
+
+  {{ PassGroup }}
+  {{ CodeGenBackend }}
+
+  // Options structs
+  {{ Options }}
+  {{ CodeGenOptions }}
+
+  m.def("run_optimizer_sir", [](const std::string& sir,
+                                dawn::SIRSerializer::Format format,
+                                const std::list<dawn::PassGroup>& groups,
+                                const dawn::Options& options) {
+      return dawn::run(sir, format, groups, options);
+    },
+    py::arg("sir"),
+    py::arg("format") = dawn::SIRSerializer::Format::Json,
+    py::arg("groups") = std::list<dawn::PassGroup>(),
+    py::arg("options") = dawn::Options()
+  );
+
+  m.def("run_optimizer_iir", [](const std::map<std::string, std::string>& stencilInstantiationMap,
+                                dawn::IIRSerializer::Format format,
+                                const std::list<dawn::PassGroup>& groups,
+                                const dawn::Options& options) {
+      return dawn::run(stencilInstantiationMap, format, groups, options);
+    },
+    py::arg("stencil_instantiation_map"),
+    py::arg("format") = dawn::IIRSerializer::Format::Json,
+    py::arg("groups") = std::list<dawn::PassGroup>(),
+    py::arg("options") = dawn::Options()
+  );
+
+  m.def("run_codegen", [](const std::map<std::string, std::string>& stencilInstantiationMap,
+                          dawn::IIRSerializer::Format format,
+                          dawn::codegen::Backend backend,
+                          const dawn::codegen::Options& options) {
+      return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
+    },
+    py::arg("stencil_instantiation_map"),
+    py::arg("format") = dawn::IIRSerializer::Format::Json,
+    py::arg("backend") = dawn::codegen::Backend::GridTools,
+    py::arg("options") = dawn::codegen::Options()
+  );
+
+  m.def("compile_sir", [](const std::string& sir,
+                          dawn::SIRSerializer::Format format,
+                          const std::list<dawn::PassGroup>& passGroups,
+                          const dawn::Options& optimizerOptions,
+                          dawn::codegen::Backend backend,
+                          const dawn::codegen::Options& codegenOptions) {
+      return dawn::compile(sir, format, passGroups, optimizerOptions, backend, codegenOptions);
+    },
+    py::arg("sir"),
+    py::arg("format") = dawn::SIRSerializer::Format::Json,
+    py::arg("optimizer_groups") = dawn::defaultPassGroups(),
+    py::arg("optimizer_options") = dawn::Options(),
+    py::arg("codegen_backend") = dawn::codegen::Backend::GridTools,
+    py::arg("codegen_options") = dawn::codegen::Options()
+  );
+}

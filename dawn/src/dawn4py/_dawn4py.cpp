@@ -1,4 +1,4 @@
-#include "dawn/Optimizer/OptimizerOptions.h"
+#include "dawn/Optimizer/Options.h"
 // TODO Rename this to Optimizer/Options.h now that DawnCompiler is gone
 #include "dawn/Compiler/Driver.h"
 
@@ -55,7 +55,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .export_values();
 
   // Options structs
-  py::class_<dawn::OptimizerOptions>(m, "OptimizerOptions")
+  py::class_<dawn::Options>(m, "Options")
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
                        int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
                        int BlockSizeK, bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
@@ -63,26 +63,26 @@ PYBIND11_MODULE(_dawn4py, m) {
                        bool ReportAccesses, bool DumpSplitGraphs, bool DumpStageGraph,
                        bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
                        bool DumpStencilInstantiation, bool DumpStencilGraph) {
-             return dawn::OptimizerOptions{MaxHaloPoints,
-                                           ReorderStrategy,
-                                           MaxFieldsPerStencil,
-                                           MaxCutMSS,
-                                           BlockSizeI,
-                                           BlockSizeJ,
-                                           BlockSizeK,
-                                           SplitStencils,
-                                           MergeDoMethods,
-                                           DisableKCaches,
-                                           UseNonTempCaches,
-                                           KeepVarnames,
-                                           PassVerbose,
-                                           ReportAccesses,
-                                           DumpSplitGraphs,
-                                           DumpStageGraph,
-                                           DumpTemporaryGraphs,
-                                           DumpRaceConditionGraph,
-                                           DumpStencilInstantiation,
-                                           DumpStencilGraph};
+             return dawn::Options{MaxHaloPoints,
+                                  ReorderStrategy,
+                                  MaxFieldsPerStencil,
+                                  MaxCutMSS,
+                                  BlockSizeI,
+                                  BlockSizeJ,
+                                  BlockSizeK,
+                                  SplitStencils,
+                                  MergeDoMethods,
+                                  DisableKCaches,
+                                  UseNonTempCaches,
+                                  KeepVarnames,
+                                  PassVerbose,
+                                  ReportAccesses,
+                                  DumpSplitGraphs,
+                                  DumpStageGraph,
+                                  DumpTemporaryGraphs,
+                                  DumpRaceConditionGraph,
+                                  DumpStencilInstantiation,
+                                  DumpStencilGraph};
            }),
            py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
            py::arg("max_fields_per_stencil") = 40, py::arg("max_cut_mss") = false,
@@ -94,28 +94,27 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
            py::arg("dump_race_condition_graph") = false,
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
-      .def_readwrite("max_halo_points", &dawn::OptimizerOptions::MaxHaloPoints)
-      .def_readwrite("reorder_strategy", &dawn::OptimizerOptions::ReorderStrategy)
-      .def_readwrite("max_fields_per_stencil", &dawn::OptimizerOptions::MaxFieldsPerStencil)
-      .def_readwrite("max_cut_mss", &dawn::OptimizerOptions::MaxCutMSS)
-      .def_readwrite("block_size_i", &dawn::OptimizerOptions::BlockSizeI)
-      .def_readwrite("block_size_j", &dawn::OptimizerOptions::BlockSizeJ)
-      .def_readwrite("block_size_k", &dawn::OptimizerOptions::BlockSizeK)
-      .def_readwrite("split_stencils", &dawn::OptimizerOptions::SplitStencils)
-      .def_readwrite("merge_do_methods", &dawn::OptimizerOptions::MergeDoMethods)
-      .def_readwrite("disable_k_caches", &dawn::OptimizerOptions::DisableKCaches)
-      .def_readwrite("use_non_temp_caches", &dawn::OptimizerOptions::UseNonTempCaches)
-      .def_readwrite("keep_varnames", &dawn::OptimizerOptions::KeepVarnames)
-      .def_readwrite("pass_verbose", &dawn::OptimizerOptions::PassVerbose)
-      .def_readwrite("report_accesses", &dawn::OptimizerOptions::ReportAccesses)
-      .def_readwrite("dump_split_graphs", &dawn::OptimizerOptions::DumpSplitGraphs)
-      .def_readwrite("dump_stage_graph", &dawn::OptimizerOptions::DumpStageGraph)
-      .def_readwrite("dump_temporary_graphs", &dawn::OptimizerOptions::DumpTemporaryGraphs)
-      .def_readwrite("dump_race_condition_graph", &dawn::OptimizerOptions::DumpRaceConditionGraph)
-      .def_readwrite("dump_stencil_instantiation",
-                     &dawn::OptimizerOptions::DumpStencilInstantiation)
-      .def_readwrite("dump_stencil_graph", &dawn::OptimizerOptions::DumpStencilGraph)
-      .def("__repr__", [](const dawn::OptimizerOptions& self) {
+      .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
+      .def_readwrite("reorder_strategy", &dawn::Options::ReorderStrategy)
+      .def_readwrite("max_fields_per_stencil", &dawn::Options::MaxFieldsPerStencil)
+      .def_readwrite("max_cut_mss", &dawn::Options::MaxCutMSS)
+      .def_readwrite("block_size_i", &dawn::Options::BlockSizeI)
+      .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
+      .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
+      .def_readwrite("split_stencils", &dawn::Options::SplitStencils)
+      .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
+      .def_readwrite("disable_k_caches", &dawn::Options::DisableKCaches)
+      .def_readwrite("use_non_temp_caches", &dawn::Options::UseNonTempCaches)
+      .def_readwrite("keep_varnames", &dawn::Options::KeepVarnames)
+      .def_readwrite("pass_verbose", &dawn::Options::PassVerbose)
+      .def_readwrite("report_accesses", &dawn::Options::ReportAccesses)
+      .def_readwrite("dump_split_graphs", &dawn::Options::DumpSplitGraphs)
+      .def_readwrite("dump_stage_graph", &dawn::Options::DumpStageGraph)
+      .def_readwrite("dump_temporary_graphs", &dawn::Options::DumpTemporaryGraphs)
+      .def_readwrite("dump_race_condition_graph", &dawn::Options::DumpRaceConditionGraph)
+      .def_readwrite("dump_stencil_instantiation", &dawn::Options::DumpStencilInstantiation)
+      .def_readwrite("dump_stencil_graph", &dawn::Options::DumpStencilGraph)
+      .def("__repr__", [](const dawn::Options& self) {
         std::ostringstream ss;
         ss << "max_halo_points=" << self.MaxHaloPoints << ",\n    "
            << "reorder_strategy="
@@ -139,7 +138,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph;
-        return "OptimizerOptions(\n    " + ss.str() + "\n)";
+        return "Options(\n    " + ss.str() + "\n)";
       });
 
   py::class_<dawn::codegen::Options>(m, "CodeGenOptions")
@@ -172,22 +171,19 @@ PYBIND11_MODULE(_dawn4py, m) {
 
   m.def("run_optimizer_sir",
         [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& groups, const dawn::OptimizerOptions& options) {
-          return dawn::run(sir, format, groups, options);
-        },
+           const std::list<dawn::PassGroup>& groups,
+           const dawn::Options& options) { return dawn::run(sir, format, groups, options); },
         py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Json,
-        py::arg("groups") = std::list<dawn::PassGroup>(),
-        py::arg("options") = dawn::OptimizerOptions());
+        py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
   m.def("run_optimizer_iir",
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
            dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-           const dawn::OptimizerOptions& options) {
+           const dawn::Options& options) {
           return dawn::run(stencilInstantiationMap, format, groups, options);
         },
         py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Json,
-        py::arg("groups") = std::list<dawn::PassGroup>(),
-        py::arg("options") = dawn::OptimizerOptions());
+        py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
   m.def("run_codegen",
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
@@ -201,14 +197,13 @@ PYBIND11_MODULE(_dawn4py, m) {
 
   m.def("compile_sir",
         [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& passGroups,
-           const dawn::OptimizerOptions& optimizerOptions, dawn::codegen::Backend backend,
-           const dawn::codegen::Options& codegenOptions) {
+           const std::list<dawn::PassGroup>& passGroups, const dawn::Options& optimizerOptions,
+           dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
           return dawn::compile(sir, format, passGroups, optimizerOptions, backend, codegenOptions);
         },
         py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Json,
         py::arg("optimizer_groups") = dawn::defaultPassGroups(),
-        py::arg("optimizer_options") = dawn::OptimizerOptions(),
+        py::arg("optimizer_options") = dawn::Options(),
         py::arg("codegen_backend") = dawn::codegen::Backend::GridTools,
         py::arg("codegen_options") = dawn::codegen::Options());
 }

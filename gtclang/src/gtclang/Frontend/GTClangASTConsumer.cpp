@@ -188,7 +188,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
   }
 
-  dawn::OptimizerOptions optimizerOptions;
+  dawn::Options optimizerOptions;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   optimizerOptions.NAME = context_->getOptions().NAME;
 #include "dawn/Optimizer/Options.inc"

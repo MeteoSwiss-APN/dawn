@@ -19,7 +19,7 @@
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerOptions.h"
+#include "dawn/Optimizer/Options.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 
@@ -36,36 +36,36 @@ std::list<PassGroup> defaultPassGroups();
 /// @brief Lower to IIR and run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
-    const OptimizerOptions& options = {});
+    const Options& options = {});
 
 std::map<std::string, std::string> run(const std::string& sir,
                                        SIRSerializer::Format format = SIRSerializer::Format::Json,
                                        const std::list<dawn::PassGroup>& groups = {},
-                                       const OptimizerOptions& options = {});
+                                       const Options& options = {});
 
 /// @brief Run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
-    const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
+    const std::list<PassGroup>& groups, const Options& options = {});
 
 std::map<std::string, std::string>
 run(const std::map<std::string, std::string>& stencilInstantiationMap,
     IIRSerializer::Format format = IIRSerializer::Format::Json,
-    const std::list<dawn::PassGroup>& groups = {}, const OptimizerOptions& options = {});
+    const std::list<dawn::PassGroup>& groups = {}, const Options& options = {});
 
 /// @brief Compile SIR to a translation unit
 std::unique_ptr<codegen::TranslationUnit>
 compile(const std::shared_ptr<SIR>& stencilIR,
         const std::list<PassGroup>& passGroups = defaultPassGroups(),
-        const OptimizerOptions& optimizerOptions = {},
+        const Options& optimizerOptions = {},
         codegen::Backend backend = codegen::Backend::GridTools,
         const codegen::Options& codegenOptions = {});
 
 std::string compile(const std::string& sir,
                     SIRSerializer::Format format = SIRSerializer::Format::Json,
                     const std::list<PassGroup>& passGroups = defaultPassGroups(),
-                    const OptimizerOptions& optimizerOptions = {},
+                    const Options& optimizerOptions = {},
                     codegen::Backend backend = codegen::Backend::GridTools,
                     const codegen::Options& codegenOptions = {});
 
