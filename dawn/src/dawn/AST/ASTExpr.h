@@ -640,7 +640,7 @@ private:
   std::optional<std::vector<std::shared_ptr<Expr>>> weights_;
   std::vector<ast::LocationType> chain_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
-  bool chainIsValid();
+  bool chainIsValid() const;
 
 public:
   /// @name Constructor & Destructor

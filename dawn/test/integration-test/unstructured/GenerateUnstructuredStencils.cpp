@@ -363,62 +363,6 @@ int main() {
     using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
-    auto vn = b.field("vn", {LocType::Edges, LocType::Cells, LocType::Vertices});
-    auto u = b.field("un", LocType::Vertices);
-    auto v = b.field("vn", LocType::Vertices);
-    auto nx = b.field("nx", LocType::Vertices);
-    auto ny = b.field("ny", LocType::Vertices);
-
-    // stencil consuming a sparse dimension and a weight
-    auto stencil_instantiation = b.build(
-        "sparseDimension",
-        b.stencil(b.multistage(
-            dawn::iir::LoopOrderKind::Parallel,
-            b.stage(
-                LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                           b.stmt(b.assignExpr(
-                               b.at(vn), b.binaryExpr(b.binaryExpr(b.at(u), b.at(nx), Op::multiply),
-                                                      b.binaryExpr(b.at(v), b.at(ny), Op::multiply),
-                                                      Op::plus))))))));
-
-    std::ofstream of("generated/generated_sparseAssignemt1.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  }
-
-  {
-    using namespace dawn::iir;
-    using LocType = dawn::ast::LocationType;
-
-    UnstructuredIIRBuilder b;
-    auto vn = b.field("vn", {LocType::Edges, LocType::Cells, LocType::Vertices});
-    auto u = b.field("un", LocType::Vertices);
-    auto v = b.field("vn", LocType::Vertices);
-    auto nx = b.field("nx", {LocType::Edges, LocType::Cells, LocType::Vertices});
-    auto ny = b.field("ny", {LocType::Edges, LocType::Cells, LocType::Vertices});
-
-    // stencil consuming a sparse dimension and a weight
-    auto stencil_instantiation = b.build(
-        "sparseDimension",
-        b.stencil(b.multistage(
-            dawn::iir::LoopOrderKind::Parallel,
-            b.stage(
-                LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                           b.stmt(b.assignExpr(
-                               b.at(vn), b.binaryExpr(b.binaryExpr(b.at(u), b.at(nx), Op::multiply),
-                                                      b.binaryExpr(b.at(v), b.at(ny), Op::multiply),
-                                                      Op::plus))))))));
-
-    std::ofstream of("generated/generated_sparseAssignemt2.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
-  }
-
-  {
-    using namespace dawn::iir;
-    using LocType = dawn::ast::LocationType;
-
-    UnstructuredIIRBuilder b;
     auto cell_f = b.field("cell_field", LocType::Cells);
     auto edge_f = b.field("edge_field", LocType::Edges);
     auto sparse_f = b.field("sparse_dim", {LocType::Cells, LocType::Edges});

@@ -452,7 +452,7 @@ bool LiteralAccessExpr::equals(const Expr* other, bool compareData) const {
 //     ReductionOverNeighborExpr
 //===------------------------------------------------------------------------------------------===//
 
-bool ReductionOverNeighborExpr::chainIsValid() {
+bool ReductionOverNeighborExpr::chainIsValid() const {
   for(int chainIdx = 0; chainIdx < chain_.size() - 1; chainIdx++) {
     if(chain_[chainIdx] == chain_[chainIdx + 1]) {
       return false;

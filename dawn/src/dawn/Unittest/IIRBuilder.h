@@ -140,9 +140,10 @@ public:
                                                     const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
-    std::vector<ast::Expr> vWeights;
+    std::vector<std::shared_ptr<ast::Expr>> vWeights;
     for(const auto& it : weights) {
-      vWeights.push_back(ast::LiteralAccessExpr(std::to_string(it), Type::TypeInfo<TWeight>::Type));
+      vWeights.push_back(std::make_shared<ast::LiteralAccessExpr>(std::to_string(it),
+                                                                  Type::TypeInfo<TWeight>::Type));
     }
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(

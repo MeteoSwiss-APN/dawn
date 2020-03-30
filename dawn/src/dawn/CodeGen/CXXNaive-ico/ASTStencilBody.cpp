@@ -119,9 +119,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     auto weights = expr->getWeights().value();
     bool first = true;
 
-    std::string typeStr = "double"; // TODO
-
-    ss_ << ", std::vector<" << typeStr << ">({";
+    ss_ << ", std::vector<::dawn::float_type>({";
     for(auto const& weight : weights) {
       if(!first) {
         ss_ << ", ";
