@@ -15,6 +15,7 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestIIR)
 add_executable(${executable}
+  TestComputeStageExtents.cpp
   TestDependencyGraphAccesses.cpp
   TestExtent.cpp
   TestField.cpp
