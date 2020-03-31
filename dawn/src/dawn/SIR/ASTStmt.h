@@ -67,6 +67,11 @@ std::shared_ptr<ast::IfStmt> makeIfStmt(Args&&... args) {
   return std::make_shared<ast::IfStmt>(std::make_unique<SIRStmtData>(),
                                        std::forward<Args>(args)...);
 }
+template <typename... Args>
+std::shared_ptr<ast::LoopStmt> makeLoopStmt(Args&&... args) {
+  return std::make_shared<ast::LoopStmt>(std::make_unique<SIRStmtData>(),
+                                         std::forward<Args>(args)...);
+}
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //

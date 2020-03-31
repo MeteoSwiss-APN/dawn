@@ -333,6 +333,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {
   protoStmt->set_id(stmt->getID());
 }
 
+void ProtoStmtBuilder::visit(const std::shared_ptr<LoopStmt>& stmt) { dawn_unreachable("TODO"); }
+
 void ProtoStmtBuilder::visit(const std::shared_ptr<ExprStmt>& stmt) {
   auto protoStmt = getCurrentStmtProto()->mutable_expr_stmt();
   currentExprProto_.push(protoStmt->mutable_expr());

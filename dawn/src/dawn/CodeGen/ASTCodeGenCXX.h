@@ -46,6 +46,7 @@ public:
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
