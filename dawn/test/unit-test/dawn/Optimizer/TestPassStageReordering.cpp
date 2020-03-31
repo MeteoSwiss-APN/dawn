@@ -16,7 +16,6 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
@@ -57,10 +56,6 @@ protected:
     // Run dependency graph pass
     PassSetDependencyGraph dependencyGraphPass(*context_);
     EXPECT_TRUE(dependencyGraphPass.run(instantiation));
-
-    // Run multistage merger pass
-    PassMultiStageMerger multiStageMerger(*context_);
-    EXPECT_TRUE(multiStageMerger.run(instantiation));
 
     // Collect pre-reordering stage IDs
     std::vector<int> prevStageIDs;
@@ -162,5 +157,21 @@ TEST_F(TestPassStageReordering, ReorderTest7) {
    */
   runTest("input/ReorderTest07.iir", {0, 1, 2, 3, 4, 5, 6});
 }
+
+// TEST_F(TestPassStageReordering, ReorderTest8) {
+//  /*vertical_region(k_start, k_start) {
+//      c = c / b;
+//      d = d / b;
+//    }
+//    vertical_region(k_start + 1, k_end) {
+//      double m = 1.0 / (b - a * c[k - 1]);
+//      c = c * m;
+//      d = (d - a * d[k - 1]) * m;
+//    }
+//    vertical_region(k_end - 1, k_start) {
+//      d -= c * d[k + 1];
+//    } */
+//  runTest("input/tridiagonal_solve.iir", {5, 1});
+//}
 
 } // anonymous namespace

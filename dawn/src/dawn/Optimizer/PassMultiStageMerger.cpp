@@ -65,7 +65,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
     possibleLoopOrders.push_back(stageLoopOrder);
 
   if(multiStageDependencyGraph.empty())
-    return ReturnType(multiStageDependencyGraph, possibleLoopOrders.front());
+    return ReturnType(multiStageDependencyGraph, multiStageLoopOrder);
 
   // Check if the resulting graph is no longer a DAG (i.e., cycles exist)
   if(!multiStageDependencyGraph.isDAG())
@@ -103,7 +103,7 @@ PassMultiStageMerger::PassMultiStageMerger(OptimizerContext& context)
 }
 
 bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  const int maxBoundaryExtent = context_.getOptions().MaxHaloPoints;
+  const int maxHaloPoints = context_.getOptions().MaxHaloPoints;
   for(const auto& stencil : instantiation->getStencils()) {
     if(stencil->getChildren().size() < 2)
       continue;
@@ -111,8 +111,8 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
     auto& metadata = instantiation->getMetaData();
     std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
         metadata, stencil->getStencilAttributes(), stencil->getStencilID());
-    newStencil->setStageDependencyGraph(
-        iir::DependencyGraphStage(*stencil->getStageDependencyGraph()));
+    //    newStencil->setStageDependencyGraph(
+    //        iir::DependencyGraphStage(*stencil->getStageDependencyGraph()));
 
     // NOTE: The Stages in the same multi-stage are assumed to have no counter loop-order vertical
     // dependencies so we can treat each multistage independently.
@@ -125,7 +125,7 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
           auto dependencyGraphLoopOrderPair = isMergable(*thisMS, *otherMS);
           auto multiStageDependencyGraph = dependencyGraphLoopOrderPair.first;
           if(multiStageDependencyGraph &&
-             !multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent)) {
+             !multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxHaloPoints)) {
             otherMS->setLoopOrder(dependencyGraphLoopOrderPair.second);
             mergeIdx = otherIdx;
           }
