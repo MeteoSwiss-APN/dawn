@@ -118,14 +118,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   if(hasWeights) {
     auto weights = expr->getWeights().value();
     bool first = true;
-    auto typeStr = sir::Value::typeToString(weights[0].getType());
-    ss_ << ", std::vector<" << typeStr << ">({";
+
+    ss_ << ", std::vector<::dawn::float_type>({";
     for(auto const& weight : weights) {
       if(!first) {
         ss_ << ", ";
       }
-      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered in code generation!\n");
-      ss_ << weight.toString();
+      weight->accept(*this);
       first = false;
     }
 

@@ -22,10 +22,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-namespace {
+namespace dawn {
+namespace iir {
 
-using namespace dawn;
-using namespace dawn::iir;
 using SInterval = dawn::sir::Interval;
 
 class TestCodeGen : public ::testing::Test {
@@ -139,4 +138,6 @@ protected:
     ASSERT_EQ(oss.str(), ref) << "Generated code does not match reference code";
   }
 };
-} // anonymous namespace
+
+} // namespace iir
+} // namespace dawn

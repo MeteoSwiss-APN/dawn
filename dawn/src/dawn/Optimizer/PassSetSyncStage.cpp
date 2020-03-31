@@ -74,9 +74,8 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
 PassSetSyncStage::PassSetSyncStage(OptimizerContext& context) : Pass(context, "PassSetSyncStage") {}
 
 bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(instantiation->getIIR()))) {
-    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
+  // Update derived info
+  instantiation->computeDerivedInfo();
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(instantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {

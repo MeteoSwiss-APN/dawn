@@ -452,7 +452,7 @@ bool LiteralAccessExpr::equals(const Expr* other, bool compareData) const {
 //     ReductionOverNeighborExpr
 //===------------------------------------------------------------------------------------------===//
 
-bool ReductionOverNeighborExpr::chainIsValid() {
+bool ReductionOverNeighborExpr::chainIsValid() const {
   for(int chainIdx = 0; chainIdx < chain_.size() - 1; chainIdx++) {
     if(chain_[chainIdx] == chain_[chainIdx + 1]) {
       return false;
@@ -471,14 +471,18 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
 }
 
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(
-    std::string const& op, std::shared_ptr<Expr> const& rhs, std::shared_ptr<Expr> const& init,
-    std::vector<sir::Value> weights, std::vector<ast::LocationType> chain, SourceLocation loc)
+ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
+                                                     std::shared_ptr<Expr> const& rhs,
+                                                     std::shared_ptr<Expr> const& init,
+                                                     std::vector<std::shared_ptr<Expr>> weights,
+                                                     std::vector<ast::LocationType> chain,
+                                                     SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
       chain_(chain), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
   DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
+  operands_.insert(operands_.end(), weights.begin(), weights.end());
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
@@ -501,6 +505,10 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
   return std::make_shared<ReductionOverNeighborExpr>(*this);
 }
 
+ArrayRef<std::shared_ptr<Expr>> ReductionOverNeighborExpr::getChildren() {
+  return ExprRangeType(operands_);
+} // namespace ast
+
 bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
 
@@ -512,7 +520,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
       return false;
     }
     for(int i = 0; i < weights_->size(); i++) {
-      if(!weights_->at(i).comparison(otherPtr->getWeights()->at(i))) {
+      if(*weights_.value().at(i) != *otherPtr->getWeights().value().at(i)) {
         return false;
       }
     }

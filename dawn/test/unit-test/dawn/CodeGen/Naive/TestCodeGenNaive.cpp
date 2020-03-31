@@ -14,7 +14,8 @@
 
 #include "../TestCodeGen.h"
 
-namespace {
+namespace dawn {
+namespace iir {
 
 class TestCodeGenNaive : public TestCodeGen {};
 
@@ -38,4 +39,5 @@ TEST_F(TestCodeGenNaive, DzCStencil) {
   runTest(this->getStencilFromIIR("update_dz_c"), "update_dz_c.cpp");
 }
 
-} // anonymous namespace
+} // namespace iir
+} // namespace dawn
