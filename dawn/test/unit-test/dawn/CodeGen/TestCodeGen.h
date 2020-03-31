@@ -12,8 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-//#include "dawn/Optimizer/OptimizerContext.h"
-//#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
