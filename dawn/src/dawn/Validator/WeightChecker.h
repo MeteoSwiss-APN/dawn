@@ -20,9 +20,13 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/SourceLocation.h"
+
 #include <memory>
+#include <optional>
+#include <stack>
 
 // This validator checks if all weights in all reduce over neighbor expressions are valid.
 //
@@ -41,12 +45,19 @@ private:
     bool parentIsWeight_ = false;
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
+    std::stack<std::shared_ptr<const iir::StencilFunctionInstantiation>>
+        functionInstantiationStack_;
+    std::shared_ptr<const iir::StencilFunctionInstantiation>
+    getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr);
+    std::optional<std::reference_wrapper<
+        const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+                                 std::shared_ptr<iir::StencilFunctionInstantiation>>>>
+        ExprToStencilFunctionInstantiationMap_;
 
   public:
     void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) override;
     void visit(const std::shared_ptr<dawn::ast::FunCallExpr>& expr) override;
     void visit(const std::shared_ptr<dawn::ast::StencilFunCallExpr>& expr) override;
-    void visit(const std::shared_ptr<dawn::ast::StencilFunArgExpr>& expr) override;
     void visit(const std::shared_ptr<dawn::ast::ReductionOverNeighborExpr>& expr) override;
 
     bool isValid() const;
@@ -56,11 +67,13 @@ private:
     WeightCheckerImpl(
         const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap);
     // This constructor is used when the check is performed from IIR. In this case, the fields may
-    // have been renamed if stencils had to be merged. Hence, an additional map with key AccessID is
-    // needed
+    // have been renamed if stencils had to be merged. Hence, an additional map with key AccessID
+    // is needed
     WeightCheckerImpl(
         const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
-        const std::unordered_map<int, std::string> idToNameMap);
+        const std::unordered_map<int, std::string> idToNameMap,
+        const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+                                 std::shared_ptr<iir::StencilFunctionInstantiation>>& exprToFunMap);
   };
 
 public:

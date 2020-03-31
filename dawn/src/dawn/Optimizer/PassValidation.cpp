@@ -56,7 +56,7 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     auto [weightsValid, weightValidErrorLocation] = WeightChecker::CheckWeights(*iir, metadata);
     DAWN_ASSERT_MSG(weightsValid,
                     ("Found invalid weights at line " +
-                     std::to_string(stageConsistencyErrorLocation.Line) + " " + description)
+                     std::to_string(weightValidErrorLocation.Line) + " " + description)
                         .c_str());
   }
 

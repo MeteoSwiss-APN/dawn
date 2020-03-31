@@ -18,6 +18,14 @@
 
 namespace dawn {
 
+std::shared_ptr<const iir::StencilFunctionInstantiation>
+WeightChecker::WeightCheckerImpl::getStencilFunctionInstantiation(
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+  if(!functionInstantiationStack_.empty())
+    return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
+  return (*ExprToStencilFunctionInstantiationMap_).get().at(expr);
+}
+
 void WeightChecker::WeightCheckerImpl::visit(
     const std::shared_ptr<dawn::ast::FieldAccessExpr>& fieldAccessExpr) {
   if(parentIsWeight_) {
@@ -54,19 +62,23 @@ void WeightChecker::WeightCheckerImpl::visit(
     weightsValid_ = false;
     return;
   } else {
-    for(const auto& s : expr->getChildren()) {
-      s->accept(*this);
-    }
-  }
-}
-void WeightChecker::WeightCheckerImpl::visit(
-    const std::shared_ptr<dawn::ast::StencilFunArgExpr>& expr) {
-  if(parentIsWeight_) {
-    weightsValid_ = false;
-    return;
-  } else {
-    for(const auto& s : expr->getChildren()) {
-      s->accept(*this);
+    // we only need to do this in the case we arrive from IIR, in the SIR the stencil funs are
+    // checked separately
+    if(ExprToStencilFunctionInstantiationMap_.has_value()) {
+      std::shared_ptr<const iir::StencilFunctionInstantiation> funCall =
+          getStencilFunctionInstantiation(expr);
+
+      functionInstantiationStack_.push(funCall);
+
+      // Follow the AST of the stencil function, it maybe unused in a nested stencil function
+      funCall->getAST()->accept(*this);
+
+      // visit arguments
+      for(const auto& s : expr->getChildren()) {
+        s->accept(*this);
+      }
+
+      functionInstantiationStack_.pop();
     }
   }
 }
@@ -95,14 +107,18 @@ WeightChecker::WeightCheckerImpl::WeightCheckerImpl(
 
 WeightChecker::WeightCheckerImpl::WeightCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
-    const std::unordered_map<int, std::string> idToNameMap)
-    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap) {}
+    const std::unordered_map<int, std::string> idToNameMap,
+    const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+                             std::shared_ptr<iir::StencilFunctionInstantiation>>& exprToFunMap)
+    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap),
+      ExprToStencilFunctionInstantiationMap_(exprToFunMap) {}
 
 WeightChecker::ConsistencyResult
 WeightChecker::CheckWeights(const iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(iir)) {
     WeightChecker::WeightCheckerImpl checker(doMethod->getFieldDimensionsByName(),
-                                             metaData.getAccessIDToNameMap());
+                                             metaData.getAccessIDToNameMap(),
+                                             metaData.getExprToStencilFunctionInstantiation());
     for(const auto& stmt : doMethod->getAST().getStatements()) {
       stmt->accept(checker);
       if(!checker.isValid()) {

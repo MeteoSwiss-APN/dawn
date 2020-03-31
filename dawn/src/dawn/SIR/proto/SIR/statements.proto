@@ -672,21 +672,6 @@ message LiteralAccessExpr {
   int32 ID = 5;            // ID of the Expr
 }
 
-// @brief A weight needed in the weighted reduction on unstrcutred stencils,
-// which is consistent with
-//        the Value class for globals
-//
-// @ingroup sir_proto
-message Weight {
-  oneof Value {
-    bool boolean_value = 1;
-    int32 integer_value = 2;
-    double double_value = 3;
-    string string_value = 4;
-    float float_value = 5;
-  }
-}
-
 // @brief Reduction operation over neighbors
 //
 // @ingroup sir_proto
