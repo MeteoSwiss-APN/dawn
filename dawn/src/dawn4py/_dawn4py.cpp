@@ -1,6 +1,5 @@
-#include "dawn/Optimizer/Options.h"
-// TODO Rename this to Optimizer/Options.h now that DawnCompiler is gone
 #include "dawn/Compiler/Driver.h"
+#include "dawn/Optimizer/Options.h"
 
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
@@ -22,40 +21,8 @@ namespace py = ::pybind11;
 PYBIND11_MODULE(_dawn4py, m) {
   m.doc() = "Dawn DSL toolchain"; // optional module docstring
 
-  // Enumerations
-  py::enum_<dawn::SIRSerializer::Format>(m, "SIRSerializerFormat")
-      .value("Json", dawn::SIRSerializer::Format::Json)
-      .value("Byte", dawn::SIRSerializer::Format::Byte)
-      .export_values();
-
-  py::enum_<dawn::IIRSerializer::Format>(m, "IIRSerializerFormat")
-      .value("Json", dawn::IIRSerializer::Format::Json)
-      .value("Byte", dawn::IIRSerializer::Format::Byte)
-      .export_values();
-
-  py::enum_<dawn::PassGroup>(m, "PassGroup")
-      .value("Parallel", dawn::PassGroup::Parallel)
-      .value("SSA", dawn::PassGroup::SSA)
-      .value("PrintStencilGraph", dawn::PassGroup::PrintStencilGraph)
-      .value("SetStageName", dawn::PassGroup::SetStageName)
-      .value("StageReordering", dawn::PassGroup::StageReordering)
-      .value("StageMerger", dawn::PassGroup::StageMerger)
-      .value("TemporaryMerger", dawn::PassGroup::TemporaryMerger)
-      .value("Inlining", dawn::PassGroup::Inlining)
-      .value("IntervalPartitioning", dawn::PassGroup::IntervalPartitioning)
-      .value("TmpToStencilFunction", dawn::PassGroup::TmpToStencilFunction)
-      .value("SetNonTempCaches", dawn::PassGroup::SetNonTempCaches)
-      .value("SetCaches", dawn::PassGroup::SetCaches)
-      .value("SetBlockSize", dawn::PassGroup::SetBlockSize)
-      .value("DataLocalityMetric", dawn::PassGroup::DataLocalityMetric)
-      .export_values();
-
-  py::enum_<dawn::codegen::Backend>(m, "CodeGenBackend")
-      .value("GridTools", dawn::codegen::Backend::GridTools)
-      .export_values();
-
   // Options structs
-  py::class_<dawn::Options>(m, "Options")
+  py::class_<dawn::Options>(m, "OptimizerOptions")
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
                        int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
                        int BlockSizeK, bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
@@ -138,7 +105,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph;
-        return "Options(\n    " + ss.str() + "\n)";
+        return "OptimizerOptions(\n    " + ss.str() + "\n)";
       });
 
   py::class_<dawn::codegen::Options>(m, "CodeGenOptions")
@@ -170,40 +137,37 @@ PYBIND11_MODULE(_dawn4py, m) {
       });
 
   m.def("run_optimizer_sir",
-        [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& groups,
+        [](const std::string& sir, const std::string& format, const std::list<std::string>& groups,
            const dawn::Options& options) { return dawn::run(sir, format, groups, options); },
-        py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Json,
-        py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
+        py::arg("sir"), py::arg("format") = "json", py::arg("groups") = std::list<std::string>(),
+        py::arg("options") = dawn::Options());
 
   m.def("run_optimizer_iir",
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
-           dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
+           const std::string& format, const std::list<std::string>& groups,
            const dawn::Options& options) {
           return dawn::run(stencilInstantiationMap, format, groups, options);
         },
-        py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Json,
-        py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
+        py::arg("stencil_instantiation_map"), py::arg("format") = "json",
+        py::arg("groups") = std::list<std::string>(), py::arg("options") = dawn::Options());
 
   m.def("run_codegen",
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
-           dawn::IIRSerializer::Format format, dawn::codegen::Backend backend,
+           const std::string& format, const std::string& backend,
            const dawn::codegen::Options& options) {
           return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
         },
-        py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Json,
-        py::arg("backend") = dawn::codegen::Backend::GridTools,
-        py::arg("options") = dawn::codegen::Options());
+        py::arg("stencil_instantiation_map"), py::arg("format") = "json",
+        py::arg("backend") = "gridtools", py::arg("options") = dawn::codegen::Options());
 
   m.def("compile_sir",
-        [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& passGroups, const dawn::Options& optimizerOptions,
-           dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
+        [](const std::string& sir, const std::string& format,
+           const std::list<std::string>& passGroups, const dawn::Options& optimizerOptions,
+           const std::string& backend, const dawn::codegen::Options& codegenOptions) {
           return dawn::compile(sir, format, passGroups, optimizerOptions, backend, codegenOptions);
         },
-        py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Json,
-        py::arg("optimizer_groups") = dawn::defaultPassGroups(),
-        py::arg("optimizer_options") = dawn::Options(),
-        py::arg("codegen_backend") = dawn::codegen::Backend::GridTools,
+        py::arg("sir"), py::arg("format") = "json",
+        py::arg("optimizer_groups") = dawn::defaultPassGroupsStrings(),
+        py::arg("optimizer_options") = dawn::Options(), py::arg("codegen_backend") = "gridtools",
         py::arg("codegen_options") = dawn::codegen::Options());
 }

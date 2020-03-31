@@ -30,17 +30,25 @@
 
 namespace dawn {
 
-/// @brief List of default optimizer pass groups.
+// TODO Move these to Optimizer/Driver.h once the OptimizerContext is independent of CodeGen
+// {
+/// @brief List of default optimizer pass groups
 std::list<PassGroup> defaultPassGroups();
+
+/// @brief Return the default optimizer pass groups as strings
+///
+/// These are used in the string-based bindings as an initializer for a default value.
+std::list<std::string> defaultPassGroupsStrings();
+
+PassGroup parsePassGroupString(const std::string& passGroup);
 
 /// @brief Lower to IIR and run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options = {});
 
-std::map<std::string, std::string> run(const std::string& sir,
-                                       SIRSerializer::Format format = SIRSerializer::Format::Json,
-                                       const std::list<dawn::PassGroup>& groups = {},
+std::map<std::string, std::string> run(const std::string& sir, const std::string& format,
+                                       const std::list<std::string>& groups = {},
                                        const Options& options = {});
 
 /// @brief Run groups
@@ -50,9 +58,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     const std::list<PassGroup>& groups, const Options& options = {});
 
 std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap,
-    IIRSerializer::Format format = IIRSerializer::Format::Json,
-    const std::list<dawn::PassGroup>& groups = {}, const Options& options = {});
+run(const std::map<std::string, std::string>& stencilInstantiationMap, const std::string& format,
+    const std::list<std::string>& groups = {}, const Options& options = {});
+// }
 
 /// @brief Compile SIR to a translation unit
 std::unique_ptr<codegen::TranslationUnit>
@@ -62,11 +70,9 @@ compile(const std::shared_ptr<SIR>& stencilIR,
         codegen::Backend backend = codegen::Backend::GridTools,
         const codegen::Options& codegenOptions = {});
 
-std::string compile(const std::string& sir,
-                    SIRSerializer::Format format = SIRSerializer::Format::Json,
-                    const std::list<PassGroup>& passGroups = defaultPassGroups(),
-                    const Options& optimizerOptions = {},
-                    codegen::Backend backend = codegen::Backend::GridTools,
+std::string compile(const std::string& sir, const std::string& format,
+                    const std::list<std::string>& passGroups = defaultPassGroupsStrings(),
+                    const Options& optimizerOptions = {}, const std::string& backend = "GridTools",
                     const codegen::Options& codegenOptions = {});
 
 } // namespace dawn

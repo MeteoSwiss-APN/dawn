@@ -1,18 +1,18 @@
 # Getting Started using GTClang & dawn
 
-In this tutorial the basic usage of the dawn and gtc-parse executables will be demonstrated using a simple example. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++.
+In this tutorial the basic usage of the dawn gtclang executables will be demonstrated using a simple example. We will compile and execute the same stencil three times: once starting from a stencil written with the **GTClang** DSL, once starting by using Python to write SIR, and once handing over SIR to dawn using C++.
 
 #### Prerequisites
 
-For the first section of this tutorial, ensure you have dawn and gtclang built. The README in the GTClang subdirectory has instructions on how to build this project. Section two expects dawn and gtclang to be installed. See the README [here](../../README.md) for instructions on how to do that. Section three requires a python installation of dawn. If a compatible python installation was detected this is automatically built and installed along with dawn, but you can ensure one is built by setting `DAWN_REQUIRE_PYTHON=ON` when configuring the project.
+Dawn and gtclang should be built. See the README [here](../../README.md) for instructions on how to do that. The third part requires python to be built. This should be automatic if a python installation is detected, but you can ensure this is done by setting `DAWN_REQUIRE_PYTHON=ON` when configuring the project.
 
 ## 1. Writing a Stencil in the GTClang SIR and Compiling the Stencil
 
-For the purpose of this exercise, we will write a simple finite difference stencil to find the laplacian of a function. In **GTClang** this can be achieved using very few lines of code, demonstrated in `laplacian_stencil.cpp`:
+For the purpose of this exercise, we will write a simple finite difference stencil to find the Laplacian of a function. In **GTClang** this can be achieved using very few lines of code, demonstrated in `laplacian_stencil.cpp`:
 
 ```
 globals {
-  //grid spacing
+  // grid spacing
   double dx;
 };
 
@@ -27,30 +27,33 @@ stencil laplacian_stencil {
 };
 ```
 
-The **GTClang** DSL allows a simplification for indices which are not offset. So, `in_field[i+1,j]` could be written simply as `in_field[i+1]`. Center accesses can be dropped altogether. `in_field[i,j]` can be `in_field`.
+The **GTClang** DSL allows a simplification for indices which are not offset. So, `in_field[i+1,j]` could be written simply as `in_field[i+1]`. Center accesses can be omitted altogether. `in_field[i,j]` can be `in_field`.
 
 This code defines two fields which will serve as the arguments to the stencil. The variable `dx` is the grid spacing and is read-only (during the stencil run), which is modelled as a global in **GTClang**. Observe how close the actual Laplacian stencil is to the numerical formula (c.f. for example [wikipedia](https://en.wikipedia.org/wiki/Finite_difference#Finite_difference_in_several_variables)), which close to no boiler plate. Save the stencil as `laplacian_stencil.cpp`.
 
-For the purpose of this tutorial we are going to use the `c++-naive` backend. The commands below assume the dawn and gtclang build or installation `bin/` directories are in your PATH. To compile the stencil run
+For the purpose of this tutorial we are going to use the `c++-naive` backend. The commands below assume the dawn and gtclang build and/or installation `bin/` directories are in your PATH. To compile the stencil run
 ```
 $ gtclang -backend=c++-naive -o laplacian_stencil_cxx_naive.cpp
 ```
 
 ## 2. Writing and Compiling the Driver Code
 
-**GTClang** output a C++11-compliant source file. This code reads in a field `in_field`, applies the stencil, and writes the result into `out_field`. To use this, we need a driver. For the purpose of this exercise we are going initialize `in_field` to a wave function `in(x,y) = sin(x)*sin(y)`, since the Laplacian of this is the same wave again, but with inverted phase and twice the amplitude, and thus easy to check. The driver code is located in `laplacian_driver.cpp` and should be straightforward. The actual stencil launch is just one line:
+The gtclang executable ran the compiler and code generation, and output a C++11-compliant source file. This code reads in a field `in_field`, applies the stencil, and writes the result into `out_field`. To use this, we need a driver. For the purpose of this exercise we are going initialize `in_field` to a wave function `in(x,y) = sin(x)*sin(y)`, since the Laplacian of this is the same wave again, but with inverted phase and twice the amplitude, and thus easy to check. The driver code is located in `laplacian_driver.cpp` and should be straightforward. The actual stencil launch is just one line:
 
 ```
 dawn_generated::cxxnaive::laplacian_stencil laplacian_naive(dom, out, in);
 laplacian_naive.set_dx(dx);
-laplacian_naive.run(out, in);   //launch stencil
+laplacian_naive.run(out, in);   // launch stencil.
 ```
 
-the run method could now be called in a time loop, for example to simulate diffusion. To facilitate the compilation, a `CMakeLists.txt` file has been provided. To compile the code:
+The run method could now be called in a time loop, for example to simulate diffusion. To facilitate the compilation, a `CMakeLists.txt` file has been provided. To compile the code:
 
 ```
-mkdir build && cmake -S . -B build && cmake --build build
+$ cmake -S . -B build -DDawn_DIR=<install_prefix>/lib/cmake/Dawn
+$ cmake --build build
 ```
+
+If Protobuf and GridTools were not built as a bundle with Dawn and GTClang, then `Protobuf_DIR` and `GridTools_DIR` may need to also be specified.
 
 This will place an executable called `laplacian_driver` in the tutorial directory. When that executable is run, two `vtk` files will be written. Those can be viewed using [ParaView](https://www.paraview.org/). `in.vtk` shows the initial conditions. If `out.vtk` is loaded on top, the inversion of phase and twofold increase in amplitude can clearly be seen, as well as the halos around the domain, which would overlap with a "neighboring" MPI rank in practical implementations.
 
@@ -58,22 +61,21 @@ This will place an executable called `laplacian_driver` in the tutorial director
 
 ## 3. Use Python to generate SIR
 
-Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided.
+Another option to use **dawn** without having to rely on the **GTClang** DSL is to use the Python interface provided to directly construct the stencil intermediate representation.
 
-To do this start by loading the virtual environment:
+To do this, start by loading the virtual environment
 ```
 cd ..
 source ../.project_venv/bin/activate
 ```
-and run the stencil-file:
+then run the stencil-file
 ```
 python laplacian_stencil.py -v
 ```
 
-
 The python file will do three things:
 
-1) Print the SIR generated within to `stdout`
+1) Print the generated SIR within to `stdout`
 2) Call the optimizer and generate C++ code using the C++ naive backend again (`laplacian_stencil_from_python.cpp`).
 3) Write the SIR to disk in json form (`laplacian_stencil_from_python.sir`)
 

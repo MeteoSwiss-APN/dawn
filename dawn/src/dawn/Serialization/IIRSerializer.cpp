@@ -33,6 +33,15 @@
 
 namespace dawn {
 
+IIRSerializer::Format IIRSerializer::parseFormatString(const std::string& format) {
+  if(format == "Byte" || format == "byte" || format == "BYTE")
+    return IIRSerializer::Format::Byte;
+  else if(format == "Json" || format == "json" || format == "JSON")
+    return IIRSerializer::Format::Json;
+  else
+    throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
+}
+
 proto::enums::LocationType
 optionalLocationTypeToProto(std::optional<ast::LocationType> locationType) {
   if(locationType.has_value()) {

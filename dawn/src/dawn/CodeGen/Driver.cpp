@@ -17,6 +17,8 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
+#include "dawn/Serialization/IIRSerializer.h"
+
 #include <stdexcept>
 
 namespace dawn {
@@ -56,14 +58,16 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& con
 }
 
 std::string run(const std::map<std::string, std::string>& stencilInstantiationMap,
-                IIRSerializer::Format format, dawn::codegen::Backend backend,
+                const std::string& format, const std::string& backend,
                 const dawn::codegen::Options& options) {
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
+  const IIRSerializer::Format inputFormat = IIRSerializer::parseFormatString(format);
   for(auto [name, instStr] : stencilInstantiationMap) {
     internalMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
+        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, inputFormat)));
   }
-  auto translationUnit = dawn::codegen::run(internalMap, backend, options);
+  auto translationUnit =
+      dawn::codegen::run(internalMap, codegen::parseBackendString(backend), options);
   std::string code;
   for(auto p : translationUnit->getPPDefines())
     code += p + "\n";
