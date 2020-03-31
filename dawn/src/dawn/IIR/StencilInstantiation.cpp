@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -309,7 +310,6 @@ void StencilInstantiation::reportAccesses() const {
   }
 
   // Stages
-
   for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
     std::cout << "\nACCESSES: line " << stmt->getSourceLocation().Line << ": "
               << stmt->getData<iir::IIRStmtData>().CallerAccesses->reportAccesses(metadata_)
@@ -317,7 +317,13 @@ void StencilInstantiation::reportAccesses() const {
   }
 }
 
-void StencilInstantiation::computeStageExtents() {
+void StencilInstantiation::computeDerivedInfo() {
+  // Update doMethod node types
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(this->getIIR()))) {
+    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  // Compute stage extents
   for(const auto& stencilPtr : this->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
 
