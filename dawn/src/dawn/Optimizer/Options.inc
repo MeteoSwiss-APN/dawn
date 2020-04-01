@@ -51,8 +51,6 @@ OPT(bool, SplitStencils, false, "split-stencils", "",
     "Split stencil whose number of fields exceeds a threshold", "", false, true)
 OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
-OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
-    "Make use of the parallel execution policy", "", false, true)
 OPT(bool, DisableKCaches, false, "disable-kcaches", "",
     "Disable use of the k-caches", "", false, true)
 OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",

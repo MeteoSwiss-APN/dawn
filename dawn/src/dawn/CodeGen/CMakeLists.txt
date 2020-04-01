@@ -50,6 +50,8 @@ add_library(DawnCodeGen
   Cuda/ASTStencilFunctionParamVisitor.h
   Cuda/MSCodeGen.cpp
   Cuda/MSCodeGen.h
+  Driver.cpp
+  Driver.h
   GridTools/ASTStencilBody.cpp
   GridTools/ASTStencilBody.h
   GridTools/ASTStencilDesc.cpp
@@ -58,6 +60,7 @@ add_library(DawnCodeGen
   GridTools/CodeGenUtils.h
   GridTools/GTCodeGen.cpp
   GridTools/GTCodeGen.h
+  Options.h
   Options.inc
   StencilFunctionAsBCGenerator.cpp
   StencilFunctionAsBCGenerator.h
