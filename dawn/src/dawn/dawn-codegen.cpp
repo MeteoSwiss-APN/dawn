@@ -126,13 +126,7 @@ int main(int argc, char* argv[]) {
 #undef OPT
   auto translationUnit = dawn::codegen::run(stencilInstantiationMap, backend, codegenOptions);
 
-  std::string code;
-  for(auto p : translationUnit->getPPDefines())
-    code += p + "\n";
-
-  code += translationUnit->getGlobals() + "\n\n";
-  for(auto p : translationUnit->getStencils())
-    code += p.second;
+  auto code = dawn::codegen::generate(translationUnit);
 
   if(result.count("out") > 0) {
     std::ofstream out(result["out"].as<std::string>());

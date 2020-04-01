@@ -22,6 +22,18 @@
 namespace dawn {
 namespace codegen {
 
+std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit) {
+  std::string code;
+  for(const auto& p : translationUnit->getPPDefines())
+    code += p + "\n";
+
+  code += translationUnit->getGlobals() + "\n\n";
+  for(const auto& p : translationUnit->getStencils())
+    code += p.second;
+
+  return code;
+}
+
 codegen::Backend parseBackendString(const std::string& backendStr) {
   if(backendStr == "gt" || backendStr == "gridtools") {
     return codegen::Backend::GridTools;

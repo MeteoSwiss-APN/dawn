@@ -33,6 +33,9 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
     Backend backend, const Options& options = {});
 
+/// @brief Shortcut to generate code from a translation unit
+std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit);
+
 } // namespace codegen
 } // namespace dawn
 
