@@ -70,7 +70,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
     std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
 
     // Further data (not cleared!)
-    Extents extents_;           // valid after StencilInstantiation::computeDerivedInfo
+    Extents extents_;           // valid after PassComputeStageExtents
     bool requiresSync_ = false; // valid after PassSetSyncStage
   };
 

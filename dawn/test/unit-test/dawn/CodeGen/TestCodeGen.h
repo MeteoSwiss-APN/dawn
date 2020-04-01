@@ -20,15 +20,15 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-namespace dawn {
-namespace iir {
+namespace {
 
+using namespace dawn::iir;
 using SInterval = dawn::sir::Interval;
 
 class TestCodeGen : public ::testing::Test {
 protected:
-  std::shared_ptr<StencilInstantiation> getGlobalIndexStencil() {
-    UIDGenerator::getInstance()->reset();
+  std::shared_ptr<dawn::iir::StencilInstantiation> getGlobalIndexStencil() {
+    dawn::UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in_f = b.field("in_field", FieldType::ijk);
@@ -38,22 +38,22 @@ protected:
         b.build("generated",
                 b.stencil(b.multistage(
                     LoopOrderKind::Parallel,
-                    b.stage(b.doMethod(SInterval::Start, SInterval::End,
+                    b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                        b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                     b.stage(1, {0, 2},
-                            b.doMethod(SInterval::Start, SInterval::End,
+                            b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                        b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
     return stencil_inst;
   }
 
-  std::shared_ptr<StencilInstantiation> getLaplacianStencil() {
-    UIDGenerator::getInstance()->reset();
+  std::shared_ptr<dawn::iir::StencilInstantiation> getLaplacianStencil() {
+    dawn::UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in = b.field("in", FieldType::ijk);
     auto out = b.field("out", FieldType::ijk);
-    auto dx = b.localvar("dx", BuiltinTypeID::Double);
+    auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
 
     auto stencil_inst = b.build(
         "generated",
@@ -78,13 +78,13 @@ protected:
     return stencil_inst;
   }
 
-  std::shared_ptr<StencilInstantiation> getNonOverlappingInterval() {
-    UIDGenerator::getInstance()->reset();
+  std::shared_ptr<dawn::iir::StencilInstantiation> getNonOverlappingInterval() {
+    dawn::UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in = b.field("in", FieldType::ijk);
     auto out = b.field("out", FieldType::ijk);
-    auto dx = b.localvar("dx", BuiltinTypeID::Double);
+    auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
 
     auto stencil_inst = b.build(
         "generated",
@@ -111,31 +111,25 @@ protected:
     return stencil_inst;
   }
 
-  std::shared_ptr<StencilInstantiation> getStencilFromIIR(const std::string& name) {
-    OptimizerContext::OptimizerContextOptions options;
-    std::unique_ptr<OptimizerContext> context;
-    UIDGenerator::getInstance()->reset();
+  std::shared_ptr<dawn::iir::StencilInstantiation> getConditionalStencil() {
+    dawn::OptimizerContext::OptimizerContextOptions options;
+    std::unique_ptr<dawn::OptimizerContext> context;
+    dawn::UIDGenerator::getInstance()->reset();
 
-    return CompilerUtil::load("../input/" + name + ".iir", options, context);
+    return dawn::CompilerUtil::load("../input/conditional_stencil.iir", options, context);
   }
 
-  std::shared_ptr<StencilInstantiation> getConditionalStencil() {
-    return getStencilFromIIR("conditional_stencil");
-  }
-
-  void runTest(const std::shared_ptr<StencilInstantiation> stencil_inst,
+  void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencil_inst,
                const std::string& ref_file) {
     std::ostringstream oss;
     if(ref_file.find(".cu") != std::string::npos) {
-      CompilerUtil::dumpCuda(oss, stencil_inst);
+      dawn::CompilerUtil::dumpCuda(oss, stencil_inst);
     } else {
-      CompilerUtil::dumpNaive(oss, stencil_inst);
+      dawn::CompilerUtil::dumpNaive(oss, stencil_inst);
     }
 
-    std::string ref = readFile("../reference/" + ref_file);
+    std::string ref = dawn::readFile("../reference/" + ref_file);
     ASSERT_EQ(oss.str(), ref) << "Generated code does not match reference code";
   }
 };
-
-} // namespace iir
-} // namespace dawn
+} // anonymous namespace

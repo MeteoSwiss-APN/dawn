@@ -116,10 +116,15 @@ public:
 };
 
 PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
-    : Pass(context, "PassSetBoundaryCondition") {}
+    : Pass(context, "PassSetBoundaryCondition") {
+  dependencies_.push_back("PassComputeStageExtents");
+}
 
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+
+  iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
+
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
     if(context_.getOptions().ReportBoundaryConditions) {
@@ -128,10 +133,6 @@ bool PassSetBoundaryCondition::run(
     }
     return true;
   }
-
-  iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
-  stencilInstantiation->computeDerivedInfo();
-
   // returns the original ID of a variable
   auto getOriginalID = [&](int ID) -> int {
     // This checks if the field was orignially defined and is not a versioned field, a chached field
