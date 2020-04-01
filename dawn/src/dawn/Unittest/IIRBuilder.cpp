@@ -202,6 +202,20 @@ std::shared_ptr<iir::Stmt> IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond,
   auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen), std::move(caseElse));
   return stmt;
 }
+std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
+                                                     std::vector<ast::LocationType>&& chain) {
+  DAWN_ASSERT(si_);
+  auto stmt = iir::makeLoopStmt(std::move(chain), std::move(body));
+  return stmt;
+}
+
+std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
+                                                     std::vector<ast::LocationType>&& chain) {
+  DAWN_ASSERT(si_);
+  auto bStmt = iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{body});
+  auto stmt = iir::makeLoopStmt(std::move(chain), std::move(bStmt));
+  return stmt;
+}
 
 std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);

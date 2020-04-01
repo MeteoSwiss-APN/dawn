@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -38,9 +39,13 @@ class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
   RangeToString offsetPrinter_;
+
+  // arg names for field access exprs
   std::string denseArgName_ = "loc";
   std::string sparseArgName_ = "loc";
+  std::string loopArgName_ = "inner_loc";
   bool parentIsReduction_ = false;
+  bool parentIsForLoop_ = false;
 
   /// The stencil function we are currently generating or NULL
   std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;
@@ -82,11 +87,12 @@ public:
 
   /// @name Statement implementation
   /// @{
+  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
   /// @}
 
   /// @name Expression implementation
@@ -95,6 +101,7 @@ public:
   void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)

@@ -13,13 +13,47 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilBody.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
+
+namespace {
+std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationType>& chain) {
+  auto getLocationTypeString = [](dawn::ast::LocationType type) {
+    switch(type) {
+    case dawn::ast::LocationType::Cells:
+      return "dawn::LocationType::Cells";
+    case dawn::ast::LocationType::Edges:
+      return "dawn::LocationType::Edges";
+    case dawn::ast::LocationType::Vertices:
+      return "dawn::LocationType::Vertices";
+    default:
+      dawn_unreachable("unknown location type");
+      return "";
+    }
+  };
+
+  std::stringstream ss;
+  ss << "std::vector<dawn::LocationType>{";
+  bool first = true;
+  for(const auto& loc : chain) {
+    if(!first) {
+      ss << ", ";
+    }
+    ss << getLocationTypeString(loc);
+    first = false;
+  }
+  ss << "}";
+
+  return ss.str();
+}
+} // namespace
 
 namespace dawn {
 namespace codegen {
@@ -59,79 +93,40 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   stmt->getExpr()->accept(*this);
   ss_ << ";\n";
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  auto getLocationTypeString = [](ast::LocationType type) {
-    switch(type) {
-    case ast::LocationType::Cells:
-      return "dawn::LocationType::Cells";
-    case ast::LocationType::Edges:
-      return "dawn::LocationType::Edges";
-    case ast::LocationType::Vertices:
-      return "dawn::LocationType::Vertices";
-    default:
-      dawn_unreachable("unknown location type");
-      return "";
-    }
-  };
 
-  bool hasWeights = expr->getWeights().has_value();
+void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
+  scopeDepth_++;
+  ss_ << std::string(indent_, ' ') << "{\n";
 
-  std::string sigArg =
-      (parentIsReduction_)
-          ? "red_loc"
-          : "loc"; // does stage or parent reduceOverNeighborExpr determine argname?
-  ss_ << std::string(indent_, ' ') << "reduce(LibTag{}, m_mesh," << sigArg << ", ";
-  expr->getInit()->accept(*this);
-
-  ss_ << ", std::vector<dawn::LocationType>{";
-  bool first = true;
-  for(const auto& loc : expr->getNbhChain()) {
-    if(!first) {
-      ss_ << ", ";
-    }
-    ss_ << getLocationTypeString(loc);
-    first = false;
+  indent_ += DAWN_PRINT_INDENT;
+  auto indent = std::string(indent_, ' ');
+  for(const auto& s : stmt->getStatements()) {
+    ss_ << indent;
+    s->accept(*this);
   }
+  indent_ -= DAWN_PRINT_INDENT;
+
+  if(parentIsForLoop_) {
+    ss_ << "m_sparse_dimension_idx++;";
+  }
+
+  ss_ << std::string(indent_, ' ') << "}\n";
+  scopeDepth_--;
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
+  const auto maybeChainPtr =
+      dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
+  DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
+
+  ss_ << "{";
+  ss_ << "int m_sparse_dimension_idx = 0;";
+  ss_ << "for (auto inner_loc : getNeighbors(m_mesh,"
+      << nbhChainToVectorString(maybeChainPtr->getChain()) << ", loc))";
+  parentIsForLoop_ = true;
+  stmt->getBlockStmt()->accept(*this);
+  parentIsForLoop_ = false;
   ss_ << "}";
-  if(hasWeights) {
-    ss_ << ", [&](auto& lhs, auto red_loc, auto const& weight) {\n";
-    ss_ << "lhs " << expr->getOp() << "= ";
-    ss_ << "weight * ";
-  } else {
-    ss_ << ", [&](auto& lhs, auto red_loc) { lhs " << expr->getOp() << "= ";
-  }
-
-  auto argName = denseArgName_;
-  // arg names for dense and sparse location
-  denseArgName_ = "red_loc";
-  sparseArgName_ = "loc";
-  // indicate if parent of subexpr is reduction
-  parentIsReduction_ = true;
-  expr->getRhs()->accept(*this);
-  parentIsReduction_ = false;
-  // "pop" argName
-  denseArgName_ = argName;
-  ss_ << ";\n";
-  ss_ << "m_sparse_dimension_idx++;\n";
-  ss_ << "return lhs;\n";
-  ss_ << "}";
-  if(hasWeights) {
-    auto weights = expr->getWeights().value();
-    bool first = true;
-    auto typeStr = sir::Value::typeToString(weights[0].getType());
-    ss_ << ", std::vector<" << typeStr << ">({";
-    for(auto const& weight : weights) {
-      if(!first) {
-        ss_ << ", ";
-      }
-      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered in code generation!\n");
-      ss_ << weight.toString();
-      first = false;
-    }
-
-    ss_ << "})";
-  }
-  ss_ << ")";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
@@ -264,7 +259,15 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
            metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())
            .isDense()) {
-      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << denseArgName_ << "),"
+      std::string resArgName = denseArgName_;
+      if(!parentIsReduction_ && parentIsForLoop_) {
+        resArgName =
+            ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
+                    .hasOffset()
+                ? "inner_loc"
+                : "loc";
+      }
+      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << resArgName << "),"
           << "k+" << expr->getOffset().verticalOffset() << ")";
     } else {
       ss_ << "m_" << getName(expr) << "("
@@ -273,6 +276,58 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
           << "k+" << expr->getOffset().verticalOffset() << ")";
     }
   }
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  bool hasWeights = expr->getWeights().has_value();
+
+  std::string sigArg =
+      (parentIsReduction_)
+          ? "red_loc"
+          : "loc"; // does stage or parent reduceOverNeighborExpr determine argname?
+  ss_ << std::string(indent_, ' ') << "reduce(LibTag{}, m_mesh," << sigArg << ", ";
+  expr->getInit()->accept(*this);
+
+  ss_ << ", " << nbhChainToVectorString(expr->getNbhChain());
+  if(hasWeights) {
+    ss_ << ", [&](auto& lhs, auto red_loc, auto const& weight) {\n";
+    ss_ << "lhs " << expr->getOp() << "= ";
+    ss_ << "weight * ";
+  } else {
+    ss_ << ", [&](auto& lhs, auto red_loc) { lhs " << expr->getOp() << "= ";
+  }
+
+  auto argName = denseArgName_;
+  // arg names for dense and sparse location
+  denseArgName_ = "red_loc";
+  sparseArgName_ = "loc";
+  // indicate if parent of subexpr is reduction
+  parentIsReduction_ = true;
+  expr->getRhs()->accept(*this);
+  parentIsReduction_ = false;
+  // "pop" argName
+  denseArgName_ = argName;
+  ss_ << ";\n";
+  ss_ << "m_sparse_dimension_idx++;\n";
+  ss_ << "return lhs;\n";
+  ss_ << "}";
+  if(hasWeights) {
+    auto weights = expr->getWeights().value();
+    bool first = true;
+    auto typeStr = sir::Value::typeToString(weights[0].getType());
+    ss_ << ", std::vector<" << typeStr << ">({";
+    for(auto const& weight : weights) {
+      if(!first) {
+        ss_ << ", ";
+      }
+      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered in code generation!\n");
+      ss_ << weight.toString();
+      first = false;
+    }
+
+    ss_ << "})";
+  }
+  ss_ << ")";
 }
 
 void ASTStencilBody::setCurrentStencilFunction(

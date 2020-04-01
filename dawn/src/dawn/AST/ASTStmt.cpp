@@ -419,6 +419,8 @@ std::string ChainIterationDescr::toString() const {
       return "Edges";
     case ast::LocationType::Vertices:
       return "Vertices";
+    default:
+      dawn_unreachable("invalid location type");
     };
   };
   ss << "{";

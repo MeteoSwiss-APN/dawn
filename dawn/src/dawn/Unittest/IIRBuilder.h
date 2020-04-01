@@ -201,6 +201,12 @@ public:
                                     std::shared_ptr<iir::Stmt>&& caseThen,
                                     std::shared_ptr<iir::Stmt>&& caseElse = {nullptr});
 
+  std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
+                                           std::vector<ast::LocationType>&& chain);
+
+  std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
+                                           std::vector<ast::LocationType>&& chain);
+
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
   template <typename... Stmts>

@@ -84,6 +84,7 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
+using LoopStmt = ast::LoopStmt;
 
 } // namespace sir
 } // namespace dawn
