@@ -787,7 +787,6 @@ def make_reduction_over_neighbor_expr(
     expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend([make_expr(weight) for weight in weights])
-    print(expr.weights)
     return expr
 
 
