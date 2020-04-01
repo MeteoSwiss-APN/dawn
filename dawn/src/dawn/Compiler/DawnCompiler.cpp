@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -179,6 +180,7 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   }
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
+  optimizer.pushBackPass<PassComputeStageExtents>();
   optimizer.pushBackPass<PassSetSyncStage>();
   // validation checks after parallelisation
   optimizer.pushBackPass<PassValidation>();
@@ -275,7 +277,9 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
       optimizer.pushBackPass<PassRemoveScalars>();
-      // modify stage dependencies
+      // modify stages and their extents ...
+      optimizer.pushBackPass<PassComputeStageExtents>();
+      // and changes their dependencies
       optimizer.pushBackPass<PassSetSyncStage>();
       // validation check
       optimizer.pushBackPass<PassValidation>();

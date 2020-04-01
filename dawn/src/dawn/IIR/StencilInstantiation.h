@@ -118,12 +118,6 @@ public:
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;
-
-  /// @brief This method computes the derived info for the stencil instantiation, including
-  /// node types and stage extents (associated to redundant computations)
-  /// The method processes the stages of each multi-stage from the instantiation and
-  /// stores the computation in the `Extent` member of the Stage (@see Stage)
-  void computeDerivedInfo();
 };
 } // namespace iir
 } // namespace dawn
