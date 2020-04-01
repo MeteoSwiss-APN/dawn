@@ -587,6 +587,7 @@ public:
                                const std::shared_ptr<Stmt>& newStmt) override;
 
   const IterationDescr& getIterationDescr() const;
+  const IterationDescr* getIterationDescrPtr() const;
 
   ACCEPTVISITOR(Stmt, LoopStmt)
 };

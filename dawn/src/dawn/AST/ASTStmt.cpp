@@ -471,6 +471,7 @@ void LoopStmt::replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
 }
 
 const IterationDescr& LoopStmt::getIterationDescr() const { return *iterationDescr_; }
+const IterationDescr* LoopStmt::getIterationDescrPtr() const { return iterationDescr_.get(); }
 
 } // namespace ast
 } // namespace dawn

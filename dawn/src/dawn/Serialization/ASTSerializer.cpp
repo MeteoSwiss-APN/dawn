@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Serialization/ASTSerializer.h"
+#include "SIR/statements.pb.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -333,7 +334,28 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {
   protoStmt->set_id(stmt->getID());
 }
 
-void ProtoStmtBuilder::visit(const std::shared_ptr<LoopStmt>& stmt) { dawn_unreachable("TODO"); }
+void ProtoStmtBuilder::visit(const std::shared_ptr<LoopStmt>& stmt) {
+  auto protoStmt = getCurrentStmtProto()->mutable_loop_stmt();
+
+  currentStmtProto_.push(protoStmt->mutable_statements());
+  stmt->getBlockStmt()->accept(*this);
+  currentStmtProto_.pop();
+
+  const auto* descrPtr = stmt->getIterationDescrPtr();
+  const auto maybeChainPtr = dynamic_cast<const ChainIterationDescr*>(descrPtr);
+  if(maybeChainPtr) {
+    auto protoChainDescr = protoStmt->mutable_loop_descriptor()->mutable_loop_descriptor_chain();
+    for(auto loc : maybeChainPtr->getChain()) {
+      protoChainDescr->add_chain(getProtoLocationTypeFromLocationType(loc));
+    }
+  } else {
+    dawn_unreachable("Loop descriptor not implemented.");
+  }
+
+  setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  setStmtData(protoStmt->mutable_data(), *stmt);
+  protoStmt->set_id(stmt->getID());
+}
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<ExprStmt>& stmt) {
   auto protoStmt = getCurrentStmtProto()->mutable_expr_stmt();
@@ -1052,6 +1074,34 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     stmt->setID(stmtProto.id());
     maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
+  }
+  case proto::statements::Stmt::kLoopStmt: {
+    const auto& stmtProto = statementProto.loop_stmt();
+    const auto& blockStmt = makeStmt(stmtProto.statements(), dataType, maxID);
+    DAWN_ASSERT_MSG(blockStmt->getKind() == Stmt::Kind::BlockStmt, "Expected a BlockStmt.");
+
+    switch(stmtProto.loop_descriptor().desc_case()) {
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
+
+      ast::NeighborChain chain;
+      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+        chain.push_back(getLocationTypeFromProtoLocationType(
+            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+      }
+      auto stmt = std::make_shared<LoopStmt>(makeData(dataType, stmtProto.data()), std::move(chain),
+                                             std::dynamic_pointer_cast<BlockStmt>(blockStmt),
+                                             makeLocation(stmtProto));
+      stmt->setID(stmtProto.id());
+      maxID = std::max(std::abs(stmtProto.id()), maxID);
+      return stmt;
+    }
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {
+      dawn_unreachable("general loop bounds not implemented!\n");
+      break;
+    }
+    default:
+      dawn_unreachable("descriptor not set!\n");
+    }
   }
   case proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();

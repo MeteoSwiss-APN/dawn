@@ -1,4 +1,5 @@
-/*===------------------------------------------------------------------------------*-proto -*-===*\
+/*===------------------------------------------------------------------------------*-proto
+-*-===*\
  *                          _
  *                         | |
  *                       __| | __ ___      ___ ___
@@ -49,8 +50,8 @@ message CartesianDimension {
 // @ingroup sir_proto
 message UnstructuredDimension {
   dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-  // neighbor chain encoding sparse part when the field has a sparse dimension         
-  repeated dawn.proto.enums.LocationType sparse_part = 2; 
+  // neighbor chain encoding sparse part when the field has a sparse dimension
+  repeated dawn.proto.enums.LocationType sparse_part = 2;
 }
 
 // @brief Dimensions spanned by a field
@@ -210,7 +211,7 @@ message StencilCall {
   SourceLocation loc = 1; // Source location of the stencil call
   string callee = 2;      // Name of the called stencil (i.e callee)
   // Fields passed as arguments during the stencil call
-  repeated string arguments = 3; 
+  repeated string arguments = 3;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -272,6 +273,7 @@ message Stmt {
     VerticalRegionDeclStmt vertical_region_decl_stmt = 6;
     BoundaryConditionDeclStmt boundary_condition_decl_stmt = 7;
     IfStmt if_stmt = 8;
+    LoopStmt loop_stmt = 9;
   }
 }
 
@@ -310,6 +312,29 @@ message BlockStmt {
   SourceLocation loc = 2;       // Source location
   StmtData data = 3;            // Generic Stmt's data container
   int32 ID = 4;                 // ID of the Stmt
+}
+
+message LoopDescriptorGeneral {
+  // dummy message for future use
+}
+
+message LoopDescriptorChain {
+  repeated dawn.proto.enums.LocationType chain = 1;
+}
+
+message LoopDescriptor {
+  oneof desc {
+    LoopDescriptorChain loop_descriptor_chain = 1;
+    LoopDescriptorGeneral loop_descriptor_general = 2;
+  }
+}
+
+message LoopStmt {
+  Stmt statements = 1; // List of statements (must be a BlockStmt)
+  LoopDescriptor loop_descriptor = 2; // Loop bounds description
+  SourceLocation loc = 3;             // Source location
+  StmtData data = 4;                  // Generic Stmt's data container
+  int32 ID = 5;                       // ID of the Stmt
 }
 
 // @brief A statement wrapping an expression
@@ -695,8 +720,8 @@ message ReductionOverNeighborExpr {
   Expr init = 3; // Initial value of reduction
   repeated Weight weights =
       4; // weights (required to be of equal type, e.g. just floats)
-  repeated dawn.proto.enums.LocationType chain = 
-      5; // Neighbor chain definining the neighbors to reduce from and the 
+  repeated dawn.proto.enums.LocationType chain =
+      5; // Neighbor chain definining the neighbors to reduce from and the
          // location type to reduce to (first element)
   SourceLocation loc = 6;
 }
