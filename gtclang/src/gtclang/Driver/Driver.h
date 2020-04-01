@@ -21,7 +21,6 @@
 #include "dawn/Support/NonCopyable.h"
 #include "gtclang/Driver/Options.h"
 #include "llvm/ADT/SmallVector.h"
-#include <list>
 #include <string>
 #include <vector>
 

@@ -15,7 +15,6 @@
 #ifndef DAWN_COMPILER_DAWNCOMPILER_H
 #define DAWN_COMPILER_DAWNCOMPILER_H
 
-#include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Compiler/Driver.h"
 #include "dawn/Compiler/Options.h"
