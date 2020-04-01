@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _
-##                         | |
-##                       __| | __ ___      ___ ___
-##                      / _` |/ _` \ \ /\ / / '_  |
-##                     | (_| | (_| |\ V  V /| | | |
-##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+# _
+# | |
+# __| | __ ___      ___ ___
+# / _` |/ _` \ \ /\ / / '_  |
+# | (_| | (_| |\ V  V /| | | |
+# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT).
-##  See LICENSE.txt for details.
+# This file is distributed under the MIT License (MIT).
+# See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
@@ -787,7 +787,6 @@ def make_reduction_over_neighbor_expr(
     expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend([make_expr(weight) for weight in weights])
-    print(expr.weights)
     return expr
 
 
