@@ -16,6 +16,7 @@
 #define DAWN_COMPILER_DAWNCOMPILER_H
 
 #include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/DiagnosticsEngine.h"
@@ -23,29 +24,11 @@
 
 #include <list>
 #include <memory>
+#include <string>
 
 namespace dawn {
 
 struct SIR;
-
-/// @brief Enumeration of all pass groups
-enum class PassGroup {
-  Parallel,
-  SSA,
-  PrintStencilGraph,
-  SetStageName,
-  StageReordering,
-  StageMerger,
-  TemporaryMerger,
-  Inlining,
-  IntervalPartitioning,
-  TmpToStencilFunction,
-  SetNonTempCaches,
-  SetCaches,
-  SetBlockSize,
-  DataLocalityMetric,
-  SetLoopOrder,
-};
 
 /// @brief The DawnCompiler class
 /// @ingroup compiler
@@ -76,8 +59,6 @@ public:
   std::unique_ptr<codegen::TranslationUnit>
   generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                stencilInstantiationMap);
-
-  static std::list<PassGroup> defaultPassGroups();
 
   /// @brief Get options
   const Options& getOptions() const;

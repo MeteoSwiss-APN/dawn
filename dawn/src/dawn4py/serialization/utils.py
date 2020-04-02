@@ -365,7 +365,8 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
     """
     stmt = BlockStmt()
     if isinstance(statements, Iterable):
-        stmt.statements.extend([make_stmt(s) for s in statements if not isinstance(s, Field)])
+        stmt.statements.extend([make_stmt(s)
+                                for s in statements if not isinstance(s, Field)])
     else:
         stmt.statements.extend([make_stmt(statements)])
     return stmt
@@ -748,7 +749,7 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     return expr
 
 
-def make_weights(weights) -> List[Weight]:
+def make_weights(weights) -> List[Expr]:
     """ Create a weights vector
 
     :param weights:         List of weights expressed with python primitive types
@@ -756,20 +757,8 @@ def make_weights(weights) -> List[Weight]:
     assert len(weights) != 0
     proto_weights = []
     for weight in weights:
-        proto_weight = Weight()
-        if type(weight) is int:
-            proto_weight.integer_value = weight
-        elif type(weight) is float:  # float in python is 64 bits
-            proto_weight.double_value = weight
-        elif type(weight) is bool:
-            proto_weight.boolean_value = weight
-        elif type(weight) is str:
-            proto_weight.string_value = weight
-        # TODO: would also be nice to map numpy types
-        else:
-            raise SIRError(
-                "cannot create Weight from type {}".format(type(weight)))
-
+        proto_weight = Expr()
+        proto_weight.CopyFrom(make_expr(weight))
         proto_weights.append(proto_weight)
 
     return proto_weights
@@ -780,7 +769,7 @@ def make_reduction_over_neighbor_expr(
     rhs: ExprType,
     init: ExprType,
     chain: List[LocationTypeValue],
-    weights: List[Weight] = None
+    weights: List[ExprType] = None
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
@@ -797,8 +786,7 @@ def make_reduction_over_neighbor_expr(
     expr.init.CopyFrom(make_expr(init))
     expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
-        expr.weights.extend(weights)
-
+        expr.weights.extend([make_expr(weight) for weight in weights])
     return expr
 
 
