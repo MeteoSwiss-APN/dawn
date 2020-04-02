@@ -63,12 +63,10 @@ run(const std::map<std::string, std::string>& stencilInstantiationMap, const std
 // }
 
 /// @brief Compile SIR to a translation unit
-std::unique_ptr<codegen::TranslationUnit>
-compile(const std::shared_ptr<SIR>& stencilIR,
-        const std::list<PassGroup>& passGroups = defaultPassGroups(),
-        const Options& optimizerOptions = {},
-        codegen::Backend backend = codegen::Backend::GridTools,
-        const codegen::Options& codegenOptions = {});
+std::unique_ptr<codegen::TranslationUnit> compile(
+    const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups = defaultPassGroups(),
+    const Options& optimizerOptions = {}, codegen::Backend backend = codegen::Backend::GridTools,
+    const codegen::Options& codegenOptions = {});
 
 std::string compile(const std::string& sir, const std::string& format,
                     const std::list<std::string>& passGroups = defaultPassGroupsStrings(),

@@ -21,6 +21,10 @@ namespace py = ::pybind11;
 PYBIND11_MODULE(_dawn4py, m) {
   m.doc() = "Dawn DSL toolchain"; // optional module docstring
 
+  // Enumerations
+  {{ PassGroup }}
+  {{ CodeGenBackend }}
+
   // Options structs
   {{ OptimizerOptions }}
   {{ CodeGenOptions }}
@@ -32,7 +36,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       return dawn::run(sir, format, groups, options);
     },
     py::arg("sir"),
-    py::arg("format") = "json",
+    py::arg("format") = "byte",
     py::arg("groups") = std::list<std::string>(),
     py::arg("options") = dawn::Options()
   );
@@ -44,7 +48,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       return dawn::run(stencilInstantiationMap, format, groups, options);
     },
     py::arg("stencil_instantiation_map"),
-    py::arg("format") = "json",
+    py::arg("format") = "byte",
     py::arg("groups") = std::list<std::string>(),
     py::arg("options") = dawn::Options()
   );
@@ -56,7 +60,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
     },
     py::arg("stencil_instantiation_map"),
-    py::arg("format") = "json",
+    py::arg("format") = "byte",
     py::arg("backend") = "gridtools",
     py::arg("options") = dawn::codegen::Options()
   );
@@ -69,8 +73,9 @@ PYBIND11_MODULE(_dawn4py, m) {
                           const dawn::codegen::Options& codegenOptions) {
       return dawn::compile(sir, format, passGroups, optimizerOptions, backend, codegenOptions);
     },
+    "Compile the provided SIR",
     py::arg("sir"),
-    py::arg("format") = "json",
+    py::arg("format") = "byte",
     py::arg("optimizer_groups") = dawn::defaultPassGroupsStrings(),
     py::arg("optimizer_options") = dawn::Options(),
     py::arg("codegen_backend") = "gridtools",

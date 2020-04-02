@@ -212,37 +212,37 @@ if __name__ == "__main__":
 
     with open(TEMPLATE_FILE, mode="r") as f:
         code = f.read()
-        # for py_name, c_name, filename in (
-        #     (
-        #         "SIRSerializerFormat",
-        #         "dawn::SIRSerializer::Format",
-        #         os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "SIRSerializer.h"),
-        #     ),
-        #     (
-        #         "IIRSerializerFormat",
-        #         "dawn::IIRSerializer::Format",
-        #         os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "IIRSerializer.h"),
-        #     ),
-        #     (
-        #         "PassGroup",
-        #         "dawn::PassGroup",
-        #         os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.h"),
-        #     ),
-        #     (
-        #         "CodeGenBackend",
-        #         "dawn::codegen::Backend",
-        #         os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.h"),
-        #     ),
-        # ):
-        #     values = []
-        #     if "::" in c_name:
-        #         values = get_enum_values(filename, c_name[c_name.rfind("::") + 2 :])
-        #     if len(values) == 0:
-        #         values = get_enum_values(filename, c_name)
-        #     if len(values) == 0:
-        #         raise ValueError(f"Could not parse enum values for {py_name} in {filename}")
-        #     enum_str = make_enum_binding(py_name, c_name, values) + "\n"
-        #     code = splice_into_string(code, "{{ " + py_name + " }}", enum_str)
+        for py_name, c_name, filename in (
+            # (
+            #     "SIRSerializerFormat",
+            #     "dawn::SIRSerializer::Format",
+            #     os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "SIRSerializer.h"),
+            # ),
+            # (
+            #     "IIRSerializerFormat",
+            #     "dawn::IIRSerializer::Format",
+            #     os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "IIRSerializer.h"),
+            # ),
+            (
+                "PassGroup",
+                "dawn::PassGroup",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.h"),
+            ),
+            (
+                "CodeGenBackend",
+                "dawn::codegen::Backend",
+                os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.h"),
+            ),
+        ):
+            values = []
+            if "::" in c_name:
+                values = get_enum_values(filename, c_name[c_name.rfind("::") + 2 :])
+            if len(values) == 0:
+                values = get_enum_values(filename, c_name)
+            if len(values) == 0:
+                raise ValueError(f"Could not parse enum values for {py_name} in {filename}")
+            enum_str = make_enum_binding(py_name, c_name, values) + "\n"
+            code = splice_into_string(code, "{{ " + py_name + " }}", enum_str)
 
         for py_name, c_name, filename in (
             (

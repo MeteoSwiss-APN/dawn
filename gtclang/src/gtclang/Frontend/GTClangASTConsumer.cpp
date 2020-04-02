@@ -23,6 +23,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/Diagnostics.h"
@@ -188,6 +189,15 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
   }
 
+  // Determine filename of generated file (by default we append "_gen" to the filename)
+  const std::string generatedPrefix = fs::path(file_).filename().stem();
+  std::string generatedFileName;
+  if(context_->getOptions().OutputFile.empty())
+    generatedFileName = generatedPrefix + "_gen.cpp";
+  else {
+    generatedFileName = context_->getOptions().OutputFile;
+  }
+
   dawn::Options optimizerOptions;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   optimizerOptions.NAME = context_->getOptions().NAME;
@@ -199,19 +209,18 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 #include "dawn/CodeGen/Options.inc"
 #undef OPT
 
+  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
+  if(context_->getOptions().SerializeIIR) {
+    for(auto [i, keyValue] : dawn::enumerate(stencilInstantiationMap)) {
+      dawn::IIRSerializer::serialize(generatedPrefix + "." + std::to_string(i) + ".iir",
+                                     keyValue.second);
+    }
+  }
+
   const dawn::codegen::Backend backend =
       dawn::codegen::parseBackendString(context_->getOptions().Backend);
 
-  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
   auto DawnTranslationUnit = dawn::codegen::run(stencilInstantiationMap, backend, codegenOptions);
-
-  // Determine filename of generated file (by default we append "_gen" to the filename)
-  std::string generatedFileName;
-  if(context_->getOptions().OutputFile.empty())
-    generatedFileName = std::string(fs::path(file_).filename().stem()) + "_gen.cpp";
-  else {
-    generatedFileName = context_->getOptions().OutputFile;
-  }
 
   if(context_->getOptions().WriteSIR) {
     const std::string generatedSIR =
@@ -361,6 +370,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   ost->write(code.data(), code.size());
   if(ec.value())
     context_->getDiagnostics().report(Diagnostics::err_fs_error) << ec.message();
-}
+} // namespace gtclang
 
 } // namespace gtclang

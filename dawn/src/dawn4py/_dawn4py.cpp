@@ -21,6 +21,28 @@ namespace py = ::pybind11;
 PYBIND11_MODULE(_dawn4py, m) {
   m.doc() = "Dawn DSL toolchain"; // optional module docstring
 
+  // Enumerations
+  py::enum_<dawn::PassGroup>(m, "PassGroup")
+      .value("Parallel", dawn::PassGroup::Parallel)
+      .value("SSA", dawn::PassGroup::SSA)
+      .value("PrintStencilGraph", dawn::PassGroup::PrintStencilGraph)
+      .value("SetStageName", dawn::PassGroup::SetStageName)
+      .value("StageReordering", dawn::PassGroup::StageReordering)
+      .value("StageMerger", dawn::PassGroup::StageMerger)
+      .value("TemporaryMerger", dawn::PassGroup::TemporaryMerger)
+      .value("Inlining", dawn::PassGroup::Inlining)
+      .value("IntervalPartitioning", dawn::PassGroup::IntervalPartitioning)
+      .value("TmpToStencilFunction", dawn::PassGroup::TmpToStencilFunction)
+      .value("SetNonTempCaches", dawn::PassGroup::SetNonTempCaches)
+      .value("SetCaches", dawn::PassGroup::SetCaches)
+      .value("SetBlockSize", dawn::PassGroup::SetBlockSize)
+      .value("DataLocalityMetric", dawn::PassGroup::DataLocalityMetric)
+      .export_values();
+
+  py::enum_<dawn::codegen::Backend>(m, "CodeGenBackend")
+      .value("GridTools", dawn::codegen::Backend::GridTools)
+      .export_values();
+
   // Options structs
   py::class_<dawn::Options>(m, "OptimizerOptions")
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
@@ -139,7 +161,7 @@ PYBIND11_MODULE(_dawn4py, m) {
   m.def("run_optimizer_sir",
         [](const std::string& sir, const std::string& format, const std::list<std::string>& groups,
            const dawn::Options& options) { return dawn::run(sir, format, groups, options); },
-        py::arg("sir"), py::arg("format") = "json", py::arg("groups") = std::list<std::string>(),
+        py::arg("sir"), py::arg("format") = "byte", py::arg("groups") = std::list<std::string>(),
         py::arg("options") = dawn::Options());
 
   m.def("run_optimizer_iir",
@@ -148,7 +170,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            const dawn::Options& options) {
           return dawn::run(stencilInstantiationMap, format, groups, options);
         },
-        py::arg("stencil_instantiation_map"), py::arg("format") = "json",
+        py::arg("stencil_instantiation_map"), py::arg("format") = "byte",
         py::arg("groups") = std::list<std::string>(), py::arg("options") = dawn::Options());
 
   m.def("run_codegen",
@@ -157,7 +179,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            const dawn::codegen::Options& options) {
           return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
         },
-        py::arg("stencil_instantiation_map"), py::arg("format") = "json",
+        py::arg("stencil_instantiation_map"), py::arg("format") = "byte",
         py::arg("backend") = "gridtools", py::arg("options") = dawn::codegen::Options());
 
   m.def("compile_sir",
@@ -166,7 +188,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            const std::string& backend, const dawn::codegen::Options& codegenOptions) {
           return dawn::compile(sir, format, passGroups, optimizerOptions, backend, codegenOptions);
         },
-        py::arg("sir"), py::arg("format") = "json",
+        "Compile the provided SIR", py::arg("sir"), py::arg("format") = "byte",
         py::arg("optimizer_groups") = dawn::defaultPassGroupsStrings(),
         py::arg("optimizer_options") = dawn::Options(), py::arg("codegen_backend") = "gridtools",
         py::arg("codegen_options") = dawn::codegen::Options());

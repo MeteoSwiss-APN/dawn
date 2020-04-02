@@ -28,13 +28,11 @@ from dawn4py.serialization import utils as sir_utils
 
 OUTPUT_NAME = "sparse_dimensions"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
-OUTPUT_PATH = os.path.join(os.path.dirname(
-    __file__), "data", f"{OUTPUT_NAME}.cpp")
+OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "data", f"{OUTPUT_NAME}.cpp")
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     # create the out = reduce(sparse_CE * in) statement
     body_ast = sir_utils.make_ast(
@@ -44,10 +42,12 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
                     sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("sparse_CE"), "*", sir_utils.make_field_access_expr("in")),
-                    sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Float),
-                    chain=[SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')]
+                        sir_utils.make_field_access_expr("sparse_CE"),
+                        "*",
+                        sir_utils.make_field_access_expr("in"),
+                    ),
+                    sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                    chain=[SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")],
                 ),
                 "=",
             )
@@ -55,7 +55,8 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
@@ -65,12 +66,24 @@ def main(args: argparse.Namespace):
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Edge')], 1)),
-                    sir_utils.make_field("sparse_CE", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')], 1)),
-                    sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Cell')], 1))
+                    sir_utils.make_field(
+                        "in",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Edge")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "sparse_CE",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "out",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
                 ],
             ),
         ],
@@ -81,7 +94,7 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico")
+    code = dawn4py.compile_sir(sir_utils.to_bytes(sir), codegen_backend="c++-naive-ico")
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
@@ -91,8 +104,14 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate a simple unstructured copy stencil using Dawn compiler")
+        description="Generate a simple unstructured copy stencil using Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())
