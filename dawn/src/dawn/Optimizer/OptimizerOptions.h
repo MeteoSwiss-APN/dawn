@@ -33,7 +33,8 @@ enum class PassGroup {
   SetNonTempCaches,
   SetCaches,
   SetBlockSize,
-  DataLocalityMetric
+  DataLocalityMetric,
+  SetLoopOrder,
 };
 
 // TODO Rename this to dawn::Options after the larger dawn::Options is removed
