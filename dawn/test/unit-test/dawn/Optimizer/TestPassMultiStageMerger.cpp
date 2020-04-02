@@ -168,7 +168,7 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest8) {
     vertical_region(k_end - 1, k_start) {
       d -= c * d[k + 1];
     } */
-  runTest("input/tridiagonal_solve.iir", {4, 1, 1},
+  runTest("input/tridiagonal_solve.iir", {5, 1},
           {iir::LoopOrderKind::Forward, iir::LoopOrderKind::Backward});
 }
 
