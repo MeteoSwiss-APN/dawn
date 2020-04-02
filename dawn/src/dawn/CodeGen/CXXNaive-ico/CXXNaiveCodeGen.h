@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
@@ -32,12 +33,18 @@ class StencilInstantiation;
 namespace codegen {
 namespace cxxnaiveico {
 
+/// @brief Run the cxx-naive-ico code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options = {});
+
 /// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup cxxnaiveico
 class CXXNaiveIcoCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveIcoCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+  CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                      int maxHaloPoint);
   virtual ~CXXNaiveIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
