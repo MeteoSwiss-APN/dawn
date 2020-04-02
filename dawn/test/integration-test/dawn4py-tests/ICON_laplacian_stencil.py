@@ -73,7 +73,9 @@ def main():
                     rhs=sir_utils.make_field_access_expr("rot_vec"),
                     chain=[SIR.LocationType.Value(
                         "Edge"), SIR.LocationType.Value("Vertex")],
-                    weights=sir_utils.make_weights([-1.0, 1.0])
+                    weights=[sir_utils.make_literal_access_expr(
+                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Double)]
                 ),
                 "=",
             ),
@@ -98,7 +100,9 @@ def main():
                     rhs=sir_utils.make_field_access_expr("div_vec"),
                     chain=[SIR.LocationType.Value(
                         "Edge"), SIR.LocationType.Value("Cell")],
-                    weights=sir_utils.make_weights([-1.0, 1.0])
+                    weights=[sir_utils.make_literal_access_expr(
+                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Double)]
                 ),
                 "=",
             ),

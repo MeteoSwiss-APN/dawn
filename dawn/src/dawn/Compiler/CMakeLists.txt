@@ -15,6 +15,8 @@
 add_library(DawnCompiler
   DawnCompiler.h
   DawnCompiler.cpp
+  Driver.h
+  Driver.cpp
   Options.h
   Options.inc
 )

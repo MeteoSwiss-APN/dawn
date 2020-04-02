@@ -19,6 +19,8 @@ add_library(DawnValidator
     GridTypeChecker.cpp
     IntegrityChecker.h
     IntegrityChecker.cpp
+    WeightChecker.h
+    WeightChecker.cpp
 )
 
 target_add_dawn_standard_props(DawnValidator)
