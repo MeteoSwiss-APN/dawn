@@ -16,22 +16,24 @@
 
 namespace {
 
+constexpr auto backend = dawn::codegen::Backend::CXXNaive;
+
 class TestCodeGenNaive : public TestCodeGen {};
 
 TEST_F(TestCodeGenNaive, GlobalIndexStencil) {
-  runTest(this->getGlobalIndexStencil(), "global_indexing.cpp");
+  runTest(this->getGlobalIndexStencil(), backend, "global_indexing.cpp");
 }
 
 TEST_F(TestCodeGenNaive, NonOverlappingInterval) {
-  runTest(this->getNonOverlappingInterval(), "nonoverlapping_stencil.cpp");
+  runTest(this->getNonOverlappingInterval(), backend, "nonoverlapping_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, LaplacianStencil) {
-  runTest(this->getLaplacianStencil(), "laplacian_stencil.cpp");
+  runTest(this->getLaplacianStencil(), backend, "laplacian_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, ConditionalStencil) {
-  runTest(this->getConditionalStencil(), "conditional_stencil.cpp");
+  runTest(this->getConditionalStencil(), backend, "conditional_stencil.cpp");
 }
 
 } // anonymous namespace

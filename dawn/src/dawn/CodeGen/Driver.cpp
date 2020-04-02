@@ -77,12 +77,19 @@ std::string run(const std::map<std::string, std::string>& stencilInstantiationMa
   return code;
 }
 
+/// @brief Run code generation on a single stencil instantiation
+std::unique_ptr<TranslationUnit>
+run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, Backend backend,
+    const Options& options) {
+  return run({{stencilInstantiation->getName(), stencilInstantiation}}, backend, options);
+}
+
 std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit) {
   std::string code;
   for(const auto& p : translationUnit->getPPDefines())
     code += p + "\n";
 
-  code += translationUnit->getGlobals() + "\n\n";
+  code += translationUnit->getGlobals();
   for(const auto& p : translationUnit->getStencils())
     code += p.second;
 

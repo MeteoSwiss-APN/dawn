@@ -34,6 +34,11 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
     Backend backend, const Options& options = {});
 
+/// @brief Run code generation on a single stencil instantiation
+std::unique_ptr<TranslationUnit>
+run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, Backend backend,
+    const Options& options = {});
+
 std::string run(const std::map<std::string, std::string>& stencilInstantiationMap,
                 const std::string& format, const std::string& backend,
                 const dawn::codegen::Options& options = {});

@@ -16,22 +16,24 @@
 
 namespace {
 
+constexpr auto backend = dawn::codegen::Backend::CUDA;
+
 class TestCodeGenCuda : public TestCodeGen {};
 
 TEST_F(TestCodeGenCuda, GlobalIndexStencil) {
-  runTest(this->getGlobalIndexStencil(), "global_indexing.cu");
+  runTest(this->getGlobalIndexStencil(), backend, "global_indexing.cu");
 }
 
 TEST_F(TestCodeGenCuda, NonOverlappingInterval) {
-  runTest(this->getNonOverlappingInterval(), "nonoverlapping_stencil.cu");
+  runTest(this->getNonOverlappingInterval(), backend, "nonoverlapping_stencil.cu");
 }
 
 TEST_F(TestCodeGenCuda, LaplacianStencil) {
-  runTest(this->getLaplacianStencil(), "laplacian_stencil.cu");
+  runTest(this->getLaplacianStencil(), backend, "laplacian_stencil.cu");
 }
 
 TEST_F(TestCodeGenCuda, ConditionalStencil) {
-  runTest(this->getConditionalStencil(), "conditional_stencil.cu");
+  runTest(this->getConditionalStencil(), backend, "conditional_stencil.cu");
 }
 
 } // anonymous namespace

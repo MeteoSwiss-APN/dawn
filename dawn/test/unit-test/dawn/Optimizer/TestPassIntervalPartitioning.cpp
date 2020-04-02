@@ -17,7 +17,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -44,10 +43,7 @@ protected:
 };
 
 TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
-  std::string filepath = "input/test_interval_partition.iir";
-  if(!TestEnvironment::path_.empty())
-    filepath = TestEnvironment::path_ + "/" + filepath;
-  auto instantiation = IIRSerializer::deserialize(filepath);
+  auto instantiation = IIRSerializer::deserialize("input/test_interval_partition.iir");
 
   // Expect pass to succeed...
   PassIntervalPartitioning intervalPartitioningPass(*context_);

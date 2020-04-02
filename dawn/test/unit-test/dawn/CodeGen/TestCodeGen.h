@@ -12,9 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/CodeGen/Driver.h"
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/FileUtil.h"
-#include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
 #include <fstream>
@@ -86,7 +89,7 @@ protected:
     auto out = b.field("out", FieldType::ijk);
     auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
 
-    auto stencil_inst = b.build(
+    auto stencilInstantiation = b.build(
         "generated",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
@@ -108,28 +111,22 @@ protected:
             b.stage(b.doMethod(SInterval(15, SInterval::End),
                                b.block(b.stmt(b.assignExpr(b.at(out), b.lit(10)))))))));
 
-    return stencil_inst;
+    return stencilInstantiation;
   }
 
   std::shared_ptr<dawn::iir::StencilInstantiation> getConditionalStencil() {
-    dawn::OptimizerContext::OptimizerContextOptions options;
-    std::unique_ptr<dawn::OptimizerContext> context;
     dawn::UIDGenerator::getInstance()->reset();
-
-    return dawn::CompilerUtil::load("../input/conditional_stencil.iir", options, context);
+    return dawn::IIRSerializer::deserialize("../input/conditional_stencil.iir",
+                                            dawn::IIRSerializer::Format::Json);
   }
 
-  void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencil_inst,
-               const std::string& ref_file) {
-    std::ostringstream oss;
-    if(ref_file.find(".cu") != std::string::npos) {
-      dawn::CompilerUtil::dumpCuda(oss, stencil_inst);
-    } else {
-      dawn::CompilerUtil::dumpNaive(oss, stencil_inst);
-    }
-
-    std::string ref = dawn::readFile("../reference/" + ref_file);
-    ASSERT_EQ(oss.str(), ref) << "Generated code does not match reference code";
+  void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencilInstantiation,
+               dawn::codegen::Backend backend, const std::string& ref_file) {
+    auto tu = dawn::codegen::run(stencilInstantiation, backend);
+    const std::string code = dawn::codegen::generate(tu);
+    const std::string ref = dawn::readFile(fs::path("../reference") / ref_file);
+    ASSERT_EQ(code, ref) << "Generated code does not match reference code";
   }
 };
+
 } // anonymous namespace
