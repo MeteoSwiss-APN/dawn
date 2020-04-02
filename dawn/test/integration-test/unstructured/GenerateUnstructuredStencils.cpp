@@ -501,8 +501,8 @@ int main() {
                             b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
     // Code generation deactivated for the reasons stated above
-    // std::ofstream of("generated/generated_NestedSparse.hpp");
-    // dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(of, stencil_instantiation);
+    std::ofstream of("generated/generated_NestedSparse.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
   }
 
   {
@@ -522,7 +522,7 @@ int main() {
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
-                LocType::Cells,
+                LocType::Edges,
                 b.doMethod(
                     dawn::sir::Interval::Start, dawn::sir::Interval::End,
                     b.loopStmtChain(
@@ -557,7 +557,7 @@ int main() {
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
-                LocType::Cells,
+                LocType::Edges,
                 b.doMethod(
                     dawn::sir::Interval::Start, dawn::sir::Interval::End,
                     b.loopStmtChain(
@@ -592,7 +592,7 @@ int main() {
     //     b.stencil(b.multistage(
     //         dawn::iir::LoopOrderKind::Parallel,
     //         b.stage(
-    //             LocType::Cells,
+    //             LocType::Edges,
     //             b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
     //                        b.loopStmtChain(
     //                            b.stmt(b.assignExpr(
@@ -629,7 +629,7 @@ int main() {
                         b.loopStmtChain(
                             b.stmt(b.assignExpr(b.at(sparse_f),
                                                 b.binaryExpr(b.at(A_f, HOffsetType::withOffset, 0),
-                                                             b.at(B_f), Op::plus))),
+                                                             b.at(B_f), Op::minus))),
                             {LocType::Cells, LocType::Edges, LocType::Cells, LocType::Edges,
                              LocType::Cells}))))));
 
@@ -644,8 +644,7 @@ int main() {
     UnstructuredIIRBuilder b;
     auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges});
 
-    auto e_f = b.field("A", LocType::Edges);
-    auto v_f = b.field("B", LocType::Vertices);
+    auto v_f = b.field("v", LocType::Vertices);
 
     auto stencil_instantiation = b.build(
         "sparseAssignment4",
@@ -662,6 +661,39 @@ int main() {
                                     {LocType::Cells, LocType::Edges}))))));
 
     std::ofstream of("generated/generated_SparseAssignment4.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges});
+
+    auto v_f = b.field("v", LocType::Vertices);
+    auto c_f = b.field("c", LocType::Cells);
+
+    auto stencil_instantiation = b.build(
+        "sparseAssignment5",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(LocType::Cells,
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.loopStmtChain(
+                                   b.stmt(b.assignExpr(
+                                       b.at(sparse_f),
+                                       b.reduceOverNeighborExpr(
+                                           Op::plus,
+                                           b.binaryExpr(b.at(v_f),
+                                                        b.reduceOverNeighborExpr(
+                                                            Op::plus, b.at(c_f), b.lit(0.),
+                                                            {LocType::Vertices, LocType::Cells}),
+                                                        Op::multiply),
+                                           b.lit(0.), {LocType::Edges, LocType::Vertices}))),
+                                   {LocType::Cells, LocType::Edges}))))));
+
+    std::ofstream of("generated/generated_SparseAssignment5.hpp");
     dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
   }
 

@@ -604,6 +604,240 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
 } // namespace
 
 namespace {
+#include <generated_NestedSparse.hpp>
+TEST(AtlasIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
+  auto mesh = generateEquilatMesh(10, 10);
+  const int edgesPerCell = 3;
+  const int verticesPerEdge = 2;
+  const int nb_levels = 1;
+
+  auto [cells_F, cells_v] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
+  auto [edges_F, edges_v] = makeAtlasField("edges", mesh.edges().size(), nb_levels);
+  auto [nodes_F, nodes_v] = makeAtlasField("nodes", mesh.nodes().size(), nb_levels);
+
+  auto [sparseDim_ce_F, sparseDim_ce_v] =
+      makeAtlasSparseField("sparse_ce", mesh.cells().size(), edgesPerCell, nb_levels);
+  auto [sparseDim_ev_F, sparseDim_ev_v] =
+      makeAtlasSparseField("sparse_ev", mesh.edges().size(), verticesPerEdge, nb_levels);
+
+  initSparseField(sparseDim_ce_v, mesh.cells().size(), nb_levels, edgesPerCell, 200.);
+  initSparseField(sparseDim_ev_v, mesh.edges().size(), nb_levels, verticesPerEdge, 300.);
+  initField(edges_v, mesh.edges().size(), nb_levels, 1.);
+  initField(nodes_v, mesh.nodes().size(), nb_levels, 2.);
+
+  dawn_generated::cxxnaiveico::nestedWithSparse<atlasInterface::atlasTag>(
+      mesh, nb_levels, cells_v, edges_v, nodes_v, sparseDim_ce_v, sparseDim_ev_v)
+      .run();
+
+  // each vertex stores 2                                                            2
+  // this is multiplied by the sparse dim storing 300                              300
+  // this is reduced by sum onto edges at 2 verts p edge                          1200
+  // each edge stores 1                                                              1
+  // this is multiplied by the reduction times the sparse dim storing 200          200
+  // this is reduced by sum onto the cells at 3 eges p cell                       4200
+  for(int i = 0; i < mesh.cells().size(); i++) {
+    EXPECT_TRUE(fabs(cells_v(i, 0) - 4200) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+}
+} // namespace
+
+namespace name {
+#include <generated_SparseAssignment0.hpp>
+TEST(AtlasIntegrationTestCompareOutput, SparseAssignment0) {
+  auto mesh = generateEquilatMesh(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  auto [vn_f, vn_v] = makeAtlasSparseField("vn", mesh.edges().size(), diamondSize, nb_levels);
+  auto [uVert_f, uVert_v] = makeAtlasField("uVert", mesh.nodes().size(), nb_levels);
+  auto [vVert_f, vVert_v] = makeAtlasField("vVert", mesh.nodes().size(), nb_levels);
+  auto [nx_f, nx_v] = makeAtlasField("nx", mesh.nodes().size(), nb_levels);
+  auto [ny_f, ny_v] = makeAtlasField("ny", mesh.nodes().size(), nb_levels);
+
+  initSparseField(vn_v, mesh.edges().size(), nb_levels, diamondSize, 1.);
+  initField(uVert_v, mesh.nodes().size(), nb_levels, 1.);
+  initField(vVert_v, mesh.nodes().size(), nb_levels, 2.);
+  initField(nx_v, mesh.nodes().size(), nb_levels, 3.);
+  initField(ny_v, mesh.nodes().size(), nb_levels, 4.);
+  // dot product: vn(e,:) = u*nx + v*ny = 1*3 + 2*4 = 11
+
+  dawn_generated::cxxnaiveico::sparseAssignment0<atlasInterface::atlasTag>(
+      mesh, nb_levels, vn_v, uVert_v, vVert_v, nx_v, ny_v)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(size_t edgeIdx = 0; edgeIdx < mesh.edges().size(); edgeIdx++) {
+      bool boundaryEdge = mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+                              mesh.edges().cell_connectivity().missing_value() ||
+                          mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+                              mesh.edges().cell_connectivity().missing_value();
+      size_t curDiamondSize = (boundaryEdge) ? 3 : 4;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(vn_v(edgeIdx, sparse, level) - 11.) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+} // namespace name
+
+namespace name {
+#include <generated_SparseAssignment1.hpp>
+TEST(AtlasIntegrationTestCompareOutput, SparseAssignment1) {
+  auto mesh = generateEquilatMesh(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  auto [vn_f, vn_v] = makeAtlasSparseField("vn", mesh.edges().size(), diamondSize, nb_levels);
+  auto [uVert_f, uVert_v] = makeAtlasField("uVert", mesh.nodes().size(), nb_levels);
+  auto [vVert_f, vVert_v] = makeAtlasField("vVert", mesh.nodes().size(), nb_levels);
+  auto [nx_f, nx_v] = makeAtlasSparseField("nx", mesh.edges().size(), diamondSize, nb_levels);
+  auto [ny_f, ny_v] = makeAtlasSparseField("ny", mesh.edges().size(), diamondSize, nb_levels);
+
+  initSparseField(vn_v, mesh.edges().size(), nb_levels, diamondSize, 1.);
+  initField(uVert_v, mesh.nodes().size(), nb_levels, 1.);
+  initField(vVert_v, mesh.nodes().size(), nb_levels, 2.);
+  initSparseField(nx_v, mesh.edges().size(), nb_levels, diamondSize, 3.);
+  initSparseField(ny_v, mesh.edges().size(), nb_levels, diamondSize, 4.);
+  // dot product: vn(e,:) = u*nx + v*ny = 1*3 + 2*4 = 11
+
+  dawn_generated::cxxnaiveico::sparseAssignment1<atlasInterface::atlasTag>(
+      mesh, nb_levels, vn_v, uVert_v, vVert_v, nx_v, ny_v)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(size_t edgeIdx = 0; edgeIdx < mesh.edges().size(); edgeIdx++) {
+      bool boundaryEdge = mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+                              mesh.edges().cell_connectivity().missing_value() ||
+                          mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+                              mesh.edges().cell_connectivity().missing_value();
+      size_t curDiamondSize = (boundaryEdge) ? 3 : 4;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(vn_v(edgeIdx, sparse, level) - 11.) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+} // namespace name
+
+namespace {
+// #include <generated_SparseAssignment2.hpp>
+TEST(AtlasIntegrationTestCompareOutput, SparseAssignment2) {
+  EXPECT_TRUE(false); // TODO
+}
+} // namespace
+
+namespace {
+#include <generated_SparseAssignment3.hpp>
+TEST(AtlasIntegrationTestCompareOutput, SparseAssignment3) {
+  auto mesh = generateEquilatMesh(10, 10);
+  const int intpSize = 9;
+  const int nb_levels = 1;
+
+  auto [sparse_f, sparse_v] =
+      makeAtlasSparseField("sparse", mesh.cells().size(), intpSize, nb_levels);
+  auto [A_f, A_v] = makeAtlasField("A", mesh.cells().size(), nb_levels);
+  auto [B_f, B_v] = makeAtlasField("B", mesh.cells().size(), nb_levels);
+
+  initField(A_v, mesh.cells().size(), nb_levels, 1.);
+  for(int cellIdx = 0; cellIdx < mesh.cells().size(); cellIdx++) {
+    B_v(cellIdx, 0) = cellIdx;
+  }
+
+  dawn_generated::cxxnaiveico::sparseAssignment3<atlasInterface::atlasTag>(mesh, nb_levels,
+                                                                           sparse_v, A_v, B_v)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(size_t cellIdx = 0; cellIdx < mesh.cells().size(); cellIdx++) {
+      size_t curIntpSize =
+          atlasInterface::getNeighbors(atlasInterface::atlasTag{}, mesh,
+                                       {dawn::LocationType::Cells, dawn::LocationType::Edges,
+                                        dawn::LocationType::Cells, dawn::LocationType::Edges,
+                                        dawn::LocationType::Cells},
+                                       cellIdx)
+              .size();
+      for(size_t sparse = 0; sparse < curIntpSize; sparse++) {
+        EXPECT_TRUE(fabs(sparse_v(cellIdx, sparse, 0) - (1. - cellIdx)) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_SparseAssignment4.hpp>
+TEST(AtlasIntegrationTestCompareOutput, SparseAssignment4) {
+  auto mesh = generateEquilatMesh(10, 10);
+  const int edgesPerCell = 3;
+  const int nb_levels = 1;
+
+  auto [sparse_f, sparse_v] =
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
+  auto [e_f, e_v] = makeAtlasField("e", mesh.nodes().size(), nb_levels);
+
+  initField(e_v, mesh.nodes().size(), nb_levels, 1.);
+  dawn_generated::cxxnaiveico::sparseAssignment4<atlasInterface::atlasTag>(mesh, nb_levels,
+                                                                           sparse_v, e_v)
+      .run();
+  // reduce value 1 from vertices to edge (=2), assign to sparse dim
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(size_t cellIdx = 0; cellIdx < mesh.cells().size(); cellIdx++) {
+      for(size_t sparse = 0; sparse < edgesPerCell; sparse++) {
+        EXPECT_TRUE(fabs(sparse_v(cellIdx, sparse, 0) - 2.) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_SparseAssignment5.hpp>
+TEST(AtlasIntegrationTestCompareOutput, SparseAssignment5) {
+  auto mesh = generateEquilatMesh(10, 10);
+  const int edgesPerCell = 3;
+  const int nb_levels = 1;
+
+  auto [sparse_f, sparse_v] =
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
+  auto [v_f, v_v] = makeAtlasField("e", mesh.nodes().size(), nb_levels);
+  auto [c_f, c_v] = makeAtlasField("c", mesh.cells().size(), nb_levels);
+
+  initField(v_v, mesh.nodes().size(), nb_levels, 3.);
+  initField(c_v, mesh.cells().size(), nb_levels, 2.);
+  dawn_generated::cxxnaiveico::sparseAssignment5<atlasInterface::atlasTag>(mesh, nb_levels,
+                                                                           sparse_v, v_v, c_v)
+      .run();
+
+  // reduce value 2 from cells to vertex (=12) and multiply by vertex field(=36) reduce this
+  // onto edges (two vertices per edge = 72)
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(size_t cellIdx = 0; cellIdx < mesh.cells().size(); cellIdx++) {
+      for(size_t sparse = 0; sparse < edgesPerCell; sparse++) {
+
+        // auto e = f.edges()[sparse];
+        const auto& connEN = mesh.edges().node_connectivity();
+        const auto& connCE = mesh.cells().edge_connectivity();
+        int edgeIdx = connCE(cellIdx, sparse);
+        int nodeIdx0 = connEN(edgeIdx, 0);
+        int nodeIdx1 = connEN(edgeIdx, 1);
+
+        double sol = mesh.nodes().cell_connectivity().cols(nodeIdx0) * 6 +
+                     mesh.nodes().cell_connectivity().cols(nodeIdx1) * 6;
+
+        EXPECT_TRUE(fabs(sparse_v(cellIdx, sparse, 0) - sol) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+} // namespace
+
+namespace {
 #include <generated_sparseDimensionTwice.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
   auto mesh = generateQuadMesh(10, 11);
