@@ -20,7 +20,6 @@
 #include "dawn/Support/StringSwitch.h"
 
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -140,7 +139,6 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   }
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
-  optimizer.pushBackPass<PassComputeStageExtents>();
   optimizer.pushBackPass<PassSetSyncStage>();
   // validation checks after parallelisation
   optimizer.pushBackPass<PassValidation>();
@@ -226,9 +224,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
       optimizer.pushBackPass<PassRemoveScalars>();
-      // modify stages and their extents ...
-      optimizer.pushBackPass<PassComputeStageExtents>();
-      // and changes their dependencies
+      // modify stage dependencies
       optimizer.pushBackPass<PassSetSyncStage>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
