@@ -26,7 +26,7 @@
 namespace dawn {
 
 /// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
-/// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
+/// @returns The new dependency graphs of the multi-stage (or NULL) and the new loop order
 template <typename ReturnType =
               std::pair<std::optional<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
 ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder,
@@ -67,7 +67,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
   if(multiStageDependencyGraph.empty())
     return ReturnType(multiStageDependencyGraph, possibleLoopOrders.front());
 
-  // If the resulting graph isn't a DAG anymore that isn't gonna work
+  // Check if the resulting graph is no longer a DAG (i.e., cycles exist)
   if(!multiStageDependencyGraph.isDAG())
     return ReturnType(std::nullopt, multiStageLoopOrder);
 
@@ -81,8 +81,9 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
   return ReturnType(std::nullopt, multiStageLoopOrder);
 }
 
-/// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
-/// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
+/// @brief Check if we can merge the first multistage into the other, possibly changing the loop
+/// order.
+/// @returns The new dependency graphs of the multi-stage (or NULL) and the new loop order
 template <typename ReturnType =
               std::pair<std::optional<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
 ReturnType isMergable(const iir::MultiStage& thisMS, const iir::MultiStage& otherMS) {
@@ -102,22 +103,9 @@ PassMultiStageMerger::PassMultiStageMerger(OptimizerContext& context)
 }
 
 bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  // Do we need to run this Pass?
-  bool doMultiStageMerge = false;
-  for(const auto& stencil : instantiation->getStencils()) {
-    doMultiStageMerge |= stencil->getChildren().size() > 1;
-    if(doMultiStageMerge)
-      break;
-  }
-
-  if(!doMultiStageMerge)
-    return true;
-
   const int maxBoundaryExtent = context_.getOptions().MaxHaloPoints;
-
   for(const auto& stencil : instantiation->getStencils()) {
-    unsigned nMultiStages = stencil->getChildren().size();
-    if(nMultiStages < 2)
+    if(stencil->getChildren().size() < 2)
       continue;
 
     auto& metadata = instantiation->getMetaData();

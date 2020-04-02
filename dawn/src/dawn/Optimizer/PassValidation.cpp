@@ -17,6 +17,7 @@
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
+#include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 
@@ -52,6 +53,11 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
                     ("Stage location type consistency check failed at line " +
                      std::to_string(stageConsistencyErrorLocation.Line) + " " + description)
                         .c_str());
+    auto [weightsValid, weightValidErrorLocation] = WeightChecker::CheckWeights(*iir, metadata);
+    DAWN_ASSERT_MSG(weightsValid,
+                    ("Found invalid weights at line " +
+                     std::to_string(weightValidErrorLocation.Line) + " " + description)
+                        .c_str());
   }
 
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*iir),
@@ -74,11 +80,16 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
 
 bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
   if(sir->GridType == ast::GridType::Unstructured) {
-    auto [checkResult, errorLocation] =
+    auto [checkResultDimensions, errorLocationDimensions] =
         UnstructuredDimensionChecker::checkDimensionsConsistency(*sir);
-    DAWN_ASSERT_MSG(checkResult, ("Dimensions in SIR are not consistent at line " +
-                                  std::to_string(errorLocation.Line))
-                                     .c_str());
+    DAWN_ASSERT_MSG(checkResultDimensions, ("Dimensions in SIR are not consistent at line " +
+                                            std::to_string(errorLocationDimensions.Line))
+                                               .c_str());
+    auto [checkResultWeights, errorLocationWeights] =
+        UnstructuredDimensionChecker::checkDimensionsConsistency(*sir);
+    DAWN_ASSERT_MSG(
+        checkResultWeights,
+        ("Found invalid weights at line " + std::to_string(errorLocationWeights.Line)).c_str());
   }
 
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*sir),

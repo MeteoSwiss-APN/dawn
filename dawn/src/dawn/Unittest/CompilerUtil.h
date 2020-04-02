@@ -28,7 +28,7 @@
 
 namespace dawn {
 
-using stencilInstantiationContext =
+using StencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 /// @brief Compiler utilities for unit tests
@@ -42,11 +42,11 @@ public:
   load(const std::string& iirFilename,
        const dawn::OptimizerContext::OptimizerContextOptions& options,
        std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");
-  static stencilInstantiationContext
+  static StencilInstantiationContext
   lower(const std::shared_ptr<dawn::SIR>& sir,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
         std::unique_ptr<OptimizerContext>& context);
-  static stencilInstantiationContext
+  static StencilInstantiationContext
   lower(const std::string& sirFilename,
         const dawn::OptimizerContext::OptimizerContextOptions& options,
         std::unique_ptr<OptimizerContext>& context, const std::string& envPath = "");

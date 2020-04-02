@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/IIR/Interval.h"
 #include <set>
 #include <unordered_map>
@@ -33,11 +34,17 @@ class Stencil;
 namespace codegen {
 namespace gt {
 
+/// @brief Run the GridTools code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options = {});
+
 /// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, bool useParallelEP,
+  GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine, bool useParallelEP,
             int maxHaloPoints);
   virtual ~GTCodeGen();
 

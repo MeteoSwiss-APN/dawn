@@ -18,12 +18,13 @@ PYBIND11_MODULE(_dawn4py, m) {
   // Classes
   py::class_<dawn::Options>(m, "Options")
       .def(py::init(
-               [](int MaxBlocksPerSM, int nsms, int DomainSizeI, int DomainSizeJ, int DomainSizeK,
-                  const std::string& Backend, const std::string& OutputFile, bool SerializeIIR,
+               [](int MaxHaloSize, bool UseParallelEP, int MaxBlocksPerSM, int nsms,
+                  int DomainSizeI, int DomainSizeJ, int DomainSizeK, const std::string& Backend,
+                  const std::string& OutputFile, bool SerializeIIR,
                   const std::string& DeserializeIIR, const std::string& IIRFormat,
                   int MaxHaloPoints, const std::string& ReorderStrategy, int MaxFieldsPerStencil,
                   bool MaxCutMSS, int BlockSizeI, int BlockSizeJ, int BlockSizeK,
-                  bool SplitStencils, bool MergeDoMethods, bool UseParallelEP, bool DisableKCaches,
+                  bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
                   bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
                   bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
                   bool DumpRaceConditionGraph, bool DumpStencilInstantiation, bool DumpStencilGraph,
@@ -38,7 +39,9 @@ PYBIND11_MODULE(_dawn4py, m) {
                   bool ReportPassTemporaryType, bool ReportPassStageReordering,
                   bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
                   bool ReportPassSetNonTempCaches) {
-                 return dawn::Options{MaxBlocksPerSM,
+                 return dawn::Options{MaxHaloSize,
+                                      UseParallelEP,
+                                      MaxBlocksPerSM,
                                       nsms,
                                       DomainSizeI,
                                       DomainSizeJ,
@@ -57,7 +60,6 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       BlockSizeK,
                                       SplitStencils,
                                       MergeDoMethods,
-                                      UseParallelEP,
                                       DisableKCaches,
                                       UseNonTempCaches,
                                       KeepVarnames,
@@ -98,6 +100,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                       ReportPassSetBlockSize,
                                       ReportPassSetNonTempCaches};
                }),
+           py::arg("max_halo_size") = 3, py::arg("use_parallel_ep") = false,
            py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0, py::arg("domain_size_i") = 0,
            py::arg("domain_size_j") = 0, py::arg("domain_size_k") = 0,
            py::arg("backend") = "gridtools", py::arg("output_file") = "",
@@ -106,12 +109,11 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("reorder_strategy") = "greedy", py::arg("max_fields_per_stencil") = 40,
            py::arg("max_cut_mss") = false, py::arg("block_size_i") = 0, py::arg("block_size_j") = 0,
            py::arg("block_size_k") = 0, py::arg("split_stencils") = false,
-           py::arg("merge_do_methods") = true, py::arg("use_parallel_ep") = false,
-           py::arg("disable_k_caches") = false, py::arg("use_non_temp_caches") = false,
-           py::arg("keep_varnames") = false, py::arg("pass_verbose") = false,
-           py::arg("report_accesses") = false, py::arg("dump_split_graphs") = false,
-           py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
-           py::arg("dump_race_condition_graph") = false,
+           py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
+           py::arg("use_non_temp_caches") = false, py::arg("keep_varnames") = false,
+           py::arg("pass_verbose") = false, py::arg("report_accesses") = false,
+           py::arg("dump_split_graphs") = false, py::arg("dump_stage_graph") = false,
+           py::arg("dump_temporary_graphs") = false, py::arg("dump_race_condition_graph") = false,
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false,
            py::arg("ssa") = false, py::arg("print_stencil_graph") = false,
            py::arg("set_stage_name") = false, py::arg("stage_reordering") = false,
@@ -133,6 +135,8 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("report_pass_stage_merger") = false, py::arg("report_pass_set_caches") = false,
            py::arg("report_pass_set_block_size") = false,
            py::arg("report_pass_set_non_temp_caches") = false)
+      .def_readwrite("max_halo_size", &dawn::Options::MaxHaloSize)
+      .def_readwrite("use_parallel_ep", &dawn::Options::UseParallelEP)
       .def_readwrite("max_blocks_per_sm", &dawn::Options::MaxBlocksPerSM)
       .def_readwrite("nsms", &dawn::Options::nsms)
       .def_readwrite("domain_size_i", &dawn::Options::DomainSizeI)
@@ -152,7 +156,6 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
       .def_readwrite("split_stencils", &dawn::Options::SplitStencils)
       .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
-      .def_readwrite("use_parallel_ep", &dawn::Options::UseParallelEP)
       .def_readwrite("disable_k_caches", &dawn::Options::DisableKCaches)
       .def_readwrite("use_non_temp_caches", &dawn::Options::UseNonTempCaches)
       .def_readwrite("keep_varnames", &dawn::Options::KeepVarnames)
@@ -194,7 +197,9 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("report_pass_set_non_temp_caches", &dawn::Options::ReportPassSetNonTempCaches)
       .def("__repr__", [](const dawn::Options& self) {
         std::ostringstream ss;
-        ss << "max_blocks_per_sm=" << self.MaxBlocksPerSM << ",\n    "
+        ss << "max_halo_size=" << self.MaxHaloSize << ",\n    "
+           << "use_parallel_ep=" << self.UseParallelEP << ",\n    "
+           << "max_blocks_per_sm=" << self.MaxBlocksPerSM << ",\n    "
            << "nsms=" << self.nsms << ",\n    "
            << "domain_size_i=" << self.DomainSizeI << ",\n    "
            << "domain_size_j=" << self.DomainSizeJ << ",\n    "
@@ -223,7 +228,6 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_k=" << self.BlockSizeK << ",\n    "
            << "split_stencils=" << self.SplitStencils << ",\n    "
            << "merge_do_methods=" << self.MergeDoMethods << ",\n    "
-           << "use_parallel_ep=" << self.UseParallelEP << ",\n    "
            << "disable_k_caches=" << self.DisableKCaches << ",\n    "
            << "use_non_temp_caches=" << self.UseNonTempCaches << ",\n    "
            << "keep_varnames=" << self.KeepVarnames << ",\n    "
