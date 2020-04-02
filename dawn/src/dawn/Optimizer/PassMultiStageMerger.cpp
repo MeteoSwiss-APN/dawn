@@ -111,8 +111,8 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
     auto& metadata = instantiation->getMetaData();
     std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
         metadata, stencil->getStencilAttributes(), stencil->getStencilID());
-    //    newStencil->setStageDependencyGraph(
-    //        iir::DependencyGraphStage(*stencil->getStageDependencyGraph()));
+    newStencil->setStageDependencyGraph(
+        iir::DependencyGraphStage(*stencil->getStageDependencyGraph()));
 
     // NOTE: The Stages in the same multi-stage are assumed to have no counter loop-order vertical
     // dependencies so we can treat each multistage independently.
