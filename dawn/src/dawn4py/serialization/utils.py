@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _
-##                         | |
-##                       __| | __ ___      ___ ___
-##                      / _` |/ _` \ \ /\ / / '_  |
-##                     | (_| | (_| |\ V  V /| | | |
-##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+# _
+# | |
+# __| | __ ___      ___ ___
+# / _` |/ _` \ \ /\ / / '_  |
+# | (_| | (_| |\ V  V /| | | |
+# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT).
-##  See LICENSE.txt for details.
+# This file is distributed under the MIT License (MIT).
+# See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
@@ -46,6 +46,7 @@ __all__ = [
     "make_stencil_call",
     "make_stmt",
     "make_block_stmt",
+    "make_loop_stmt",
     "make_expr_stmt",
     "make_return_stmt",
     "make_var_decl_stmt",
@@ -104,6 +105,7 @@ StmtType = TypeVar(
     StencilCallDeclStmt,
     BoundaryConditionDeclStmt,
     IfStmt,
+    LoopStmt,
 )
 
 # Can't pass SIR.enums_pb2.LocationType as argument because it doesn't contain the value
@@ -353,6 +355,8 @@ def make_stmt(stmt: StmtType):
         wrapped_stmt.boundary_condition_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, IfStmt):
         wrapped_stmt.if_stmt.CopyFrom(stmt)
+    elif isinstance(stmt, LoopStmt):
+        wrapped_stmt.loop_stmt.CopyFrom(stmt)
     else:
         raise SIRError("cannot create Stmt from type {}".format(type(stmt)))
     return wrapped_stmt
@@ -369,6 +373,20 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
                                 for s in statements if not isinstance(s, Field)])
     else:
         stmt.statements.extend([make_stmt(statements)])
+    return stmt
+
+
+def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue]) -> LoopStmt:
+    """ Create an For Loop
+
+    :param block: List of statements that compose the body of the loop
+    """
+    stmt = LoopStmt()
+    stmt.statements.CopyFrom(make_stmt(make_block_stmt(block)))
+    loop_descriptor_chain = LoopDescriptorChain()
+    loop_descriptor_chain.chain.extend(chain)
+    stmt.loop_descriptor.loop_descriptor_chain.CopyFrom(loop_descriptor_chain)
+
     return stmt
 
 
