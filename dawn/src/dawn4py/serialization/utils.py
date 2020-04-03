@@ -1034,6 +1034,19 @@ class SIRPrinter:
 
         print(self.wrapper.fill("}"), file=self.file)
 
+    def visit_loop_stmt(self, stmt):
+        print(self.wrapper.fill("{"), file=self.file)
+        self._indent += self.indent_size
+        self.wrapper.initial_indent = " " * self._indent
+        #TODO fix print
+        print("for(" + stmt.loop_descriptor.loop_descriptor_chain.chain + ")")
+        self.visit_block_stmt(stmt.statements.block_stmt)
+
+        self._indent -= self.indent_size
+        self.wrapper.initial_indent = " " * self._indent
+
+        print(self.wrapper.fill("}"), file=self.file)
+
     def visit_body_stmt(self, stmt):
         if stmt.WhichOneof("stmt") == "var_decl_stmt":
             self.visit_var_decl_stmt(stmt.var_decl_stmt)
@@ -1043,6 +1056,8 @@ class SIRPrinter:
             self.visit_if_stmt(stmt.if_stmt)
         elif stmt.WhichOneof("stmt") == "block_stmt":
             self.visit_block_stmt(stmt.block_stmt)
+        elif stmt.WhichOneof("stmt") == "loop_stmt":
+            self.visit_loop_stmt(stmt.loop_stmt)
         else:
             raise ValueError("Stmt not supported :" + stmt.WhichOneof("stmt"))
 

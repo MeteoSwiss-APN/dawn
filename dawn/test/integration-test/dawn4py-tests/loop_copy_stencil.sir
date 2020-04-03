@@ -1,0 +1,118 @@
+{
+  "gridType": "Unstructured",
+  "filename": "loop_copy_stencil.cpp",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "loopStmt": {
+                                "statements": {
+                                  "blockStmt": {
+                                    "statements": [
+                                      {
+                                        "exprStmt": {
+                                          "expr": {
+                                            "assignmentExpr": {
+                                              "left": {
+                                                "fieldAccessExpr": {
+                                                  "name": "out",
+                                                  "zeroOffset": {},
+                                                  "argumentMap": [
+                                                    -1,
+                                                    -1,
+                                                    -1
+                                                  ],
+                                                  "argumentOffset": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                  ]
+                                                }
+                                              },
+                                              "op": "=",
+                                              "right": {
+                                                "fieldAccessExpr": {
+                                                  "name": "in",
+                                                  "zeroOffset": {},
+                                                  "argumentMap": [
+                                                    -1,
+                                                    -1,
+                                                    -1
+                                                  ],
+                                                  "argumentOffset": [
+                                                    0,
+                                                    0,
+                                                    0
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                "loopDescriptor": {
+                                  "loopDescriptorChain": {
+                                    "chain": [
+                                      "Cell",
+                                      "Edge"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "out",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell",
+              "sparsePart": [
+                "Cell",
+                "Edge"
+              ]
+            },
+            "maskK": 1
+          }
+        },
+        {
+          "name": "in",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Edge"
+            },
+            "maskK": 1
+          }
+        }
+      ],
+      "name": "loop_copy_stencil"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from google.protobuf.json_format import MessageToJson
 
 OUTPUT_NAME = "loop_copy_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -77,13 +78,17 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    # compile
-    code = dawn4py.compile(sir, backend="cuda")
+    f = open("loop_copy_stencil.sir", "w")
+    f.write(MessageToJson(sir))
+    f.close()
 
-    # write to file
-    print(f"Writing generated code to '{OUTPUT_PATH}'")
-    with open(OUTPUT_PATH, "w") as f:
-        f.write(code)
+    # compile
+    # code = dawn4py.compile(sir, backend="c++-naive-ico", serialize_sir=True)
+
+    # # write to file
+    # print(f"Writing generated code to '{OUTPUT_PATH}'")
+    # with open(OUTPUT_PATH, "w") as f:
+    #     f.write(code)
 
 
 if __name__ == "__main__":

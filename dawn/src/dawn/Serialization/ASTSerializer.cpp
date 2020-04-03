@@ -278,9 +278,8 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
         protoFieldDimensions->mutable_unstructured_horizontal_dimension();
 
     if(unstructuredDimension.isSparse()) {
-      for(int i = 0; i < unstructuredDimension.getNeighborChain().size(); ++i) {
-        protoUnstructuredDimension->set_sparse_part(
-            i, getProtoLocationTypeFromLocationType(unstructuredDimension.getNeighborChain()[i]));
+      for(auto locType : unstructuredDimension.getNeighborChain()) {
+        protoUnstructuredDimension->add_sparse_part(getProtoLocationTypeFromLocationType(locType));
       }
     }
     protoUnstructuredDimension->set_dense_location_type(
