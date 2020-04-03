@@ -89,7 +89,22 @@ std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 }
 } // namespace
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const stencilInstantiationContext& ctx,
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options) {
+  DiagnosticsEngine diagnostics;
+  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloSize);
+  if(diagnostics.hasDiags()) {
+    for(const auto& diag : diagnostics.getQueue())
+      DAWN_LOG(INFO) << diag->getMessage();
+    throw std::runtime_error("An error occured in code generation");
+  }
+
+  return CG.generateCode();
+}
+
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx,
                                        DiagnosticsEngine& engine, int maxHaloPoint)
     : CodeGen(ctx, engine, maxHaloPoint) {}
 

@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_IIRBUILDER_H
 #define DAWN_IIR_IIRBUILDER_H
 
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -139,9 +140,10 @@ public:
                                                     const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
-    std::vector<sir::Value> vWeights;
+    std::vector<std::shared_ptr<ast::Expr>> vWeights;
     for(const auto& it : weights) {
-      vWeights.push_back(sir::Value(it));
+      vWeights.push_back(std::make_shared<ast::LiteralAccessExpr>(std::to_string(it),
+                                                                  Type::TypeInfo<TWeight>::Type));
     }
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
@@ -151,6 +153,12 @@ public:
 
     return expr;
   }
+
+  std::shared_ptr<iir::Expr>
+  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                         std::shared_ptr<iir::Expr>&& init,
+                         const std::vector<ast::LocationType>& chain,
+                         const std::vector<std::shared_ptr<iir::Expr>>&& weights);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,

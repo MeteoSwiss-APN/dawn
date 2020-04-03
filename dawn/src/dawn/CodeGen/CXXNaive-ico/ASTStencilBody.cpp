@@ -128,6 +128,22 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   stmt->getBlockStmt()->accept(*this);
   parentIsForLoop_ = false;
   ss_ << "}";
+  if(hasWeights) {
+    auto weights = expr->getWeights().value();
+    bool first = true;
+
+    ss_ << ", std::vector<::dawn::float_type>({";
+    for(auto const& weight : weights) {
+      if(!first) {
+        ss_ << ", ";
+      }
+      weight->accept(*this);
+      first = false;
+    }
+
+    ss_ << "})";
+  }
+  ss_ << ")";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {

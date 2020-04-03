@@ -297,24 +297,75 @@ TEST(AtlasIntegrationTestCompareOutput, Diamond) {
   const size_t level = 0;
 
   // Create input (on cells) and output (on cells) fields for generated and reference stencils
-  auto [in_ref, in_v_ref] = makeAtlasField("in_v_ref", mesh.nodes().size(), nb_levels);
-  auto [in_gen, in_v_gen] = makeAtlasField("in_v_gen", mesh.nodes().size(), nb_levels);
+  auto [in, in_v] = makeAtlasField("in_v", mesh.nodes().size(), nb_levels);
   auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.edges().size(), nb_levels);
   auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.edges().size(), nb_levels);
 
   auto xy = atlas::array::make_view<double, 2>(mesh.nodes().xy());
   for(int nodeIdx = 0, size = mesh.nodes().size(); nodeIdx < size; ++nodeIdx) {
-    double x = 0.5 * (xy(nodeIdx, atlas::LON) + xy(nodeIdx, atlas::LON));
-    double y = 0.5 * (xy(nodeIdx, atlas::LAT) + xy(nodeIdx, atlas::LAT));
-    in_v_ref(nodeIdx, level) = sin(x) * sin(y);
-    in_v_gen(nodeIdx, level) = sin(x) * sin(y);
+    double x = xy(nodeIdx, atlas::LON);
+    double y = xy(nodeIdx, atlas::LAT);
+    in_v(nodeIdx, level) = sin(x) * sin(y);
   }
 
   dawn_generated::cxxnaiveico::reference_diamond<atlasInterface::atlasTag>(
-      mesh, static_cast<int>(nb_levels), out_v_ref, in_v_ref)
+      mesh, static_cast<int>(nb_levels), out_v_ref, in_v)
       .run();
   dawn_generated::cxxnaiveico::diamond<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
-                                                                 out_v_gen, in_v_gen)
+                                                                 out_v_gen, in_v)
+      .run();
+
+  // Check correctness of the output
+  {
+    auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
+    auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_diamondWeights.hpp>
+#include <reference_diamondWeights.hpp>
+TEST(AtlasIntegrationTestCompareOutput, DiamondWeight) {
+  auto mesh = generateEquilatMesh(32, 32);
+  const size_t nb_levels = 1;
+  const size_t level = 0;
+
+  // Create input (on cells) and output (on cells) fields for generated and reference stencils
+  auto [in, in_v] = makeAtlasField("in_v", mesh.nodes().size(), nb_levels);
+  auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.edges().size(), nb_levels);
+  auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.edges().size(), nb_levels);
+
+  auto [inv_edge_length, inv_edge_length_v] =
+      makeAtlasField("inv_edge_length", mesh.edges().size(), nb_levels);
+  auto [inv_vert_length, inv_vert_length_v] =
+      makeAtlasField("inv_vert_length", mesh.edges().size(), nb_levels);
+
+  auto xy = atlas::array::make_view<double, 2>(mesh.nodes().xy());
+  for(int nodeIdx = 0, size = mesh.nodes().size(); nodeIdx < size; ++nodeIdx) {
+    double x = xy(nodeIdx, atlas::LON);
+    double y = xy(nodeIdx, atlas::LAT);
+    in_v(nodeIdx, level) = sin(x) * sin(y);
+  }
+
+  for(int edgeIdx = 0, size = mesh.edges().size(); edgeIdx < size; ++edgeIdx) {
+    int nodeIdx0 = mesh.edges().node_connectivity()(edgeIdx, 0);
+    int nodeIdx1 = mesh.edges().node_connectivity()(edgeIdx, 1);
+    double dx = xy(nodeIdx0, atlas::LON) - xy(nodeIdx1, atlas::LON);
+    double dy = xy(nodeIdx0, atlas::LAT) - xy(nodeIdx1, atlas::LAT);
+    double length = sqrt(dx * dx + dy * dy);
+    inv_edge_length_v(edgeIdx, level) = 1. / length;
+    inv_vert_length_v(edgeIdx, level) =
+        1. / (0.5 * sqrt(3) * length * 2); // twice the height of equilat triangle
+  }
+
+  dawn_generated::cxxnaiveico::reference_diamondWeights<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), out_v_ref, inv_edge_length_v, inv_vert_length_v, in_v)
+      .run();
+  dawn_generated::cxxnaiveico::diamondWeights<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), out_v_gen, inv_edge_length_v, inv_vert_length_v, in_v)
       .run();
 
   // Check correctness of the output

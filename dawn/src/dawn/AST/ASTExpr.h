@@ -637,10 +637,10 @@ private:
   enum OperandKind { Rhs = 0, Init };
 
   std::string op_ = "+";
-  std::optional<std::vector<sir::Value>> weights_;
+  std::optional<std::vector<std::shared_ptr<Expr>>> weights_;
   std::vector<ast::LocationType> chain_;
-  std::array<std::shared_ptr<Expr>, 2> operands_;
-  bool chainIsValid();
+  std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
+  bool chainIsValid() const;
 
 public:
   /// @name Constructor & Destructor
@@ -649,7 +649,8 @@ public:
                             std::shared_ptr<Expr> const& init, std::vector<ast::LocationType> chain,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init, std::vector<sir::Value> weights,
+                            std::shared_ptr<Expr> const& init,
+                            std::vector<std::shared_ptr<Expr>> weights,
                             std::vector<ast::LocationType> chain,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
@@ -663,9 +664,9 @@ public:
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
   std::vector<ast::LocationType> getNbhChain() const { return chain_; };
   ast::LocationType getLhsLocation() const { return chain_.front(); };
-  const std::optional<std::vector<sir::Value>>& getWeights() const { return weights_; };
+  const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
 
-  ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  ExprRangeType getChildren() override;
 
   static bool classof(const Expr* expr) {
     return expr->getKind() == Kind::ReductionOverNeighborExpr;

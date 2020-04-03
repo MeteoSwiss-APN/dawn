@@ -499,31 +499,10 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    std::vector<dawn::sir::Value> weights;
+    std::vector<std::shared_ptr<sir::Expr>> weights;
 
     for(const auto& weightProto : exprProto.weights()) {
-      switch(weightProto.Value_case()) {
-      case proto::statements::Weight::kBooleanValue:
-        weights.push_back(dawn::sir::Value(weightProto.boolean_value()));
-        break;
-      case proto::statements::Weight::kFloatValue:
-        weights.push_back(dawn::sir::Value(weightProto.float_value()));
-        break;
-      case proto::statements::Weight::kDoubleValue:
-        weights.push_back(dawn::sir::Value(weightProto.double_value()));
-        break;
-      case proto::statements::Weight::kIntegerValue:
-        weights.push_back(dawn::sir::Value(weightProto.integer_value()));
-        break;
-      case proto::statements::Weight::kStringValue:
-        throw std::invalid_argument(
-            "string type for weight encountered in serialization (weights need to be "
-            "of arithmetic type)\n");
-        break;
-      case proto::statements::Weight::VALUE_NOT_SET:
-        throw std::invalid_argument("weight with undefined value encountered!\n");
-        break;
-      }
+      weights.push_back(makeExpr(weightProto));
     }
 
     ast::NeighborChain chain;
