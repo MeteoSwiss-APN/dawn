@@ -134,4 +134,19 @@ TEST_F(TestPassMultiStageSplitter, SplitterTest5) {
   ASSERT_TRUE(true);
 }
 
+TEST_F(TestPassMultiStageSplitter, LaplacianTwoStep) {
+  /*
+    vertical_region(k_start, k_end) {
+      tmp= lap(in);
+      out = lap(tmp);
+    } */
+  auto instantiation = runPass("input/LaplacianTwoStep.iir");
+  ASSERT_EQ(getNumberOfMultistages(*instantiation), 2);
+  auto& multiStage0 = instantiation->getIIR()->getChild(0)->getChild(0);
+  ASSERT_EQ(multiStage0->getLoopOrder(), iir::LoopOrderKind::Parallel);
+  auto& multiStage1 = instantiation->getIIR()->getChild(0)->getChild(1);
+  ASSERT_EQ(multiStage1->getLoopOrder(), iir::LoopOrderKind::Forward);
+  ASSERT_TRUE(true);
+}
+
 } // anonymous namespace
