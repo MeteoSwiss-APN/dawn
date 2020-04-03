@@ -585,27 +585,22 @@ int main() {
     auto e_f = b.field("e", LocType::Edges);
     auto v_f = b.field("v", LocType::Vertices);
 
-    // Currently failing due to dimension checker
+    auto stencil_instantiation = b.build(
+        "sparseAssignment2",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Edges,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.loopStmtChain(
+                               b.stmt(b.assignExpr(
+                                   b.at(sparse_f),
+                                   b.binaryExpr(b.binaryExpr(b.lit(-4.), b.at(e_f), Op::multiply),
+                                                b.at(v_f, HOffsetType::withOffset, 0), Op::plus))),
+                               {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
-    // auto stencil_instantiation = b.build(
-    //     "sparseAssignment2",
-    //     b.stencil(b.multistage(
-    //         dawn::iir::LoopOrderKind::Parallel,
-    //         b.stage(
-    //             LocType::Edges,
-    //             b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-    //                        b.loopStmtChain(
-    //                            b.stmt(b.assignExpr(
-    //                                b.at(sparse_f),
-    //                                b.binaryExpr(b.binaryExpr(b.lit(-4.),
-    //                                                          b.at(e_f, HOffsetType::withOffset,
-    //                                                          0), Op::multiply),
-    //                                             b.at(v_f, HOffsetType::withOffset, 0),
-    //                                             Op::plus))),
-    //                            {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
-
-    // std::ofstream of("generated/generated_SparseAssignment2.hpp");
-    // dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    std::ofstream of("generated/generated_SparseAssignment2.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
   }
 
   {

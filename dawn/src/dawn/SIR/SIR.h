@@ -28,10 +28,10 @@
 #include "dawn/Support/Type.h"
 #include <algorithm>
 #include <iosfwd>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
-#include <map>
 #include <variant>
 #include <vector>
 
@@ -150,6 +150,7 @@ struct StencilFunctionArg {
   SourceLocation Loc; ///< Source location
 
   bool operator==(const StencilFunctionArg& rhs) const;
+
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 

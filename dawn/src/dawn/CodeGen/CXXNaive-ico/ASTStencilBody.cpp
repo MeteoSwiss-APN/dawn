@@ -107,7 +107,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   indent_ -= DAWN_PRINT_INDENT;
 
   if(parentIsForLoop_) {
-    ss_ << "for_loop_idx++;";
+    ss_ << ASTStencilBody::LoopLinearIndexVarName() << "++;";
   }
 
   ss_ << std::string(indent_, ' ') << "}\n";
@@ -120,9 +120,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
 
   ss_ << "{";
-  ss_ << "int for_loop_idx = 0;";
-  ss_ << "for (auto inner_loc : getNeighbors(LibTag{}, m_mesh,"
-      << nbhChainToVectorString(maybeChainPtr->getChain()) << ", loc))";
+  ss_ << "int " << ASTStencilBody::LoopLinearIndexVarName() << " = 0;";
+  ss_ << "for (auto " << ASTStencilBody::LoopNeighborIndexVarName()
+      << ": getNeighbors(LibTag{}, m_mesh," << nbhChainToVectorString(maybeChainPtr->getChain())
+      << ", " << ASTStencilBody::StageIndexVarName() << "))";
   parentIsForLoop_ = true;
   stmt->getBlockStmt()->accept(*this);
   parentIsForLoop_ = false;
@@ -264,15 +265,15 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
         resArgName =
             ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
                     .hasOffset()
-                ? "inner_loc"
-                : "loc";
+                ? ASTStencilBody::LoopNeighborIndexVarName()
+                : ASTStencilBody::StageIndexVarName();
       }
       ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << resArgName << "),"
           << "k+" << expr->getOffset().verticalOffset() << ")";
     } else {
       std::string sparseIdx = parentIsReduction_
-                                  ? ("sparse_dimension_idx" + std::to_string(reductionDepth_ - 1))
-                                  : "for_loop_idx";
+                                  ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
+                                  : ASTStencilBody::LoopLinearIndexVarName();
       ss_ << "m_" << getName(expr) << "("
           << "deref(LibTag{}, " << sparseArgName_ << ")," << sparseIdx << ", "
           << "k+" << expr->getOffset().verticalOffset() << ")";
@@ -285,12 +286,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
 
   std::string sigArg;
   if(parentIsReduction_) { // does stage or parent reduceOverNeighborExpr determine argname?
-    sigArg = "red_loc" + std::to_string(reductionDepth_);
+    sigArg = ASTStencilBody::ReductionIndexVarName(reductionDepth_);
   } else {
     if(parentIsForLoop_) {
-      sigArg = "inner_loc";
+      sigArg = ASTStencilBody::LoopNeighborIndexVarName();
     } else {
-      sigArg = "loc";
+      sigArg = ASTStencilBody::StageIndexVarName();
     }
   }
 
@@ -299,7 +300,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
 
   ss_ << ", " << nbhChainToVectorString(expr->getNbhChain());
   if(hasWeights) {
-    ss_ << ", [&](auto& lhs, auto red_loc" << reductionDepth_ + 1 << ", auto const& weight) {\n";
+    ss_ << ", [&](auto& lhs, auto " << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1)
+        << ", auto const& weight) {\n";
     ss_ << "lhs " << expr->getOp() << "= ";
     ss_ << "weight * ";
   } else {
@@ -308,16 +310,19 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     FindReduceOverNeighborExpr redFinder;
     expr->getRhs()->accept(redFinder);
     if(redFinder.hasReduceOverNeighborExpr()) {
-      ss_ << "int sparse_dimension_idx" << (reductionDepth_ + 1) << " = 0;";
+      ss_ << "int " << ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ + 1) << " = 0;";
     }
     ss_ << "lhs " << expr->getOp() << "= ";
   }
 
   auto argName = denseArgName_;
   // arg names for dense and sparse location
-  denseArgName_ = "red_loc" + std::to_string(reductionDepth_ + 1); //<- always top of stack
-  sparseArgName_ = (parentIsReduction_) ? "red_loc" + std::to_string(reductionDepth_)
-                                        : "loc"; //<- distincion: upper most level or not
+  denseArgName_ =
+      ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1); //<- always top of stack
+  sparseArgName_ =
+      (parentIsReduction_)
+          ? ASTStencilBody::ReductionIndexVarName(reductionDepth_)
+          : ASTStencilBody::StageIndexVarName(); //<- distincion: upper most level or not
   // indicate if parent of subexpr is reduction
   parentIsReduction_ = true;
   reductionDepth_++;
@@ -327,7 +332,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   // "pop" argName
   denseArgName_ = argName;
   ss_ << ";\n";
-  ss_ << "sparse_dimension_idx" << reductionDepth_ << "++;\n";
+  ss_ << ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) << "++;\n";
   ss_ << "return lhs;\n";
   ss_ << "}";
   if(hasWeights) {

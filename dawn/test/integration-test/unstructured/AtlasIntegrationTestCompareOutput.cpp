@@ -722,9 +722,38 @@ TEST(AtlasIntegrationTestCompareOutput, SparseAssignment1) {
 } // namespace name
 
 namespace {
-// #include <generated_SparseAssignment2.hpp>
+#include <generated_SparseAssignment2.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment2) {
-  EXPECT_TRUE(false); // TODO
+  auto mesh = generateEquilatMesh(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  auto [sparse_f, sparse_v] =
+      makeAtlasSparseField("sparse", mesh.edges().size(), diamondSize, nb_levels);
+  auto [edge_f, edge_v] = makeAtlasField("edge", mesh.edges().size(), nb_levels);
+  auto [node_f, node_v] = makeAtlasField("node", mesh.nodes().size(), nb_levels);
+
+  initSparseField(sparse_v, mesh.edges().size(), nb_levels, diamondSize, 1.);
+  initField(edge_v, mesh.edges().size(), nb_levels, 1.);
+  initField(node_v, mesh.nodes().size(), nb_levels, 2.);
+
+  dawn_generated::cxxnaiveico::sparseAssignment2<atlasInterface::atlasTag>(mesh, nb_levels,
+                                                                           sparse_v, edge_v, node_v)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(size_t edgeIdx = 0; edgeIdx < mesh.edges().size(); edgeIdx++) {
+      bool boundaryEdge = mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+                              mesh.edges().cell_connectivity().missing_value() ||
+                          mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+                              mesh.edges().cell_connectivity().missing_value();
+      size_t curDiamondSize = (boundaryEdge) ? 3 : 4;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(sparse_v(edgeIdx, sparse, level) - (-2.)) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
 }
 } // namespace
 

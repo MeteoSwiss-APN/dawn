@@ -1,4 +1,6 @@
 #include "UnstructuredDimensionChecker.h"
+#include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/Support/SourceLocation.h"
@@ -93,13 +95,15 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
 }
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap)
-    : nameToDimensions_(nameToDimensionsMap) {}
+    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+    UnstructuredDimensionCheckerConfig config)
+    : nameToDimensions_(nameToDimensionsMap), config_(config) {}
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
-    const std::unordered_map<int, std::string> idToNameMap)
-    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap) {}
+    const std::unordered_map<int, std::string> idToNameMap,
+    UnstructuredDimensionCheckerConfig config)
+    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap), config_(config) {}
 
 const sir::FieldDimensions&
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() const {
@@ -112,6 +116,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!dimensionsConsistent_) {
     return;
   }
+
+  bool hasOffset = ast::offset_cast<const ast::UnstructuredOffset&>(
+                       fieldAccessExpr->getOffset().horizontalOffset())
+                       .hasOffset();
 
   auto fieldName = fieldAccessExpr->getName();
   // the name in the FieldAccessExpr may be stale if the there are nested stencils
@@ -126,6 +134,21 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   DAWN_ASSERT(nameToDimensions_.count(fieldName));
   curDimensions_ = nameToDimensions_.at(fieldName);
+
+  if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
+    dimensionsConsistent_ &=
+        getUnstructuredDim(*curDimensions_).getDenseLocationType() == config_.currentChain_->back();
+  }
+}
+
+static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
+                              ast::NeighborChain chain) {
+  if(dim.isDense()) {
+    return dim.getDenseLocationType() == chain.back() ||
+           dim.getDenseLocationType() == chain.front();
+  } else {
+    return dim.getNeighborChain() == chain;
+  }
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinaryOpUnstructured(
@@ -133,111 +156,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinary
   const auto& unstructuredDimLeft = getUnstructuredDim(left);
   const auto& unstructuredDimRight = getUnstructuredDim(right);
 
-  // Case 0: Both operands are sparse. Their dense + sparse parts must match.
-  // example:
-  // ```
-  // field(edges, e->c->v) sparseL, sparseR;
-  // ...
-  // expr = (sparseL + sparseR);
-  // ```
-  // Result of expression (= iteration space) is sparse dimension e->c->v
-  if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isSparse()) {
-    // Check that neighbor chains match
-    if(unstructuredDimLeft.getNeighborChain() != unstructuredDimRight.getNeighborChain()) {
-      dimensionsConsistent_ = false;
-      return;
-    }
-    curDimensions_ = left; // pick one, they are the same
-  } else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isSparse()) {
-
-    // Case 1.a: Left is dense, right is sparse, left's location type matches right's target
-    // location type (last of chain).
-    // Example:
-    // ```
-    // field(vertices) denseL;
-    // field(edges, e->c->v) sparseR;
-    // ...
-    // expr = (denseL + sparseR);
-    // ```
-    // Result of expression (= iteration space) is sparse dimension: e->c->v
-    if(unstructuredDimLeft.getDenseLocationType() ==
-       unstructuredDimRight.getLastSparseLocationType()) {
-      // Propagate sparse
-      curDimensions_ = right;
-    }
-    // Case 1.b: Left is dense, right is sparse, left's location type matches right's dense
-    // location type (first of chain).
-    // Example:
-    // ```
-    // field(edges) denseL;
-    // field(edges, e->c->v) sparseR;
-    // ...
-    // expr = (denseL + sparseR);
-    // ```
-    // Result of expression (= iteration space) is sparse dimension: e->c->v
-    else if(unstructuredDimLeft.getDenseLocationType() ==
-            unstructuredDimRight.getDenseLocationType()) {
-      // Propagate sparse
-      curDimensions_ = right;
-
-    } else { // No other subcase is allowed.
-      dimensionsConsistent_ = false;
-    }
-
-  } else if(unstructuredDimLeft.isSparse() && unstructuredDimRight.isDense()) {
-
-    // Case 2.a: Left is sparse, right is dense, right's location type matches left's target
-    // location type (last of chain).
-    // Example:
-    // ```
-    // field(edges, e->c->v) sparseL;
-    // field(vertices) denseR;
-    // ...
-    // expr = (sparseL + denseR);
-    // ```
-    // Result of expression (= iteration space) is sparse dimension: e->c->v
-    if(unstructuredDimLeft.getLastSparseLocationType() ==
-       unstructuredDimRight.getDenseLocationType()) {
-      // Propagate sparse
-      curDimensions_ = left;
-    }
-    // Case 2.b: Left is sparse, right is dense, right's location type matches left's dense
-    // location type (first of chain).
-    // Example:
-    // ```
-    // field(edges, e->c->v) sparseL;
-    // field(edges) denseR;
-    // ...
-    // expr = (sparseL + denseR);
-    // ```
-    // Result of expression (= iteration space) is sparse dimension: e->c->v
-    else if(unstructuredDimLeft.getDenseLocationType() ==
-            unstructuredDimRight.getDenseLocationType()) {
-      // Propagate sparse
-      curDimensions_ = left;
-
-    } else { // No other subcase is allowed.
-      dimensionsConsistent_ = false;
-    }
-  }
-  // Case 3: Both operands are dense. They must match.
-  // example:
-  // ```
-  // field(edges) denseL, denseR;
-  // ...
-  // expr = (denseL + denseR);
-  // ```
-  // Result of expression (= iteration space) is dense dimension edges
-  else if(unstructuredDimLeft.isDense() && unstructuredDimRight.isDense()) {
-
-    if(unstructuredDimLeft.getDenseLocationType() != unstructuredDimRight.getDenseLocationType()) {
-      dimensionsConsistent_ = false;
-      return;
-    }
-    curDimensions_ = left; // pick one, they are the same
-
+  if(config_.currentChain_) {
+    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimLeft, *config_.currentChain_);
+    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimRight, *config_.currentChain_);
   } else {
-    dawn_unreachable("All cases should be covered.");
+    dimensionsConsistent_ &=
+        unstructuredDimLeft.isDense() && unstructuredDimRight.isDense() &&
+        unstructuredDimLeft.getDenseLocationType() == unstructuredDimRight.getDenseLocationType();
   }
 }
 
@@ -248,9 +173,9 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
-                                                                      idToNameMap_);
+                                                                      idToNameMap_, config_);
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
-                                                                       idToNameMap_);
+                                                                       idToNameMap_, config_);
 
   binOp->getLeft()->accept(left);
   binOp->getRight()->accept(right);
@@ -273,21 +198,36 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     curDimensions_ = right.getDimensions();
   }
 }
+
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::AssignmentExpr>& assignmentExpr) {
   if(!dimensionsConsistent_) {
     return;
   }
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
-                                                                      idToNameMap_);
+                                                                      idToNameMap_, config_);
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
-                                                                       idToNameMap_);
+                                                                       idToNameMap_, config_);
 
   assignmentExpr->getLeft()->accept(left);
   assignmentExpr->getRight()->accept(right);
 
   // type check failed further down below
   if(!(left.isConsistent() && right.isConsistent())) {
+    dimensionsConsistent_ = false;
+    return;
+  }
+
+  // assigning to sparse dimensions is only allowed in a foor loop context
+  if(!config_.parentIsChainForLoop_ && left.hasDimensions() &&
+     getUnstructuredDim(left.getDimensions()).isSparse()) {
+    dimensionsConsistent_ = false;
+    return;
+  }
+
+  // assigning from sparse dimensions is only allowed in either reductions or for loops
+  if(right.hasDimensions() && getUnstructuredDim(right.getDimensions()).isSparse() &&
+     !(config_.parentIsReduction_ || config_.parentIsChainForLoop_)) {
     dimensionsConsistent_ = false;
     return;
   }
@@ -381,6 +321,22 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     curDimensions_ = right.getDimensions();
   }
 }
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::LoopStmt>& loopStmt) {
+  config_.parentIsChainForLoop_ = true;
+  const auto maybeChainPtr =
+      dynamic_cast<const ast::ChainIterationDescr*>(loopStmt->getIterationDescrPtr());
+  if(maybeChainPtr) {
+    config_.currentChain_ = maybeChainPtr->getChain();
+  }
+  for(auto it : loopStmt->getChildren()) {
+    it->accept(*this);
+  }
+  config_.parentIsChainForLoop_ = false;
+  config_.currentChain_ = std::nullopt;
+}
+
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::ReductionOverNeighborExpr>& reductionExpr) {
   if(!dimensionsConsistent_) {
@@ -388,12 +344,20 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(nameToDimensions_,
-                                                                      idToNameMap_);
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(nameToDimensions_,
-                                                                     idToNameMap_);
+                                                                      idToNameMap_, config_);
 
+  config_.parentIsReduction_ = true;
+  config_.currentChain_ = reductionExpr->getNbhChain();
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(nameToDimensions_,
+                                                                     idToNameMap_, config_);
+  config_.currentChain_ = std::nullopt;
   reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);
+
+  if(!ops.isConsistent()) {
+    dimensionsConsistent_ = false;
+    return;
+  }
 
   // initial value needs to be consistent with operations on right hand side
   if(init.hasDimensions() && ops.hasDimensions()) {

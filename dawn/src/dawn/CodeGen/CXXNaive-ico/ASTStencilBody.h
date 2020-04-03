@@ -59,7 +59,6 @@ protected:
   // arg names for field access exprs
   std::string denseArgName_ = "loc";
   std::string sparseArgName_ = "loc";
-  std::string loopArgName_ = "inner_loc";
 
   bool parentIsReduction_ = false;
   bool parentIsForLoop_ = false;

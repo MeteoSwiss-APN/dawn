@@ -488,9 +488,35 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment1) {
   }
 }
 
-// #include <generated_SparseAssignment2.hpp>
+#include <generated_SparseAssignment2.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment2) {
-  EXPECT_TRUE(false); // TODO
+  auto mesh = toylib::Grid(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  toylib::SparseEdgeData<double> sparse_f(mesh, diamondSize, nb_levels);
+  toylib::EdgeData<double> e_f(mesh, nb_levels);
+  toylib::VertexData<double> v_f(mesh, nb_levels);
+
+  InitData(mesh.edges(), e_f, nb_levels, 1.);
+  InitData(mesh.vertices(), v_f, nb_levels, 2.);
+
+  // loop(e->c->v) {
+  //  sparse_f = -4. * e_f(false) + v_f(true)
+  // }
+  dawn_generated::cxxnaiveico::sparseAssignment2<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             sparse_f, e_f, v_f)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& e : mesh.edges()) {
+      int curDiamondSize = (e.get().faces().size() == 2) ? 4 : 3;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(sparse_f(e, sparse, level) - (-2.)) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
 }
 
 #include <generated_SparseAssignment3.hpp>
