@@ -445,7 +445,7 @@ LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
   iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain));
 }
 LoopStmt::LoopStmt(const LoopStmt& stmt)
-    : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(getBlockStmt()->clone())),
+    : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(stmt.getBlockStmt()->clone())),
       iterationDescr_(stmt.getIterationDescr().clone()) {}
 LoopStmt& LoopStmt::operator=(LoopStmt const& stmt) {
   assign(stmt);

@@ -78,17 +78,13 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    f = open("loop_copy_stencil.sir", "w")
-    f.write(MessageToJson(sir))
-    f.close()
-
     # compile
-    # code = dawn4py.compile(sir, backend="c++-naive-ico", serialize_sir=True)
+    code = dawn4py.compile(sir, backend="c++-naive-ico")
 
-    # # write to file
-    # print(f"Writing generated code to '{OUTPUT_PATH}'")
-    # with open(OUTPUT_PATH, "w") as f:
-    #     f.write(code)
+    # write to file
+    print(f"Writing generated code to '{OUTPUT_PATH}'")
+    with open(OUTPUT_PATH, "w") as f:
+        f.write(code)
 
 
 if __name__ == "__main__":
