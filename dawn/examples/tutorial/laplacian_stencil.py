@@ -99,7 +99,10 @@ def main(args: argparse.Namespace):
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("out"), sir_utils.make_field("in")],
+                [
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                ],
             )
         ],
         global_variables=stencils_globals,
@@ -111,11 +114,11 @@ def main(args: argparse.Namespace):
 
     # serialize the SIR to file
     sir_file = open("./laplacian_stencil_from_python.sir", "wb")
-    sir_file.write(sir.SerializeToString())
+    sir_file.write(sir_utils.to_bytes(sir))
     sir_file.close()
 
     # compile
-    code = dawn4py.compile_sir(sir, dawn4py.SIRSerializerFormat.Byte, backend="c++-naive")
+    code = dawn4py.compile_sir(sir_utils.to_bytes(sir), codegen_backend="c++-naive")
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

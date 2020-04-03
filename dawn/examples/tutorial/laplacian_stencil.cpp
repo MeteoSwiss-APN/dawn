@@ -1,7 +1,3 @@
-#include "gtclang_dsl_defs/gtclang_dsl.hpp"
-
-using namespace gtclang::dsl;
-
 globals {
   // grid spacing
   double dx;
