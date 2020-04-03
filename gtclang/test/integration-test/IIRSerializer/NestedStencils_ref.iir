@@ -5,8 +5,8 @@
    "17": "field_b"
   },
   "accessIDToType": {
-   "16": 6,
-   "17": 6
+   "17": 6,
+   "16": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -108,7 +108,7 @@
                    "data": {
                     "accessID": 16
                    },
-                   "ID": 114
+                   "ID": 108
                   }
                  },
                  "op": "=",
@@ -135,14 +135,14 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 113
+                   "ID": 107
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 115
+                 "ID": 109
                 }
                },
                "loc": {
@@ -171,7 +171,7 @@
                  }
                 }
                },
-               "ID": 112
+               "ID": 106
               }
              }
             ],
@@ -180,7 +180,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 111
+            "ID": 105
            }
           },
           "doMethodID": 0,
@@ -197,7 +197,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 110,
+      "multiStageID": 27,
       "Caches": {}
      }
     ],
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }
