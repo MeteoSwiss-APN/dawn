@@ -18,6 +18,7 @@
 #include <memory>
 
 int main(int argc, char* argv[]) {
+  dawn::UIDGenerator::getInstance()->reset();
   dawn::IIRSerializer::serialize("reference_iir/copy_stencil.iir",
                                  createCopyStencilIIRInMemory(dawn::ast::GridType::Cartesian),
                                  dawn::IIRSerializer::Format::Json);

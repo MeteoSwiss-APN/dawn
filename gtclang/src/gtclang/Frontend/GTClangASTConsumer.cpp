@@ -211,9 +211,13 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
   if(context_->getOptions().SerializeIIR) {
+    dawn::IIRSerializer::Format serializationKind = dawn::IIRSerializer::Format::Json;
+    if(context_->getOptions().SerializeIIR || (context_->getOptions().DeserializeIIR != "")) {
+      serializationKind = dawn::IIRSerializer::parseFormatString(context_->getOptions().IIRFormat);
+    }
     for(auto [i, keyValue] : dawn::enumerate(stencilInstantiationMap)) {
       dawn::IIRSerializer::serialize(generatedPrefix + "." + std::to_string(i) + ".iir",
-                                     keyValue.second);
+                                     keyValue.second, serializationKind);
     }
   }
 
