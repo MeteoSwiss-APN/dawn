@@ -21,7 +21,7 @@
 
 namespace dawn {
 
-/// @brief Try to merge multistages to improve data locality
+/// @brief Try to merge multistages to reduce the amount of synchronization required.
 ///
 /// This Pass depends on `PassSetStageGraph`.
 ///

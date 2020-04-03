@@ -44,10 +44,8 @@ protected:
 
   void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {
     std::string filepath = filename;
-    if(!TestEnvironment::path_.empty()) {
+    if(!TestEnvironment::path_.empty())
       filepath = TestEnvironment::path_ + "/" + filepath;
-    }
-
     auto instantiation = IIRSerializer::deserialize(filepath);
 
     // Run stage graph pass
@@ -58,7 +56,7 @@ protected:
     PassSetDependencyGraph dependencyGraphPass(*context_);
     EXPECT_TRUE(dependencyGraphPass.run(instantiation));
 
-    // Run multistage merger pass
+    // Run multistage merge pass
     PassMultiStageMerger multiStageMerger(*context_);
     EXPECT_TRUE(multiStageMerger.run(instantiation));
 
@@ -161,6 +159,22 @@ TEST_F(TestPassStageReordering, ReorderTest7) {
     }
    */
   runTest("input/ReorderTest07.iir", {0, 1, 2, 3, 4, 5, 6});
+}
+
+TEST_F(TestPassStageReordering, ReorderTest8) {
+  /*vertical_region(k_start, k_start) {
+      c = c / b;
+      d = d / b;
+    }
+    vertical_region(k_start + 1, k_end) {
+      double m = 1.0 / (b - a * c[k - 1]);
+      c = c * m;
+      d = (d - a * d[k - 1]) * m;
+    }
+    vertical_region(k_end - 1, k_start) {
+      d -= c * d[k + 1];
+    } */
+  runTest("input/tridiagonal_solve.iir", {1, 0, 2, 4, 3, 5});
 }
 
 } // anonymous namespace
