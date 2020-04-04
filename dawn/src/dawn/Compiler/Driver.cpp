@@ -16,11 +16,11 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -140,7 +140,6 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   }
   optimizer.pushBackPass<PassTemporaryType>();
   optimizer.pushBackPass<PassFixVersionedInputFields>();
-  optimizer.pushBackPass<PassComputeStageExtents>();
   optimizer.pushBackPass<PassSetSyncStage>();
   // validation checks after parallelisation
   optimizer.pushBackPass<PassValidation>();
@@ -226,9 +225,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       optimizer.pushBackPass<PassTemporaryType>();
       optimizer.pushBackPass<PassLocalVarType>();
       optimizer.pushBackPass<PassRemoveScalars>();
-      // modify stages and their extents ...
-      optimizer.pushBackPass<PassComputeStageExtents>();
-      // and changes their dependencies
+      // modify stage dependencies
       optimizer.pushBackPass<PassSetSyncStage>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
@@ -289,6 +286,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     }
   }
   // Note that we need to run PassInlining here if serializing or using the Cuda codegen backend.
+  if(options.SerializeIIR) {
+    optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::ComputationsOnTheFly);
+  }
 
   //===-----------------------------------------------------------------------------------------
 
@@ -303,6 +303,14 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 
     DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
                    << "`";
+
+    if(options.SerializeIIR) {
+      const dawn::IIRSerializer::Format serializationKind =
+          options.SerializeIIR ? dawn::IIRSerializer::parseFormatString(options.IIRFormat)
+                               : dawn::IIRSerializer::Format::Json;
+      dawn::IIRSerializer::serialize(instantiation->getName() + ".iir", instantiation,
+                                     serializationKind);
+    }
 
     if(options.DumpStencilInstantiation) {
       instantiation->dump();
@@ -332,15 +340,19 @@ std::map<std::string, std::string> run(const std::string& sir, const std::string
 }
 
 std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap,
-    dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-    const dawn::Options& options) {
+run(const std::map<std::string, std::string>& stencilInstantiationMap, const std::string& format,
+    const std::list<std::string>& groups, const dawn::Options& options) {
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
   for(auto [name, instStr] : stencilInstantiationMap) {
-    internalMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
+    internalMap.insert(std::make_pair(
+        name,
+        IIRSerializer::deserializeFromString(instStr, IIRSerializer::parseFormatString(format))));
   }
-  auto optimizedSIM = dawn::run(internalMap, groups, options);
+  std::list<PassGroup> passGroup;
+  std::transform(std::begin(groups), std::end(groups),
+                 std::inserter(passGroup, std::end(passGroup)),
+                 [](const std::string& group) { return parsePassGroupString(group); });
+  auto optimizedSIM = dawn::run(internalMap, passGroup, options);
   std::map<std::string, std::string> instantiationStringMap;
   for(auto [name, instantiation] : optimizedSIM) {
     instantiationStringMap.insert(std::make_pair(
@@ -359,10 +371,18 @@ std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& st
 }
 
 std::string compile(const std::string& sir, const std::string& format,
-                    const std::list<std::string>& passGroups, const Options& optimizerOptions,
+                    const std::list<std::string>& groups, const Options& optimizerOptions,
                     const std::string& backend, const codegen::Options& codegenOptions) {
-  return codegen::run(run(sir, format, passGroups, optimizerOptions), "json", backend,
-                      codegenOptions);
+  // Could call string version here, but that forces serialization of the IIR. Avoids serializing.
+  auto stencilIR =
+      SIRSerializer::deserializeFromString(sir, SIRSerializer::parseFormatString(format));
+  std::list<PassGroup> passGroup;
+  std::transform(std::begin(groups), std::end(groups),
+                 std::inserter(passGroup, std::end(passGroup)),
+                 [](const std::string& group) { return parsePassGroupString(group); });
+  auto optimizedSIM = run(stencilIR, passGroup, optimizerOptions);
+  return codegen::generate(
+      codegen::run(optimizedSIM, codegen::parseBackendString(backend), codegenOptions));
 }
 
 } // namespace dawn

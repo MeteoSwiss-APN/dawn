@@ -14,7 +14,8 @@
 
 #include "../TestCodeGen.h"
 
-namespace {
+namespace dawn {
+namespace iir {
 
 constexpr auto backend = dawn::codegen::Backend::CUDA;
 
@@ -36,4 +37,9 @@ TEST_F(TestCodeGenCuda, ConditionalStencil) {
   runTest(this->getConditionalStencil(), backend, "conditional_stencil.cu");
 }
 
-} // anonymous namespace
+TEST_F(TestCodeGenCuda, DzCStencil) {
+  runTest(this->getStencilFromIIR("update_dz_c"), backend, "update_dz_c.cu");
+}
+
+} // namespace iir
+} // namespace dawn

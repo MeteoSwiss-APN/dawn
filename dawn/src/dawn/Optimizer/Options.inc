@@ -61,6 +61,10 @@ OPT(bool, PassVerbose, false, "pass-verbose", "",
 OPT(bool, ReportAccesses, false, "report-accesses", "",
     "Detailed report on the accesses of each statement", "", false, true)
 
+OPT(bool, SerializeIIR, false, "write-iir", "",
+    "Serialize the low level intermediate representation after Optimization", "", false, false)
+OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
+
 OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
     "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
 OPT(bool, DumpStageGraph, false, "dump-stage-dag", "",

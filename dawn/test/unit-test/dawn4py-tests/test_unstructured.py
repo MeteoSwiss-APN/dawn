@@ -45,23 +45,9 @@ def test_sir_serialization(name):
     assert bytes_strio.getvalue() == json_strio.getvalue()
 
 
-def test_compilation(unstructure_sir_with_reference_code):
-    sir, reference_code = unstructure_sir_with_reference_code
-    backend = "c++-naive-ico"
-
-    unit_info = {}
-    code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    # with open("new_code.hpp", "w") as f:
-    #     f.write(code)
-    # assert code == reference_code
-    assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
-
-    unit_info = {}
-    code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    # assert code == reference_code
-    assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
-
-    unit_info = {}
-    code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    # assert code == reference_code
-    assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
+def test_compilation(unstructured_sir_with_reference_code):
+    sir, reference_code = unstructured_sir_with_reference_code
+    code = dawn4py.compile_sir(
+        dawn4py.serialization.to_bytes(sir), codegen_backend="c++-naive-ico"
+    )
+    # TODO There was no test here...

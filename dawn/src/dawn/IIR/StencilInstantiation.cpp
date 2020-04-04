@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -309,11 +310,83 @@ void StencilInstantiation::reportAccesses() const {
   }
 
   // Stages
-
   for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
     std::cout << "\nACCESSES: line " << stmt->getSourceLocation().Line << ": "
               << stmt->getData<iir::IIRStmtData>().CallerAccesses->reportAccesses(metadata_)
               << "\n";
+  }
+}
+
+void StencilInstantiation::computeDerivedInfo() {
+  // Update doMethod node types
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(this->getIIR()))) {
+    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  // Compute stage extents
+  for(const auto& stencilPtr : this->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
+
+    int numStages = stencil.getNumStages();
+
+    // backward loop over stages
+    for(int i = numStages - 1; i >= 0; --i) {
+      iir::Stage& fromStage = *(stencil.getStage(i));
+      // If the stage has a global iterationspace set, we should never extend it since it is user
+      // defined where this computation should happen
+      if(std::any_of(fromStage.getIterationSpace().cbegin(), fromStage.getIterationSpace().cend(),
+                     [](const auto& p) { return p.has_value(); })) {
+        fromStage.setExtents(iir::Extents());
+        continue;
+      }
+
+      iir::Extents const& stageExtent = fromStage.getExtents();
+
+      // loop over all the input fields read in fromStage
+      for(const auto& fromFieldPair : fromStage.getFields()) {
+
+        const iir::Field& fromField = fromFieldPair.second;
+        auto&& fromFieldExtents = fromField.getExtents();
+
+        // notice that IO (if read happens before write) would also be a valid pattern
+        // to trigger the propagation of the stage extents, however this is not a legal
+        // pattern within a stage
+        // ===-----------------------------------------------------------------------------------===
+        //      Point one [ExtentComputationTODO]
+        // ===-----------------------------------------------------------------------------------===
+
+        iir::Extents fieldExtent = fromFieldExtents + stageExtent;
+
+        // check which (previous) stage computes the field (read in fromStage)
+        for(int j = i - 1; j >= 0; --j) {
+          iir::Stage& toStage = *(stencil.getStage(j));
+          // ===---------------------------------------------------------------------------------===
+          //      Point two [ExtentComputationTODO]
+          // ===---------------------------------------------------------------------------------===
+          auto fields = toStage.getFields();
+          auto it = std::find_if(fields.begin(), fields.end(),
+                                 [&](std::pair<int, iir::Field> const& pair) {
+                                   const auto& f = pair.second;
+                                   return (f.getIntend() != iir::Field::IntendKind::Input) &&
+                                          (f.getAccessID() == fromField.getAccessID());
+                                 });
+          if(it == fields.end())
+            continue;
+
+          // if found, add the (read) extent of the field as an extent of the stage
+          iir::Extents ext = toStage.getExtents();
+          ext.merge(fieldExtent);
+          // this pass is computing the redundant computation in the horizontal, therefore we
+          // nullify the vertical component of the stage
+          ext.resetVerticalExtent();
+          toStage.setExtents(ext);
+        }
+      }
+    }
+  }
+
+  for(const auto& MS : iterateIIROver<iir::MultiStage>(*(this->getIIR()))) {
+    MS->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 }
 

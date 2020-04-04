@@ -43,9 +43,10 @@ if(eckit_FOUND AND atlas_FOUND)
     generated_sparseDimensionTwice.hpp
     generated_intp.hpp
     generated_diamond.hpp
+    generated_diamondWeights.hpp
   )
   set(reference_stencil_codes reference_diffusion.hpp
-    reference_gradient.hpp reference_intp.hpp reference_diamond.hpp
+    reference_gradient.hpp reference_intp.hpp reference_diamond.hpp reference_diamondWeights.hpp
   )
   list(TRANSFORM generated_stencil_codes PREPEND generated/)
   list(TRANSFORM reference_stencil_codes PREPEND reference/)

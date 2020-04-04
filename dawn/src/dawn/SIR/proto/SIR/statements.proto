@@ -1,4 +1,5 @@
-/*===------------------------------------------------------------------------------*-proto -*-===*\
+/*===------------------------------------------------------------------------------*-proto
+-*-===*\
  *                          _
  *                         | |
  *                       __| | __ ___      ___ ___
@@ -49,8 +50,8 @@ message CartesianDimension {
 // @ingroup sir_proto
 message UnstructuredDimension {
   dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-  // neighbor chain encoding sparse part when the field has a sparse dimension         
-  repeated dawn.proto.enums.LocationType sparse_part = 2; 
+  // neighbor chain encoding sparse part when the field has a sparse dimension
+  repeated dawn.proto.enums.LocationType sparse_part = 2;
 }
 
 // @brief Dimensions spanned by a field
@@ -210,7 +211,7 @@ message StencilCall {
   SourceLocation loc = 1; // Source location of the stencil call
   string callee = 2;      // Name of the called stencil (i.e callee)
   // Fields passed as arguments during the stencil call
-  repeated string arguments = 3; 
+  repeated string arguments = 3;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -671,21 +672,6 @@ message LiteralAccessExpr {
   int32 ID = 5;            // ID of the Expr
 }
 
-// @brief A weight needed in the weighted reduction on unstrcutred stencils,
-// which is consistent with
-//        the Value class for globals
-//
-// @ingroup sir_proto
-message Weight {
-  oneof Value {
-    bool boolean_value = 1;
-    int32 integer_value = 2;
-    double double_value = 3;
-    string string_value = 4;
-    float float_value = 5;
-  }
-}
-
 // @brief Reduction operation over neighbors
 //
 // @ingroup sir_proto
@@ -693,10 +679,10 @@ message ReductionOverNeighborExpr {
   string op = 1; // Reduction operation
   Expr rhs = 2;  // Operation to be applied for each neighbor
   Expr init = 3; // Initial value of reduction
-  repeated Weight weights =
+  repeated Expr weights =
       4; // weights (required to be of equal type, e.g. just floats)
-  repeated dawn.proto.enums.LocationType chain = 
-      5; // Neighbor chain definining the neighbors to reduce from and the 
+  repeated dawn.proto.enums.LocationType chain =
+      5; // Neighbor chain definining the neighbors to reduce from and the
          // location type to reduce to (first element)
   SourceLocation loc = 6;
 }

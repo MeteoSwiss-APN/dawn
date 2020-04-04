@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Driver.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/LocalVariable.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -310,6 +311,41 @@ int main() {
     std::ofstream of("generated/generated_diamond.hpp");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto out_f = b.field("out", LocType::Edges);
+    auto inv_edge_length_f = b.field("inv_edge_length", LocType::Edges);
+    auto inv_vert_length_f = b.field("inv_vert_length", LocType::Edges);
+    auto in_f = b.field("in", LocType::Vertices);
+
+    auto stencil_instantiation = b.build(
+        "diamondWeights",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Edges,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(
+                               b.at(out_f),
+                               b.reduceOverNeighborExpr(
+                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                   {LocType::Edges, LocType::Cells, LocType::Vertices},
+                                   {b.binaryExpr(b.at(inv_edge_length_f), b.at(inv_edge_length_f),
+                                                 Op::multiply),
+                                    b.binaryExpr(b.at(inv_edge_length_f), b.at(inv_edge_length_f),
+                                                 Op::multiply),
+                                    b.binaryExpr(b.at(inv_vert_length_f), b.at(inv_vert_length_f),
+                                                 Op::multiply),
+                                    b.binaryExpr(b.at(inv_vert_length_f), b.at(inv_vert_length_f),
+                                                 Op::multiply)}))))))));
+
+    std::ofstream of("generated/generated_diamondWeights.hpp");
+    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
   }
 
   {

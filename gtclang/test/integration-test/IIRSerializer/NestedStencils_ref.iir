@@ -65,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "NestedStencils"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -108,7 +108,7 @@
                    "data": {
                     "accessID": 16
                    },
-                   "ID": 112
+                   "ID": 94
                   }
                  },
                  "op": "=",
@@ -135,14 +135,14 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 111
+                   "ID": 93
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 113
+                 "ID": 95
                 }
                },
                "loc": {
@@ -171,7 +171,7 @@
                  }
                 }
                },
-               "ID": 110
+               "ID": 92
               }
              }
             ],
@@ -180,7 +180,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 109
+            "ID": 91
            }
           },
           "doMethodID": 0,
@@ -197,7 +197,7 @@
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 108,
+      "multiStageID": 90,
       "Caches": {}
      }
     ],
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/Users/johannd/Code/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }

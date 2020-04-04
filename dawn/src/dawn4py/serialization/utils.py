@@ -107,7 +107,7 @@ StmtType = TypeVar(
 )
 
 # Can't pass SIR.enums_pb2.LocationType as argument because it doesn't contain the value
-LocationTypeValue = NewType('LocationTypeValue', int)
+LocationTypeValue = NewType("LocationTypeValue", int)
 
 
 def make_sir(
@@ -200,8 +200,7 @@ def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
 
 def make_field_dimensions_unstructured(
-    locations: List[LocationTypeValue],
-    mask_k: int,
+    locations: List[LocationTypeValue], mask_k: int,
 ) -> FieldDimensions:
     """ Create FieldDimensions of unstructured type
 
@@ -210,7 +209,7 @@ def make_field_dimensions_unstructured(
     :sparse_part:  optional sparse part encoded by a neighbor chain
     """
 
-    assert(len(locations) >= 1)
+    assert len(locations) >= 1
 
     horizontal_dim = UnstructuredDimension()
     horizontal_dim.dense_location_type = locations[0]
@@ -224,11 +223,7 @@ def make_field_dimensions_unstructured(
     return dims
 
 
-def make_field(
-    name: str,
-    dimensions: FieldDimensions,
-    is_temporary: bool = False
-) -> Field:
+def make_field(name: str, dimensions: FieldDimensions, is_temporary: bool = False) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
@@ -449,8 +444,7 @@ def make_vertical_region_decl_stmt(
     :param vertical_region:   Vertical region.
     """
     stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(make_vertical_region(
-        ast, interval, loop_order, IRange, JRange))
+    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order, IRange, JRange))
     return stmt
 
 
@@ -605,7 +599,9 @@ def make_stencil_function_arg(arg):
     return result
 
 
-def make_stencil_function(name: str, asts: List[AST], intervals: List[Interval], arguments: List[StencilFunctionArg]):
+def make_stencil_function(
+    name: str, asts: List[AST], intervals: List[Interval], arguments: List[StencilFunctionArg]
+):
     result = StencilFunction()
     result.name = name
     result.asts.extend(asts)
@@ -653,13 +649,11 @@ def make_stencil_fun_arg_expr(
 
 
 def make_unstructured_field_access_expr(
-    name: str,
-    horizontal_offset: UnstructuredOffset = None,
-    vertical_offset: int = 0,
+    name: str, horizontal_offset: UnstructuredOffset = None, vertical_offset: int = 0,
 ) -> FieldAccessExpr:
     expr = FieldAccessExpr()
     expr.name = name
-    if (horizontal_offset is None):
+    if horizontal_offset is None:
         expr.unstructured_offset.CopyFrom(make_unstructured_offset(False))
     else:
         expr.unstructured_offset.CopyFrom(horizontal_offset)
@@ -748,7 +742,7 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     return expr
 
 
-def make_weights(weights) -> List[Weight]:
+def make_weights(weights) -> List[Expr]:
     """ Create a weights vector
 
     :param weights:         List of weights expressed with python primitive types
@@ -756,20 +750,8 @@ def make_weights(weights) -> List[Weight]:
     assert len(weights) != 0
     proto_weights = []
     for weight in weights:
-        proto_weight = Weight()
-        if type(weight) is int:
-            proto_weight.integer_value = weight
-        elif type(weight) is float:  # float in python is 64 bits
-            proto_weight.double_value = weight
-        elif type(weight) is bool:
-            proto_weight.boolean_value = weight
-        elif type(weight) is str:
-            proto_weight.string_value = weight
-        # TODO: would also be nice to map numpy types
-        else:
-            raise SIRError(
-                "cannot create Weight from type {}".format(type(weight)))
-
+        proto_weight = Expr()
+        proto_weight.CopyFrom(make_expr(weight))
         proto_weights.append(proto_weight)
 
     return proto_weights
@@ -780,14 +762,14 @@ def make_reduction_over_neighbor_expr(
     rhs: ExprType,
     init: ExprType,
     chain: List[LocationTypeValue],
-    weights: List[Weight] = None
+    weights: List[ExprType] = None,
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
     :param op:              Reduction operation performed for each neighbor
     :param rhs:             Operation to be performed for each neighbor before reducing
     :param init:            Initial value for reduction operation
-    :param chain:           Neighbor chain definining the neighbors to reduce from and 
+    :param chain:           Neighbor chain definining the neighbors to reduce from and
                             the location type to reduce to (first element)
     :param weights:         Weights on neighbors (required to be of equal type)
     """
@@ -797,8 +779,7 @@ def make_reduction_over_neighbor_expr(
     expr.init.CopyFrom(make_expr(init))
     expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
-        expr.weights.extend(weights)
-
+        expr.weights.extend([make_expr(weight) for weight in weights])
     return expr
 
 
@@ -1087,8 +1068,7 @@ class SIRPrinter:
         block = stencil.ast.root.block_stmt
         for stmt in block.statements:
             if stmt.WhichOneof("stmt") == "vertical_region_decl_stmt":
-                self.visit_vertical_region(
-                    stmt.vertical_region_decl_stmt.vertical_region)
+                self.visit_vertical_region(stmt.vertical_region_decl_stmt.vertical_region)
 
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
@@ -1145,7 +1125,8 @@ class SIRPrinter:
     def visit_unstructured_field(self, field):
         str_ = field.name + "("
         str_ += self.location_type_to_string(
-            field.field_dimensions.unstructured_horizontal_dimension.dense_location_type)
+            field.field_dimensions.unstructured_horizontal_dimension.dense_location_type
+        )
         str_ += ", "
         for location_type in field.field_dimensions.unstructured_horizontal_dimension.sparse_part:
             str_ += self.location_type_to_string(location_type) + "->"
@@ -1155,7 +1136,10 @@ class SIRPrinter:
     def visit_fields(self, fields):
         str_ = "field "
         for field in fields:
-            if field.field_dimensions.WhichOneof("horizontal_dimension") == "cartesian_horizontal_dimension":
+            if (
+                field.field_dimensions.WhichOneof("horizontal_dimension")
+                == "cartesian_horizontal_dimension"
+            ):
                 str_ += self.visit_cartesian_field(field)
             else:
                 str_ += self.visit_unstructured_field(field)
@@ -1163,8 +1147,7 @@ class SIRPrinter:
         print(self.wrapper.fill(str_), file=self.file)
 
     def visit_sir(self, sir):
-        print(self.wrapper.fill("grid_type['{}']".format(
-            str(sir.gridType))), file=self.file)
+        print(self.wrapper.fill("grid_type['{}']".format(str(sir.gridType))), file=self.file)
         for stencil in sir.stencils:
             self.visit_stencil(stencil)
 

@@ -47,21 +47,6 @@ def test_sir_serialization(name):
 
 def test_compilation(grid_sir_with_reference_code):
     sir, reference_code = grid_sir_with_reference_code
-    backend = "cuda"
-
-    unit_info = {}
-    code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    # with open("new_code.hpp", "w") as f:
-    #     f.write(code)
-    # assert code == reference_code
-    assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
-
-    unit_info = {}
-    code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    # assert code == reference_code
-    assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
-
-    unit_info = {}
-    code = dawn4py.compile(sir, backend=backend, unit_info=unit_info)
-    # assert code == reference_code
-    assert {"filename", "pp_defines", "stencils", "globals"} == set(unit_info.keys())
+    for backend in ("c++-naive", "gridtools", "cuda"):
+        dawn4py.compile_sir(dawn4py.serialization.to_bytes(sir), codegen_backend=backend)
+        # TODO There was not test here...

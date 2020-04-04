@@ -23,15 +23,15 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-namespace {
+namespace dawn {
+namespace iir {
 
-using namespace dawn::iir;
 using SInterval = dawn::sir::Interval;
 
 class TestCodeGen : public ::testing::Test {
 protected:
-  std::shared_ptr<dawn::iir::StencilInstantiation> getGlobalIndexStencil() {
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getGlobalIndexStencil() {
+    UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in_f = b.field("in_field", FieldType::ijk);
@@ -41,22 +41,22 @@ protected:
         b.build("generated",
                 b.stencil(b.multistage(
                     LoopOrderKind::Parallel,
-                    b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.stage(b.doMethod(SInterval::Start, SInterval::End,
                                        b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                     b.stage(1, {0, 2},
-                            b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                            b.doMethod(SInterval::Start, SInterval::End,
                                        b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
     return stencil_inst;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getLaplacianStencil() {
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getLaplacianStencil() {
+    UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in = b.field("in", FieldType::ijk);
     auto out = b.field("out", FieldType::ijk);
-    auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+    auto dx = b.localvar("dx", BuiltinTypeID::Double);
 
     auto stencil_inst = b.build(
         "generated",
@@ -81,13 +81,13 @@ protected:
     return stencil_inst;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getNonOverlappingInterval() {
-    dawn::UIDGenerator::getInstance()->reset();
+  std::shared_ptr<StencilInstantiation> getNonOverlappingInterval() {
+    UIDGenerator::getInstance()->reset();
 
     CartesianIIRBuilder b;
     auto in = b.field("in", FieldType::ijk);
     auto out = b.field("out", FieldType::ijk);
-    auto dx = b.localvar("dx", dawn::BuiltinTypeID::Double);
+    auto dx = b.localvar("dx", BuiltinTypeID::Double);
 
     auto stencilInstantiation = b.build(
         "generated",
@@ -114,12 +114,6 @@ protected:
     return stencilInstantiation;
   }
 
-  std::shared_ptr<dawn::iir::StencilInstantiation> getConditionalStencil() {
-    dawn::UIDGenerator::getInstance()->reset();
-    return dawn::IIRSerializer::deserialize("../input/conditional_stencil.iir",
-                                            dawn::IIRSerializer::Format::Json);
-  }
-
   void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencilInstantiation,
                dawn::codegen::Backend backend, const std::string& ref_file) {
     auto tu = dawn::codegen::run(stencilInstantiation, backend);
@@ -127,6 +121,15 @@ protected:
     const std::string ref = dawn::readFile(fs::path("../reference") / ref_file);
     ASSERT_EQ(code, ref) << "Generated code does not match reference code";
   }
+
+  std::shared_ptr<StencilInstantiation> getStencilFromIIR(const std::string& name) {
+    return IIRSerializer::deserialize("../input/" + name + ".iir");
+  }
+
+  std::shared_ptr<StencilInstantiation> getConditionalStencil() {
+    return getStencilFromIIR("conditional_stencil");
+  }
 };
 
-} // anonymous namespace
+} // namespace iir
+} // namespace dawn

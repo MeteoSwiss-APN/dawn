@@ -23,6 +23,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/Diagnostics.h"
@@ -177,15 +178,28 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   // if nothing is passed, we fill the group with the default if no-optimization is not specified
   if(!context_->getOptions().DisableOptimization && passGroup.size() == 0) {
-    passGroup.push_back(dawn::PassGroup::SetStageName);
-    passGroup.push_back(dawn::PassGroup::StageReordering);
-    passGroup.push_back(dawn::PassGroup::StageMerger);
-    passGroup.push_back(dawn::PassGroup::SetCaches);
-    passGroup.push_back(dawn::PassGroup::SetBlockSize);
+    passGroup = dawn::defaultPassGroups();
   }
 
   if(context_->getOptions().DisableOptimization && passGroup.size() > 0) {
     DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
+  }
+
+  // Inline at end if serializing or if the codegen backend is CUDA
+  if(context_->getOptions().SerializeIIR ||
+     (!context_->getOptions().CodeGen &&
+      dawn::codegen::parseBackendString(context_->getOptions().Backend) ==
+          dawn::codegen::Backend::CUDA)) {
+    passGroup.push_back(dawn::PassGroup::Inlining);
+  }
+
+  // Determine filename of generated file (by default we append "_gen" to the filename)
+  const std::string generatedPrefix = fs::path(file_).filename().stem();
+  std::string generatedFileName;
+  if(context_->getOptions().OutputFile.empty())
+    generatedFileName = generatedPrefix + "_gen.cpp";
+  else {
+    generatedFileName = context_->getOptions().OutputFile;
   }
 
   dawn::Options optimizerOptions;
@@ -199,20 +213,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 #include "dawn/CodeGen/Options.inc"
 #undef OPT
 
-  const dawn::codegen::Backend backend =
-      dawn::codegen::parseBackendString(context_->getOptions().Backend);
-
-  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
-  auto DawnTranslationUnit = dawn::codegen::run(stencilInstantiationMap, backend, codegenOptions);
-
-  // Determine filename of generated file (by default we append "_gen" to the filename)
-  std::string generatedFileName;
-  if(context_->getOptions().OutputFile.empty())
-    generatedFileName = std::string(fs::path(file_).filename().stem()) + "_gen.cpp";
-  else {
-    generatedFileName = context_->getOptions().OutputFile;
-  }
-
   if(context_->getOptions().WriteSIR) {
     const std::string generatedSIR =
         std::string(fs::path(generatedFileName).filename().stem()) + ".sir";
@@ -222,17 +222,22 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
     } else if(context_->getOptions().SIRFormat == "byte") {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Byte);
-
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
+
+  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
 
   // Do we generate code?
   if(!context_->getOptions().CodeGen) {
     DAWN_LOG(INFO) << "Skipping code-generation";
     return;
   }
+
+  auto DawnTranslationUnit = dawn::codegen::run(
+      stencilInstantiationMap, dawn::codegen::parseBackendString(context_->getOptions().Backend),
+      codegenOptions);
 
   // Create new in-memory FS
   llvm::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
@@ -244,14 +249,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   std::string code;
   if(context_->getOptions().Serialized) {
     DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
-
-    code += DawnTranslationUnit->getGlobals();
-
-    code += "\n\n";
-
-    for(auto p : DawnTranslationUnit->getStencils()) {
-      code += p.second;
-    }
+    code = dawn::codegen::generate(DawnTranslationUnit);
   } else {
     int num_stencils_generated = 0;
 
@@ -361,6 +359,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   ost->write(code.data(), code.size());
   if(ec.value())
     context_->getDiagnostics().report(Diagnostics::err_fs_error) << ec.message();
-}
+} // namespace gtclang
 
 } // namespace gtclang

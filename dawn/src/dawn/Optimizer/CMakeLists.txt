@@ -20,8 +20,6 @@ add_library(DawnOptimizer
   Options.h
   Options.inc
   Pass.h
-  PassComputeStageExtents.cpp
-  PassComputeStageExtents.h
   PassDataLocalityMetric.cpp
   PassDataLocalityMetric.h
   PassFieldVersioning.cpp

@@ -14,7 +14,8 @@
 
 #include "../TestCodeGen.h"
 
-namespace {
+namespace dawn {
+namespace iir {
 
 constexpr auto backend = dawn::codegen::Backend::CXXNaive;
 
@@ -36,4 +37,9 @@ TEST_F(TestCodeGenNaive, ConditionalStencil) {
   runTest(this->getConditionalStencil(), backend, "conditional_stencil.cpp");
 }
 
-} // anonymous namespace
+TEST_F(TestCodeGenNaive, DzCStencil) {
+  runTest(this->getStencilFromIIR("update_dz_c"), backend, "update_dz_c.cpp");
+}
+
+} // namespace iir
+} // namespace dawn
