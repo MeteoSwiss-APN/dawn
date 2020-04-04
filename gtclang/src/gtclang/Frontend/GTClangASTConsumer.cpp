@@ -178,15 +178,19 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   // if nothing is passed, we fill the group with the default if no-optimization is not specified
   if(!context_->getOptions().DisableOptimization && passGroup.size() == 0) {
-    passGroup.push_back(dawn::PassGroup::SetStageName);
-    passGroup.push_back(dawn::PassGroup::StageReordering);
-    passGroup.push_back(dawn::PassGroup::StageMerger);
-    passGroup.push_back(dawn::PassGroup::SetCaches);
-    passGroup.push_back(dawn::PassGroup::SetBlockSize);
+    passGroup = dawn::defaultPassGroups();
   }
 
   if(context_->getOptions().DisableOptimization && passGroup.size() > 0) {
     DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
+  }
+
+  // Inline at end if serializing or if the codegen backend is CUDA
+  if(context_->getOptions().SerializeIIR ||
+     (!context_->getOptions().CodeGen &&
+      dawn::codegen::parseBackendString(context_->getOptions().Backend) ==
+          dawn::codegen::Backend::CUDA)) {
+    passGroup.push_back(dawn::PassGroup::Inlining);
   }
 
   // Determine filename of generated file (by default we append "_gen" to the filename)
