@@ -16,6 +16,7 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
 
@@ -285,6 +286,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     }
   }
   // Note that we need to run PassInlining here if serializing or using the Cuda codegen backend.
+  if(options.SerializeIIR) {
+    optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::ComputationsOnTheFly);
+  }
 
   //===-----------------------------------------------------------------------------------------
 
@@ -299,6 +303,14 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 
     DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()
                    << "`";
+
+    if(options.SerializeIIR) {
+      const dawn::IIRSerializer::Format serializationKind =
+          options.SerializeIIR ? dawn::IIRSerializer::parseFormatString(options.IIRFormat)
+                               : dawn::IIRSerializer::Format::Json;
+      dawn::IIRSerializer::serialize(instantiation->getName() + ".iir", instantiation,
+                                     serializationKind);
+    }
 
     if(options.DumpStencilInstantiation) {
       instantiation->dump();

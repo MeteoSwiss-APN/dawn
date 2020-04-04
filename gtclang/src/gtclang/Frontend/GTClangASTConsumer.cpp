@@ -209,23 +209,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 #include "dawn/CodeGen/Options.inc"
 #undef OPT
 
-  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
-  if(context_->getOptions().SerializeIIR) {
-    dawn::IIRSerializer::Format serializationKind = dawn::IIRSerializer::Format::Json;
-    if(context_->getOptions().SerializeIIR || (context_->getOptions().DeserializeIIR != "")) {
-      serializationKind = dawn::IIRSerializer::parseFormatString(context_->getOptions().IIRFormat);
-    }
-    for(auto [i, keyValue] : dawn::enumerate(stencilInstantiationMap)) {
-      dawn::IIRSerializer::serialize(generatedPrefix + "." + std::to_string(i) + ".iir",
-                                     keyValue.second, serializationKind);
-    }
-  }
-
-  const dawn::codegen::Backend backend =
-      dawn::codegen::parseBackendString(context_->getOptions().Backend);
-
-  auto DawnTranslationUnit = dawn::codegen::run(stencilInstantiationMap, backend, codegenOptions);
-
   if(context_->getOptions().WriteSIR) {
     const std::string generatedSIR =
         std::string(fs::path(generatedFileName).filename().stem()) + ".sir";
@@ -235,17 +218,22 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
     } else if(context_->getOptions().SIRFormat == "byte") {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Byte);
-
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
+
+  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
 
   // Do we generate code?
   if(!context_->getOptions().CodeGen) {
     DAWN_LOG(INFO) << "Skipping code-generation";
     return;
   }
+
+  auto DawnTranslationUnit = dawn::codegen::run(
+      stencilInstantiationMap, dawn::codegen::parseBackendString(context_->getOptions().Backend),
+      codegenOptions);
 
   // Create new in-memory FS
   llvm::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
@@ -257,14 +245,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   std::string code;
   if(context_->getOptions().Serialized) {
     DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
-
-    code += DawnTranslationUnit->getGlobals();
-
-    code += "\n\n";
-
-    for(auto p : DawnTranslationUnit->getStencils()) {
-      code += p.second;
-    }
+    code = dawn::codegen::generate(DawnTranslationUnit);
   } else {
     int num_stencils_generated = 0;
 

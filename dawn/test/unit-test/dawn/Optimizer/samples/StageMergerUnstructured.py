@@ -24,10 +24,10 @@ from google.protobuf.json_format import MessageToJson, Parse
 
 backend = "c++-naive-ico"
 
+
 def two_copies():
     outputfile = "StageMergerTestTwoCopies"
-    interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     body_ast = sir_utils.make_ast(
         [
@@ -40,7 +40,7 @@ def two_copies():
                 sir_utils.make_field_access_expr("out_cell_2"),
                 sir_utils.make_field_access_expr("in_cell_2"),
                 "=",
-            )
+            ),
         ]
     )
 
@@ -84,15 +84,15 @@ def two_copies():
             ),
         ],
     )
-    dawn4py.compile(sir, backend=backend, serialize_iir=True, output_file=outputfile)
+    sim = dawn4py.run_optimizer_sir(sir_utils.to_bytes(sir))
+    with open(outputfile, mode="w") as f:
+        f.write(sim["generated"])
     os.rename(outputfile + ".0.iir", "../input/" + outputfile + ".iir")
-
 
 
 def two_copies_mixed():
     outputfile = "StageMergerTestTwoCopiesMixed"
-    interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     body_ast = sir_utils.make_ast(
         [
@@ -105,7 +105,7 @@ def two_copies_mixed():
                 sir_utils.make_field_access_expr("out_edge"),
                 sir_utils.make_field_access_expr("in_edge"),
                 "=",
-            )
+            ),
         ]
     )
 
@@ -149,8 +149,11 @@ def two_copies_mixed():
             ),
         ],
     )
-    dawn4py.compile(sir, backend=backend, serialize_iir=True, output_file=outputfile)
+    sim = dawn4py.run_optimizer_sir(sir_utils.to_bytes(sir))
+    with open(outputfile, mode="w") as f:
+        f.write(sim["generated"])
     os.rename(outputfile + ".0.iir", "../input/" + outputfile + ".iir")
+
 
 if __name__ == "__main__":
     two_copies()
