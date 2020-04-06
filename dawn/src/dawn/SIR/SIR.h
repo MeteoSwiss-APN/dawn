@@ -206,6 +206,7 @@ class UnstructuredFieldDimension : public FieldDimensionImpl {
                       otherUnstructured.neighborChain_.begin());
   }
 
+  bool chainIsValid() const;
   const ast::NeighborChain neighborChain_;
 
 public:
