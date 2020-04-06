@@ -508,13 +508,6 @@ int main() {
     // a nested reduction v->e->c, the edge field is also consumed "along the way"
     // two additional sparse dimension fields with {c,e} and {e,v} are also introduced and consumed
     // in the outer and inner reduction, respectively
-    //
-    // currently this IIR is rejected. The type of the inner sparse dimension needs to be clarified
-    // options include:
-    //      - this IIR is ok, some modifications with regard to code generation and/or the interface
-    //      are needed
-    //      - this IIR is not ok. The stage fixes the dense part of the sparse dimension, the
-    //      correct type of the inner sparse dimension is {C, E->V}
     auto stencil_instantiation = b.build(
         "nestedWithSparse",
         b.stencil(b.multistage(
