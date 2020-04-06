@@ -41,7 +41,7 @@ def main():
                     init=sir_utils.make_literal_access_expr(
                         "0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec"),
+                        sir_utils.make_field_access_expr("vec", [True, 0]),
                         "*",
                         sir_utils.make_field_access_expr("geofac_rot")),
                     chain=[SIR.LocationType.Value(
@@ -56,7 +56,7 @@ def main():
                     init=sir_utils.make_literal_access_expr(
                         "0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec"),
+                        sir_utils.make_field_access_expr("vec", [True, 0]),
                         "*",
                         sir_utils.make_field_access_expr("geofac_div")),
                     chain=[SIR.LocationType.Value(
@@ -70,7 +70,7 @@ def main():
                     op="+",
                     init=sir_utils.make_literal_access_expr(
                         "0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_field_access_expr("rot_vec"),
+                    rhs=sir_utils.make_field_access_expr("rot_vec", [True, 0]),
                     chain=[SIR.LocationType.Value(
                         "Edge"), SIR.LocationType.Value("Vertex")],
                     weights=[sir_utils.make_literal_access_expr(
@@ -97,7 +97,7 @@ def main():
                     op="+",
                     init=sir_utils.make_literal_access_expr(
                         "0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_field_access_expr("div_vec"),
+                    rhs=sir_utils.make_field_access_expr("div_vec", [True, 0]),
                     chain=[SIR.LocationType.Value(
                         "Edge"), SIR.LocationType.Value("Cell")],
                     weights=[sir_utils.make_literal_access_expr(

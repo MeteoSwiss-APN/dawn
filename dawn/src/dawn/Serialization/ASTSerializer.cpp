@@ -748,8 +748,6 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
                       "serialized FieldDimensions message.");
 
       NeighborChain neighborChain;
-      neighborChain.push_back(
-          getLocationTypeFromProtoLocationType(protoUnstructuredDimension.dense_location_type()));
       for(int i = 0; i < protoUnstructuredDimension.sparse_part_size(); ++i) {
         neighborChain.push_back(
             getLocationTypeFromProtoLocationType(protoUnstructuredDimension.sparse_part(i)));
