@@ -15,6 +15,8 @@
 #ifndef DAWN_IIR_IIRBUILDER_H
 #define DAWN_IIR_IIRBUILDER_H
 
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
@@ -132,29 +134,35 @@ public:
                     std::optional<LocalVariableType> localVarType = std::nullopt);
 
   template <class TWeight>
-  std::shared_ptr<iir::Expr>
-  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                         std::shared_ptr<iir::Expr>&& init, ast::LocationType lhs_location,
-                         ast::LocationType rhs_location, const std::vector<TWeight>&& weights) {
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                                    std::shared_ptr<iir::Expr>&& init,
+                                                    const std::vector<ast::LocationType>& chain,
+                                                    const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
-    std::vector<sir::Value> vWeights;
+    std::vector<std::shared_ptr<ast::Expr>> vWeights;
     for(const auto& it : weights) {
-      vWeights.push_back(sir::Value(it));
+      vWeights.push_back(std::make_shared<ast::LiteralAccessExpr>(std::to_string(it),
+                                                                  Type::TypeInfo<TWeight>::Type));
     }
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
         toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}),
-        std::move(rhs), std::move(init), vWeights, lhs_location, rhs_location);
+        std::move(rhs), std::move(init), vWeights, chain);
     expr->setID(si_->nextUID());
 
     return expr;
   }
 
+  std::shared_ptr<iir::Expr>
+  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                         std::shared_ptr<iir::Expr>&& init,
+                         const std::vector<ast::LocationType>& chain,
+                         const std::vector<std::shared_ptr<iir::Expr>>&& weights);
+
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    ast::LocationType lhs_location,
-                                                    ast::LocationType rhs_location);
+                                                    const std::vector<ast::LocationType>& chain);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);

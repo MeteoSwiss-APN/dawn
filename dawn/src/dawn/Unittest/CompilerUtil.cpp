@@ -16,7 +16,6 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -63,7 +62,7 @@ CompilerUtil::load(const std::string& irFilename,
     filename = envPath + "/" + filename;
 
   if(filename.find(".sir") != std::string::npos) {
-    stencilInstantiationContext siMap = lower(filename, options, context, envPath);
+    StencilInstantiationContext siMap = lower(filename, options, context, envPath);
     return siMap.begin()->second;
   } else {
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
@@ -72,7 +71,7 @@ CompilerUtil::load(const std::string& irFilename,
   }
 }
 
-stencilInstantiationContext
+StencilInstantiationContext
 CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context) {
@@ -80,7 +79,7 @@ CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
   return context->getStencilInstantiationMap();
 }
 
-stencilInstantiationContext
+StencilInstantiationContext
 CompilerUtil::lower(const std::string& sirFilename,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
@@ -109,9 +108,9 @@ void dump(CG& generator, std::ostream& os) {
   os << ss.str();
 }
 
-dawn::codegen::stencilInstantiationContext
+dawn::codegen::StencilInstantiationContext
 siToContext(std::shared_ptr<iir::StencilInstantiation> si) {
-  dawn::codegen::stencilInstantiationContext ctx;
+  dawn::codegen::StencilInstantiationContext ctx;
   ctx[si->getName()] = si;
   return ctx;
 }
@@ -161,7 +160,6 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassLocalVarType>(context, passes);
     addPass<dawn::PassRemoveScalars>(context, passes);
     // TODO: how to add grid-dependent passes?: PassStageSplitAllStatements, PassSetLocationType
-    addPass<dawn::PassComputeStageExtents>(context, passes);
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
 
@@ -177,9 +175,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassStageMerger>(context, passes);
     // since this can change the scope of temporaries ...
     addPass<dawn::PassTemporaryType>(context, passes);
-    // modify stages and their extents ...
-    addPass<dawn::PassComputeStageExtents>(context, passes);
-    // and changes their dependencies
+    // modify stage dependencies
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
 
@@ -307,7 +303,6 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassSSA>(context, instantiation);
     result &= runPass<dawn::PassPrintStencilGraph>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     break;
 
@@ -323,7 +318,6 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
   case PassGroup::StageMerger:
     result &= runPass<dawn::PassStageMerger>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     break;
 

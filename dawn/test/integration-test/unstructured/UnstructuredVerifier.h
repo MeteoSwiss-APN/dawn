@@ -21,7 +21,7 @@
 #include <type_traits>
 
 // Verifiyer class for atlas' ArrayViews, very close in behaviour to gridtools::dawn::verifier
-class AtlasVerifier {
+class UnstructuredVerifier {
 private:
   bool use_default_precision_ = false;
   double precision_;
@@ -62,8 +62,8 @@ private:
   }
 
 public:
-  AtlasVerifier() : use_default_precision_(true) {}
-  AtlasVerifier(double precision) : use_default_precision_(false), precision_(precision) {}
+  UnstructuredVerifier() : use_default_precision_(true) {}
+  UnstructuredVerifier(double precision) : use_default_precision_(false), precision_(precision) {}
 
   template <typename Value, int RANK, atlas::array::Intent AccessMode>
   bool compareArrayView(const atlas::array::ArrayView<Value, RANK, AccessMode>& lhs,

@@ -14,7 +14,8 @@
 
 #include "../TestCodeGen.h"
 
-namespace {
+namespace dawn {
+namespace iir {
 
 class TestCodeGenCuda : public TestCodeGen {};
 
@@ -34,4 +35,9 @@ TEST_F(TestCodeGenCuda, ConditionalStencil) {
   runTest(this->getConditionalStencil(), "conditional_stencil.cu");
 }
 
-} // anonymous namespace
+TEST_F(TestCodeGenCuda, DzCStencil) {
+  runTest(this->getStencilFromIIR("update_dz_c"), "update_dz_c.cu");
+}
+
+} // namespace iir
+} // namespace dawn

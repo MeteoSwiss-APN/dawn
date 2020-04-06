@@ -1,4 +1,5 @@
-/*===------------------------------------------------------------------------------*- proto -*-===*\
+/*===------------------------------------------------------------------------------*-proto
+-*-===*\
  *                          _
  *                         | |
  *                       __| | __ ___      ___ ___
@@ -33,28 +34,31 @@ message SourceLocation {
 
 // @brief Cartesian horizontal dimension of a field
 //
-// For a cartesian grid we enable/disable the I and J components through their respective masks.
+// For a cartesian grid we enable/disable the I and J components through their
+// respective masks.
 // @ingroup sir_proto
 message CartesianDimension {
-  int32 mask_cart_i = 1;                 // mask for cartesian component i
-  int32 mask_cart_j = 2;                 // mask for cartesian component j
+  int32 mask_cart_i = 1; // mask for cartesian component i
+  int32 mask_cart_j = 2; // mask for cartesian component j
 }
 
 // @brief Unstructured horizontal dimension of a field
 //
 // For a unstructured grid we need to specify the dense location type.
-// It could also have a sparse dimension. In such case the sparse part is non-empty.
+// It could also have a sparse dimension. In such case the sparse part is
+// non-empty.
 // @ingroup sir_proto
 message UnstructuredDimension {
   dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-  repeated dawn.proto.enums.LocationType sparse_part = 2;   // neighbor chain encoding sparse part when the field has a sparse dimension
+  // neighbor chain encoding sparse part when the field has a sparse dimension
+  repeated dawn.proto.enums.LocationType sparse_part = 2;
 }
 
 // @brief Dimensions spanned by a field
-// 
-// This is a condensed representation of the dimensions of a field. 
-// A field has a vertical component iff maskK=1. 
-// On the horizontal we distinguish between cartesian and unstructured grids. 
+//
+// This is a condensed representation of the dimensions of a field.
+// A field has a vertical component iff maskK=1.
+// On the horizontal we distinguish between cartesian and unstructured grids.
 // @ingroup sir_proto
 message FieldDimensions {
   oneof horizontal_dimension {
@@ -62,21 +66,22 @@ message FieldDimensions {
     UnstructuredDimension unstructured_horizontal_dimension = 2;
   }
 
-  int32 mask_k = 3;                        // mask for vertical dimension
+  int32 mask_k = 3; // mask for vertical dimension
 }
 
 // @brief Description of a field argument of a Stencil or StencilFunction
 // @ingroup sir_proto
 message Field {
-  string name = 1;                     // Name of the field
-  SourceLocation loc = 2;              // Source location
-  bool is_temporary = 3;               // Is the field a temporary?
+  string name = 1;                      // Name of the field
+  SourceLocation loc = 2;               // Source location
+  bool is_temporary = 3;                // Is the field a temporary?
   FieldDimensions field_dimensions = 4; // Dimensions spanned by the field
 }
 
 // @brief Directional argument of a StencilFunction
 //
-// Note that this message is merely a placeholder as the actual arguments is encoded as an AST node.
+// Note that this message is merely a placeholder as the actual arguments is
+// encoded as an AST node.
 // @ingroup sir_proto
 message Direction {
   string name = 1;        // Name of the directional argument
@@ -85,7 +90,8 @@ message Direction {
 
 // @brief Offset argument of a StencilFunction
 //
-// Note that this message is merely a placeholder as the actual arguments is encoded as an AST node.
+// Note that this message is merely a placeholder as the actual arguments is
+// encoded as an AST node.
 // @ingroup sir_proto
 message Offset {
   string name = 1;        // Name of the offset argument
@@ -103,8 +109,9 @@ message StencilFunctionArg {
   }
 }
 
-// @brief Representation of a vertical interval, given by a lower and upper bound where a bound
-// is represented by a level and an offset (`bound = level + offset`)
+// @brief Representation of a vertical interval, given by a lower and upper
+// bound where a bound is represented by a level and an offset (`bound = level +
+// offset`)
 //
 // The Interval has to satisfy the following invariants:
 //  - `lower_level >= Interval::Start`
@@ -121,8 +128,8 @@ message Interval {
 
   // Lower level
   //
-  // A level can be any integer between `[Start, End]` while the `Start` and `End` levels are
-  // treated specially.
+  // A level can be any integer between `[Start, End]` while the `Start` and
+  // `End` levels are treated specially.
   oneof LowerLevel {
     SpecialLevel special_lower_level = 1;
     int32 lower_level = 2;
@@ -130,8 +137,8 @@ message Interval {
 
   // Upper level
   //
-  // A level can be any integer between `[Start, End]` while the `Start` and `End` levels are
-  // treated specially.
+  // A level can be any integer between `[Start, End]` while the `Start` and
+  // `End` levels are treated specially.
   oneof UpperLevel {
     SpecialLevel special_upper_level = 3;
     int32 upper_level = 4;
@@ -201,9 +208,10 @@ message VerticalRegion {
 // @brief Stencil call declaration
 // @ingroup sir_proto
 message StencilCall {
-  SourceLocation loc = 1;        // Source location of the stencil call
-  string callee = 2;             // Name of the called stencil (i.e callee)
-  repeated string arguments = 3; // Fields passed as arguments during the stencil call
+  SourceLocation loc = 1; // Source location of the stencil call
+  string callee = 2;      // Name of the called stencil (i.e callee)
+  // Fields passed as arguments during the stencil call
+  repeated string arguments = 3;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -211,8 +219,8 @@ message StencilCall {
 /* ===-----------------------------------------------------------------------------------------===*/
 // @brief Extent attached to a FieldAccess
 //
-// Each filed-access has extents in each dimension that define how far the accesses are in the
-// respective dimension
+// Each filed-access has extents in each dimension that define how far the
+// accesses are in the respective dimension
 message Extent {
   int32 minus = 1;
   int32 plus = 2;
@@ -329,7 +337,8 @@ message ReturnStmt {
 //
 // @ingroup sir_proto
 message VarDeclStmtData {
-  google.protobuf.Int32Value accessID = 1; // ID of the variable declared in the statement
+  google.protobuf.Int32Value accessID =
+      1; // ID of the variable declared in the statement
 }
 
 // @brief Declaration of a variable
@@ -363,7 +372,8 @@ message VarDeclStmt {
   int32 dimension = 3; // Dimension of the array or 0 for variables
   string op = 4;       // Operation used for initialization
 
-  // List of expression used for array initialization or just 1 element for variable initialization
+  // List of expression used for array initialization or just 1 element for
+  // variable initialization
   repeated Expr init_list = 5;
 
   SourceLocation loc = 6;                 // Source location
@@ -504,7 +514,7 @@ message FunCallExpr {
 // @endcode
 // @ingroup sir_proto
 message StencilFunCallExpr {
-  string callee = 1;           // Identifier of the stencil function (i.e callee)
+  string callee = 1; // Identifier of the stencil function (i.e callee)
   repeated Expr arguments = 2; // List of arguments
   SourceLocation loc = 3;      // Source location
   int32 ID = 4;                // ID of the Expr
@@ -512,9 +522,10 @@ message StencilFunCallExpr {
 
 // @brief Stencil function argument
 //
-// A stencil function argument can be a simple dimension (e.g `i`), an offset (e.g `i+1`) or
-// reference an argument of a stencil functions if the current stencil function is called within the
-// scope of another stencil function (nested calls).
+// A stencil function argument can be a simple dimension (e.g `i`), an offset
+// (e.g `i+1`) or reference an argument of a stencil functions if the current
+// stencil function is called within the scope of another stencil function
+// (nested calls).
 //
 // @ingroup sir_proto
 message StencilFunArgExpr {
@@ -524,24 +535,28 @@ message StencilFunArgExpr {
   // Offset to the dimension
   int32 offset = 2;
 
-  // Index of the argument of the stencil function in the outer scope. If unused, the value *has* to
-  // be set to -1.
+  // Index of the argument of the stencil function in the outer scope. If
+  // unused, the value *has* to be set to -1.
   //
   // @b Example:
   //
-  // The following example shows the usage of `argument_index`. Imagine the following scenario:
+  // The following example shows the usage of `argument_index`. Imagine the
+  // following scenario:
   // @code{.cpp}
   //   foo(storage a, dimension dir) {
   //      bar(dir+1, a);
   //   }
   // @endcode
   //
-  // in which the members of `StencilFunArgExpr` for the argument `dir+1` of `bar` would be:
+  // in which the members of `StencilFunArgExpr` for the argument `dir+1` of
+  // `bar` would be:
   //
   // @code{.cpp}
-  //  - dimension: -1        // We do not know the dimension yet as it depends on `dir` of `foo`
+  //  - dimension: -1        // We do not know the dimension yet as it depends
+  //  on `dir` of `foo`
   //  - offset: +1           // Whatever `dir` will be, we offset it by `+1`
-  //  - argument_index: 1    // We reference the second argument `dir` of `foo` thus assign
+  //  - argument_index: 1    // We reference the second argument `dir` of `foo`
+  //  thus assign
   //                         // the index 1 as we use a 0 based indexing.
   // @endcode
   int32 argument_index = 3;
@@ -557,16 +572,18 @@ message StencilFunArgExpr {
 //
 // @ingroup sir_proto
 message AccessExprData {
-  google.protobuf.Int32Value accessID = 1; // Access ID of variable/literal/field accessed
+  google.protobuf.Int32Value accessID =
+      1; // Access ID of variable/literal/field accessed
 }
 
 // @brief Access to a variable
 //
 // @ingroup sir_proto
 message VarAccessExpr {
-  string name = 1;         // Name of the variable
-  Expr index = 2;          // Is it an array access (i.e var[2])?
-  bool is_external = 3;    // Is this an access to a external variable (e.g a global)?
+  string name = 1; // Name of the variable
+  Expr index = 2;  // Is it an array access (i.e var[2])?
+  bool is_external =
+      3; // Is this an access to a external variable (e.g a global)?
   SourceLocation loc = 4;  // Source location
   AccessExprData data = 5; // Access data
   int32 ID = 6;            // ID of the Expr
@@ -589,10 +606,11 @@ message FieldAccessExpr {
 
   // Static offsets
   //
-  // This represent the offset which are know before instantiationg the stencil function. Meaning,
-  // if we have directional or offset arguments, we have to perform a lazy evaluation to compute
-  // the real offset once we know the mapping of the directions (and offsets) to the actual
-  // arguments of the stencil function.
+  // This represent the offset which are know before instantiationg the stencil
+  // function. Meaning, if we have directional or offset arguments, we have to
+  // perform a lazy evaluation to compute the real offset once we know the
+  // mapping of the directions (and offsets) to the actual arguments of the
+  // stencil function.
   int32 vertical_offset = 2;
   oneof horizontal_offset {
     CartesianOffset cartesian_offset = 3;
@@ -602,12 +620,13 @@ message FieldAccessExpr {
 
   // Mapping of the directional and offset arguments of the stencil function.
   //
-  // The `argumentMap` stores an index to the argument list of the stencil function with -1
-  // indicating this argument is unused. The `argumentOffset` holds the parsed offsets of the
-  // direction (or offset).
+  // The `argumentMap` stores an index to the argument list of the stencil
+  // function with -1 indicating this argument is unused. The `argumentOffset`
+  // holds the parsed offsets of the direction (or offset).
   //
   // @b Example:
-  // Consider the following example which implements an average stencil function :
+  // Consider the following example which implements an average stencil function
+  // :
   //
   // @code{.cpp}
   // avg(storage in, direction dir) {
@@ -620,7 +639,8 @@ message FieldAccessExpr {
   // @code{.cpp}
   //  - name           : "in"
   //  - offset         : {0, 0, 0}     // We don't have any i,j or k accesses
-  //  - argumentMap    : {1, -1, -1}   // `dir` maps to the 1st argument of `avg` (0 based)
+  //  - argumentMap    : {1, -1, -1}   // `dir` maps to the 1st argument of
+  //  `avg` (0 based)
   //  - argumentOffset : {2, 0, 0}     // `dir+2` has an offset `+2`
   // @endcode
   repeated int32 argument_map = 6;
@@ -652,31 +672,19 @@ message LiteralAccessExpr {
   int32 ID = 5;            // ID of the Expr
 }
 
-// @brief A weight needed in the weighted reduction on unstrcutred stencils, which is consistent with
-//        the Value class for globals
-//
-// @ingroup sir_proto
-message Weight {
-  oneof Value {
-    bool boolean_value = 1;
-    int32 integer_value = 2;
-    double double_value = 3;
-    string string_value = 4;
-    float float_value = 5;
-  }
-}
-
 // @brief Reduction operation over neighbors
 //
 // @ingroup sir_proto
 message ReductionOverNeighborExpr {
-  string op = 1;               // Reduction operation
-  Expr rhs = 2;                // Operation to be applied for each neighbor
-  Expr init = 3;               // Initial value of reduction
-  repeated Weight weights = 4; // weights (required to be of equal type, e.g. just floats)
-  dawn.proto.enums.LocationType lhs_location = 5;
-  dawn.proto.enums.LocationType rhs_location = 6;
-  SourceLocation loc = 7;
+  string op = 1; // Reduction operation
+  Expr rhs = 2;  // Operation to be applied for each neighbor
+  Expr init = 3; // Initial value of reduction
+  repeated Expr weights =
+      4; // weights (required to be of equal type, e.g. just floats)
+  repeated dawn.proto.enums.LocationType chain =
+      5; // Neighbor chain definining the neighbors to reduce from and the
+         // location type to reduce to (first element)
+  SourceLocation loc = 6;
 }
 
 // @brief Abstract syntax tree of the SIR

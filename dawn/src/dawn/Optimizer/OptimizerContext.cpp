@@ -22,7 +22,6 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
@@ -747,8 +746,9 @@ bool OptimizerContext::restoreIIR(std::string const& name,
 
   // fix extents of stages since they are not stored in the iir but computed from the accesses
   // contained in the DoMethods
+  stencilInstantiation->computeDerivedInfo();
+
   pushBackPass<PassSetStageName>();
-  pushBackPass<PassComputeStageExtents>();
   const bool passed =
       getPassManager().runAllPassesOnStencilInstantiation(*this, stencilInstantiation);
 

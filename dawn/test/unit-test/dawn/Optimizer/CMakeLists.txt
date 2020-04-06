@@ -17,10 +17,10 @@ set(executable ${PROJECT_NAME}UnittestOptimizer)
 add_executable(${executable}
   TestMain.cpp
   TestPassCaching.cpp
-  TestPassComputeStageExtents.cpp
   TestPassLocalVarType.cpp
   TestPassIntervalPartitioning.cpp
   TestPassFieldVersioning.cpp
+  TestPassMultiStageMerger.cpp
   TestPassRemoveScalars.cpp
   TestPassSetCaches.cpp
   TestPassSetNonTempCaches.cpp

@@ -13,7 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Serialization/ASTSerializer.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
@@ -150,21 +152,22 @@ getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationTyp
 
 dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   dawn::proto::statements::Extents protoExtents;
-  extent_dispatch(extents.horizontalExtent(),
-                  [&](iir::CartesianExtent const& hExtent) {
-                    auto cartesianExtent = protoExtents.mutable_cartesian_extent();
-                    auto protoIExtent = cartesianExtent->mutable_i_extent();
-                    protoIExtent->set_minus(hExtent.iMinus());
-                    protoIExtent->set_plus(hExtent.iPlus());
-                    auto protoJExtent = cartesianExtent->mutable_j_extent();
-                    protoJExtent->set_minus(hExtent.jMinus());
-                    protoJExtent->set_plus(hExtent.jPlus());
-                  },
-                  [&](iir::UnstructuredExtent const& hExtent) {
-                    auto protoHExtent = protoExtents.mutable_unstructured_extent();
-                    protoHExtent->set_has_extent(hExtent.hasExtent());
-                  },
-                  [&] { protoExtents.mutable_zero_extent(); });
+  extent_dispatch(
+      extents.horizontalExtent(),
+      [&](iir::CartesianExtent const& hExtent) {
+        auto cartesianExtent = protoExtents.mutable_cartesian_extent();
+        auto protoIExtent = cartesianExtent->mutable_i_extent();
+        protoIExtent->set_minus(hExtent.iMinus());
+        protoIExtent->set_plus(hExtent.iPlus());
+        auto protoJExtent = cartesianExtent->mutable_j_extent();
+        protoJExtent->set_minus(hExtent.jMinus());
+        protoJExtent->set_plus(hExtent.jPlus());
+      },
+      [&](iir::UnstructuredExtent const& hExtent) {
+        auto protoHExtent = protoExtents.mutable_unstructured_extent();
+        protoHExtent->set_has_extent(hExtent.hasExtent());
+      },
+      [&] { protoExtents.mutable_zero_extent(); });
 
   auto const& vExtent = extents.verticalExtent();
   auto protoVExtent = protoExtents.mutable_vertical_extent();
@@ -618,16 +621,16 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   protoExpr->set_name(expr->getName());
 
   auto const& offset = expr->getOffset();
-  ast::offset_dispatch(offset.horizontalOffset(),
-                       [&](ast::CartesianOffset const& hOffset) {
-                         protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
-                         protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
-                       },
-                       [&](ast::UnstructuredOffset const& hOffset) {
-                         protoExpr->mutable_unstructured_offset()->set_has_offset(
-                             hOffset.hasOffset());
-                       },
-                       [&] { protoExpr->mutable_zero_offset(); });
+  ast::offset_dispatch(
+      offset.horizontalOffset(),
+      [&](ast::CartesianOffset const& hOffset) {
+        protoExpr->mutable_cartesian_offset()->set_i_offset(hOffset.offsetI());
+        protoExpr->mutable_cartesian_offset()->set_j_offset(hOffset.offsetJ());
+      },
+      [&](ast::UnstructuredOffset const& hOffset) {
+        protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
+      },
+      [&] { protoExpr->mutable_zero_offset(); });
   protoExpr->set_vertical_offset(offset.verticalOffset());
 
   for(int argOffset : expr->getArgumentOffset())
@@ -665,8 +668,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
-  protoExpr->set_rhs_location(getProtoLocationTypeFromLocationType(expr->getRhsLocation()));
-  protoExpr->set_lhs_location(getProtoLocationTypeFromLocationType(expr->getLhsLocation()));
+  auto protoChain = protoExpr->mutable_chain();
+  for(const auto& loc : expr->getNbhChain()) {
+    protoChain->Add(getProtoLocationTypeFromLocationType(loc));
+  }
 
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
@@ -677,28 +682,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
   currentExprProto_.pop();
 
   if(expr->getWeights()) {
-    auto protoWeights = protoExpr->mutable_weights();
     for(const auto& weight : expr->getWeights().value()) {
-      auto weightProto = protoWeights->Add();
-      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered during serialization");
-      switch(weight.getType()) {
-      case sir::Value::Kind::Boolean:
-        weightProto->set_boolean_value(weight.getValue<bool>());
-        break;
-      case sir::Value::Kind::Integer:
-        weightProto->set_integer_value(weight.getValue<int>());
-        break;
-      case sir::Value::Kind::Double:
-        weightProto->set_double_value(weight.getValue<double>());
-        break;
-      case sir::Value::Kind::Float:
-        weightProto->set_float_value(weight.getValue<float>());
-        break;
-      case sir::Value::Kind::String:
-        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
-                         "of arithmetic type)");
-        break;
-      }
+      currentExprProto_.push(protoExpr->add_weights());
+      weight->accept(*this);
+      currentExprProto_.pop();
     }
   }
 }
@@ -984,42 +971,26 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
   case proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
     auto weights = exprProto.weights();
+
+    ast::NeighborChain chain;
+    for(int i = 0; i < exprProto.chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
+    }
+
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID),
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), chain, makeLocation(exprProto));
       return expr;
     } else {
-      std::vector<sir::Value> deserializedWeights;
+      std::vector<std::shared_ptr<ast::Expr>> deserializedWeights;
       for(const auto weight : weights) {
-        switch(weight.Value_case()) {
-        case dawn::proto::statements::Weight::kBooleanValue:
-          dawn_unreachable("non arithmetic weight encountered in deserialization (boolean)");
-          break;
-        case dawn::proto::statements::Weight::kIntegerValue:
-          deserializedWeights.push_back(sir::Value(weight.integer_value()));
-          break;
-        case dawn::proto::statements::Weight::kDoubleValue:
-          deserializedWeights.push_back(sir::Value(weight.double_value()));
-          break;
-        case dawn::proto::statements::Weight::kFloatValue:
-          deserializedWeights.push_back(sir::Value(weight.float_value()));
-          break;
-        case dawn::proto::statements::Weight::kStringValue:
-          dawn_unreachable("non arithmetic weight encountered in deserialization (string)");
-          break;
-        case dawn::proto::statements::Weight::VALUE_NOT_SET:
-          dawn_unreachable("un-set weight encountered in deserialization");
-          break;
-        }
+        deserializedWeights.push_back(makeExpr(weight, dataType, maxID));
       }
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights,
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
+          makeLocation(exprProto));
       return expr;
     }
   }

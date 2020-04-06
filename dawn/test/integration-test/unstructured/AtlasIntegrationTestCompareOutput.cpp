@@ -26,14 +26,17 @@
 #include "atlas/output/Gmsh.h"
 #include "interface/atlas_interface.hpp"
 
-#include <field/Field.h>
+#include <atlas/util/CoordinateEnums.h>
+
 #include <gtest/gtest.h>
 
 #include <sstream>
 #include <tuple>
+
+#include <generated_copyCell.hpp>
 namespace {
 
-atlas::Mesh generateMesh(size_t nx, size_t ny) {
+atlas::Mesh generateQuadMesh(size_t nx, size_t ny) {
   std::stringstream configStr;
   configStr << "L" << nx << "x" << ny;
   atlas::StructuredGrid structuredGrid = atlas::Grid(configStr.str());
@@ -43,6 +46,65 @@ atlas::Mesh generateMesh(size_t nx, size_t ny) {
       mesh, atlas::util::Config("pole_edges", false)); // work around to eliminate pole edges
   atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
   atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+  return mesh;
+}
+
+atlas::Mesh generateEquilatMesh(size_t nx, size_t ny) {
+
+  // right handed triangle mesh
+  auto x = atlas::grid::LinearSpacing(0, nx, nx, false);
+  auto y = atlas::grid::LinearSpacing(0, ny, ny, false);
+  atlas::Grid grid = atlas::StructuredGrid{x, y};
+
+  auto meshgen = atlas::StructuredMeshGenerator{atlas::util::Config("angle", -1.)};
+  atlas::Mesh mesh = meshgen.generate(grid);
+
+  // coordinate trafo to mold this into an equilat mesh
+  auto xy = atlas::array::make_view<double, 2>(mesh.nodes().xy());
+  for(int nodeIdx = 0; nodeIdx < mesh.nodes().size(); nodeIdx++) {
+    double x = xy(nodeIdx, atlas::LON);
+    double y = xy(nodeIdx, atlas::LAT);
+    x = x - 0.5 * y;
+    y = y * sqrt(3) / 2.;
+    xy(nodeIdx, atlas::LON) = x;
+    xy(nodeIdx, atlas::LAT) = y;
+  }
+
+  // build up nbh tables
+  atlas::mesh::actions::build_edges(mesh, atlas::util::Config("pole_edges", false));
+  atlas::mesh::actions::build_node_to_edge_connectivity(mesh);
+  atlas::mesh::actions::build_element_to_edge_connectivity(mesh);
+
+  // mesh constructed this way is missing node to cell connectivity, built it as well
+  for(int nodeIdx = 0; nodeIdx < mesh.nodes().size(); nodeIdx++) {
+    const auto& nodeToEdge = mesh.nodes().edge_connectivity();
+    const auto& edgeToCell = mesh.edges().cell_connectivity();
+    auto& nodeToCell = mesh.nodes().cell_connectivity();
+
+    std::set<int> nbh;
+    for(int nbhEdgeIdx = 0; nbhEdgeIdx < nodeToEdge.cols(nodeIdx); nbhEdgeIdx++) {
+      int edgeIdx = nodeToEdge(nodeIdx, nbhEdgeIdx);
+      if(edgeIdx == nodeToEdge.missing_value()) {
+        continue;
+      }
+      for(int nbhCellIdx = 0; nbhCellIdx < edgeToCell.cols(edgeIdx); nbhCellIdx++) {
+        int cellIdx = edgeToCell(edgeIdx, nbhCellIdx);
+        if(cellIdx == edgeToCell.missing_value()) {
+          continue;
+        }
+        nbh.insert(cellIdx);
+      }
+    }
+
+    assert(nbh.size() <= 6);
+    std::vector<int> initData(nbh.size(), nodeToCell.missing_value());
+    nodeToCell.add(1, nbh.size(), initData.data());
+    int copyIter = 0;
+    for(const int n : nbh) {
+      nodeToCell.set(nodeIdx, copyIter++, n);
+    }
+  }
+
   return mesh;
 }
 
@@ -85,7 +147,7 @@ namespace {
 #include <generated_copyCell.hpp>
 TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
   // Setup a 32 by 32 grid of quads and generate a mesh out of it
-  auto mesh = generateMesh(32, 32);
+  auto mesh = generateQuadMesh(32, 32);
   // We only need one vertical level
   size_t nb_levels = 1;
 
@@ -110,7 +172,7 @@ TEST(AtlasIntegrationTestCompareOutput, CopyCell) {
 namespace {
 #include <generated_copyEdge.hpp>
 TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
-  auto mesh = generateMesh(32, 32);
+  auto mesh = generateQuadMesh(32, 32);
   size_t nb_levels = 1;
 
   auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
@@ -131,7 +193,7 @@ TEST(AtlasIntegrationTestCompareOutput, CopyEdge) {
 namespace {
 #include <generated_verticalSum.hpp>
 TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
-  auto mesh = generateMesh(32, 32);
+  auto mesh = generateQuadMesh(32, 32);
   size_t nb_levels = 5; // must be >= 3
 
   auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
@@ -158,7 +220,7 @@ TEST(AtlasIntegrationTestCompareOutput, verticalCopy) {
 namespace {
 #include <generated_accumulateEdgeToCell.hpp>
 TEST(AtlasIntegrationTestCompareOutput, Accumulate) {
-  auto mesh = generateMesh(32, 32);
+  auto mesh = generateQuadMesh(32, 32);
   size_t nb_levels = 1;
 
   auto [in_F, in_v] = makeAtlasField("in", mesh.edges().size(), nb_levels);
@@ -182,7 +244,7 @@ namespace {
 #include <generated_diffusion.hpp>
 #include <reference_diffusion.hpp>
 TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
-  auto mesh = generateMesh(32, 32);
+  auto mesh = generateQuadMesh(32, 32);
   size_t nb_levels = 1;
 
   // Create input (on cells) and output (on cells) fields for generated and reference stencils
@@ -220,7 +282,139 @@ TEST(AtlasIntegrationTestCompareOutput, Diffusion) {
   {
     auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
     auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
-    AtlasVerifier v;
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_diamond.hpp>
+#include <reference_diamond.hpp>
+TEST(AtlasIntegrationTestCompareOutput, Diamond) {
+  auto mesh = generateEquilatMesh(32, 32);
+  const size_t nb_levels = 1;
+  const size_t level = 0;
+
+  // Create input (on cells) and output (on cells) fields for generated and reference stencils
+  auto [in, in_v] = makeAtlasField("in_v", mesh.nodes().size(), nb_levels);
+  auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.edges().size(), nb_levels);
+  auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.edges().size(), nb_levels);
+
+  auto xy = atlas::array::make_view<double, 2>(mesh.nodes().xy());
+  for(int nodeIdx = 0, size = mesh.nodes().size(); nodeIdx < size; ++nodeIdx) {
+    double x = xy(nodeIdx, atlas::LON);
+    double y = xy(nodeIdx, atlas::LAT);
+    in_v(nodeIdx, level) = sin(x) * sin(y);
+  }
+
+  dawn_generated::cxxnaiveico::reference_diamond<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), out_v_ref, in_v)
+      .run();
+  dawn_generated::cxxnaiveico::diamond<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
+                                                                 out_v_gen, in_v)
+      .run();
+
+  // Check correctness of the output
+  {
+    auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
+    auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_diamondWeights.hpp>
+#include <reference_diamondWeights.hpp>
+TEST(AtlasIntegrationTestCompareOutput, DiamondWeight) {
+  auto mesh = generateEquilatMesh(32, 32);
+  const size_t nb_levels = 1;
+  const size_t level = 0;
+
+  // Create input (on cells) and output (on cells) fields for generated and reference stencils
+  auto [in, in_v] = makeAtlasField("in_v", mesh.nodes().size(), nb_levels);
+  auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.edges().size(), nb_levels);
+  auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.edges().size(), nb_levels);
+
+  auto [inv_edge_length, inv_edge_length_v] =
+      makeAtlasField("inv_edge_length", mesh.edges().size(), nb_levels);
+  auto [inv_vert_length, inv_vert_length_v] =
+      makeAtlasField("inv_vert_length", mesh.edges().size(), nb_levels);
+
+  auto xy = atlas::array::make_view<double, 2>(mesh.nodes().xy());
+  for(int nodeIdx = 0, size = mesh.nodes().size(); nodeIdx < size; ++nodeIdx) {
+    double x = xy(nodeIdx, atlas::LON);
+    double y = xy(nodeIdx, atlas::LAT);
+    in_v(nodeIdx, level) = sin(x) * sin(y);
+  }
+
+  for(int edgeIdx = 0, size = mesh.edges().size(); edgeIdx < size; ++edgeIdx) {
+    int nodeIdx0 = mesh.edges().node_connectivity()(edgeIdx, 0);
+    int nodeIdx1 = mesh.edges().node_connectivity()(edgeIdx, 1);
+    double dx = xy(nodeIdx0, atlas::LON) - xy(nodeIdx1, atlas::LON);
+    double dy = xy(nodeIdx0, atlas::LAT) - xy(nodeIdx1, atlas::LAT);
+    double length = sqrt(dx * dx + dy * dy);
+    inv_edge_length_v(edgeIdx, level) = 1. / length;
+    inv_vert_length_v(edgeIdx, level) =
+        1. / (0.5 * sqrt(3) * length * 2); // twice the height of equilat triangle
+  }
+
+  dawn_generated::cxxnaiveico::reference_diamondWeights<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), out_v_ref, inv_edge_length_v, inv_vert_length_v, in_v)
+      .run();
+  dawn_generated::cxxnaiveico::diamondWeights<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), out_v_gen, inv_edge_length_v, inv_vert_length_v, in_v)
+      .run();
+
+  // Check correctness of the output
+  {
+    auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
+    auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
+    UnstructuredVerifier v;
+    EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_intp.hpp>
+#include <reference_intp.hpp>
+TEST(AtlasIntegrationTestCompareOutput, Intp) {
+  auto mesh = generateEquilatMesh(32, 32);
+  const size_t nb_levels = 1;
+  const size_t level = 0;
+
+  // Create input (on cells) and output (on cells) fields for generated and reference stencils
+  auto [in_ref, in_v_ref] = makeAtlasField("in_v_ref", mesh.cells().size(), nb_levels);
+  auto [in_gen, in_v_gen] = makeAtlasField("in_v_gen", mesh.cells().size(), nb_levels);
+  auto [out_ref, out_v_ref] = makeAtlasField("out_v_ref", mesh.cells().size(), nb_levels);
+  auto [out_gen, out_v_gen] = makeAtlasField("out_v_gen", mesh.cells().size(), nb_levels);
+
+  auto xy = atlas::array::make_view<double, 2>(mesh.nodes().xy());
+  for(int cellIdx = 0, size = mesh.cells().size(); cellIdx < size; ++cellIdx) {
+    int v0 = mesh.cells().node_connectivity()(cellIdx, 0);
+    int v1 = mesh.cells().node_connectivity()(cellIdx, 1);
+    int v2 = mesh.cells().node_connectivity()(cellIdx, 2);
+    double x = 1. / 3. * (xy(v0, atlas::LON) + xy(v1, atlas::LON) + xy(v2, atlas::LON));
+    double y = 1. / 3. * (xy(v0, atlas::LAT) + xy(v1, atlas::LAT) + xy(v2, atlas::LON));
+    in_v_ref(cellIdx, level) = sin(x) * sin(y);
+    in_v_gen(cellIdx, level) = sin(x) * sin(y);
+  }
+
+  dawn_generated::cxxnaiveico::reference_intp<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v_ref, out_v_ref)
+      .run();
+  dawn_generated::cxxnaiveico::intp<atlasInterface::atlasTag>(mesh, static_cast<int>(nb_levels),
+                                                              in_v_gen, out_v_gen)
+      .run();
+
+  // Check correctness of the output
+  {
+    auto out_v_ref = atlas::array::make_view<double, 2>(out_ref);
+    auto out_v_gen = atlas::array::make_view<double, 2>(out_gen);
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareArrayView(out_v_gen, out_v_ref)) << "while comparing output (on cells)";
   }
 }
@@ -293,7 +487,7 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
 
   // apparently, one needs to be added to the second dimension in order to get a
   // square mesh, or we are mis-interpreting the output
-  auto mesh = generateMesh(numCell, numCell + 1);
+  auto mesh = generateQuadMesh(numCell, numCell + 1);
 
   AtlasToCartesian atlasToCartesianMapper(mesh);
   build_periodic_edges(mesh, numCell, numCell, atlasToCartesianMapper);
@@ -324,7 +518,7 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
   {
     auto ref_cells_v = atlas::array::make_view<double, 2>(ref_cells);
     auto gen_cells_v = atlas::array::make_view<double, 2>(gen_cells);
-    AtlasVerifier v;
+    UnstructuredVerifier v;
     EXPECT_TRUE(v.compareArrayView(ref_cells_v, gen_cells_v))
         << "while comparing output (on cells)";
   }
@@ -341,7 +535,7 @@ TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
 
   // apparently, one needs to be added to the second dimension in order to get a
   // square mesh, or we are mis-interpreting the output
-  auto mesh = generateMesh(numCell, numCell + 1);
+  auto mesh = generateQuadMesh(numCell, numCell + 1);
 
   // the 4 fields required for the thomas algorithm
   //  c.f.
@@ -382,7 +576,7 @@ namespace {
 #include <generated_NestedSimple.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
   const int numCell = 10;
-  auto mesh = generateMesh(numCell, numCell + 1);
+  auto mesh = generateQuadMesh(numCell, numCell + 1);
 
   int nb_levels = 1;
   auto [cells, v_cells] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
@@ -408,7 +602,7 @@ namespace {
 #include <generated_NestedWithField.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
   const int numCell = 10;
-  auto mesh = generateMesh(numCell, numCell + 1);
+  auto mesh = generateQuadMesh(numCell, numCell + 1);
 
   int nb_levels = 1;
   auto [cells, v_cells] = makeAtlasField("cells", mesh.cells().size(), nb_levels);
@@ -435,7 +629,7 @@ TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
 namespace {
 #include <generated_sparseDimension.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
-  auto mesh = generateMesh(10, 11);
+  auto mesh = generateQuadMesh(10, 11);
   const int edgesPerCell = 4;
   const int nb_levels = 1;
 
@@ -463,7 +657,7 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
 namespace {
 #include <generated_sparseDimensionTwice.hpp>
 TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
-  auto mesh = generateMesh(10, 11);
+  auto mesh = generateQuadMesh(10, 11);
   const int edgesPerCell = 4;
   const int nb_levels = 1;
 

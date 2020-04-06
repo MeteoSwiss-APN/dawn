@@ -499,43 +499,25 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    std::vector<dawn::sir::Value> weights;
+    std::vector<std::shared_ptr<sir::Expr>> weights;
 
     for(const auto& weightProto : exprProto.weights()) {
-      switch(weightProto.Value_case()) {
-      case proto::statements::Weight::kBooleanValue:
-        weights.push_back(dawn::sir::Value(weightProto.boolean_value()));
-        break;
-      case proto::statements::Weight::kFloatValue:
-        weights.push_back(dawn::sir::Value(weightProto.float_value()));
-        break;
-      case proto::statements::Weight::kDoubleValue:
-        weights.push_back(dawn::sir::Value(weightProto.double_value()));
-        break;
-      case proto::statements::Weight::kIntegerValue:
-        weights.push_back(dawn::sir::Value(weightProto.integer_value()));
-        break;
-      case proto::statements::Weight::kStringValue:
-        throw std::invalid_argument(
-            "string type for weight encountered in serialization (weights need to be "
-            "of arithmetic type)\n");
-        break;
-      case proto::statements::Weight::VALUE_NOT_SET:
-        throw std::invalid_argument("weight with undefined value encountered!\n");
-        break;
-      }
+      weights.push_back(makeExpr(weightProto));
+    }
+
+    ast::NeighborChain chain;
+    for(int i = 0; i < exprProto.chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
     }
 
     if(weights.size() > 0) {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights,
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, chain,
+          makeLocation(exprProto));
     } else {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()),
-          getLocationTypeFromProtoLocationType(exprProto.lhs_location()),
-          getLocationTypeFromProtoLocationType(exprProto.rhs_location()), makeLocation(exprProto));
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), chain,
+          makeLocation(exprProto));
     }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
