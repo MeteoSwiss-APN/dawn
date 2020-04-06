@@ -234,15 +234,20 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::StageReordering:
-      optimizer.pushBackPass<PassSetStageGraph>();
-      optimizer.pushBackPass<PassSetDependencyGraph>();
-      optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
-      // moved stages around ...
-      optimizer.pushBackPass<PassSetSyncStage>();
-      // if we want this info around, we should probably run this also
-      // optimizer.pushBackPass<PassSetStageName>();
-      // validation check
-      optimizer.pushBackPass<PassValidation>();
+      // TODO: disabled for unstructured as it is broken due to offsets/extents handled as
+      // cartesian
+      if(stencilInstantiationMap.begin()->second->getIIR()->getGridType() !=
+         ast::GridType::Unstructured) {
+        optimizer.pushBackPass<PassSetStageGraph>();
+        optimizer.pushBackPass<PassSetDependencyGraph>();
+        optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
+        // moved stages around ...
+        optimizer.pushBackPass<PassSetSyncStage>();
+        // if we want this info around, we should probably run this also
+        // optimizer.pushBackPass<PassSetStageName>();
+        // validation check
+        optimizer.pushBackPass<PassValidation>();
+      }
       break;
     case PassGroup::StageMerger:
       // merging requires the stage graph
@@ -300,9 +305,14 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::SetBlockSize:
-      optimizer.pushBackPass<PassSetBlockSize>();
-      // validation check
-      optimizer.pushBackPass<PassValidation>();
+      // TODO: disabled for unstructured as it is broken due to offsets/extents handled as
+      // cartesian
+      if(stencilInstantiationMap.begin()->second->getIIR()->getGridType() !=
+         ast::GridType::Unstructured) {
+        optimizer.pushBackPass<PassSetBlockSize>();
+        // validation check
+        optimizer.pushBackPass<PassValidation>();
+      }
       break;
     case PassGroup::DataLocalityMetric:
       // Plain diagnostics, should not even be a pass but is independent
