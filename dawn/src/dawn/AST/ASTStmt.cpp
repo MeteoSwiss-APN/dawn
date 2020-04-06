@@ -440,9 +440,16 @@ bool ChainIterationDescr::equals(const IterationDescr* otherPtr) const {
 }
 
 LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
-                   std::shared_ptr<BlockStmt> stmt, SourceLocation loc)
-    : Stmt(std::move(data), Kind::LoopStmt, loc), blockStmt_(stmt) {
+                   std::shared_ptr<BlockStmt> body, SourceLocation loc)
+    : Stmt(std::move(data), Kind::LoopStmt, loc), blockStmt_(body) {
   iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain));
+  for(const auto& stmtPtr : body->getStatements()) {
+    DAWN_ASSERT_MSG(stmtPtr->getKind() == ast::Stmt::Kind::ExprStmt,
+                    "only expression statements allowed in loop body");
+    DAWN_ASSERT_MSG(dyn_pointer_cast<ExprStmt>(stmtPtr)->getExpr()->getKind() ==
+                        ast::Expr::Kind::AssignmentExpr,
+                    "only assignments allowed in loop body");
+  }
 }
 LoopStmt::LoopStmt(const LoopStmt& stmt)
     : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(stmt.getBlockStmt()->clone())),
