@@ -19,9 +19,9 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
+#include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -45,7 +45,15 @@ protected:
     context_->getDiagnostics().clear();
     std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
 
-    // Expect pass to succeed...
+    // Run stage graph pass
+    PassSetStageGraph stageGraphPass(*context_);
+    EXPECT_TRUE(stageGraphPass.run(instantiation));
+
+    // Run dependency graph pass
+    PassSetDependencyGraph dependencyGraphPass(*context_);
+    EXPECT_TRUE(dependencyGraphPass.run(instantiation));
+
+    // Run multistage split pass
     auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
     PassMultiStageSplitter splitter(*context_, mssSplitStrategy);
     splitter.run(instantiation);
@@ -137,11 +145,12 @@ TEST_F(TestPassMultiStageSplitter, SplitterTest5) {
 TEST_F(TestPassMultiStageSplitter, LaplacianTwoStep) {
   /*
     vertical_region(k_start, k_end) {
-      tmp= lap(in);
-      out = lap(tmp);
+      lap(in, tmp);
+      lap(tmp, out);
     } */
   auto instantiation = runPass("input/LaplacianTwoStep.iir");
-  ASSERT_EQ(getNumberOfMultistages(*instantiation), 2);
+  unsigned nMultiStages = getNumberOfMultistages(*instantiation);
+  ASSERT_EQ(nMultiStages, 2);
   auto& multiStage0 = instantiation->getIIR()->getChild(0)->getChild(0);
   ASSERT_EQ(multiStage0->getLoopOrder(), iir::LoopOrderKind::Parallel);
   auto& multiStage1 = instantiation->getIIR()->getChild(0)->getChild(1);
