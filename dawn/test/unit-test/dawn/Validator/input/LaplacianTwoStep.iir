@@ -916,5 +916,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/eddied/Work/dawn/dawn/test/unit-test/dawn/Optimizer/samples/LaplacianTwoStep.cpp"
+ "filename": "samples/LaplacianTwoStep.cpp"
 }
