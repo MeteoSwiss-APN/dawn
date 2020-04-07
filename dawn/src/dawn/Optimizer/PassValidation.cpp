@@ -65,15 +65,11 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
                   ("Grid type consistency check failed " + description).c_str());
 
   try {
-    IntegrityChecker checker(instantiation.get());
-    checker.run();
-  } catch(CompileError& error) {
-    DAWN_ASSERT_MSG(false, error.getMessage().c_str());
-  }
+    IntegrityChecker integrityChecker(instantiation.get());
+    integrityChecker.run();
 
-  try {
-    MultiStageChecker checker(instantiation.get());
-    checker.run();
+    MultiStageChecker multiStageChecker(instantiation.get());
+    multiStageChecker.run();
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
   }
