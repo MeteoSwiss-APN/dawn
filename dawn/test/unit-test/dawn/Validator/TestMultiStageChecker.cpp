@@ -28,7 +28,7 @@ namespace {
 TEST(TestMultiStageChecker, LaplacianTwoStep) {
   // Load IIR from file
   auto instantiation = IIRSerializer::deserialize("input/LaplacianTwoStep.iir");
-  MultiStageChecker checker(instantiation.get(), 0);
+  MultiStageChecker checker(instantiation.get(), 1);
 
   // Run multistage checker and succeed if exception is thrown
   try {

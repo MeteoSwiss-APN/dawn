@@ -19,28 +19,31 @@
 namespace dawn {
 MultiStageChecker::MultiStageChecker(iir::StencilInstantiation* instantiation,
                                      const int maxHaloPoints)
-    : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
-      maxHaloPoints_(maxHaloPoints) {}
+    : instantiation_(instantiation), maxHaloPoints_(maxHaloPoints) {}
 
 void MultiStageChecker::run() {
-  iir::Extents globalMaxExtents{ast::cartesian};
+  iir::Extents maxExtents{ast::cartesian};
   for(const auto& stencil : instantiation_->getStencils()) {
+    // Merge stencil field extents...
+    for(const auto& fieldPair : stencil->getOrderedFields()) {
+      const auto& fieldInfo = fieldPair.second;
+      if(!fieldInfo.IsTemporary) {
+        const auto& fieldExtents = fieldInfo.field.getExtentsRB();
+        maxExtents.merge(fieldExtents);
+      }
+    }
+    // Merge stencil stage extents...
     for(const auto& multistage : stencil->getChildren()) {
       for(const auto& stage : multistage->getChildren()) {
-        for(const auto& doMethod : stage->getChildren()) {
-          for(const auto& accessPair : metadata_.getAccessIDToNameMap()) {
-            auto thisMaxExtent = doMethod->computeMaximumExtents(accessPair.first);
-            if(thisMaxExtent)
-              globalMaxExtents.merge(thisMaxExtent.value());
-          }
-        }
+        const auto& stageExtents = stage->getExtents();
+        maxExtents.merge(stageExtents);
       }
     }
   }
-
+  // Check if max extents exceed max halo points...
   const auto& horizExtent =
-      iir::extent_cast<iir::CartesianExtent const&>(globalMaxExtents.horizontalExtent());
-  const auto& vertExtent = globalMaxExtents.verticalExtent();
+      iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+  const auto& vertExtent = maxExtents.verticalExtent();
   if(horizExtent.iPlus() > maxHaloPoints_ || horizExtent.iMinus() < -maxHaloPoints_ ||
      horizExtent.jPlus() > maxHaloPoints_ || horizExtent.jMinus() < -maxHaloPoints_ ||
      vertExtent.plus() > maxHaloPoints_ || vertExtent.minus() < -maxHaloPoints_) {

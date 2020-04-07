@@ -25,10 +25,9 @@ namespace dawn {
 //===------------------------------------------------------------------------------------------===//
 //     MultiStageChecker
 //===------------------------------------------------------------------------------------------===//
-/// @brief Perform basic integrity checks on the AST.
+/// @brief Check whether multistages in stencil instantiation exceeds max halo points.
 class MultiStageChecker {
   iir::StencilInstantiation* instantiation_;
-  iir::StencilMetaInformation& metadata_;
   int maxHaloPoints_;
 
 public:
