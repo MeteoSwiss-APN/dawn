@@ -23,29 +23,28 @@ MultiStageChecker::MultiStageChecker(iir::StencilInstantiation* instantiation,
       maxHaloPoints_(maxHaloPoints) {}
 
 void MultiStageChecker::run() {
+  iir::Extents globalMaxExtents{ast::cartesian};
   for(const auto& stencil : instantiation_->getStencils()) {
     for(const auto& multistage : stencil->getChildren()) {
       for(const auto& stage : multistage->getChildren()) {
         for(const auto& doMethod : stage->getChildren()) {
           for(const auto& accessPair : metadata_.getAccessIDToNameMap()) {
-            std::cerr << "MulitStageChecker: check field '" << accessPair.second << "'\n";
-            auto maxExtent = doMethod->computeMaximumExtents(accessPair.first);
-            if(maxExtent) {
-              const auto& horizExtent = iir::extent_cast<iir::CartesianExtent const&>(
-                  maxExtent.value().horizontalExtent());
-              const auto& vertExtent = maxExtent.value().verticalExtent();
-              if(horizExtent.iPlus() > maxHaloPoints_ || horizExtent.iMinus() < -maxHaloPoints_ ||
-                 horizExtent.jPlus() > maxHaloPoints_ || horizExtent.jMinus() < -maxHaloPoints_ ||
-                 vertExtent.plus() > maxHaloPoints_ || vertExtent.minus() < -maxHaloPoints_) {
-                throw CompileError("Multistage exeeds max halo points " +
-                                   std::to_string(maxHaloPoints_) + " in field access '" +
-                                   accessPair.second + "'");
-              }
-            }
+            auto thisMaxExtent = doMethod->computeMaximumExtents(accessPair.first);
+            if(thisMaxExtent)
+              globalMaxExtents.merge(thisMaxExtent.value());
           }
         }
       }
     }
+  }
+
+  const auto& horizExtent =
+      iir::extent_cast<iir::CartesianExtent const&>(globalMaxExtents.horizontalExtent());
+  const auto& vertExtent = globalMaxExtents.verticalExtent();
+  if(horizExtent.iPlus() > maxHaloPoints_ || horizExtent.iMinus() < -maxHaloPoints_ ||
+     horizExtent.jPlus() > maxHaloPoints_ || horizExtent.jMinus() < -maxHaloPoints_ ||
+     vertExtent.plus() > maxHaloPoints_ || vertExtent.minus() < -maxHaloPoints_) {
+    throw CompileError("Multistage exeeds max halo points " + std::to_string(maxHaloPoints_));
   }
 }
 
