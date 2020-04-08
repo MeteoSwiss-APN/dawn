@@ -54,7 +54,6 @@ OPT(bool, DisableOptimization, false, "no-opt", "",
 OPT(bool, DefaultOptimization, false, "default-opt", "",
     "Runs all the default optimization", "", false, false)
 
-// Originally Dawn/Compiler/Options.inc
 OPT(std::string, Backend, "gridtools", "backend", "",
     "Set backend code-generator. Possible values for <backend> are:"
     "\n - gridtools     = gridtools C++ code"

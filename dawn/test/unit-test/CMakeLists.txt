@@ -13,7 +13,6 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(dawn)
-add_subdirectory(dawn-c)
 # Pytest is confused when the test directory is named 'dawn4py', so we added '-tests'
 add_subdirectory(dawn4py-tests)
 add_subdirectory(driver-includes)

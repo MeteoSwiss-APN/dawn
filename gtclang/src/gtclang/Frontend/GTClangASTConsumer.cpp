@@ -359,6 +359,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   ost->write(code.data(), code.size());
   if(ec.value())
     context_->getDiagnostics().report(Diagnostics::err_fs_error) << ec.message();
-} // namespace gtclang
+}
 
 } // namespace gtclang

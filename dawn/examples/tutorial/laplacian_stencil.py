@@ -118,7 +118,9 @@ def main(args: argparse.Namespace):
     sir_file.close()
 
     # compile
-    code = dawn4py.compile_sir(sir_utils.to_bytes(sir), codegen_backend="c++-naive")
+    code = dawn4py.compile_sir(
+        sir_utils.to_bytes(sir), codegen_backend=dawn4py.CodeGenBackend.CXXNaive
+    )
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

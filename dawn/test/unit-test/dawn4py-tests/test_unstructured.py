@@ -48,6 +48,6 @@ def test_sir_serialization(name):
 def test_compilation(unstructured_sir_with_reference_code):
     sir, reference_code = unstructured_sir_with_reference_code
     code = dawn4py.compile_sir(
-        dawn4py.serialization.to_bytes(sir), codegen_backend="c++-naive-ico"
+        dawn4py.serialization.to_bytes(sir), codegen_backend=dawn4py.CodeGenBackend.CXXNaiveIco
     )
     # TODO There was no test here...

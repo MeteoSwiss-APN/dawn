@@ -47,6 +47,10 @@ def test_sir_serialization(name):
 
 def test_compilation(grid_sir_with_reference_code):
     sir, reference_code = grid_sir_with_reference_code
-    for backend in ("c++-naive", "gridtools", "cuda"):
+    for backend in (
+        dawn4py.CodeGenBackend.CXXNaive,
+        dawn4py.CodeGenBackend.GridTools,
+        dawn4py.CodeGenBackend.CUDA,
+    ):
         dawn4py.compile_sir(dawn4py.serialization.to_bytes(sir), codegen_backend=backend)
         # TODO There was not test here...

@@ -37,7 +37,6 @@ std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilena
                             std::istreambuf_iterator<char>());
 
   auto sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
-  // stage merger segfaults if stage reordering is not run beforehand
   auto stencilInstantiationMap = run(sir, {PassGroup::StageReordering, PassGroup::StageMerger});
 
   DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),

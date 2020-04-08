@@ -187,6 +187,9 @@ def splice_into_string(string: str, original: str, replacement: str):
 
 
 def get_enum_values(filename: str, enum_name: str):
+    def flatten(list_of_lists):
+        return [item for sublist in list_of_lists for item in sublist]
+
     with open(filename, mode="r") as f:
         code = f.read()
         m = re.search(r"enum\s*(class)?\s+" + enum_name, code)
@@ -195,8 +198,17 @@ def get_enum_values(filename: str, enum_name: str):
         start_pos = code[enum_start + len(enum_name) :].find("{") + enum_start + len(enum_name) + 1
         end_pos = code[start_pos:].find("}") + start_pos
         enum_values = code[start_pos:end_pos].strip().split("\n")
+        enum_values = list(
+            filter(
+                None,
+                map(
+                    lambda x: x.strip().split("//")[0],
+                    flatten([x.strip().split(",") for x in enum_values]),
+                ),
+            )
+        )
         assert len(enum_values) > 0
-        return list(map(lambda x: x.split("//")[0].split(",")[0].strip(), enum_values))
+        return enum_values
 
 
 def make_enum_binding(py_name: str, c_name: str, values: list):
@@ -213,16 +225,16 @@ if __name__ == "__main__":
     with open(TEMPLATE_FILE, mode="r") as f:
         code = f.read()
         for py_name, c_name, filename in (
-            # (
-            #     "SIRSerializerFormat",
-            #     "dawn::SIRSerializer::Format",
-            #     os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "SIRSerializer.h"),
-            # ),
-            # (
-            #     "IIRSerializerFormat",
-            #     "dawn::IIRSerializer::Format",
-            #     os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "IIRSerializer.h"),
-            # ),
+            (
+                "SIRSerializerFormat",
+                "dawn::SIRSerializer::Format",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "SIRSerializer.h"),
+            ),
+            (
+                "IIRSerializerFormat",
+                "dawn::IIRSerializer::Format",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "IIRSerializer.h"),
+            ),
             (
                 "PassGroup",
                 "dawn::PassGroup",

@@ -15,8 +15,6 @@
 #ifndef DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 #define DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 
-#include <string>
-
 namespace dawn {
 
 /// @brief Enumeration of all pass groups

@@ -176,19 +176,6 @@ endif()
 
 add_subdirectory(src)
 
-# Only build examples if BUILD_EXAMPLES and main project, or DAWN_BUILD_EXAMPLES is on
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_EXAMPLES) AND BUILD_EXAMPLES)
-  set(${PROJECT_NAME}_EXAMPLES ON)
-else()
-  set(${PROJECT_NAME}_EXAMPLES OFF)
-endif()
-mark_as_advanced(${PROJECT_NAME}_EXAMPLES)
-
-# Currently there are no examples for CMake to build
-# if(${PROJECT_NAME}_EXAMPLES)
-#   add_subdirectory(examples)
-# endif()
-
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
