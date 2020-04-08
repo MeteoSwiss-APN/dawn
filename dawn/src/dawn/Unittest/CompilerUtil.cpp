@@ -16,7 +16,6 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -166,7 +165,6 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassLocalVarType>(context, passes);
     addPass<dawn::PassRemoveScalars>(context, passes);
     // TODO: how to add grid-dependent passes?: PassStageSplitAllStatements, PassSetLocationType
-    addPass<dawn::PassComputeStageExtents>(context, passes);
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
 
@@ -182,9 +180,7 @@ CompilerUtil::createGroup(PassGroup group, std::unique_ptr<OptimizerContext>& co
     addPass<dawn::PassStageMerger>(context, passes);
     // since this can change the scope of temporaries ...
     addPass<dawn::PassTemporaryType>(context, passes);
-    // modify stages and their extents ...
-    addPass<dawn::PassComputeStageExtents>(context, passes);
-    // and changes their dependencies
+    // modify stage dependencies
     addPass<dawn::PassSetSyncStage>(context, passes);
     break;
 
@@ -282,13 +278,11 @@ bool CompilerUtil::runPasses(unsigned nPasses, std::unique_ptr<OptimizerContext>
     result &= runPass<dawn::PassSetCaches>(context, instantiation);
   if(nPasses > 18)
     result &= runPass<dawn::PassFixVersionedInputFields>(context, instantiation);
-  if(nPasses > 19)
-    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
-  if(nPasses > 20) // if(getOptions().Backend == "cuda") {
+  if(nPasses > 19) // if(getOptions().Backend == "cuda") {
     result &= runPass<dawn::PassSetBlockSize>(context, instantiation);
-  if(nPasses > 21)
+  if(nPasses > 20)
     result &= runPass<dawn::PassDataLocalityMetric>(context, instantiation);
-  if(nPasses > 22)
+  if(nPasses > 21)
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
 
   return result;
@@ -319,7 +313,6 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
     result &= runPass<dawn::PassStageSplitter>(context, instantiation);
     result &= runPass<dawn::PassPrintStencilGraph>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     break;
 
@@ -335,7 +328,6 @@ bool CompilerUtil::runGroup(PassGroup group, std::unique_ptr<OptimizerContext>& 
   case PassGroup::StageMerger:
     result &= runPass<dawn::PassStageMerger>(context, instantiation);
     result &= runPass<dawn::PassTemporaryType>(context, instantiation);
-    result &= runPass<dawn::PassComputeStageExtents>(context, instantiation);
     result &= runPass<dawn::PassSetSyncStage>(context, instantiation);
     break;
 
