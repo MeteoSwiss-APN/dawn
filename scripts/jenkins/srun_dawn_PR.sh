@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -x
 
 script_path=$(dirname $(which $0))
 root_dir=$script_path/../../
