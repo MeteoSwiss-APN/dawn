@@ -10,8 +10,9 @@ dawn_source_dir=$script_path/..
 dawn_build_dir=$dawn_source_dir/build
 dawn_install_dir=/usr/local
 
-# Empty prefix
+# Empty variables
 unset prefix
+unset python_venv
 
 # Build arguments
 build_args=()
@@ -52,6 +53,10 @@ while [ "$1" != "" ]; do
     -t | --timing)
         prefix=time
         ;;
+    -p | --python-venv)
+        python_venv=$2
+        shift
+        ;;
     *)
         build_args+=($1)
         ;;
@@ -66,6 +71,9 @@ cmake -S $dawn_source_dir -B $dawn_build_dir \
     ${build_args[@]}
 
 $prefix cmake --build $dawn_build_dir --config $build_type --parallel $build_jobs --target install
+
+# Activate virtual environment
+[ -n $python_venv ] && source $python_venv/bin/activate
 
 $prefix python -m pip install -e $dawn_source_dir/dawn
 
@@ -89,3 +97,6 @@ if [ "$run_tests" == "true" ]; then
         (cd $cg_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
     fi
 fi
+
+# Deactivate virtual environment
+[ -n $python_venv ] && deactivate
