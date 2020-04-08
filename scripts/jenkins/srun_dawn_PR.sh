@@ -23,7 +23,16 @@ git clone --depth 1 -b $CLANG_GRIDTOOLS_BRANCH $CLANG_GRIDTOOLS_REPOSITORY $root
 
 python -m venv dawn_venv
 
-$root_dir/scripts/build-and-test \
+srun --job-name=dawn_PR \
+    --time=00:45:00 \
+    --nodes=1 \
+    --ntasks-per-node=1 \
+    --ntasks-per-core=2 \
+    --cpus-per-task=24 \
+    --partition=cscsci \
+    --constraint=gpu \
+    --account=c14 \
+    $root_dir/scripts/build-and-test \
     --dawn-build-dir $root_dir/build \
     --dawn-install-dir $root_dir/install \
     --clang-gridtools-source-dir $root_dir/clang-gridtools \
