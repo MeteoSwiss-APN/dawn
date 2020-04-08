@@ -357,10 +357,15 @@ void CodeGen::addTmpStorageInit(
       for(const auto& stage : multiStage->getChildren())
         maxExtents.merge(stage->getExtents());
 
-    const auto& hMaxExtents =
-        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
-    int iMax = hMaxExtents.iPlus();
-    int jMax = hMaxExtents.jPlus();
+    int iMax, jMax;
+    try {
+      iir::CartesianExtent hMaxExtents =
+          iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+      iMax = hMaxExtents.iPlus();
+      jMax = hMaxExtents.jPlus();
+    } catch(const std::bad_cast& error) {
+      iMax = jMax = 0;
+    }
 
     std::string tmpMetadataInit = tmpMetadataName_ + "(dom_.isize()";
     if(iMax > 0)
