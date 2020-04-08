@@ -10,6 +10,9 @@ dawn_source_dir=$script_path/..
 dawn_build_dir=$dawn_source_dir/build
 dawn_install_dir=/usr/local
 
+# Empty prefix
+unset prefix
+
 # Build arguments
 build_args=()
 
@@ -46,6 +49,9 @@ while [ "$1" != "" ]; do
         dawn_install_dir=$2
         shift
         ;;
+    -t | --timing)
+        prefix=time
+        ;;
     *)
         build_args+=($1)
         ;;
@@ -59,13 +65,13 @@ cmake -S $dawn_source_dir -B $dawn_build_dir \
     -DCMAKE_INSTALL_PREFIX=$dawn_install_dir \
     ${build_args[@]}
 
-time cmake --build $dawn_build_dir --config $build_type --parallel $build_jobs --target install
+$prefix cmake --build $dawn_build_dir --config $build_type --parallel $build_jobs --target install
 
-time python -m pip install -e $dawn_source_dir/dawn
+$prefix python -m pip install -e $dawn_source_dir/dawn
 
 # Testing
 if [ "$run_tests" == "true" ]; then
-    (cd $dawn_build_dir && time ctest --output-on-failure --force-new-ctest-process --max-width 80)
+    (cd $dawn_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
 
     # Clang-GridTools
     if [ -n "$cg_source_dir" ]; then
@@ -78,8 +84,8 @@ if [ "$run_tests" == "true" ]; then
             -DGTClang_DIR=$dawn_install_dir/lib/cmake/GTClang \
             ${build_args[@]}
 
-        time cmake --build $cg_build_dir --config $build_type --parallel $build_jobs
+        $prefix cmake --build $cg_build_dir --config $build_type --parallel $build_jobs
 
-        (cd $cg_build_dir && time ctest --output-on-failure --force-new-ctest-process --max-width 80)
+        (cd $cg_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
     fi
 fi
