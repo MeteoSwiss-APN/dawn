@@ -90,6 +90,7 @@ if [ "$run_tests" == "true" ]; then
         cmake -S $cg_source_dir -B $cg_build_dir \
             -DDawn_DIR=$dawn_install_dir/lib/cmake/Dawn \
             -DGTClang_DIR=$dawn_install_dir/lib/cmake/GTClang \
+            -DGridTools_DIR=$dawn_install_dir/lib/cmake \
             ${build_args[@]}
 
         $prefix cmake --build $cg_build_dir --config $build_type --parallel $build_jobs
