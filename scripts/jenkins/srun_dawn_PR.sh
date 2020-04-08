@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
-
 script_path=$(dirname $(which $0))
 root_dir=$script_path/../../
 
@@ -30,7 +28,7 @@ srun --job-name=dawn_PR \
     --nodes=1 \
     --ntasks-per-node=1 \
     --ntasks-per-core=2 \
-    --cpus-per-task=24 \
+    --cpus-per-task=$build_jobs \
     --partition=cscsci \
     --constraint=gpu \
     --account=c14 \
@@ -42,8 +40,8 @@ srun --job-name=dawn_PR \
     --parallel $build_jobs \
     --config $build_type \
     --python-venv dawn_venv \
-    -DProtobuf_DIR=$PROTOBUFDIR \
-    -DPROTOBUF_PYTHON_MODULE_DIR=$PROTOBUFDIR/../../../python \
+    -DProtobuf_DIR=$PROTOBUF_DIR/lib/cmake/protobuf \
+    -DPROTOBUF_PYTHON_MODULE_DIR=$PROTOBUF_DIR/python \
     -DDAWN_REQUIRE_PYTHON=ON \
-    -Datlas_DIR=${ATLAS_DIR}/lib/cmake/atlas \
-    -Deckit_DIR=${ECKIT_DIR}/lib/cmake/eckit
+    -Datlas_DIR=$ATLAS_DIR/lib/cmake/atlas \
+    -Deckit_DIR=$ECKIT_DIR/lib/cmake/eckit
