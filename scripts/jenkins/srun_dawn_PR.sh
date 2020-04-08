@@ -13,7 +13,7 @@ source $script_path/env_${myhost}.sh
 
 # Clone clang-gridtools here because the image does not have the ssh key
 if [ -z ${CLANG_GRIDTOOLS_REPOSITORY+x} ]; then
-    CLANG_GRIDTOOLS_REPOSITORY=git@github.com:MeteoSwiss-APN/clang-gridtools.git
+    CLANG_GRIDTOOLS_REPOSITORY=ssh://git@ssh.github.com:443/MeteoSwiss-APN/clang-gridtools.git
 fi
 if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
     CLANG_GRIDTOOLS_BRANCH=master
