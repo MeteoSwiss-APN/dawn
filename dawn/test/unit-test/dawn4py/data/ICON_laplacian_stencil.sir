@@ -222,10 +222,20 @@
                                         },
                                         "weights": [
                                           {
-                                            "doubleValue": -1.0
+                                            "literalAccessExpr": {
+                                              "value": "-1.0",
+                                              "type": {
+                                                "typeId": "Double"
+                                              }
+                                            }
                                           },
                                           {
-                                            "doubleValue": 1.0
+                                            "literalAccessExpr": {
+                                              "value": "1.0",
+                                              "type": {
+                                                "typeId": "Double"
+                                              }
+                                            }
                                           }
                                         ],
                                         "chain": [
@@ -371,10 +381,20 @@
                                         },
                                         "weights": [
                                           {
-                                            "doubleValue": -1.0
+                                            "literalAccessExpr": {
+                                              "value": "-1.0",
+                                              "type": {
+                                                "typeId": "Double"
+                                              }
+                                            }
                                           },
                                           {
-                                            "doubleValue": 1.0
+                                            "literalAccessExpr": {
+                                              "value": "1.0",
+                                              "type": {
+                                                "typeId": "Double"
+                                              }
+                                            }
                                           }
                                         ],
                                         "chain": [

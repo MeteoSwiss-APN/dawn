@@ -60,9 +60,9 @@ private:
   public:
 
     stencil_41(const gridtools::dawn::domain& dom_, int rank, int xcols, int ycols) : m_dom(dom_), m_tmp_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*0), m_lap(m_tmp_meta_data){}
-    static constexpr dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
+    static constexpr dawn::driver::cartesian_extent in_extent = {-2,2, -2,2, 0,0};
     static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
-    static constexpr dawn::driver::cartesian_extent coeff_extent = {0,0, 0,0, 0,0};
+    static constexpr dawn::driver::cartesian_extent coeff_extent = {-1,1, -1,1, 0,0};
 
     void run(storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) {
       int iMin = m_dom.iminus();
@@ -83,8 +83,8 @@ private:
       gridtools::data_view<tmp_storage_t> lap= gridtools::make_host_view(m_lap);
       std::array<int,3> lap_offsets{0,0,0};
     for(int k = kMin + 0+0; k <= kMax + 0+0; ++k) {
-      for(int i = iMin+0; i  <=  iMax+0; ++i) {
-        for(int j = jMin+0; j  <=  jMax+0; ++j) {
+      for(int i = iMin+-1; i  <=  iMax+1; ++i) {
+        for(int j = jMin+-1; j  <=  jMax+1; ++j) {
 lap(i+0, j+0, k+0) = (((::dawn::float_type) -4.0 * in(i+0, j+0, k+0)) + (coeff(i+0, j+0, k+0) * (in(i+1, j+0, k+0) + (in(i+-1, j+0, k+0) + (in(i+0, j+1, k+0) + in(i+0, j+-1, k+0))))));
         }      }      for(int i = iMin+0; i  <=  iMax+0; ++i) {
         for(int j = jMin+0; j  <=  jMax+0; ++j) {

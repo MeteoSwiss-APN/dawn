@@ -8,7 +8,7 @@
  #define BOOST_NO_CXX11_DECLTYPE 1
 #endif
 #ifndef GRIDTOOLS_DAWN_HALO_EXTENT
- #define GRIDTOOLS_DAWN_HALO_EXTENT 0
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 3
 #endif
 #ifndef BOOST_PP_VARIADICS
  #define BOOST_PP_VARIADICS 1
@@ -47,6 +47,8 @@ struct globals {
 };
 } // namespace cuda
 } // namespace dawn_generated
+
+
 namespace dawn_generated{
 namespace cuda{
 template<typename TmpStorage>__global__ void __launch_bounds__(192)  update_dz_c_stencil443_ms653_kernel(globals globals_, const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, const int tmpBeginIIndex, const int tmpBeginJIndex, const int jstride_tmp, const int kstride_tmp, ::dawn::float_type * const dp_ref, ::dawn::float_type * const ut, ::dawn::float_type * const vt, gridtools::data_view<TmpStorage>xfx_dv, gridtools::data_view<TmpStorage>yfx_dv) {
@@ -723,3 +725,4 @@ m_stencil_443.reset();  }
 };
 } // namespace cuda
 } // namespace dawn_generated
+
