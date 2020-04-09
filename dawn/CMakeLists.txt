@@ -26,7 +26,7 @@ unset(__VERSION_LIST)
 project(Dawn
   VERSION ${__DAWN_VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C
+  LANGUAGES CXX
 )
 unset(__DAWN_VERSION)
 

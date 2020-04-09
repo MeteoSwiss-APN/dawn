@@ -27,7 +27,7 @@ unset(__VERSION_LIST)
 project(GTClang
   VERSION ${__GTCLANG_VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C
+  LANGUAGES CXX
 )
 unset(__GTCLANG_VERSION)
 
