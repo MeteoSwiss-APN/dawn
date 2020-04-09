@@ -64,7 +64,7 @@ CompilerUtil::load(const std::string& irFilename,
     filename = envPath + "/" + filename;
 
   if(filename.find(".sir") != std::string::npos) {
-    stencilInstantiationContext siMap = lower(filename, options, context, envPath);
+    StencilInstantiationContext siMap = lower(filename, options, context, envPath);
     return siMap.begin()->second;
   } else {
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
@@ -73,7 +73,7 @@ CompilerUtil::load(const std::string& irFilename,
   }
 }
 
-stencilInstantiationContext
+StencilInstantiationContext
 CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context) {
@@ -81,7 +81,7 @@ CompilerUtil::lower(const std::shared_ptr<dawn::SIR>& sir,
   return context->getStencilInstantiationMap();
 }
 
-stencilInstantiationContext
+StencilInstantiationContext
 CompilerUtil::lower(const std::string& sirFilename,
                     const dawn::OptimizerContext::OptimizerContextOptions& options,
                     std::unique_ptr<OptimizerContext>& context, const std::string& envPath) {
@@ -110,9 +110,9 @@ void dump(CG& generator, std::ostream& os) {
   os << ss.str() << std::endl;
 }
 
-dawn::codegen::stencilInstantiationContext
+dawn::codegen::StencilInstantiationContext
 siToContext(std::shared_ptr<iir::StencilInstantiation> si) {
-  dawn::codegen::stencilInstantiationContext ctx;
+  dawn::codegen::StencilInstantiationContext ctx;
   ctx[si->getName()] = si;
   return ctx;
 }

@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
+#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -63,24 +64,6 @@
 namespace dawn {
 
 namespace {
-
-// CodeGen backends
-enum class BackendType { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
-
-BackendType parseBackendString(const std::string& backendStr) {
-  if(backendStr == "gt" || backendStr == "gridtools") {
-    return BackendType::GridTools;
-  } else if(backendStr == "naive" || backendStr == "cxx-naive" || backendStr == "c++-naive") {
-    return BackendType::CXXNaive;
-  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico" ||
-            backendStr == "cxx-naive-ico") {
-    return BackendType::CXXNaiveIco;
-  } else if(backendStr == "cuda" || backendStr == "CUDA") {
-    return BackendType::CUDA;
-  } else {
-    throw CompileError("Backend not supported");
-  }
-}
 
 /// @brief Make a suggestion to the user if there is a small typo (only works with string options)
 template <class T>
@@ -146,11 +129,6 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 } // namespace
-
-std::list<PassGroup> DawnCompiler::defaultPassGroups() {
-  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
-          PassGroup::SetCaches, PassGroup::SetBlockSize};
-}
 
 DawnCompiler::DawnCompiler(const Options& options) : diagnostics_(), options_(options) {}
 
@@ -378,9 +356,9 @@ std::unique_ptr<codegen::TranslationUnit>
 DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                            stencilInstantiationMap) {
   // Generate code
-  BackendType backend;
+  codegen::Backend backend;
   try {
-    backend = parseBackendString(options_.Backend);
+    backend = codegen::parseBackendString(options_.Backend);
   } catch(CompileError& e) {
     diagnostics_.report(buildDiag("-backend", options_.Backend,
                                   "backend options must be : " +
@@ -389,32 +367,12 @@ DawnCompiler::generate(const std::map<std::string, std::shared_ptr<iir::StencilI
     return nullptr;
   }
   try {
-    switch(backend) {
-    case BackendType::GridTools: {
-      codegen::gt::GTCodeGen CG(stencilInstantiationMap, diagnostics_, options_.UseParallelEP,
-                                options_.MaxHaloPoints);
-      return CG.generateCode();
-    }
-    case BackendType::CXXNaive: {
-      codegen::cxxnaive::CXXNaiveCodeGen CG(stencilInstantiationMap, diagnostics_,
-                                            options_.MaxHaloPoints);
-      return CG.generateCode();
-    }
-    case BackendType::CUDA: {
-      const Array3i domain_size{options_.DomainSizeI, options_.DomainSizeJ, options_.DomainSizeK};
-      codegen::cuda::CudaCodeGen CG(stencilInstantiationMap, diagnostics_, options_.MaxHaloPoints,
-                                    options_.nsms, options_.MaxBlocksPerSM, domain_size);
-      return CG.generateCode();
-    }
-    case BackendType::CXXNaiveIco: {
-      codegen::cxxnaiveico::CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics_,
-                                                  options_.MaxHaloPoints);
-
-      return CG.generateCode();
-    }
-    case BackendType::CXXOpt:
-      dawn_unreachable("GTClangOptCXX not supported yet");
-    }
+    codegen::Options codegenOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME = options_.NAME;
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
+    return codegen::run(stencilInstantiationMap, backend, codegenOptions);
   } catch(...) {
     DiagnosticsBuilder diag(DiagnosticsKind::Error);
     diag << "code generation for backend `" << options_.Backend << "` failed";
