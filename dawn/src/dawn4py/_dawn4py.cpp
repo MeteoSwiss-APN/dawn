@@ -17,88 +17,89 @@ PYBIND11_MODULE(_dawn4py, m) {
 
   // Classes
   py::class_<dawn::Options>(m, "Options")
-      .def(py::init([](int MaxHaloSize, bool UseParallelEP, int MaxBlocksPerSM, int nsms,
-                       int DomainSizeI, int DomainSizeJ, int DomainSizeK,
-                       const std::string& Backend, const std::string& OutputFile, bool SerializeIIR,
-                       const std::string& DeserializeIIR, const std::string& IIRFormat,
-                       int MaxHaloPoints, const std::string& ReorderStrategy,
-                       int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
-                       int BlockSizeK, bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
-                       bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose,
-                       bool ReportAccesses, bool DumpSplitGraphs, bool DumpStageGraph,
-                       bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
-                       bool DumpStencilInstantiation, bool DumpStencilGraph, bool SSA,
-                       bool PrintStencilGraph, bool SetStageName, bool StageReordering,
-                       bool StageMerger, bool TemporaryMerger, bool Inlining,
-                       bool IntervalPartitioning, bool TmpToStencilFunction, bool SetNonTempCaches,
-                       bool SetCaches, bool SetBlockSize, bool DataLocalityMetric,
-                       bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
-                       bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
-                       bool ReportPassStageSplit, bool ReportPassMultiStageSplit,
-                       bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
-                       bool ReportPassTemporaryType, bool ReportPassStageReodering,
-                       bool ReportPassStageMerger, bool ReportPassSetCaches,
-                       bool ReportPassSetBlockSize, bool ReportPassSetNonTempCaches) {
-             return dawn::Options{MaxHaloSize,
-                                  UseParallelEP,
-                                  MaxBlocksPerSM,
-                                  nsms,
-                                  DomainSizeI,
-                                  DomainSizeJ,
-                                  DomainSizeK,
-                                  Backend,
-                                  OutputFile,
-                                  SerializeIIR,
-                                  DeserializeIIR,
-                                  IIRFormat,
-                                  MaxHaloPoints,
-                                  ReorderStrategy,
-                                  MaxFieldsPerStencil,
-                                  MaxCutMSS,
-                                  BlockSizeI,
-                                  BlockSizeJ,
-                                  BlockSizeK,
-                                  SplitStencils,
-                                  MergeDoMethods,
-                                  DisableKCaches,
-                                  UseNonTempCaches,
-                                  KeepVarnames,
-                                  PassVerbose,
-                                  ReportAccesses,
-                                  DumpSplitGraphs,
-                                  DumpStageGraph,
-                                  DumpTemporaryGraphs,
-                                  DumpRaceConditionGraph,
-                                  DumpStencilInstantiation,
-                                  DumpStencilGraph,
-                                  SSA,
-                                  PrintStencilGraph,
-                                  SetStageName,
-                                  StageReordering,
-                                  StageMerger,
-                                  TemporaryMerger,
-                                  Inlining,
-                                  IntervalPartitioning,
-                                  TmpToStencilFunction,
-                                  SetNonTempCaches,
-                                  SetCaches,
-                                  SetBlockSize,
-                                  DataLocalityMetric,
-                                  ReportBoundaryConditions,
-                                  ReportDataLocalityMetric,
-                                  ReportPassTmpToFunction,
-                                  ReportPassRemoveScalars,
-                                  ReportPassStageSplit,
-                                  ReportPassMultiStageSplit,
-                                  ReportPassFieldVersioning,
-                                  ReportPassTemporaryMerger,
-                                  ReportPassTemporaryType,
-                                  ReportPassStageReodering,
-                                  ReportPassStageMerger,
-                                  ReportPassSetCaches,
-                                  ReportPassSetBlockSize,
-                                  ReportPassSetNonTempCaches};
-           }),
+      .def(py::init(
+               [](int MaxHaloSize, bool UseParallelEP, int MaxBlocksPerSM, int nsms,
+                  int DomainSizeI, int DomainSizeJ, int DomainSizeK, const std::string& Backend,
+                  const std::string& OutputFile, bool SerializeIIR,
+                  const std::string& DeserializeIIR, const std::string& IIRFormat,
+                  int MaxHaloPoints, const std::string& ReorderStrategy, int MaxFieldsPerStencil,
+                  bool MaxCutMSS, int BlockSizeI, int BlockSizeJ, int BlockSizeK,
+                  bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
+                  bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
+                  bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
+                  bool DumpRaceConditionGraph, bool DumpStencilInstantiation, bool DumpStencilGraph,
+                  bool SSA, bool PrintStencilGraph, bool SetStageName, bool StageReordering,
+                  bool StageMerger, bool TemporaryMerger, bool Inlining, bool IntervalPartitioning,
+                  bool TmpToStencilFunction, bool SetNonTempCaches, bool SetCaches,
+                  bool SetBlockSize, bool SetLoopOrder, bool DataLocalityMetric,
+                  bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
+                  bool ReportPassTmpToFunction, bool ReportPassRemoveScalars,
+                  bool ReportPassStageSplit, bool ReportPassMultiStageSplit,
+                  bool ReportPassFieldVersioning, bool ReportPassTemporaryMerger,
+                  bool ReportPassTemporaryType, bool ReportPassStageReordering,
+                  bool ReportPassStageMerger, bool ReportPassSetCaches, bool ReportPassSetBlockSize,
+                  bool ReportPassSetNonTempCaches) {
+                 return dawn::Options{MaxHaloSize,
+                                      UseParallelEP,
+                                      MaxBlocksPerSM,
+                                      nsms,
+                                      DomainSizeI,
+                                      DomainSizeJ,
+                                      DomainSizeK,
+                                      Backend,
+                                      OutputFile,
+                                      SerializeIIR,
+                                      DeserializeIIR,
+                                      IIRFormat,
+                                      MaxHaloPoints,
+                                      ReorderStrategy,
+                                      MaxFieldsPerStencil,
+                                      MaxCutMSS,
+                                      BlockSizeI,
+                                      BlockSizeJ,
+                                      BlockSizeK,
+                                      SplitStencils,
+                                      MergeDoMethods,
+                                      DisableKCaches,
+                                      UseNonTempCaches,
+                                      KeepVarnames,
+                                      PassVerbose,
+                                      ReportAccesses,
+                                      DumpSplitGraphs,
+                                      DumpStageGraph,
+                                      DumpTemporaryGraphs,
+                                      DumpRaceConditionGraph,
+                                      DumpStencilInstantiation,
+                                      DumpStencilGraph,
+                                      SSA,
+                                      PrintStencilGraph,
+                                      SetStageName,
+                                      StageReordering,
+                                      StageMerger,
+                                      TemporaryMerger,
+                                      Inlining,
+                                      IntervalPartitioning,
+                                      TmpToStencilFunction,
+                                      SetNonTempCaches,
+                                      SetCaches,
+                                      SetBlockSize,
+                                      SetLoopOrder,
+                                      DataLocalityMetric,
+                                      ReportBoundaryConditions,
+                                      ReportDataLocalityMetric,
+                                      ReportPassTmpToFunction,
+                                      ReportPassRemoveScalars,
+                                      ReportPassStageSplit,
+                                      ReportPassMultiStageSplit,
+                                      ReportPassFieldVersioning,
+                                      ReportPassTemporaryMerger,
+                                      ReportPassTemporaryType,
+                                      ReportPassStageReordering,
+                                      ReportPassStageMerger,
+                                      ReportPassSetCaches,
+                                      ReportPassSetBlockSize,
+                                      ReportPassSetNonTempCaches};
+               }),
            py::arg("max_halo_size") = 3, py::arg("use_parallel_ep") = false,
            py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0, py::arg("domain_size_i") = 0,
            py::arg("domain_size_j") = 0, py::arg("domain_size_k") = 0,
@@ -120,7 +121,8 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("inlining") = false, py::arg("interval_partitioning") = false,
            py::arg("tmp_to_stencil_function") = false, py::arg("set_non_temp_caches") = false,
            py::arg("set_caches") = false, py::arg("set_block_size") = false,
-           py::arg("data_locality_metric") = false, py::arg("report_boundary_conditions") = false,
+           py::arg("set_loop_order") = false, py::arg("data_locality_metric") = false,
+           py::arg("report_boundary_conditions") = false,
            py::arg("report_data_locality_metric") = false,
            py::arg("report_pass_tmp_to_function") = false,
            py::arg("report_pass_remove_scalars") = false,
@@ -129,7 +131,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("report_pass_field_versioning") = false,
            py::arg("report_pass_temporary_merger") = false,
            py::arg("report_pass_temporary_type") = false,
-           py::arg("report_pass_stage_reodering") = false,
+           py::arg("report_pass_stage_reordering") = false,
            py::arg("report_pass_stage_merger") = false, py::arg("report_pass_set_caches") = false,
            py::arg("report_pass_set_block_size") = false,
            py::arg("report_pass_set_non_temp_caches") = false)
@@ -177,6 +179,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("set_non_temp_caches", &dawn::Options::SetNonTempCaches)
       .def_readwrite("set_caches", &dawn::Options::SetCaches)
       .def_readwrite("set_block_size", &dawn::Options::SetBlockSize)
+      .def_readwrite("set_loop_order", &dawn::Options::SetLoopOrder)
       .def_readwrite("data_locality_metric", &dawn::Options::DataLocalityMetric)
       .def_readwrite("report_boundary_conditions", &dawn::Options::ReportBoundaryConditions)
       .def_readwrite("report_data_locality_metric", &dawn::Options::ReportDataLocalityMetric)
@@ -187,7 +190,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("report_pass_field_versioning", &dawn::Options::ReportPassFieldVersioning)
       .def_readwrite("report_pass_temporary_merger", &dawn::Options::ReportPassTemporaryMerger)
       .def_readwrite("report_pass_temporary_type", &dawn::Options::ReportPassTemporaryType)
-      .def_readwrite("report_pass_stage_reodering", &dawn::Options::ReportPassStageReodering)
+      .def_readwrite("report_pass_stage_reordering", &dawn::Options::ReportPassStageReordering)
       .def_readwrite("report_pass_stage_merger", &dawn::Options::ReportPassStageMerger)
       .def_readwrite("report_pass_set_caches", &dawn::Options::ReportPassSetCaches)
       .def_readwrite("report_pass_set_block_size", &dawn::Options::ReportPassSetBlockSize)
@@ -248,6 +251,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "set_non_temp_caches=" << self.SetNonTempCaches << ",\n    "
            << "set_caches=" << self.SetCaches << ",\n    "
            << "set_block_size=" << self.SetBlockSize << ",\n    "
+           << "set_loop_order=" << self.SetLoopOrder << ",\n    "
            << "data_locality_metric=" << self.DataLocalityMetric << ",\n    "
            << "report_boundary_conditions=" << self.ReportBoundaryConditions << ",\n    "
            << "report_data_locality_metric=" << self.ReportDataLocalityMetric << ",\n    "
@@ -258,7 +262,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "report_pass_field_versioning=" << self.ReportPassFieldVersioning << ",\n    "
            << "report_pass_temporary_merger=" << self.ReportPassTemporaryMerger << ",\n    "
            << "report_pass_temporary_type=" << self.ReportPassTemporaryType << ",\n    "
-           << "report_pass_stage_reodering=" << self.ReportPassStageReodering << ",\n    "
+           << "report_pass_stage_reordering=" << self.ReportPassStageReordering << ",\n    "
            << "report_pass_stage_merger=" << self.ReportPassStageMerger << ",\n    "
            << "report_pass_set_caches=" << self.ReportPassSetCaches << ",\n    "
            << "report_pass_set_block_size=" << self.ReportPassSetBlockSize << ",\n    "

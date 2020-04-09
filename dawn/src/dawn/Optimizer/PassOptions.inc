@@ -82,7 +82,7 @@ OPT(bool, ReportPassTemporaryMerger, false, "report-pass-temporary-merger", "",
     "which will be merged, are sorted in alphapetical order.", "", false, true)
 OPT(bool, ReportPassTemporaryType, false, "report-pass-temporary-type", "",
     "Report which variables and temporary fields are promoted/demoted", "", false, true)
-OPT(bool, ReportPassStageReodering, false, "report-pass-stage-reordering", "",
+OPT(bool, ReportPassStageReordering, false, "report-pass-stage-reordering", "",
     "Dump the stencil-instantiation before and after the stage reordering pass to json", "", false, true)
 OPT(bool, ReportPassStageMerger, false, "report-pass-stage-merger", "",
     "Dump the stencil-instantiation before and after the stage merger pass to JSON", "", false, true)
