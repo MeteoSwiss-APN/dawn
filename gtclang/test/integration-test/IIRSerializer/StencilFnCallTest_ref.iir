@@ -290,5 +290,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }
