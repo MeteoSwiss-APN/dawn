@@ -5,8 +5,8 @@
    "17": "field_b"
   },
   "accessIDToType": {
-   "17": 6,
-   "16": 6
+   "16": 6,
+   "17": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -24,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "16": {
+   "17": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "17": {
+   "16": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }
