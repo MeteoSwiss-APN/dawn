@@ -39,7 +39,8 @@ codegen::Backend parseBackendString(const std::string& backendStr) {
     return codegen::Backend::GridTools;
   } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
     return codegen::Backend::CXXNaive;
-  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
+  } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico" ||
+            backendStr == "cxx-naive-ico") {
     return codegen::Backend::CXXNaiveIco;
   } else if(backendStr == "cuda" || backendStr == "CUDA") {
     return codegen::Backend::CUDA;

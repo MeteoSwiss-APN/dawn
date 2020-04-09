@@ -1,59 +1,41 @@
+
+add_custom_target(update_codegen_refs)
 function(add_update_codegen_reference_target)
     set(options)
-    set(oneValueArgs NAME STENCIL BACKEND)
-    set(multiValueArgs)
+    set(oneValueArgs STENCIL)
+    set(multiValueArgs BACKENDS)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(inputDir ${CMAKE_CURRENT_SOURCE_DIR}/../input)
-    set(refsDir ${CMAKE_CURRENT_SOURCE_DIR}/../reference)
-    set(refsBuildDir ${CMAKE_CURRENT_BINARY_DIR}/../reference)
+    set(input_dir ${CMAKE_CURRENT_SOURCE_DIR}/../input)
+    set(ref_dir ${CMAKE_CURRENT_SOURCE_DIR}/../reference)
+    set(ref_build_dir ${CMAKE_CURRENT_BINARY_DIR}/../reference)
 
-    if(${ARG_BACKEND} STREQUAL cuda)
-        set(extension cu)
-    else()
-        set(extension cpp)
-    endif()
+    foreach(backend ${ARG_BACKENDS})
+        if(${backend} STREQUAL cuda)
+            set(extension cu)
+        else()
+            set(extension cpp)
+        endif()
 
-    add_custom_target(${ARG_NAME} 
-        COMMAND dawn-codegen ${inputDir}/${ARG_STENCIL}.iir -o ${refsDir}/${ARG_STENCIL}.${extension} --backend=${ARG_BACKEND}
-        COMMAND ${CMAKE_COMMAND} -E copy ${refsDir}/${ARG_STENCIL}.${extension} ${refsBuildDir}/${ARG_STENCIL}.${extension}
-        DEPENDS dawn-codegen)
+        set(target codegen_${ARG_STENCIL}_${backend})
+        add_custom_target(${target}
+            COMMAND dawn-codegen ${input_dir}/${ARG_STENCIL}.iir -o ${ref_dir}/${ARG_STENCIL}.${extension} --backend=${backend}
+            COMMAND ${CMAKE_COMMAND} -E copy ${ref_dir}/${ARG_STENCIL}.${extension} ${ref_build_dir}/${ARG_STENCIL}.${extension}
+            DEPENDS dawn-codegen)
+        add_dependencies(update_codegen_refs ${target})
+    endforeach()
 endfunction()
 
 # Structured stencils
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceConditionalCuda STENCIL conditional_stencil BACKEND cuda)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceConditionalNaive STENCIL conditional_stencil BACKEND naive)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceCopyCuda STENCIL copy_stencil BACKEND cuda)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceCopyNaive STENCIL copy_stencil BACKEND naive)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceGlobalIndexCuda STENCIL global_index_stencil BACKEND cuda)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceGlobalIndexNaive STENCIL global_index_stencil BACKEND naive)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceHoriDiffCuda STENCIL hori_diff_stencil BACKEND cuda)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceHoriDiffNaive STENCIL hori_diff_stencil BACKEND naive)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceTridiagonalSolveCuda STENCIL tridiagonal_solve_stencil BACKEND cuda)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceTridiagonalSolveNaive STENCIL tridiagonal_solve_stencil BACKEND naive)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceDzCStencilCuda STENCIL update_dz_c BACKEND cuda)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceDzCStencilNaive STENCIL update_dz_c BACKEND naive)
+add_update_codegen_reference_target(STENCIL conditional_stencil BACKENDS c++-naive cuda)
+add_update_codegen_reference_target(STENCIL copy_stencil BACKENDS c++-naive cuda)
+add_update_codegen_reference_target(STENCIL global_index_stencil BACKENDS c++-naive cuda)
+add_update_codegen_reference_target(STENCIL hori_diff_stencil BACKENDS c++-naive cuda)
+add_update_codegen_reference_target(STENCIL tridiagonal_solve_stencil BACKENDS c++-naive cuda)
+add_update_codegen_reference_target(STENCIL update_dz_c BACKENDS c++-naive cuda)
 
 # Unstructured stencils
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceICONLaplacian STENCIL ICON_laplacian_stencil BACKEND cxx-naive-ico)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceSimpleReduction STENCIL simple_reduction_stencil BACKEND cxx-naive-ico)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceSparseDimensions STENCIL sparse_dimensions BACKEND cxx-naive-ico)
-add_update_codegen_reference_target(NAME UpdateCodeGenReferenceTridiagonalSolveUnstructured STENCIL tridiagonal_solve_unstructured BACKEND cxx-naive-ico)
-
-add_custom_target(UpdateCodeGenReferences)
-add_dependencies(UpdateCodeGenReferences 
-                    UpdateCodeGenReferenceConditionalCuda
-                    UpdateCodeGenReferenceConditionalNaive
-                    UpdateCodeGenReferenceCopyCuda
-                    UpdateCodeGenReferenceCopyNaive
-                    UpdateCodeGenReferenceGlobalIndexCuda
-                    UpdateCodeGenReferenceGlobalIndexNaive
-                    UpdateCodeGenReferenceHoriDiffCuda
-                    UpdateCodeGenReferenceHoriDiffNaive
-                    UpdateCodeGenReferenceTridiagonalSolveCuda
-                    UpdateCodeGenReferenceTridiagonalSolveNaive
-                    UpdateCodeGenReferenceICONLaplacian
-                    UpdateCodeGenReferenceSimpleReduction
-                    UpdateCodeGenReferenceSparseDimensions
-                    UpdateCodeGenReferenceTridiagonalSolveUnstructured
-                )
+add_update_codegen_reference_target(STENCIL ICON_laplacian_stencil BACKENDS c++-naive-ico)
+add_update_codegen_reference_target(STENCIL simple_reduction_stencil BACKEND c++-naive-ico)
+add_update_codegen_reference_target(STENCIL sparse_dimensions BACKEND c++-naive-ico)
+add_update_codegen_reference_target(STENCIL tridiagonal_solve_unstructured BACKEND c++-naive-ico)
