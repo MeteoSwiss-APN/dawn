@@ -21,7 +21,7 @@
 #include <type_traits>
 
 // Verifiyer class for atlas' ArrayViews, very close in behaviour to gridtools::dawn::verifier
-class AtlasVerifier {
+class UnstructuredVerifier {
 private:
   bool use_default_precision_ = false;
   double precision_;
@@ -62,8 +62,8 @@ private:
   }
 
 public:
-  AtlasVerifier() : use_default_precision_(true) {}
-  AtlasVerifier(double precision) : use_default_precision_(false), precision_(precision) {}
+  UnstructuredVerifier() : use_default_precision_(true) {}
+  UnstructuredVerifier(double precision) : use_default_precision_(false), precision_(precision) {}
 
   template <typename Value, int RANK, atlas::array::Intent AccessMode>
   bool compareArrayView(const atlas::array::ArrayView<Value, RANK, AccessMode>& lhs,
@@ -97,6 +97,33 @@ public:
         if(!result) {
           if(--max_erros >= 0) {
             std::cerr << "( idx: " << i << " lvl: " << k << " ) : "
+                      << "  error: " << error << std::endl;
+          }
+          verified = false;
+        }
+      }
+    }
+
+    return verified;
+  }
+
+  template <typename ValT, typename iteratorT, template <typename> class FieldT>
+  bool compareToylibField(const iteratorT& iter, FieldT<ValT>& lhs, FieldT<ValT>& rhs, size_t kSize,
+                          int max_erros = 10) {
+
+    if(use_default_precision_) {
+      setDefaultPrecision<ValT>();
+    }
+
+    bool verified = true;
+    for(size_t level = 0; level < kSize; level++) {
+      for(const auto& e : iter) {
+        ValT valueLhs = lhs(e, level);
+        ValT valueRhs = rhs(e, level);
+        auto [result, error] = compare_below_threshold(valueLhs, valueRhs, ValT(precision_));
+        if(!result) {
+          if(--max_erros >= 0) {
+            std::cerr << "( idx: " << e.id() << " lvl: " << level << " ) : "
                       << "  error: " << error << std::endl;
           }
           verified = false;

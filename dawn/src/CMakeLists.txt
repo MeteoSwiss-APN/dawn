@@ -14,6 +14,7 @@
 
 add_subdirectory(dawn)
 add_subdirectory(dawn-c)
+add_subdirectory(toylib)
 
 if(ENABLE_PYTHON)
   add_subdirectory(dawn4py)

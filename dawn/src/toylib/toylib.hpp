@@ -1,3 +1,17 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===/&
+
 #pragma once
 
 #include <algorithm>
@@ -6,7 +20,18 @@
 #include <iostream>
 #include <vector>
 
-namespace mylib {
+namespace toylib {
+class ToylibElement {
+protected:
+  ToylibElement() = default;
+  ToylibElement(int id) : id_(id) {}
+  virtual ~ToylibElement() = 0;
+  int id_ = -1;
+
+public:
+  int id() const { return id_; }
+};
+
 class Vertex;
 class Edge;
 class Face;
@@ -19,14 +44,14 @@ class Face;
 enum face_color { upward = 0, downward = 1 };
 enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 
-class Vertex {
+class Vertex : public ToylibElement {
 public:
   Vertex() = default;
-  Vertex(double x, double y, int id) : x_(x), y_(y), id_(id) {}
+  Vertex(double x, double y, int id) : ToylibElement(id), x_(x), y_(y) {}
+  ~Vertex() {}
 
   double x() const { return x_; }
   double y() const { return y_; }
-  int id() const { return id_; }
 
   Edge const& edge(size_t i) const;
   Face const& face(size_t i) const;
@@ -39,19 +64,18 @@ public:
   void add_face(Face& f) { faces_.push_back(&f); }
 
 private:
-  int id_;
   double x_;
   double y_;
 
   std::vector<Edge*> edges_;
   std::vector<Face*> faces_;
 };
-class Face {
+class Face : public ToylibElement {
 public:
   Face() = default;
-  Face(int id, face_color color) : id_(id), color_(color) {}
+  Face(int id, face_color color) : ToylibElement(id), color_(color) {}
+  ~Face(){};
 
-  int id() const { return id_; }
   face_color color() const { return color_; }
 
   Vertex const& vertex(size_t i) const;
@@ -65,18 +89,17 @@ public:
   void add_vertex(Vertex& v) { vertices_.push_back(&v); }
 
 private:
-  int id_;
   face_color color_;
 
   std::vector<Edge*> edges_;
   std::vector<Vertex*> vertices_;
 };
-class Edge {
+class Edge : public ToylibElement {
 public:
   Edge() = default;
-  Edge(int id, edge_color color) : id_(id), color_(color) {}
+  Edge(int id, edge_color color) : ToylibElement(id), color_(color) {}
+  ~Edge() {}
 
-  int id() const { return id_; }
   edge_color color() const { return color_; }
 
   Vertex const& vertex(size_t i) const;
@@ -96,7 +119,6 @@ public:
   }
 
 private:
-  int id_ = -1;
   edge_color color_;
 
   std::vector<Vertex*> vertices_;
@@ -268,13 +290,13 @@ public:
         //      5   4
         if(i > 0 || periodic) //
           v.add_edge(edge_at(i - 1, j, edge_color::horizontal));
-        if(i > 0 && j > 0 || periodic) //
+        if((i > 0 && j > 0) || periodic) //
           v.add_edge(edge_at(i - 1, j - 1, edge_color::diagonal));
         if(j > 0 || periodic) //
           v.add_edge(edge_at(i, j - 1, edge_color::vertical));
         if(i < nx || periodic) //
           v.add_edge(edge_at(i, j, edge_color::horizontal));
-        if(i < nx && j < ny || periodic) //
+        if((i < nx && j < ny) || periodic) //
           v.add_edge(edge_at(i, j, edge_color::diagonal));
         if(j < ny || periodic) //
           v.add_edge(edge_at(i, j, edge_color::vertical));
@@ -288,17 +310,17 @@ public:
         //   5  | \ 3
         //      |  \
         //        4
-        if(i > 0 && j > 0 || periodic) {
+        if((i > 0 && j > 0) || periodic) {
           v.add_face(face_at(i - 1, j - 1, face_color::upward));
           v.add_face(face_at(i - 1, j - 1, face_color::downward));
         }
-        if(i < nx && j > 0 || periodic) //
+        if((i < nx && j > 0) || periodic) //
           v.add_face(face_at(i, j - 1, face_color::upward));
-        if(i < nx && j < ny || periodic) {
+        if((i < nx && j < ny) || periodic) {
           v.add_face(face_at(i, j, face_color::downward));
           v.add_face(face_at(i, j, face_color::upward));
         }
-        if(i > 0 && j < ny || periodic) {
+        if((i > 0 && j < ny) || periodic) {
           v.add_face(face_at(i - 1, j, face_color::downward));
         }
       }
@@ -346,6 +368,12 @@ public:
       : data_(num_k_levels, std::vector<T>(horizontal_size)) {}
   T& operator()(O const& f, size_t k_level) { return data_[k_level][f.id()]; }
   T const& operator()(O const& f, size_t k_level) const { return data_[k_level][f.id()]; }
+  T& operator()(ToylibElement const* f, size_t k_level) {
+    return data_[k_level][static_cast<const O*>(f)->id()];
+  }
+  T const& operator()(ToylibElement const* f, size_t k_level) const {
+    return data_[k_level][static_cast<const O*>(f)->id()];
+  }
   auto begin() { return data_.begin(); }
   auto end() { return data_.end(); }
 
@@ -386,6 +414,12 @@ public:
   T const& operator()(const O& elem, size_t sparse_idx, size_t k_level) const {
     return data_[k_level][elem.id()][sparse_idx];
   }
+  T& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) {
+    return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
+  }
+  T const& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) const {
+    return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
+  }
   int k_size() const { return data_.size(); }
 
 private:
@@ -419,13 +453,4 @@ std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Gri
 std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, Grid const& grid,
                     std::ostream& os = std::cout);
 
-namespace {
-bool inner_face(Face const& f) {
-  return (f.color() == face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
-          f.vertex(0).id() < f.vertex(2).id()) ||
-         (f.color() == face_color::upward && f.vertex(1).id() > f.vertex(0).id() &&
-          f.vertex(1).id() > f.vertex(2).id());
-}
-} // namespace
-
-} // namespace mylib
+} // namespace toylib

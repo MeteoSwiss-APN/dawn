@@ -104,7 +104,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   DAWN_LOG(INFO) << "Done parsing translation unit";
 
   if(context_->getASTContext().getDiagnostics().hasErrorOccurred()) {
-    DAWN_LOG(INFO) << "Erros occurred. Aborting";
+    DAWN_LOG(INFO) << "Errors occurred. Aborting";
     return;
   }
 
@@ -142,55 +142,69 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     return;
 
   // Compile the SIR using Dawn
-  std::list<dawn::PassGroup> PassGroups;
+  std::list<dawn::PassGroup> passGroup;
 
   if(context_->getOptions().SSA)
-    PassGroups.push_back(dawn::PassGroup::SSA);
+    passGroup.push_back(dawn::PassGroup::SSA);
 
   if(context_->getOptions().PrintStencilGraph)
-    PassGroups.push_back(dawn::PassGroup::PrintStencilGraph);
+    passGroup.push_back(dawn::PassGroup::PrintStencilGraph);
 
-  if(!context_->getOptions().DisableOptimization)
-    PassGroups.push_back(dawn::PassGroup::SetStageName);
+  if(context_->getOptions().SetStageName || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::SetStageName);
 
-  if(!context_->getOptions().DisableOptimization)
-    PassGroups.push_back(dawn::PassGroup::StageReordering);
+  if(context_->getOptions().StageReordering || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::StageReordering);
 
-  if(!context_->getOptions().DisableOptimization)
-    PassGroups.push_back(dawn::PassGroup::StageMerger);
+  if(context_->getOptions().StageMerger || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::StageMerger);
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
                  [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
                    return stencilPtr->Attributes.has(dawn::sir::Attr::Kind::MergeTemporaries);
                  }) ||
      context_->getOptions().TemporaryMerger) {
-    PassGroups.push_back(dawn::PassGroup::TemporaryMerger);
+    passGroup.push_back(dawn::PassGroup::TemporaryMerger);
   }
 
   if(context_->getOptions().Inlining)
-    PassGroups.push_back(dawn::PassGroup::Inlining);
+    passGroup.push_back(dawn::PassGroup::Inlining);
 
   if(context_->getOptions().IntervalPartitioning)
-    PassGroups.push_back(dawn::PassGroup::IntervalPartitioning);
+    passGroup.push_back(dawn::PassGroup::IntervalPartitioning);
 
   if(context_->getOptions().TmpToStencilFunction)
-    PassGroups.push_back(dawn::PassGroup::TmpToStencilFunction);
+    passGroup.push_back(dawn::PassGroup::TmpToStencilFunction);
 
   if(context_->getOptions().SetNonTempCaches)
-    PassGroups.push_back(dawn::PassGroup::SetNonTempCaches);
+    passGroup.push_back(dawn::PassGroup::SetNonTempCaches);
 
-  if(!context_->getOptions().DisableOptimization)
-    PassGroups.push_back(dawn::PassGroup::SetCaches);
+  if(context_->getOptions().SetCaches || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::SetCaches);
 
-  if(!context_->getOptions().DisableOptimization)
-    PassGroups.push_back(dawn::PassGroup::SetBlockSize);
+  if(context_->getOptions().SetBlockSize || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::SetBlockSize);
 
   if(context_->getOptions().DataLocalityMetric)
-    PassGroups.push_back(dawn::PassGroup::DataLocalityMetric);
+    passGroup.push_back(dawn::PassGroup::DataLocalityMetric);
+
+  // if nothing is passed, we fill the group with the default if no-optimization is not specified
+  if(!context_->getOptions().DisableOptimization && passGroup.size() == 0) {
+    passGroup.push_back(dawn::PassGroup::SetStageName);
+    passGroup.push_back(dawn::PassGroup::StageReordering);
+    passGroup.push_back(dawn::PassGroup::StageMerger);
+    passGroup.push_back(dawn::PassGroup::SetCaches);
+    passGroup.push_back(dawn::PassGroup::SetBlockSize);
+  }
+
+  if(context_->getOptions().DisableOptimization && passGroup.size() > 0) {
+    DAWN_ASSERT_MSG(false,
+                    "Inconsistent arguments: no optimisation as well as optimization specified");
+  }
 
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
   std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
-      Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), PassGroups));
+      Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), passGroup));
 
   // Report diagnostics from Dawn
   if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {

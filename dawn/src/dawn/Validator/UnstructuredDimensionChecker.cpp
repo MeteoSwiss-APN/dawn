@@ -2,6 +2,7 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/Support/SourceLocation.h"
+#include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 
@@ -405,15 +406,45 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
   }
 
+  // check weighs for consistency w.r.t dimensions
+  if(reductionExpr->getWeights().has_value()) {
+    // check weights one by one
+    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl weightChecker(nameToDimensions_,
+                                                                                 idToNameMap_);
+    for(const auto& weight : *reductionExpr->getWeights()) {
+      weight->accept(weightChecker);
+    }
+
+    // if a weight is not consistent "in itself", abort
+    if(!weightChecker.isConsistent()) {
+      dimensionsConsistent_ = false;
+      return;
+    }
+
+    // otherwise, all weights need to be of the same type, namely the lhs type of the reduction
+    //  this assumes that all field accesses are dense in the weights. this restriction will
+    //  eventually be lifted, but is for now ensured in the weights checker
+    if(weightChecker.hasDimensions()) {
+      if(getUnstructuredDim(weightChecker.getDimensions()).getDenseLocationType() !=
+         reductionExpr->getLhsLocation()) {
+        dimensionsConsistent_ = false;
+        return;
+      }
+    }
+  }
+
   // if the rhs subtree has dimensions, we must check that such dimensions are consistent with the
   // declared rhs and lhs location types
   if(ops.hasDimensions()) {
     const auto& rhsUnstructuredDim = getUnstructuredDim(ops.getDimensions());
-    dimensionsConsistent_ =
-        rhsUnstructuredDim.isSparse()
-            ? (rhsUnstructuredDim.getLastSparseLocationType() == reductionExpr->getRhsLocation() &&
-               rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation())
-            : (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getRhsLocation());
+    if(rhsUnstructuredDim.isSparse()) {
+      dimensionsConsistent_ =
+          (rhsUnstructuredDim.getLastSparseLocationType() == reductionExpr->getNbhChain().back() &&
+           rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getLhsLocation());
+    } else {
+      dimensionsConsistent_ =
+          (rhsUnstructuredDim.getDenseLocationType() == reductionExpr->getNbhChain().back());
+    }
   }
 
   if(!dimensionsConsistent_) {

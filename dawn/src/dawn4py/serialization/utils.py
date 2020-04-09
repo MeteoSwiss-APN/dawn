@@ -365,7 +365,8 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
     """
     stmt = BlockStmt()
     if isinstance(statements, Iterable):
-        stmt.statements.extend([make_stmt(s) for s in statements if not isinstance(s, Field)])
+        stmt.statements.extend([make_stmt(s)
+                                for s in statements if not isinstance(s, Field)])
     else:
         stmt.statements.extend([make_stmt(statements)])
     return stmt
@@ -748,7 +749,7 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     return expr
 
 
-def make_weights(weights) -> List[Weight]:
+def make_weights(weights) -> List[Expr]:
     """ Create a weights vector
 
     :param weights:         List of weights expressed with python primitive types
@@ -756,20 +757,8 @@ def make_weights(weights) -> List[Weight]:
     assert len(weights) != 0
     proto_weights = []
     for weight in weights:
-        proto_weight = Weight()
-        if type(weight) is int:
-            proto_weight.integer_value = weight
-        elif type(weight) is float:  # float in python is 64 bits
-            proto_weight.double_value = weight
-        elif type(weight) is bool:
-            proto_weight.boolean_value = weight
-        elif type(weight) is str:
-            proto_weight.string_value = weight
-        # TODO: would also be nice to map numpy types
-        else:
-            raise SIRError(
-                "cannot create Weight from type {}".format(type(weight)))
-
+        proto_weight = Expr()
+        proto_weight.CopyFrom(make_expr(weight))
         proto_weights.append(proto_weight)
 
     return proto_weights
@@ -779,28 +768,25 @@ def make_reduction_over_neighbor_expr(
     op: str,
     rhs: ExprType,
     init: ExprType,
-    lhs_location: LocationTypeValue,
-    rhs_location: LocationTypeValue,
-    weights: List[Weight] = None
+    chain: List[LocationTypeValue],
+    weights: List[ExprType] = None
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
     :param op:              Reduction operation performed for each neighbor
     :param rhs:             Operation to be performed for each neighbor before reducing
     :param init:            Initial value for reduction operation
-    :param lhs_location:    Location type of left hand side
-    :param rhs_location:    Location type of right hand side
+    :param chain:           Neighbor chain definining the neighbors to reduce from and 
+                            the location type to reduce to (first element)
     :param weights:         Weights on neighbors (required to be of equal type)
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
-    expr.lhs_location = lhs_location
-    expr.rhs_location = rhs_location
+    expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
-        expr.weights.extend(weights)
-
+        expr.weights.extend([make_expr(weight) for weight in weights])
     return expr
 
 

@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/LocationType.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
@@ -95,7 +96,8 @@ TEST_P(StencilTest, AST_Reduction) {
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
       std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
-      ast::LocationType::Cells, ast::LocationType::Cells);
+      std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
+                                     ast::LocationType::Cells});
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
@@ -104,12 +106,16 @@ TEST_P(StencilTest, AST_Reduction) {
 }
 
 TEST_P(StencilTest, AST_ReductionWeighted) {
-  std::vector<sir::Value> weights{sir::Value(1.), sir::Value(2.), sir::Value(3.)};
+  std::vector<std::shared_ptr<sir::Expr>> weights{
+      std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Double),
+      std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Double),
+      std::make_shared<sir::LiteralAccessExpr>("3", BuiltinTypeID::Double)};
 
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
       std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights,
-      ast::LocationType::Cells, ast::LocationType::Cells);
+      std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
+                                     ast::LocationType::Cells});
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));

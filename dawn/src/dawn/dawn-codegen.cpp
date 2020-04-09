@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/CodeGen/Driver.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -42,14 +42,14 @@ std::shared_ptr<dawn::iir::StencilInstantiation> deserializeInput(const std::str
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Byte);
       format = SerializationFormat::Byte;
     } catch(...) {
-      // Do nothing
+      internalIR = nullptr;
     }
   }
   if(!internalIR) {
     try {
       internalIR =
           dawn::IIRSerializer::deserializeFromString(input, dawn::IIRSerializer::Format::Json);
-      SerializationFormat::Json;
+      format = SerializationFormat::Json;
     } catch(...) {
       // Exhausted possibilities, so throw
       throw std::runtime_error("Cannot deserialize input");
@@ -110,28 +110,23 @@ int main(int argc, char* argv[]) {
     std::istreambuf_iterator<char> begin(std::cin), end;
     input.insert(input.begin(), begin, end);
   }
-  dawn::Options dawnOptions;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  dawnOptions.NAME = result[OPTION].as<TYPE>();
-#include "dawn/CodeGen/Options.inc"
-#undef OPT
-  dawnOptions.Backend = result["backend"].as<std::string>();
-  dawn::DawnCompiler compiler(dawnOptions);
 
   auto internalIR = deserializeInput(input);
 
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> stencilInstantiationMap{
       {"restoredIIR", internalIR}};
 
-  auto translationUnit = compiler.generate(stencilInstantiationMap);
+  dawn::codegen::Backend backend =
+      dawn::codegen::parseBackendString(result["backend"].as<std::string>());
 
-  std::string code;
-  for(auto p : translationUnit->getPPDefines())
-    code += p + "\n";
+  dawn::codegen::Options codegenOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME = result[OPTION].as<TYPE>();
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
+  auto translationUnit = dawn::codegen::run(stencilInstantiationMap, backend, codegenOptions);
 
-  code += translationUnit->getGlobals() + "\n\n";
-  for(auto p : translationUnit->getStencils())
-    code += p.second;
+  auto code = dawn::codegen::generate(translationUnit);
 
   if(result.count("out") > 0) {
     std::ofstream out(result["out"].as<std::string>());

@@ -27,14 +27,14 @@
 namespace dawn {
 namespace codegen {
 
-using stencilInstantiationContext =
+using StencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 /// @brief Interface of the backend code generation
 /// @ingroup codegen
 class CodeGen {
 protected:
-  const stencilInstantiationContext& context_;
+  const StencilInstantiationContext& context_;
   DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;
@@ -78,7 +78,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints);
+  CodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints);
   virtual ~CodeGen() {}
 
   /// @brief Generate code
@@ -99,16 +99,16 @@ public:
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
-  virtual std::string generateGlobals(const stencilInstantiationContext& context,
+  virtual std::string generateGlobals(const StencilInstantiationContext& context,
                                       std::string namespace_);
-  virtual std::string generateGlobals(const stencilInstantiationContext& context,
+  virtual std::string generateGlobals(const StencilInstantiationContext& context,
                                       std::string outer_namespace_, std::string inner_namespace_);
   virtual std::string generateGlobals(const sir::GlobalVariableMap& globalsMaps,
                                       std::string namespace_) const;
 
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;
 
-  std::string generateFileName(const stencilInstantiationContext& context) const;
+  std::string generateFileName(const StencilInstantiationContext& context) const;
 };
 
 } // namespace codegen

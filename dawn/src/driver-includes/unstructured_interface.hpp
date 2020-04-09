@@ -35,6 +35,8 @@ void sparseVertexFieldType(...);
 
 void meshType(...);
 
+void indexType(...);
+
 template <typename Tag, typename T>
 using cell_field_t = decltype(cellFieldType<T>(Tag{}));
 template <typename Tag, typename T>
@@ -50,11 +52,24 @@ template <typename Tag, typename T>
 using sparse_vertex_field_t = decltype(sparseVertexFieldType<T>(Tag{}));
 
 template <typename Tag>
+using nbh_table_index_t = decltype(indexType(Tag{}));
+
+template <typename Tag>
 using mesh_t = decltype(meshType(Tag{}));
+
+// TODO instead of replicating, make the enum in LocationType.h accessible from here (or move it to
+// a more appropriate place)
+enum class LocationType { Cells = 0, Edges, Vertices };
 
 // generic deref, specialize if needed
 template <typename Tag, typename LocationType>
 auto deref(Tag, LocationType const& l) -> LocationType const& {
   return l;
 }
+
+template <typename Tag, typename LocationType>
+auto deref(Tag, LocationType const* l) -> LocationType const* {
+  return l;
+}
+
 } // namespace dawn

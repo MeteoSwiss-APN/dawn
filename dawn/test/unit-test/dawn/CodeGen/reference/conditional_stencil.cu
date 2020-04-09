@@ -40,8 +40,8 @@ namespace dawn_generated{
 namespace cuda{
 
 struct globals {
-  bool var2;
   int var1;
+  bool var2;
 
   globals() : var1(1){
   }
@@ -188,20 +188,20 @@ public:
 
   // Access-wrapper for globally defined variables
 
-  bool get_var2() {
-    return m_globals.var2;
-  }
-
-  void set_var2(bool var2) {
-    m_globals.var2=var2;
-  }
-
   int get_var1() {
     return m_globals.var1;
   }
 
   void set_var1(int var1) {
     m_globals.var1=var1;
+  }
+
+  bool get_var2() {
+    return m_globals.var2;
+  }
+
+  void set_var2(bool var2) {
+    m_globals.var2=var2;
   }
 
   template<typename S>
