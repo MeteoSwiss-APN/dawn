@@ -19,11 +19,14 @@
 #include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
+#include "dawn/Optimizer/PassSetSyncStage.h"
 #include "dawn/Optimizer/PassStageMerger.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <streambuf>
@@ -42,7 +45,9 @@ protected:
     context_ = std::make_unique<dawn::OptimizerContext>(diagnostics_, options_, nullptr);
   }
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
+  std::shared_ptr<iir::StencilInstantiation>
+  loadTest(const std::string& sirFilename,
+           const std::string& stencilName = "compute_extent_test_stencil") {
     std::string filename = sirFilename;
     if(!TestEnvironment::path_.empty())
       filename = TestEnvironment::path_ + "/" + filename;
@@ -56,9 +61,9 @@ protected:
     auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
 
     DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
-    DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
-                    "compute_extent_test_stencil not found in sir");
-    auto instantiation = stencilInstantiationMap["compute_extent_test_stencil"];
+    DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
+                    (stencilName + " not found in sir").c_str());
+    auto instantiation = stencilInstantiationMap[stencilName];
 
     // Run stage graph pass
     PassSetStageGraph stageGraphPass(*context_);
@@ -76,9 +81,17 @@ protected:
     PassStageMerger stageMergerPass(*context_);
     EXPECT_TRUE(stageMergerPass.run(instantiation));
 
+    // Run temporary type pass
+    PassTemporaryType tempTypePass(*context_);
+    EXPECT_TRUE(tempTypePass.run(instantiation));
+
+    // Run sync stage pass
+    PassSetSyncStage setSyncStagePass(*context_);
+    EXPECT_TRUE(setSyncStagePass.run(instantiation));
+
     // Recompute derived info...
     instantiation->computeDerivedInfo();
-    IIRSerializer::serialize(filename + ".iir", instantiation);
+    // IIRSerializer::serialize(filename + ".iir", instantiation);
 
     return instantiation;
   }
