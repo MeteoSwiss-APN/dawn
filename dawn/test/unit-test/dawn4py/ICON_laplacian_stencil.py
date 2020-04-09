@@ -40,12 +40,14 @@ def main():
                 sir_utils.make_field_access_expr("rot_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr(
+                        "0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec"), 
-                        "*", 
+                        sir_utils.make_field_access_expr("vec"),
+                        "*",
                         sir_utils.make_field_access_expr("geofac_rot")),
-                    chain=[SIR.LocationType.Value("Vertex"), SIR.LocationType.Value("Edge")]
+                    chain=[SIR.LocationType.Value(
+                        "Vertex"), SIR.LocationType.Value("Edge")]
                 ),
                 "=",
             ),
@@ -53,12 +55,14 @@ def main():
                 sir_utils.make_field_access_expr("div_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr(
+                        "0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec"), 
-                        "*", 
+                        sir_utils.make_field_access_expr("vec"),
+                        "*",
                         sir_utils.make_field_access_expr("geofac_div")),
-                    chain=[SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")]
+                    chain=[SIR.LocationType.Value(
+                        "Cell"), SIR.LocationType.Value("Edge")]
                 ),
                 "=",
             ),
@@ -66,10 +70,14 @@ def main():
                 sir_utils.make_field_access_expr("nabla2t1_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr(
+                        "0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("rot_vec"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Vertex")],
-                    weights=sir_utils.make_weights([-1.0, 1.0])
+                    chain=[SIR.LocationType.Value(
+                        "Edge"), SIR.LocationType.Value("Vertex")],
+                    weights=[sir_utils.make_literal_access_expr(
+                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Double)]
                 ),
                 "=",
             ),
@@ -77,7 +85,8 @@ def main():
                 sir_utils.make_field_access_expr("nabla2t1_vec"),
                 sir_utils.make_binary_operator(
                     sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("tangent_orientation"),
+                        sir_utils.make_field_access_expr(
+                            "tangent_orientation"),
                         "*",
                         sir_utils.make_field_access_expr("nabla2t1_vec")),
                     "/",
@@ -88,10 +97,14 @@ def main():
                 sir_utils.make_field_access_expr("nabla2t2_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr(
+                        "0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("div_vec"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
-                    weights=sir_utils.make_weights([-1.0, 1.0])
+                    chain=[SIR.LocationType.Value(
+                        "Edge"), SIR.LocationType.Value("Cell")],
+                    weights=[sir_utils.make_literal_access_expr(
+                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Double)]
                 ),
                 "=",
             ),

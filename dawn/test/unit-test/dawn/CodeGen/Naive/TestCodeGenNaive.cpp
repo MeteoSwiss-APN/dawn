@@ -20,21 +20,19 @@ namespace iir {
 class TestCodeGenNaive : public TestCodeGen {};
 
 TEST_F(TestCodeGenNaive, CopyStencil) {
-  runTest(this->getStencilFromIIRFile("../input/copy_stencil.iir"), "copy_stencil.cpp");
+  runTest(this->getStencilFromIIR("copy_stencil"), "copy_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, GlobalIndexStencilFromFile) {
-  runTest(this->getStencilFromIIRFile("../input/global_index_stencil.iir"),
-          "global_index_stencil.cpp");
+  runTest(this->getStencilFromIIR("global_index_stencil"), "global_index_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, HoriDiffStencil) {
-  runTest(this->getStencilFromIIRFile("../input/hori_diff_stencil.iir"), "hori_diff_stencil.cpp");
+  runTest(this->getStencilFromIIR("hori_diff_stencil"), "hori_diff_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, TridiagonalSolveStencil) {
-  runTest(this->getStencilFromIIRFile("../input/tridiagonal_solve_stencil.iir"),
-          "tridiagonal_solve_stencil.cpp");
+  runTest(this->getStencilFromIIR("tridiagonal_solve_stencil"), "tridiagonal_solve_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, GlobalIndexStencil) {
@@ -50,8 +48,7 @@ TEST_F(TestCodeGenNaive, LaplacianStencil) {
 }
 
 TEST_F(TestCodeGenNaive, ConditionalStencil) {
-  runTest(this->getStencilFromIIRFile("../input/conditional_stencil.iir"),
-          "conditional_stencil.cpp");
+  runTest(this->getStencilFromIIR("conditional_stencil"), "conditional_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaive, DzCStencil) {

@@ -121,12 +121,8 @@ protected:
     return CompilerUtil::load("../input/" + name + ".iir", options, context);
   }
 
-  std::shared_ptr<StencilInstantiation> getConditionalStencil() {
-    return getStencilFromIIR("conditional_stencil");
-  }
-
-  void runTest(const std::shared_ptr<StencilInstantiation> stencil_inst,
-               const std::string& ref_file) {
+  void runTest(const std::shared_ptr<StencilInstantiation> stencilInst,
+               const std::string& refFile) {
     std::ostringstream oss;
     if(refFile.find(".cu") != std::string::npos) {
       dawn::CompilerUtil::dumpCuda(oss, stencilInst);

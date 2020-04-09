@@ -14,27 +14,27 @@
 
 #include "../TestCodeGen.h"
 
-namespace {
+namespace dawn {
+namespace iir {
 
 class TestCodeGenNaiveIco : public TestCodeGen {};
 
 TEST_F(TestCodeGenNaiveIco, ICONLaplacianStencil) {
-  runTest(this->getStencilFromIIRFile("../input/ICON_laplacian_stencil.iir"),
-          "ICON_laplacian_stencil.cpp");
+  runTest(this->getStencilFromIIR("ICON_laplacian_stencil"), "ICON_laplacian_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaiveIco, SimpleReductionStencil) {
-  runTest(this->getStencilFromIIRFile("../input/simple_reduction_stencil.iir"),
-          "simple_reduction_stencil.cpp");
+  runTest(this->getStencilFromIIR("simple_reduction_stencil"), "simple_reduction_stencil.cpp");
 }
 
 TEST_F(TestCodeGenNaiveIco, SparseDimensionsStencil) {
-  runTest(this->getStencilFromIIRFile("../input/sparse_dimensions.iir"), "sparse_dimensions.cpp");
+  runTest(this->getStencilFromIIR("sparse_dimensions"), "sparse_dimensions.cpp");
 }
 
 TEST_F(TestCodeGenNaiveIco, TridiagonalSolveUnstructured) {
-  runTest(this->getStencilFromIIRFile("../input/tridiagonal_solve_unstructured.iir"),
+  runTest(this->getStencilFromIIR("tridiagonal_solve_unstructured"),
           "tridiagonal_solve_unstructured.cpp");
 }
 
-} // anonymous namespace
+} // namespace iir
+} // namespace dawn
