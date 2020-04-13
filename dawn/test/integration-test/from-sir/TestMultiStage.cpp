@@ -203,7 +203,7 @@ TEST_F(TestMultiStage, test_compute_read_access_interval) {
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{0, 1}}));
 }
 
-TEST_F(TestMultiStage, test_compute_read_access_interval_02) {
+TEST_F(TestMultiStage, DISABLED_test_compute_read_access_interval_02) {
 
   //    Stencil_0
   //    {
