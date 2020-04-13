@@ -99,7 +99,7 @@ PassGroup parsePassGroupString(const std::string& passGroup) {
 
 namespace {
 
-OptimizerContext::OptimizerContextOptions createOptionsFromOptions(const Options& options) {
+OptimizerContext::OptimizerContextOptions createContextOptionsFromOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   retval.NAME = options.NAME;
@@ -116,7 +116,7 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   DiagnosticsEngine diagnostics;
   diagnostics.setFilename(stencilIR->Filename);
 
-  OptimizerContext optimizer(diagnostics, createOptionsFromOptions(options), stencilIR);
+  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options), stencilIR);
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
@@ -181,7 +181,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   }
 
   // Initialize optimizer
-  OptimizerContext optimizer(diagnostics, createOptionsFromOptions(options),
+  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options),
                              stencilInstantiationMap);
 
   for(auto group : groups) {
