@@ -23,3 +23,4 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90 \
     --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
     --slave /usr/bin/gcov gcov /usr/bin/gcov-8
+RUN ls -s /usr/local/lib/python3.6 /usr/local/lib/python
