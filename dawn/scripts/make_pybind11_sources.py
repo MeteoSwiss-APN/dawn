@@ -75,28 +75,26 @@ MemberInfo = namedtuple(
 )
 
 
-def extract_options_from_files(files: list) -> list:
+def extract_options_from_file(file: str) -> list:
     """Generate a list of MemberInfo for an options struct."""
-
     options_info = []
-    for f in files:
-        with open(f, mode="r") as fo:
-            for m in opt_regexp.finditer("".join(fo.readlines())):
-                default_value = m.group("default_value").strip('"')
-                py_type = pythonize_type(m.group("type"))
-                py_default = pythonize_value(default_value, as_type=py_type)
-                options_info.append(
-                    MemberInfo(
-                        py_name=pythonize_name(m.group("name")),
-                        cpp_name=m.group("name"),
-                        py_type=py_type,
-                        cpp_type=m.group("type"),
-                        py_default=py_default,
-                        cpp_default=default_value,
-                        const=False,
-                        help=m.group("help"),
-                    )
+    with open(file, mode="r") as fo:
+        for m in opt_regexp.finditer("".join(fo.readlines())):
+            default_value = m.group("default_value").strip('"')
+            py_type = pythonize_type(m.group("type"))
+            py_default = pythonize_value(default_value, as_type=py_type)
+            options_info.append(
+                MemberInfo(
+                    py_name=pythonize_name(m.group("name")),
+                    cpp_name=m.group("name"),
+                    py_type=py_type,
+                    cpp_type=m.group("type"),
+                    py_default=py_default,
+                    cpp_default=default_value,
+                    const=False,
+                    help=m.group("help"),
                 )
+            )
     return options_info
 
 
@@ -182,8 +180,10 @@ def make_struct_binding(
 
 def splice_into_string(string: str, original: str, replacement: str):
     pos_start = string.find(original)
-    assert pos_start >= 0 and pos_start < len(string)
-    return string[0:pos_start] + replacement + string[pos_start + len(original) :]
+    while pos_start >= 0 and pos_start < len(string):
+        string = string[0:pos_start] + replacement + string[pos_start + len(original) :]
+        pos_start = string.find(original)
+    return string
 
 
 def get_enum_values(filename: str, enum_name: str):
@@ -219,6 +219,27 @@ def make_enum_binding(py_name: str, c_name: str, values: list):
     )
 
 
+def make_args(options: list) -> (list, list):
+    cpp_args = tuple(
+        map(
+            lambda x: "const "
+            + ("std::string& " if x.cpp_type == "std::string" else x.cpp_type + " ")
+            + x.cpp_name,
+            options,
+        )
+    )
+    py_args = tuple(
+        map(
+            lambda x: 'py::arg("'
+            + x.py_name
+            + '") = '
+            + ('"' + x.cpp_default + '"' if x.cpp_type == "std::string" else x.cpp_default),
+            options,
+        )
+    )
+    return cpp_args, py_args
+
+
 if __name__ == "__main__":
     print("-> Generating pybind11 bindings for Dawn...\n")
 
@@ -241,7 +262,7 @@ if __name__ == "__main__":
                 os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.h"),
             ),
             (
-                "CodeGenBackend",
+                "CodegenBackend",
                 "dawn::codegen::Backend",
                 os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.h"),
             ),
@@ -256,23 +277,28 @@ if __name__ == "__main__":
             enum_str = make_enum_binding(py_name, c_name, values) + "\n"
             code = splice_into_string(code, "{{ " + py_name + " }}", enum_str)
 
-        for py_name, c_name, filename in (
-            (
-                "CodeGenOptions",
-                "dawn::codegen::Options",
-                os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),
-            ),
-            (
-                "OptimizerOptions",
-                "dawn::Options",
-                os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),
-            ),
+        for c_name, file in (
+            ("dawn::codegen::Options", os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),),
+            ("dawn::Options", os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),),
         ):
-            struct_str = (
-                make_struct_binding(py_name, c_name, extract_options_from_files([filename]))
-                + "\n\n"
-            )
-            code = splice_into_string(code, "{{ " + py_name + " }}", struct_str)
+            options = extract_options_from_file(file)
+            cpp_args, py_args = make_args(options)
+            if len(cpp_args) > 0:
+                cpp_args_str = "," + ",\n".join(cpp_args)
+                py_args_str = "," + ",\n".join(py_args)
+                code = splice_into_string(
+                    code, "{{ " + c_name + ":" + "CppArgs" " }}", cpp_args_str
+                )
+                code = splice_into_string(
+                    code,
+                    "{{ " + c_name + ":" + "VarList" " }}",
+                    ",".join((x.cpp_name for x in options)),
+                )
+                code = splice_into_string(
+                    code, "{{ " + c_name + ":" + "PyArgs" " }}", py_args_str,
+                )
+            # struct_str = make_struct_binding(py_name, c_name,) + "\n\n"
+            # code = splice_into_string(code, "{{ " + py_name + " }}", struct_str)
 
         with open(OUTPUT_FILE, mode="w") as f:
             f.write(code)

@@ -12,26 +12,23 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(NOT TARGET cxxopts::cxxopts)
-  if(NOT INCLUDE_CXXOPTS)
-    message(STATUS "Fetching cxxopts...")
+if(NOT TARGET magic_enum::magic_enum)
+  if(NOT INCLUDE_MAGIC_ENUM)
+    message(STATUS "Fetching magic_enum...")
   endif()
-  set(CXXOPTS_BUILD_EXAMPLES OFF)
-  set(CXXOPTS_BUILD_TESTS OFF)
-  set(CXXOPTS_ENABLE_INSTALL ON)
+  set(MAGIC_ENUM_OPT_BUILD_EXAMPLES OFF)
+  set(MAGIC_ENUM_OPT_BUILD_TESTS OFF)
 
-  FetchContent_Declare(cxxopts
-    URL https://github.com/jarro2783/cxxopts/archive/v2.2.0.tar.gz
+  FetchContent_Declare(magic_enum
+    URL https://github.com/Neargye/magic_enum/archive/v0.6.5.tar.gz
   )
 
-  FetchContent_GetProperties(cxxopts)
-  if(NOT cxxopts_POPULATED)
-    FetchContent_Populate(cxxopts)
-    add_subdirectory(${cxxopts_SOURCE_DIR} ${cxxopts_BINARY_DIR})
+  FetchContent_GetProperties(magic_enum)
+  if(NOT magic_enum_POPULATED)
+    FetchContent_Populate(magic_enum)
+    add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
   endif()
 
-  set(INCLUDE_CXXOPTS ON CACHE BOOL "Fetched cxxopts.")
-  mark_as_advanced(INCLUDE_CXXOPTS)
+  set(INCLUDE_MAGIC_ENUM ON CACHE BOOL "Fetched magic_enum.")
+  mark_as_advanced(INCLUDE_MAGIC_ENUM)
 endif()
-
-add_library(cxxopts::cxxopts ALIAS cxxopts)

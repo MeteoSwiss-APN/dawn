@@ -15,6 +15,8 @@
 add_library(DawnOptimizer
   CreateVersionAndRename.cpp
   CreateVersionAndRename.h
+  Driver.cpp
+  Driver.h
   OptimizerContext.cpp
   OptimizerContext.h
   Options.h
@@ -98,5 +100,7 @@ add_library(DawnOptimizer
   TemporaryHandling.h
 )
 
+include(FetchMagicEnum)
+
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)
+target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator magic_enum::magic_enum)

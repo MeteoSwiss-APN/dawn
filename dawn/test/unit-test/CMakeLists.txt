@@ -16,4 +16,8 @@ add_subdirectory(dawn)
 # Pytest is confused when the test directory is named 'dawn4py', so we added '-tests'
 add_subdirectory(dawn4py-tests)
 add_subdirectory(driver-includes)
-add_subdirectory(interface)
+
+include(HasUnstructuredDeps)
+if(HAS_UNSTRUCTURED_DEPS)
+    add_subdirectory(interface)
+endif()

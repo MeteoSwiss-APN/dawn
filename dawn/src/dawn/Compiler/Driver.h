@@ -19,6 +19,7 @@
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/Driver.h"
 #include "dawn/Optimizer/Options.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -30,44 +31,26 @@
 
 namespace dawn {
 
-/// @brief List of default optimizer pass groups
-std::list<PassGroup> defaultPassGroups();
-
-PassGroup parsePassGroupString(const std::string& passGroup);
-
+/// TODO Move these to Optimizer/Driver when OptimizerContext is removed
+/// {
 /// @brief Lower to IIR and run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options = {});
-
-/// @brief Use strings instead of C++ objects
-std::map<std::string, std::string> run(const std::string& sir, SIRSerializer::Format format,
-                                       const std::list<PassGroup>& groups = {},
-                                       const Options& options = {});
 
 /// @brief Run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const std::list<PassGroup>& groups, const Options& options = {});
+/// }
 
-/// @brief Use strings instead of C++ objects
-std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap, IIRSerializer::Format format,
-    const std::list<PassGroup>& groups = {}, const Options& options = {});
-
-/// @brief Compile SIR to a translation unit
-std::unique_ptr<codegen::TranslationUnit> compile(
-    const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups = defaultPassGroups(),
-    const Options& optimizerOptions = {}, codegen::Backend backend = codegen::Backend::GridTools,
-    const codegen::Options& codegenOptions = {});
-
-/// @brief Use strings instead of C++ objects
-std::string compile(const std::string& sir, SIRSerializer::Format format,
-                    const std::list<PassGroup>& passGroups = defaultPassGroups(),
-                    const Options& optimizerOptions = {},
-                    codegen::Backend backend = codegen::Backend::GridTools,
-                    const codegen::Options& codegenOptions = {});
+/// @brief Convenience function to compile SIR directly to a translation unit
+std::unique_ptr<codegen::TranslationUnit>
+compile(const std::shared_ptr<SIR>& stencilIR,
+        const std::list<PassGroup>& groups = defaultPassGroups(),
+        codegen::Backend backend = codegen::Backend::GridTools,
+        const Options& optimizerOptions = {}, const codegen::Options& codegenOptions = {});
 
 } // namespace dawn
 

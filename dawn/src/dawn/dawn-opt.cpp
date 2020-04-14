@@ -14,6 +14,7 @@
 
 #include "dawn/Compiler/Driver.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/Driver.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -156,7 +157,7 @@ int main(int argc, char* argv[]) {
   }
 
   for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
-    passGroups.push_back(dawn::parsePassGroupString(pg));
+    passGroups.push_back(dawn::parsePassGroup(pg));
   }
 
   // Until stencil functions are added to the IIR...

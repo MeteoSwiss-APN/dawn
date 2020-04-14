@@ -57,46 +57,6 @@
 
 namespace dawn {
 
-std::list<PassGroup> defaultPassGroups() {
-  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
-          PassGroup::SetCaches, PassGroup::SetBlockSize};
-}
-
-PassGroup parsePassGroupString(const std::string& passGroup) {
-  if(passGroup == "SSA" || passGroup == "ssa")
-    return dawn::PassGroup::SSA;
-  else if(passGroup == "PrintStencilGraph" || passGroup == "print-stencil-graph")
-    return dawn::PassGroup::PrintStencilGraph;
-  else if(passGroup == "SetStageName" || passGroup == "set-stage-name")
-    return dawn::PassGroup::SetStageName;
-  else if(passGroup == "StageReordering" || passGroup == "stage-reordering")
-    return dawn::PassGroup::StageReordering;
-  else if(passGroup == "StageMerger" || passGroup == "stage-merger")
-    return dawn::PassGroup::StageMerger;
-  else if(passGroup == "TemporaryMerger" || passGroup == "temporary-merger" ||
-          passGroup == "tmp-merger")
-    return dawn::PassGroup::TemporaryMerger;
-  else if(passGroup == "Inlining" || passGroup == "inlining")
-    return dawn::PassGroup::Inlining;
-  else if(passGroup == "IntervalPartitioning" || passGroup == "interval-partitioning")
-    return dawn::PassGroup::IntervalPartitioning;
-  else if(passGroup == "TmpToStencilFunction" || passGroup == "tmp-to-stencil-function" ||
-          passGroup == "tmp-to-stencil-fcn" || passGroup == "tmp-to-function" ||
-          passGroup == "tmp-to-fcn")
-    return dawn::PassGroup::TmpToStencilFunction;
-  else if(passGroup == "SetNonTempCaches" || passGroup == "set-non-tmp-caches" ||
-          passGroup == "set-nontmp-caches")
-    return dawn::PassGroup::SetNonTempCaches;
-  else if(passGroup == "SetCaches" || passGroup == "set-caches")
-    return dawn::PassGroup::SetCaches;
-  else if(passGroup == "SetBlockSize" || passGroup == "set-block-size")
-    return dawn::PassGroup::SetBlockSize;
-  else if(passGroup == "DataLocalityMetric" || passGroup == "data-locality-metric")
-    return dawn::PassGroup::DataLocalityMetric;
-  else
-    throw std::invalid_argument(std::string("Unknown pass group: ") + passGroup);
-}
-
 namespace {
 
 OptimizerContext::OptimizerContextOptions createContextOptionsFromOptions(const Options& options) {
@@ -329,52 +289,12 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   return optimizer.getStencilInstantiationMap();
 }
 
-std::map<std::string, std::string> run(const std::string& sir, SIRSerializer::Format format,
-                                       const std::list<PassGroup>& groups, const Options& options) {
-  auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
-  auto optimizedSIM = run(stencilIR, groups, options);
-  std::map<std::string, std::string> instantiationStringMap;
-  const IIRSerializer::Format outputFormat = format == SIRSerializer::Format::Byte
-                                                 ? IIRSerializer::Format::Byte
-                                                 : IIRSerializer::Format::Json;
-  for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, outputFormat)));
-  }
-  return instantiationStringMap;
-}
-
-std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap, IIRSerializer::Format format,
-    const std::list<PassGroup>& groups, const dawn::Options& options) {
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
-  for(auto [name, instStr] : stencilInstantiationMap) {
-    internalMap.insert(std::make_pair(name, IIRSerializer::deserializeFromString(instStr, format)));
-  }
-  auto optimizedSIM = dawn::run(internalMap, groups, options);
-  std::map<std::string, std::string> instantiationStringMap;
-  for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, format)));
-  }
-  return instantiationStringMap;
-}
-
 std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& stencilIR,
                                                   const std::list<PassGroup>& passGroups,
                                                   const Options& optimizerOptions,
                                                   codegen::Backend backend,
                                                   const codegen::Options& codegenOptions) {
   return codegen::run(run(stencilIR, passGroups, optimizerOptions), backend, codegenOptions);
-}
-
-std::string compile(const std::string& sir, SIRSerializer::Format format,
-                    const std::list<PassGroup>& groups, const Options& optimizerOptions,
-                    codegen::Backend backend, const codegen::Options& codegenOptions) {
-  // Could call string version here, but that forces serialization of the IIR. Avoids serializing.
-  auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
-  auto optimizedSIM = run(stencilIR, groups, optimizerOptions);
-  return codegen::generate(codegen::run(optimizedSIM, backend, codegenOptions));
 }
 
 } // namespace dawn

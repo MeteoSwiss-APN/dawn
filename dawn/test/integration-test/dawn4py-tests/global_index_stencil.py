@@ -167,7 +167,7 @@ def main(args: argparse.Namespace):
 
     # compile
     code = dawn4py.compile_sir(
-        sir_utils.to_bytes(sir), codegen_backend=dawn4py.CodeGenBackend.CXXNaive
+        sir_utils.to_bytes(sir), codegen_backend=dawn4py.CodegenBackend.CXXNaive
     )
 
     # write to file

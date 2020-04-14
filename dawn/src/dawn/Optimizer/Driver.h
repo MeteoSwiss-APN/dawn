@@ -12,37 +12,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
-#define DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
+#ifndef DAWN_OPTIMIZER_DRIVER_H
+#define DAWN_OPTIMIZER_DRIVER_H
 
+#include "dawn/Optimizer/Options.h"
+
+#include <list>
 #include <string>
 
 namespace dawn {
 
-/// @brief Enumeration of all pass groups
-enum class PassGroup {
-  Parallel,
-  SSA,
-  PrintStencilGraph,
-  SetStageName,
-  StageReordering,
-  StageMerger,
-  TemporaryMerger,
-  Inlining,
-  IntervalPartitioning,
-  TmpToStencilFunction,
-  SetNonTempCaches,
-  SetCaches,
-  SetBlockSize,
-  DataLocalityMetric
-};
+/// @brief List of default optimizer pass groups
+std::list<PassGroup> defaultPassGroups();
 
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
-};
+/// @brief Convert to/from string
+/// {
+PassGroup parsePassGroup(const std::string& passGroup);
+std::string parsePassGroup(PassGroup passGroup);
+/// }
+
+/// TODO Driver methods will go here when OptimizerContext is removed.
 
 } // namespace dawn
 
