@@ -7,4 +7,3 @@ RUN apt update && apt install -y --no-install-recommends \
     libboost-dev && apt clean
 RUN python3 -m pip install --upgrade pip
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-RUN ln -s /usr/local/lib/python3.7 /usr/local/lib/python

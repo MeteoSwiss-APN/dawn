@@ -45,9 +45,10 @@ RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     -GNinja && \
     cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc) && \
     rm -rf /usr/src/protobuf-3.10.1/build
-# Installs into /usr/local/lib/python3.7/dist-packages
 RUN cd /usr/src/protobuf-3.10.1/python && \
-    PROTOC=/usr/local/protobuf/bin/protoc python setup.py install
+    PROTOC=/usr/local/protobuf/bin/protoc python setup.py build && \
+    mkdir -p /usr/local/protobuf/lib/python && \
+    mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/protobuf/lib/python/google
 # ---------------------- GridTools ----------------------
 RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
     tar -xz -C /usr/src

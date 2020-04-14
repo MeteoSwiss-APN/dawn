@@ -43,7 +43,6 @@ srun --job-name=dawn_PR \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
-    -DPROTOBUF_PYTHON_MODULE_DIR=/usr/local/lib/python/dist-packages/protobuf-3.10.1-py3.7.egg \
     -DGridTools_DIR=/usr/local/gridtools/lib/cmake \
     -Datlas_DIR=/usr/local/atlas/lib/cmake/atlas \
     -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit \
