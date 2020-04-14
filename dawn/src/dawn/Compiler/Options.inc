@@ -41,8 +41,8 @@ OPT(std::string, Backend, "gridtools", "backend", "",
 OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, false)
-OPT(std::string, DeserializeIIR, "", "read-iir", "",
-    "Deserialize the low level intermediate representation from file", "", true, false)
+OPT(bool, DeserializeIIR, false, "read-iir", "",
+    "Deserialize the low level intermediate representation from file", "", false, false)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 
 // clang-format on

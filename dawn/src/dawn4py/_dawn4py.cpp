@@ -20,16 +20,15 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def(py::init([](int MaxHaloSize, bool UseParallelEP, int MaxBlocksPerSM, int nsms,
                        int DomainSizeI, int DomainSizeJ, int DomainSizeK,
                        const std::string& Backend, const std::string& OutputFile, bool SerializeIIR,
-                       const std::string& DeserializeIIR, const std::string& IIRFormat,
-                       int MaxHaloPoints, const std::string& ReorderStrategy,
-                       int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
-                       int BlockSizeK, bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
-                       bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose,
-                       bool ReportAccesses, bool DumpSplitGraphs, bool DumpStageGraph,
-                       bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
-                       bool DumpStencilInstantiation, bool DumpStencilGraph, bool SSA,
-                       bool PrintStencilGraph, bool SetStageName, bool StageReordering,
-                       bool StageMerger, bool TemporaryMerger, bool Inlining,
+                       bool DeserializeIIR, const std::string& IIRFormat, int MaxHaloPoints,
+                       const std::string& ReorderStrategy, int MaxFieldsPerStencil, bool MaxCutMSS,
+                       int BlockSizeI, int BlockSizeJ, int BlockSizeK, bool SplitStencils,
+                       bool MergeDoMethods, bool DisableKCaches, bool UseNonTempCaches,
+                       bool KeepVarnames, bool PassVerbose, bool ReportAccesses,
+                       bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
+                       bool DumpRaceConditionGraph, bool DumpStencilInstantiation,
+                       bool DumpStencilGraph, bool SSA, bool PrintStencilGraph, bool SetStageName,
+                       bool StageReordering, bool StageMerger, bool TemporaryMerger, bool Inlining,
                        bool IntervalPartitioning, bool TmpToStencilFunction, bool SetNonTempCaches,
                        bool SetCaches, bool SetBlockSize, bool DataLocalityMetric,
                        bool ReportBoundaryConditions, bool ReportDataLocalityMetric,
@@ -103,7 +102,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0, py::arg("domain_size_i") = 0,
            py::arg("domain_size_j") = 0, py::arg("domain_size_k") = 0,
            py::arg("backend") = "gridtools", py::arg("output_file") = "",
-           py::arg("serialize_iir") = false, py::arg("deserialize_iir") = "",
+           py::arg("serialize_iir") = false, py::arg("deserialize_iir") = false,
            py::arg("iir_format") = "json", py::arg("max_halo_points") = 3,
            py::arg("reorder_strategy") = "greedy", py::arg("max_fields_per_stencil") = 40,
            py::arg("max_cut_mss") = false, py::arg("block_size_i") = 0, py::arg("block_size_j") = 0,
@@ -272,55 +271,56 @@ PYBIND11_MODULE(_dawn4py, m) {
       }))
       .def_property_readonly("options", (dawn::Options & (dawn::DawnCompiler::*)()) &
                                             dawn::DawnCompiler::getOptions)
-      .def("compile",
-           [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
-              py::object unit_info_obj) {
-             auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-             auto translationUnit = self.compile(inMemorySIR);
+      .def(
+          "compile",
+          [](dawn::DawnCompiler& self, const std::string& sir, dawn::SIRSerializer::Format format,
+             py::object unit_info_obj) {
+            auto inMemorySIR = dawn::SIRSerializer::deserializeFromString(sir, format);
+            auto translationUnit = self.compile(inMemorySIR);
 
-             auto result = py::none();
-             auto export_info = false;
-             auto pp_defines_list = py::list();
-             auto stencils_dict = py::dict();
+            auto result = py::none();
+            auto export_info = false;
+            auto pp_defines_list = py::list();
+            auto stencils_dict = py::dict();
 
-             if(translationUnit) {
-               export_info = true;
-               if(!unit_info_obj.is_none()) {
-                 auto unit_info_dict = unit_info_obj.cast<py::dict>();
-                 export_info = true;
-                 unit_info_dict["filename"] = py::str(translationUnit->getFilename());
-                 unit_info_dict["pp_defines"] = pp_defines_list;
-                 unit_info_dict["stencils"] = stencils_dict;
-                 unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
-               }
+            if(translationUnit) {
+              export_info = true;
+              if(!unit_info_obj.is_none()) {
+                auto unit_info_dict = unit_info_obj.cast<py::dict>();
+                export_info = true;
+                unit_info_dict["filename"] = py::str(translationUnit->getFilename());
+                unit_info_dict["pp_defines"] = pp_defines_list;
+                unit_info_dict["stencils"] = stencils_dict;
+                unit_info_dict["globals"] = py::str(translationUnit->getGlobals());
+              }
 
-               std::ostringstream ss;
-               ss << "//---- Preprocessor defines ----\n";
-               for(const auto& macroDefine : translationUnit->getPPDefines()) {
-                 ss << macroDefine << "\n";
-                 if(export_info)
-                   pp_defines_list.append(py::str(macroDefine));
-               }
-               ss << "\n//---- Includes ----\n"
-                  << "#include \"driver-includes/gridtools_includes.hpp\"\n"
-                  << "using namespace gridtools::dawn;\n";
-               ss << "\n//---- Globals ----\n";
-               ss << translationUnit->getGlobals();
-               ss << "\n//---- Stencils ----\n";
-               for(const auto& sItem : translationUnit->getStencils()) {
-                 ss << sItem.second;
-                 if(export_info)
-                   stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
-               }
-               result = py::str(ss.str());
-             }
+              std::ostringstream ss;
+              ss << "//---- Preprocessor defines ----\n";
+              for(const auto& macroDefine : translationUnit->getPPDefines()) {
+                ss << macroDefine << "\n";
+                if(export_info)
+                  pp_defines_list.append(py::str(macroDefine));
+              }
+              ss << "\n//---- Includes ----\n"
+                 << "#include \"driver-includes/gridtools_includes.hpp\"\n"
+                 << "using namespace gridtools::dawn;\n";
+              ss << "\n//---- Globals ----\n";
+              ss << translationUnit->getGlobals();
+              ss << "\n//---- Stencils ----\n";
+              for(const auto& sItem : translationUnit->getStencils()) {
+                ss << sItem.second;
+                if(export_info)
+                  stencils_dict[py::str(sItem.first)] = py::str(sItem.second);
+              }
+              result = py::str(ss.str());
+            }
 
-             return result;
-           },
-           "Compile the provided SIR object.\n\n"
-           "Returns a `str` with the compiled source code` on success or `None` otherwise.",
-           "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
-           "members on it.",
-           py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
-           py::arg("unit_info") = nullptr);
+            return result;
+          },
+          "Compile the provided SIR object.\n\n"
+          "Returns a `str` with the compiled source code` on success or `None` otherwise.",
+          "If a unit_info `dict` is provided, it will store the separated `TranslationUnit` "
+          "members on it.",
+          py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
+          py::arg("unit_info") = nullptr);
 };
