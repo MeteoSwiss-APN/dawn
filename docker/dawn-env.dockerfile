@@ -23,7 +23,7 @@ RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
     rm -rf /usr/src/protobuf-3.10.1/build
 RUN cd /usr/src/protobuf-3.10.1/python && \
     PROTOC=/usr/local/protobuf/bin/protoc python setup.py build && \
-    mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/lib/google
+    mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/protobuf/lib/python/google
 # ---------------------- GridTools ----------------------
 RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
     tar -xz -C /usr/src
