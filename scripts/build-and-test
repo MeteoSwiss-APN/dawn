@@ -75,7 +75,7 @@ if [ "$run_tests" == "true" ]; then
 
     # Clang-GridTools
     if [ -n "$cg_source_dir" ]; then
-        if [ -n "$cg_build_dir" ]; then
+        if [ -z "$cg_build_dir" ]; then
             cg_build_dir=$cg_source_dir/build
         fi
 

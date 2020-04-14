@@ -5,37 +5,6 @@
 # - boost
 ARG IMAGE
 FROM $IMAGE
-# ---------------------- Protobuf ----------------------
-RUN curl -L https://github.com/protocolbuffers/protobuf/releases/download/v3.10.1/protobuf-all-3.10.1.tar.gz | \
-    tar -xz -C /usr/src
-# These files seem to have a high UID/GID by default, so update this
-RUN chown root:root /usr/src/protobuf-3.10.1 -R
-RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
-    -Dprotobuf_BUILD_EXAMPLES=OFF \
-    -Dprotobuf_BUILD_TESTS=OFF \
-    -Dprotobuf_INSTALL_EXAMPLES=OFF \
-    -Dprotobuf_BUILD_PROTOC_BINARIES=ON \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local/protobuf \
-    -DBUILD_SHARED_LIBS=ON \
-    -GNinja && \
-    cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc) && \
-    rm -rf /usr/src/protobuf-3.10.1/build
-RUN cd /usr/src/protobuf-3.10.1/python && \
-    PROTOC=/usr/local/protobuf/bin/protoc python setup.py build && \
-    mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/protobuf/lib/python/google
-# ---------------------- GridTools ----------------------
-RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
-    tar -xz -C /usr/src
-RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
-    -DBUILD_TESTING=OFF \
-    -DINSTALL_TOOLS=OFF \
-    -DGT_INSTALL_EXAMPLES=OFF \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local/gridtools \
-    -GNinja && \
-    cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
-    rm -rf /usr/src/gridtools-1.0.4/build
 # ---------------------- ECBuild ----------------------
 RUN curl -L https://github.com/ecmwf/ecbuild/archive/3.3.0.tar.gz | \
     tar -xz -C /usr/src
@@ -60,3 +29,34 @@ RUN mkdir -p /usr/src/atlas-0.19.0/build && cd /usr/src/atlas-0.19.0/build && \
     -DECKIT_PATH=/usr/local/eckit \
     -GNinja -- ../ && \
     cmake --build . -j $(nproc) --target install && rm -rf /usr/src/atlas-0.19.0/build
+# ---------------------- Protobuf ----------------------
+RUN curl -L https://github.com/protocolbuffers/protobuf/releases/download/v3.10.1/protobuf-all-3.10.1.tar.gz | \
+    tar -xz -C /usr/src
+# These files seem to have a high UID/GID by default, so update this
+RUN chown root:root /usr/src/protobuf-3.10.1 -R
+RUN cmake -S /usr/src/protobuf-3.10.1/cmake -B /usr/src/protobuf-3.10.1/build \
+    -Dprotobuf_BUILD_EXAMPLES=OFF \
+    -Dprotobuf_BUILD_TESTS=OFF \
+    -Dprotobuf_INSTALL_EXAMPLES=OFF \
+    -Dprotobuf_BUILD_PROTOC_BINARIES=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/protobuf \
+    -DBUILD_SHARED_LIBS=ON \
+    -GNinja && \
+    cmake --build /usr/src/protobuf-3.10.1/build --target install -j $(nproc) && \
+    rm -rf /usr/src/protobuf-3.10.1/build
+# Installs into /usr/local/lib/python3.7/dist-packages
+RUN cd /usr/src/protobuf-3.10.1/python && \
+    PROTOC=/usr/local/protobuf/bin/protoc python setup.py install
+# ---------------------- GridTools ----------------------
+RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
+    tar -xz -C /usr/src
+RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
+    -DBUILD_TESTING=OFF \
+    -DINSTALL_TOOLS=OFF \
+    -DGT_INSTALL_EXAMPLES=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/gridtools \
+    -GNinja && \
+    cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
+    rm -rf /usr/src/gridtools-1.0.4/build
