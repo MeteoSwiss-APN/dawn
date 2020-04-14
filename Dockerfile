@@ -6,7 +6,7 @@ COPY . /usr/src/dawn
 RUN /usr/src/dawn/scripts/build-and-test \
     --dawn-install-dir /usr/local/dawn \
     --parallel $(nproc) \
-    --config $BUILD_TYPE \
+    -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
     -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
     -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
