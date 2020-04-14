@@ -60,3 +60,5 @@ RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
     -GNinja && \
     cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
     rm -rf /usr/src/gridtools-1.0.4/build
+# Other python dependencies for using and testing dawn
+RUN pip install pytest
