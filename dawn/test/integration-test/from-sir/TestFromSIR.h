@@ -90,8 +90,8 @@ protected:
     EXPECT_TRUE(setSyncStagePass.run(instantiation));
 
     // Recompute derived info...
-    instantiation->computeDerivedInfo();
-    // IIRSerializer::serialize(filename + ".iir", instantiation);
+    //instantiation->computeDerivedInfo();
+    //IIRSerializer::serialize(filename + ".iir", instantiation);
 
     return instantiation;
   }
