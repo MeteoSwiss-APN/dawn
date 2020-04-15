@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
   }
 
   for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
-    passGroups.push_back(dawn::parsePassGroup(pg));
+    passGroups.push_back(parsePassGroup(pg));
   }
 
   // Until stencil functions are added to the IIR...
