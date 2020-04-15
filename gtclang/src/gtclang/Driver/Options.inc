@@ -62,7 +62,5 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-opt       = optimized C++ code"
     "\n - cuda          = optimized cuda", "<backend>", true, false)
 OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
-OPT(std::string, DeserializeIIR, "", "read-iir", "",
-    "Deserialize the low level intermediate representation from file", "", true, false)
 
 // clang-format on
