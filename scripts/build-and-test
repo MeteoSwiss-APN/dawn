@@ -107,4 +107,8 @@ if [ "$copy_test_xml" = "true" ]; then
         cp $xml $dawn_source_dir/gtest_${i}.xml
         i=$((i+1))
     done
+    for xml in $(find $cg_build_dir -path "*/_deps" -prune -o -name "*.xml" -print); do
+        cp $xml $dawn_source_dir/gtest_${i}.xml
+        i=$((i+1))
+    done
 fi
