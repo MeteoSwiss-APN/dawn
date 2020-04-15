@@ -100,7 +100,5 @@ add_library(DawnOptimizer
   TemporaryHandling.h
 )
 
-include(FetchMagicEnum)
-
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator magic_enum::magic_enum)
+target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)

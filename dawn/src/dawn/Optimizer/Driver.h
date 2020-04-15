@@ -25,12 +25,6 @@ namespace dawn {
 /// @brief List of default optimizer pass groups
 std::list<PassGroup> defaultPassGroups();
 
-/// @brief Convert to/from string
-/// {
-PassGroup parsePassGroup(const std::string& passGroup);
-std::string parsePassGroup(PassGroup passGroup);
-/// }
-
 /// TODO Driver methods will go here when OptimizerContext is removed.
 
 } // namespace dawn

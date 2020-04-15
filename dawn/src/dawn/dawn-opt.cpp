@@ -40,6 +40,41 @@ std::string toString(const T& t) {
 std::string toString(const char* t) { return t; }
 std::string toString(const std::string& t) { return t; }
 
+dawn::PassGroup parsePassGroup(const std::string& passGroup) {
+  if(passGroup == "SSA" || passGroup == "ssa")
+    return dawn::PassGroup::SSA;
+  else if(passGroup == "PrintStencilGraph" || passGroup == "print-stencil-graph")
+    return dawn::PassGroup::PrintStencilGraph;
+  else if(passGroup == "SetStageName" || passGroup == "set-stage-name")
+    return dawn::PassGroup::SetStageName;
+  else if(passGroup == "StageReordering" || passGroup == "stage-reordering")
+    return dawn::PassGroup::StageReordering;
+  else if(passGroup == "StageMerger" || passGroup == "stage-merger")
+    return dawn::PassGroup::StageMerger;
+  else if(passGroup == "TemporaryMerger" || passGroup == "temporary-merger" ||
+          passGroup == "tmp-merger")
+    return dawn::PassGroup::TemporaryMerger;
+  else if(passGroup == "Inlining" || passGroup == "inlining")
+    return dawn::PassGroup::Inlining;
+  else if(passGroup == "IntervalPartitioning" || passGroup == "interval-partitioning")
+    return dawn::PassGroup::IntervalPartitioning;
+  else if(passGroup == "TmpToStencilFunction" || passGroup == "tmp-to-stencil-function" ||
+          passGroup == "tmp-to-stencil-fcn" || passGroup == "tmp-to-function" ||
+          passGroup == "tmp-to-fcn")
+    return dawn::PassGroup::TmpToStencilFunction;
+  else if(passGroup == "SetNonTempCaches" || passGroup == "set-non-tmp-caches" ||
+          passGroup == "set-nontmp-caches")
+    return dawn::PassGroup::SetNonTempCaches;
+  else if(passGroup == "SetCaches" || passGroup == "set-caches")
+    return dawn::PassGroup::SetCaches;
+  else if(passGroup == "SetBlockSize" || passGroup == "set-block-size")
+    return dawn::PassGroup::SetBlockSize;
+  else if(passGroup == "DataLocalityMetric" || passGroup == "data-locality-metric")
+    return dawn::PassGroup::DataLocalityMetric;
+  else
+    throw std::runtime_error(std::string("Unknown pass group: ") + passGroup);
+}
+
 std::tuple<std::shared_ptr<dawn::SIR>, std::shared_ptr<dawn::iir::StencilInstantiation>,
            SerializationFormat>
 deserializeInput(const std::string& input) {
