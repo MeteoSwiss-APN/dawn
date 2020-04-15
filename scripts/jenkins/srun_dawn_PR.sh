@@ -39,11 +39,6 @@ srun --job-name=dawn_PR \
     --clang-gridtools-source-dir /usr/src/clang-gridtools \
     --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
     --parallel $build_jobs \
+    --docker-env \
     -DCMAKE_BUILD_TYPE=$build_type \
-    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
-    -DCMAKE_PREFIX_PATH=/usr/lib/llvm-9 \
-    -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf \
-    -DGridTools_DIR=/usr/local/gridtools/lib/cmake \
-    -Datlas_DIR=/usr/local/atlas/lib/cmake/atlas \
-    -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit \
-    -GNinja
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
