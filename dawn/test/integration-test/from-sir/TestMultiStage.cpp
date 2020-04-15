@@ -328,14 +328,14 @@ TEST_F(TestMultiStage, test_field_access_interval_04) {
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getChildren().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 2);
 
-  auto const& mss = *stencil->childrenBegin();
+  auto const& mss = *(std::next(stencil->childrenBegin()));
 
   int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("u");
   auto interval = mss->computeReadAccessInterval(accessID);
 
-  EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{4, 14}}));
+  EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{3, 14}}));
 }
 
 TEST_F(TestMultiStage, test_compute_read_access_interval_03) {

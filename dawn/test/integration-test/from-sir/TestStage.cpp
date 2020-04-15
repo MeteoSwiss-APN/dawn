@@ -33,42 +33,42 @@ TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_01) {
       (stencil->getStage(1)->getExtents() == iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0)));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
-  auto const& mss = *stencil->childrenBegin();
-  ASSERT_TRUE((mss->getChildren().size() == 2));
 
-  auto stage_ptr = mss->childrenBegin();
-  std::unique_ptr<iir::Stage> const& stage1 = *stage_ptr;
-  stage_ptr = std::next(stage_ptr);
-  std::unique_ptr<iir::Stage> const& stage2 = *stage_ptr;
+  auto const& mss = *stencil->childrenBegin();
+
+  auto stage1_ptr = mss->childrenBegin();
+  auto stage2_ptr = std::next(stage1_ptr);
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
+  std::unique_ptr<iir::Stage> const& stage2 = *stage2_ptr;
 
   std::optional<iir::Interval> intervalU1 =
       stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("u"), false);
-  ASSERT_TRUE(intervalU1.has_value());     // [k_start .. k_end]
-  ASSERT_EQ(*intervalU1, (iir::Interval{0, sir::Interval::End, 0, 0}));
-
   std::optional<iir::Interval> intervalOut1 =
       stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("out"), false);
-  ASSERT_TRUE(intervalOut1.has_value());   // [k_start .. k_start+10]
-  ASSERT_EQ(*intervalOut1, (iir::Interval{0, 0, 0, 10}));
-
   std::optional<iir::Interval> intervalLap1 =
       stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("lap"), false);
-  ASSERT_TRUE(intervalLap1.has_value());   // [k_start + 11 .. k_end]
-  ASSERT_EQ(*intervalLap1, (iir::Interval{0, sir::Interval::End, 11, 0}));
+
+  ASSERT_TRUE(intervalU1.has_value());
+  ASSERT_TRUE(!intervalOut1.has_value());
+  ASSERT_TRUE(intervalLap1.has_value());
+
+  ASSERT_TRUE((*intervalU1 == iir::Interval{0, sir::Interval::End, 11, 0}));
+  ASSERT_TRUE((*intervalLap1 == iir::Interval{0, sir::Interval::End, 11, 0}));
 
   std::optional<iir::Interval> intervalU2 =
       stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("u"), false);
-  ASSERT_FALSE(intervalU2.has_value());
-
   std::optional<iir::Interval> intervalOut2 =
       stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("out"), false);
-  ASSERT_TRUE(intervalOut2.has_value());
-  ASSERT_TRUE((*intervalOut2 == iir::Interval{0, sir::Interval::End, 11, 0}));
-
   std::optional<iir::Interval> intervalLap2 =
       stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("lap"), false);
+
+  ASSERT_TRUE(intervalU2.has_value());
+  ASSERT_TRUE(intervalOut2.has_value());
   ASSERT_TRUE(intervalLap2.has_value());
-  ASSERT_TRUE((*intervalLap2 == iir::Interval{0, sir::Interval::End, 11, 0}));
+
+  EXPECT_EQ(*intervalU2, (iir::Interval{0, 0, 0, 10}));
+  EXPECT_EQ(*intervalOut2, (iir::Interval{0, sir::Interval::End, 0, 0}));
+  EXPECT_EQ(*intervalLap2, (iir::Interval{0, sir::Interval::End, 11, 0}));
 }
 
 TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_02) {

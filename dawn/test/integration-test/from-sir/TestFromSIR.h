@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -58,40 +59,17 @@ protected:
 
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
-    auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
+    std::list<PassGroup> groups = defaultPassGroups();
+    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir), groups);
 
     DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
     DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
                     (stencilName + " not found in sir").c_str());
     auto instantiation = stencilInstantiationMap[stencilName];
 
-    // Run stage graph pass
-    PassSetStageGraph stageGraphPass(*context_);
-    EXPECT_TRUE(stageGraphPass.run(instantiation));
-
-    // Run dependency graph pass
-    PassSetDependencyGraph dependencyGraphPass(*context_);
-    EXPECT_TRUE(dependencyGraphPass.run(instantiation));
-
-    // Run multistage merger pass
-    PassMultiStageMerger multiStageMergerPass(*context_);
-    EXPECT_TRUE(multiStageMergerPass.run(instantiation));
-
-    // Run stage merger pass
-    PassStageMerger stageMergerPass(*context_);
-    EXPECT_TRUE(stageMergerPass.run(instantiation));
-
-    // Run temporary type pass
-    PassTemporaryType tempTypePass(*context_);
-    EXPECT_TRUE(tempTypePass.run(instantiation));
-
-    // Run sync stage pass
-    PassSetSyncStage setSyncStagePass(*context_);
-    EXPECT_TRUE(setSyncStagePass.run(instantiation));
-
-    // Recompute derived info...
-    //instantiation->computeDerivedInfo();
-    //IIRSerializer::serialize(filename + ".iir", instantiation);
+    //    // Recompute derived info...
+    //    instantiation->computeDerivedInfo();
+    //    IIRSerializer::serialize(filename + ".iir", instantiation);
 
     return instantiation;
   }
