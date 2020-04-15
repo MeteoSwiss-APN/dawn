@@ -40,5 +40,6 @@ srun --job-name=dawn_PR \
     --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
     --parallel $build_jobs \
     --docker-env \
+    --copy-test-xml \
     -DCMAKE_BUILD_TYPE=$build_type \
     -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
