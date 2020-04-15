@@ -1,7 +1,7 @@
 #!/bin/sh
 
 script_path=$(dirname $(which $0))
-root_dir=$script_path/../../
+root_dir=$script_path/../
 
 image=gtclang/dawn-env-cuda10.1-ubuntu18.04
 build_jobs=24
