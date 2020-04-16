@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+script_path=$(dirname $(which $0))
+root_dir=$script_path/..
+
+prefix_args=()
+extra_options=()
+
+dawn_build_dir=""
+dawn_install_dir=""
+build_jobs=4
+build_type=Debug
+
+while [ "$1" != "" ]; do
+    case $1 in
+    -j | --parallel)
+        build_jobs=$2
+        shift
+        ;;
+    -b | --dawn-build-dir)
+        dawn_build_dir=$2
+        shift
+        ;;
+    -i | --dawn-install-dir)
+        dawn_install_dir=$2
+        shift
+        ;;
+    -s)
+        prefix_args+=(srun --time=00:45:00 --nodes=1 --ntasks-per-node=1 --ntasks-per-core=2 --account=$2 --constraint $3)
+        shift 2
+        ;;
+    --clang-gridtools)
+        extra_options+=(--clang-gridtools-source-dir $2 --clang-gridtools-build-dir $3)
+        shift 2
+        ;;
+    -t | --build-type)
+        build_type=$2
+        shift
+        ;;
+    -h | --help)
+        echo "USAGE: daint-test-bare -b dawn_build_dir -i dawn_install_dir [-s account constraint] [-t build_type] [--clang-gridtools source_dir build_dir]"
+        exit 1
+    esac
+    shift
+done
+
+if [ -z "$dawn_build_dir" ]; then
+    echo "Requires -b path/to/dawn_build_dir"
+    exit 1
+fi
+if [ -z "$dawn_install_dir" ]; then
+    echo "Requires -i path/to/dawn_install_dir"
+    exit 1
+fi
+
+module load daint-gpu
+module load CMake
+
+module swap PrgEnv-cray PrgEnv-gnu
+module load cray-python
+module load cudatoolkit
+module load /project/c14/install/daint/clang/module_6.0.1-gcc-8.3.0
+
+${prefix_args[@]} $root_dir/scripts/build-and-test \
+    --dawn-build-dir $dawn_build_dir \
+    --dawn-install-dir $dawn_install_dir \
+    --parallel $build_jobs \
+    ${extra_args[@]} \
+    -DCMAKE_C_COMPILER=$(which gcc) \
+    -DCMAKE_CXX_COMPILER=$(which g++) \
+    -DCMAKE_BUILD_TYPE=$build_type \
+    -DCMAKE_CUDA_COMPILER=$(which nvcc) \
+    -DCMAKE_PREFIX_PATH=/project/c14/install/daint/clang/llvmorg-6.0.1 \
+    -DProtobuf_DIR=/project/c14/install/daint/protobuf/lib/cmake/protobuf \
+    -DBOOST_ROOT=/project/c14/install/daint/boost/boost_1_67_0 \
+    -Datlas_DIR=/project/c14/install/daint/atlas_install/release/cpu/lib/cmake/atlas \
+    -Deckit_DIR=/project/c14/install/daint/eckit_install/lib/cmake/eckit
