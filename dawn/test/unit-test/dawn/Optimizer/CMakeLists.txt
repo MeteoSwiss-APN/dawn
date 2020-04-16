@@ -25,6 +25,7 @@ add_executable(${executable}
   TestPassSetCaches.cpp
   TestPassSetNonTempCaches.cpp
   TestPassSetStageLocationType.cpp
+  TestPassSimplifyStatements.cpp
   TestPassStageMerger.cpp
   TestPassStageSplitAllStatements.cpp
   TestPassStageReordering.cpp
