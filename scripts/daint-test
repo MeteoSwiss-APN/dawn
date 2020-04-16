@@ -33,6 +33,7 @@ srun --job-name=dawn_PR \
     sarus run --mount=type=bind,source=$root_dir,destination=/usr/src/dawn \
     --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
     $image \
+    bash -c "export GTEST_OUTPUT=\"xml:$root_dir\" &&
     /usr/src/dawn/scripts/build-and-test \
     --dawn-build-dir /usr/src/dawn-build \
     --dawn-install-dir /usr/local/dawn \
@@ -40,6 +41,5 @@ srun --job-name=dawn_PR \
     --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
     --parallel $build_jobs \
     --docker-env \
-    --copy-test-xml \
     -DCMAKE_BUILD_TYPE=$build_type \
-    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc"
