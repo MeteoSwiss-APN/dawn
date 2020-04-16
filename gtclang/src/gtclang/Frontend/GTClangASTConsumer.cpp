@@ -177,28 +177,25 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     passGroup.push_back(dawn::PassGroup::DataLocalityMetric);
 
   // if nothing is passed, we fill the group with the default if no-optimization is not specified
-  if(!context_->getOptions().DisableOptimization && passGroup.size() == 0) {
+  if(!context_->getOptions().DisableOptimization && passGroup.size() == 0)
     passGroup = dawn::defaultPassGroups();
-  }
 
-  if(context_->getOptions().DisableOptimization && passGroup.size() > 0) {
+  if(context_->getOptions().DisableOptimization && passGroup.size() > 0)
     DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
-  }
 
   // Inline at end if serializing or if the codegen backend is CUDA
   if(context_->getOptions().SerializeIIR ||
-     (!context_->getOptions().CodeGen &&
+     (context_->getOptions().CodeGen &&
       dawn::codegen::parseBackendString(context_->getOptions().Backend) ==
-          dawn::codegen::Backend::CUDA)) {
+          dawn::codegen::Backend::CUDA))
     passGroup.push_back(dawn::PassGroup::Inlining);
-  }
 
   // Determine filename of generated file (by default we append "_gen" to the filename)
   const std::string generatedPrefix = fs::path(file_).filename().stem();
   std::string generatedFileName;
-  if(context_->getOptions().OutputFile.empty())
+  if(context_->getOptions().OutputFile.empty()) {
     generatedFileName = generatedPrefix + "_gen.cpp";
-  else {
+  } else {
     generatedFileName = context_->getOptions().OutputFile;
   }
 
@@ -231,7 +228,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   // Do we generate code?
   if(!context_->getOptions().CodeGen) {
-    DAWN_LOG(INFO) << "Skipping code-generation";
+    DAWN_LOG(INFO) << "Skipping code generation";
     return;
   }
 
