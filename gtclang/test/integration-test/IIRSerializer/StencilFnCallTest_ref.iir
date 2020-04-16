@@ -3,7 +3,7 @@
   "accessIDToName": {
    "16": "a",
    "17": "b",
-   "36": "__local_fn_36"
+   "35": "__local_fn_35"
   },
   "accessIDToType": {
    "16": 6,
@@ -91,7 +91,7 @@
                 "is_const": true,
                 "is_volatile": false
                },
-               "name": "__local_fn_36",
+               "name": "__local_fn_35",
                "dimension": 0,
                "op": "=",
                "init_list": [
@@ -118,7 +118,7 @@
                   "data": {
                    "accessID": 16
                   },
-                  "ID": 41
+                  "ID": 40
                  }
                 }
                ],
@@ -129,7 +129,7 @@
                "data": {
                 "accesses": {
                  "writeAccess": {
-                  "36": {
+                  "35": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -149,9 +149,9 @@
                 }
                },
                "var_decl_stmt_data": {
-                "accessID": 36
+                "accessID": 35
                },
-               "ID": 40
+               "ID": 39
               }
              },
              {
@@ -181,29 +181,29 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 44
+                   "ID": 43
                   }
                  },
                  "op": "=",
                  "right": {
                   "var_access_expr": {
-                   "name": "__local_fn_36",
+                   "name": "__local_fn_35",
                    "is_external": false,
                    "loc": {
                     "Line": -1,
                     "Column": -1
                    },
                    "data": {
-                    "accessID": 36
+                    "accessID": 35
                    },
-                   "ID": 43
+                   "ID": 42
                   }
                  },
                  "loc": {
                   "Line": 32,
                   "Column": 59
                  },
-                 "ID": 45
+                 "ID": 44
                 }
                },
                "loc": {
@@ -222,7 +222,7 @@
                   }
                  },
                  "readAccess": {
-                  "36": {
+                  "35": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -232,7 +232,7 @@
                  }
                 }
                },
-               "ID": 42
+               "ID": 41
               }
              }
             ],
@@ -241,7 +241,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 39
+            "ID": 38
            }
           },
           "doMethodID": 0,
@@ -258,7 +258,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 35,
+      "multiStageID": 28,
       "Caches": {}
      }
     ],
@@ -290,5 +290,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }
