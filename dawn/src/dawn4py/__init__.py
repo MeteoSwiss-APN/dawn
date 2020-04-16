@@ -23,7 +23,7 @@ from typing import Any, Dict, Optional, Union
 from . import _dawn4py
 from . import serialization
 from ._dawn4py import SIRSerializerFormat, IIRSerializerFormat
-from ._dawn4py import PassGroup, CodegenBackend
+from ._dawn4py import PassGroup, CodeGenBackend
 from ._dawn4py import default_pass_groups
 from ._dawn4py import run_optimizer_sir, run_optimizer_iir
 from ._dawn4py import run_codegen, compile_sir

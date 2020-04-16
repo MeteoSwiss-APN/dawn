@@ -262,7 +262,7 @@ if __name__ == "__main__":
                 os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.h"),
             ),
             (
-                "CodegenBackend",
+                "CodeGenBackend",
                 "dawn::codegen::Backend",
                 os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.h"),
             ),
@@ -277,28 +277,36 @@ if __name__ == "__main__":
             enum_str = make_enum_binding(py_name, c_name, values) + "\n"
             code = splice_into_string(code, "{{ " + py_name + " }}", enum_str)
 
-        for c_name, file in (
-            ("dawn::codegen::Options", os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),),
-            ("dawn::Options", os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),),
+        for c_name, py_name, file in (
+            (
+                "dawn::codegen::Options",
+                "CodeGenOptions",
+                os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),
+            ),
+            (
+                "dawn::Options",
+                "OptimizerOptions",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),
+            ),
         ):
             options = extract_options_from_file(file)
-            cpp_args, py_args = make_args(options)
-            if len(cpp_args) > 0:
-                cpp_args_str = "," + ",\n".join(cpp_args)
-                py_args_str = "," + ",\n".join(py_args)
-                code = splice_into_string(
-                    code, "{{ " + c_name + ":" + "CppArgs" " }}", cpp_args_str
-                )
-                code = splice_into_string(
-                    code,
-                    "{{ " + c_name + ":" + "VarList" " }}",
-                    ",".join((x.cpp_name for x in options)),
-                )
-                code = splice_into_string(
-                    code, "{{ " + c_name + ":" + "PyArgs" " }}", py_args_str,
-                )
-            # struct_str = make_struct_binding(py_name, c_name,) + "\n\n"
-            # code = splice_into_string(code, "{{ " + py_name + " }}", struct_str)
+            # cpp_args, py_args = make_args(options)
+            # if len(cpp_args) > 0:
+            #     cpp_args_str = "," + ",\n".join(cpp_args)
+            #     py_args_str = "," + ",\n".join(py_args)
+            #     code = splice_into_string(
+            #         code, "{{ " + c_name + ":" + "CppArgs" " }}", cpp_args_str
+            #     )
+            #     code = splice_into_string(
+            #         code,
+            #         "{{ " + c_name + ":" + "VarList" " }}",
+            #         ",".join((x.cpp_name for x in options)),
+            #     )
+            #     code = splice_into_string(
+            #         code, "{{ " + c_name + ":" + "PyArgs" " }}", py_args_str,
+            #     )
+            struct_str = make_struct_binding(py_name, c_name, options) + "\n\n"
+            code = splice_into_string(code, "{{ " + py_name + " }}", struct_str)
 
         with open(OUTPUT_FILE, mode="w") as f:
             f.write(code)

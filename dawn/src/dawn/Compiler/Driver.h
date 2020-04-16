@@ -46,11 +46,10 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 /// }
 
 /// @brief Convenience function to compile SIR directly to a translation unit
-std::unique_ptr<codegen::TranslationUnit>
-compile(const std::shared_ptr<SIR>& stencilIR,
-        const std::list<PassGroup>& groups = defaultPassGroups(),
-        codegen::Backend backend = codegen::Backend::GridTools,
-        const Options& optimizerOptions = {}, const codegen::Options& codegenOptions = {});
+std::unique_ptr<codegen::TranslationUnit> compile(
+    const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups = defaultPassGroups(),
+    const Options& optimizerOptions = {}, codegen::Backend backend = codegen::Backend::GridTools,
+    const codegen::Options& codegenOptions = {});
 
 } // namespace dawn
 

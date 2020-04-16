@@ -211,9 +211,7 @@ def main():
     f.close()
 
     # compile
-    code = dawn4py.compile_sir(
-        sir_utils.to_bytes(sir), codegen_backend=dawn4py.CodegenBackend.CXXNaiveIco
-    )
+    code = dawn4py.compile_sir(sir_utils.to_bytes(sir), backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
     print(f"Writing generated code to '{gen_outputfile}'")
