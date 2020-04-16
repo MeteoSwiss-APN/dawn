@@ -1,26 +1,20 @@
-#include "dawn/Compiler/Driver.h"
-#include "dawn/Optimizer/Options.h"
-
-#include "dawn/CodeGen/Driver.h"
-#include "dawn/CodeGen/Options.h"
-
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 
+#include "dawn/CodeGen/Driver.h"
+#include "dawn/Compiler/Driver.h"
+
+#include <list>
+#include <map>
+#include <string>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <sstream>
-#include <string>
-
 namespace py = ::pybind11;
-
-namespace {
-const auto defaultPassGroups = dawn::defaultPassGroups();
-}
 
 PYBIND11_MODULE(_dawn4py, m) {
   m.doc() = "Dawn DSL toolchain"; // optional module docstring
@@ -191,8 +185,7 @@ PYBIND11_MODULE(_dawn4py, m) {
 
   m.def("run_optimizer_sir",
         [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& groups,
-           const dawn::Options& options) -> std::map<std::string, std::string> {
+           const std::list<dawn::PassGroup>& groups, const dawn::Options& options) {
           auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
           auto optimizedSIM = dawn::run(stencilIR, groups, options);
           std::map<std::string, std::string> instantiationStringMap;
@@ -206,15 +199,14 @@ PYBIND11_MODULE(_dawn4py, m) {
           return instantiationStringMap;
         },
         "Lower the stencil IR to a stencil instantiation map and (optionally) run optimization "
-        "passes.",
-        "A list of default optimization passes is returned from default_pass_groups().",
+        "passes. A list of default optimization passes is returned from default_pass_groups().",
         py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
         py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
   m.def("run_optimizer_iir",
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
            dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-           const dawn::Options& options) -> std::map<std::string, std::string> {
+           const dawn::Options& options) {
           std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
           for(auto [name, instStr] : stencilInstantiationMap) {
             internalMap.insert(
@@ -228,8 +220,8 @@ PYBIND11_MODULE(_dawn4py, m) {
           }
           return instantiationStringMap;
         },
-        "Optimize the stencil instantiation map.",
-        "A list of default optimization passes is returned from default_pass_groups().",
+        "Optimize the stencil instantiation map. A list of default optimization passes is returned "
+        "from default_pass_groups().",
         py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Byte,
         py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
@@ -251,14 +243,14 @@ PYBIND11_MODULE(_dawn4py, m) {
 
   m.def("compile_sir",
         [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& passGroups, const dawn::Options& optimizerOptions,
+           const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
            dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
           auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-          auto optimizedSIM = dawn::run(stencilIR, passGroups, optimizerOptions);
-          return dawn::codegen::generate(dawn::codegen::run(optimizedSIM, backend, codegenOptions));
+          return dawn::codegen::generate(
+              dawn::compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
         },
         "Compile the stencil IR: lower, optimize, and generate code. Runs the "
-        "default_pass_groups() unless ",
+        "default_pass_groups() unless the 'groups' argument is passed",
         py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
         py::arg("groups") = dawn::defaultPassGroups(),
         py::arg("optimizer_options") = dawn::Options(),
