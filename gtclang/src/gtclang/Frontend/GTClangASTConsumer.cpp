@@ -23,7 +23,6 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/Diagnostics.h"
