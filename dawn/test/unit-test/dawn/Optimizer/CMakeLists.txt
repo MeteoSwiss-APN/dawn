@@ -21,7 +21,6 @@ add_executable(${executable}
   TestPassIntervalPartitioning.cpp
   TestPassFieldVersioning.cpp
   TestPassMultiStageMerger.cpp
-  TestPassMultiStageSplitter.cpp
   TestPassRemoveScalars.cpp
   TestPassSetCaches.cpp
   TestPassSetNonTempCaches.cpp
