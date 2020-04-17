@@ -208,7 +208,7 @@ def get_enum_values(filename: str, enum_name: str):
             )
         )
         assert len(enum_values) > 0
-        return enum_values
+        return [x.strip() for x in enum_values]
 
 
 def make_enum_binding(py_name: str, c_name: str, values: list):

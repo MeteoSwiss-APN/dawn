@@ -22,12 +22,12 @@ PYBIND11_MODULE(_dawn4py, m) {
   // Enumerations
   py::enum_<dawn::SIRSerializer::Format>(m, "SIRSerializerFormat")
       .value("Json", dawn::SIRSerializer::Format::Json)
-      .value("Byte  ", dawn::SIRSerializer::Format::Byte)
+      .value("Byte", dawn::SIRSerializer::Format::Byte)
       .export_values();
 
   py::enum_<dawn::IIRSerializer::Format>(m, "IIRSerializerFormat")
       .value("Json", dawn::IIRSerializer::Format::Json)
-      .value("Byte  ", dawn::IIRSerializer::Format::Byte)
+      .value("Byte", dawn::IIRSerializer::Format::Byte)
       .export_values();
 
   py::enum_<dawn::PassGroup>(m, "PassGroup")
