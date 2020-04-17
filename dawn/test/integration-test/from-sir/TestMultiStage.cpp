@@ -339,74 +339,27 @@ TEST_F(TestMultiStage, test_field_access_interval_04) {
 }
 
 TEST_F(TestMultiStage, test_compute_read_access_interval_03) {
-  //    Stencil_0
-  //    {
-  //      MultiStage_0 [forward]
-  //      {
-  //        Stage_0
-  //        {
-  //          Do_0 { Start : Start }
-  //          {
-  //            tmp[0, 0, 0] = a[0, 0, 0];
-  //              Write Accesses:
-  //                tmp : [(0, 0), (0, 0), (0, 0)]
-  //              Read Accesses:
-  //                a : [(0, 0), (0, 0), (0, 0)]
-
-  //          }
-  //          Do_1 { Start+1 : End }
-  //          {
-  //            b[0, 0, 0] = tmp[0, 0, -1];
-  //              Write Accesses:
-  //                b : [(0, 0), (0, 0), (0, 0)]
-  //              Read Accesses:
-  //                tmp : [(0, 0), (0, 0), (-1, 0)]
-
-  //          }
-  //          Extents: [(0, 0), (0, 0), (-1, 0)]
-  //        }
-  //      }
-  //      MultiStage_1 [backward]
-  //      {
-  //        Stage_0
-  //        {
-  //          Do_0 { End : End }
-  //          {
-  //            tmp[0, 0, 0] = ((b[0, 0, -1] + b[0, 0, 0]) * tmp[0, 0, 0]);
-  //              Write Accesses:
-  //                tmp : [(0, 0), (0, 0), (0, 0)]
-  //              Read Accesses:
-  //                tmp : [(0, 0), (0, 0), (0, 0)]
-  //                b : [(0, 0), (0, 0), (-1, 0)]
-
-  //          }
-  //          Do_1 { Start : End-1 }
-  //          {
-  //            tmp[0, 0, 0] = (2 * b[0, 0, 0]);
-  //              Write Accesses:
-  //                tmp : [(0, 0), (0, 0), (0, 0)]
-  //              Read Accesses:
-  //                b : [(0, 0), (0, 0), (0, 0)]
-  //                2 : [(0, 0), (0, 0), (0, 0)]
-
-  //            c[0, 0, 0] = tmp[0, 0, 1];
-  //              Write Accesses:
-  //                c : [(0, 0), (0, 0), (0, 0)]
-  //              Read Accesses:
-  //                tmp : [(0, 0), (0, 0), (0, 1)]
-
-  //          }
-  //          Extents: [(0, 0), (0, 0), (0, 0)]
-  //        }
-  //      }
-  //    }
-
+  /*
+    vertical_region(k_start, k_start) {
+      tmp = a;
+    }
+    vertical_region(k_start + 1, k_end) {
+      b = tmp(k - 1);
+    }
+    vertical_region(k_end, k_end) {
+      tmp = (b(k - 1) + b) * tmp;
+    }
+    vertical_region(k_end - 1, k_start) {
+      tmp = 2 * b;
+      c = tmp(k + 1);
+    }
+   */
   auto stencilInstantiation = loadTest("input/test_compute_read_access_interval_03.sir", "stencil");
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getChildren().size(), 2);
+  EXPECT_EQ(stencil->getChildren().size(), 3);
 
   auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *mss0it;

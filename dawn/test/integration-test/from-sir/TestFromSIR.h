@@ -53,26 +53,24 @@ protected:
     if(!TestEnvironment::path_.empty())
       filename = TestEnvironment::path_ + "/" + filename;
     std::ifstream file(filename);
-    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
+    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
     std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
+    // Read SIR and lower to IIR
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
     auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
-    std::list<PassGroup> groups = defaultPassGroups();
-    stencilInstantiationMap = compiler_.optimize(stencilInstantiationMap, groups);
 
     DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
     DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
                     (stencilName + " not found in sir").c_str());
-    auto instantiation = stencilInstantiationMap[stencilName];
 
-    //    // Recompute derived info...
-    //    instantiation->computeDerivedInfo();
-    //    IIRSerializer::serialize(filename + ".iir", instantiation);
+    // Optimize IIR
+    std::list<PassGroup> groups = defaultPassGroups();
+    stencilInstantiationMap = compiler_.optimize(stencilInstantiationMap, groups);
 
-    return instantiation;
+    return stencilInstantiationMap[stencilName];
   }
 };
 
