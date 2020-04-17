@@ -1,0 +1,617 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "28": "d",
+   "60": "c",
+   "27": "a",
+   "59": "b"
+  },
+  "accessIDToType": {
+   "27": 6,
+   "28": 6
+  },
+  "literalIDToName": {
+   "-61": "1"
+  },
+  "fieldAccessIDs": [
+   27,
+   28
+  ],
+  "APIFieldIDs": [
+   27,
+   28
+  ],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {
+   "27": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   },
+   "28": {
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
+   }
+  },
+  "idToStencilCall": {
+   "29": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_29",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 30
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": 23,
+   "Column": 8
+  },
+  "stencilName": "stencil"
+ },
+ "internalIR": {
+  "gridType": "Cartesian",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "var_decl_stmt": {
+               "type": {
+                "builtin_type": {
+                 "type_id": "Integer"
+                },
+                "is_const": false,
+                "is_volatile": false
+               },
+               "name": "b",
+               "dimension": 0,
+               "op": "=",
+               "init_list": [
+                {
+                 "field_access_expr": {
+                  "name": "d",
+                  "vertical_offset": 0,
+                  "zero_offset": {},
+                  "argument_map": [
+                   -1,
+                   -1,
+                   -1
+                  ],
+                  "argument_offset": [
+                   0,
+                   0,
+                   0
+                  ],
+                  "negate_offset": false,
+                  "loc": {
+                   "Line": 28,
+                   "Column": 15
+                  },
+                  "data": {
+                   "accessID": 28
+                  },
+                  "ID": 89
+                 }
+                }
+               ],
+               "loc": {
+                "Line": 28,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "59": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "28": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "var_decl_stmt_data": {
+                "accessID": 59
+               },
+               "ID": 88
+              }
+             },
+             {
+              "var_decl_stmt": {
+               "type": {
+                "builtin_type": {
+                 "type_id": "Integer"
+                },
+                "is_const": false,
+                "is_volatile": false
+               },
+               "name": "c",
+               "dimension": 0,
+               "op": "=",
+               "init_list": [
+                {
+                 "field_access_expr": {
+                  "name": "d",
+                  "vertical_offset": 0,
+                  "zero_offset": {},
+                  "argument_map": [
+                   -1,
+                   -1,
+                   -1
+                  ],
+                  "argument_offset": [
+                   0,
+                   0,
+                   0
+                  ],
+                  "negate_offset": false,
+                  "loc": {
+                   "Line": 29,
+                   "Column": 15
+                  },
+                  "data": {
+                   "accessID": 28
+                  },
+                  "ID": 91
+                 }
+                }
+               ],
+               "loc": {
+                "Line": 29,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "60": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "28": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "var_decl_stmt_data": {
+                "accessID": 60
+               },
+               "ID": 90
+              }
+             },
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "a",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 30,
+                    "Column": 7
+                   },
+                   "data": {
+                    "accessID": 27
+                   },
+                   "ID": 100
+                  }
+                 },
+                 "op": "+=",
+                 "right": {
+                  "binary_operator": {
+                   "left": {
+                    "unary_operator": {
+                     "op": "++",
+                     "operand": {
+                      "var_access_expr": {
+                       "name": "b",
+                       "is_external": false,
+                       "loc": {
+                        "Line": 30,
+                        "Column": 14
+                       },
+                       "data": {
+                        "accessID": 59
+                       },
+                       "ID": 95
+                      }
+                     },
+                     "loc": {
+                      "Line": 30,
+                      "Column": 12
+                     },
+                     "ID": 94
+                    }
+                   },
+                   "op": "+",
+                   "right": {
+                    "binary_operator": {
+                     "left": {
+                      "literal_access_expr": {
+                       "value": "1",
+                       "type": {
+                        "type_id": "Integer"
+                       },
+                       "loc": {
+                        "Line": 30,
+                        "Column": 19
+                       },
+                       "data": {
+                        "accessID": -61
+                       },
+                       "ID": 97
+                      }
+                     },
+                     "op": "+",
+                     "right": {
+                      "unary_operator": {
+                       "op": "--",
+                       "operand": {
+                        "var_access_expr": {
+                         "name": "c",
+                         "is_external": false,
+                         "loc": {
+                          "Line": 30,
+                          "Column": 25
+                         },
+                         "data": {
+                          "accessID": 60
+                         },
+                         "ID": 99
+                        }
+                       },
+                       "loc": {
+                        "Line": 30,
+                        "Column": 23
+                       },
+                       "ID": 98
+                      }
+                     },
+                     "loc": {
+                      "Line": 30,
+                      "Column": 19
+                     },
+                     "ID": 96
+                    }
+                   },
+                   "loc": {
+                    "Line": 30,
+                    "Column": 12
+                   },
+                   "ID": 93
+                  }
+                 },
+                 "loc": {
+                  "Line": 30,
+                  "Column": 7
+                 },
+                 "ID": 101
+                }
+               },
+               "loc": {
+                "Line": 30,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "27": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "60": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "59": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "27": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "-61": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 92
+              }
+             },
+             {
+              "expr_stmt": {
+               "expr": {
+                "assignment_expr": {
+                 "left": {
+                  "field_access_expr": {
+                   "name": "a",
+                   "vertical_offset": 0,
+                   "zero_offset": {},
+                   "argument_map": [
+                    -1,
+                    -1,
+                    -1
+                   ],
+                   "argument_offset": [
+                    0,
+                    0,
+                    0
+                   ],
+                   "negate_offset": false,
+                   "loc": {
+                    "Line": 31,
+                    "Column": 7
+                   },
+                   "data": {
+                    "accessID": 27
+                   },
+                   "ID": 108
+                  }
+                 },
+                 "op": "*=",
+                 "right": {
+                  "binary_operator": {
+                   "left": {
+                    "unary_operator": {
+                     "op": "++",
+                     "operand": {
+                      "var_access_expr": {
+                       "name": "c",
+                       "is_external": false,
+                       "loc": {
+                        "Line": 31,
+                        "Column": 14
+                       },
+                       "data": {
+                        "accessID": 60
+                       },
+                       "ID": 105
+                      }
+                     },
+                     "loc": {
+                      "Line": 31,
+                      "Column": 12
+                     },
+                     "ID": 104
+                    }
+                   },
+                   "op": "*",
+                   "right": {
+                    "unary_operator": {
+                     "op": "--",
+                     "operand": {
+                      "var_access_expr": {
+                       "name": "b",
+                       "is_external": false,
+                       "loc": {
+                        "Line": 31,
+                        "Column": 20
+                       },
+                       "data": {
+                        "accessID": 59
+                       },
+                       "ID": 107
+                      }
+                     },
+                     "loc": {
+                      "Line": 31,
+                      "Column": 18
+                     },
+                     "ID": 106
+                    }
+                   },
+                   "loc": {
+                    "Line": 31,
+                    "Column": 12
+                   },
+                   "ID": 103
+                  }
+                 },
+                 "loc": {
+                  "Line": 31,
+                  "Column": 7
+                 },
+                 "ID": 109
+                }
+               },
+               "loc": {
+                "Line": 31,
+                "Column": 7
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "27": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {
+                  "27": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "59": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  },
+                  "60": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 }
+                }
+               },
+               "ID": 102
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 87
+           }
+          },
+          "doMethodID": 0,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 57,
+        "locationType": "LocationTypeUnknown"
+       }
+      ],
+      "loopOrder": "Parallel",
+      "multiStageID": 62,
+      "Caches": {
+       "27": {
+        "type": "CT_K",
+        "policy": "CP_FillFlush",
+        "accessID": 27,
+        "interval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        },
+        "enclosingAccessInterval": {
+         "lower_offset": 0,
+         "upper_offset": 0,
+         "special_lower_level": "Start",
+         "special_upper_level": "End"
+        }
+       }
+      }
+     }
+    ],
+    "stencilID": 29,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_29",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 30
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "samples/test_simplify_statements_mix_multiple_nested.cpp"
+}

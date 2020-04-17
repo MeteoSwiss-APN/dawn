@@ -14,22 +14,19 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// gtclang test_simplify_statements_increment_decrement.cpp -fno-codegen -fwrite-iir -fkeep-varnames
+// gtclang test_simplify_statements_increment_nested.cpp -fno-codegen -fwrite-iir -fkeep-varnames
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gtclang::dsl;
 
 stencil stencil {
-  storage a, d;
+  storage a, c;
 
   Do {
     vertical_region(k_start, k_end) { 
-      int b = d;
-      int c = d;
-      --b;
-      ++c;
-      a = c + b;
+      int b = c;
+      a = (++b) + 1;
     }
   }
 };

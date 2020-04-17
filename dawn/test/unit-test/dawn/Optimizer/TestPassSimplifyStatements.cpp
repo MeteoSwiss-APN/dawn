@@ -61,17 +61,63 @@ TEST_F(TestPassSimplifyStatements, CompoundStatement) {
 }
 
 TEST_F(TestPassSimplifyStatements, IncrementDecrement) {
-  // int b = 0;
-  // int c = 0;
+  // int b = d;
+  // int c = d;
   // --b;
   // ++c;
+  // a = c + b;
   runPass("input/test_simplify_statements_increment_decrement.iir");
+  ASSERT_EQ(5, getFirstDoMethod(instantiation_).getAST().getStatements().size());
   auto const& firstStmt = getNthStmt(getFirstDoMethod(instantiation_), 2);
   ASSERT_TRUE(firstStmt->equals(expr(assign(var("b"), binop(var("b"), "-", lit(1)))).get(),
                                 /*compareData = */ false));
   auto const& secondStmt = getNthStmt(getFirstDoMethod(instantiation_), 3);
   ASSERT_TRUE(secondStmt->equals(expr(assign(var("c"), binop(var("c"), "+", lit(1)))).get(),
                                  /*compareData = */ false));
+}
+
+TEST_F(TestPassSimplifyStatements, IncrementNested) {
+  // int b = c;
+  // a = (++b) + 1;
+  runPass("input/test_simplify_statements_increment_nested.iir");
+  ASSERT_EQ(3, getFirstDoMethod(instantiation_).getAST().getStatements().size());
+  auto const& firstStmt = getNthStmt(getFirstDoMethod(instantiation_), 1);
+  ASSERT_TRUE(firstStmt->equals(expr(assign(var("b"), binop(var("b"), "+", lit(1)))).get(),
+                                /*compareData = */ false));
+  auto const& secondStmt = getNthStmt(getFirstDoMethod(instantiation_), 2);
+  ASSERT_TRUE(secondStmt->equals(expr(assign(field("a"), binop(var("b"), "+", lit(1)))).get(),
+                                 /*compareData = */ false));
+}
+
+TEST_F(TestPassSimplifyStatements, MixMultipleNested) {
+  // int b = d;
+  // int c = d;
+  // a += ++b + (1 + --c);
+  // a *= ++c * --b;
+  runPass("input/test_simplify_statements_mix_multiple_nested.iir");
+  ASSERT_EQ(8, getFirstDoMethod(instantiation_).getAST().getStatements().size());
+  auto const& firstStmt = getNthStmt(getFirstDoMethod(instantiation_), 2);
+  ASSERT_TRUE(firstStmt->equals(expr(assign(var("b"), binop(var("b"), "+", lit(1)))).get(),
+                                /*compareData = */ false));
+  auto const& secondStmt = getNthStmt(getFirstDoMethod(instantiation_), 3);
+  ASSERT_TRUE(secondStmt->equals(expr(assign(var("c"), binop(var("c"), "-", lit(1)))).get(),
+                                 /*compareData = */ false));
+  auto const& thirdStmt = getNthStmt(getFirstDoMethod(instantiation_), 4);
+  ASSERT_TRUE(thirdStmt->equals(
+      expr(assign(field("a"),
+                  binop(field("a"), "+", binop(var("b"), "+", binop(lit(1), "+", var("c"))))))
+          .get(),
+      /*compareData = */ false));
+  auto const& fourthStmt = getNthStmt(getFirstDoMethod(instantiation_), 5);
+  ASSERT_TRUE(fourthStmt->equals(expr(assign(var("c"), binop(var("c"), "+", lit(1)))).get(),
+                                 /*compareData = */ false));
+  auto const& fifthStmt = getNthStmt(getFirstDoMethod(instantiation_), 6);
+  ASSERT_TRUE(fifthStmt->equals(expr(assign(var("b"), binop(var("b"), "-", lit(1)))).get(),
+                                /*compareData = */ false));
+  auto const& sixthStmt = getNthStmt(getFirstDoMethod(instantiation_), 7);
+  ASSERT_TRUE(sixthStmt->equals(
+      expr(assign(field("a"), binop(field("a"), "*", binop(var("c"), "*", var("b"))))).get(),
+      /*compareData = */ false));
 }
 
 } // namespace
