@@ -33,18 +33,17 @@ using namespace dawn;
 using namespace astgen;
 
 namespace {
-// TODO remove compilerutil
 class TestPassSimplifyStatements : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
   void runPass(const std::string& filename) {
     dawn::UIDGenerator::getInstance()->reset();
-    instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+    instantiation_ = IIRSerializer::deserialize(filename);
 
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSimplifyStatements>(context_, instantiation_));
+    PassSimplifyStatements pass(*context_);
+    ASSERT_TRUE(pass.run(instantiation_));
   }
 };
 
