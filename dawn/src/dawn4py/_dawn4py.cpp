@@ -185,21 +185,11 @@ PYBIND11_MODULE(_dawn4py, m) {
 
   m.def("run_optimizer_sir",
         [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& groups, const dawn::Options& options) {
-          auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-          auto optimizedSIM = dawn::run(stencilIR, groups, options);
-          std::map<std::string, std::string> instantiationStringMap;
-          const dawn::IIRSerializer::Format outputFormat =
-              format == dawn::SIRSerializer::Format::Byte ? dawn::IIRSerializer::Format::Byte
-                                                          : dawn::IIRSerializer::Format::Json;
-          for(auto [name, instantiation] : optimizedSIM) {
-            instantiationStringMap.insert(std::make_pair(
-                name, dawn::IIRSerializer::serializeToString(instantiation, outputFormat)));
-          }
-          return instantiationStringMap;
-        },
+           const std::list<dawn::PassGroup>& groups,
+           const dawn::Options& options) { return dawn::run(sir, format, groups, options); },
         "Lower the stencil IR to a stencil instantiation map and (optionally) run optimization "
-        "passes. A list of default optimization passes is returned from default_pass_groups().",
+        "passes.",
+        "A list of default optimization passes is returned from default_pass_groups().",
         py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
         py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
@@ -207,21 +197,10 @@ PYBIND11_MODULE(_dawn4py, m) {
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
            dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
            const dawn::Options& options) {
-          std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
-          for(auto [name, instStr] : stencilInstantiationMap) {
-            internalMap.insert(
-                std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
-          }
-          auto optimizedSIM = dawn::run(internalMap, groups, options);
-          std::map<std::string, std::string> instantiationStringMap;
-          for(auto [name, instantiation] : optimizedSIM) {
-            instantiationStringMap.insert(std::make_pair(
-                name, dawn::IIRSerializer::serializeToString(instantiation, format)));
-          }
-          return instantiationStringMap;
+          return dawn::run(stencilInstantiationMap, format, groups, options);
         },
-        "Optimize the stencil instantiation map. A list of default optimization passes is returned "
-        "from default_pass_groups().",
+        "Optimize the stencil instantiation map.",
+        "A list of default optimization passes is returned from default_pass_groups().",
         py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Byte,
         py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
@@ -229,14 +208,9 @@ PYBIND11_MODULE(_dawn4py, m) {
         [](const std::map<std::string, std::string>& stencilInstantiationMap,
            dawn::IIRSerializer::Format format, dawn::codegen::Backend backend,
            const dawn::codegen::Options& options) {
-          std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
-          for(auto [name, instStr] : stencilInstantiationMap) {
-            internalMap.insert(
-                std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
-          }
-          return dawn::codegen::generate(dawn::codegen::run(internalMap, backend, options));
+          return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
         },
-        "Generate code from the stencil instantiation map", py::arg("stencil_instantiation_map"),
+        "Generate code from the stencil instantiation map.", py::arg("stencil_instantiation_map"),
         py::arg("format") = dawn::IIRSerializer::Format::Byte,
         py::arg("backend") = dawn::codegen::Backend::GridTools,
         py::arg("options") = dawn::codegen::Options());
@@ -245,13 +219,11 @@ PYBIND11_MODULE(_dawn4py, m) {
         [](const std::string& sir, dawn::SIRSerializer::Format format,
            const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
            dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
-          auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-          return dawn::codegen::generate(
-              dawn::compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
+          return dawn::compile(sir, format, groups, optimizerOptions, backend, codegenOptions);
         },
-        "Compile the stencil IR: lower, optimize, and generate code. Runs the "
-        "default_pass_groups() unless the 'groups' argument is passed",
-        py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
+        "Compile the stencil IR: lower, optimize, and generate code.",
+        "Runs the default_pass_groups() unless the 'groups' argument is passed.", py::arg("sir"),
+        py::arg("format") = dawn::SIRSerializer::Format::Byte,
         py::arg("groups") = dawn::defaultPassGroups(),
         py::arg("optimizer_options") = dawn::Options(),
         py::arg("backend") = dawn::codegen::Backend::GridTools,
