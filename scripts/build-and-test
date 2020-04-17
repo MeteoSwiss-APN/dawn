@@ -85,20 +85,20 @@ if [ "$run_tests" == "true" ]; then
     (cd $dawn_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
 
     # Clang-GridTools
-    if [ -n "$cg_source_dir" ]; then
-        if [ -z "$cg_build_dir" ]; then
-            cg_build_dir=$cg_source_dir/build
-        fi
+    # if [ -n "$cg_source_dir" ]; then
+    #     if [ -z "$cg_build_dir" ]; then
+    #         cg_build_dir=$cg_source_dir/build
+    #     fi
 
-        cmake -S $cg_source_dir -B $cg_build_dir \
-            -DDawn_DIR=$dawn_install_dir/lib/cmake/Dawn \
-            -DGTClang_DIR=$dawn_install_dir/lib/cmake/GTClang \
-            ${build_args[@]}
+    #     cmake -S $cg_source_dir -B $cg_build_dir \
+    #         -DDawn_DIR=$dawn_install_dir/lib/cmake/Dawn \
+    #         -DGTClang_DIR=$dawn_install_dir/lib/cmake/GTClang \
+    #         ${build_args[@]}
 
-        $prefix cmake --build $cg_build_dir --parallel $build_jobs
+    #     $prefix cmake --build $cg_build_dir --parallel $build_jobs
 
-        (cd $cg_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
-    fi
+    #     (cd $cg_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
+    # fi
 fi
 
 if [ "$copy_test_xml" = "true" ]; then
