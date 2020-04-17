@@ -59,8 +59,9 @@ protected:
 
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
+    auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
     std::list<PassGroup> groups = defaultPassGroups();
-    auto stencilInstantiationMap = compiler_.optimize(compiler_.lowerToIIR(sir), groups);
+    stencilInstantiationMap = compiler_.optimize(stencilInstantiationMap, groups);
 
     DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
     DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),

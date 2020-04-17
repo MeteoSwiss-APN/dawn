@@ -421,127 +421,43 @@ TEST_F(TestMultiStage, test_compute_read_access_interval_03) {
 
   EXPECT_EQ(interval1, (iir::MultiInterval{iir::Interval{sir::Interval::End, sir::Interval::End}}));
 }
+
 TEST_F(TestMultiStage, test_compute_read_access_interval_04) {
+  /**
+   vertical_region(k_start, k_end) {
+      tmp = in;
 
-  // Stencil_0
-  //{
-  //  MultiStage_0 [parallel]
-  //  {
-  //    Stage_0
-  //    {
-  //      Do_0 { Start : End }
-  //      {
-  //        tmp[0, 0, 0] = in[0, 0, 0];
-  //          Write Accesses:
-  //            tmp : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            in : [(0, 0), (0, 0), (0, 0)]
+      b1 = a1;
+      c1 = b1(k + 1);
+      c1 = b1(k - 1);
 
-  //        b1[0, 0, 0] = a1[0, 0, 0];
-  //          Write Accesses:
-  //            b1 : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            a1 : [(0, 0), (0, 0), (0, 0)]
+      out = tmp;
+      tmp = in;
 
-  //      }
-  //      Extents: [(0, 0), (0, 0), (-2, 2)]
-  //    }
-  //  }
-  //  MultiStage_1 [parallel]
-  //  {
-  //    Stage_0
-  //    {
-  //      Do_0 { Start : End }
-  //      {
-  //        c1[0, 0, 0] = b1[0, 0, 1];
-  //          Write Accesses:
-  //            c1 : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            b1 : [(0, 0), (0, 0), (0, 1)]
+      b2 = a2;
+      c2 = b2(k + 1);
+      c2 = b2(k - 1);
 
-  //        c1[0, 0, 0] = b1[0, 0, -1];
-  //          Write Accesses:
-  //            c1 : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            b1 : [(0, 0), (0, 0), (-1, 0)]
+      out = tmp;
+    }
+   */
+  auto instantiation = loadTest("input/test_compute_read_access_interval_04.sir", "stencil");
+  const auto& stencils = instantiation->getStencils();
 
-  //        out[0, 0, 0] = tmp[0, 0, 0];
-  //          Write Accesses:
-  //            out : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            tmp : [(0, 0), (0, 0), (0, 0)]
-
-  //        tmp[0, 0, 0] = in[0, 0, 0];
-  //          Write Accesses:
-  //            tmp : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            in : [(0, 0), (0, 0), (0, 0)]
-
-  //        b2[0, 0, 0] = a2[0, 0, 0];
-  //          Write Accesses:
-  //            b2 : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            a2 : [(0, 0), (0, 0), (0, 0)]
-
-  //      }
-  //      Extents: [(0, 0), (0, 0), (-1, 1)]
-  //    }
-  //  }
-  //  MultiStage_2 [parallel]
-  //  {
-  //    Stage_0
-  //    {
-  //      Do_0 { Start : End }
-  //      {
-  //        c2[0, 0, 0] = b2[0, 0, 1];
-  //          Write Accesses:
-  //            c2 : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            b2 : [(0, 0), (0, 0), (0, 1)]
-
-  //        c2[0, 0, 0] = b2[0, 0, -1];
-  //          Write Accesses:
-  //            c2 : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            b2 : [(0, 0), (0, 0), (-1, 0)]
-
-  //        out[0, 0, 0] = tmp[0, 0, 0];
-  //          Write Accesses:
-  //            out : [(0, 0), (0, 0), (0, 0)]
-  //          Read Accesses:
-  //            tmp : [(0, 0), (0, 0), (0, 0)]
-
-  //      }
-  //      Extents: [(0, 0), (0, 0), (0, 0)]
-  //    }
-  //  }
-  //}
-
-  auto stencilInstantiation = loadTest("input/test_compute_read_access_interval_04.sir", "stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getChildren().size(), 3);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
+  auto const& mss = *(stencil->childrenBegin());
+  const auto& metadata = instantiation->getMetaData();
 
-  auto const mss0it = stencil->childrenBegin();
-  auto const& mss0 = *(mss0it);
+  auto a2_interval = mss->computeReadAccessInterval(metadata.getAccessIDFromName("a2"));
+  auto multinterval = iir::MultiInterval{iir::Interval{0, sir::Interval::End, 0, 0}};
+  ASSERT_EQ(a2_interval, multinterval);
 
-  int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("tmp");
-  auto interval0 = mss0->computeReadAccessInterval(accessID);
-
-  auto const mss1it = std::next(mss0it);
-  auto const& mss1 = *(mss1it);
-
-  auto interval1 = mss1->computeReadAccessInterval(accessID);
-
-  EXPECT_EQ(interval1, (iir::MultiInterval{iir::Interval{0, sir::Interval::End}}));
-
-  auto const mss2it = std::next(mss1it);
-  auto const& mss2 = *(mss2it);
-
-  auto interval2 = mss2->computeReadAccessInterval(accessID);
-
-  EXPECT_EQ(interval2, (iir::MultiInterval{iir::Interval{0, sir::Interval::End}}));
+  auto b1_interval = mss->computeReadAccessInterval(metadata.getAccessIDFromName("b1"));
+  multinterval =
+      iir::MultiInterval{iir::Interval{0, 0, -1, -1}, iir::Interval{0, sir::Interval::End, 1, 1}};
+  ASSERT_EQ(b1_interval, multinterval);
 }
 } // namespace dawn
