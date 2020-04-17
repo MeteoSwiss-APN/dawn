@@ -13,6 +13,9 @@ dawn_install_dir=/usr/local
 # Empty prefix
 unset prefix
 
+# By default, don't copy test xml back to root source dir
+copy_test_xml=false
+
 # Build arguments
 build_args=()
 
@@ -57,6 +60,9 @@ while [ "$1" != "" ]; do
             -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit
             -GNinja)
         ;;
+    --copy-test-xml)
+        copy_test_xml=true
+        ;;
     *)
         build_args+=($1)
         ;;
@@ -93,4 +99,16 @@ if [ "$run_tests" == "true" ]; then
 
         (cd $cg_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
     fi
+fi
+
+if [ "$copy_test_xml" = "true" ]; then
+    i=0
+    for xml in $(find $dawn_build_dir -path "*/_deps" -prune -o -name "*.xml" -print); do
+        cp $xml $dawn_source_dir/gtest_${i}.xml
+        i=$((i+1))
+    done
+    for xml in $(find $cg_build_dir -path "*/_deps" -prune -o -name "*.xml" -print); do
+        cp $xml $dawn_source_dir/gtest_${i}.xml
+        i=$((i+1))
+    done
 fi
