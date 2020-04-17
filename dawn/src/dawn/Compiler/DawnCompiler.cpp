@@ -191,7 +191,7 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
   }
 
   IIRSerializer::Format serializationKind = IIRSerializer::Format::Json;
-  if(options_.SerializeIIR || (options_.DeserializeIIR != "")) {
+  if(options_.SerializeIIR || options_.DeserializeIIR) {
     if(options_.IIRFormat == "json") {
       serializationKind = IIRSerializer::Format::Json;
     } else if(options_.IIRFormat == "byte") {
