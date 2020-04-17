@@ -18,7 +18,9 @@
 
 namespace dawn {
 
-/// @brief PassSimplifyStatements...
+/// @brief PassSimplifyStatements converts "advanced" statements (compound assignments and
+/// increment, decrement ops) into their extended equivalent forms, to have a syntax which is
+/// simpler to anaylise.
 /// @ingroup optimizer
 ///
 /// This pass is necessary to generate legal IIR

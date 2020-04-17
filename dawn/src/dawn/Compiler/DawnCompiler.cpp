@@ -40,6 +40,7 @@
 #include "dawn/Optimizer/PassSetStageLocationType.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassSetSyncStage.h"
+#include "dawn/Optimizer/PassSimplifyStatements.h"
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
@@ -143,6 +144,7 @@ DawnCompiler::lowerToIIR(const std::shared_ptr<SIR>& stencilIR) {
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
   // required passes to have proper, parallelized IR
+  optimizer.pushBackPass<PassSimplifyStatements>();
   optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
   optimizer.pushBackPass<PassMultiStageSplitter>(

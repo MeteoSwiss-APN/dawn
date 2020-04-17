@@ -15,6 +15,7 @@
 #include "PassSimplifyStatements.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Type.h"
@@ -95,6 +96,9 @@ bool PassSimplifyStatements::run(
 
       ++stmtIt;
     }
+    // Recompute the accesses metadata of all statements (new statements and changed statements
+    // require this)
+    computeAccesses(stencilInstantiation->getMetaData(), doMethod->getAST().getStatements());
   }
   return true;
 }
