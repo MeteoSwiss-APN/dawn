@@ -343,10 +343,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
                        GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
   *ost << "// Generated on " << currentDateTime() << "\n\n";
 
-  // Add the macro definitions
-  for(const auto& macroDefine : DawnTranslationUnit->getPPDefines())
-    *ost << macroDefine << "\n";
-
   ost->write(code.data(), code.size());
   if(ec.value())
     context_->getDiagnostics().report(Diagnostics::err_fs_error) << ec.message();
