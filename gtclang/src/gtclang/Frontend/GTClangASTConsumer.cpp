@@ -245,7 +245,12 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   std::string code;
   if(context_->getOptions().Serialized) {
     DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
-    code = dawn::codegen::generate(DawnTranslationUnit);
+    // Would call generate here but that adds PPDefines as well
+    code += DawnTranslationUnit->getGlobals();
+    code += "\n\n";
+    for(auto p : DawnTranslationUnit->getStencils()) {
+      code += p.second;
+    }
   } else {
     int num_stencils_generated = 0;
 
@@ -342,6 +347,10 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   *ost << dawn::format("// gtclang (%s)\n// based on LLVM/Clang (%s), Dawn (%s)\n",
                        GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
   *ost << "// Generated on " << currentDateTime() << "\n\n";
+
+  // Add the macro definitions
+  for(const auto& macroDefine : DawnTranslationUnit->getPPDefines())
+    *ost << macroDefine << "\n";
 
   ost->write(code.data(), code.size());
   if(ec.value())
