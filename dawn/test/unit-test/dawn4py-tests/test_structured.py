@@ -52,5 +52,5 @@ def test_compilation(grid_sir_with_reference_code):
         dawn4py.CodeGenBackend.GridTools,
         dawn4py.CodeGenBackend.CUDA,
     ):
-        dawn4py.compile_sir(dawn4py.serialization.to_bytes(sir), backend=backend)
+        dawn4py.compile(sir, backend=backend)
         # TODO There was not test here...

@@ -114,11 +114,11 @@ def main(args: argparse.Namespace):
 
     # serialize the SIR to file
     sir_file = open("./laplacian_stencil_from_python.sir", "wb")
-    sir_file.write(sir_utils.to_bytes(sir))
+    sir_file.write(sir_utils.to_json(sir))
     sir_file.close()
 
     # compile
-    code = dawn4py.compile_sir(sir_utils.to_bytes(sir), backend=dawn4py.CodeGenBackend.CXXNaive)
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaive)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
