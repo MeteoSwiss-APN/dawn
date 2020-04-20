@@ -75,28 +75,26 @@ MemberInfo = namedtuple(
 )
 
 
-def extract_options_from_files(files: list) -> list:
+def extract_options_from_file(file: str) -> list:
     """Generate a list of MemberInfo for an options struct."""
-
     options_info = []
-    for f in files:
-        with open(f, mode="r") as fo:
-            for m in opt_regexp.finditer("".join(fo.readlines())):
-                default_value = m.group("default_value").strip('"')
-                py_type = pythonize_type(m.group("type"))
-                py_default = pythonize_value(default_value, as_type=py_type)
-                options_info.append(
-                    MemberInfo(
-                        py_name=pythonize_name(m.group("name")),
-                        cpp_name=m.group("name"),
-                        py_type=py_type,
-                        cpp_type=m.group("type"),
-                        py_default=py_default,
-                        cpp_default=default_value,
-                        const=False,
-                        help=m.group("help"),
-                    )
+    with open(file, mode="r") as fo:
+        for m in opt_regexp.finditer("".join(fo.readlines())):
+            default_value = m.group("default_value").strip('"')
+            py_type = pythonize_type(m.group("type"))
+            py_default = pythonize_value(default_value, as_type=py_type)
+            options_info.append(
+                MemberInfo(
+                    py_name=pythonize_name(m.group("name")),
+                    cpp_name=m.group("name"),
+                    py_type=py_type,
+                    cpp_type=m.group("type"),
+                    py_default=py_default,
+                    cpp_default=default_value,
+                    const=False,
+                    help=m.group("help"),
                 )
+            )
     return options_info
 
 
@@ -182,11 +180,16 @@ def make_struct_binding(
 
 def splice_into_string(string: str, original: str, replacement: str):
     pos_start = string.find(original)
-    assert pos_start >= 0 and pos_start < len(string)
-    return string[0:pos_start] + replacement + string[pos_start + len(original) :]
+    while pos_start >= 0 and pos_start < len(string):
+        string = string[0:pos_start] + replacement + string[pos_start + len(original) :]
+        pos_start = string.find(original)
+    return string
 
 
 def get_enum_values(filename: str, enum_name: str):
+    def flatten(list_of_lists):
+        return [item for sublist in list_of_lists for item in sublist]
+
     with open(filename, mode="r") as f:
         code = f.read()
         m = re.search(r"enum\s*(class)?\s+" + enum_name, code)
@@ -195,8 +198,17 @@ def get_enum_values(filename: str, enum_name: str):
         start_pos = code[enum_start + len(enum_name) :].find("{") + enum_start + len(enum_name) + 1
         end_pos = code[start_pos:].find("}") + start_pos
         enum_values = code[start_pos:end_pos].strip().split("\n")
+        enum_values = list(
+            filter(
+                None,
+                map(
+                    lambda x: x.strip().split("//")[0],
+                    flatten([x.strip().split(",") for x in enum_values]),
+                ),
+            )
+        )
         assert len(enum_values) > 0
-        return list(map(lambda x: x.split("//")[0].split(",")[0].strip(), enum_values))
+        return [x.strip() for x in enum_values]
 
 
 def make_enum_binding(py_name: str, c_name: str, values: list):
@@ -207,22 +219,43 @@ def make_enum_binding(py_name: str, c_name: str, values: list):
     )
 
 
+def make_args(options: list) -> (list, list):
+    cpp_args = tuple(
+        map(
+            lambda x: "const "
+            + ("std::string& " if x.cpp_type == "std::string" else x.cpp_type + " ")
+            + x.cpp_name,
+            options,
+        )
+    )
+    py_args = tuple(
+        map(
+            lambda x: 'py::arg("'
+            + x.py_name
+            + '") = '
+            + ('"' + x.cpp_default + '"' if x.cpp_type == "std::string" else x.cpp_default),
+            options,
+        )
+    )
+    return cpp_args, py_args
+
+
 if __name__ == "__main__":
     print("-> Generating pybind11 bindings for Dawn...\n")
 
     with open(TEMPLATE_FILE, mode="r") as f:
         code = f.read()
         for py_name, c_name, filename in (
-            # (
-            #     "SIRSerializerFormat",
-            #     "dawn::SIRSerializer::Format",
-            #     os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "SIRSerializer.h"),
-            # ),
-            # (
-            #     "IIRSerializerFormat",
-            #     "dawn::IIRSerializer::Format",
-            #     os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "IIRSerializer.h"),
-            # ),
+            (
+                "SIRSerializerFormat",
+                "dawn::SIRSerializer::Format",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "SIRSerializer.h"),
+            ),
+            (
+                "IIRSerializerFormat",
+                "dawn::IIRSerializer::Format",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Serialization", "IIRSerializer.h"),
+            ),
             (
                 "PassGroup",
                 "dawn::PassGroup",
@@ -244,22 +277,35 @@ if __name__ == "__main__":
             enum_str = make_enum_binding(py_name, c_name, values) + "\n"
             code = splice_into_string(code, "{{ " + py_name + " }}", enum_str)
 
-        for py_name, c_name, filename in (
+        for c_name, py_name, file in (
             (
-                "CodeGenOptions",
                 "dawn::codegen::Options",
+                "CodeGenOptions",
                 os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.inc"),
             ),
             (
-                "OptimizerOptions",
                 "dawn::Options",
+                "OptimizerOptions",
                 os.path.join(DAWN_CPP_SRC_ROOT, "Optimizer", "Options.inc"),
             ),
         ):
-            struct_str = (
-                make_struct_binding(py_name, c_name, extract_options_from_files([filename]))
-                + "\n\n"
-            )
+            options = extract_options_from_file(file)
+            # cpp_args, py_args = make_args(options)
+            # if len(cpp_args) > 0:
+            #     cpp_args_str = "," + ",\n".join(cpp_args)
+            #     py_args_str = "," + ",\n".join(py_args)
+            #     code = splice_into_string(
+            #         code, "{{ " + c_name + ":" + "CppArgs" " }}", cpp_args_str
+            #     )
+            #     code = splice_into_string(
+            #         code,
+            #         "{{ " + c_name + ":" + "VarList" " }}",
+            #         ",".join((x.cpp_name for x in options)),
+            #     )
+            #     code = splice_into_string(
+            #         code, "{{ " + c_name + ":" + "PyArgs" " }}", py_args_str,
+            #     )
+            struct_str = make_struct_binding(py_name, c_name, options) + "\n\n"
             code = splice_into_string(code, "{{ " + py_name + " }}", struct_str)
 
         with open(OUTPUT_FILE, mode="w") as f:

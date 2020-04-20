@@ -54,7 +54,6 @@ OPT(bool, DisableOptimization, false, "no-opt", "",
 OPT(bool, DefaultOptimization, false, "default-opt", "",
     "Runs all the default optimization", "", false, false)
 
-// Originally Dawn/Compiler/Options.inc
 OPT(std::string, Backend, "gridtools", "backend", "",
     "Set backend code-generator. Possible values for <backend> are:"
     "\n - gridtools     = gridtools C++ code"
@@ -63,7 +62,5 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-opt       = optimized C++ code"
     "\n - cuda          = optimized cuda", "<backend>", true, false)
 OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
-OPT(std::string, DeserializeIIR, "", "read-iir", "",
-    "Deserialize the low level intermediate representation from file", "", true, false)
 
 // clang-format on

@@ -116,7 +116,8 @@ protected:
 
   void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencilInstantiation,
                dawn::codegen::Backend backend, const std::string& ref_file) {
-    auto tu = dawn::codegen::run(stencilInstantiation, backend);
+    auto tu =
+        dawn::codegen::run({{stencilInstantiation->getName(), stencilInstantiation}}, backend);
     const std::string code = dawn::codegen::generate(tu);
     const std::string ref = dawn::readFile(fs::path("../reference") / ref_file);
     ASSERT_EQ(code, ref) << "Generated code does not match reference code";

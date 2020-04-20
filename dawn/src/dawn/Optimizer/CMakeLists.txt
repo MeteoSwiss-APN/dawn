@@ -15,6 +15,8 @@
 add_library(DawnOptimizer
   CreateVersionAndRename.cpp
   CreateVersionAndRename.h
+  Driver.cpp
+  Driver.h
   OptimizerContext.cpp
   OptimizerContext.h
   Options.h

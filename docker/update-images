@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+    echo "USAGE: docker/update-images [-s] [cpu] [gpu]"
+    exit 1
+}
+
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+if [ "$1" = "-s" ]; then
+    cmd_prefix="sudo"
+    shift
+else
+    cmd_prefix=""
+fi
+
+while [ "$1" != "" ]; do
+    case $1 in
+    c | cpu)
+        image_name=gtclang/dawn-env-ubuntu19.10
+        $cmd_prefix docker build --rm \
+            --tag $image_name-base \
+            --file docker/ubuntu19.10.dockerfile .
+        $cmd_prefix docker build --rm \
+            --tag $image_name --build-arg IMAGE=$image_name-base \
+            --file docker/dawn-env.dockerfile .
+        echo "Now run:\n\t$cmd_prefix docker push $image_name"
+        ;;
+    g | gpu)
+        image_name=gtclang/dawn-env-cuda10.1-ubuntu18.04
+        $cmd_prefix docker build --rm \
+            --tag $image_name-base \
+            --file docker/cuda10.1-ubuntu18.04.dockerfile .
+        $cmd_prefix docker build --rm \
+            --tag $image_name --build-arg IMAGE=$image_name-base \
+            --file docker/dawn-env.dockerfile .
+        echo "Now run:\n\t$cmd_prefix docker push $image_name"
+        ;;
+    *)
+        usage
+        ;;
+    esac
+    shift
+done

@@ -84,7 +84,7 @@ def two_copies():
             ),
         ],
     )
-    sim = dawn4py.run_optimizer_sir(sir_utils.to_bytes(sir))
+    sim = dawn4py.lower_and_optimize(sir)
     with open(outputfile, mode="w") as f:
         f.write(sim["generated"])
     os.rename(outputfile + ".0.iir", "../input/" + outputfile + ".iir")
@@ -149,7 +149,7 @@ def two_copies_mixed():
             ),
         ],
     )
-    sim = dawn4py.run_optimizer_sir(sir_utils.to_bytes(sir))
+    sim = dawn4py.lower_and_optimize(sir)
     with open(outputfile, mode="w") as f:
         f.write(sim["generated"])
     os.rename(outputfile + ".0.iir", "../input/" + outputfile + ".iir")

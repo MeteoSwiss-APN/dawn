@@ -57,53 +57,9 @@
 
 namespace dawn {
 
-std::list<PassGroup> defaultPassGroups() {
-  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
-          PassGroup::SetCaches, PassGroup::SetBlockSize};
-}
-
-std::list<std::string> defaultPassGroupsStrings() {
-  return {"SetStageName", "StageReordering", "StageMerger", "SetCaches", "SetBlockSize"};
-}
-
-PassGroup parsePassGroupString(const std::string& passGroup) {
-  if(passGroup == "SSA" || passGroup == "ssa")
-    return dawn::PassGroup::SSA;
-  else if(passGroup == "PrintStencilGraph" || passGroup == "print-stencil-graph")
-    return dawn::PassGroup::PrintStencilGraph;
-  else if(passGroup == "SetStageName" || passGroup == "set-stage-name")
-    return dawn::PassGroup::SetStageName;
-  else if(passGroup == "StageReordering" || passGroup == "stage-reordering")
-    return dawn::PassGroup::StageReordering;
-  else if(passGroup == "StageMerger" || passGroup == "stage-merger")
-    return dawn::PassGroup::StageMerger;
-  else if(passGroup == "TemporaryMerger" || passGroup == "temporary-merger" ||
-          passGroup == "tmp-merger")
-    return dawn::PassGroup::TemporaryMerger;
-  else if(passGroup == "Inlining" || passGroup == "inlining")
-    return dawn::PassGroup::Inlining;
-  else if(passGroup == "IntervalPartitioning" || passGroup == "interval-partitioning")
-    return dawn::PassGroup::IntervalPartitioning;
-  else if(passGroup == "TmpToStencilFunction" || passGroup == "tmp-to-stencil-function" ||
-          passGroup == "tmp-to-stencil-fcn" || passGroup == "tmp-to-function" ||
-          passGroup == "tmp-to-fcn")
-    return dawn::PassGroup::TmpToStencilFunction;
-  else if(passGroup == "SetNonTempCaches" || passGroup == "set-non-tmp-caches" ||
-          passGroup == "set-nontmp-caches")
-    return dawn::PassGroup::SetNonTempCaches;
-  else if(passGroup == "SetCaches" || passGroup == "set-caches")
-    return dawn::PassGroup::SetCaches;
-  else if(passGroup == "SetBlockSize" || passGroup == "set-block-size")
-    return dawn::PassGroup::SetBlockSize;
-  else if(passGroup == "DataLocalityMetric" || passGroup == "data-locality-metric")
-    return dawn::PassGroup::DataLocalityMetric;
-  else
-    throw std::invalid_argument(std::string("Unknown pass group: ") + passGroup);
-}
-
 namespace {
 
-OptimizerContext::OptimizerContextOptions createOptionsFromOptions(const Options& options) {
+OptimizerContext::OptimizerContextOptions createContextOptionsFromOptions(const Options& options) {
   OptimizerContext::OptimizerContextOptions retval;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   retval.NAME = options.NAME;
@@ -117,10 +73,10 @@ OptimizerContext::OptimizerContextOptions createOptionsFromOptions(const Options
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options) {
-  DiagnosticsEngine diag;
-  diag.setFilename(stencilIR->Filename);
+  DiagnosticsEngine diagnostics;
+  diagnostics.setFilename(stencilIR->Filename);
 
-  OptimizerContext optimizer(diag, createOptionsFromOptions(options), stencilIR);
+  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options), stencilIR);
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
@@ -156,6 +112,12 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
   }
 
+  if(diagnostics.hasDiags()) {
+    for(const auto& diag : diagnostics.getQueue())
+      DAWN_LOG(INFO) << diag->getMessage();
+    throw std::runtime_error("An error occured in lowering");
+  }
+
   return run(optimizer.getStencilInstantiationMap(), groups, options);
 }
 
@@ -163,7 +125,7 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const std::list<PassGroup>& groups, const Options& options) {
-  DiagnosticsEngine diag;
+  DiagnosticsEngine diagnostics;
 
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
@@ -179,7 +141,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   }
 
   // Initialize optimizer
-  OptimizerContext optimizer(diag, createOptionsFromOptions(options), stencilInstantiationMap);
+  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options),
+                             stencilInstantiationMap);
 
   for(auto group : groups) {
     switch(group) {
@@ -317,21 +280,24 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     }
   }
 
+  if(diagnostics.hasDiags()) {
+    for(const auto& diag : diagnostics.getQueue())
+      DAWN_LOG(INFO) << diag->getMessage();
+    throw std::runtime_error("An error occured in optimization");
+  }
+
   return optimizer.getStencilInstantiationMap();
 }
 
-std::map<std::string, std::string> run(const std::string& sir, const std::string& format,
-                                       const std::list<std::string>& groups,
-                                       const Options& options) {
-  auto stencilIR =
-      SIRSerializer::deserializeFromString(sir, SIRSerializer::parseFormatString(format));
-  std::list<PassGroup> passGroup;
-  std::transform(std::begin(groups), std::end(groups),
-                 std::inserter(passGroup, std::end(passGroup)),
-                 [](const std::string& group) { return parsePassGroupString(group); });
-  auto optimizedSIM = run(stencilIR, passGroup, options);
+std::map<std::string, std::string> run(const std::string& sir, dawn::SIRSerializer::Format format,
+                                       const std::list<dawn::PassGroup>& groups,
+                                       const dawn::Options& options) {
+  auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
+  auto optimizedSIM = dawn::run(stencilIR, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
-  const IIRSerializer::Format outputFormat = IIRSerializer::Format::Json;
+  const dawn::IIRSerializer::Format outputFormat = format == dawn::SIRSerializer::Format::Byte
+                                                       ? dawn::IIRSerializer::Format::Byte
+                                                       : dawn::IIRSerializer::Format::Json;
   for(auto [name, instantiation] : optimizedSIM) {
     instantiationStringMap.insert(
         std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, outputFormat)));
@@ -340,24 +306,19 @@ std::map<std::string, std::string> run(const std::string& sir, const std::string
 }
 
 std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap, const std::string& format,
-    const std::list<std::string>& groups, const dawn::Options& options) {
+run(const std::map<std::string, std::string>& stencilInstantiationMap,
+    dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
+    const dawn::Options& options) {
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
   for(auto [name, instStr] : stencilInstantiationMap) {
-    internalMap.insert(std::make_pair(
-        name,
-        IIRSerializer::deserializeFromString(instStr, IIRSerializer::parseFormatString(format))));
+    internalMap.insert(
+        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
   }
-  std::list<PassGroup> passGroup;
-  std::transform(std::begin(groups), std::end(groups),
-                 std::inserter(passGroup, std::end(passGroup)),
-                 [](const std::string& group) { return parsePassGroupString(group); });
-  auto optimizedSIM = dawn::run(internalMap, passGroup, options);
+  auto optimizedSIM = dawn::run(internalMap, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
   for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(std::make_pair(
-        name,
-        dawn::IIRSerializer::serializeToString(instantiation, dawn::IIRSerializer::Format::Json)));
+    instantiationStringMap.insert(
+        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, format)));
   }
   return instantiationStringMap;
 }
@@ -370,19 +331,12 @@ std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& st
   return codegen::run(run(stencilIR, passGroups, optimizerOptions), backend, codegenOptions);
 }
 
-std::string compile(const std::string& sir, const std::string& format,
-                    const std::list<std::string>& groups, const Options& optimizerOptions,
-                    const std::string& backend, const codegen::Options& codegenOptions) {
-  // Could call string version here, but that forces serialization of the IIR. Avoids serializing.
-  auto stencilIR =
-      SIRSerializer::deserializeFromString(sir, SIRSerializer::parseFormatString(format));
-  std::list<PassGroup> passGroup;
-  std::transform(std::begin(groups), std::end(groups),
-                 std::inserter(passGroup, std::end(passGroup)),
-                 [](const std::string& group) { return parsePassGroupString(group); });
-  auto optimizedSIM = run(stencilIR, passGroup, optimizerOptions);
-  return codegen::generate(
-      codegen::run(optimizedSIM, codegen::parseBackendString(backend), codegenOptions));
+std::string compile(const std::string& sir, dawn::SIRSerializer::Format format,
+                    const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
+                    dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
+  auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
+  return dawn::codegen::generate(
+      dawn::compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
 }
 
 } // namespace dawn

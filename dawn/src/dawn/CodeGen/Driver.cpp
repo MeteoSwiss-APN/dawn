@@ -58,23 +58,14 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& con
 }
 
 std::string run(const std::map<std::string, std::string>& stencilInstantiationMap,
-                const std::string& format, const std::string& backend,
+                dawn::IIRSerializer::Format format, dawn::codegen::Backend backend,
                 const dawn::codegen::Options& options) {
   std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
-  const IIRSerializer::Format inputFormat = IIRSerializer::parseFormatString(format);
   for(auto [name, instStr] : stencilInstantiationMap) {
     internalMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, inputFormat)));
+        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
   }
-  auto translationUnit =
-      dawn::codegen::run(internalMap, codegen::parseBackendString(backend), options);
-  std::string code;
-  for(auto p : translationUnit->getPPDefines())
-    code += p + "\n";
-  code += translationUnit->getGlobals() + "\n\n";
-  for(auto p : translationUnit->getStencils())
-    code += p.second;
-  return code;
+  return dawn::codegen::generate(dawn::codegen::run(internalMap, backend, options));
 }
 
 /// @brief Run code generation on a single stencil instantiation
