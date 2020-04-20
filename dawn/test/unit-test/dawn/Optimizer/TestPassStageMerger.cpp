@@ -35,7 +35,7 @@ protected:
   DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
-    options_.StageMerger = options_.MergeDoMethods = true;
+    options_.MergeStages = options_.MergeDoMethods = true;
     context_ = std::make_unique<OptimizerContext>(diag_, options_,
                                                   std::make_shared<SIR>(ast::GridType::Cartesian));
     UIDGenerator::getInstance()->reset();

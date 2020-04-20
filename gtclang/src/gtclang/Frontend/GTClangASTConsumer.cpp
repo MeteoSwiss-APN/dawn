@@ -143,7 +143,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().StageReordering || context_->getOptions().DefaultOptimization)
     passGroup.push_back(dawn::PassGroup::StageReordering);
 
-  if(context_->getOptions().StageMerger || context_->getOptions().DefaultOptimization)
+  if(context_->getOptions().MergeStages || context_->getOptions().DefaultOptimization)
     passGroup.push_back(dawn::PassGroup::StageMerger);
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),

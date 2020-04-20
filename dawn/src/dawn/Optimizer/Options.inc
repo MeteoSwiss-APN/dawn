@@ -47,6 +47,8 @@ OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations
 
 OPT(bool, SplitStencils, false, "split-stencils", "",
     "Split stencil whose number of fields exceeds a threshold", "", false, true)
+OPT(bool, MergeStages, false, "merge-stages", "",
+    "Merge stages within a multi-stage into the same Do-Method if possible", "", false, true)
 OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
 OPT(bool, DisableKCaches, false, "disable-kcaches", "",
