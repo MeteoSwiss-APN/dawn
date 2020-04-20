@@ -156,7 +156,8 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest7) {
 }
 
 TEST_F(TestPassMultiStageMerger, MultiStageMergeTest8) {
-  /*vertical_region(k_start, k_start) {
+  /*
+    vertical_region(k_start, k_start) {
       c = c / b;
       d = d / b;
     }
@@ -170,6 +171,22 @@ TEST_F(TestPassMultiStageMerger, MultiStageMergeTest8) {
     } */
   runTest("input/tridiagonal_solve.iir", {5, 1},
           {iir::LoopOrderKind::Forward, iir::LoopOrderKind::Backward});
+}
+
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest9) {
+  /*
+    vertical_region(k_start, k_end) {
+      b = 1;
+    }
+    /// b == 1
+    vertical_region(k_start, k_end) {
+      b = 2;
+      a = b[k + 1];
+      // b == 2
+      // a == 1
+    } */
+  runTest("input/MultiStageTest01.iir", {1, 2},
+          {iir::LoopOrderKind::Forward, iir::LoopOrderKind::Forward});
 }
 
 } // anonymous namespace
