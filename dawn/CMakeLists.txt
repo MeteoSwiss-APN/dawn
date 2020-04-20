@@ -116,7 +116,7 @@ find_package(Python3 COMPONENTS Interpreter)
 
 # Set PYTHON_EXECUTABLE to the Python3_EXECUTABLE if not manually specified,
 # otherwise pybind11 may find the wrong python library.
-if (Python3_EXECUTABLE AND NOT PYTHON_EXECUTABLE)
+if (DEFINED Python3_EXECUTABLE AND NOT DEFINED PYTHON_EXECUTABLE)
   set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 endif()
 
