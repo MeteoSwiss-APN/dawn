@@ -28,10 +28,10 @@
 #include "dawn/Support/Type.h"
 #include <algorithm>
 #include <iosfwd>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
-#include <map>
 #include <variant>
 #include <vector>
 
@@ -297,7 +297,7 @@ bool dimension_isa(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
                 "Can only be casted to a valid field dimension implementation");
-  return (bool)(dynamic_cast<PlainT*>(dimension.impl_.get()));
+  return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
 }
 
 /// @brief Representation of a field
@@ -451,36 +451,36 @@ public:
 
   template <class T>
   Value(T value)
-      : value_{std::move(value)}, is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+      : value_{std::move(value)}, isConstexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   template <class T>
   Value(T value, bool is_constexpr)
       : value_{std::move(value)},
-        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+        isConstexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   Value(const Value& other)
-      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value& other)
-      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value&& other)
-      : value_{std::move(other.value_)}, is_constexpr_{other.isConstexpr()}, type_{
-                                                                                 other.getType()} {}
+      : value_{std::move(other.value_)}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {
+  }
 
-  Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+  Value(Kind type) : value_{}, isConstexpr_{false}, type_{type} {}
 
   virtual ~Value() = default;
 
   Value& operator=(const Value& other) {
     value_ = other.value_;
-    is_constexpr_ = other.isConstexpr();
+    isConstexpr_ = other.isConstexpr();
     type_ = other.getType();
     return *this;
   }
 
   /// @brief Get/Set if the variable is `constexpr`
-  virtual bool isConstexpr() const { return is_constexpr_; }
+  virtual bool isConstexpr() const { return isConstexpr_; }
 
   /// @brief `Type` to string
   static const char* typeToString(Kind type);
@@ -519,7 +519,7 @@ public:
 
 protected:
   std::optional<std::variant<bool, int, float, double, std::string>> value_;
-  bool is_constexpr_;
+  bool isConstexpr_;
   Kind type_;
 };
 
