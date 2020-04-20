@@ -158,7 +158,7 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend="cuda")
+    code = dawn4py.compile(sir, backend="cuda", stage_merger=False)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

@@ -88,13 +88,15 @@ template <typename ReturnType =
               std::pair<std::optional<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
 ReturnType isMergable(const iir::MultiStage& thisMS, const iir::MultiStage& otherMS) {
   iir::LoopOrderKind thisLoopOrder = thisMS.getLoopOrder();
+  ReturnType dependencyGraphLoopOrderPair(std::nullopt, thisLoopOrder);
+
   for(const auto& thisStage : thisMS.getChildren()) {
-    auto dependencyGraphLoopOrderPair = isMergable(*thisStage, thisLoopOrder, otherMS);
-    if(dependencyGraphLoopOrderPair.first) {
+    dependencyGraphLoopOrderPair = isMergable(*thisStage, thisLoopOrder, otherMS);
+    if(!dependencyGraphLoopOrderPair.first)
       return dependencyGraphLoopOrderPair;
-    }
   }
-  return ReturnType(std::nullopt, thisLoopOrder);
+
+  return dependencyGraphLoopOrderPair;
 }
 
 PassMultiStageMerger::PassMultiStageMerger(OptimizerContext& context)
