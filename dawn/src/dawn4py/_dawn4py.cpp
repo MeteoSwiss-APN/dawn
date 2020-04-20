@@ -59,12 +59,12 @@ PYBIND11_MODULE(_dawn4py, m) {
   py::class_<dawn::Options>(m, "OptimizerOptions")
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
                        int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
-                       int BlockSizeK, bool SplitStencils, bool MergeDoMethods, bool DisableKCaches,
-                       bool UseNonTempCaches, bool KeepVarnames, bool PassVerbose,
-                       bool ReportAccesses, bool SerializeIIR, const std::string& IIRFormat,
-                       bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
-                       bool DumpRaceConditionGraph, bool DumpStencilInstantiation,
-                       bool DumpStencilGraph) {
+                       int BlockSizeK, bool SplitStencils, bool MergeStages, bool MergeDoMethods,
+                       bool DisableKCaches, bool UseNonTempCaches, bool KeepVarnames,
+                       bool PassVerbose, bool ReportAccesses, bool SerializeIIR,
+                       const std::string& IIRFormat, bool DumpSplitGraphs, bool DumpStageGraph,
+                       bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
+                       bool DumpStencilInstantiation, bool DumpStencilGraph) {
              return dawn::Options{MaxHaloPoints,
                                   ReorderStrategy,
                                   MaxFieldsPerStencil,
@@ -73,6 +73,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                   BlockSizeJ,
                                   BlockSizeK,
                                   SplitStencils,
+                                  MergeStages,
                                   MergeDoMethods,
                                   DisableKCaches,
                                   UseNonTempCaches,
@@ -91,13 +92,13 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
            py::arg("max_fields_per_stencil") = 40, py::arg("max_cut_mss") = false,
            py::arg("block_size_i") = 0, py::arg("block_size_j") = 0, py::arg("block_size_k") = 0,
-           py::arg("split_stencils") = false, py::arg("merge_do_methods") = true,
-           py::arg("disable_k_caches") = false, py::arg("use_non_temp_caches") = false,
-           py::arg("keep_varnames") = false, py::arg("pass_verbose") = false,
-           py::arg("report_accesses") = false, py::arg("serialize_iir") = false,
-           py::arg("iir_format") = "json", py::arg("dump_split_graphs") = false,
-           py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
-           py::arg("dump_race_condition_graph") = false,
+           py::arg("split_stencils") = false, py::arg("merge_stages") = false,
+           py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
+           py::arg("use_non_temp_caches") = false, py::arg("keep_varnames") = false,
+           py::arg("pass_verbose") = false, py::arg("report_accesses") = false,
+           py::arg("serialize_iir") = false, py::arg("iir_format") = "json",
+           py::arg("dump_split_graphs") = false, py::arg("dump_stage_graph") = false,
+           py::arg("dump_temporary_graphs") = false, py::arg("dump_race_condition_graph") = false,
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
       .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
       .def_readwrite("reorder_strategy", &dawn::Options::ReorderStrategy)
@@ -107,6 +108,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
       .def_readwrite("split_stencils", &dawn::Options::SplitStencils)
+      .def_readwrite("merge_stages", &dawn::Options::MergeStages)
       .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
       .def_readwrite("disable_k_caches", &dawn::Options::DisableKCaches)
       .def_readwrite("use_non_temp_caches", &dawn::Options::UseNonTempCaches)
@@ -133,6 +135,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_j=" << self.BlockSizeJ << ",\n    "
            << "block_size_k=" << self.BlockSizeK << ",\n    "
            << "split_stencils=" << self.SplitStencils << ",\n    "
+           << "merge_stages=" << self.MergeStages << ",\n    "
            << "merge_do_methods=" << self.MergeDoMethods << ",\n    "
            << "disable_k_caches=" << self.DisableKCaches << ",\n    "
            << "use_non_temp_caches=" << self.UseNonTempCaches << ",\n    "
