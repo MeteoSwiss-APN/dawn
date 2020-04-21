@@ -18,9 +18,9 @@ file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 foreach(backend IN ITEMS Cuda Naive)
   set(executable ${PROJECT_NAME}UnittestCodeGen${backend})
-  add_executable(${executable} TestCodeGen${backend}.cpp Stencils.cpp)
+  add_executable(${executable} ${backend}/TestCodeGen${backend}.cpp Stencils.cpp)
   target_add_dawn_standard_props(${executable})
-  target_include_directories(${executable} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+  target_include_directories(${executable} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
   target_link_libraries(${executable} DawnUnittest gtest gtest_main)
   gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::CodeGen::"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
