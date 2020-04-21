@@ -48,6 +48,8 @@ struct globals {
 };
 } // namespace cxxnaive
 } // namespace dawn_generated
+
+
 namespace dawn_generated{
 namespace cxxnaive{
 

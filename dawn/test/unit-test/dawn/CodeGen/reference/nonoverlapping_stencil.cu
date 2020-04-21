@@ -36,6 +36,8 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
+
+
 namespace dawn_generated{
 namespace cuda{
 __global__ void __launch_bounds__(128)  generated_stencil59_ms58_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {

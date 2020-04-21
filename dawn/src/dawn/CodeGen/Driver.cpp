@@ -80,7 +80,7 @@ std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit) {
   for(const auto& p : translationUnit->getPPDefines())
     code += p + "\n";
 
-  code += translationUnit->getGlobals();
+  code += translationUnit->getGlobals() + "\n\n";
   for(const auto& p : translationUnit->getStencils())
     code += p.second;
 

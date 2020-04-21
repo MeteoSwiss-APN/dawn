@@ -16,9 +16,9 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
-#include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
+#include <fstream>
 #include <gtest/gtest.h>
 #include <string>
 
@@ -111,10 +111,11 @@ std::shared_ptr<iir::StencilInstantiation> getNonOverlappingInterval() {
 }
 
 void runTest(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-             codegen::Backend backend, const std::string& ref_file) {
+             codegen::Backend backend, const std::string& refFile) {
   auto tu = dawn::codegen::run(stencilInstantiation, backend);
   const std::string code = dawn::codegen::generate(tu);
-  const std::string ref = readFile(fs::path("../reference") / ref_file);
+  std::ifstream t(refFile);
+  const std::string ref((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
   ASSERT_EQ(code, ref) << "Generated code does not match reference code";
 }
 

@@ -28,9 +28,6 @@ namespace {
 
 std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilename,
                                                     const std::string& stencilName) {
-  const std::string errorMsg = "File " + sirFilename + " does not exists";
-  DAWN_ASSERT_MSG(fs::exists(sirFilename), errorMsg.c_str());
-
   auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);
 
   // stage merger segfaults if stage reordering is not run beforehand

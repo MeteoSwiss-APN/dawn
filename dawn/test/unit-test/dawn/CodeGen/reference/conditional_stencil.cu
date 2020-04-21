@@ -48,6 +48,8 @@ struct globals {
 };
 } // namespace cuda
 } // namespace dawn_generated
+
+
 namespace dawn_generated{
 namespace cuda{
 __global__ void __launch_bounds__(128)  conditional_stencil_stencil21_ms41_kernel(globals globals_, const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out) {
@@ -94,7 +96,7 @@ if(threadIdx.y < +4) {
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;

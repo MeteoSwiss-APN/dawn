@@ -28,10 +28,7 @@ using namespace dawn;
 namespace {
 
 std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilename) {
-  const std::string errorMsg = "File " + sirFilename + " does not exists";
-  DAWN_ASSERT_MSG(fs::exists(sirFilename), errorMsg.c_str());
-
-  auto sir = SIRSerializer::deserializeFromString(sirFilename, SIRSerializer::Format::Json);
+  auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);
   auto stencilInstantiationMap = run(sir, {PassGroup::StageReordering, PassGroup::StageMerger});
 
   DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),

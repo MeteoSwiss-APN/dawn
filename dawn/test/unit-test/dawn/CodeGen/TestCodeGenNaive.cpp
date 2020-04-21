@@ -23,24 +23,25 @@ namespace {
 constexpr auto backend = dawn::codegen::Backend::CXXNaive;
 
 TEST(TestCodeGenNaive, GlobalIndexStencil) {
-  runTest(dawn::getGlobalIndexStencil(), backend, "global_indexing.cpp");
+  runTest(dawn::getGlobalIndexStencil(), backend, "reference/global_indexing.cpp");
 }
 
 TEST(TestCodeGenNaive, NonOverlappingInterval) {
-  runTest(dawn::getNonOverlappingInterval(), backend, "nonoverlapping_stencil.cpp");
+  runTest(dawn::getNonOverlappingInterval(), backend, "reference/nonoverlapping_stencil.cpp");
 }
 
 TEST(TestCodeGenNaive, LaplacianStencil) {
-  runTest(dawn::getLaplacianStencil(), backend, "laplacian_stencil.cpp");
+  runTest(dawn::getLaplacianStencil(), backend, "reference/laplacian_stencil.cpp");
 }
 
 TEST(TestCodeGenNaive, ConditionalStencil) {
   runTest(dawn::IIRSerializer::deserialize("input/conditional_stencil.iir"), backend,
-          "conditional_stencil.cpp");
+          "reference/conditional_stencil.cpp");
 }
 
 TEST(TestCodeGenNaive, DzCStencil) {
-  runTest(dawn::IIRSerializer::deserialize("input/update_dz_c.iir"), backend, "update_dz_c.cpp");
+  runTest(dawn::IIRSerializer::deserialize("input/update_dz_c.iir"), backend,
+          "reference/update_dz_c.cpp");
 }
 
 } // namespace
