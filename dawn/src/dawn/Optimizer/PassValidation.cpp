@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassValidation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
@@ -68,7 +69,7 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     IntegrityChecker integrityChecker(instantiation.get());
     integrityChecker.run();
 
-    MultiStageChecker multiStageChecker(instantiation.get());
+    MultiStageChecker multiStageChecker(instantiation.get(), context_.getOptions().MaxHaloPoints);
     multiStageChecker.run();
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
