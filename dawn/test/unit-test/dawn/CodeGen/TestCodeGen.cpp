@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <gtest/gtest.h>
+#include <memory>
 #include <string>
 
 namespace dawn {
@@ -120,3 +121,57 @@ void runTest(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiati
 }
 
 } // namespace dawn
+
+namespace {
+
+TEST(Naive, GlobalIndexStencil) {
+  runTest(dawn::getGlobalIndexStencil(), dawn::codegen::Backend::CXXNaive,
+          "reference/global_indexing.cpp");
+}
+
+TEST(Naive, NonOverlappingInterval) {
+  runTest(dawn::getNonOverlappingInterval(), dawn::codegen::Backend::CXXNaive,
+          "reference/nonoverlapping_stencil.cpp");
+}
+
+TEST(Naive, LaplacianStencil) {
+  runTest(dawn::getLaplacianStencil(), dawn::codegen::Backend::CXXNaive,
+          "reference/laplacian_stencil.cpp");
+}
+
+TEST(Naive, ConditionalStencil) {
+  runTest(dawn::IIRSerializer::deserialize("input/conditional_stencil.iir"),
+          dawn::codegen::Backend::CXXNaive, "reference/conditional_stencil.cpp");
+}
+
+TEST(Naive, DzCStencil) {
+  runTest(dawn::IIRSerializer::deserialize("input/update_dz_c.iir"),
+          dawn::codegen::Backend::CXXNaive, "reference/update_dz_c.cpp");
+}
+
+TEST(Cuda, GlobalIndexStencil) {
+  runTest(dawn::getGlobalIndexStencil(), dawn::codegen::Backend::CUDA,
+          "reference/global_indexing.cu");
+}
+
+TEST(Cuda, NonOverlappingInterval) {
+  runTest(dawn::getNonOverlappingInterval(), dawn::codegen::Backend::CUDA,
+          "reference/nonoverlapping_stencil.cu");
+}
+
+TEST(Cuda, LaplacianStencil) {
+  runTest(dawn::getLaplacianStencil(), dawn::codegen::Backend::CUDA,
+          "reference/laplacian_stencil.cu");
+}
+
+TEST(Cuda, ConditionalStencil) {
+  runTest(dawn::IIRSerializer::deserialize("input/conditional_stencil.iir"),
+          dawn::codegen::Backend::CUDA, "reference/conditional_stencil.cu");
+}
+
+TEST(Cuda, DzCStencil) {
+  runTest(dawn::IIRSerializer::deserialize("input/update_dz_c.iir"), dawn::codegen::Backend::CUDA,
+          "reference/update_dz_c.cu");
+}
+
+} // namespace
