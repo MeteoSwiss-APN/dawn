@@ -14,7 +14,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""Generate input for the ICON Laplacian stencil test"""
+"""Generate input for the ICON Laplacian stencil test. This is the classic Finite Volume vector Laplacian. 
+   Unfortunately, it is not used in operational simulations because of bad convergence."""
 
 import os
 
