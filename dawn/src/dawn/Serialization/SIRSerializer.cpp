@@ -98,6 +98,15 @@ ProtobufLogger* ProtobufLogger::instance_ = nullptr;
 
 } // anonymous namespace
 
+SIRSerializer::Format SIRSerializer::parseFormatString(const std::string& format) {
+  if(format == "Byte" || format == "byte" || format == "BYTE")
+    return SIRSerializer::Format::Byte;
+  else if(format == "Json" || format == "json" || format == "JSON")
+    return SIRSerializer::Format::Json;
+  else
+    throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
+}
+
 //===------------------------------------------------------------------------------------------===//
 //     Serialization
 //===------------------------------------------------------------------------------------------===//

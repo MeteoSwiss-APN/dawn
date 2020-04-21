@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/Driver.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/Driver.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -190,9 +190,13 @@ int main(int argc, char* argv[]) {
   if(result.count("default-opt") > 0) {
     passGroups = dawn::defaultPassGroups();
   }
+
   for(auto pg : result["pass-groups"].as<std::vector<std::string>>()) {
     passGroups.push_back(parsePassGroup(pg));
   }
+
+  // Until stencil functions are added to the IIR...
+  passGroups.push_back(dawn::PassGroup::Inlining);
 
   // Get the input from file or stdin
   std::string input;
@@ -207,8 +211,8 @@ int main(int argc, char* argv[]) {
 
   auto [stencilIR, internalIR, format] = deserializeInput(input);
 
-  // Create a dawn::OptimizerOptions struct for the driver
-  dawn::OptimizerOptions optimizerOptions;
+  // Create a dawn::Options struct for the driver
+  dawn::Options optimizerOptions;
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   optimizerOptions.NAME = result[OPTION].as<TYPE>();
 #include "dawn/Optimizer/Options.inc"
@@ -235,7 +239,6 @@ int main(int argc, char* argv[]) {
     if(result.count("out"))
       dawn::IIRSerializer::serialize(result["out"].as<std::string>(), instantiation, iirFormat);
     else if(!optimizerOptions.DumpStencilInstantiation) {
-
       std::cout << dawn::IIRSerializer::serializeToString(instantiation, iirFormat);
     } else {
       DAWN_LOG(INFO) << "dump-si present. Skipping serialization.";

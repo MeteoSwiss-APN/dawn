@@ -15,13 +15,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fwrite-iir -fno-codegen
-// EXPECTED_FILE: OUTPUT:%filename%.0.iir REFERENCE:%filename%_ref.iir IGNORE:filename
+// EXPECTED_FILE: OUTPUT:CopyTest.iir REFERENCE:%filename%_ref.iir IGNORE:filename
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gtclang::dsl;
 
-stencil Test {
+stencil CopyTest {
   storage field_a, field_b;
 
   Do {

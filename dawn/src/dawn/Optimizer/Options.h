@@ -15,9 +15,10 @@
 #ifndef DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 #define DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
 
+#include <string>
+
 namespace dawn {
 
-// TODO This will be moved to Compiler/Driver.h when
 /// @brief Enumeration of all pass groups
 enum class PassGroup {
   Parallel,
@@ -36,8 +37,7 @@ enum class PassGroup {
   DataLocalityMetric
 };
 
-// TODO Rename this to dawn::Options after the larger dawn::Options is removed
-struct OptimizerOptions {
+struct Options {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   TYPE NAME = DEFAULT_VALUE;
 #include "dawn/Optimizer/Options.inc"
