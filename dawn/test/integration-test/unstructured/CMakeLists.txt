@@ -96,7 +96,7 @@ if(eckit_FOUND AND atlas_FOUND)
   )
 
   add_test(NAME ${test_name}
-    COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
+    COMMAND $<TARGET_FILE:${test_name}>
   )
 
   # Toylib Tests
@@ -104,7 +104,7 @@ if(eckit_FOUND AND atlas_FOUND)
   set(test_name ToylibIntegrationTestCompareOutput)
   add_executable(${test_name}
     ToylibIntegrationTestCompareOutput.cpp
-    UnstructuredVerifier.h    
+    UnstructuredVerifier.h
     ${generated_stencil_codes}
     ${reference_stencil_codes}
   )
