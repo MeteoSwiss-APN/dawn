@@ -12,264 +12,471 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/AST/GridType.h"
-#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/AccessComputation.h"
-#include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassSetStageName.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
-#include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/SIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/STLExtras.h"
-
+#include "dawn/Support/Type.h"
+#include "dawn/Unittest/IIRBuilder.h"
+#include "dawn/Unittest/UnittestUtils.h"
 #include <gtest/gtest.h>
 #include <memory>
-#include <stack>
-#include <string>
-#include <unistd.h>
-
-#include "GenerateInMemoryStencils.h"
+#include <optional>
 
 using namespace dawn;
 
 namespace {
+#define IIR_EARLY_EXIT(value)                                                                      \
+  if(!value)                                                                                       \
+    return false;
 
-void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
-  EXPECT_TRUE(lhs->checkTreeConsistency());
-  EXPECT_TRUE(rhs->checkTreeConsistency());
+#define IIR_EXPECT_IMPL(iir1, iir2, VALUE)                                                         \
+  do {                                                                                             \
+    EXPECT_##VALUE(compareStencilInstantiations(iir1, iir2));                                      \
+  } while(0);
+
+#define IIR_EXPECT_EQ(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), TRUE)
+#define IIR_EXPECT_NE(iir1, iir2) IIR_EXPECT_IMPL((iir1), (iir2), FALSE)
+
+bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
+  IIR_EARLY_EXIT((lhs->getGridType() == rhs->getGridType()));
+  IIR_EARLY_EXIT(lhs->checkTreeConsistency());
+  IIR_EARLY_EXIT(rhs->checkTreeConsistency());
   // checking the stencils
-  ASSERT_EQ(lhs->getChildren().size(), rhs->getChildren().size());
   for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
     const auto& lhsStencil = lhs->getChild(stencils);
     const auto& rhsStencil = rhs->getChild(stencils);
-    EXPECT_EQ(lhsStencil->getStencilAttributes(), rhsStencil->getStencilAttributes());
-    EXPECT_EQ(lhsStencil->getStencilID(), rhsStencil->getStencilID());
+    IIR_EARLY_EXIT((lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes()));
+    IIR_EARLY_EXIT((lhsStencil->getStencilID() == rhsStencil->getStencilID()));
 
     // checking each of the multistages
-    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
     for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
       const auto& lhsMSS = lhsStencil->getChild(mssidx);
       const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      EXPECT_EQ(lhsMSS->getLoopOrder(), rhsMSS->getLoopOrder());
-      EXPECT_EQ(lhsMSS->getID(), rhsMSS->getID());
-
+      IIR_EARLY_EXIT((lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder()));
+      IIR_EARLY_EXIT((lhsMSS->getID() == rhsMSS->getID()));
+      IIR_EARLY_EXIT((lhsMSS->getCaches().size() == rhsMSS->getCaches().size()));
+      for(const auto& lhsPair : lhsMSS->getCaches()) {
+        IIR_EARLY_EXIT(rhsMSS->getCaches().count(lhsPair.first));
+        auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
+        IIR_EARLY_EXIT((rhsValue == lhsPair.second));
+      }
       // checking each of the stages
-      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
       for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
           ++stageidx) {
         const auto& lhsStage = lhsMSS->getChild(stageidx);
         const auto& rhsStage = rhsMSS->getChild(stageidx);
-        EXPECT_EQ(lhsStage->getStageID(), rhsStage->getStageID());
+        IIR_EARLY_EXIT((lhsStage->getStageID() == rhsStage->getStageID()));
 
         // checking each of the doMethods
-        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
-        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodIdx < doMethodSize; ++doMethodIdx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
-          EXPECT_EQ(lhsDoMethod->getID(), rhsDoMethod->getID());
-          EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
+        for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
+            doMethodidx < doMethodSize; ++doMethodidx) {
+          const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
+          const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
+          IIR_EARLY_EXIT((lhsDoMethod->getID() == rhsDoMethod->getID()));
+          IIR_EARLY_EXIT((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
 
           // checking each of the statements
-          ASSERT_EQ(lhsDoMethod->getAST().getStatements().size(),
-                    rhsDoMethod->getAST().getStatements().size());
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getAST().getStatements().size();
               stmtidx < stmtSize; ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
             const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
             // check the statement (and its data)
-            EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
+            IIR_EARLY_EXIT((lhsStmt->equals(rhsStmt.get())));
           }
         }
-        EXPECT_EQ(lhsStage->getLocationType(), rhsStage->getLocationType());
+
+        IIR_EARLY_EXIT((lhsStage->getLocationType() == rhsStage->getLocationType()));
       }
     }
   }
   const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
   const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
 
-  ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
+  IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    EXPECT_TRUE(lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()));
+    // check the statement (and its data)
+    if(!lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()))
+      return false;
   }
+
+  return true;
 }
 
-void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Literal>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::Literal>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Field>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::Field>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::APIField>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::APIField>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>());
+bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::Literal>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::Literal>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::Field>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::Field>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::APIField>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::APIField>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>()));
+  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>()));
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  ASSERT_EQ(lhs.getFieldNameToBCMap().size(), rhs.getFieldNameToBCMap().size());
+  IIR_EARLY_EXIT((lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size()));
   for(const auto& lhsPair : lhs.getFieldNameToBCMap()) {
-    EXPECT_TRUE(rhs.getFieldNameToBCMap().count(lhsPair.first));
+    IIR_EARLY_EXIT(rhs.getFieldNameToBCMap().count(lhsPair.first));
     auto rhsValue = rhs.getFieldNameToBCMap().at(lhsPair.first);
-    EXPECT_TRUE(rhsValue->equals(lhsPair.second.get()));
+    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
   }
-  EXPECT_EQ(lhs.getFieldIDToDimsMap(), rhs.getFieldIDToDimsMap());
-  EXPECT_EQ(lhs.getStencilLocation(), rhs.getStencilLocation());
-  EXPECT_EQ(lhs.getStencilName(), rhs.getStencilName());
+  IIR_EARLY_EXIT((lhs.getFieldIDToDimsMap() == rhs.getFieldIDToDimsMap()));
+  IIR_EARLY_EXIT((lhs.getStencilLocation() == rhs.getStencilLocation()));
+  IIR_EARLY_EXIT((lhs.getStencilName() == rhs.getStencilName()));
+  IIR_EARLY_EXIT((lhs.getFileName() == rhs.getFileName()));
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  ASSERT_EQ(lhs.getStencilIDToStencilCallMap().getDirectMap().size(),
-            rhs.getStencilIDToStencilCallMap().getDirectMap().size());
+  IIR_EARLY_EXIT((lhs.getStencilIDToStencilCallMap().getDirectMap().size() ==
+                  rhs.getStencilIDToStencilCallMap().getDirectMap().size()));
   for(const auto& lhsPair : lhs.getStencilIDToStencilCallMap().getDirectMap()) {
-    EXPECT_TRUE(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
+    IIR_EARLY_EXIT(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
     auto rhsValue = rhs.getStencilIDToStencilCallMap().getDirectMap().at(lhsPair.first);
-    EXPECT_TRUE(rhsValue->equals(lhsPair.second.get()));
+    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
   }
+  return true;
 }
 
-void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
-  for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
-    const auto& lhsStencil = lhs->getChild(stencils);
-    const auto& rhsStencil = rhs->getChild(stencils);
+bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiation>& lhs,
+                                  const std::shared_ptr<iir::StencilInstantiation>& rhs) {
+  IIR_EARLY_EXIT(compareIIRs(lhs->getIIR().get(), rhs->getIIR().get()));
+  IIR_EARLY_EXIT(compareMetaData(lhs->getMetaData(), rhs->getMetaData()));
+  return true;
+}
 
-    EXPECT_EQ(lhsStencil->getStageDependencyGraph(), rhsStencil->getStageDependencyGraph());
-    EXPECT_EQ(lhsStencil->getFields(), rhsStencil->getFields());
-
-    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
-
-    // checking each of the multistages
-    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
-      const auto& lhsMSS = lhsStencil->getChild(mssidx);
-      const auto& rhsMSS = rhsStencil->getChild(mssidx);
-
-      EXPECT_EQ(lhsMSS->getCaches(), rhsMSS->getCaches());
-      EXPECT_EQ(lhsMSS->getFields(), rhsMSS->getFields());
-
-      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
-
-      // checking each of the stages
-      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
-          ++stageidx) {
-        const auto& lhsStage = lhsMSS->getChild(stageidx);
-        const auto& rhsStage = rhsMSS->getChild(stageidx);
-
-        EXPECT_EQ(lhsStage->getFields(), rhsStage->getFields());
-        EXPECT_EQ(lhsStage->getAllGlobalVariables(), rhsStage->getAllGlobalVariables());
-        EXPECT_EQ(lhsStage->getGlobalVariables(), rhsStage->getGlobalVariables());
-        EXPECT_EQ(lhsStage->getGlobalVariablesFromStencilFunctionCalls(),
-                  rhsStage->getGlobalVariablesFromStencilFunctionCalls());
-        EXPECT_EQ(lhsStage->getExtents(), rhsStage->getExtents());
-        EXPECT_EQ(lhsStage->getRequiresSync(), rhsStage->getRequiresSync());
-
-        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
-
-        // checking each of the doMethods
-        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodIdx < doMethodSize; ++doMethodIdx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
-
-          ASSERT_EQ(lhsDoMethod->getFields(), rhsDoMethod->getFields());
-          ASSERT_EQ(lhsDoMethod->getDependencyGraph(), rhsDoMethod->getDependencyGraph());
-        }
-      }
-    }
+class createEmptyOptimizerContext : public ::testing::Test {
+protected:
+  virtual void SetUp() override {
+    dawn::DiagnosticsEngine diag;
+    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+    dawn::OptimizerContext::OptimizerContextOptions options;
+    context_ = std::make_unique<OptimizerContext>(diag, options, sir);
   }
+  virtual void TearDown() override {}
+  std::unique_ptr<OptimizerContext> context_;
+};
+
+class IIRSerializerTest : public createEmptyOptimizerContext {
+protected:
+  virtual void SetUp() override {
+    createEmptyOptimizerContext::SetUp();
+    referenceInstantiation = std::make_shared<iir::StencilInstantiation>(
+        context_->getSIR()->GridType, context_->getSIR()->GlobalVariableMap,
+        context_->getSIR()->StencilFunctions);
+  }
+  virtual void TearDown() override { referenceInstantiation.reset(); }
+
+  std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
+    return IIRSerializer::deserializeFromString(
+        IIRSerializer::serializeToString(referenceInstantiation));
+  }
+
+  std::shared_ptr<iir::StencilInstantiation> referenceInstantiation;
+};
+
+TEST_F(IIRSerializerTest, EmptySetup) {
+  auto desired = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(desired, referenceInstantiation);
+  desired->getMetaData().insertAccessOfType(iir::FieldAccessType::InterStencilTemporary, 10,
+                                            "name");
+  IIR_EXPECT_NE(desired, referenceInstantiation);
+}
+TEST_F(IIRSerializerTest, SimpleDataStructures) {
+  //===------------------------------------------------------------------------------------------===
+  // Checking inserts into the various maps
+  //===------------------------------------------------------------------------------------------===
+  referenceInstantiation->getMetaData().addAccessIDNamePair(1, "test");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, -5,
+                                                           "test");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::Field, 712,
+                                                           "field0");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
+                                                           "field1");
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
+                                                           "field2");
+  auto deserializedStencilInstantiaion = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiation);
+
+  // check that ordering is preserved
+  referenceInstantiation->getMetaData().removeAccessID(12);
+  referenceInstantiation->getMetaData().removeAccessID(10);
+
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 12,
+                                                           "field1");
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::APIField, 10,
+                                                           "field2");
+
+  IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiation);
+
+  referenceInstantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary,
+                                                           713, "field4");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 7);
+  referenceInstantiation->getMetaData().addFieldVersionIDPair(5, 8);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  referenceInstantiation->getMetaData().setFileName("fileName");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+  referenceInstantiation->getMetaData().setStencilName("stencilName");
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+  referenceInstantiation->getMetaData().setStencilLocation(SourceLocation{1, 2});
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 }
 
-std::shared_ptr<iir::StencilInstantiation> readIIRFromFile(OptimizerContext& optimizer,
-                                                           const std::string& fname) {
-  auto target = IIRSerializer::deserialize(fname, IIRSerializer::Format::Json);
+TEST_F(IIRSerializerTest, ComplexStrucutes) {
+  auto scStmt = iir::makeStencilCallDeclStmt(std::make_shared<ast::StencilCall>("me"));
+  scStmt->getSourceLocation().Line = 10;
+  scStmt->getSourceLocation().Column = 12;
+  referenceInstantiation->getIIR()->getControlFlowDescriptor().insertStmt(scStmt);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
-  // this is whats actually to be tested.
-  optimizer.restoreIIR("<restored>", target);
-  return target;
+  auto stmt = iir::makeStencilCallDeclStmt(std::make_shared<ast::StencilCall>("test"));
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  auto bcstmt = iir::makeBoundaryConditionDeclStmt("callee");
+  bcstmt->getFields().push_back("field1");
+  bcstmt->getFields().push_back("field2");
+  referenceInstantiation->getMetaData().addFieldBC("bc", bcstmt);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 }
 
-void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
-                 std::shared_ptr<iir::StencilInstantiation> rhs) {
-  // first compare the (structure of the) iirs, this is a precondition before we can actually check
-  // the metadata / derived info
-  compareIIRstructures(lhs->getIIR().get(), rhs->getIIR().get());
+TEST_F(IIRSerializerTest, IIRTestsStageLocationType) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
 
-  // then we compare the meta data
-  compareMetaData(lhs->getMetaData(), rhs->getMetaData());
+  UnstructuredIIRBuilder b;
+  auto in_c = b.field("in_c", LocType::Cells);
+  auto out_c = b.field("out_c", LocType::Cells);
+  auto in_v = b.field("in_v", LocType::Vertices);
+  auto out_v = b.field("out_v", LocType::Vertices);
 
-  // and finally the derived info
-  compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get());
+  std::string stencilName("testSerializationStageLocationType");
+
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                             b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
+          b.stage(LocType::Vertices,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(b.at(out_v), b.at(in_v))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
-TEST(TestIIRSerializer, CopyStencil) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
+TEST_F(IIRSerializerTest, IIRTestsReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
 
-  // read IIR from file
-  auto copy_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/copy_stencil.iir");
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
 
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto copy_stencil_memory = createCopyStencilIIRInMemory(optimizer);
+  std::string stencilName("testSerializationReduce");
 
-  compareIIRs(copy_stencil_from_file, copy_stencil_memory);
+  auto stencil_instantiation =
+      b.build(stencilName.c_str(),
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.stmt(b.assignExpr(b.at(out_f),
+                                          b.reduceOverNeighborExpr(
+                                              Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                              b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
-TEST(TestIIRSerializer, LapStencil) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
+TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
 
-  // read IIR from file
-  auto lap_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/lap_stencil.iir");
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
 
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
+  std::string stencilName("testSerializationReduceWeights");
 
-  compareIIRs(lap_stencil_from_file, lap_stencil_memory);
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), {LocType::Cells, LocType::Edges},
+                                                   std::vector<float>({1., 2., 3., 4.})))),
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), {LocType::Cells, LocType::Edges},
+                                                   std::vector<double>({1., 2., 3., 4.})))),
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                                   b.lit(0.), {LocType::Cells, LocType::Edges},
+                                                   std::vector<int>({1, 2, 3, 4})))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
-TEST(TestIIRSerializer, UnstructuredSumEdgeToCells) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
-  // read IIR from file
-  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
+TEST_F(IIRSerializerTest, IIRTestsGeneralWeightedReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
 
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory(optimizer);
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
+  auto aux0_f = b.field("aux0_field", LocType::Cells);
+  auto aux1_f = b.field("aux1_field", LocType::Cells);
 
-  compareIIRs(from_file, in_memory);
+  std::string stencilName("testSerializationReduceWeights");
+
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f),
+                                  b.reduceOverNeighborExpr(
+                                      Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                      {LocType::Cells, LocType::Edges},
+                                      {b.at(aux0_f), b.at(aux0_f), b.at(aux1_f), b.at(aux1_f)}))),
+              b.stmt(b.assignExpr(
+                  b.at(out_f), b.reduceOverNeighborExpr(
+                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                   {LocType::Cells, LocType::Edges},
+                                   {b.binaryExpr(b.at(aux0_f), b.at(aux0_f), Op::multiply),
+                                    b.binaryExpr(b.at(aux0_f), b.at(aux1_f), Op::multiply),
+                                    b.binaryExpr(b.at(aux1_f), b.at(aux0_f), Op::multiply),
+                                    b.binaryExpr(b.at(aux1_f), b.at(aux1_f), Op::multiply)}))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
-TEST(TestIIRSerializer, UnstructuredMixedCopies) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
-  // read IIR from file
-  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_mixed_copies.iir");
+TEST_F(IIRSerializerTest, IIRTests) {
+  sir::Attr attributes;
+  attributes.set(sir::Attr::Kind::MergeStages);
+  referenceInstantiation->getIIR()->insertChild(
+      std::make_unique<iir::Stencil>(referenceInstantiation->getMetaData(), attributes, 10),
+      referenceInstantiation->getIIR());
+  const auto& IIRStencil = referenceInstantiation->getIIR()->getChild(0);
+  auto deserialized = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserialized, referenceInstantiation);
+  IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
 
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto in_memory = createUnstructuredMixedCopies(optimizer);
+  (IIRStencil)
+      ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiation->getMetaData(),
+                                                      iir::LoopOrderKind::Backward));
+  const auto& IIRMSS = (IIRStencil)->getChild(0);
+  IIRMSS->getCaches().emplace(10, iir::Cache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::fill,
+                                             10, std::nullopt, std::nullopt, std::nullopt));
+  deserialized = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserialized, referenceInstantiation);
+  IIRMSS->setLoopOrder(iir::LoopOrderKind::Forward);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
 
-  compareIIRs(from_file, in_memory);
+  IIRMSS->insertChild(std::make_unique<iir::Stage>(referenceInstantiation->getMetaData(), 12));
+  const auto& IIRStage = IIRMSS->getChild(0);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  (IIRStage)->insertChild(std::make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1),
+                                                          referenceInstantiation->getMetaData()));
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
+
+  auto& IIRDoMethod = (IIRStage)->getChild(0);
+  auto expr = std::make_shared<iir::VarAccessExpr>("name");
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
+  auto stmt = iir::makeExprStmt(expr);
+  stmt->setID(22);
+  iir::Accesses stmtAccesses;
+  iir::Extents extents(ast::Offsets{ast::cartesian});
+  stmtAccesses.addReadExtent(42, extents);
+  stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
+
+  IIRDoMethod->getAST().push_back(std::move(stmt));
+  std::string varName = "foo";
+  auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
+                                          std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
+  iir::Accesses varDeclStmtAccesses;
+  varDeclStmtAccesses.addWriteExtent(33, extents);
+  varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
+      std::make_optional(std::move(varDeclStmtAccesses));
+  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(33);
+
+  IIRDoMethod->getAST().push_back(std::move(varDeclStmt));
+
+  deserialized = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserialized, referenceInstantiation);
+  auto deserializedExprStmt =
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
+  deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
+  deserialized = serializeAndDeserializeRef();
+  auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0))
+          ->getExpr());
+  deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
+      std::make_optional<int>(50);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
+  deserialized = serializeAndDeserializeRef();
+  auto deserializedVarDeclStmt =
+      std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
+  deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
+  IIR_EXPECT_NE(deserialized, referenceInstantiation);
+}
+
+TEST_F(IIRSerializerTest, IterationSpace) {
+  using namespace dawn::iir;
+
+  CartesianIIRBuilder b;
+  auto in_f = b.field("in_f", FieldType::ijk);
+  auto out_f = b.field("out_f", FieldType::ijk);
+
+  auto instantiation =
+      b.build("iteration_space",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
+                  b.stage(1, {0, 2},
+                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                     b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
+
+  std::string serializedIIR = IIRSerializer::serializeToString(instantiation);
+  auto deserialized = IIRSerializer::deserializeFromString(serializedIIR);
+  std::string deserializedIIR = IIRSerializer::serializeToString(deserialized);
+
+  IIR_EXPECT_EQ(instantiation, deserialized);
 }
 
 } // anonymous namespace
