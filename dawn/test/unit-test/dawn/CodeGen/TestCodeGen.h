@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/FileUtil.h"
 #include "dawn/Unittest/CompilerUtil.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -123,16 +122,17 @@ protected:
     return getStencilFromIIR("conditional_stencil");
   }
 
-  void runTest(const std::shared_ptr<StencilInstantiation> stencil_inst,
-               const std::string& ref_file) {
+  void runTest(const std::shared_ptr<StencilInstantiation> stencilInstantiation,
+               const std::string& refFile) {
     std::ostringstream oss;
-    if(ref_file.find(".cu") != std::string::npos) {
-      CompilerUtil::dumpCuda(oss, stencil_inst);
+    if(refFile.find(".cu") != std::string::npos) {
+      CompilerUtil::dumpCuda(oss, stencilInstantiation);
     } else {
-      CompilerUtil::dumpNaive(oss, stencil_inst);
+      CompilerUtil::dumpNaive(oss, stencilInstantiation);
     }
 
-    std::string ref = readFile("../reference/" + ref_file);
+    std::ifstream t("../reference/" + refFile);
+    const std::string ref((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
     ASSERT_EQ(oss.str(), ref) << "Generated code does not match reference code";
   }
 };
