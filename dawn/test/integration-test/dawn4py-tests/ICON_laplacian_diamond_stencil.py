@@ -187,11 +187,59 @@ def main():
                     rhs=sir_utils.make_field_access_expr("vn_vert"),
                     chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
                         "Cell"), SIR.LocationType.Value("Vertex")],
-                    weights=[sir_utils.make_field_access_expr(
-                        "inv_primal_edge_length")]
+                    weights=[
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_field_access_expr(
+                                "inv_primal_edge_length"),
+                            '*',
+                            sir_utils.make_field_access_expr(
+                                "inv_primal_edge_length")),
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_field_access_expr(
+                                "inv_primal_edge_length"),
+                            '*',
+                            sir_utils.make_field_access_expr(
+                                "inv_primal_edge_length")),
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_field_access_expr(
+                                "inv_vert_vert_length"),
+                            '*',
+                            sir_utils.make_field_access_expr(
+                                "inv_vert_vert_length")),
+                        sir_utils.make_binary_operator(
+                            sir_utils.make_field_access_expr(
+                                "inv_vert_vert_length"),
+                            '*',
+                            sir_utils.make_field_access_expr(
+                                "inv_vert_vert_length")),
+                    ]
                 ),
                 "=",
             ),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("nabla2"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_field_access_expr("nabla2"),
+                    "-",
+                    sir_utils.make_binary_operator(
+                        sir_utils.make_binary_operator(sir_utils.make_binary_operator(sir_utils.make_literal_access_expr(
+                            "8.0", SIR.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn")), "*",
+                            sir_utils.make_binary_operator(
+                                sir_utils.make_field_access_expr(
+                                    "inv_primal_edge_length"),
+                                "*",
+                                sir_utils.make_field_access_expr(
+                                    "inv_primal_edge_length"))),
+                        "-",
+                        sir_utils.make_binary_operator(sir_utils.make_binary_operator(sir_utils.make_literal_access_expr(
+                            "8.0", SIR.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn")), "*",
+                            sir_utils.make_binary_operator(
+                                sir_utils.make_field_access_expr(
+                                    "inv_vert_vert_length"),
+                                "*",
+                                sir_utils.make_field_access_expr(
+                                    "inv_vert_vert_length"))))),
+                "=")
         ]
     )
 
@@ -277,6 +325,12 @@ def main():
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
                                 "Cell"), SIR.LocationType.Value("Vertex")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "vn",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
