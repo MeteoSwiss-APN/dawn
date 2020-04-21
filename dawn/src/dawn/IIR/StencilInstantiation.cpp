@@ -27,7 +27,6 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/DiagnosticsEngine.h"
-#include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/Logging.h"
