@@ -22,24 +22,24 @@ namespace {
 
 constexpr auto backend = dawn::codegen::Backend::CUDA;
 
-TEST(TestCodeGenCuda, GlobalIndexStencil) {
+TEST(Cuda, GlobalIndexStencil) {
   runTest(dawn::getGlobalIndexStencil(), backend, "reference/global_indexing.cu");
 }
 
-TEST(TestCodeGenCuda, NonOverlappingInterval) {
+TEST(Cuda, NonOverlappingInterval) {
   runTest(dawn::getNonOverlappingInterval(), backend, "reference/nonoverlapping_stencil.cu");
 }
 
-TEST(TestCodeGenCuda, LaplacianStencil) {
+TEST(Cuda, LaplacianStencil) {
   runTest(dawn::getLaplacianStencil(), backend, "reference/laplacian_stencil.cu");
 }
 
-TEST(TestCodeGenCuda, ConditionalStencil) {
+TEST(Cuda, ConditionalStencil) {
   runTest(dawn::IIRSerializer::deserialize("input/conditional_stencil.iir"), backend,
           "reference/conditional_stencil.cu");
 }
 
-TEST(TestCodeGenCuda, DzCStencil) {
+TEST(Cuda, DzCStencil) {
   runTest(dawn::IIRSerializer::deserialize("input/update_dz_c.iir"), backend,
           "reference/update_dz_c.cu");
 }
