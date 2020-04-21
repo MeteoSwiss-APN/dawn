@@ -101,7 +101,9 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
         output_file,
@@ -114,7 +116,9 @@ def main(args: argparse.Namespace):
                     sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
                     sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
                     sir_utils.make_field("coeff", sir_utils.make_field_dimensions_cartesian()),
-                    sir_utils.make_field("lap", sir_utils.make_field_dimensions_cartesian(), is_temporary=True),
+                    sir_utils.make_field(
+                        "lap", sir_utils.make_field_dimensions_cartesian(), is_temporary=True
+                    ),
                 ],
             )
         ],
@@ -124,14 +128,20 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    f = open(output_file, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    with open(output_file, mode="w") as f:
+        f.write(sir_utils.to_json(sir))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate the SIR of a simple horizontal diffusion stencil")
+    parser = argparse.ArgumentParser(
+        description="Generate the SIR of a simple horizontal diffusion stencil"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

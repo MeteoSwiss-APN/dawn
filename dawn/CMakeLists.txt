@@ -26,7 +26,7 @@ unset(__VERSION_LIST)
 project(Dawn
   VERSION ${__DAWN_VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C
+  LANGUAGES CXX
 )
 unset(__DAWN_VERSION)
 
@@ -114,6 +114,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(Python3 COMPONENTS Interpreter)
 
+# Set PYTHON_EXECUTABLE to the Python3_EXECUTABLE if not manually specified,
+# otherwise pybind11 may find the wrong python library.
+if (Python3_EXECUTABLE AND NOT PYBIND11_PYTHON_VERSION)
+  set(PYBIND11_PYTHON_VERSION ${Python3_VERSION})
+endif()
+
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
   target_include_directories(${target}
@@ -176,18 +182,6 @@ endif()
 
 add_subdirectory(src)
 
-# Only build examples if BUILD_EXAMPLES and main project, or DAWN_BUILD_EXAMPLES is on
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_EXAMPLES) AND BUILD_EXAMPLES)
-  set(${PROJECT_NAME}_EXAMPLES ON)
-else()
-  set(${PROJECT_NAME}_EXAMPLES OFF)
-endif()
-mark_as_advanced(${PROJECT_NAME}_EXAMPLES)
-
-if(${PROJECT_NAME}_EXAMPLES)
-  add_subdirectory(examples)
-endif()
-
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
 endif()
@@ -201,7 +195,7 @@ include(CMakePackageConfigHelpers)
 configure_package_config_file(
   cmake/${PROJECT_NAME}Config.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
   PATH_VARS DAWN_INSTALL_DRIVER_INCLUDEDIR
 )
 
@@ -214,12 +208,12 @@ install(
   EXPORT ${PROJECT_NAME}Targets
   FILE ${PROJECT_NAME}Targets.cmake
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(
   FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )

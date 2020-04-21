@@ -44,7 +44,9 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("c"),
                 sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"), "/", sir_utils.make_field_access_expr("b"),
+                    sir_utils.make_field_access_expr("c"),
+                    "/",
+                    sir_utils.make_field_access_expr("b"),
                 ),
                 "=",
             )
@@ -118,7 +120,9 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("d"),
                 sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"), "*", sir_utils.make_field_access_expr("d", [0, 0, 1]),
+                    sir_utils.make_field_access_expr("c"),
+                    "*",
+                    sir_utils.make_field_access_expr("d", [0, 0, 1]),
                 ),
                 "-=",
             )
@@ -135,7 +139,9 @@ def main(args: argparse.Namespace):
         [
             sir_utils.make_stencil(
                 stencil_name,
-                sir_utils.make_ast([vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]),
+                sir_utils.make_ast(
+                    [vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]
+                ),
                 [
                     sir_utils.make_field("a", sir_utils.make_field_dimensions_cartesian()),
                     sir_utils.make_field("b", sir_utils.make_field_dimensions_cartesian()),
@@ -150,14 +156,20 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    f = open(output_file, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    with open(output_file, mode="w") as f:
+        f.write(sir_utils.to_json(sir))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate the SIR of a tridiagonal solve computation stencil")
+    parser = argparse.ArgumentParser(
+        description="Generate the SIR of a tridiagonal solve computation stencil"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

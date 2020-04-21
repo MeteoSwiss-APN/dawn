@@ -35,10 +35,8 @@
 OPT(int, MaxHaloPoints, 3, "max-halo", "",
     "Set the maximum number of allowed halo points", "<N>", true, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
-    "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:"
-    "\n - none   = Disable reordering"
-    "\n - greedy = Use greedy fusing"
-    "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
+    "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:\n - none   = Disable reordering\n - greedy = Use greedy fusing\n - scut   = Use S-cut graph partitioning\n",
+    "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
 OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
@@ -49,6 +47,8 @@ OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations
 
 OPT(bool, SplitStencils, false, "split-stencils", "",
     "Split stencil whose number of fields exceeds a threshold", "", false, true)
+OPT(bool, MergeStages, false, "merge-stages", "",
+    "Merge stages within a multi-stage into the same Do-Method if possible", "", false, true)
 OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
 OPT(bool, DisableKCaches, false, "disable-kcaches", "",
@@ -62,6 +62,10 @@ OPT(bool, PassVerbose, false, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "",
     "Detailed report on the accesses of each statement", "", false, true)
+
+OPT(bool, SerializeIIR, false, "write-iir", "",
+    "Serialize the low level intermediate representation after Optimization", "", false, false)
+OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 
 OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
     "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)

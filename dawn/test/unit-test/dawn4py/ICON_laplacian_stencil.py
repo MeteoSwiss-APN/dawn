@@ -24,14 +24,12 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
-from google.protobuf.json_format import MessageToJson, Parse
-
 
 
 def main():
     stencil_name = "ICON_laplacian_stencil"
     output_file = f"{stencil_name}.sir"
-    
+
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     body_ast = sir_utils.make_ast(
@@ -40,14 +38,13 @@ def main():
                 sir_utils.make_field_access_expr("rot_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
                         sir_utils.make_field_access_expr("vec"),
                         "*",
-                        sir_utils.make_field_access_expr("geofac_rot")),
-                    chain=[SIR.LocationType.Value(
-                        "Vertex"), SIR.LocationType.Value("Edge")]
+                        sir_utils.make_field_access_expr("geofac_rot"),
+                    ),
+                    chain=[SIR.LocationType.Value("Vertex"), SIR.LocationType.Value("Edge")],
                 ),
                 "=",
             ),
@@ -55,14 +52,13 @@ def main():
                 sir_utils.make_field_access_expr("div_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
                         sir_utils.make_field_access_expr("vec"),
                         "*",
-                        sir_utils.make_field_access_expr("geofac_div")),
-                    chain=[SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Edge")]
+                        sir_utils.make_field_access_expr("geofac_div"),
+                    ),
+                    chain=[SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")],
                 ),
                 "=",
             ),
@@ -70,14 +66,13 @@ def main():
                 sir_utils.make_field_access_expr("nabla2t1_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("rot_vec"),
-                    chain=[SIR.LocationType.Value(
-                        "Edge"), SIR.LocationType.Value("Vertex")],
-                    weights=[sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double)]
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Vertex")],
+                    weights=[
+                        sir_utils.make_literal_access_expr("-1.0", SIR.BuiltinType.Double),
+                        sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Double),
+                    ],
                 ),
                 "=",
             ),
@@ -85,26 +80,26 @@ def main():
                 sir_utils.make_field_access_expr("nabla2t1_vec"),
                 sir_utils.make_binary_operator(
                     sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr(
-                            "tangent_orientation"),
+                        sir_utils.make_field_access_expr("tangent_orientation"),
                         "*",
-                        sir_utils.make_field_access_expr("nabla2t1_vec")),
+                        sir_utils.make_field_access_expr("nabla2t1_vec"),
+                    ),
                     "/",
-                    sir_utils.make_field_access_expr("primal_edge_length")),
+                    sir_utils.make_field_access_expr("primal_edge_length"),
+                ),
                 "=",
             ),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("nabla2t2_vec"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("div_vec"),
-                    chain=[SIR.LocationType.Value(
-                        "Edge"), SIR.LocationType.Value("Cell")],
-                    weights=[sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double)]
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
+                    weights=[
+                        sir_utils.make_literal_access_expr("-1.0", SIR.BuiltinType.Double),
+                        sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Double),
+                    ],
                 ),
                 "=",
             ),
@@ -113,7 +108,8 @@ def main():
                 sir_utils.make_binary_operator(
                     sir_utils.make_field_access_expr("nabla2t2_vec"),
                     "/",
-                    sir_utils.make_field_access_expr("dual_edge_length")),
+                    sir_utils.make_field_access_expr("dual_edge_length"),
+                ),
                 "=",
             ),
             sir_utils.make_assignment_stmt(
@@ -121,7 +117,8 @@ def main():
                 sir_utils.make_binary_operator(
                     sir_utils.make_field_access_expr("nabla2t2_vec"),
                     "-",
-                    sir_utils.make_field_access_expr("nabla2t1_vec")),
+                    sir_utils.make_field_access_expr("nabla2t1_vec"),
+                ),
                 "=",
             ),
         ]
@@ -210,9 +207,8 @@ def main():
         ],
     )
 
-    f = open(output_file, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    with open(output_file, mode="w") as f:
+        f.write(sir_utils.to_json(sir))
 
 
 if __name__ == "__main__":

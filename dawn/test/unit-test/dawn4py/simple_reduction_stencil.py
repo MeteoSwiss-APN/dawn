@@ -44,7 +44,7 @@ def main(args: argparse.Namespace):
                     "+",
                     rhs=sir_utils.make_field_access_expr("in"),
                     init=sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")]
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
                 ),
                 "=",
             )
@@ -84,15 +84,12 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    f = open(output_file, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    with open(output_file, mode="w") as f:
+        f.write(sir_utils.to_json(sir))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate the SIR of a simple reduction stencil"
-    )
+    parser = argparse.ArgumentParser(description="Generate the SIR of a simple reduction stencil")
     parser.add_argument(
         "-v",
         "--verbose",

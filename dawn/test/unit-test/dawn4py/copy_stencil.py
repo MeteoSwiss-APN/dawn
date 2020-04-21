@@ -25,10 +25,10 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
-from google.protobuf.json_format import MessageToJson
 
 stencil_name = "copy_stencil"
 output_file = f"{stencil_name}.sir"
+
 
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
@@ -44,7 +44,9 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
         output_file,
@@ -53,7 +55,10 @@ def main(args: argparse.Namespace):
             sir_utils.make_stencil(
                 stencil_name,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())],
+                [
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                ],
             )
         ],
     )
@@ -62,14 +67,18 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    f = open(output_file, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    with open(output_file, mode="w") as f:
+        f.write(sir_utils.to_json(sir))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate the SIR of a simple copy-shift stencil")
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

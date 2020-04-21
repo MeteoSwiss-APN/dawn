@@ -12,10 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageMerger.h"
@@ -31,15 +30,15 @@ namespace {
 
 class TestPassStageMerger : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
-  dawn::DiagnosticsEngine diag_;
+  DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
-    options_.StageMerger = options_.MergeDoMethods = true;
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-    context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
-    dawn::UIDGenerator::getInstance()->reset();
+    options_.MergeStages = options_.MergeDoMethods = true;
+    context_ = std::make_unique<OptimizerContext>(diag_, options_,
+                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
+    UIDGenerator::getInstance()->reset();
   }
 
   void runTest(const std::string& filename, unsigned nStencils,

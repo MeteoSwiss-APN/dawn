@@ -32,8 +32,7 @@ output_file = f"{stencil_name}.sir"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     # create the out = reduce(sparse_CE * in) statement
     body_ast = sir_utils.make_ast(
@@ -43,10 +42,12 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("sparse_CE"), "*", sir_utils.make_field_access_expr("in")),
-                    init=sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Float),
-                    chain=[SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')]
+                        sir_utils.make_field_access_expr("sparse_CE"),
+                        "*",
+                        sir_utils.make_field_access_expr("in"),
+                    ),
+                    init=sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                    chain=[SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")],
                 ),
                 "=",
             )
@@ -54,7 +55,8 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
         output_file,
@@ -64,12 +66,24 @@ def main(args: argparse.Namespace):
                 stencil_name,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Edge')], 1)),
-                    sir_utils.make_field("sparse_CE", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Cell'), SIR.LocationType.Value('Edge')], 1)),
-                    sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Cell')], 1))
+                    sir_utils.make_field(
+                        "in",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Edge")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "sparse_CE",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "out",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
                 ],
             ),
         ],
@@ -79,15 +93,20 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    f = open(output_file, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    with open(output_file, mode="w") as f:
+        f.write(sir_utils.to_json(sir))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate the SIR of a simple unstructured sparse stencil")
+        description="Generate the SIR of a simple unstructured sparse stencil"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())
