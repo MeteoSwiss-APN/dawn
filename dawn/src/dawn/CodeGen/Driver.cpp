@@ -70,7 +70,7 @@ std::string run(const std::map<std::string, std::string>& stencilInstantiationMa
 
 /// @brief Run code generation on a single stencil instantiation
 std::unique_ptr<TranslationUnit>
-run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, Backend backend,
+run(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation, Backend backend,
     const Options& options) {
   return run({{stencilInstantiation->getName(), stencilInstantiation}}, backend, options);
 }

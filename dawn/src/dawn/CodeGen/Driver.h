@@ -40,6 +40,11 @@ std::string run(const std::map<std::string, std::string>& stencilInstantiationMa
                 IIRSerializer::Format format, codegen::Backend backend,
                 const codegen::Options& options = {});
 
+/// @brief Run the code generation for a single stencil instantiation.
+std::unique_ptr<TranslationUnit>
+run(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation, Backend backend,
+    const Options& options = {});
+
 /// @brief Shortcut to generate code from a translation unit
 std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit);
 
