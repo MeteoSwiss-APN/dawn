@@ -12,25 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_COMPILER_OPTIONS_H
-#define DAWN_COMPILER_OPTIONS_H
+#include "dawn/Optimizer/Driver.h"
 
+#include <stdexcept>
 #include <string>
 
 namespace dawn {
 
-/// @brief Configuration options used by dawn
-/// @ingroup compiler
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/CodeGen/Options.inc"
-#include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/Options.inc"
-#include "dawn/Optimizer/PassOptions.inc"
-#undef OPT
-};
+std::list<PassGroup> defaultPassGroups() {
+  return {PassGroup::SetStageName, PassGroup::StageReordering, PassGroup::StageMerger,
+          PassGroup::SetCaches, PassGroup::SetBlockSize};
+}
 
 } // namespace dawn
-
-#endif

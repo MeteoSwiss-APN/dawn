@@ -15,13 +15,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fwrite-iir -fno-codegen
-// EXPECTED_FILE: OUTPUT:%filename%.2.iir REFERENCE:%filename%_ref.iir IGNORE:filename DELETE:%filename%.0.iir,%filename%.1.iir
+// EXPECTED_FILE: OUTPUT:NestedStencils.iir REFERENCE:%filename%_ref.iir IGNORE:filename
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
 using namespace gtclang::dsl;
 
-stencil Test {
+stencil NestedStencils {
   storage field_a, field_b;
 
   Do {
@@ -32,7 +32,7 @@ stencil Test {
 stencil Nesting1 {
   storage filed_c, field_d;
 
-  Do { Test(filed_c, field_d); }
+  Do { NestedStencils(filed_c, field_d); }
 };
 
 stencil Nesting2 {
@@ -40,6 +40,6 @@ stencil Nesting2 {
 
   Do {
     Nesting1(field_e, field_f);
-    Test(field_f, field_e);
+    NestedStencils(field_f, field_e);
   }
 };

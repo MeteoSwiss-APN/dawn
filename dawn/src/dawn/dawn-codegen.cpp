@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Driver.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
 

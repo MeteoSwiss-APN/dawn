@@ -13,12 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnCompiler
-  DawnCompiler.h
-  DawnCompiler.cpp
   Driver.h
   Driver.cpp
-  Options.h
-  Options.inc
 )
 
 target_add_dawn_standard_props(DawnCompiler)

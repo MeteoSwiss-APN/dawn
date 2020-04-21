@@ -45,7 +45,7 @@ include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 FetchContent_Declare(pybind11_fetch
-  URL https://github.com/pybind/pybind11/archive/v2.4.0.tar.gz
+  URL https://github.com/pybind/pybind11/archive/v2.5.0.tar.gz
 )
 FetchContent_GetProperties(pybind11_fetch)
 if(NOT pybind11_fetch_POPULATED)
