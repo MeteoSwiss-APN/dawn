@@ -14,8 +14,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -fno-codegen --write-iir -o %filename%.cpp
-// EXPECTED_FILE: OUTPUT:%filename%.0.iir REFERENCE:%filename%_ref.0.iir IGNORE:filename
+// RUN: %gtclang% %file% -fno-codegen -write-iir -o %filename%.cpp
+// EXPECTED_FILE: OUTPUT:copystencil.iir REFERENCE:%filename%_ref.0.iir IGNORE:filename
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 

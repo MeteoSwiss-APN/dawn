@@ -12,13 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -40,16 +39,16 @@ public:
   }
 
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
   std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
     context_->getDiagnostics().clear();
-    std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
+    auto instantiation = IIRSerializer::deserialize(filename);
     EXPECT_TRUE(instantiation->getIIR()->getChildren().size() == 1);
     for(auto& stmt : iterateIIROverStmt(*instantiation->getIIR())) {
-      stmt->getData<iir::IIRStmtData>().StackTrace = std::vector<dawn::ast::StencilCall*>();
+      stmt->getData<iir::IIRStmtData>().StackTrace = std::vector<ast::StencilCall*>();
     }
 
     // run temp to function passs
