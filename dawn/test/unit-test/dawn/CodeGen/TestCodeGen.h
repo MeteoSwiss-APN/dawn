@@ -18,7 +18,6 @@
 
 #include <fstream>
 #include <gtest/gtest.h>
-#include <string>
 
 namespace dawn {
 namespace iir {
