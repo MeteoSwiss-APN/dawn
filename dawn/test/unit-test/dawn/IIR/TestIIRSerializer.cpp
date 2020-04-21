@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/ASTExpr.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
@@ -338,6 +337,44 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                    b.lit(0.), {LocType::Cells, LocType::Edges},
                                                    std::vector<int>({1, 2, 3, 4})))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
+}
+
+TEST_F(IIRSerializerTest, IIRTestsGeneralWeightedReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
+  auto aux0_f = b.field("aux0_field", LocType::Cells);
+  auto aux1_f = b.field("aux1_field", LocType::Cells);
+
+  std::string stencilName("testSerializationReduceWeights");
+
+  auto stencil_instantiation = b.build(
+      stencilName.c_str(),
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f),
+                                  b.reduceOverNeighborExpr(
+                                      Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                      {LocType::Cells, LocType::Edges},
+                                      {b.at(aux0_f), b.at(aux0_f), b.at(aux1_f), b.at(aux1_f)}))),
+              b.stmt(b.assignExpr(
+                  b.at(out_f), b.reduceOverNeighborExpr(
+                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
+                                   {LocType::Cells, LocType::Edges},
+                                   {b.binaryExpr(b.at(aux0_f), b.at(aux0_f), Op::multiply),
+                                    b.binaryExpr(b.at(aux0_f), b.at(aux1_f), Op::multiply),
+                                    b.binaryExpr(b.at(aux1_f), b.at(aux0_f), Op::multiply),
+                                    b.binaryExpr(b.at(aux1_f), b.at(aux1_f), Op::multiply)}))))))));
 
   auto deserializedAndSerialized =
       IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));

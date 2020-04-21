@@ -15,6 +15,7 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestIIR)
 add_executable(${executable}
+  TestComputeStageExtents.cpp
   TestDependencyGraphAccesses.cpp
   TestExtent.cpp
   TestField.cpp
@@ -29,4 +30,5 @@ add_executable(${executable}
 )
 target_link_libraries(${executable} PRIVATE DawnIIR DawnSerialization DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::IIR::" DISCOVERY_TIMEOUT 30)

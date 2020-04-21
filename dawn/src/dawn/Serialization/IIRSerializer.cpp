@@ -33,6 +33,15 @@
 
 namespace dawn {
 
+IIRSerializer::Format IIRSerializer::parseFormatString(const std::string& format) {
+  if(format == "Byte" || format == "byte" || format == "BYTE")
+    return IIRSerializer::Format::Byte;
+  else if(format == "Json" || format == "json" || format == "JSON")
+    return IIRSerializer::Format::Json;
+  else
+    throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
+}
+
 proto::enums::LocationType
 optionalLocationTypeToProto(std::optional<ast::LocationType> locationType) {
   if(locationType.has_value()) {
@@ -164,12 +173,6 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
   }
 
   return iir::Cache(cacheType, cachePolicy, ID, interval, enclosingInverval, cacheWindow);
-}
-
-static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
-  for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
-    leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
 }
 
 void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
@@ -798,7 +801,7 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   deserializeMetaData(target, (protoStencilInstantiation.metadata()), maxID);
   target->getMetaData().fileName_ = protoStencilInstantiation.filename();
   UIDGenerator::getInstance()->set(maxID + 1);
-  computeInitialDerivedInfo(target);
+  target->computeDerivedInfo();
 
   return target;
 }

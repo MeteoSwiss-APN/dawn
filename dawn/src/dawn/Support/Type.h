@@ -44,6 +44,9 @@ class Type {
   CVQualifier cvQualifier_;
 
 public:
+  template <typename T>
+  struct TypeInfo;
+
   /// @name Constructors and Assignment
   /// @{
   Type() : name_(), builtinTypeID_(BuiltinTypeID::Invalid), cvQualifier_(CVQualifier::Invalid) {}
@@ -86,6 +89,26 @@ public:
 
   /// @brief Stream to C++ compatible type
   friend std::ostream& operator<<(std::ostream& os, Type type);
+};
+
+template <>
+struct Type::TypeInfo<bool> {
+  static constexpr BuiltinTypeID Type = BuiltinTypeID::Boolean;
+};
+
+template <>
+struct Type::TypeInfo<int> {
+  static constexpr BuiltinTypeID Type = BuiltinTypeID::Integer;
+};
+
+template <>
+struct Type::TypeInfo<float> {
+  static constexpr BuiltinTypeID Type = BuiltinTypeID::Float;
+};
+
+template <>
+struct Type::TypeInfo<double> {
+  static constexpr BuiltinTypeID Type = BuiltinTypeID::Double;
 };
 
 extern std::ostream& operator<<(std::ostream& os, Type type);

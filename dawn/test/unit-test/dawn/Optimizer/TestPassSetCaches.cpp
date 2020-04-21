@@ -12,10 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -37,9 +36,9 @@ protected:
   DiagnosticsEngine diag_;
 
   explicit TestPassSetCaches() {
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-    context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
-    dawn::UIDGenerator::getInstance()->reset();
+    context_ = std::make_unique<OptimizerContext>(diag_, options_,
+                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
+    UIDGenerator::getInstance()->reset();
   }
 
   void runTest(const std::string& filename, int nMultiStages,

@@ -45,7 +45,7 @@ def main(args: argparse.Namespace):
                     "+",
                     sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
                     sir_utils.make_field_access_expr("in"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")]
+                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
                 ),
                 "=",
             )
@@ -86,7 +86,7 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico")
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
