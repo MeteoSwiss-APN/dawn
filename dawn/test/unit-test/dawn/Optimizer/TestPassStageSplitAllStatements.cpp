@@ -12,11 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Type.h"
@@ -35,12 +34,12 @@ namespace {
 
 class TestPassStageSplitAllStatements : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
   void runPass(const std::string& filename) {
-    dawn::UIDGenerator::getInstance()->reset();
+    UIDGenerator::getInstance()->reset();
     instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
 
     ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageSplitAllStatements>(context_, instantiation_));

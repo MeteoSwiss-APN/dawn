@@ -51,7 +51,9 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("c"),
                 sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"), "/", sir_utils.make_field_access_expr("b"),
+                    sir_utils.make_field_access_expr("c"),
+                    "/",
+                    sir_utils.make_field_access_expr("b"),
                 ),
                 "=",
             )
@@ -125,7 +127,9 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("d"),
                 sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"), "*", sir_utils.make_field_access_expr("d", [0, 0, 1]),
+                    sir_utils.make_field_access_expr("c"),
+                    "*",
+                    sir_utils.make_field_access_expr("d", [0, 0, 1]),
                 ),
                 "-=",
             )
@@ -142,7 +146,9 @@ def main(args: argparse.Namespace):
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]),
+                sir_utils.make_ast(
+                    [vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]
+                ),
                 [
                     sir_utils.make_field("a", sir_utils.make_field_dimensions_cartesian()),
                     sir_utils.make_field("b", sir_utils.make_field_dimensions_cartesian()),
@@ -158,7 +164,7 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend="cuda")
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDA)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
@@ -167,8 +173,15 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a tridiagonal solve computation stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(
+        description="Generate a tridiagonal solve computation stencil using Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

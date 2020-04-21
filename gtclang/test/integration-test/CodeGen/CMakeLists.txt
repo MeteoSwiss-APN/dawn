@@ -86,7 +86,7 @@ function(compile_target)
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
   add_test(NAME GTClang::Integration::CodeGen::${executable}
-    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10
   )
 endfunction()
 
@@ -133,7 +133,7 @@ function(compile_target_cuda)
 
 
   add_test(NAME GTClang-${executable}
-    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10
   )
 endfunction()
 

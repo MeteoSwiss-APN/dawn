@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
@@ -28,54 +27,28 @@ using namespace dawn;
 
 namespace {
 
-class MultiStageTest : public ::testing::Test {
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  DiagnosticsEngine diagnostics_;
-  dawn::DawnCompiler compiler_;
-  std::unique_ptr<OptimizerContext> context_;
+std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilename,
+                                                    const std::string& stencilName) {
 
-protected:
-  MultiStageTest() {
-    context_ = std::make_unique<dawn::OptimizerContext>(diagnostics_, options_, nullptr);
-  }
+  const std::string filename = TestEnvironment::path_ + "/" + sirFilename;
+  std::ifstream file(filename);
+  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
-  virtual void SetUp() {}
+  const std::string jsonstr((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename,
-                                                      std::string stencilName) {
+  auto sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
 
-    std::string filename = TestEnvironment::path_ + "/" + sirFilename;
-    std::ifstream file(filename);
-    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
+  // stage merger segfaults if stage reordering is not run beforehand
+  auto stencilInstantiationMap = run(sir, {PassGroup::StageReordering, PassGroup::StageMerger});
 
-    std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
+                  "compute_extent_test_stencil not found in sir");
 
-    std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
+  return stencilInstantiationMap[stencilName];
+}
 
-    auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
-    DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
-    CompilerUtil::runGroup(PassGroup::StageReordering, context_,
-                           stencilInstantiationMap.begin()->second);
-    // stage merger segfaults if stage reordering is not run beforehand
-    CompilerUtil::runGroup(PassGroup::StageMerger, context_,
-                           stencilInstantiationMap.begin()->second);
-
-    // Report diagnostics
-    if(compiler_.getDiagnostics().hasDiags()) {
-      for(const auto& diag : compiler_.getDiagnostics().getQueue())
-        std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-      throw std::runtime_error("compilation failed");
-    }
-
-    DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
-                    "compute_extent_test_stencil not found in sir");
-
-    return stencilInstantiationMap[stencilName];
-  }
-};
-
-TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
+TEST(MultiStageTest, test_compute_ordered_do_methods) {
   //    Stencil_0
   //    {
   //      MultiStage_0 [forward]
@@ -211,7 +184,7 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   EXPECT_EQ(orderedDoMethods[7]->getID(), do2_0->getID());
 }
 
-TEST_F(MultiStageTest, test_compute_read_access_interval) {
+TEST(MultiStageTest, test_compute_read_access_interval) {
 
   //    Stencil_0
   //    {
@@ -258,7 +231,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{0, 1}}));
 }
 
-TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval_02) {
+TEST(MultiStageTest, DISABLED_test_compute_read_access_interval_02) {
 
   //    Stencil_0
   //    {
@@ -329,7 +302,7 @@ TEST_F(MultiStageTest, DISABLED_test_compute_read_access_interval_02) {
                                 iir::Interval{sir::Interval::End - 2, sir::Interval::End + 1}}));
 }
 
-TEST_F(MultiStageTest, test_field_access_interval_04) {
+TEST(MultiStageTest, test_field_access_interval_04) {
 
   //    Stencil_0
   //    {
@@ -393,7 +366,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{4, 14}}));
 }
 
-TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
+TEST(MultiStageTest, test_compute_read_access_interval_03) {
   //    Stencil_0
   //    {
   //      MultiStage_0 [forward]
@@ -476,7 +449,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
 
   EXPECT_EQ(interval1, (iir::MultiInterval{iir::Interval{sir::Interval::End, sir::Interval::End}}));
 }
-TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
+
+TEST(MultiStageTest, test_compute_read_access_interval_04) {
 
   // Stencil_0
   //{
@@ -599,4 +573,5 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
 
   EXPECT_EQ(interval2, (iir::MultiInterval{iir::Interval{0, sir::Interval::End}}));
 }
+
 } // anonymous namespace

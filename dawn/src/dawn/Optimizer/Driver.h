@@ -12,22 +12,21 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GENERATE_IN_MEMORY_STENCILS_H
-#define GENERATE_IN_MEMORY_STENCILS_H
+#ifndef DAWN_OPTIMIZER_DRIVER_H
+#define DAWN_OPTIMIZER_DRIVER_H
 
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include <memory>
+#include "dawn/Optimizer/Options.h"
 
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createCopyStencilIIRInMemory(dawn::ast::GridType gridType);
+#include <list>
+#include <string>
 
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createLapStencilIIRInMemory(dawn::ast::GridType gridType);
+namespace dawn {
 
-std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredSumEdgeToCellsIIRInMemory();
+/// @brief List of default optimizer pass groups
+std::list<PassGroup> defaultPassGroups();
 
-std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredMixedCopies();
+/// TODO Driver methods will go here when OptimizerContext is removed.
+
+} // namespace dawn
 
 #endif
