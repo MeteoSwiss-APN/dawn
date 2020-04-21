@@ -19,7 +19,6 @@
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -41,12 +40,7 @@ protected:
   }
 
   void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {
-    std::string filepath = filename;
-    if(!TestEnvironment::path_.empty()) {
-      filepath = TestEnvironment::path_ + "/" + filepath;
-    }
-
-    auto instantiation = IIRSerializer::deserialize(filepath);
+    auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage graph pass
     PassSetStageGraph stageGraphPass(*context_);
