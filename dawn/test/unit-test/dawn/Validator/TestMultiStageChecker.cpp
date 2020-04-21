@@ -33,7 +33,7 @@ TEST(TestMultiStageChecker, LaplacianTwoStep) {
   // Run multistage checker and succeed if exception is thrown
   try {
     checker.run();
-    FAIL() << "Max halo error not thrown";
+    FAIL() << "Max halo error not caught";
   } catch(CompileError& error) {
     SUCCEED();
   }

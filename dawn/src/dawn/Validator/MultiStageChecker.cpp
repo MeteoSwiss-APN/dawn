@@ -32,21 +32,34 @@ void MultiStageChecker::run() {
         maxExtents.merge(fieldExtents);
       }
     }
-    // Merge stencil stage extents...
-    for(const auto& multistage : stencil->getChildren()) {
-      for(const auto& stage : multistage->getChildren()) {
-        const auto& stageExtents = stage->getExtents();
-        maxExtents.merge(stageExtents);
-      }
+  }
+
+  // Merge stencil stage extents...
+  for(const auto& multistage : iterateIIROver<iir::MultiStage>(*(instantiation_->getIIR()))) {
+    for(const auto& stage : multistage->getChildren()) {
+      const auto& stageExtents = stage->getExtents();
+      maxExtents.merge(stageExtents);
     }
   }
+
+  // Get horizontal extents
+  int iMinus, iPlus, jMinus, jPlus;
+  try {
+    const auto& horizExtent =
+        iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+    iMinus = horizExtent.iMinus();
+    iPlus = horizExtent.iPlus();
+    jMinus = horizExtent.jMinus();
+    jPlus = horizExtent.jPlus();
+  } catch(const std::bad_cast& error) {
+    iMinus = iPlus = jMinus = jPlus = 0;
+  }
+
   // Check if max extents exceed max halo points...
-  const auto& horizExtent =
-      iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
   const auto& vertExtent = maxExtents.verticalExtent();
-  if(horizExtent.iPlus() > maxHaloPoints_ || horizExtent.iMinus() < -maxHaloPoints_ ||
-     horizExtent.jPlus() > maxHaloPoints_ || horizExtent.jMinus() < -maxHaloPoints_ ||
-     vertExtent.plus() > maxHaloPoints_ || vertExtent.minus() < -maxHaloPoints_) {
+  if(iPlus > maxHaloPoints_ || iMinus < -maxHaloPoints_ || jPlus > maxHaloPoints_ ||
+     jMinus < -maxHaloPoints_ || vertExtent.plus() > maxHaloPoints_ ||
+     vertExtent.minus() < -maxHaloPoints_) {
     throw CompileError("Multistage exeeds max halo points " + std::to_string(maxHaloPoints_));
   }
 }
