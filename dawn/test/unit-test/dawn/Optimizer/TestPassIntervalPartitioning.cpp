@@ -25,28 +25,23 @@ namespace {
 
 using namespace dawn;
 
-class TestPassIntervalPartitioning : public ::testing::Test {
-protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-  std::unordered_set<iir::Interval> expected_;
+TEST(TestPassIntervalPartitioning, test_interval_partition) {
+  OptimizerContext::OptimizerContextOptions options;
+  std::unique_ptr<OptimizerContext> context;
+  std::unordered_set<iir::Interval> expected;
 
-  virtual void SetUp() {
-    options_.IntervalPartitioning = true;
-    dawn::UIDGenerator::getInstance()->reset();
-    expected_.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
-    expected_.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
-    expected_.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
-    expected_.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
-    expected_.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
-  }
-};
+  options.IntervalPartitioning = true;
+  dawn::UIDGenerator::getInstance()->reset();
+  expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
+  expected.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
+  expected.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
+  expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
+  expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
 
-TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
   auto instantiation = IIRSerializer::deserialize("input/test_interval_partition.iir");
 
   // Expect pass to succeed...
-  PassIntervalPartitioning intervalPartitioningPass(*context_);
+  PassIntervalPartitioning intervalPartitioningPass(*context);
   EXPECT_TRUE(intervalPartitioningPass.run(instantiation));
 
   const auto& stencils = instantiation->getIIR()->getChildren();
@@ -57,8 +52,8 @@ TEST_F(TestPassIntervalPartitioning, test_interval_partition) {
   const auto& multiStage = stencil->getChildren().begin()->get();
   auto intervals = multiStage->getIntervals();
 
-  ASSERT_TRUE(intervals.size() == expected_.size());
-  for(const auto& interval : expected_) {
+  ASSERT_TRUE(intervals.size() == expected.size());
+  for(const auto& interval : expected) {
     ASSERT_TRUE(intervals.find(interval) != intervals.end());
   }
 }
