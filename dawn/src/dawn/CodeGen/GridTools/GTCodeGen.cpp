@@ -34,7 +34,22 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-GTCodeGen::GTCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options) {
+  DiagnosticsEngine diagnostics;
+  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize);
+  if(diagnostics.hasDiags()) {
+    for(const auto& diag : diagnostics.getQueue())
+      DAWN_LOG(INFO) << diag->getMessage();
+    throw std::runtime_error("An error occured in code generation");
+  }
+
+  return CG.generateCode();
+}
+
+GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                      bool useParallelEP, int maxHaloPoints)
     : CodeGen(ctx, engine, maxHaloPoints),
       mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}

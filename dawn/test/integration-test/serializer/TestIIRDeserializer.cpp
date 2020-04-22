@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/GridType.h"
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/AccessComputation.h"
@@ -24,7 +23,6 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
@@ -215,62 +213,65 @@ void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
 
 TEST(IIRDeserializerTest, CopyStencil) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
+  DiagnosticsEngine diag;
+  ast::GridType gridType = ast::GridType::Cartesian;
+
+  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
 
   // read IIR from file
   auto copy_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/copy_stencil.iir");
 
   // generate IIR in memory
   UIDGenerator::getInstance()->reset();
-  auto copy_stencil_memory = createCopyStencilIIRInMemory(optimizer);
+  auto copy_stencil_memory = createCopyStencilIIRInMemory(gridType);
 
   compareIIRs(copy_stencil_from_file, copy_stencil_memory);
 }
 
 TEST(IIRDeserializerTest, LapStencil) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
+  DiagnosticsEngine diag;
+  ast::GridType gridType = ast::GridType::Cartesian;
+
+  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
 
   // read IIR from file
   auto lap_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/lap_stencil.iir");
 
   // generate IIR in memory
   UIDGenerator::getInstance()->reset();
-  auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
+  auto lap_stencil_memory = createLapStencilIIRInMemory(gridType);
 
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);
 }
 
 TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
+  dawn::DiagnosticsEngine diag;
+  ast::GridType gridType = dawn::ast::GridType::Unstructured;
+
+  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
   // read IIR from file
   auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
 
   // generate IIR in memory
   UIDGenerator::getInstance()->reset();
-  auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory(optimizer);
+  auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory();
 
   compareIIRs(from_file, in_memory);
 }
 
 TEST(IIRDeserializerTest, UnstructuredMixedCopies) {
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(dawn::ast::GridType::Unstructured));
+  dawn::DiagnosticsEngine diag;
+  ast::GridType gridType = dawn::ast::GridType::Unstructured;
+  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
   // read IIR from file
   auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_mixed_copies.iir");
 
   // generate IIR in memory
   UIDGenerator::getInstance()->reset();
-  auto in_memory = createUnstructuredMixedCopies(optimizer);
+  auto in_memory = createUnstructuredMixedCopies();
 
   compareIIRs(from_file, in_memory);
 }

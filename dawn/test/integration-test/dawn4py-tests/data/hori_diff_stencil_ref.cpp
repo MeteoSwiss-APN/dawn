@@ -1,4 +1,3 @@
-//---- Preprocessor defines ----
 #define DAWN_GENERATED 1
 #undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CUDA
@@ -38,13 +37,7 @@
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
 
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
 
-//---- Globals ----
-
-//---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
 __global__ void __launch_bounds__(256)  hori_diff_stencil_stencil41_ms87_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const in, ::dawn::float_type * const out, ::dawn::float_type * const coeff) {
@@ -99,7 +92,7 @@ if(threadIdx.y < +6) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int ijcacheindex= iblock + 1 + (jblock + 1)*34;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;

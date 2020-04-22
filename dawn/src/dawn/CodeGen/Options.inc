@@ -32,6 +32,11 @@
 //                  command-line target will be generated which allows to negate the option i.e
 //
 
+// TODO Rename this to (MaxHaloPoints, "max-halo") after combined struct is eliminated
+OPT(int, MaxHaloSize, 3, "max-halo-size", "",
+    "Set the maximum number of allowed halo points", "<N>", true, false)
+OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
+    "Make use of the parallel execution policy", "", false, true)
 OPT(int, MaxBlocksPerSM, 0, "max-blocks-sm", "",
     "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
 OPT(int, nsms, 0, "nsms", "", "Number of (CUDA) SMs", "<nsms>", true, false)

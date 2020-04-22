@@ -16,9 +16,9 @@
 
 #include "gtclang/Frontend/GTClangASTConsumer.h"
 #include "dawn/AST/GridType.h"
+#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
@@ -63,19 +63,6 @@ static const std::string currentDateTime() {
   return buf;
 }
 
-/// @brief Extract the DAWN options from the GTClang options
-static dawn::Options makeDAWNOptions(const Options& options) {
-  dawn::Options DAWNOptions;
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  DAWNOptions.NAME = options.NAME;
-#include "dawn/CodeGen/Options.inc"
-#include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/Options.inc"
-#include "dawn/Optimizer/PassOptions.inc"
-#undef OPT
-  return DAWNOptions;
-}
-
 } // anonymous namespace
 
 GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, const std::string& file,
@@ -104,7 +91,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   DAWN_LOG(INFO) << "Done parsing translation unit";
 
   if(context_->getASTContext().getDiagnostics().hasErrorOccurred()) {
-    DAWN_LOG(INFO) << "Erros occurred. Aborting";
+    DAWN_LOG(INFO) << "Errors occurred. Aborting";
     return;
   }
 
@@ -156,7 +143,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().StageReordering || context_->getOptions().DefaultOptimization)
     passGroup.push_back(dawn::PassGroup::StageReordering);
 
-  if(context_->getOptions().StageMerger || context_->getOptions().DefaultOptimization)
+  if(context_->getOptions().MergeStages || context_->getOptions().DefaultOptimization)
     passGroup.push_back(dawn::PassGroup::StageMerger);
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
@@ -189,39 +176,38 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     passGroup.push_back(dawn::PassGroup::DataLocalityMetric);
 
   // if nothing is passed, we fill the group with the default if no-optimization is not specified
-  if(!context_->getOptions().DisableOptimization && passGroup.size() == 0) {
-    passGroup.push_back(dawn::PassGroup::SetStageName);
-    passGroup.push_back(dawn::PassGroup::StageReordering);
-    passGroup.push_back(dawn::PassGroup::StageMerger);
-    passGroup.push_back(dawn::PassGroup::SetCaches);
-    passGroup.push_back(dawn::PassGroup::SetBlockSize);
-  }
+  if(!context_->getOptions().DisableOptimization && passGroup.size() == 0)
+    passGroup = dawn::defaultPassGroups();
 
-  if(context_->getOptions().DisableOptimization && passGroup.size() > 0) {
-    DAWN_ASSERT_MSG(false,
-                    "Inconsistent arguments: no optimisation as well as optimization specified");
-  }
+  if(context_->getOptions().DisableOptimization && passGroup.size() > 0)
+    DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
 
-  dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()));
-  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
-      Compiler.generate(Compiler.optimize(Compiler.lowerToIIR(SIR), passGroup));
-
-  // Report diagnostics from Dawn
-  if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
-    for(const auto& diags : Compiler.getDiagnostics().getQueue()) {
-      context_->getDiagnostics().report(*diags);
-    }
-    DAWN_LOG(INFO) << "Errors in Dawn. Aborting";
-    return;
-  }
+  // Inline at end if serializing or if the codegen backend is CUDA
+  if(context_->getOptions().SerializeIIR ||
+     (context_->getOptions().CodeGen &&
+      dawn::codegen::parseBackendString(context_->getOptions().Backend) ==
+          dawn::codegen::Backend::CUDA))
+    passGroup.push_back(dawn::PassGroup::Inlining);
 
   // Determine filename of generated file (by default we append "_gen" to the filename)
+  const std::string generatedPrefix = fs::path(file_).filename().stem();
   std::string generatedFileName;
-  if(context_->getOptions().OutputFile.empty())
-    generatedFileName = std::string(fs::path(file_).filename().stem()) + "_gen.cpp";
-  else {
+  if(context_->getOptions().OutputFile.empty()) {
+    generatedFileName = generatedPrefix + "_gen.cpp";
+  } else {
     generatedFileName = context_->getOptions().OutputFile;
   }
+
+  dawn::Options optimizerOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  optimizerOptions.NAME = context_->getOptions().NAME;
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+  dawn::codegen::Options codegenOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME = context_->getOptions().NAME;
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
 
   if(context_->getOptions().WriteSIR) {
     const std::string generatedSIR =
@@ -232,17 +218,22 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
     } else if(context_->getOptions().SIRFormat == "byte") {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Byte);
-
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
 
+  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
+
   // Do we generate code?
   if(!context_->getOptions().CodeGen) {
-    DAWN_LOG(INFO) << "Skipping code-generation";
+    DAWN_LOG(INFO) << "Skipping code generation";
     return;
   }
+
+  auto DawnTranslationUnit = dawn::codegen::run(
+      stencilInstantiationMap, dawn::codegen::parseBackendString(context_->getOptions().Backend),
+      codegenOptions);
 
   // Create new in-memory FS
   llvm::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
@@ -254,11 +245,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   std::string code;
   if(context_->getOptions().Serialized) {
     DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
-
+    // Would call generate here but that adds PPDefines as well
     code += DawnTranslationUnit->getGlobals();
-
     code += "\n\n";
-
     for(auto p : DawnTranslationUnit->getStencils()) {
       code += p.second;
     }
@@ -294,11 +283,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
             "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
       } else {
         num_stencils_generated++;
-      }
-      if(context_->getOptions().DeserializeIIR != "" && num_stencils_generated > 1) {
-        DAWN_LOG(ERROR)
-            << "more than one stencil present in DSL but only one stencil deserialized from IIR";
-        return;
       }
     }
 

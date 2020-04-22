@@ -38,10 +38,8 @@ add_library(DawnSupport
   DiagnosticsQueue.h
   DoubleSidedMap.h
   EditDistance.h
-  FileUtil.cpp
   Exception.h
   Exception.cpp
-  FileUtil.h
   Format.h
   HashCombine.h
   IndexGenerator.cpp

@@ -15,7 +15,7 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
-#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -35,7 +35,7 @@ namespace {
 TEST(TestCaching, test_global_iteration_space_01) {
   using namespace dawn::iir;
 
-  std::string stencilName("kcache");
+  const std::string stencilName = "kcache";
 
   CartesianIIRBuilder b;
   auto out = b.field("out_field", FieldType::ijk);
@@ -51,12 +51,10 @@ TEST(TestCaching, test_global_iteration_space_01) {
                   b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
-  // dummy options
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -78,7 +76,7 @@ TEST(TestCaching, test_global_iteration_space_01) {
 TEST(TestCaching, test_global_iteration_space_02) {
   using namespace dawn::iir;
 
-  std::string stencilName("kcache");
+  const std::string stencilName = "kcache";
 
   CartesianIIRBuilder b;
   auto out = b.field("out_field", FieldType::ijk);
@@ -96,12 +94,10 @@ TEST(TestCaching, test_global_iteration_space_02) {
                           b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
-  // dummy options
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -124,7 +120,7 @@ TEST(TestCaching, test_global_iteration_space_02) {
 TEST(TestCaching, test_global_iteration_space_03) {
   using namespace dawn::iir;
 
-  std::string stencilName("kcache");
+  const std::string stencilName = "kcache";
 
   CartesianIIRBuilder b;
   auto out = b.field("out_field", FieldType::ijk);
@@ -142,13 +138,10 @@ TEST(TestCaching, test_global_iteration_space_03) {
                           b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
-  // dummy options
-  Options compileOptions;
+  // optimizer (required to run caching pass)
+  DiagnosticsEngine diag;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-
-  // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -168,7 +161,7 @@ TEST(TestCaching, test_global_iteration_space_03) {
 TEST(TestCaching, test_global_iteration_space_04) {
   using namespace dawn::iir;
 
-  std::string stencilName("kcache");
+  const std::string stencilName = "kcache";
 
   CartesianIIRBuilder b;
   auto out = b.field("out_field", FieldType::ijk);
@@ -185,12 +178,10 @@ TEST(TestCaching, test_global_iteration_space_04) {
                   b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
-  // dummy options
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -210,7 +201,7 @@ TEST(TestCaching, test_global_iteration_space_04) {
 TEST(TestCaching, test_global_iteration_space_05) {
   using namespace dawn::iir;
 
-  std::string stencilName("kcache");
+  const std::string stencilName = "kcache";
 
   CartesianIIRBuilder b;
   auto out = b.field("out_field", FieldType::ijk);
@@ -227,12 +218,10 @@ TEST(TestCaching, test_global_iteration_space_05) {
                           b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
-  // dummy options
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-
   // optimizer and compiler (required to run caching pass)
-  DawnCompiler compiler;
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+  DiagnosticsEngine diag;
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)

@@ -1,3 +1,17 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/IIR/Extents.h"
@@ -6,7 +20,7 @@
 namespace dawn {
 namespace codegen {
 
-CodeGen::CodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+CodeGen::CodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                  int maxHaloPoints)
     : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {}
 
@@ -30,7 +44,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
   return fullIntervals ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
 }
 
-std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
+std::string CodeGen::generateGlobals(const StencilInstantiationContext& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
@@ -43,7 +57,7 @@ std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
   return ss.str();
 }
 
-std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
+std::string CodeGen::generateGlobals(const StencilInstantiationContext& context,
                                      std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
@@ -338,8 +352,31 @@ void CodeGen::addTmpStorageInit(
     MemberFunction& ctr, iir::Stencil const& stencil,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
-    ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
-                std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
+    iir::Extents maxExtents{ast::cartesian};
+    for(const auto& multiStage : stencil.getChildren())
+      for(const auto& stage : multiStage->getChildren())
+        maxExtents.merge(stage->getExtents());
+
+    int iMax, jMax;
+    try {
+      iir::CartesianExtent hMaxExtents =
+          iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+      iMax = hMaxExtents.iPlus();
+      jMax = hMaxExtents.jPlus();
+    } catch(const std::bad_cast& error) {
+      iMax = jMax = 0;
+    }
+
+    std::string tmpMetadataInit = tmpMetadataName_ + "(dom_.isize()";
+    if(iMax > 0)
+      tmpMetadataInit += " + " + std::to_string(iMax);
+    tmpMetadataInit += ", dom_.jsize()";
+    if(jMax > 0)
+      tmpMetadataInit += " + " + std::to_string(jMax);
+    tmpMetadataInit +=
+        ", dom_.ksize() + 2*" + std::to_string(getVerticalTmpHaloSize(stencil)) + ")";
+
+    ctr.addInit(tmpMetadataInit);
     for(const auto& field : tempFields) {
       ctr.addInit("m_" + field.second.Name + "(" + tmpMetadataName_ + ")");
     }
@@ -382,7 +419,7 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
       makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
 }
 
-std::string CodeGen::generateFileName(const stencilInstantiationContext& context) const {
+std::string CodeGen::generateFileName(const StencilInstantiationContext& context) const {
   if(context.size() > 0) {
     return context_.begin()->second->getMetaData().getFileName();
   }

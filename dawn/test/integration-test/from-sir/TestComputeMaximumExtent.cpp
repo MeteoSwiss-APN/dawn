@@ -12,14 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+#include "dawn/Support/FileSystem.h"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <streambuf>
@@ -29,52 +27,17 @@ using namespace dawn;
 
 namespace {
 
-class TestComputeMaximumExtent : public ::testing::Test {
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  DiagnosticsEngine diagnostics_;
-  dawn::DawnCompiler compiler_;
-  std::unique_ptr<OptimizerContext> context_;
+std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilename) {
+  auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);
+  auto stencilInstantiationMap = run(sir, {PassGroup::StageReordering, PassGroup::StageMerger});
 
-protected:
-  virtual void SetUp() {}
+  DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
+                  "compute_extent_test_stencil not found in sir");
 
-  TestComputeMaximumExtent() {
-    context_ = std::make_unique<dawn::OptimizerContext>(diagnostics_, options_, nullptr);
-  }
+  return stencilInstantiationMap["compute_extent_test_stencil"];
+}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
-
-    std::string filename = TestEnvironment::path_ + "/" + sirFilename;
-    std::ifstream file(filename);
-    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
-
-    std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-    std::shared_ptr<SIR> sir =
-        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
-    auto stencilInstantiationMap = compiler_.lowerToIIR(sir);
-    DAWN_ASSERT_MSG(stencilInstantiationMap.size() == 1, "unexpected number of stencils");
-    CompilerUtil::runGroup(PassGroup::StageReordering, context_,
-                           stencilInstantiationMap.begin()->second);
-    // stage merger segfaults if stage reordering is not run beforehand
-    CompilerUtil::runGroup(PassGroup::StageMerger, context_,
-                           stencilInstantiationMap.begin()->second);
-
-    // Report diagnostics
-    if(compiler_.getDiagnostics().hasDiags()) {
-      for(const auto& diag : compiler_.getDiagnostics().getQueue())
-        std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-      throw std::runtime_error("compilation failed");
-    }
-
-    DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
-                    "compute_extent_test_stencil not found in sir");
-
-    return stencilInstantiationMap["compute_extent_test_stencil"];
-  }
-};
-
-TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
+TEST(TestComputeMaximumExtent, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("input/test_field_access_interval_02.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
@@ -107,7 +70,7 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
             (iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 1, 1)));
 }
 
-TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
+TEST(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
   auto stencilInstantiation = loadTest("input/test_compute_maximum_extent_01.sir");
   const auto& stencils = stencilInstantiation->getStencils();
 

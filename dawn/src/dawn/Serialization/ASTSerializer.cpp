@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Serialization/ASTSerializer.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -681,28 +682,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
   currentExprProto_.pop();
 
   if(expr->getWeights()) {
-    auto protoWeights = protoExpr->mutable_weights();
     for(const auto& weight : expr->getWeights().value()) {
-      auto weightProto = protoWeights->Add();
-      DAWN_ASSERT_MSG(weight.has_value(), "weight with no value encountered during serialization");
-      switch(weight.getType()) {
-      case sir::Value::Kind::Boolean:
-        weightProto->set_boolean_value(weight.getValue<bool>());
-        break;
-      case sir::Value::Kind::Integer:
-        weightProto->set_integer_value(weight.getValue<int>());
-        break;
-      case sir::Value::Kind::Double:
-        weightProto->set_double_value(weight.getValue<double>());
-        break;
-      case sir::Value::Kind::Float:
-        weightProto->set_float_value(weight.getValue<float>());
-        break;
-      case sir::Value::Kind::String:
-        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
-                         "of arithmetic type)");
-        break;
-      }
+      currentExprProto_.push(protoExpr->add_weights());
+      weight->accept(*this);
+      currentExprProto_.pop();
     }
   }
 }
@@ -1000,28 +983,9 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
           makeExpr(exprProto.init(), dataType, maxID), chain, makeLocation(exprProto));
       return expr;
     } else {
-      std::vector<sir::Value> deserializedWeights;
+      std::vector<std::shared_ptr<ast::Expr>> deserializedWeights;
       for(const auto weight : weights) {
-        switch(weight.Value_case()) {
-        case dawn::proto::statements::Weight::kBooleanValue:
-          dawn_unreachable("non arithmetic weight encountered in deserialization (boolean)");
-          break;
-        case dawn::proto::statements::Weight::kIntegerValue:
-          deserializedWeights.push_back(sir::Value(weight.integer_value()));
-          break;
-        case dawn::proto::statements::Weight::kDoubleValue:
-          deserializedWeights.push_back(sir::Value(weight.double_value()));
-          break;
-        case dawn::proto::statements::Weight::kFloatValue:
-          deserializedWeights.push_back(sir::Value(weight.float_value()));
-          break;
-        case dawn::proto::statements::Weight::kStringValue:
-          dawn_unreachable("non arithmetic weight encountered in deserialization (string)");
-          break;
-        case dawn::proto::statements::Weight::VALUE_NOT_SET:
-          dawn_unreachable("un-set weight encountered in deserialization");
-          break;
-        }
+        deserializedWeights.push_back(makeExpr(weight, dataType, maxID));
       }
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),

@@ -106,7 +106,10 @@ TEST_P(StencilTest, AST_Reduction) {
 }
 
 TEST_P(StencilTest, AST_ReductionWeighted) {
-  std::vector<sir::Value> weights{sir::Value(1.), sir::Value(2.), sir::Value(3.)};
+  std::vector<std::shared_ptr<sir::Expr>> weights{
+      std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Double),
+      std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Double),
+      std::make_shared<sir::LiteralAccessExpr>("3", BuiltinTypeID::Double)};
 
   const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
       "*", std::make_shared<sir::FieldAccessExpr>("rhs"),

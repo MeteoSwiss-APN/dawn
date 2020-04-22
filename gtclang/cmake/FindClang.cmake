@@ -55,7 +55,6 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
   endif()
 
   if(${LLVM_VERSION} VERSION_GREATER_EQUAL 9.0.0)
-    set(clang_libnames clang)
     set(clang_libnames clang-cpp)
   else()
     set(clang_libnames
