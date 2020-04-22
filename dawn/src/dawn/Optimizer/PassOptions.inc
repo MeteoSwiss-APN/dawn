@@ -44,6 +44,8 @@ OPT(bool, StageReordering, false, "stage-reordering", "",
     "Run reorder-stages pass group", "", false, true)
 OPT(bool, StageMerger, true, "stage-merger", "",
     "Merge stages within a multi-stage into the same Do-Method if possible", "", false, true)
+OPT(bool, MultiStageMerger, false, "multistage-merger", "",
+    "Merge Multistages if possible", "", false, true)    
 OPT(bool, TemporaryMerger, false, "temporary-merger", "",
     "Merge temporaries if possible", "", false, true)
 OPT(bool, Inlining, false, "inlining", "",
@@ -76,10 +78,10 @@ OPT(bool, ReportPassStageSplit, false, "report-pass-stage-split", "",
 OPT(bool, ReportPassMultiStageSplit, false, "report-pass-multi-stage-split", "",
     "Detailed report on the actions taken during the multi-stage splitting pass", "", false, true)
 OPT(bool, ReportPassFieldVersioning, false, "report-pass-field-versioning", "",
-    "Report on all field renamings during the field-versioning pass", "", false, true)
+    "Report on all field renaming during the field-versioning pass", "", false, true)
 OPT(bool, ReportPassTemporaryMerger, false, "report-pass-temporary-merger", "",
     "Report which temporaries will be merged during the temporary merger pass. The groups of temporaries, "
-    "which will be merged, are sorted in alphapetical order.", "", false, true)
+    "which will be merged, are sorted in alphabetical order.", "", false, true)
 OPT(bool, ReportPassTemporaryType, false, "report-pass-temporary-type", "",
     "Report which variables and temporary fields are promoted/demoted", "", false, true)
 OPT(bool, ReportPassStageReordering, false, "report-pass-stage-reordering", "",
