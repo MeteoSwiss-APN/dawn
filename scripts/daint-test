@@ -1,7 +1,10 @@
 #!/usr/bin/env sh
 
 script_path=$(dirname $(which $0))
-root_dir=$script_path/../
+# Path on host filesystem
+root_dir=$script_path/..
+# Path in container
+dawn_dir=/usr/src/dawn
 
 image=gtclang/dawn-env-cuda10.1-ubuntu18.04
 build_jobs=24
@@ -10,10 +13,10 @@ module load daint-gpu
 module load sarus
 
 # Clone clang-gridtools here because the image does not have the ssh key
-if [ -z ${CLANG_GRIDTOOLS_REPOSITORY+x} ]; then
+if [ -z "$CLANG_GRIDTOOLS_REPOSITORY" ]; then
     CLANG_GRIDTOOLS_REPOSITORY=git@github.com:MeteoSwiss-APN/clang-gridtools.git
 fi
-if [ -z ${CLANG_GRIDTOOLS_BRANCH+x} ]; then
+if [ -z "$CLANG_GRIDTOOLS_BRANCH" ]; then
     CLANG_GRIDTOOLS_BRANCH=master
 fi
 
@@ -30,9 +33,11 @@ srun --job-name=dawn_PR \
     --partition=cscsci \
     --constraint=gpu \
     --account=c14 \
-    sarus run --mount=type=bind,source=$root_dir,destination=/usr/src/dawn \
+    sarus run --mount=type=bind,source=$root_dir,destination=$dawn_dir \
     --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
     $image \
+    bash -c "mkdir $dawn_dir/gtest_output && \
+    export GTEST_OUTPUT=\"xml:$dawn_dir/gtest_output/\" &&
     /usr/src/dawn/scripts/build-and-test \
     --dawn-build-dir /usr/src/dawn-build \
     --dawn-install-dir /usr/local/dawn \
@@ -40,6 +45,5 @@ srun --job-name=dawn_PR \
     --clang-gridtools-build-dir /usr/src/clang-gridtools-build \
     --parallel $build_jobs \
     --docker-env \
-    --copy-test-xml \
     -DCMAKE_BUILD_TYPE=$build_type \
-    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc"

@@ -8,7 +8,7 @@
  #define BOOST_NO_CXX11_DECLTYPE 1
 #endif
 #ifndef GRIDTOOLS_DAWN_HALO_EXTENT
- #define GRIDTOOLS_DAWN_HALO_EXTENT 0
+ #define GRIDTOOLS_DAWN_HALO_EXTENT 3
 #endif
 #ifndef BOOST_PP_VARIADICS
  #define BOOST_PP_VARIADICS 1
@@ -36,6 +36,8 @@
 #endif
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
+
+
 namespace dawn_generated{
 namespace cuda{
 __constant__ int stage14GlobalJIndices_[2];
@@ -87,7 +89,7 @@ if(threadIdx.y < +4) {
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;

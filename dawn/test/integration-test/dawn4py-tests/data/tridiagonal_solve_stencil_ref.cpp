@@ -1,4 +1,3 @@
-//---- Preprocessor defines ----
 #define DAWN_GENERATED 1
 #undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CUDA
@@ -38,13 +37,7 @@
 #include <driver-includes/gridtools_includes.hpp>
 using namespace gridtools::dawn;
 
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
 
-//---- Globals ----
-
-//---- Stencils ----
 namespace dawn_generated{
 namespace cuda{
 __global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms108_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {

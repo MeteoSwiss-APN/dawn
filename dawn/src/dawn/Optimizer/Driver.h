@@ -12,21 +12,21 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Assert.h"
-#include "dawn/Support/STLExtras.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
-#include <gtest/gtest.h>
+#ifndef DAWN_OPTIMIZER_DRIVER_H
+#define DAWN_OPTIMIZER_DRIVER_H
 
-std::string TestEnvironment::path_ = "";
+#include "dawn/Optimizer/Options.h"
 
-int main(int argc, char* argv[]) {
-  // Initialize gtest
-  testing::InitGoogleTest(&argc, argv);
+#include <list>
+#include <string>
 
-  if(argc > 1) {
-    DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
-    TestEnvironment::path_ = argv[1];
-    ::testing::AddGlobalTestEnvironment(new TestEnvironment());
-  }
-  return RUN_ALL_TESTS();
-}
+namespace dawn {
+
+/// @brief List of default optimizer pass groups
+std::list<PassGroup> defaultPassGroups();
+
+/// TODO Driver methods will go here when OptimizerContext is removed.
+
+} // namespace dawn
+
+#endif

@@ -15,17 +15,18 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}IntegrationTestOptimizerFromSIR)
 add_executable(${executable}
-  TestMain.cpp
   TestComputeMaximumExtent.cpp
   TestMultiStage.cpp
   TestStage.cpp
 )
-target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest)
+target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})
 target_include_directories(${executable}
   PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
+
+# This copy to the tests CWD is required
 file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Integration::Optimizer::TestsFromSIR::"
-  EXTRA_ARGS "${CMAKE_CURRENT_BINARY_DIR}/"
-  DISCOVERY_TIMEOUT 30)
+  DISCOVERY_TIMEOUT 30
+)

@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Support/FileUtil.h"
+#include "dawn/Support/FileSystem.h"
 
 namespace dawn {
 
@@ -33,15 +33,15 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
         sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
-  bool MergeStages = context_.getOptions().StageMerger;
+  bool MergeStages = context_.getOptions().MergeStages;
   bool MergeDoMethods = context_.getOptions().MergeDoMethods;
 
   // ... Nope
   if(!MergeDoMethods && !stencilNeedsMergePass)
     return true;
 
-  std::string filenameWE =
-      getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
+  const std::string filenameWE =
+      fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
   if(context_.getOptions().ReportPassStageMerger)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 

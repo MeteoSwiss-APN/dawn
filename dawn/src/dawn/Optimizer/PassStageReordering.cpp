@@ -15,7 +15,7 @@
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Support/FileUtil.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Unreachable.h"
 
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
@@ -30,8 +30,8 @@ PassStageReordering::PassStageReordering(OptimizerContext& context, ReorderStrat
 
 bool PassStageReordering::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  std::string filenameWE =
-      getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
+  const std::string filenameWE =
+      fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
   if(context_.getOptions().ReportPassStageReodering)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 

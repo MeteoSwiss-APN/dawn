@@ -16,7 +16,6 @@
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <gtest/gtest.h>
 #include <memory>
