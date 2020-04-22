@@ -26,6 +26,7 @@ enum class PassGroup {
   SetStageName,
   StageReordering,
   StageMerger,
+  MultiStageMerger,
   TemporaryMerger,
   Inlining,
   IntervalPartitioning,
