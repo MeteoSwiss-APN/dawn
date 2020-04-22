@@ -231,12 +231,10 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     case PassGroup::StageReordering:
       optimizer.pushBackPass<PassSetStageGraph>();
       optimizer.pushBackPass<PassSetDependencyGraph>();
-      optimizer.pushBackPass<PassMultiStageMerger>();
+      // running the actual pass
       optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
       // moved stages around ...
       optimizer.pushBackPass<PassSetSyncStage>();
-      // if we want this info around, we should probably run this also
-      // optimizer.pushBackPass<PassSetStageName>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
@@ -309,6 +307,19 @@ DawnCompiler::optimize(const std::map<std::string, std::shared_ptr<iir::StencilI
     case PassGroup::SetLoopOrder:
       // Plain diagnostics, should not even be a pass but is independent
       optimizer.pushBackPass<PassSetLoopOrder>();
+      // validation check
+      optimizer.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::MultiStageMerger:
+      // set up the graphs for the analysis
+      optimizer.pushBackPass<PassSetStageGraph>();
+      optimizer.pushBackPass<PassSetDependencyGraph>();
+      // run the pass
+      optimizer.pushBackPass<PassMultiStageMerger>();
+      // since this can change the scope of temporaries ...
+      optimizer.pushBackPass<PassTemporaryType>();
+      optimizer.pushBackPass<PassLocalVarType>();
+      optimizer.pushBackPass<PassRemoveScalars>();
       // validation check
       optimizer.pushBackPass<PassValidation>();
       break;
