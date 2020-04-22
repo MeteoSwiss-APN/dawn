@@ -34,14 +34,6 @@ void MultiStageChecker::run() {
     }
   }
 
-  // Merge stencil stage extents...
-  for(const auto& multistage : iterateIIROver<iir::MultiStage>(*(instantiation_->getIIR()))) {
-    for(const auto& stage : multistage->getChildren()) {
-      const auto& stageExtents = stage->getExtents();
-      maxExtents.merge(stageExtents);
-    }
-  }
-
   // Get horizontal extents
   int iMinus, iPlus, jMinus, jPlus;
   try {
@@ -55,12 +47,18 @@ void MultiStageChecker::run() {
     iMinus = iPlus = jMinus = jPlus = 0;
   }
 
-  // Check if max extents exceed max halo points...
+  // Get vertical extents
   const auto& vertExtent = maxExtents.verticalExtent();
+  int kMinus = vertExtent.minus();
+  int kPlus = vertExtent.plus();
+
+  // Check if max extents exceed max halo points...
   if(iPlus > maxHaloPoints_ || iMinus < -maxHaloPoints_ || jPlus > maxHaloPoints_ ||
-     jMinus < -maxHaloPoints_ || vertExtent.plus() > maxHaloPoints_ ||
-     vertExtent.minus() < -maxHaloPoints_) {
-    throw CompileError("Multistage exeeds max halo points " + std::to_string(maxHaloPoints_));
+     jMinus < -maxHaloPoints_ || kPlus > maxHaloPoints_ || kMinus < -maxHaloPoints_) {
+    throw CompileError(
+        "Multistage extent (" + std::to_string(iMinus) + "," + std::to_string(iPlus) + "," +
+        std::to_string(jMinus) + "," + std::to_string(jPlus) + "," + std::to_string(kMinus) + "," +
+        std::to_string(kPlus) + ") exeeds max halo points " + std::to_string(maxHaloPoints_));
   }
 }
 
