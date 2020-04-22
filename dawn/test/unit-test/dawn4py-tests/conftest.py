@@ -34,7 +34,7 @@ def grid_sir_with_reference_code(request):
 
 
 @pytest.fixture(params=utils.UNSTRUCTURED_TEST_CASES)
-def unstructure_sir_with_reference_code(request):
+def unstructured_sir_with_reference_code(request):
     sir = getattr(utils, f"make_{request.param}_sir")(name=request.param)
     reference_code = ""
 

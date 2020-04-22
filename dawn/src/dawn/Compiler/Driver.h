@@ -19,37 +19,53 @@
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerOptions.h"
+#include "dawn/Optimizer/Driver.h"
+#include "dawn/Optimizer/Options.h"
+#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
+
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace dawn {
 
-/// @brief List of default optimizer pass groups.
-std::list<PassGroup> defaultPassGroups();
-
-// TODO Move these to Optimizer/Driver.{cpp,h} when DawnCompiler is removed
-// {
+/// TODO Move these to Optimizer/Driver when OptimizerContext is removed
+/// {
 /// @brief Lower to IIR and run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
-    const OptimizerOptions& options = {});
+    const Options& options = {});
+
+/// @brief Lower to IIR and run groups. Use strings in place of C++ structures.
+std::map<std::string, std::string> run(const std::string& sir, dawn::SIRSerializer::Format format,
+                                       const std::list<dawn::PassGroup>& groups,
+                                       const dawn::Options& options = {});
 
 /// @brief Run groups
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
-    const std::list<PassGroup>& groups, const OptimizerOptions& options = {});
-// }
+    const std::list<PassGroup>& groups, const Options& options = {});
 
-/// @brief Compile SIR to a translation unit
-std::unique_ptr<codegen::TranslationUnit>
-compile(const std::shared_ptr<SIR>& stencilIR,
-        const std::list<PassGroup>& passGroups = defaultPassGroups(),
-        const OptimizerOptions& optimizerOptions = {},
-        codegen::Backend backend = codegen::Backend::GridTools,
-        const codegen::Options& codegenOptions = {});
+/// @brief Run groups. Use strings in place of C++ structures.
+std::map<std::string, std::string>
+run(const std::map<std::string, std::string>& stencilInstantiationMap, IIRSerializer::Format format,
+    const std::list<PassGroup>& groups, const Options& options = {});
+/// }
+
+/// @brief Convenience function to compile SIR directly to a translation unit
+std::unique_ptr<codegen::TranslationUnit> compile(
+    const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups = defaultPassGroups(),
+    const Options& optimizerOptions = {}, codegen::Backend backend = codegen::Backend::GridTools,
+    const codegen::Options& codegenOptions = {});
+
+/// @brief Convenience function to compile SIR directly to a translation unit. Use strings in place
+/// of C++ structures.
+std::string compile(const std::string& sir, SIRSerializer::Format format,
+                    const std::list<PassGroup>& groups, const Options& optimizerOptions,
+                    codegen::Backend backend, const codegen::Options& codegenOptions);
 
 } // namespace dawn
 

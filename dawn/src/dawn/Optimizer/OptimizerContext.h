@@ -31,8 +31,6 @@ namespace iir {
 class StencilInstantiation;
 }
 
-class DawnCompiler;
-
 struct HardwareConfig {
   /// Maximum number of fields concurrently in shared memory
   int SMemMaxFields = 8;

@@ -990,14 +990,14 @@ void MSCodeGen::generateCudaKernelCode() {
                    CodeGeneratorHelper::generateStrideName(2, index.second);
 
             cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
-                                  "interval and the parallel execution block ");
+                                  "interval and the parallel execution block");
             cudaKernel.addStatement("idx" + index.first + " += " + step);
           }
         }
       }
       if(useCodeGenTemporaries_) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
-                              "interval and the parallel execution block ");
+                              "interval and the parallel execution block");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
                                 ", blockIdx.z * " + std::to_string(blockSize_[2]) +
                                 ") * kstride_tmp");
