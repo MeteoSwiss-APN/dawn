@@ -131,7 +131,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
 
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, true);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, false);
 
   stencilWrapperClass.commit();
 
@@ -144,12 +145,13 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 void CXXNaiveCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const CodeGenProperties& codeGenProperties) const {
+    const CodeGenProperties& codeGenProperties, bool withSync) const {
 
   const auto& metadata = stencilInstantiation->getMetaData();
 
   // Generate the run method by generate code for the stencil description AST
-  MemberFunction runMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
+  std::string methodName = withSync ? "run" : "runWithoutSync";
+  MemberFunction runMethod = stencilWrapperClass.addMemberFunction("void", methodName, "");
 
   for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
