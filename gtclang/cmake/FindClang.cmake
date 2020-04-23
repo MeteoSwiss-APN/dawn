@@ -54,7 +54,15 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     )
   endif()
 
-  find_library(gtclang_clang-cpp-lib clang-cpp PATHS ${LLVM_LIBRARY_DIRS})
+  find_library(gtclang_clang-cpp-lib clang-cpp
+    PATHS ${LLVM_LIBRARY_DIRS}
+    NO_DEFAULT_PATH
+    NO_PACKAGE_ROOT_PATH
+    NO_CMAKE_PATH
+    NO_CMAKE_ENVIRONMENT_PATH
+    NO_SYSTEM_ENVIRONMENT_PATH
+    NO_CMAKE_SYSTEM_PATH
+  )
   mark_as_advanced(gtclang_clang-cpp-lib)
 
   if(gtclang_clang-cpp-lib) # single library installation is available
