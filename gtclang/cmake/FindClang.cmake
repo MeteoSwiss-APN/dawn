@@ -64,6 +64,7 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     NO_CMAKE_SYSTEM_PATH
   )
   mark_as_advanced(gtclang_clang-cpp-lib)
+  message(STATUS "---------> ${gtclang_clang-cpp-lib}")
 
   if(gtclang_clang-cpp-lib) # single library installation is available
     set(clang_libnames clang-cpp)
