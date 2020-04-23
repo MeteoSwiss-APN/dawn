@@ -54,7 +54,10 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     )
   endif()
 
-  if(${LLVM_VERSION} VERSION_GREATER_EQUAL 9.0.0)
+  find_library(gtclang_clang-cpp-lib clang-cpp PATHS ${LLVM_LIBRARY_DIRS})
+  mark_as_advanced(gtclang_clang-cpp-lib)
+
+  if(gtclang_clang-cpp-lib) # single library installation is available
     set(clang_libnames clang-cpp)
   else()
     set(clang_libnames
