@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CUDA_MSCODEGEN_H
 
 #include <sstream>
+#include <unordered_set>
 
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
@@ -58,6 +59,7 @@ private:
   const bool solveKLoopInParallel_;
   CudaCodeGen::CudaCodeGenOptions options_;
   bool iterationSpaceSet_;
+  std::unordered_set<std::string> globalNames_;
 
 public:
   MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
