@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-# _
-# | |
-# __| | __ ___      ___ ___
-# / _` |/ _` \ \ /\ / / '_  |
-# | (_| | (_| |\ V  V /| | | |
-# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-# This file is distributed under the MIT License (MIT).
-# See LICENSE.txt for details.
+##  This file is distributed under the MIT License (MIT).
+##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
@@ -79,7 +79,7 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico")
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

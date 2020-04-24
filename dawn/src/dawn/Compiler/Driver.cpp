@@ -168,15 +168,18 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::StageReordering:
-      optimizer.pushBackPass<PassSetStageGraph>();
-      optimizer.pushBackPass<PassSetDependencyGraph>();
-      optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
-      // moved stages around ...
-      optimizer.pushBackPass<PassSetSyncStage>();
-      // if we want this info around, we should probably run this also
-      // optimizer.pushBackPass<PassSetStageName>();
-      // validation check
-      optimizer.pushBackPass<PassValidation>();
+      if(stencilInstantiationMap.begin()->second->getIIR()->getGridType() !=
+         ast::GridType::Unstructured) {
+        optimizer.pushBackPass<PassSetStageGraph>();
+        optimizer.pushBackPass<PassSetDependencyGraph>();
+        optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
+        // moved stages around ...
+        optimizer.pushBackPass<PassSetSyncStage>();
+        // if we want this info around, we should probably run this also
+        // optimizer.pushBackPass<PassSetStageName>();
+        // validation check
+        optimizer.pushBackPass<PassValidation>();
+      }
       break;
     case PassGroup::StageMerger:
       // merging requires the stage graph
@@ -234,9 +237,12 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       optimizer.pushBackPass<PassValidation>();
       break;
     case PassGroup::SetBlockSize:
-      optimizer.pushBackPass<PassSetBlockSize>();
-      // validation check
-      optimizer.pushBackPass<PassValidation>();
+      if(stencilInstantiationMap.begin()->second->getIIR()->getGridType() !=
+         ast::GridType::Unstructured) {
+        optimizer.pushBackPass<PassSetBlockSize>();
+        // validation check
+        optimizer.pushBackPass<PassValidation>();
+      }
       break;
     case PassGroup::DataLocalityMetric:
       // Plain diagnostics, should not even be a pass but is independent
