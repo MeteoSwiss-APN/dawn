@@ -49,7 +49,7 @@ dawn::PassGroup parsePassGroup(const std::string& passGroup) {
     return dawn::PassGroup::SetStageName;
   else if(passGroup == "StageReordering" || passGroup == "stage-reordering")
     return dawn::PassGroup::StageReordering;
-  else if(passGroup == "StageMerger" || passGroup == "stage-merger")
+  else if(passGroup == "StageMerger" || passGroup == "merge-stages")
     return dawn::PassGroup::StageMerger;
   else if(passGroup == "TemporaryMerger" || passGroup == "temporary-merger" ||
           passGroup == "tmp-merger")
