@@ -27,6 +27,9 @@
 namespace dawn {
 namespace codegen {
 namespace cuda {
+
+std::unordered_set<std::string> MSCodeGen::globalNames_;
+
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties,
@@ -714,6 +717,7 @@ void MSCodeGen::generateCudaKernelCode() {
         }
       }
     }
+
     if(globalNames_.find("globalOffsets") == globalNames_.end()) {
       ss_ << "__constant__ unsigned globalOffsets_[2];\n";
       globalNames_.insert("globalOffsets");

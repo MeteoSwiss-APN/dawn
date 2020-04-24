@@ -59,7 +59,7 @@ private:
   const bool solveKLoopInParallel_;
   CudaCodeGen::CudaCodeGenOptions options_;
   bool iterationSpaceSet_;
-  std::unordered_set<std::string> globalNames_;
+  static std::unordered_set<std::string> globalNames_;
 
 public:
   MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
