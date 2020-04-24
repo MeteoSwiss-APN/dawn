@@ -299,7 +299,7 @@ bool dimension_isa(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
                 "Can only be casted to a valid field dimension implementation");
-  return (bool)(dynamic_cast<PlainT*>(dimension.impl_.get()));
+  return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
 }
 
 /// @brief Representation of a field

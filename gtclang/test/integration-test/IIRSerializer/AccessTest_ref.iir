@@ -65,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "AccessTest"
  },
  "internalIR": {
   "gridType": "Cartesian",

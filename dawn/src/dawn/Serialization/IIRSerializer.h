@@ -39,6 +39,9 @@ public:
     Byte  ///< Protobuf's internal byte format
   };
 
+  /// @brief Parse a format string to serialization type
+  static Format parseFormatString(const std::string& format);
+
   /// @brief Deserialize the StencilInstantiation from `file`
   ///
   /// @param file    Path the file

@@ -1,16 +1,9 @@
-//---- Preprocessor defines ----
 #define DAWN_GENERATED 1
 #undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CXXNAIVEICO
 #include <driver-includes/unstructured_interface.hpp>
 
-//---- Includes ----
-#include "driver-includes/gridtools_includes.hpp"
-using namespace gridtools::dawn;
 
-//---- Globals ----
-
-//---- Stencils ----
 namespace dawn_generated{
 namespace cxxnaiveico{
 template<typename LibTag>
