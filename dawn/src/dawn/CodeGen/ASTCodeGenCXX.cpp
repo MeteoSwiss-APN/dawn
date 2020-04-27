@@ -103,8 +103,6 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
   }
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::LoopStmt>& stmt) { dawn_unreachable("TODO"); }
-
 //===------------------------------------------------------------------------------------------===//
 //     Expr
 //===------------------------------------------------------------------------------------------===//

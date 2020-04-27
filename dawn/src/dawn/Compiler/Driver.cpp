@@ -179,6 +179,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         // optimizer.pushBackPass<PassSetStageName>();
         // validation check
         optimizer.pushBackPass<PassValidation>();
+      } else {
+        DAWN_LOG(WARNING) << "PassStageReordering currently disabled for unstructured meshes!";
       }
       break;
     case PassGroup::StageMerger:
@@ -242,6 +244,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         optimizer.pushBackPass<PassSetBlockSize>();
         // validation check
         optimizer.pushBackPass<PassValidation>();
+      } else {
+        DAWN_LOG(WARNING) << "PassSetBlockSize currently disabled for unstructured meshes!";
       }
       break;
     case PassGroup::DataLocalityMetric:

@@ -23,8 +23,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
 
-namespace {
-std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationType>& chain) {
+static std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationType>& chain) {
   auto getLocationTypeString = [](dawn::ast::LocationType type) {
     switch(type) {
     case dawn::ast::LocationType::Cells:
@@ -53,7 +52,6 @@ std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationType>& c
 
   return ss.str();
 }
-} // namespace
 
 namespace dawn {
 namespace codegen {

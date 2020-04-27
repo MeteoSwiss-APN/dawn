@@ -57,8 +57,10 @@ public:
   }
 
   void visit(const std::shared_ptr<LoopStmt>& stmt) override {
+    scopeDepth_++;
     ss_ << "for (" << stmt->getIterationDescr().toString() << ")\n";
     stmt->getBlockStmt()->accept(*this);
+    scopeDepth_--;
   }
 
   void visit(const std::shared_ptr<ExprStmt>& stmt) override {
