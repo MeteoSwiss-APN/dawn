@@ -123,6 +123,21 @@ TEST_P(StencilTest, AST_ReductionWeighted) {
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
+TEST_P(StencilTest, AST_ForLoopChain) {
+  std::shared_ptr<sir::AssignmentExpr> body = std::make_shared<sir::AssignmentExpr>(
+      std::make_shared<sir::FieldAccessExpr>("lhs"), std::make_shared<sir::FieldAccessExpr>("rhs"));
+  std::shared_ptr<sir::BlockStmt> bodyBlock =
+      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(body)});
+  std::vector<ast::LocationType> chain{ast::LocationType::Cells, ast::LocationType::Edges,
+                                       ast::LocationType::Vertices};
+  std::shared_ptr<sir::LoopStmt> loopStmt = sir::makeLoopStmt(std::move(chain), bodyBlock);
+
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
+      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{loopStmt}));
+
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
+
 INSTANTIATE_TEST_CASE_P(SIRSerializeTest, StencilTest,
                         ::testing::Values(SIRSerializer::Format::Json,
                                           SIRSerializer::Format::Byte));

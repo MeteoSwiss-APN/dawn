@@ -114,6 +114,11 @@ std::shared_ptr<ast::IfStmt> makeIfStmt(Args&&... args) {
   return std::make_shared<ast::IfStmt>(std::make_unique<IIRStmtData>(),
                                        std::forward<Args>(args)...);
 }
+template <typename... Args>
+std::shared_ptr<ast::LoopStmt> makeLoopStmt(Args&&... args) {
+  return std::make_shared<ast::LoopStmt>(std::make_unique<IIRStmtData>(),
+                                         std::forward<Args>(args)...);
+}
 //
 // TODO refactor_AST: the following is going to be removed
 //
@@ -126,6 +131,7 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
+using LoopStmt = ast::LoopStmt;
 //
 // END_TODO
 //
