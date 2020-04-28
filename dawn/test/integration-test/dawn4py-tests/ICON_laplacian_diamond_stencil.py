@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-# _
-# | |
-# __| | __ ___      ___ ___
-# / _` |/ _` \ \ /\ / / '_  |
-# | (_| | (_| |\ V  V /| | | |
-# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-# This file is distributed under the MIT License (MIT).
-# See LICENSE.txt for details.
+##  This file is distributed under the MIT License (MIT).
+##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
@@ -162,7 +162,7 @@ def main():
                         sir_utils.make_field_access_expr("kh_smag_2"),
                         "*",
                         sir_utils.make_field_access_expr("inv_vert_vert_length")),
-                    "-",
+                    "+",
                     sir_utils.make_binary_operator(
                         sir_utils.make_field_access_expr("dvt_tang"),
                         "*",
