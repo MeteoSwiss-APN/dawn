@@ -16,6 +16,7 @@
 #define DAWN_AST_ASTSTMT_H
 
 #include "dawn/AST/ASTVisitorHelpers.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
@@ -24,6 +25,7 @@
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <memory>
+#include <sstream>
 #include <vector>
 
 namespace dawn {
@@ -57,7 +59,8 @@ public:
     StencilCallDeclStmt,
     VerticalRegionDeclStmt,
     BoundaryConditionDeclStmt,
-    IfStmt
+    IfStmt,
+    LoopStmt,
   };
 
   using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
@@ -538,6 +541,57 @@ public:
                                const std::shared_ptr<Stmt>& newStmt) override;
   ACCEPTVISITOR(Stmt, IfStmt)
 };
+
+//===------------------------------------------------------------------------------------------===//
+//     Loop
+//===------------------------------------------------------------------------------------------===//
+
+class IterationDescr {
+public:
+  virtual ~IterationDescr() = 0;
+  virtual std::unique_ptr<IterationDescr> clone() const = 0;
+  virtual std::string toString() const = 0;
+  virtual bool equals(const IterationDescr*) const = 0;
+};
+
+class ChainIterationDescr : public IterationDescr {
+  ast::NeighborChain chain_;
+
+public:
+  ChainIterationDescr(ast::NeighborChain&& chain);
+  ast::NeighborChain getChain() const;
+  std::unique_ptr<IterationDescr> clone() const override;
+  std::string toString() const override;
+  bool equals(const IterationDescr* otherPtr) const override;
+};
+
+class LoopStmt : public Stmt {
+  std::shared_ptr<BlockStmt> blockStmt_;
+  std::unique_ptr<IterationDescr> iterationDescr_;
+
+public:
+  LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
+           std::shared_ptr<BlockStmt> stmt, SourceLocation loc = SourceLocation());
+  LoopStmt(const LoopStmt& stmt);
+  LoopStmt& operator=(LoopStmt const& stmt);
+  virtual ~LoopStmt();
+
+  const std::shared_ptr<BlockStmt>& getBlockStmt() const;
+  std::shared_ptr<BlockStmt>& getBlockStmt();
+
+  std::shared_ptr<Stmt> clone() const override;
+  bool equals(const Stmt* other, bool compareData = true) const override;
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::LoopStmt; }
+  virtual StmtRangeType getChildren() override;
+  virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
+                               const std::shared_ptr<Stmt>& newStmt) override;
+
+  const IterationDescr& getIterationDescr() const;
+  const IterationDescr* getIterationDescrPtr() const;
+
+  ACCEPTVISITOR(Stmt, LoopStmt)
+};
+
 } // namespace ast
 } // namespace dawn
 

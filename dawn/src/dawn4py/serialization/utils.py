@@ -46,6 +46,7 @@ __all__ = [
     "make_stencil_call",
     "make_stmt",
     "make_block_stmt",
+    "make_loop_stmt",
     "make_expr_stmt",
     "make_return_stmt",
     "make_var_decl_stmt",
@@ -104,6 +105,7 @@ StmtType = TypeVar(
     StencilCallDeclStmt,
     BoundaryConditionDeclStmt,
     IfStmt,
+    LoopStmt,
 )
 
 # Can't pass SIR.enums_pb2.LocationType as argument because it doesn't contain the value
@@ -348,6 +350,8 @@ def make_stmt(stmt: StmtType):
         wrapped_stmt.boundary_condition_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, IfStmt):
         wrapped_stmt.if_stmt.CopyFrom(stmt)
+    elif isinstance(stmt, LoopStmt):
+        wrapped_stmt.loop_stmt.CopyFrom(stmt)
     else:
         raise SIRError("cannot create Stmt from type {}".format(type(stmt)))
     return wrapped_stmt
@@ -363,6 +367,20 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
         stmt.statements.extend([make_stmt(s) for s in statements if not isinstance(s, Field)])
     else:
         stmt.statements.extend([make_stmt(statements)])
+    return stmt
+
+
+def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue]) -> LoopStmt:
+    """ Create an For Loop
+
+    :param block: List of statements that compose the body of the loop
+    """
+    stmt = LoopStmt()
+    stmt.statements.CopyFrom(make_stmt(make_block_stmt(block)))
+    loop_descriptor_chain = LoopDescriptorChain()
+    loop_descriptor_chain.chain.extend(chain)
+    stmt.loop_descriptor.loop_descriptor_chain.CopyFrom(loop_descriptor_chain)
+
     return stmt
 
 
@@ -1009,6 +1027,19 @@ class SIRPrinter:
 
         print(self.wrapper.fill("}"), file=self.file)
 
+    def visit_loop_stmt(self, stmt):
+        print(self.wrapper.fill("{"), file=self.file)
+        self._indent += self.indent_size
+        self.wrapper.initial_indent = " " * self._indent
+        #TODO fix print
+        print("for(" + stmt.loop_descriptor.loop_descriptor_chain.chain + ")")
+        self.visit_block_stmt(stmt.statements.block_stmt)
+
+        self._indent -= self.indent_size
+        self.wrapper.initial_indent = " " * self._indent
+
+        print(self.wrapper.fill("}"), file=self.file)
+
     def visit_body_stmt(self, stmt):
         if stmt.WhichOneof("stmt") == "var_decl_stmt":
             self.visit_var_decl_stmt(stmt.var_decl_stmt)
@@ -1018,6 +1049,8 @@ class SIRPrinter:
             self.visit_if_stmt(stmt.if_stmt)
         elif stmt.WhichOneof("stmt") == "block_stmt":
             self.visit_block_stmt(stmt.block_stmt)
+        elif stmt.WhichOneof("stmt") == "loop_stmt":
+            self.visit_loop_stmt(stmt.loop_stmt)
         else:
             raise ValueError("Stmt not supported :" + stmt.WhichOneof("stmt"))
 

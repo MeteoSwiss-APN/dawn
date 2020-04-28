@@ -396,9 +396,8 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
 
           auto protoStmt = protoDoMethod->mutable_ast();
           ProtoStmtBuilder builder(protoStmt, ast::StmtData::IIR_DATA_TYPE);
-          auto ptr = std::make_shared<ast::BlockStmt>(
-              domethod->getAST()); // TODO takes a copy to allow using shared_from_this()
-          ptr->accept(builder);
+
+          domethod->getASTPtr()->accept(builder);
         }
         protoStage->set_locationtype(optionalLocationTypeToProto(stage->getLocationType()));
       }

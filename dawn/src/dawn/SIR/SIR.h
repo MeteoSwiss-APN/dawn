@@ -150,6 +150,7 @@ struct StencilFunctionArg {
   SourceLocation Loc; ///< Source location
 
   bool operator==(const StencilFunctionArg& rhs) const;
+
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
@@ -205,6 +206,7 @@ class UnstructuredFieldDimension : public FieldDimensionImpl {
                       otherUnstructured.neighborChain_.begin());
   }
 
+  bool chainIsValid() const;
   const ast::NeighborChain neighborChain_;
 
 public:

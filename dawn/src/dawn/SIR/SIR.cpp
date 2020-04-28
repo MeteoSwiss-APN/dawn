@@ -565,9 +565,20 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
+bool UnstructuredFieldDimension::chainIsValid() const {
+  for(int chainIdx = 0; chainIdx < neighborChain_.size() - 1; chainIdx++) {
+    if(neighborChain_[chainIdx] == neighborChain_[chainIdx + 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain)
     : neighborChain_(neighborChain) {
-  DAWN_ASSERT(neighborChain.size() > 0);
+  DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
+  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
+                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
 }
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {

@@ -273,6 +273,7 @@ message Stmt {
     VerticalRegionDeclStmt vertical_region_decl_stmt = 6;
     BoundaryConditionDeclStmt boundary_condition_decl_stmt = 7;
     IfStmt if_stmt = 8;
+    LoopStmt loop_stmt = 9;
   }
 }
 
@@ -311,6 +312,29 @@ message BlockStmt {
   SourceLocation loc = 2;       // Source location
   StmtData data = 3;            // Generic Stmt's data container
   int32 ID = 4;                 // ID of the Stmt
+}
+
+message LoopDescriptorGeneral {
+  // dummy message for future use
+}
+
+message LoopDescriptorChain {
+  repeated dawn.proto.enums.LocationType chain = 1;
+}
+
+message LoopDescriptor {
+  oneof desc {
+    LoopDescriptorChain loop_descriptor_chain = 1;
+    LoopDescriptorGeneral loop_descriptor_general = 2;
+  }
+}
+
+message LoopStmt {
+  Stmt statements = 1; // List of statements (must be a BlockStmt)
+  LoopDescriptor loop_descriptor = 2; // Loop bounds description
+  SourceLocation loc = 3;             // Source location
+  StmtData data = 4;                  // Generic Stmt's data container
+  int32 ID = 5;                       // ID of the Stmt
 }
 
 // @brief A statement wrapping an expression
