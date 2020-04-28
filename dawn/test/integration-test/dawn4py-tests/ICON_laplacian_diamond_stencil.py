@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-# _
-# | |
-# __| | __ ___      ___ ___
-# / _` |/ _` \ \ /\ / / '_  |
-# | (_| | (_| |\ V  V /| | | |
-# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-# This file is distributed under the MIT License (MIT).
-# See LICENSE.txt for details.
+##  This file is distributed under the MIT License (MIT).
+##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+
 
 """Generate input for the ICON Laplacian stencil test. This is an alternative version of the diamond,
    emulating an FD stencil on a FV mesh. This is the version used in operations, since it is expected
