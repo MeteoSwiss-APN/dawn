@@ -99,7 +99,7 @@ def main():
     f.close()
 
     # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico")
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
     print(f"Writing generated code to '{gen_outputfile}'")
