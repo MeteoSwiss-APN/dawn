@@ -175,8 +175,9 @@ def main():
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("kh_smag"),
                 sir_utils.make_binary_operator(sir_utils.make_field_access_expr("diff_multfac_smag"), "*",
-                                               sir_utils.make_binary_operator(sir_utils.make_field_access_expr(
-                                                   "kh_smag_1"), "+", sir_utils.make_field_access_expr("kh_smag_2"))),
+                                               sir_utils.make_fun_call_expr("math::sqrt",
+                                                                            [sir_utils.make_binary_operator(sir_utils.make_field_access_expr(
+                                                                                "kh_smag_1"), "+", sir_utils.make_field_access_expr("kh_smag_2"))])),
                 "="),
             # compute nabla2 using the diamond reduction
             sir_utils.make_assignment_stmt(
