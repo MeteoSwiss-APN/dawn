@@ -15,6 +15,8 @@
 add_library(DawnOptimizer
   CreateVersionAndRename.cpp
   CreateVersionAndRename.h
+  MultiStageChecker.h
+  MultiStageChecker.cpp
   OptimizerContext.cpp
   OptimizerContext.h
   OptimizerOptions.h

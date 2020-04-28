@@ -12,11 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/MultiStageChecker.h"
+#include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Exception.h"
-#include "dawn/Validator/MultiStageChecker.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -26,8 +29,18 @@ using namespace dawn;
 namespace {
 
 TEST(TestMultiStageChecker, LaplacianTwoStep) {
+  dawn::DiagnosticsEngine diag;
+  dawn::OptimizerContext::OptimizerContextOptions options;
+  auto sir = std::make_shared<SIR>(ast::GridType::Cartesian);
+
   // Load IIR from file
   auto instantiation = IIRSerializer::deserialize("input/LaplacianTwoStep.iir");
+
+  // Run dependency graph pass
+  auto context = std::make_unique<OptimizerContext>(diag, options, sir);
+  PassSetDependencyGraph dependencyGraphPass(*context);
+  EXPECT_TRUE(dependencyGraphPass.run(instantiation));
+
   MultiStageChecker checker(instantiation.get(), 1);
 
   // Run multistage checker and succeed if exception is thrown

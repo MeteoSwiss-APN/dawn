@@ -16,6 +16,7 @@ include(GoogleTest)
 set(executable ${PROJECT_NAME}UnittestOptimizer)
 add_executable(${executable}
   TestMain.cpp
+  TestMultiStageChecker.cpp
   TestPassCaching.cpp
   TestPassLocalVarType.cpp
   TestPassIntervalPartitioning.cpp

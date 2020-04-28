@@ -18,7 +18,6 @@ add_executable(${executable}
   TestUnstructuredDimensionChecker.cpp
   TestGridTypeChecker.cpp
   TestIntegrityChecker.cpp
-  TestMultiStageChecker.cpp
   TestWeightChecker.cpp
 )
 target_link_libraries(${executable} DawnValidator DawnUnittest gtest gtest_main)
