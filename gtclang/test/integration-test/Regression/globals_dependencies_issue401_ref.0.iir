@@ -6,9 +6,9 @@
    "31": "out_field"
   },
   "accessIDToType": {
+   "31": 6,
    "29": 0,
-   "30": 6,
-   "31": 6
+   "30": 6
   },
   "literalIDToName": {
    "-61": "0",
@@ -139,7 +139,7 @@
                    "data": {
                     "accessID": 31
                    },
-                   "ID": 80
+                   "ID": 82
                   }
                  },
                  "op": "=",
@@ -156,7 +156,7 @@
                      "data": {
                       "accessID": 29
                      },
-                     "ID": 78
+                     "ID": 80
                     }
                    },
                    "op": "*",
@@ -183,21 +183,21 @@
                      "data": {
                       "accessID": 30
                      },
-                     "ID": 79
+                     "ID": 81
                     }
                    },
                    "loc": {
                     "Line": 30,
                     "Column": 64
                    },
-                   "ID": 77
+                   "ID": 79
                   }
                  },
                  "loc": {
                   "Line": 30,
                   "Column": 52
                  },
-                 "ID": 81
+                 "ID": 83
                 }
                },
                "loc": {
@@ -233,7 +233,7 @@
                  }
                 }
                },
-               "ID": 76
+               "ID": 78
               }
              }
             ],
@@ -242,7 +242,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 75
+            "ID": 77
            }
           },
           "doMethodID": 0,
@@ -259,7 +259,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 64,
+      "multiStageID": 75,
       "Caches": {}
      }
     ],
@@ -305,7 +305,7 @@
                    "data": {
                     "accessID": 31
                    },
-                   "ID": 87
+                   "ID": 89
                   }
                  },
                  "op": "=",
@@ -322,7 +322,7 @@
                      "data": {
                       "accessID": 29
                      },
-                     "ID": 85
+                     "ID": 87
                     }
                    },
                    "op": "*",
@@ -349,21 +349,21 @@
                      "data": {
                       "accessID": 30
                      },
-                     "ID": 86
+                     "ID": 88
                     }
                    },
                    "loc": {
                     "Line": 32,
                     "Column": 64
                    },
-                   "ID": 84
+                   "ID": 86
                   }
                  },
                  "loc": {
                   "Line": 32,
                   "Column": 52
                  },
-                 "ID": 88
+                 "ID": 90
                 }
                },
                "loc": {
@@ -399,7 +399,7 @@
                  }
                 }
                },
-               "ID": 83
+               "ID": 85
               }
              }
             ],
@@ -408,7 +408,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 82
+            "ID": 84
            }
           },
           "doMethodID": 1,
@@ -425,7 +425,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 70,
+      "multiStageID": 76,
       "Caches": {}
      }
     ],
@@ -597,5 +597,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "/home/eddied/Work/dawn-pm/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }
