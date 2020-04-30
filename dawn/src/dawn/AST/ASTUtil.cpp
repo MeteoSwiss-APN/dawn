@@ -41,6 +41,10 @@ public:
       s->accept(*this);
   }
 
+  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   void visit(const std::shared_ptr<ExprStmt>& stmt) override {
     if(stmt->getExpr() == oldExpr_)
       stmt->setExpr(newExpr_);
@@ -342,6 +346,10 @@ public:
   bool isValid() const { return valid_; }
 
   void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+    dawn_unreachable("cannot evaluate stmt");
+  }
+
+  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 

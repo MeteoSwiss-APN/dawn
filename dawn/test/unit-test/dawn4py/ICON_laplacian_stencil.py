@@ -14,10 +14,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""ICON Laplacian SIR generator
-
-Generate input for the ICON Laplacian stencil test
-"""
+"""Generate input for the ICON Laplacian stencil test. This is the classic Finite Volume vector Laplacian.
+   Unfortunately, it is not used in operational simulations because of bad convergence."""
 
 import os
 
@@ -40,7 +38,7 @@ def main():
                     op="+",
                     init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec"),
+                        sir_utils.make_field_access_expr("vec", [True, 0]),
                         "*",
                         sir_utils.make_field_access_expr("geofac_rot"),
                     ),
@@ -54,7 +52,7 @@ def main():
                     op="+",
                     init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec"),
+                        sir_utils.make_field_access_expr("vec", [True, 0]),
                         "*",
                         sir_utils.make_field_access_expr("geofac_div"),
                     ),
@@ -67,7 +65,7 @@ def main():
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_field_access_expr("rot_vec"),
+                    rhs=sir_utils.make_field_access_expr("rot_vec", [True, 0]),
                     chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Vertex")],
                     weights=[
                         sir_utils.make_literal_access_expr("-1.0", SIR.BuiltinType.Double),
@@ -94,7 +92,7 @@ def main():
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_field_access_expr("div_vec"),
+                    rhs=sir_utils.make_field_access_expr("div_vec", [True, 0]),
                     chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
                     weights=[
                         sir_utils.make_literal_access_expr("-1.0", SIR.BuiltinType.Double),

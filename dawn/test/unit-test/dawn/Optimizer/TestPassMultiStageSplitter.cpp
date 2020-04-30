@@ -19,8 +19,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -42,7 +40,7 @@ protected:
 
   std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
     context_->getDiagnostics().clear();
-    std::shared_ptr<iir::StencilInstantiation> instantiation = IIRSerializer::deserialize(filename);
+    auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
     auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;

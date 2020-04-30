@@ -101,10 +101,10 @@ if(threadIdx.y < +5) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int idx_tmp = (iblock+0)*1 + (jblock+0)*jstride_tmp;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
 
-  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block
   idx_tmp += max(0, blockIdx.z * 4) * kstride_tmp;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min(1,(blockIdx.z+1)*4-1);;
@@ -171,10 +171,10 @@ if(threadIdx.y < +5) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int idx_tmp = (iblock+0)*1 + (jblock+0)*jstride_tmp;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(ksize - 1+-1, blockIdx.z * 4) * stride_111_2;
 
-  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block
   idx_tmp += max(ksize - 1+-1, blockIdx.z * 4) * kstride_tmp;
   int kleg_lower_bound = max( ksize - 1 + -1,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
@@ -241,10 +241,10 @@ if(threadIdx.y < +5) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int idx_tmp = (iblock+0)*1 + (jblock+0)*jstride_tmp;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(1, blockIdx.z * 4) * stride_111_2;
 
-  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block
   idx_tmp += max(1, blockIdx.z * 4) * kstride_tmp;
   int kleg_lower_bound = max(1,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + -1,(blockIdx.z+1)*4-1);;
@@ -313,10 +313,10 @@ if(threadIdx.y < +5) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int idx_tmp = (iblock+0)*1 + (jblock+0)*jstride_tmp;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
 
-  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump tmp iterators to match the intersection of beginning of next interval and the parallel execution block
   idx_tmp += max(0, blockIdx.z * 4) * kstride_tmp;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
@@ -379,7 +379,7 @@ if(threadIdx.y < +4) {
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(ksize - 1+-1, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max( ksize - 1 + -1,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
@@ -436,7 +436,7 @@ if(threadIdx.y < +4) {
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(ksize - 1+-1, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max( ksize - 1 + -1,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
@@ -493,7 +493,7 @@ if(threadIdx.y < +4) {
   // initialized iterators
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + -1,(blockIdx.z+1)*4-1);;

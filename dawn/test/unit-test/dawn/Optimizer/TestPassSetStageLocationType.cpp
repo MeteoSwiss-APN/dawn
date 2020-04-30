@@ -22,37 +22,54 @@
 #include "dawn/Optimizer/PassSetStageLocationType.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
+#include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Unittest/UnittestUtils.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
+#include <iterator>
 #include <memory>
 
 using namespace dawn;
 
 namespace {
 
-class TestPassSetStageLocationType : public ::testing::Test {
-protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-  std::shared_ptr<iir::StencilInstantiation> instantiation_;
+std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::string& sirFilename) {
+  UIDGenerator::getInstance()->reset();
+  auto stencilIR = SIRSerializer::deserialize(sirFilename);
 
-  void runPass(const std::string& filename) {
-    UIDGenerator::getInstance()->reset();
-    instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+  DiagnosticsEngine diag;
+  OptimizerContext context(diag, {}, stencilIR);
+  auto stencilInstantiationMap = context.getStencilInstantiationMap();
+  DAWN_ASSERT(stencilInstantiationMap.size() == 1);
+  auto instantiation = std::begin(stencilInstantiationMap)->second;
 
-    CompilerUtil::runPass<dawn::PassLocalVarType>(context_, instantiation_);
-    CompilerUtil::runPass<dawn::PassRemoveScalars>(context_, instantiation_);
-    CompilerUtil::runPass<dawn::PassStageSplitAllStatements>(context_, instantiation_);
-
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassSetStageLocationType>(context_, instantiation_));
+  {
+    dawn::PassLocalVarType pass(context);
+    pass.run(instantiation);
+    EXPECT_TRUE(!diag.hasErrors());
   }
-};
+  {
+    dawn::PassRemoveScalars pass(context);
+    pass.run(instantiation);
+    EXPECT_TRUE(!diag.hasErrors());
+  }
+  {
+    dawn::PassStageSplitAllStatements pass(context);
+    pass.run(instantiation);
+    EXPECT_TRUE(!diag.hasErrors());
+  }
+  {
+    dawn::PassSetStageLocationType pass(context);
+    pass.run(instantiation);
+    EXPECT_TRUE(!diag.hasErrors());
+  }
 
-TEST_F(TestPassSetStageLocationType, CopyFieldsLocationTypes) {
+  return instantiation;
+}
+
+TEST(TestPassSetStageLocationType, CopyFieldsLocationTypes) {
   // field(cells) in_cell, out_cell;
   // field(edges) in_edge, out_edge;
   // fields(vertices) in_vertex, out_vertex
@@ -60,9 +77,10 @@ TEST_F(TestPassSetStageLocationType, CopyFieldsLocationTypes) {
   // out_edge = in_edge;
   // out_vertex = in_vertex;
 
-  runPass("input/test_set_stage_location_type_copy_fields.sir");
+  auto instantiation =
+      initializeInstantiation("input/test_set_stage_location_type_copy_fields.sir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
 
   auto const& firstStage = multistage->getChild(0);
   ASSERT_EQ(firstStage->getLocationType(), ast::LocationType::Cells);
@@ -74,7 +92,7 @@ TEST_F(TestPassSetStageLocationType, CopyFieldsLocationTypes) {
   ASSERT_EQ(thirdStage->getLocationType(), ast::LocationType::Vertices);
 }
 
-TEST_F(TestPassSetStageLocationType, CopyVarsLocationTypes) {
+TEST(TestPassSetStageLocationType, CopyVarsLocationTypes) {
   // field(cells) in_cell;
   // field(edges) in_edge;
   // field(vertices) in_vertex;
@@ -85,9 +103,9 @@ TEST_F(TestPassSetStageLocationType, CopyVarsLocationTypes) {
   // out_var_edge = in_edge;
   // out_var_vertex = in_vertex;
 
-  runPass("input/test_set_stage_location_type_copy_vars.sir");
+  auto instantiation = initializeInstantiation("input/test_set_stage_location_type_copy_vars.sir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
 
   const auto& varDeclCell = multistage->getChild(0);
   ASSERT_EQ(ast::LocationType::Cells, varDeclCell->getLocationType());
@@ -108,14 +126,14 @@ TEST_F(TestPassSetStageLocationType, CopyVarsLocationTypes) {
   ASSERT_EQ(ast::LocationType::Vertices, assignVertex->getLocationType());
 }
 
-TEST_F(TestPassSetStageLocationType, IfStmt) {
+TEST(TestPassSetStageLocationType, IfStmt) {
   // field(cells) in_cell;
   // var out_var_cell;
   // if(out_var_cell) out_var_cell = in_cell;
 
-  runPass("input/test_set_stage_location_type_if_stmt.sir");
+  auto instantiation = initializeInstantiation("input/test_set_stage_location_type_if_stmt.sir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
 
   const auto& varDeclCell = multistage->getChild(0);
   ASSERT_EQ(ast::LocationType::Cells, varDeclCell->getLocationType());
@@ -125,7 +143,7 @@ TEST_F(TestPassSetStageLocationType, IfStmt) {
 }
 
 // TODO to run this test from IIR, we need serialization support for stencil functions
-TEST_F(TestPassSetStageLocationType, FunctionCall) {
+TEST(TestPassSetStageLocationType, FunctionCall) {
   // stencil_function f(field(cells) out) {
   //  out = 2.0;
   // }
@@ -133,9 +151,10 @@ TEST_F(TestPassSetStageLocationType, FunctionCall) {
   // fields(cells) out_cell;
   // f(out_cells);
 
-  runPass("input/test_set_stage_location_type_function_call.sir");
+  auto instantiation =
+      initializeInstantiation("input/test_set_stage_location_type_function_call.sir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
 
   const auto& funCall = multistage->getChild(0);
   ASSERT_EQ(ast::LocationType::Cells, funCall->getLocationType());

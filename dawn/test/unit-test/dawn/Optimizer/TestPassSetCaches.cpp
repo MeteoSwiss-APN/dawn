@@ -19,7 +19,6 @@
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Iterator.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -45,10 +44,7 @@ protected:
                const std::vector<std::vector<std::string>>& fieldNames,
                const std::vector<std::vector<Cache::CacheType>>& cacheTypes,
                const std::vector<std::vector<Cache::IOPolicy>>& ioPolicies) {
-    std::string filepath = filename;
-    if(!TestEnvironment::path_.empty() && filepath.find('/') != 0)
-      filepath = TestEnvironment::path_ + "/" + filepath;
-    auto instantiation = IIRSerializer::deserialize(filepath);
+    auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage splitter pass
     PassStageSplitter stageSplitPass(*context_);

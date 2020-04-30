@@ -22,6 +22,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "UnstructuredVerifier.h"
+#include "dawn/Support/Logging.h"
 #include "interface/toylib_interface.hpp"
 #include "toylib/toylib.hpp"
 
@@ -370,7 +371,7 @@ TEST(ToylibIntegrationTestCompareOutput, nestedSimple) {
       .run();
   // each vertex stores value 1                 1
   // vertices are reduced onto edges            2
-  // each face reduces its edges (4 per face)   6
+  // each face reduces its edges (3 per face)   6
   for(const auto& f : mesh.faces()) {
     EXPECT_TRUE(fabs(cells(f, 0) - 6.) < 1e3 * std::numeric_limits<double>::epsilon());
   }
@@ -394,7 +395,7 @@ TEST(ToylibIntegrationTestCompareOutput, nestedWithField) {
   // each vertex stores value 1                 1
   // vertices are reduced onto edges            2
   // each edge stores 200                     202
-  // each face reduces its edges (4 per face) 606
+  // each face reduces its edges (3 per face) 606
   for(const auto& f : mesh.faces()) {
     EXPECT_TRUE(fabs(cells(f, 0) - 606) < 1e3 * std::numeric_limits<double>::epsilon());
   }
@@ -418,9 +419,234 @@ TEST(ToylibIntegrationTestCompareOutput, sparseDimensions) {
       .run();
   // each edge stores 1                                         1
   // this is multiplied by the sparse dim storing 200         200
-  // this is reduced by sum onto the cells at 4 eges p cell   600
+  // this is reduced by sum onto the cells at 3 eges p cell   600
   for(const auto& f : mesh.faces()) {
     EXPECT_TRUE(fabs(cells(f, 0) - 600) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+}
+
+#include <generated_NestedSparse.hpp>
+TEST(ToylibIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
+  auto mesh = toylib::Grid(10, 10);
+  const int edgesPerCell = 3;
+  const int verticesPerEdge = 2;
+  const int nb_levels = 1;
+
+  toylib::FaceData<double> cells(mesh, nb_levels);
+  toylib::EdgeData<double> edges(mesh, nb_levels);
+  toylib::VertexData<double> vertices(mesh, nb_levels);
+
+  toylib::SparseFaceData<double> sparseDim_ce(mesh, edgesPerCell, nb_levels);
+  toylib::SparseEdgeData<double> sparseDim_ev(mesh, verticesPerEdge, nb_levels);
+
+  InitSparseData(mesh.faces(), sparseDim_ce, edgesPerCell, nb_levels, 200.);
+  InitSparseData(mesh.edges(), sparseDim_ev, verticesPerEdge, nb_levels, 300.);
+  InitData(mesh.edges(), edges, nb_levels, 1.);
+  InitData(mesh.vertices(), vertices, nb_levels, 2.);
+
+  dawn_generated::cxxnaiveico::nestedWithSparse<toylibInterface::toylibTag>(
+      mesh, nb_levels, cells, edges, vertices, sparseDim_ce, sparseDim_ev)
+      .run();
+
+  // each vertex stores 2                                                            2
+  // this is multiplied by the sparse dim storing 300                              300
+  // this is reduced by sum onto edges at 2 verts p edge                          1200
+  // each edge stores 1                                                              1
+  // this is multiplied by the reduction times the sparse dim storing 200          200
+  // this is reduced by sum onto the cells at 3 eges p cell                       4200
+  for(const auto& f : mesh.faces()) {
+    EXPECT_TRUE(fabs(cells(f, 0) - 4200) < 1e3 * std::numeric_limits<double>::epsilon());
+  }
+}
+
+#include <generated_SparseAssignment0.hpp>
+TEST(ToylibIntegrationTestCompareOutput, SparseAssignment0) {
+  auto mesh = toylib::Grid(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  toylib::SparseEdgeData<double> vn_f(mesh, diamondSize, nb_levels);
+  toylib::VertexData<double> uVert_f(mesh, nb_levels);
+  toylib::VertexData<double> vVert_f(mesh, nb_levels);
+  toylib::VertexData<double> nx_f(mesh, nb_levels);
+  toylib::VertexData<double> ny_f(mesh, nb_levels);
+
+  InitData(mesh.vertices(), uVert_f, nb_levels, 1.);
+  InitData(mesh.vertices(), vVert_f, nb_levels, 2.);
+  InitData(mesh.vertices(), nx_f, nb_levels, 3.);
+  InitData(mesh.vertices(), ny_f, nb_levels, 4.);
+  // dot product: vn(e,:) = u*nx + v*ny = 1*3 + 2*4 = 11
+
+  dawn_generated::cxxnaiveico::sparseAssignment0<toylibInterface::toylibTag>(
+      mesh, nb_levels, vn_f, uVert_f, vVert_f, nx_f, ny_f)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& e : mesh.edges()) {
+      int curDiamondSize = (e.get().faces().size() == 2) ? 4 : 3;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(vn_f(e, sparse, level) - 11.) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+
+#include <generated_SparseAssignment1.hpp>
+TEST(ToylibIntegrationTestCompareOutput, SparseAssignment1) {
+  auto mesh = toylib::Grid(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  toylib::SparseEdgeData<double> vn_f(mesh, diamondSize, nb_levels);
+  toylib::SparseEdgeData<double> nx_f(mesh, diamondSize, nb_levels);
+  toylib::SparseEdgeData<double> ny_f(mesh, diamondSize, nb_levels);
+  toylib::VertexData<double> uVert_f(mesh, nb_levels);
+  toylib::VertexData<double> vVert_f(mesh, nb_levels);
+
+  InitSparseData(mesh.edges(), nx_f, diamondSize, nb_levels, 1.);
+  InitSparseData(mesh.edges(), ny_f, diamondSize, nb_levels, 2.);
+  InitData(mesh.vertices(), uVert_f, nb_levels, 3.);
+  InitData(mesh.vertices(), vVert_f, nb_levels, 4.);
+  // dot product: vn(e,:) = u*nx + v*ny = 1*3 + 2*4 = 11
+
+  dawn_generated::cxxnaiveico::sparseAssignment1<toylibInterface::toylibTag>(
+      mesh, nb_levels, vn_f, uVert_f, vVert_f, nx_f, ny_f)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& e : mesh.edges()) {
+      int curDiamondSize = (e.get().faces().size() == 2) ? 4 : 3;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(vn_f(e, sparse, level) - 11.) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+
+#include <generated_SparseAssignment2.hpp>
+TEST(ToylibIntegrationTestCompareOutput, SparseAssignment2) {
+  auto mesh = toylib::Grid(10, 10);
+  const int diamondSize = 4;
+  const int nb_levels = 1;
+
+  toylib::SparseEdgeData<double> sparse_f(mesh, diamondSize, nb_levels);
+  toylib::EdgeData<double> e_f(mesh, nb_levels);
+  toylib::VertexData<double> v_f(mesh, nb_levels);
+
+  InitData(mesh.edges(), e_f, nb_levels, 1.);
+  InitData(mesh.vertices(), v_f, nb_levels, 2.);
+
+  // loop(e->c->v) {
+  //  sparse_f = -4. * e_f(false) + v_f(true)
+  // }
+  dawn_generated::cxxnaiveico::sparseAssignment2<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             sparse_f, e_f, v_f)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& e : mesh.edges()) {
+      int curDiamondSize = (e.get().faces().size() == 2) ? 4 : 3;
+      for(size_t sparse = 0; sparse < curDiamondSize; sparse++) {
+        EXPECT_TRUE(fabs(sparse_f(e, sparse, level) - (-2.)) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+
+#include <generated_SparseAssignment3.hpp>
+TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
+  auto mesh = toylib::Grid(10, 10);
+  const int intpSize = 9;
+  const int nb_levels = 1;
+
+  toylib::SparseFaceData<double> sparse_f(mesh, intpSize, nb_levels);
+  toylib::FaceData<double> A_f(mesh, nb_levels);
+  toylib::FaceData<double> B_f(mesh, nb_levels);
+
+  InitSparseData(mesh.faces(), sparse_f, intpSize, nb_levels, 1.);
+  InitData(mesh.faces(), A_f, nb_levels, 1.);
+  for(const auto f : mesh.faces()) {
+    B_f(f, 0) = f.id();
+  }
+
+  dawn_generated::cxxnaiveico::sparseAssignment3<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             sparse_f, A_f, B_f)
+      .run();
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& f : mesh.faces()) {
+      size_t curIntpSize =
+          toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh,
+                                        {dawn::LocationType::Cells, dawn::LocationType::Edges,
+                                         dawn::LocationType::Cells, dawn::LocationType::Edges,
+                                         dawn::LocationType::Cells},
+                                        &f)
+              .size();
+      for(size_t sparse = 0; sparse < curIntpSize; sparse++) {
+        EXPECT_TRUE(fabs(sparse_f(f, sparse, 0) - (1 - f.id())) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+
+#include <generated_SparseAssignment4.hpp>
+TEST(ToylibIntegrationTestCompareOutput, SparseAssignment4) {
+  auto mesh = toylib::Grid(10, 10);
+  const int edgesPerCell = 3;
+  const int nb_levels = 1;
+
+  toylib::SparseFaceData<double> sparse_f(mesh, edgesPerCell, nb_levels);
+  toylib::VertexData<double> e_f(mesh, nb_levels);
+
+  InitData(mesh.vertices(), e_f, nb_levels, 1.);
+  dawn_generated::cxxnaiveico::sparseAssignment4<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             sparse_f, e_f)
+      .run();
+  // reduce value 1 from vertices to edge (=2), assign to sparse dim
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& f : mesh.faces()) {
+      for(size_t sparse = 0; sparse < edgesPerCell; sparse++) {
+        EXPECT_TRUE(fabs(sparse_f(f, sparse, 0) - 2.) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
+}
+
+#include <generated_SparseAssignment5.hpp>
+TEST(ToylibIntegrationTestCompareOutput, SparseAssignment5) {
+  auto mesh = toylib::Grid(10, 10);
+  const int edgesPerCell = 3;
+  const int nb_levels = 1;
+
+  toylib::SparseFaceData<double> sparse_f(mesh, edgesPerCell, nb_levels);
+  toylib::VertexData<double> v_f(mesh, nb_levels);
+  toylib::FaceData<double> c_f(mesh, nb_levels);
+
+  InitData(mesh.vertices(), v_f, nb_levels, 3.);
+  InitData(mesh.faces(), c_f, nb_levels, 2.);
+  dawn_generated::cxxnaiveico::sparseAssignment5<toylibInterface::toylibTag>(mesh, nb_levels,
+                                                                             sparse_f, v_f, c_f)
+      .run();
+
+  // reduce value 2 from cells to vertex (=12) and multiply by vertex field(=36) reduce this onto
+  // edges (two vertices per edge = 72)
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& f : mesh.faces()) {
+      for(size_t sparse = 0; sparse < edgesPerCell; sparse++) {
+
+        auto e = f.edges()[sparse];
+        double sol = e->vertices()[0]->faces().size() * 6 + e->vertices()[1]->faces().size() * 6;
+
+        EXPECT_TRUE(fabs(sparse_f(f, sparse, 0) - sol) <
+                    1e3 * std::numeric_limits<double>::epsilon());
+      }
+    }
   }
 }
 
@@ -442,7 +668,7 @@ TEST(ToylibIntegrationTestCompareOutput, sparseDimensionsTwice) {
       .run();
   // each edge stores 1                                         1
   // this is multiplied by the sparse dim storing 200         200
-  // this is reduced by sum onto the cells at 4 eges p cell   600
+  // this is reduced by sum onto the cells at 3 eges p cell   600
   for(const auto& f : mesh.faces()) {
     EXPECT_TRUE(fabs(cells(f, 0) - 600) < 1e3 * std::numeric_limits<double>::epsilon());
   }
