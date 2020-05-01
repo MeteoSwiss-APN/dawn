@@ -216,7 +216,7 @@ def main():
     f.close()
 
     # compile
-    code = dawn4py.compile(sir, backend="c++-naive-ico", stage_merger=False)
+    code = dawn4py.compile(sir, backend="c++-naive-ico", merge_stages=False)
 
     # write to file
     print(f"Writing generated code to '{gen_outputfile}'")

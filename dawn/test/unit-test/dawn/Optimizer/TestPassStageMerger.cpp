@@ -36,7 +36,7 @@ protected:
   dawn::DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
-    options_.StageMerger = options_.MergeDoMethods = true;
+    options_.MergeStages = options_.MergeDoMethods = true;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
     dawn::UIDGenerator::getInstance()->reset();

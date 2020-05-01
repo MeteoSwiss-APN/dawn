@@ -40,7 +40,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
     // Do we need to run the analysis for this stencil?
     bool mergeDoMethodsOfStencil =
         attributes.has(sir::Attr::Kind::MergeDoMethods) || options.MergeDoMethods;
-    bool mergeStagesOfStencil = attributes.has(sir::Attr::Kind::MergeStages) || options.StageMerger;
+    bool mergeStagesOfStencil = attributes.has(sir::Attr::Kind::MergeStages) || options.MergeStages;
     if(!mergeStagesOfStencil && !mergeDoMethodsOfStencil)
       continue;
 

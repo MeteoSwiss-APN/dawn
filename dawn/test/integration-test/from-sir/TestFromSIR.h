@@ -70,7 +70,7 @@ protected:
     std::list<PassGroup> groups = {PassGroup::SetStageName,    PassGroup::MultiStageMerger,
                                    PassGroup::StageReordering, PassGroup::StageMerger,
                                    PassGroup::SetCaches,       PassGroup::SetBlockSize};
-    compiler_.getOptions().StageMerger = true;
+    compiler_.getOptions().MergeStages = true;
     stencilInstantiationMap = compiler_.optimize(stencilInstantiationMap, groups);
 
     return stencilInstantiationMap[stencilName];

@@ -118,7 +118,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false,
            py::arg("ssa") = false, py::arg("print_stencil_graph") = false,
            py::arg("set_stage_name") = false, py::arg("stage_reordering") = false,
-           py::arg("stage_merger") = false, py::arg("multi_stage_merger") = false,
+           py::arg("merge_stages") = false, py::arg("multi_stage_merger") = false,
            py::arg("temporary_merger") = false, py::arg("inlining") = false,
            py::arg("interval_partitioning") = false, py::arg("tmp_to_stencil_function") = false,
            py::arg("set_non_temp_caches") = false, py::arg("set_caches") = false,
@@ -172,7 +172,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("print_stencil_graph", &dawn::Options::PrintStencilGraph)
       .def_readwrite("set_stage_name", &dawn::Options::SetStageName)
       .def_readwrite("stage_reordering", &dawn::Options::StageReordering)
-      .def_readwrite("stage_merger", &dawn::Options::StageMerger)
+      .def_readwrite("merge_stages", &dawn::Options::MergeStages)
       .def_readwrite("multi_stage_merger", &dawn::Options::MultiStageMerger)
       .def_readwrite("temporary_merger", &dawn::Options::TemporaryMerger)
       .def_readwrite("inlining", &dawn::Options::Inlining)
@@ -243,7 +243,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "print_stencil_graph=" << self.PrintStencilGraph << ",\n    "
            << "set_stage_name=" << self.SetStageName << ",\n    "
            << "stage_reordering=" << self.StageReordering << ",\n    "
-           << "stage_merger=" << self.StageMerger << ",\n    "
+           << "merge_stages=" << self.MergeStages << ",\n    "
            << "multi_stage_merger=" << self.MultiStageMerger << ",\n    "
            << "temporary_merger=" << self.TemporaryMerger << ",\n    "
            << "inlining=" << self.Inlining << ",\n    "
