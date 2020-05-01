@@ -13,9 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassValidation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/MultiStageChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
 
@@ -63,9 +65,12 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*iir),
                   ("Grid type consistency check failed " + description).c_str());
 
-  IntegrityChecker checker(instantiation.get());
   try {
-    checker.run();
+    IntegrityChecker integrityChecker(instantiation.get());
+    integrityChecker.run();
+
+    MultiStageChecker multiStageChecker(instantiation.get(), context_.getOptions().MaxHaloPoints);
+    multiStageChecker.run();
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
   }

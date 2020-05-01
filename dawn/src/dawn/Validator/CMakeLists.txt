@@ -19,6 +19,8 @@ add_library(DawnValidator
     GridTypeChecker.cpp
     IntegrityChecker.h
     IntegrityChecker.cpp
+    MultiStageChecker.h
+    MultiStageChecker.cpp
     WeightChecker.h
     WeightChecker.cpp
 )
