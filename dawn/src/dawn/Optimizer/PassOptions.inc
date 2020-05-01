@@ -42,7 +42,7 @@ OPT(bool, SetStageName, false, "set-stage-name", "",
     "Run print-stage-name pass group", "", false, true)
 OPT(bool, StageReordering, false, "stage-reordering", "",
     "Run reorder-stages pass group", "", false, true)
-OPT(bool, StageMerger, false, "stage-merger", "",
+OPT(bool, StageMerger, true, "stage-merger", "",
     "Merge stages within a multi-stage into the same Do-Method if possible", "", false, true)
 OPT(bool, MultiStageMerger, false, "multistage-merger", "",
     "Merge Multistages if possible", "", false, true)    
