@@ -258,7 +258,6 @@ void DoMethod::updateLevel() {
   derivedInfo_.fields_.insert(inputFields.begin(), inputFields.end());
 
   if(derivedInfo_.fields_.empty()) {
-    DAWN_LOG(WARNING) << "no fields referenced in stage";
     return;
   }
 

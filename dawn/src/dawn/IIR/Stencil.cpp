@@ -284,6 +284,11 @@ bool Stencil::hasGlobalVariables() const {
   return false;
 }
 bool Stencil::compareDerivedInfo() const {
+  if(derivedInfo_.fields_.empty()) {
+    dawn_unreachable("ERROR: no fields referenced in stage");
+    return false;
+  }
+
   auto fieldsOnTheFly = computeFieldsOnTheFly();
 
   bool equal = true;
