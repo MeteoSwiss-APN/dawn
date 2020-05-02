@@ -1,18 +1,19 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-# ===-----------------------------------------------------------------------------*- Python -*-===##
-#                          _
-#                         | |
-#                       __| | __ ___      ___ ___
-#                      / _` |/ _` \ \ /\ / / '_  |
-#                     | (_| | (_| |\ V  V /| | | |
-#                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
-#
-#
-#  This file is distributed under the MIT License (MIT).
-#  See LICENSE.txt for details.
-#
-# ===------------------------------------------------------------------------------------------===##
+#!/usr/bin/env python3
+
+##===-----------------------------------------------------------------------------*- Python -*-===##
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##
+##
+##  This file is distributed under the MIT License (MIT).
+##  See LICENSE.txt for details.
+##
+##===------------------------------------------------------------------------------------------===##
+
 """Tridiagonal solve computation SIR generator
 
 This program creates the SIR corresponding to a tridiagonal solve computation using the Python API.
@@ -26,11 +27,9 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
-from google.protobuf.json_format import MessageToJson
 
-
-stencil_name = "tridiagonal_solve_unstructured"
-output_file = f"{stencil_name}.sir"
+STENCIL_NAME = "tridiagonal_solve_unstructured"
+OUTPUT_FILE = f"{STENCIL_NAME}.sir"
 
 
 def create_vertical_region_stmt1():
@@ -164,13 +163,27 @@ def create_vertical_region_stmt3():
     return vertical_region_stmt
 
 
-def main(args: argparse.Namespace):
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Generate the SIR of an unstructured vertical solver"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
+    )
+
+    args = parser.parse_args()
+
     sir = sir_utils.make_sir(
-        output_file,
+        OUTPUT_FILE,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                stencil_name,
+                STENCIL_NAME,
                 sir_utils.make_ast(
                     [
                         create_vertical_region_stmt1(),
@@ -212,20 +225,5 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    with open(output_file, mode="w") as f:
+    with open(OUTPUT_FILE, mode="w") as f:
         f.write(sir_utils.to_json(sir))
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate the SIR of an unstructured vertical solver"
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=False,
-        help="Print the generated SIR",
-    )
-    main(parser.parse_args())

@@ -39,7 +39,9 @@ if __name__ == "__main__":
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
         output_file,
@@ -48,11 +50,13 @@ if __name__ == "__main__":
             sir_utils.make_stencil(
                 stencil_name,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())],
+                [
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                ],
             )
         ],
     )
 
     dawn4py.compile(sir, backend="cuda", serialize_iir=True, output_file=output_file)
     os.rename(stencil_name + ".0.iir", stencil_name + ".iir")
-

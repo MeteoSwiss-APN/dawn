@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _
@@ -26,14 +26,12 @@ from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
+STENCIL_NAME = "general_weights"
+GEN_OUTFILE = f"{STENCIL_NAME}.cpp"
+SIR_OUTFILE = f"{STENCIL_NAME}.sir"
 
-def main():
-    stencil_name = "general_weights"
-    gen_outputfile = f"{stencil_name}.cpp"
-    sir_outputfile = f"{stencil_name}.sir"
-
-    interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+if __name__ == "__main__":
+    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     body_ast = sir_utils.make_ast(
         [
@@ -42,16 +40,19 @@ def main():
                 sir_utils.make_field_access_expr("nabla2"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("vn_vert"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Vertex")],
-                    weights=[sir_utils.make_field_access_expr(
-                        "inv_primal_edge_length"), sir_utils.make_field_access_expr(
-                        "inv_primal_edge_length"), sir_utils.make_field_access_expr(
-                        "inv_primal_edge_length"), sir_utils.make_field_access_expr(
-                        "inv_primal_edge_length")]
+                    chain=[
+                        SIR.LocationType.Value("Edge"),
+                        SIR.LocationType.Value("Cell"),
+                        SIR.LocationType.Value("Vertex"),
+                    ],
+                    weights=[
+                        sir_utils.make_field_access_expr("inv_primal_edge_length"),
+                        sir_utils.make_field_access_expr("inv_primal_edge_length"),
+                        sir_utils.make_field_access_expr("inv_primal_edge_length"),
+                        sir_utils.make_field_access_expr("inv_primal_edge_length"),
+                    ],
                 ),
                 "=",
             ),
@@ -63,11 +64,11 @@ def main():
     )
 
     sir = sir_utils.make_sir(
-        gen_outputfile,
+        GEN_OUTFILE,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                stencil_name,
+                STENCIL_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field(
@@ -79,8 +80,12 @@ def main():
                     sir_utils.make_field(
                         "vn_vert",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                                "Cell"), SIR.LocationType.Value("Vertex")], 1
+                            [
+                                SIR.LocationType.Value("Edge"),
+                                SIR.LocationType.Value("Cell"),
+                                SIR.LocationType.Value("Vertex"),
+                            ],
+                            1,
                         ),
                     ),
                     sir_utils.make_field(
@@ -95,7 +100,7 @@ def main():
     )
 
     # write SIR to file (for debugging purposes)
-    f = open(sir_outputfile, "w")
+    f = open(SIR_OUTFILE, "w")
     f.write(MessageToJson(sir))
     f.close()
 
@@ -103,10 +108,6 @@ def main():
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
-    print(f"Writing generated code to '{gen_outputfile}'")
-    with open(gen_outputfile, "w") as f:
+    print(f"Writing generated code to '{GEN_OUTFILE}'")
+    with open(GEN_OUTFILE, "w") as f:
         f.write(code)
-
-
-if __name__ == "__main__":
-    main()

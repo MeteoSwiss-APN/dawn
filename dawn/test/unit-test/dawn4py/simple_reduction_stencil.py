@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # ===-----------------------------------------------------------------------------*- Python -*-===##
 #                          _
@@ -26,13 +26,23 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
-from google.protobuf.json_format import MessageToJson
 
-stencil_name = "simple_reduction_stencil"
-output_file = f"{stencil_name}.sir"
+STENCIL_NAME = "simple_reduction_stencil"
+OUTPUT_FILE = f"{STENCIL_NAME}.sir"
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate the SIR of a simple reduction stencil")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
+    )
 
-def main(args: argparse.Namespace):
+    args = parser.parse_args()
+
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     # create the out = reduce(+, init=1.0, rhs=in, E->C) statement
@@ -56,11 +66,11 @@ def main(args: argparse.Namespace):
     )
 
     sir = sir_utils.make_sir(
-        output_file,
+        OUTPUT_FILE,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                stencil_name,
+                STENCIL_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field(
@@ -84,18 +94,5 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    with open(output_file, mode="w") as f:
+    with open(OUTPUT_FILE, mode="w") as f:
         f.write(sir_utils.to_json(sir))
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate the SIR of a simple reduction stencil")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=False,
-        help="Print the generated SIR",
-    )
-    main(parser.parse_args())

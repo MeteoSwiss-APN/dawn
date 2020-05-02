@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _
@@ -23,11 +23,11 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 
+STENCIL_NAME = "ICON_laplacian_stencil"
+OUTPUT_FILE = f"{STENCIL_NAME}.sir"
 
-def main():
-    stencil_name = "ICON_laplacian_stencil"
-    output_file = f"{stencil_name}.sir"
 
+if __name__ == "__main__":
     interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     body_ast = sir_utils.make_ast(
@@ -127,11 +127,11 @@ def main():
     )
 
     sir = sir_utils.make_sir(
-        output_file,
+        OUTPUT_FILE,
         SIR.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
-                stencil_name,
+                STENCIL_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field(
@@ -205,9 +205,5 @@ def main():
         ],
     )
 
-    with open(output_file, mode="w") as f:
+    with open(OUTPUT_FILE, mode="w") as f:
         f.write(sir_utils.to_json(sir))
-
-
-if __name__ == "__main__":
-    main()
