@@ -8,7 +8,7 @@
     - `Regression/`: Test IIR generation to specific regression issues. TODO Move this into dawn
     - `SIR/`: Generate SIR from DSL code and compare to reference SIR files. These tests should stay in gtclang.
 
-* `unit-test/`: Unit tests on dawn components.
+* `unit-test/`: Unit tests on gtclang components.
     - `Frontend/`: Tests for the frontend library.
     - `Support/`: Tests of the gtclang support library.
     - `Unittest/`: Google Test integration. TODO Remove this.
