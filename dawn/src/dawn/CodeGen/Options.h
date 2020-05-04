@@ -19,7 +19,7 @@ namespace dawn {
 namespace codegen {
 
 /// @brief CodeGen backends
-enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDAIco, CUDA, CXXOpt };
 
 /// @brief Options for all codegen backends combined.
 ///
