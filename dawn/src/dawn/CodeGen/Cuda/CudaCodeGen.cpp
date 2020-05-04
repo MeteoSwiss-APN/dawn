@@ -530,8 +530,6 @@ void CudaCodeGen::generateStencilRunMethod(
                                     c_gt() + "make_device_view( m_" + fieldName + ")");
     }
 
-    DAWN_ASSERT(msNonTempFields.size() > 0);
-
     iir::Extents maxExtents{ast::cartesian};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
       maxExtents.merge(stage->getExtents());
@@ -610,25 +608,33 @@ void CudaCodeGen::generateStencilRunMethod(
     int idx = 0;
     for(const auto& fieldPair : msNonTempFields) {
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-      args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + fieldName +
+      if(idx > 0)
+        args += ",";
+      args += "(" + fieldName + ".data()+" + fieldName +
              "_ds.get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
              ".begin<1>(),0 ))";
       ++idx;
     }
-    DAWN_ASSERT(msNonTempFields.size() > 0);
+
+    if(!args.empty() && !tempMSFieldsNonLocalCached.empty())
+      args += ",";
+
+    idx = 0;
     for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
+      if(idx > 0)
+        args += ",";
       if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), metadata)) {
         const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-
-        args = args + ", (" + fieldName + ".data()+ m_" + fieldName +
+        args += "(" + fieldName + ".data()+ m_" + fieldName +
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
-        args = args + "," + metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
+        args += metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       }
+      ++idx;
     }
 
     std::vector<std::string> strides = CodeGeneratorHelper::generateStrideArguments(
