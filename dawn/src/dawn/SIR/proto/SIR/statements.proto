@@ -318,7 +318,9 @@ message LoopDescriptorGeneral {
   // dummy message for future use
 }
 
-message LoopDescriptorChain { repeated dawn.proto.enums.LocationType chain = 1; }
+message LoopDescriptorChain {
+  repeated dawn.proto.enums.LocationType chain = 1;
+}
 
 message LoopDescriptor {
   oneof desc {
@@ -328,7 +330,7 @@ message LoopDescriptor {
 }
 
 message LoopStmt {
-  Stmt statements = 1;                // List of statements (must be a BlockStmt)
+  Stmt statements = 1; // List of statements (must be a BlockStmt)
   LoopDescriptor loop_descriptor = 2; // Loop bounds description
   SourceLocation loc = 3;             // Source location
   StmtData data = 4;                  // Generic Stmt's data container
