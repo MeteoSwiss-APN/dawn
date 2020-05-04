@@ -900,7 +900,6 @@ void MSCodeGen::generateCudaKernelCode() {
   for(const auto& fieldPair : tempFieldsNonLocalCached) {
     Array3i dims{1, 1, 1};
     fieldIndexMap.emplace(fieldPair.second.getAccessID(), dims);
-    indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 
   cudaKernel.addComment("initialized iterators");
