@@ -54,15 +54,6 @@ public:
   };
 
 private:
-private:
-  static std::string
-  buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                      const std::unique_ptr<iir::MultiStage>& ms);
-
-  void
-  generateCudaKernelCode(std::stringstream& ssSW,
-                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                         const std::unique_ptr<iir::MultiStage>& ms);
   void
   generateAllCudaKernels(std::stringstream& ssSW,
                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
@@ -77,38 +68,17 @@ private:
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                          Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
-  void
-  generateStencilWrapperCtr(Class& stencilWrapperClass,
-                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties) const;
 
-  void generateStencilWrapperMembers(
-      Class& stencilWrapperClass,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-      CodeGenProperties& codeGenProperties) const;
+  void generateGpuMesh(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                       Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
-  void
-  generateStencilWrapperRun(Class& stencilWrapperClass,
-                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties) const;
+  void generateRunFun(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                      MemberFunction& runFun, CodeGenProperties& codeGenProperties);
 
-  void
-  generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass,
-                                              const CodeGenProperties& codeGenProperties) const;
+  void generateStencilClassCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
+                               CodeGenProperties& codeGenProperties) const;
 
-  void
-  generateStencilClassCtr(Structure& stencilClass, const iir::Stencil& stencil,
-                          const sir::GlobalVariableMap& globalsMap,
-                          IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-                          IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-                          std::shared_ptr<StencilProperties> stencilProperties) const;
-
-  void generateStencilClassMembers(
-      Structure& stencilClass, const iir::Stencil& stencil,
-      const sir::GlobalVariableMap& globalsMap,
-      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-      std::shared_ptr<StencilProperties> stencilProperties) const;
+  void generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil) const;
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
