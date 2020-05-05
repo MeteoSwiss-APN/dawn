@@ -641,9 +641,11 @@ void CudaCodeGen::generateStencilRunMethod(
         msNonTempFields, tempMSFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
         CodeGeneratorHelper::FunctionArgType::FT_Caller);
 
-    DAWN_ASSERT(!strides.empty());
+    kernelCall += "nx,ny,nz,";
+    if(!strides.empty())
+      kernelCall += RangeToString(",", "", "")(strides) + ",";
+    kernelCall +=  args + ")";
 
-    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
     stencilRunMethod.addStatement(kernelCall);
     stencilRunMethod.addStatement("}");
   }
