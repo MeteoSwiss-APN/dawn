@@ -40,240 +40,248 @@
 
 #include "GenerateInMemoryStencils.h"
 
-using namespace dawn;
+namespace dawn {
 
-namespace {
+TEST(TestIIRDeserializer, CopyStencil) {
+  auto instantiation = IIRSerializer::deserialize("reference_iir/copy_stencil.iir");
+  EXPECT_EQ(instantiation->getIIR()->getGridType(), ast::GridType::Cartesian);
+  EXPECT_EQ(instantiation->getStencils().size(), 1);
 
-void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
-  EXPECT_TRUE(lhs->checkTreeConsistency());
-  EXPECT_TRUE(rhs->checkTreeConsistency());
-  // checking the stencils
-  ASSERT_EQ(lhs->getChildren().size(), rhs->getChildren().size());
-  for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
-    const auto& lhsStencil = lhs->getChild(stencils);
-    const auto& rhsStencil = rhs->getChild(stencils);
-    EXPECT_EQ(lhsStencil->getStencilAttributes(), rhsStencil->getStencilAttributes());
-    EXPECT_EQ(lhsStencil->getStencilID(), rhsStencil->getStencilID());
+  const auto& metaData = instantiation->getMetaData();
+  const auto& stencil = instantiation->getStencils()[0];
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-    // checking each of the multistages
-    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
-    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
-      const auto& lhsMSS = lhsStencil->getChild(mssidx);
-      const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      EXPECT_EQ(lhsMSS->getLoopOrder(), rhsMSS->getLoopOrder());
-      EXPECT_EQ(lhsMSS->getID(), rhsMSS->getID());
+  auto const& mss = *(stencil->childrenBegin());
+  EXPECT_EQ(mss->getChildren().size(), 1);
+  EXPECT_EQ(mss->getLoopOrder(), iir::LoopOrderKind::Parallel);
 
-      // checking each of the stages
-      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
-      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
-          ++stageidx) {
-        const auto& lhsStage = lhsMSS->getChild(stageidx);
-        const auto& rhsStage = rhsMSS->getChild(stageidx);
-        EXPECT_EQ(lhsStage->getStageID(), rhsStage->getStageID());
+  auto const& stage = *(mss->childrenBegin());
+  EXPECT_EQ(stage->getChildren().size(), 1);
 
-        // checking each of the doMethods
-        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
-        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodIdx < doMethodSize; ++doMethodIdx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
-          EXPECT_EQ(lhsDoMethod->getID(), rhsDoMethod->getID());
-          EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
+  auto const& doMethod = *(stage->childrenBegin());
+  auto interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod->getInterval(), interval);
 
-          // checking each of the statements
-          ASSERT_EQ(lhsDoMethod->getAST().getStatements().size(),
-                    rhsDoMethod->getAST().getStatements().size());
-          for(int stmtidx = 0, stmtSize = lhsDoMethod->getAST().getStatements().size();
-              stmtidx < stmtSize; ++stmtidx) {
-            const auto& lhsStmt = lhsDoMethod->getAST().getStatements()[stmtidx];
-            const auto& rhsStmt = rhsDoMethod->getAST().getStatements()[stmtidx];
-            // check the statement (and its data)
-            EXPECT_TRUE(lhsStmt->equals(rhsStmt.get()));
-          }
-        }
-        EXPECT_EQ(lhsStage->getLocationType(), rhsStage->getLocationType());
-      }
-    }
-  }
-  const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
-  const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
+  auto const& ast = doMethod->getAST();
+  EXPECT_EQ(ast.getStatements().size(), 1);
 
-  ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
-  for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    EXPECT_TRUE(lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()));
-  }
+  auto const& stmt = ast.getStatements()[0];
+  EXPECT_EQ(stmt->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads = accesses->getReadAccesses();
+  const auto& writes = accesses->getWriteAccesses();
+
+  const auto& reads_it = reads.find(metaData.getAccessIDFromName("in_field"));
+  EXPECT_TRUE(reads_it != reads.end());
+  const auto& reads_extents = reads_it->second;
+  EXPECT_EQ(reads_extents, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
+
+  const auto& writes_it = writes.find(metaData.getAccessIDFromName("out_field"));
+  EXPECT_TRUE(writes_it != writes.end());
+  const auto& writes_extents = writes_it->second;
+  EXPECT_EQ(writes_extents, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 }
 
-void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Literal>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::Literal>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::Field>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::Field>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::APIField>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::APIField>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>());
-  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>(),
-            rhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>());
+TEST(TestIIRDeserializer, LapStencil) {
+  auto instantiation = IIRSerializer::deserialize("reference_iir/lap_stencil.iir");
+  EXPECT_EQ(instantiation->getIIR()->getGridType(), ast::GridType::Cartesian);
+  EXPECT_EQ(instantiation->getStencils().size(), 1);
 
-  // we compare the content of the maps since the shared-ptr's are not the same
-  ASSERT_EQ(lhs.getFieldNameToBCMap().size(), rhs.getFieldNameToBCMap().size());
-  for(const auto& lhsPair : lhs.getFieldNameToBCMap()) {
-    EXPECT_TRUE(rhs.getFieldNameToBCMap().count(lhsPair.first));
-    auto rhsValue = rhs.getFieldNameToBCMap().at(lhsPair.first);
-    EXPECT_TRUE(rhsValue->equals(lhsPair.second.get()));
-  }
-  EXPECT_EQ(lhs.getFieldIDToDimsMap(), rhs.getFieldIDToDimsMap());
-  EXPECT_EQ(lhs.getStencilLocation(), rhs.getStencilLocation());
-  EXPECT_EQ(lhs.getStencilName(), rhs.getStencilName());
-  // file name makes little sense for in memory stencil
-  // ASSERT_EQ(lhs.getFileName(), rhs.getFileName()));
+  const auto& metaData = instantiation->getMetaData();
+  const auto& stencil = instantiation->getStencils()[0];
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  // we compare the content of the maps since the shared-ptr's are not the same
-  ASSERT_EQ(lhs.getStencilIDToStencilCallMap().getDirectMap().size(),
-            rhs.getStencilIDToStencilCallMap().getDirectMap().size());
-  for(const auto& lhsPair : lhs.getStencilIDToStencilCallMap().getDirectMap()) {
-    EXPECT_TRUE(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
-    auto rhsValue = rhs.getStencilIDToStencilCallMap().getDirectMap().at(lhsPair.first);
-    EXPECT_TRUE(rhsValue->equals(lhsPair.second.get()));
-  }
+  auto const& mss = *(stencil->childrenBegin());
+  EXPECT_EQ(mss->getChildren().size(), 2);
+  EXPECT_EQ(mss->getLoopOrder(), iir::LoopOrderKind::Parallel);
+
+  auto const& stage_iter = mss->getChildren().begin();
+  auto const& stage1 = *(stage_iter);
+  EXPECT_EQ(stage1->getChildren().size(), 1);
+
+  auto const& doMethod1 = *(stage1->childrenBegin());
+  auto interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod1->getInterval(), interval);
+
+  auto const& ast1 = doMethod1->getAST();
+  EXPECT_EQ(ast1.getStatements().size(), 1);
+
+  auto const& stmt1 = ast1.getStatements()[0];
+  EXPECT_EQ(stmt1->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses1 = stmt1->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads1 = accesses1->getReadAccesses();
+  const auto& writes1 = accesses1->getWriteAccesses();
+
+  const auto& reads1it = reads1.find(metaData.getAccessIDFromName("in"));
+  EXPECT_TRUE(reads1it != reads1.end());
+  const auto& reads1_extents = reads1it->second;
+  EXPECT_EQ(reads1_extents, iir::Extents(dawn::ast::cartesian, -2, 2, -2, 2, 0, 0));
+
+  const auto& writes1it = writes1.find(metaData.getAccessIDFromName("tmp"));
+  EXPECT_TRUE(writes1it != writes1.end());
+  const auto& writes1_extents = writes1it->second;
+  EXPECT_EQ(writes1_extents, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
+
+  auto const& stage2 = *(std::next(stage_iter));
+  EXPECT_EQ(stage2->getChildren().size(), 1);
+
+  auto const& doMethod2 = *(stage2->childrenBegin());
+  interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod2->getInterval(), interval);
+
+  auto const& ast2 = doMethod2->getAST();
+  EXPECT_EQ(ast2.getStatements().size(), 1);
+
+  auto const& stmt2 = ast2.getStatements()[0];
+  EXPECT_EQ(stmt2->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses2 = stmt2->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads2 = accesses2->getReadAccesses();
+  const auto& writes2 = accesses2->getWriteAccesses();
+
+  const auto& reads2it = reads2.find(metaData.getAccessIDFromName("tmp"));
+  EXPECT_TRUE(reads2it != reads2.end());
+  const auto& reads2_extents = reads2it->second;
+  EXPECT_EQ(reads2_extents, iir::Extents(dawn::ast::cartesian, -1, 1, -1, 1, 0, 0));
+
+  const auto& writes2it = writes2.find(metaData.getAccessIDFromName("out"));
+  EXPECT_TRUE(writes2it != writes2.end());
+  const auto& writes2_extents = writes2it->second;
+  EXPECT_EQ(writes2_extents, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 }
 
-void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
-  for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
-    const auto& lhsStencil = lhs->getChild(stencils);
-    const auto& rhsStencil = rhs->getChild(stencils);
+TEST(TestIIRDeserializer, UnstructuredSumEdgeToCells) {
+  auto instantiation =
+      IIRSerializer::deserialize("reference_iir/unstructured_sum_edge_to_cells.iir");
+  EXPECT_EQ(instantiation->getIIR()->getGridType(), ast::GridType::Unstructured);
+  EXPECT_EQ(instantiation->getStencils().size(), 1);
 
-    EXPECT_EQ(lhsStencil->getStageDependencyGraph(), rhsStencil->getStageDependencyGraph());
-    EXPECT_EQ(lhsStencil->getFields(), rhsStencil->getFields());
+  const auto& metaData = instantiation->getMetaData();
+  const auto& stencil = instantiation->getStencils()[0];
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
+  auto const& mss = *(stencil->childrenBegin());
+  EXPECT_EQ(mss->getChildren().size(), 2);
+  EXPECT_EQ(mss->getLoopOrder(), iir::LoopOrderKind::Parallel);
 
-    // checking each of the multistages
-    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
-      const auto& lhsMSS = lhsStencil->getChild(mssidx);
-      const auto& rhsMSS = rhsStencil->getChild(mssidx);
+  auto const& stage_iter = mss->getChildren().begin();
+  auto const& stage1 = *(stage_iter);
+  EXPECT_EQ(stage1->getLocationType(), ast::LocationType::Edges);
+  EXPECT_EQ(stage1->getChildren().size(), 1);
 
-      EXPECT_EQ(lhsMSS->getCaches(), rhsMSS->getCaches());
-      EXPECT_EQ(lhsMSS->getFields(), rhsMSS->getFields());
+  auto const& doMethod1 = *(stage1->childrenBegin());
+  auto interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod1->getInterval(), interval);
 
-      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
+  auto const& ast1 = doMethod1->getAST();
+  EXPECT_EQ(ast1.getStatements().size(), 1);
 
-      // checking each of the stages
-      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
-          ++stageidx) {
-        const auto& lhsStage = lhsMSS->getChild(stageidx);
-        const auto& rhsStage = rhsMSS->getChild(stageidx);
+  auto const& stmt1 = ast1.getStatements()[0];
+  EXPECT_EQ(stmt1->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses1 = stmt1->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads1 = accesses1->getReadAccesses();
+  const auto& writes1 = accesses1->getWriteAccesses();
 
-        EXPECT_EQ(lhsStage->getFields(), rhsStage->getFields());
-        EXPECT_EQ(lhsStage->getAllGlobalVariables(), rhsStage->getAllGlobalVariables());
-        EXPECT_EQ(lhsStage->getGlobalVariables(), rhsStage->getGlobalVariables());
-        EXPECT_EQ(lhsStage->getGlobalVariablesFromStencilFunctionCalls(),
-                  rhsStage->getGlobalVariablesFromStencilFunctionCalls());
-        EXPECT_EQ(lhsStage->getExtents(), rhsStage->getExtents());
-        EXPECT_EQ(lhsStage->getRequiresSync(), rhsStage->getRequiresSync());
+  std::string literalName = metaData.getNameFromLiteralAccessID(reads1.begin()->first);
+  EXPECT_EQ(literalName, "10");
 
-        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
+  const auto& writes1it = writes1.find(metaData.getAccessIDFromName("in_field"));
+  EXPECT_TRUE(writes1it != writes1.end());
+  EXPECT_EQ(writes1it->second, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 
-        // checking each of the doMethods
-        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodIdx < doMethodSize; ++doMethodIdx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
+  auto const& stage2 = *(std::next(stage_iter));
+  EXPECT_EQ(stage2->getLocationType(), ast::LocationType::Cells);
+  EXPECT_EQ(stage2->getChildren().size(), 1);
 
-          ASSERT_EQ(lhsDoMethod->getFields(), rhsDoMethod->getFields());
-          ASSERT_EQ(lhsDoMethod->getDependencyGraph(), rhsDoMethod->getDependencyGraph());
-        }
-      }
-    }
-  }
+  auto const& doMethod2 = *(stage2->childrenBegin());
+  interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod2->getInterval(), interval);
+
+  auto const& ast2 = doMethod2->getAST();
+  EXPECT_EQ(ast2.getStatements().size(), 1);
+
+  auto const& stmt2 = ast2.getStatements()[0];
+  EXPECT_EQ(stmt2->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses2 = stmt2->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads2 = accesses2->getReadAccesses();
+  const auto& writes2 = accesses2->getWriteAccesses();
+
+  auto reads2it = reads2.find(-5);
+  EXPECT_TRUE(reads2it != reads2.end());
+  EXPECT_EQ(metaData.getNameFromLiteralAccessID(reads2it->first), "0.000000");
+
+  reads2it = reads2.find(metaData.getAccessIDFromName("in_field"));
+  EXPECT_TRUE(reads2it != reads2.end());
+  auto const& reads2_extents =
+      iir::extent_cast<iir::UnstructuredExtent const&>(reads2it->second.horizontalExtent());
+  EXPECT_TRUE(reads2_extents.hasExtent());
+
+  const auto& writes2it = writes2.find(metaData.getAccessIDFromName("out_field"));
+  EXPECT_TRUE(writes2it != writes2.end());
+  const auto& writes2_extents = writes2it->second;
+  EXPECT_EQ(writes2_extents, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 }
 
-std::shared_ptr<iir::StencilInstantiation> readIIRFromFile(OptimizerContext& optimizer,
-                                                           const std::string& fname) {
-  auto target = IIRSerializer::deserialize(fname, IIRSerializer::Format::Json);
+TEST(TestIIRDeserializer, UnstructuredMixedCopies) {
+  auto instantiation = IIRSerializer::deserialize("reference_iir/unstructured_mixed_copies.iir");
+  EXPECT_EQ(instantiation->getIIR()->getGridType(), ast::GridType::Unstructured);
+  EXPECT_EQ(instantiation->getStencils().size(), 1);
 
-  // this is whats actually to be tested.
-  optimizer.restoreIIR("<restored>", target);
-  return target;
-}
+  const auto& metaData = instantiation->getMetaData();
+  const auto& stencil = instantiation->getStencils()[0];
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
-                 std::shared_ptr<iir::StencilInstantiation> rhs) {
-  // first compare the (structure of the) iirs, this is a precondition before we can actually check
-  // the metadata / derived info
-  compareIIRstructures(lhs->getIIR().get(), rhs->getIIR().get());
+  auto const& mss = *(stencil->childrenBegin());
+  EXPECT_EQ(mss->getChildren().size(), 2);
+  EXPECT_EQ(mss->getLoopOrder(), iir::LoopOrderKind::Forward);
 
-  // then we compare the meta data
-  compareMetaData(lhs->getMetaData(), rhs->getMetaData());
+  auto const& stage_iter = mss->getChildren().begin();
+  auto const& stage1 = *(stage_iter);
+  EXPECT_EQ(stage1->getChildren().size(), 1);
 
-  // and finally the derived info
-  compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get());
-}
+  auto const& doMethod1 = *(stage1->childrenBegin());
+  auto interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod1->getInterval(), interval);
 
-TEST(IIRDeserializerTest, CopyStencil) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  ast::GridType gridType = ast::GridType::Cartesian;
+  auto const& ast1 = doMethod1->getAST();
+  EXPECT_EQ(ast1.getStatements().size(), 1);
 
-  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
+  auto const& stmt1 = ast1.getStatements()[0];
+  EXPECT_EQ(stmt1->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses1 = stmt1->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads1 = accesses1->getReadAccesses();
+  const auto& writes1 = accesses1->getWriteAccesses();
 
-  // read IIR from file
-  auto copy_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/copy_stencil.iir");
+  const auto& reads1it = reads1.find(metaData.getAccessIDFromName("in_c"));
+  EXPECT_TRUE(reads1it != reads1.end());
+  EXPECT_EQ(reads1it->second, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto copy_stencil_memory = createCopyStencilIIRInMemory(gridType);
+  const auto& writes1it = writes1.find(metaData.getAccessIDFromName("out_c"));
+  EXPECT_TRUE(writes1it != writes1.end());
+  EXPECT_EQ(writes1it->second, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 
-  compareIIRs(copy_stencil_from_file, copy_stencil_memory);
-}
+  auto const& stage2 = *(std::next(stage_iter));
+  EXPECT_EQ(stage2->getChildren().size(), 1);
 
-TEST(IIRDeserializerTest, LapStencil) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  ast::GridType gridType = ast::GridType::Cartesian;
+  auto const& doMethod2 = *(stage2->childrenBegin());
+  interval = iir::Interval{0, sir::Interval::End};
+  EXPECT_EQ(doMethod2->getInterval(), interval);
 
-  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
+  auto const& ast2 = doMethod2->getAST();
+  EXPECT_EQ(ast2.getStatements().size(), 1);
 
-  // read IIR from file
-  auto lap_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/lap_stencil.iir");
+  auto const& stmt2 = ast2.getStatements()[0];
+  EXPECT_EQ(stmt2->getKind(), ast::Stmt::Kind::ExprStmt);
+  const auto& accesses2 = stmt2->getData<iir::IIRStmtData>().CallerAccesses;
+  const auto& reads2 = accesses2->getReadAccesses();
+  const auto& writes2 = accesses2->getWriteAccesses();
 
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto lap_stencil_memory = createLapStencilIIRInMemory(gridType);
+  const auto& reads2it = reads2.find(metaData.getAccessIDFromName("in_e"));
+  EXPECT_TRUE(reads2it != reads2.end());
+  EXPECT_EQ(reads2it->second, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 
-  compareIIRs(lap_stencil_from_file, lap_stencil_memory);
-}
-
-TEST(IIRDeserializerTest, UnstructuredSumEdgeToCells) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  dawn::DiagnosticsEngine diag;
-  ast::GridType gridType = dawn::ast::GridType::Unstructured;
-
-  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
-  // read IIR from file
-  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_sum_edge_to_cells.iir");
-
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto in_memory = createUnstructuredSumEdgeToCellsIIRInMemory();
-
-  compareIIRs(from_file, in_memory);
-}
-
-TEST(IIRDeserializerTest, UnstructuredMixedCopies) {
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  dawn::DiagnosticsEngine diag;
-  ast::GridType gridType = dawn::ast::GridType::Unstructured;
-  OptimizerContext optimizer(diag, optimizerOptions, std::make_shared<dawn::SIR>(gridType));
-  // read IIR from file
-  auto from_file = readIIRFromFile(optimizer, "reference_iir/unstructured_mixed_copies.iir");
-
-  // generate IIR in memory
-  UIDGenerator::getInstance()->reset();
-  auto in_memory = createUnstructuredMixedCopies();
-
-  compareIIRs(from_file, in_memory);
+  const auto& writes2it = writes2.find(metaData.getAccessIDFromName("out_e"));
+  EXPECT_TRUE(writes2it != writes2.end());
+  EXPECT_EQ(writes2it->second, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 }
 
 } // anonymous namespace
