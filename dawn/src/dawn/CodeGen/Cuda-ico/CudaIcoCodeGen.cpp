@@ -14,10 +14,15 @@
 
 #include "dawn/CodeGen/Cuda-ico/CudaIcoCodeGen.h"
 
+#include "ASTStencilBody.h"
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/Support/Logging.h"
+#include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -55,31 +60,51 @@ CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, Diagnosti
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
+class CollectChainStrings : public iir::ASTVisitorForwarding {
+private:
+  std::set<std::string> chainStrings_;
+  std::string chainToString(std::vector<ast::LocationType> locs) {
+    std::stringstream ss;
+    for(auto loc : locs) {
+      switch(loc) {
+      case ast::LocationType::Cells:
+        ss << "c";
+        break;
+      case ast::LocationType::Edges:
+        ss << "e";
+        break;
+      case ast::LocationType::Vertices:
+        ss << "v";
+        break;
+      }
+    }
+    return ss.str();
+  }
+
+public:
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+    chainStrings_.insert(chainToString(expr->getNbhChain()));
+    for(auto c : expr->getChildren()) {
+      c->accept(*this);
+    }
+  }
+
+  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+    auto chainDescr = dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
+    chainStrings_.insert(chainToString(chainDescr->getChain()));
+    for(auto c : stmt->getChildren()) {
+      c->accept(*this);
+    }
+  }
+
+  const std::set<std::string>& getChainStrings() const { return chainStrings_; }
+};
+
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  // for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
-
-  //   // fields used in the stencil
-  //   const auto fields = support::orderMap(ms->getFields());
-  //   auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-  //     return !stencilInstantiation->getMetaData().isAccessType(
-  //         iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
-  //   });
-
-  //   MemberFunction cudaKernel(
-  //       "__global__ void", cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation,
-  //       ms), ssSW);
-
-  //   for(const auto& fieldPair : nonTempFields) {
-  //     std::string cvstr = fieldPair.second.getIntend() == dawn::iir::Field::IntendKind::Input
-  //                             ? "const ::dawn::float_type * "
-  //                             : "::dawn::float_type * ";
-  //     cudaKernel.addArg(cvstr + stencilInstantiation->getMetaData().getFieldNameFromAccessID(
-  //                                   fieldPair.second.getAccessID()));
-  //   }
-  // }
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData());
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -91,24 +116,55 @@ void CudaIcoCodeGen::generateAllCudaKernels(
             iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
       });
 
+      //--------------------------------------
       // signature of kernel
+      //--------------------------------------
       MemberFunction cudaKernel(
           "__global__ void",
           cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage), ssSW);
 
+      // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
+      std::set<std::string> locArgs;
+      auto locToArgString = [](ast::LocationType loc) {
+        switch(loc) {
+        case ast::LocationType::Cells:
+          return "int NumCells";
+          break;
+        case ast::LocationType::Edges:
+          return "int NumEdges";
+          break;
+        case ast::LocationType::Vertices:
+          return "int NumVertices";
+          break;
+        default:
+          dawn_unreachable("");
+        }
+      };
+      for(auto field : fields) {
+        auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+            field.second.getFieldDimensions().getHorizontalFieldDimension());
+        locArgs.insert(locToArgString(dims.getDenseLocationType()));
+      }
       auto loc = *stage->getLocationType();
-      switch(loc) {
-      case ast::LocationType::Cells:
-        cudaKernel.addArg("int NumCells");
-        break;
-      case ast::LocationType::Edges:
-        cudaKernel.addArg("int NumEdges");
-        break;
-      case ast::LocationType::Vertices:
-        cudaKernel.addArg("int NumVertices");
-        break;
+      locArgs.insert(locToArgString(loc));
+      for(auto arg : locArgs) {
+        cudaKernel.addArg(arg);
       }
 
+      // we always need the k size
+      cudaKernel.addArg("int kSize");
+
+      // which nbh tables need to be passed?
+      CollectChainStrings chainStringCollector;
+      for(const auto& doMethod : stage->getChildren()) {
+        doMethod->getAST().accept(chainStringCollector);
+      }
+      auto chainStrings = chainStringCollector.getChainStrings();
+      for(auto chainString : chainStrings) {
+        cudaKernel.addArg("const int *" + chainString + "Table");
+      }
+
+      // field arguments (correct cv specifier)
       for(const auto& fieldPair : nonTempFields) {
         std::string cvstr = fieldPair.second.getIntend() == dawn::iir::Field::IntendKind::Input
                                 ? "const ::dawn::float_type * "
@@ -116,6 +172,10 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addArg(cvstr + stencilInstantiation->getMetaData().getFieldNameFromAccessID(
                                       fieldPair.second.getAccessID()));
       }
+
+      //--------------------------------------
+      // body of the kernel
+      //--------------------------------------
 
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
@@ -133,6 +193,18 @@ void CudaIcoCodeGen::generateAllCudaKernels(
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       }
+
+      // k loop
+      cudaKernel.addBlockStatement("for(int kIter = 0; kIter < kSize; kIter++)", [&]() {
+        // Generate Do-Method
+        for(const auto& doMethodPtr : stage->getChildren()) {
+          const iir::DoMethod& doMethod = *doMethodPtr;
+          for(const auto& stmt : doMethod.getAST().getStatements()) {
+            stmt->accept(stencilBodyCXXVisitor);
+            cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+          }
+        }
+      });
     }
   }
 }
