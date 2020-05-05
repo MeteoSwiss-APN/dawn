@@ -678,6 +678,11 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
 }
 
 void MSCodeGen::generateCudaKernelCode() {
+  // fields used in the stencil
+  const auto fields = support::orderMap(ms_->getFields());
+  if(fields.size() < 1)
+    return;
+
   iir::Extents maxExtents(ast::cartesian);
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms_)) {
     maxExtents.merge(stage->getExtents());
@@ -685,9 +690,6 @@ void MSCodeGen::generateCudaKernelCode() {
 
   auto const& hMaxExtents =
       iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
-
-  // fields used in the stencil
-  const auto fields = support::orderMap(ms_->getFields());
 
   auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
     return !metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
@@ -783,8 +785,6 @@ void MSCodeGen::generateCudaKernelCode() {
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
   }
-
-  DAWN_ASSERT(fields.size() > 0);
 
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
