@@ -27,6 +27,9 @@
 namespace dawn {
 namespace codegen {
 namespace cuda {
+
+std::unordered_set<std::string> MSCodeGen::globalNames_;
+
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties,
@@ -707,20 +710,31 @@ void MSCodeGen::generateCudaKernelCode() {
     for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
       for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
         if(interval.has_value()) {
-          ss_ << "__constant__ int stage" << stage->getStageID() << "Global" << iterators.at(index)
-              << "Indices_[2];\n";
+          std::string stageName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                  iterators.at(index) + "Indices";
+          if(globalNames_.find(stageName) == globalNames_.end()) {
+            ss_ << "__constant__ int " << stageName << "_[2];\n";
+            globalNames_.insert(stageName);
+          }
         }
       }
     }
-    ss_ << "__constant__ unsigned globalOffsets_[2];\n";
 
-    MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
-    offsetFunc.addArg("unsigned int min");
-    offsetFunc.addArg("unsigned int max");
-    offsetFunc.addArg("unsigned int val");
-    offsetFunc.startBody();
-    offsetFunc.addStatement("return (min <= val && val < max)");
-    offsetFunc.commit();
+    if(globalNames_.find("globalOffsets") == globalNames_.end()) {
+      ss_ << "__constant__ unsigned globalOffsets_[2];\n";
+      globalNames_.insert("globalOffsets");
+    }
+
+    if(globalNames_.find("checkOffset") == globalNames_.end()) {
+      MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
+      offsetFunc.addArg("unsigned int min");
+      offsetFunc.addArg("unsigned int max");
+      offsetFunc.addArg("unsigned int val");
+      offsetFunc.startBody();
+      offsetFunc.addStatement("return (min <= val && val < max)");
+      offsetFunc.commit();
+      globalNames_.insert("checkOffset");
+    }
   }
 
   std::string fnDecl = "";
@@ -876,6 +890,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   std::unordered_map<int, Array3i> fieldIndexMap;
   std::unordered_map<std::string, Array3i> indexIterators;
+  std::unordered_set<std::string> strideNames;
 
   for(const auto& fieldPair : nonTempFields) {
     Array3i dims{-1, -1, -1};
@@ -900,6 +915,7 @@ void MSCodeGen::generateCudaKernelCode() {
   for(const auto& fieldPair : tempFieldsNonLocalCached) {
     Array3i dims{1, 1, 1};
     fieldIndexMap.emplace(fieldPair.second.getAccessID(), dims);
+    indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 
   cudaKernel.addComment("initialized iterators");
@@ -914,11 +930,18 @@ void MSCodeGen::generateCudaKernelCode() {
       idxStmt = idxStmt + "(blockIdx.x*" + std::to_string(ntx) + "+iblock)*1";
     }
     if(index.second[1]) {
-      if(init) {
+      if(init)
         idxStmt = idxStmt + "+";
+      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+jblock)";
+
+      std::string strideName = CodeGeneratorHelper::generateStrideName(1, index.second);
+      for(const std::string stride : strides) {
+        if(stride.find(strideName) != std::string::npos) {
+          idxStmt += "*" + strideName;
+          strideNames.insert(strideName);
+          break;
+        }
       }
-      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+jblock)*" +
-                CodeGeneratorHelper::generateStrideName(1, index.second);
     }
     cudaKernel.addStatement(idxStmt);
   }
@@ -962,9 +985,12 @@ void MSCodeGen::generateCudaKernelCode() {
       for(auto index : indexIterators) {
         if(index.second[2] && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
           cudaKernel.addComment("jump iterators to match the beginning of next interval");
-          cudaKernel.addStatement("idx" + index.first + " += " +
-                                  CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
-                                  intervalDiffToString(kmin, "ksize - 1") + ")");
+          std::string jumpStatement =
+              "idx" + index.first + " += (" + intervalDiffToString(kmin, "ksize - 1") + ")";
+          std::string strideName = CodeGeneratorHelper::generateStrideName(2, index.second);
+          if(strideNames.find(strideName) != strideNames.end())
+            jumpStatement += "*" + strideName;
+          cudaKernel.addStatement(jumpStatement);
         }
       }
       if(useCodeGenTemporaries_ && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
@@ -989,14 +1015,14 @@ void MSCodeGen::generateCudaKernelCode() {
                    CodeGeneratorHelper::generateStrideName(2, index.second);
 
             cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
-                                  "interval and the parallel execution block ");
+                                  "interval and the parallel execution block");
             cudaKernel.addStatement("idx" + index.first + " += " + step);
           }
         }
       }
       if(useCodeGenTemporaries_) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
-                              "interval and the parallel execution block ");
+                              "interval and the parallel execution block");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
                                 ", blockIdx.z * " + std::to_string(blockSize_[2]) +
                                 ") * kstride_tmp");
@@ -1097,14 +1123,17 @@ void MSCodeGen::generateCudaKernelCode() {
 
       for(auto index : indexIterators) {
         if(index.second[2]) {
-          cudaKernel.addStatement("idx" + index.first + incStr +
-                                  CodeGeneratorHelper::generateStrideName(2, index.second));
+          std::string strideName = CodeGeneratorHelper::generateStrideName(2, index.second);
+          if(strideNames.find(strideName) == strideNames.end())
+            strideName = "1";
+          cudaKernel.addStatement("idx" + index.first + incStr + strideName);
         }
       }
       if(useCodeGenTemporaries_) {
         cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
       }
     });
+
     if(!solveKLoopInParallel_) {
       generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
                                 iir::Cache::IOPolicy::fill_and_flush);
