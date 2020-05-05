@@ -487,12 +487,14 @@ void CudaCodeGen::generateStencilRunMethod(
   stencilRunMethod.addStatement("start()");
 
   for(const auto& multiStagePtr : stencil.getChildren()) {
-    stencilRunMethod.addStatement("{");
-
     const iir::MultiStage& multiStage = *multiStagePtr;
     bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(multiStagePtr);
 
     const auto fields = multiStage.getOrderedFields();
+    if(fields.empty())
+      continue;
+
+    stencilRunMethod.addStatement("{");
 
     auto msNonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
       return !metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
@@ -641,10 +643,12 @@ void CudaCodeGen::generateStencilRunMethod(
         msNonTempFields, tempMSFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
         CodeGeneratorHelper::FunctionArgType::FT_Caller);
 
-    kernelCall += "nx,ny,nz,";
+    kernelCall += "nx,ny,nz";
     if(!strides.empty())
-      kernelCall += RangeToString(",", "", "")(strides) + ",";
-    kernelCall +=  args + ")";
+      kernelCall += "," + RangeToString(",", "", "")(strides);
+    if(!args.empty())
+      kernelCall += "," + args;
+    kernelCall +=  ")";
 
     stencilRunMethod.addStatement(kernelCall);
     stencilRunMethod.addStatement("}");
