@@ -890,7 +890,11 @@ void MSCodeGen::generateCudaKernelCode() {
 
   std::unordered_map<int, Array3i> fieldIndexMap;
   std::unordered_map<std::string, Array3i> indexIterators;
+
   std::unordered_set<std::string> strideNames;
+  for(std::string strideArg : strides) {
+    strideNames.insert(strideArg.substr(strideArg.rfind(' ') + 1));
+  }
 
   for(const auto& fieldPair : nonTempFields) {
     Array3i dims{-1, -1, -1};
@@ -935,13 +939,8 @@ void MSCodeGen::generateCudaKernelCode() {
       idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+jblock)";
 
       std::string strideName = CodeGeneratorHelper::generateStrideName(1, index.second);
-      for(const std::string stride : strides) {
-        if(stride.find(strideName) != std::string::npos) {
-          idxStmt += "*" + strideName;
-          strideNames.insert(strideName);
-          break;
-        }
-      }
+      if(strideNames.find(strideName) != strideNames.end())
+        idxStmt += "*" + strideName;
     }
     cudaKernel.addStatement(idxStmt);
   }
@@ -1015,7 +1014,7 @@ void MSCodeGen::generateCudaKernelCode() {
                    CodeGeneratorHelper::generateStrideName(2, index.second);
 
             cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
-                                  "interval and the parallel execution block");
+                                  "interval and the parallel execution block ");
             cudaKernel.addStatement("idx" + index.first + " += " + step);
           }
         }
