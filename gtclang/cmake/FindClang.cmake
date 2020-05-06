@@ -59,7 +59,7 @@ if(LLVM_FOUND)
   target_include_directories(Clang INTERFACE ${CLANG_INCLUDE_DIRS})
   target_compile_features(Clang INTERFACE cxx_std_11)
 
-  # Clang-9 includes a single-library version (libclang-cpp on Debian systems)
+  # Clang-9 includes a single-library version (libclang-cpp9 on Debian systems)
   find_library(single_clang_lib clang-cpp
     PATHS ${LLVM_LIBRARY_DIRS}
     NO_DEFAULT_PATH
