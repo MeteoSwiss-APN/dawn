@@ -59,8 +59,8 @@ if(LLVM_FOUND)
   target_include_directories(Clang INTERFACE ${CLANG_INCLUDE_DIRS})
   target_compile_features(Clang INTERFACE cxx_std_11)
 
-  # Clang-9 includes a single-library c++ interface -- detected here
-  find_library(_clang_lib clang-cpp
+  # Clang-9 includes a single-library version (libclang-cpp on Debian systems)
+  find_library(single_clang_lib clang-cpp
     PATHS ${LLVM_LIBRARY_DIRS}
     NO_DEFAULT_PATH
     NO_PACKAGE_ROOT_PATH
@@ -69,11 +69,7 @@ if(LLVM_FOUND)
     NO_SYSTEM_ENVIRONMENT_PATH
     NO_CMAKE_SYSTEM_PATH
   )
-  mark_as_advanced(_clang_lib)
-
-  # Check if it really exists.
-  # On Debian systems we need libclang-cpp* to actually get the linked-to library
-  get_filename_component(single_clang_lib ${_clang_lib} REALPATH)
+  mark_as_advanced(single_clang_lib)
 
   if(single_clang_lib)
     # Single library installation is available
