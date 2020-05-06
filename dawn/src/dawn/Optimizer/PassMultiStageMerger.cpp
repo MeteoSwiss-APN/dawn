@@ -152,6 +152,8 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
     instantiation->getIIR()->replace(stencil, newStencil, instantiation->getIIR());
   }
 
+  instantiation->computeDerivedInfo(); // Recompute derived info...
+
   return true;
 }
 
