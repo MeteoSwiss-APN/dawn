@@ -984,11 +984,11 @@ void MSCodeGen::generateCudaKernelCode() {
       for(auto index : indexIterators) {
         if(index.second[2] && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
           cudaKernel.addComment("jump iterators to match the beginning of next interval");
-          std::string jumpStatement =
-              "idx" + index.first + " += (" + intervalDiffToString(kmin, "ksize - 1") + ")";
+          std::string jumpStatement = "idx" + index.first + " += ";
           std::string strideName = CodeGeneratorHelper::generateStrideName(2, index.second);
           if(strideNames.find(strideName) != strideNames.end())
-            jumpStatement += "*" + strideName;
+            jumpStatement += strideName + "*";
+          jumpStatement += "(" + intervalDiffToString(kmin, "ksize - 1") + ")";
           cudaKernel.addStatement(jumpStatement);
         }
       }
@@ -1021,7 +1021,7 @@ void MSCodeGen::generateCudaKernelCode() {
       }
       if(useCodeGenTemporaries_) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
-                              "interval and the parallel execution block");
+                              "interval and the parallel execution block ");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
                                 ", blockIdx.z * " + std::to_string(blockSize_[2]) +
                                 ") * kstride_tmp");
