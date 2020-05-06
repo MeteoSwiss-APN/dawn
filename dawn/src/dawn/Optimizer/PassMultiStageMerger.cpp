@@ -118,7 +118,7 @@ bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>&
 
     // NOTE: The Stages in the same multi-stage are assumed to have no counter loop-order vertical
     // dependencies so we can treat each multistage independently.
-    for(auto thisMS : stencil->getChildren()) {
+    for(auto [thisIdx, thisMS] : enumerate(stencil->getChildren())) {
       int mergeIdx = -1;
       for(auto [otherIdx, otherMS] : enumerate(newStencil->getChildren())) {
         // 1) Are the loop orders compatible?
