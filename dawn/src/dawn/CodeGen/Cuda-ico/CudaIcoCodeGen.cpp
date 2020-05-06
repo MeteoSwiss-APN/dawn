@@ -180,7 +180,7 @@ void CudaIcoCodeGen::generateGpuMesh(
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
   Structure gpuMeshClass = stencilWrapperClass.addStruct("GpuTriMesh");
 
-  gpuMeshClass.addMember("int", "NumNodes");
+  gpuMeshClass.addMember("int", "NumVertices");
   gpuMeshClass.addMember("int", "NumEdges");
   gpuMeshClass.addMember("int", "NumCells");
 
@@ -196,15 +196,15 @@ void CudaIcoCodeGen::generateGpuMesh(
 
   auto gpuMeshClassCtor = gpuMeshClass.addConstructor();
   gpuMeshClassCtor.addArg("const atlas::Mesh& mesh");
-  gpuMeshClassCtor.addStatement("NumNodes = mesh.nodes.size()");
-  gpuMeshClassCtor.addStatement("NumCells = mesh.cells.size()");
-  gpuMeshClassCtor.addStatement("NumEdges = mesh.edges.size()");
+  gpuMeshClassCtor.addStatement("NumVertices = mesh.nodes().size()");
+  gpuMeshClassCtor.addStatement("NumCells = mesh.cells().size()");
+  gpuMeshClassCtor.addStatement("NumEdges = mesh.edges().size()");
   for(auto chain : chains) {
     gpuMeshClassCtor.addStatement("gpuErrchk(cudaMalloc((void**)" + chainToTableString(chain) +
-                                  "* sizeof(int) * " + chainToDenseSizeString(chain) + "* " +
+                                  ", sizeof(int) * " + chainToDenseSizeString(chain) + "* " +
                                   chainToSparseSizeString(chain) + "))");
-    gpuMeshClassCtor.addStatement("generateNbhTable(mesh, " + chainToVectorString(chain) + ", " +
-                                  chainToDenseSizeString(chain) + ", " +
+    gpuMeshClassCtor.addStatement("dawn::generateNbhTable(mesh, " + chainToVectorString(chain) +
+                                  ", " + chainToDenseSizeString(chain) + ", " +
                                   chainToSparseSizeString(chain) + ", " +
                                   chainToTableString(chain) + ")");
   }
@@ -224,17 +224,17 @@ void CudaIcoCodeGen::generateRunFun(
   for(auto stageLoc : stageLocType) {
     switch(stageLoc) {
     case ast::LocationType::Cells:
-      runFun.addStatement("dim3 dGC((mesh_.NumCells() + BLOCK_SIZE - 1) / BLOCK_SIZE)");
+      runFun.addStatement("dim3 dGC((mesh_.NumCells + BLOCK_SIZE - 1) / BLOCK_SIZE)");
       break;
     case ast::LocationType::Edges:
-      runFun.addStatement("dim3 dGE((mesh_.NumEdges() + BLOCK_SIZE - 1) / BLOCK_SIZE)");
+      runFun.addStatement("dim3 dGE((mesh_.NumEdges + BLOCK_SIZE - 1) / BLOCK_SIZE)");
       break;
     case ast::LocationType::Vertices:
-      runFun.addStatement("dim3 dGV((mesh_.NumNodes() + BLOCK_SIZE - 1) / BLOCK_SIZE)");
+      runFun.addStatement("dim3 dGV((mesh_.NumVertices + BLOCK_SIZE - 1) / BLOCK_SIZE)");
       break;
     }
   }
-  runFun.addStatement("dim3 DB(BLOCK_SIZE)");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE)");
 
   // start timers
   runFun.addStatement("start()");
@@ -288,7 +288,7 @@ void CudaIcoCodeGen::generateRunFun(
       }
 
       // we always need the k size
-      kernelCall << "kSize, ";
+      kernelCall << "kSize_, ";
 
       // which nbh tables need to be passed?
       CollectChainStrings chainStringCollector;
@@ -334,11 +334,12 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
     auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
         field.second.field.getFieldDimensions().getHorizontalFieldDimension());
     if(dims.isDense()) {
-      ctor.addStatement("initField(" + field.second.Name + ", " + "&" + field.second.Name + "_, " +
-                        chainToDenseSizeString({dims.getDenseLocationType()}) + ", kSize)");
+      ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
+                        "_, " + chainToDenseSizeString({dims.getDenseLocationType()}) + ", kSize)");
     } else {
-      ctor.addStatement("initSparseField(" + field.second.Name + ", " + "&" + field.second.Name +
-                        "_, " + chainToDenseSizeString(dims.getNeighborChain()) +
+      ctor.addStatement("dawn::initSparseField(" + field.second.Name + ", " + "&" +
+                        field.second.Name + "_, " +
+                        chainToDenseSizeString(dims.getNeighborChain()) + ", " +
                         chainToSparseSizeString(dims.getNeighborChain()) + ", kSize)");
     }
   }
@@ -353,20 +354,20 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
           field.second.field.getFieldDimensions().getHorizontalFieldDimension());
 
       copyBackFun.addBlockStatement("", [&]() {
-        copyBackFun.addStatement("dawn::float_type* host_buf = new float[" + field.second.Name +
-                                 ".numElements()" + "]");
+        copyBackFun.addStatement("dawn::float_type* host_buf = new dawn::float_type[" +
+                                 field.second.Name + ".numElements()" + "]");
         copyBackFun.addStatement("gpuErrchk(cudaMemcpy((dawn::float_type*) host_buf, " +
                                  field.second.Name + "_, " + field.second.Name +
-                                 ".numElements(), cudaMemcpyDeviceToHost)");
+                                 ".numElements(), cudaMemcpyDeviceToHost))");
         if(dims.isDense()) {
-          copyBackFun.addStatement("reshape_back(host_buf, " + field.second.Name +
-                                   ".data(), kSize, mesh_." +
-                                   chainToDenseSizeString({dims.getDenseLocationType()}));
+          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
+                                   ".data(), kSize_, mesh_." +
+                                   locToArgString(dims.getDenseLocationType()) + ")");
         } else {
-          copyBackFun.addStatement("reshape_back(host_buf, " + field.second.Name +
-                                   ".data(), kSize, mesh_." +
-                                   chainToDenseSizeString({dims.getDenseLocationType()}) + ", " +
-                                   chainToSparseSizeString(dims.getNeighborChain()));
+          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
+                                   ".data(), kSize_, mesh_." +
+                                   locToArgString(dims.getDenseLocationType()) + ", " +
+                                   chainToSparseSizeString(dims.getNeighborChain()) + ")");
         }
         copyBackFun.addStatement("delete[] host_buf");
       });
@@ -394,7 +395,7 @@ void CudaIcoCodeGen::generateStencilClasses(
       stencilClass.addMember("dawn::float_type*", field.second.Name + "_");
     }
     stencilClass.addMember("int", "kSize_ = 0");
-    stencilClass.addMember("GpuTriMesh", "mesh_ = 0");
+    stencilClass.addMember("GpuTriMesh", "mesh_");
 
     stencilClass.changeAccessibility("public");
 
@@ -415,7 +416,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClassConstructor, stencil, codeGenProperties);
     stencilClassConstructor.commit();
 
-    auto runFun = stencilClass.addMemberFunction("void", "run(");
+    auto runFun = stencilClass.addMemberFunction("void", "run");
     generateRunFun(stencilInstantiation, runFun, codeGenProperties);
     runFun.commit();
 
@@ -560,18 +561,9 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   sbase.commit();
 
-  generateStencilClasses(stencilInstantiation, stencilWrapperClass, codeGenProperties);
-
   generateGpuMesh(stencilInstantiation, stencilWrapperClass, codeGenProperties);
 
-  // generateStencilWrapperMembers(stencilWrapperClass, stencilInstantiation,
-  // codeGenProperties);
-
-  // generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
-
-  // generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
-
-  // generateStencilWrapperPublicMemberFunctions(stencilWrapperClass, codeGenProperties);
+  generateStencilClasses(stencilInstantiation, stencilWrapperClass, codeGenProperties);
 
   stencilWrapperClass.commit();
 
@@ -599,8 +591,19 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  // currently no pp defines are required
-  std::vector<std::string> ppDefines;
+  // temporary "solution"
+  std::vector<std::string> ppDefines{
+      "#include \"driver-includes/cuda_utils.hpp\"",
+      "#include \"driver-includes/defs.hpp\"",
+      "#include \"driver-includes/math.hpp\"",
+      "#include \"driver-includes/timer_cuda.hpp\"",
+      "#include \"atlas_interface.hpp\"",
+      "#include <atlas/mesh.h>",
+      "#define E_C_V_SIZE 4",
+      "#define BLOCK_SIZE 128",
+      "#define DEVICE_MISSING_VALUE -1",
+      "using namespace gridtools::dawn;",
+  };
 
   // globals not yet supported
   std::string globals = "";

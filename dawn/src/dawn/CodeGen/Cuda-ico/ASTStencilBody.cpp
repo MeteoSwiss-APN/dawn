@@ -119,7 +119,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   ss_ << "int nbhIdx = __ldg(&" << tableString(maybeChainPtr->getChain()) << "["
       << "pidx * " << sparseSizeString(maybeChainPtr->getChain()) << " + nbhIter"
       << "]);\n";
-  ss_ << "if (nbh_idx == DEVICE_MISSING_VALUE) { continue; }";
+  ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
   stmt->getBlockStmt()->accept(*this);
 
@@ -182,6 +182,20 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     ss_ << getName(expr) << "[" << resArgName << "]";
   }
 }
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
+  std::string callee = expr->getCallee();
+  // temporary hack to remove the "math::" prefix
+  ss_ << callee.substr(6, callee.size()) << "(";
+
+  std::size_t numArgs = expr->getArguments().size();
+  for(std::size_t i = 0; i < numArgs; ++i) {
+    expr->getArguments()[i]->accept(*this);
+    ss_ << (i == numArgs - 1 ? "" : ", ");
+  }
+  ss_ << ")";
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
   ss_ << "::dawn::float_type lhs = ";
   expr->getInit()->accept(*this);
@@ -207,13 +221,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   ss_ << "int nbhIdx = __ldg(&" << tableString(expr->getNbhChain()) << "["
       << "pidx * " << sparseSizeString(expr->getNbhChain()) << " + nbhIter"
       << "]);\n";
-  ss_ << "if (nbh_idx == DEVICE_MISSING_VALUE) { continue; }";
+  ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   ss_ << "lhs " << expr->getOp() << "=";
   if(weights.has_value()) {
     ss_ << " weights[nbhIter] * ";
   }
   expr->getRhs()->accept(*this);
-  ss_ << "}\n";
+  ss_ << ";}\n";
   parentIsReduction_ = false;
 }
 

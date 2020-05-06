@@ -95,6 +95,7 @@ public:
 
   /// @name Expression implementation
   /// @{
+  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
   void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
   void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
