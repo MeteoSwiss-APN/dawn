@@ -73,7 +73,7 @@ if(LLVM_FOUND)
 
   # Check if it really exists.
   # On Debian systems we need libclang-cpp* to actually get the linked-to library
-  get_filename_component(single_clang_lib ${clang_lib} REALPATH)
+  get_filename_component(single_clang_lib ${_clang_lib} REALPATH)
 
   if(single_clang_lib)
     # Single library installation is available
