@@ -19,8 +19,11 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
+
 #include <stack>
 #include <unordered_map>
+
+#include "LocToStringUtils.h"
 
 namespace dawn {
 

@@ -22,6 +22,8 @@
 #include "dawn/Support/IndexRange.h"
 #include <unordered_map>
 
+#include "LocToStringUtils.h"
+
 namespace dawn {
 namespace iir {
 class StencilInstantiation;

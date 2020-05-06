@@ -22,58 +22,6 @@ namespace dawn {
 namespace codegen {
 namespace cudaico {
 
-static std::string sparseSizeString(const std::vector<ast::LocationType>& locs) {
-  std::stringstream ss;
-  for(auto loc : locs) {
-    switch(loc) {
-    case ast::LocationType::Cells:
-      ss << "C_";
-      break;
-    case ast::LocationType::Edges:
-      ss << "E_";
-      break;
-    case ast::LocationType::Vertices:
-      ss << "V_";
-      break;
-    }
-  }
-  ss << "SIZE";
-  return ss.str();
-}
-static std::string tableString(const std::vector<ast::LocationType>& locs) {
-  std::stringstream ss;
-  for(auto loc : locs) {
-    switch(loc) {
-    case ast::LocationType::Cells:
-      ss << "c";
-      break;
-    case ast::LocationType::Edges:
-      ss << "e";
-      break;
-    case ast::LocationType::Vertices:
-      ss << "v";
-      break;
-    }
-  }
-  ss << "Table";
-  return ss.str();
-}
-static std::string numLocString(ast::LocationType loc) {
-  std::stringstream ss;
-  switch(loc) {
-  case ast::LocationType::Cells:
-    ss << "NumCells";
-    break;
-  case ast::LocationType::Edges:
-    ss << "NumEdges";
-    break;
-  case ast::LocationType::Vertices:
-    ss << "NumVertices";
-    break;
-  }
-  return ss.str();
-}
-
 namespace {
 class FindReduceOverNeighborExpr : public dawn::ast::ASTVisitorForwarding {
   std::optional<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>> foundReduction_ =
@@ -111,13 +59,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
 
-  ss_ << "for (int nbhIter = 0; nbhIter < " << sparseSizeString(maybeChainPtr->getChain())
+  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(maybeChainPtr->getChain())
       << "; nbhIter++)";
   parentIsForLoop_ = true;
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = __ldg(&" << tableString(maybeChainPtr->getChain()) << "["
-      << "pidx * " << sparseSizeString(maybeChainPtr->getChain()) << " + nbhIter"
+  ss_ << "int nbhIdx = __ldg(&" << chainToTableString(maybeChainPtr->getChain()) << "["
+      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getChain()) << " + nbhIter"
       << "]);\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
@@ -161,7 +109,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
-  std::string denseOffset = "kIter * " + numLocString(unstrDims.getDenseLocationType());
+  std::string denseOffset =
+      "kIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
   if(unstrDims.isDense()) {
     std::string resArgName;
     if(!parentIsReduction_ && parentIsForLoop_ &&
@@ -176,9 +125,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
 
-    std::string sparseSize = sparseSizeString(unstrDims.getNeighborChain());
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
     std::string resArgName = denseOffset + " * " + sparseSize + "+ nbhIter * " +
-                             numLocString(unstrDims.getDenseLocationType()) + "+ pidx";
+                             locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) +
+                             "+ pidx";
     ss_ << getName(expr) << "[" << resArgName << "]";
   }
 }
@@ -213,13 +163,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
     ss_ << "};";
   }
-  ss_ << "for (int nbhIter = 0; nbhIter < " << sparseSizeString(expr->getNbhChain())
+  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
       << "; nbhIter++)";
 
   parentIsReduction_ = true;
   ss_ << "{\n";
-  ss_ << "int nbhIdx = __ldg(&" << tableString(expr->getNbhChain()) << "["
-      << "pidx * " << sparseSizeString(expr->getNbhChain()) << " + nbhIter"
+  ss_ << "int nbhIdx = __ldg(&" << chainToTableString(expr->getNbhChain()) << "["
+      << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"
       << "]);\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   ss_ << "lhs " << expr->getOp() << "=";
