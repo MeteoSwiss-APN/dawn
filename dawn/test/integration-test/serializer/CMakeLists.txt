@@ -14,6 +14,7 @@
 include(GoogleTest)
 
 add_executable(${PROJECT_NAME}IntegrationTest
+  TestIIRSerializer.cpp
   TestIIRDeserializer.cpp
   GenerateInMemoryStencils.cpp
 )

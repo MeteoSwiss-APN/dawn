@@ -16,10 +16,10 @@
 
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/ClangCompat/SourceLocation.h"
-#include "gtclang/Support/FileUtil.h"
 #include "clang/AST/ASTContext.h"
 
 namespace gtclang {
@@ -79,7 +79,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           auto name = recordDecl->getIdentifier()->getName().str();
 
           DAWN_LOG(INFO) << "Parsing stencil `" << name << "` at "
-                         << getFilename(clang_compat::getBeginLoc(base).printToString(SM)).str();
+                         << fs::path(clang_compat::getBeginLoc(base).printToString(SM)).filename();
 
           stencilParser_.parseStencil(recordDecl, name);
         }
@@ -89,7 +89,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           auto name = recordDecl->getIdentifier()->getName().str();
 
           DAWN_LOG(INFO) << "Parsing stencil function `" << name << "` at "
-                         << getFilename(clang_compat::getBeginLoc(base).printToString(SM)).str();
+                         << fs::path(clang_compat::getBeginLoc(base).printToString(SM)).filename();
 
           stencilParser_.parseStencilFunction(recordDecl, name);
         }

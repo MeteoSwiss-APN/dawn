@@ -278,9 +278,8 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
         protoFieldDimensions->mutable_unstructured_horizontal_dimension();
 
     if(unstructuredDimension.isSparse()) {
-      for(int i = 0; i < unstructuredDimension.getNeighborChain().size(); ++i) {
-        protoUnstructuredDimension->set_sparse_part(
-            i, getProtoLocationTypeFromLocationType(unstructuredDimension.getNeighborChain()[i]));
+      for(auto locType : unstructuredDimension.getNeighborChain()) {
+        protoUnstructuredDimension->add_sparse_part(getProtoLocationTypeFromLocationType(locType));
       }
     }
     protoUnstructuredDimension->set_dense_location_type(
@@ -331,6 +330,29 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {
   setStmtData(protoStmt->mutable_data(), *stmt);
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
+}
+
+void ProtoStmtBuilder::visit(const std::shared_ptr<LoopStmt>& stmt) {
+  auto protoStmt = getCurrentStmtProto()->mutable_loop_stmt();
+
+  currentStmtProto_.push(protoStmt->mutable_statements());
+  stmt->getBlockStmt()->accept(*this);
+  currentStmtProto_.pop();
+
+  const auto* descrPtr = stmt->getIterationDescrPtr();
+  const auto maybeChainPtr = dynamic_cast<const ChainIterationDescr*>(descrPtr);
+  if(maybeChainPtr) {
+    auto protoChainDescr = protoStmt->mutable_loop_descriptor()->mutable_loop_descriptor_chain();
+    for(auto loc : maybeChainPtr->getChain()) {
+      protoChainDescr->add_chain(getProtoLocationTypeFromLocationType(loc));
+    }
+  } else {
+    dawn_unreachable("Loop descriptor not implemented.");
+  }
+
+  setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  setStmtData(protoStmt->mutable_data(), *stmt);
   protoStmt->set_id(stmt->getID());
 }
 
@@ -726,8 +748,6 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
                       "serialized FieldDimensions message.");
 
       NeighborChain neighborChain;
-      neighborChain.push_back(
-          getLocationTypeFromProtoLocationType(protoUnstructuredDimension.dense_location_type()));
       for(int i = 0; i < protoUnstructuredDimension.sparse_part_size(); ++i) {
         neighborChain.push_back(
             getLocationTypeFromProtoLocationType(protoUnstructuredDimension.sparse_part(i)));
@@ -1014,6 +1034,34 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     stmt->setID(stmtProto.id());
     maxID = std::max(std::abs(stmtProto.id()), maxID);
     return stmt;
+  }
+  case proto::statements::Stmt::kLoopStmt: {
+    const auto& stmtProto = statementProto.loop_stmt();
+    const auto& blockStmt = makeStmt(stmtProto.statements(), dataType, maxID);
+    DAWN_ASSERT_MSG(blockStmt->getKind() == Stmt::Kind::BlockStmt, "Expected a BlockStmt.");
+
+    switch(stmtProto.loop_descriptor().desc_case()) {
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
+
+      ast::NeighborChain chain;
+      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+        chain.push_back(getLocationTypeFromProtoLocationType(
+            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+      }
+      auto stmt = std::make_shared<LoopStmt>(makeData(dataType, stmtProto.data()), std::move(chain),
+                                             std::dynamic_pointer_cast<BlockStmt>(blockStmt),
+                                             makeLocation(stmtProto));
+      stmt->setID(stmtProto.id());
+      maxID = std::max(std::abs(stmtProto.id()), maxID);
+      return stmt;
+    }
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {
+      dawn_unreachable("general loop bounds not implemented!\n");
+      break;
+    }
+    default:
+      dawn_unreachable("descriptor not set!\n");
+    }
   }
   case proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();

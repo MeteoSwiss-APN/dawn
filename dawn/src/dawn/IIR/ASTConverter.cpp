@@ -13,8 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/ASTConverter.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Unreachable.h"
 #include <memory>
 #include <unordered_map>
 
@@ -95,6 +99,18 @@ void ASTConverter::visit(const std::shared_ptr<sir::IfStmt>& stmt) {
       stmt, iir::makeIfStmt(stmtMap_.at(stmt->getCondStmt()), stmtMap_.at(stmt->getThenStmt()),
                             stmt->hasElse() ? stmtMap_.at(stmt->getElseStmt()) : nullptr,
                             stmt->getSourceLocation()));
+}
+
+void ASTConverter::visit(const std::shared_ptr<sir::LoopStmt>& stmt) {
+  stmt->getBlockStmt()->accept(*this);
+  if(auto* chainDesc =
+         dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr())) {
+    stmtMap_.emplace(
+        stmt, iir::makeLoopStmt(chainDesc->getChain(), std::dynamic_pointer_cast<iir::BlockStmt>(
+                                                           stmtMap_.at(stmt->getBlockStmt()))));
+  } else {
+    dawn_unreachable("unsupported loop descriptor!\n");
+  }
 }
 
 } // namespace dawn

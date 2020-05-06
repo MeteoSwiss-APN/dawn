@@ -547,6 +547,32 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
 
     return stmt;
   }
+  case dawn::proto::statements::Stmt::kLoopStmt: {
+    const auto& stmtProto = statementProto.loop_stmt();
+    const auto& blockStmt = makeStmt(stmtProto.statements());
+    DAWN_ASSERT_MSG(blockStmt->getKind() == ast::Stmt::Kind::BlockStmt, "Expected a BlockStmt.");
+
+    switch(stmtProto.loop_descriptor().desc_case()) {
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
+
+      ast::NeighborChain chain;
+      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+        chain.push_back(getLocationTypeFromProtoLocationType(
+            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+      }
+      auto stmt =
+          sir::makeLoopStmt(std::move(chain), std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt),
+                            makeLocation(stmtProto));
+      return stmt;
+    }
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {
+      dawn_unreachable("general loop bounds not implemented!\n");
+      break;
+    }
+    default:
+      dawn_unreachable("descriptor not set!\n");
+    }
+  }
   case dawn::proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
     return sir::makeExprStmt(makeExpr(stmtProto.expr()), makeLocation(stmtProto));

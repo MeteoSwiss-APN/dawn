@@ -124,7 +124,8 @@ bool nbhsValidAndEqual(std::vector<int> a, std::vector<int> b) {
 TEST_F(TestAtlasInterface, Diamond) {
   std::vector<dawn::LocationType> chain{dawn::LocationType::Edges, dawn::LocationType::Cells,
                                         dawn::LocationType::Vertices};
-  std::vector<int> diamond = atlasInterface::getNeighbors(getMesh(), chain, testIdx());
+  std::vector<int> diamond =
+      atlasInterface::getNeighbors(atlasInterface::atlasTag{}, getMesh(), chain, testIdx());
 
   ASSERT_TRUE(diamond.size() == 4);
   std::vector<int> diamondLo{diamond[0], diamond[1]};
@@ -161,7 +162,8 @@ TEST_F(TestAtlasInterface, Star) {
       dawn::LocationType::Edges,
       dawn::LocationType::Cells,
   };
-  std::vector<int> star = atlasInterface::getNeighbors(getMesh(), chain, testIdx());
+  std::vector<int> star =
+      atlasInterface::getNeighbors(atlasInterface::atlasTag{}, getMesh(), chain, testIdx());
   ASSERT_TRUE(star.size() == 12);
   std::vector<int> starLo{star.begin(), star.begin() + 6};
   std::vector<int> starHi{star.begin() + 6, star.end()};
@@ -201,7 +203,8 @@ TEST_F(TestAtlasInterface, Fan) {
       dawn::LocationType::Cells,
       dawn::LocationType::Edges,
   };
-  std::vector<int> fan = atlasInterface::getNeighbors(getMesh(), chain, testIdx());
+  std::vector<int> fan =
+      atlasInterface::getNeighbors(atlasInterface::atlasTag{}, getMesh(), chain, testIdx());
   ASSERT_TRUE(fan.size() == 12);
   std::vector<int> fanLo{fan.begin(), fan.begin() + 6};
   std::vector<int> fanHi{fan.begin() + 6, fan.end()};
@@ -235,7 +238,8 @@ TEST_F(TestAtlasInterface, Intp) {
   std::vector<dawn::LocationType> chain{dawn::LocationType::Cells, dawn::LocationType::Edges,
                                         dawn::LocationType::Cells, dawn::LocationType::Edges,
                                         dawn::LocationType::Cells};
-  std::vector<int> intp = atlasInterface::getNeighbors(getMesh(), chain, testIdx());
+  std::vector<int> intp =
+      atlasInterface::getNeighbors(atlasInterface::atlasTag{}, getMesh(), chain, testIdx());
   ASSERT_TRUE(intp.size() == 9);
   std::vector<int> intpLo{intp.begin(), intp.begin() + 3};
   std::vector<int> intpHi{intp.begin() + 3, intp.end()};

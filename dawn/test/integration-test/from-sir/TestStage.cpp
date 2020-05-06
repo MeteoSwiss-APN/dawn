@@ -16,8 +16,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Unittest/CompilerUtil.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
+#include "dawn/Support/FileSystem.h"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <optional>
@@ -29,14 +28,7 @@ using namespace dawn;
 namespace {
 
 std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilename) {
-  const std::string filename = TestEnvironment::path_ + "/" + sirFilename;
-  std::ifstream file(filename);
-  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
-
-  const std::string jsonstr((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
-
-  auto sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::Format::Json);
+  auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);
   auto stencilInstantiationMap = run(sir, {PassGroup::StageReordering, PassGroup::StageMerger});
 
   DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),

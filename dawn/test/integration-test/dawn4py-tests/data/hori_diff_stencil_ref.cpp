@@ -92,7 +92,7 @@ if(threadIdx.y < +6) {
   int idx111 = (blockIdx.x*32+iblock)*1+(blockIdx.y*4+jblock)*stride_111_1;
   int ijcacheindex= iblock + 1 + (jblock + 1)*34;
 
-  // jump iterators to match the intersection of beginning of next interval and the parallel execution block 
+  // jump iterators to match the intersection of beginning of next interval and the parallel execution block
   idx111 += max(0, blockIdx.z * 4) * stride_111_2;
   int kleg_lower_bound = max(0,blockIdx.z*4);
   int kleg_upper_bound = min( ksize - 1 + 0,(blockIdx.z+1)*4-1);;
