@@ -34,7 +34,7 @@ if(LLVM_FOUND)
     OUTPUT_VARIABLE llvm_install_prefix
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSION}/include")
+  set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSION}/include")
 
   # potentially add include dir from binary dir for non-installed LLVM
   execute_process(
@@ -49,12 +49,18 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     message(STATUS
       "Detected that llvm-config comes from a build-tree, adding more include directories for Clang")
     list(APPEND CLANG_INCLUDE_DIRS
-         "${llvm_install_prefix}/tools/clang/include" # build dir
+         "${llvm_install_prefix}/tools/clang/include"  # build dir
          "${llvm_source_root}/tools/clang/include"     # source dir
     )
   endif()
 
-  find_library(gtclang_clang-cpp-lib clang-cpp
+  add_library(Clang INTERFACE IMPORTED GLOBAL)
+  add_library(Clang::Clang ALIAS Clang)
+  target_include_directories(Clang INTERFACE ${CLANG_INCLUDE_DIRS})
+  target_compile_features(Clang INTERFACE cxx_std_11)
+
+  # Clang-9 includes a single-library version -- detected here
+  find_library(single_clang_lib clang-cpp
     PATHS ${LLVM_LIBRARY_DIRS}
     NO_DEFAULT_PATH
     NO_PACKAGE_ROOT_PATH
@@ -63,11 +69,17 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     NO_SYSTEM_ENVIRONMENT_PATH
     NO_CMAKE_SYSTEM_PATH
   )
-  mark_as_advanced(gtclang_clang-cpp-lib)
-  message(STATUS "---------> ${gtclang_clang-cpp-lib}")
+  mark_as_advanced(single_clang_lib)
+  message(STATUS "---------> ${single_clang_lib}")
 
-  if(gtclang_clang-cpp-lib) # single library installation is available
-    set(clang_libnames clang-cpp)
+  if(single_clang_lib)
+    # Single library installation is available
+    list(APPEND CLANG_LIBS ${single_clang_lib})
+    if(single_clang_lib)
+      target_link_libraries(Clang INTERFACE ${single_clang_lib})
+    else()
+      message(FATAL_ERROR "Cannot find ${single_clang_lib}")
+    endif()
   else()
     set(clang_libnames
       clangFrontend
@@ -97,27 +109,24 @@ set(CLANG_RESSOURCE_INCLUDE_PATH "${llvm_install_prefix}/lib/clang/${LLVM_VERSIO
     if(${LLVM_VERSION} VERSION_GREATER_EQUAL 7.0.0)
       list(APPEND clang_libnames clangToolingInclusions)
     endif()
+
+    foreach(_lib ${clang_libnames})
+      find_library(${_lib}_LIBRARY ${_lib}
+        HINTS ${CLANG_LIBRARY_DIRS} ${LLVM_ROOT}
+        PATH_SUFFIXES lib
+      )
+      mark_as_advanced(${_lib}_LIBRARY)
+      list(APPEND CLANG_LIBS ${${_lib}_LIBRARY})
+      if(${_lib}_LIBRARY)
+        target_link_libraries(Clang INTERFACE ${${_lib}_LIBRARY})
+      else()
+        message(FATAL_ERROR "Could not find ${_lib} library: Try setting CLANG_LIBRARY_DIRS or LLVM_ROOT")
+      endif()
+    endforeach()
   endif()
 
-  add_library(Clang INTERFACE IMPORTED GLOBAL)
-  add_library(Clang::Clang ALIAS Clang)
-  target_include_directories(Clang INTERFACE ${CLANG_INCLUDE_DIRS})
-  target_compile_features(Clang INTERFACE cxx_std_11)
-  foreach(_lib ${clang_libnames})
-    find_library(${_lib}_LIBRARY ${_lib}
-      HINTS ${CLANG_LIBRARY_DIRS} ${LLVM_ROOT}
-      PATH_SUFFIXES lib
-      )
-    mark_as_advanced(${_lib}_LIBRARY)
-    list(APPEND CLANG_LIBS ${${_lib}_LIBRARY})
-    if(${_lib}_LIBRARY)
-      target_link_libraries(Clang INTERFACE ${${_lib}_LIBRARY})
-    else()
-      message(FATAL_ERROR "Could not find ${_lib} library: Try setting CLANG_LIBRARY_DIRS or LLVM_ROOT")
-    endif()
-  endforeach()
 else()
-  message(FATAL_ERROR "Could NOT find Clang")
+  message(FATAL_ERROR "LLVM NOT Found")
 endif()
 
 include(FindPackageHandleStandardArgs)
