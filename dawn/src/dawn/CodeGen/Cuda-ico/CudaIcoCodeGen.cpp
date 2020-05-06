@@ -108,7 +108,6 @@ static std::string chainToVectorString(std::vector<dawn::ast::LocationType> locs
   ss << "}";
   return ss.str();
 }
-
 static std::string locToArgString(dawn::ast::LocationType loc) {
   switch(loc) {
   case dawn::ast::LocationType::Cells:
@@ -119,6 +118,36 @@ static std::string locToArgString(dawn::ast::LocationType loc) {
     break;
   case dawn::ast::LocationType::Vertices:
     return "NumVertices";
+    break;
+  default:
+    dawn_unreachable("");
+  }
+}
+static std::string locToDenseTypeString(dawn::ast::LocationType loc) {
+  switch(loc) {
+  case dawn::ast::LocationType::Cells:
+    return "dawn::cell_field_t<LibTag, dawn::float_type>";
+    break;
+  case dawn::ast::LocationType::Edges:
+    return "dawn::edge_field_t<LibTag, dawn::float_type>";
+    break;
+  case dawn::ast::LocationType::Vertices:
+    return "dawn::vertex_field_t<LibTag, dawn::float_type>";
+    break;
+  default:
+    dawn_unreachable("");
+  }
+}
+static std::string locToSparseTypeString(dawn::ast::LocationType loc) {
+  switch(loc) {
+  case dawn::ast::LocationType::Cells:
+    return "dawn::sparse_cell_field_t<LibTag, dawn::float_type>";
+    break;
+  case dawn::ast::LocationType::Edges:
+    return "dawn::sparse_edge_field_t<LibTag, dawn::float_type>";
+    break;
+  case dawn::ast::LocationType::Vertices:
+    return "dawn::sparse_vertex_field_t<LibTag, dawn::float_type>";
     break;
   default:
     dawn_unreachable("");
@@ -195,7 +224,7 @@ void CudaIcoCodeGen::generateGpuMesh(
   }
 
   auto gpuMeshClassCtor = gpuMeshClass.addConstructor();
-  gpuMeshClassCtor.addArg("const atlas::Mesh& mesh");
+  gpuMeshClassCtor.addArg("const dawn::mesh_t<LibTag>& mesh");
   gpuMeshClassCtor.addStatement("NumVertices = mesh.nodes().size()");
   gpuMeshClassCtor.addStatement("NumCells = mesh.cells().size()");
   gpuMeshClassCtor.addStatement("NumEdges = mesh.edges().size()");
@@ -203,10 +232,10 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshClassCtor.addStatement("gpuErrchk(cudaMalloc((void**)" + chainToTableString(chain) +
                                   ", sizeof(int) * " + chainToDenseSizeString(chain) + "* " +
                                   chainToSparseSizeString(chain) + "))");
-    gpuMeshClassCtor.addStatement("dawn::generateNbhTable(mesh, " + chainToVectorString(chain) +
-                                  ", " + chainToDenseSizeString(chain) + ", " +
-                                  chainToSparseSizeString(chain) + ", " +
-                                  chainToTableString(chain) + ")");
+    gpuMeshClassCtor.addStatement(
+        "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(chain) + ", " +
+        chainToDenseSizeString(chain) + ", " + chainToSparseSizeString(chain) + ", " +
+        chainToTableString(chain) + ")");
   }
 }
 
@@ -237,7 +266,7 @@ void CudaIcoCodeGen::generateRunFun(
   runFun.addStatement("dim3 dB(BLOCK_SIZE)");
 
   // start timers
-  runFun.addStatement("start()");
+  runFun.addStatement("sbase::start()");
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -319,7 +348,7 @@ void CudaIcoCodeGen::generateRunFun(
   }
 
   // stop timers
-  runFun.addStatement("pause()");
+  runFun.addStatement("sbase::pause()");
 }
 
 void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::Stencil& stencil,
@@ -400,16 +429,16 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClass.changeAccessibility("public");
 
     auto stencilClassConstructor = stencilClass.addConstructor();
-    stencilClassConstructor.addArg("const atlas::Mesh& mesh");
+    stencilClassConstructor.addArg("const dawn::mesh_t<LibTag>& mesh");
     stencilClassConstructor.addArg("int kSize");
     for(auto field : support::orderMap(stencil.getFields())) {
       auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           field.second.field.getFieldDimensions().getHorizontalFieldDimension());
       if(dims.isDense()) {
-        stencilClassConstructor.addArg("const atlasInterface::Field<dawn::float_type>& " +
+        stencilClassConstructor.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " +
                                        field.second.Name);
       } else {
-        stencilClassConstructor.addArg("const atlasInterface::SparseDimension<dawn::float_type> " +
+        stencilClassConstructor.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " +
                                        field.second.Name);
       }
     }
@@ -427,9 +456,10 @@ void CudaIcoCodeGen::generateStencilClasses(
         auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
             field.second.field.getFieldDimensions().getHorizontalFieldDimension());
         if(dims.isDense()) {
-          copyBackFun.addArg("atlasInterface::Field<dawn::float_type>& " + field.second.Name);
+          copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " +
+                             field.second.Name);
         } else {
-          copyBackFun.addArg("atlasInterface::SparseDimension<dawn::float_type> " +
+          copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " +
                              field.second.Name);
         }
       }
@@ -544,7 +574,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
-  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
+
   stencilWrapperClass.changeAccessibility("public");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
@@ -593,12 +624,11 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
 
   // temporary "solution"
   std::vector<std::string> ppDefines{
+      "#include \"atlas_interface.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
-      "#include \"atlas_interface.hpp\"",
-      "#include <atlas/mesh.h>",
       "#define E_C_V_SIZE 4",
       "#define BLOCK_SIZE 128",
       "#define DEVICE_MISSING_VALUE -1",
