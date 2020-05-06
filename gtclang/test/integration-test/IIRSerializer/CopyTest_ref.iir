@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "10": "field_b",
-   "9": "field_a"
+   "9": "field_a",
+   "10": "field_b"
   },
   "accessIDToType": {
    "9": 6,
@@ -108,7 +108,7 @@
                    "data": {
                     "accessID": 9
                    },
-                   "ID": 27
+                   "ID": 14
                   }
                  },
                  "op": "=",
@@ -135,14 +135,14 @@
                    "data": {
                     "accessID": 10
                    },
-                   "ID": 26
+                   "ID": 13
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 28
+                 "ID": 15
                 }
                },
                "loc": {
@@ -171,7 +171,7 @@
                  }
                 }
                },
-               "ID": 25
+               "ID": 16
               }
              }
             ],
@@ -180,7 +180,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 24
+            "ID": 22
            }
           },
           "doMethodID": 0,
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "CopyTest.cpp"
 }

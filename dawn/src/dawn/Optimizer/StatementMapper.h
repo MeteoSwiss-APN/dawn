@@ -80,6 +80,8 @@ public:
 
   void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
 
+  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
+
   void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
 
   void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;

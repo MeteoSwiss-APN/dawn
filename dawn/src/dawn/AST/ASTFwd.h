@@ -30,6 +30,7 @@ class VerticalRegionDeclStmt;
 class StencilCallDeclStmt;
 class BoundaryConditionDeclStmt;
 class IfStmt;
+class LoopStmt;
 
 class Expr;
 class NOPExpr;

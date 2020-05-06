@@ -487,15 +487,13 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
-      weights_(expr.getWeights()),
-      chain_(expr.getNbhChain()), operands_{expr.getRhs()->clone(), expr.getInit()->clone()} {}
+      weights_(expr.getWeights()), chain_(expr.getNbhChain()), operands_(expr.operands_) {}
 
 ReductionOverNeighborExpr&
 ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
   assign(expr);
   op_ = expr.op_;
-  operands_[Rhs] = expr.getRhs();
-  operands_[Init] = expr.getInit();
+  operands_ = expr.operands_;
   chain_ = expr.getNbhChain();
   weights_ = expr.getWeights();
   return *this;

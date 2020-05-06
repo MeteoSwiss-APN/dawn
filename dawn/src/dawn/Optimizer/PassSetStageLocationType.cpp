@@ -75,6 +75,13 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
     } else if(ifStmt->hasElse()) {
       return deduceLocationType(ifStmt->getElseStmt()->getChildren()[0], metaInformation);
     }
+  } else if(const auto& loopStmt = std::dynamic_pointer_cast<iir::LoopStmt>(stmt)) {
+    if(auto* chainDesc =
+           dynamic_cast<const ast::ChainIterationDescr*>(loopStmt->getIterationDescrPtr())) {
+      return chainDesc->getChain().front();
+    } else {
+      dawn_unreachable("unsupported loop descriptor!\n");
+    }
   }
   DAWN_LOG(ERROR) << "Couldn't deduce location type for statement at line "
                   << stmt->getSourceLocation() << ".";

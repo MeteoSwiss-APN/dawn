@@ -397,5 +397,90 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
   }
   DAWN_ASSERT_MSG((false), ("Expression not found"));
 }
+
+//===------------------------------------------------------------------------------------------===//
+//     Loop
+//===------------------------------------------------------------------------------------------===//
+
+IterationDescr::~IterationDescr() {}
+
+ChainIterationDescr::ChainIterationDescr(ast::NeighborChain&& chain) : chain_(std::move(chain)) {}
+ast::NeighborChain ChainIterationDescr::getChain() const { return chain_; }
+std::unique_ptr<IterationDescr> ChainIterationDescr::clone() const {
+  return std::make_unique<ChainIterationDescr>(*this);
+}
+std::string ChainIterationDescr::toString() const {
+  std::stringstream ss;
+  auto locString = [](ast::LocationType type) {
+    switch(type) {
+    case ast::LocationType::Cells:
+      return "Cell";
+    case ast::LocationType::Edges:
+      return "Edges";
+    case ast::LocationType::Vertices:
+      return "Vertices";
+    default:
+      dawn_unreachable("invalid location type");
+    };
+  };
+  ss << "{";
+  bool first = true;
+  for(const auto it : chain_) {
+    if(!first) {
+      ss << ", ";
+    }
+    first = false;
+    ss << locString(it);
+  }
+  return ss.str();
+}
+bool ChainIterationDescr::equals(const IterationDescr* otherPtr) const {
+  const ChainIterationDescr* chainPtr = dynamic_cast<const ChainIterationDescr*>(otherPtr);
+  return chainPtr && chain_ == chainPtr->chain_;
+}
+
+LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
+                   std::shared_ptr<BlockStmt> body, SourceLocation loc)
+    : Stmt(std::move(data), Kind::LoopStmt, loc), blockStmt_(body) {
+  iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain));
+  for(const auto& stmtPtr : body->getStatements()) {
+    DAWN_ASSERT_MSG(stmtPtr->getKind() == ast::Stmt::Kind::ExprStmt,
+                    "only expression statements allowed in loop body");
+    DAWN_ASSERT_MSG(dyn_pointer_cast<ExprStmt>(stmtPtr)->getExpr()->getKind() ==
+                        ast::Expr::Kind::AssignmentExpr,
+                    "only assignments allowed in loop body");
+  }
+}
+LoopStmt::LoopStmt(const LoopStmt& stmt)
+    : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(stmt.getBlockStmt()->clone())),
+      iterationDescr_(stmt.getIterationDescr().clone()) {}
+LoopStmt& LoopStmt::operator=(LoopStmt const& stmt) {
+  assign(stmt);
+  blockStmt_ = stmt.blockStmt_;
+  iterationDescr_ = stmt.getIterationDescr().clone();
+  return *this;
+}
+LoopStmt::~LoopStmt() {}
+
+const std::shared_ptr<BlockStmt>& LoopStmt::getBlockStmt() const { return blockStmt_; }
+std::shared_ptr<BlockStmt>& LoopStmt::getBlockStmt() { return blockStmt_; }
+
+std::shared_ptr<Stmt> LoopStmt::clone() const { return std::make_shared<LoopStmt>(*this); }
+bool LoopStmt::equals(const Stmt* other, bool compareData) const {
+  const LoopStmt* otherPtr = dynamic_cast<const LoopStmt*>(other);
+  return otherPtr && Stmt::equals(other, compareData) &&
+         getBlockStmt()->equals(otherPtr->getBlockStmt().get(), compareData) &&
+         iterationDescr_->equals(otherPtr->iterationDescr_.get());
+}
+
+MutableArrayRef<std::shared_ptr<Stmt>> LoopStmt::getChildren() { return blockStmt_->getChildren(); }
+void LoopStmt::replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
+                               const std::shared_ptr<Stmt>& newStmt) {
+  blockStmt_->replaceChildren(oldStmt, newStmt);
+}
+
+const IterationDescr& LoopStmt::getIterationDescr() const { return *iterationDescr_; }
+const IterationDescr* LoopStmt::getIterationDescrPtr() const { return iterationDescr_.get(); }
+
 } // namespace ast
 } // namespace dawn

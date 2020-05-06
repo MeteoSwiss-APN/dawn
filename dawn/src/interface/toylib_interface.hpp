@@ -137,7 +137,7 @@ private:
   T origin_;
 };
 
-inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid& mesh,
+inline std::vector<const toylib::ToylibElement*> getNeighbors(toylibTag, const toylib::Grid& mesh,
                                                               std::vector<dawn::LocationType> chain,
                                                               const toylib::ToylibElement* elem) {
   switch(chain.front()) {
@@ -276,7 +276,7 @@ inline std::vector<const toylib::ToylibElement*> getNeighbors(const toylib::Grid
 template <typename Init, typename Op>
 auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* idx, Init init,
             std::vector<dawn::LocationType> chain, Op&& op) {
-  for(auto ptr : getNeighbors(grid, chain, idx)) {
+  for(auto ptr : getNeighbors(toylibTag{}, grid, chain, idx)) {
     switch(chain.back()) {
     case dawn::LocationType::Cells:
       op(init, static_cast<const toylib::Face*>(ptr));
@@ -301,7 +301,7 @@ template <typename Init, typename Op, typename Weight>
 auto reduce(toylibTag, toylib::Grid const& grid, toylib::ToylibElement const* idx, Init init,
             std::vector<dawn::LocationType> chain, Op&& op, std::vector<Weight>&& weights) {
   int i = 0;
-  for(auto ptr : getNeighbors(grid, chain, idx)) {
+  for(auto ptr : getNeighbors(toylibTag{}, grid, chain, idx)) {
     switch(chain.back()) {
     case dawn::LocationType::Cells:
       op(init, static_cast<const toylib::Face*>(ptr), weights[i++]);

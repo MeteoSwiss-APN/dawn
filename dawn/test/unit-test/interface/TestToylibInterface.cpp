@@ -58,7 +58,7 @@ TEST(TestToylibInterface, Diamond) {
   int testIdx = w * w / 2 + w / 2;
   toylib::Edge e = mesh.edges()[testIdx];
   std::vector<const toylib::ToylibElement*> diamond =
-      toylibInterface::getNeighbors(mesh, chain, &e);
+      toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh, chain, &e);
   ASSERT_TRUE(diamond.size() == 4);
 
   std::vector<const toylib::ToylibElement*> diamondLo{diamond[0], diamond[1]};
@@ -89,7 +89,8 @@ TEST(TestToylibInterface, Star) {
   };
   int testIdx = w * w / 2 + w;
   toylib::Vertex v = mesh.vertices()[testIdx];
-  std::vector<const toylib::ToylibElement*> star = toylibInterface::getNeighbors(mesh, chain, &v);
+  std::vector<const toylib::ToylibElement*> star =
+      toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh, chain, &v);
   ASSERT_TRUE(star.size() == 12);
 
   std::vector<const toylib::ToylibElement*> starLo{star.begin(), star.begin() + 6};
@@ -123,7 +124,8 @@ TEST(TestToylibInterface, Fan) {
   };
   int testIdx = (w + 3) * w / 2 + w / 2 + 4;
   toylib::Vertex v = mesh.vertices()[testIdx];
-  std::vector<const toylib::ToylibElement*> fan = toylibInterface::getNeighbors(mesh, chain, &v);
+  std::vector<const toylib::ToylibElement*> fan =
+      toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh, chain, &v);
   ASSERT_TRUE(fan.size() == 12);
 
   std::vector<const toylib::ToylibElement*> fanLo{fan.begin(), fan.begin() + 6};
@@ -156,7 +158,8 @@ TEST(TestToylibInterface, Intp) {
   int testIdx = 4 * w + w / 2;
 
   toylib::Face c = mesh.faces()[testIdx];
-  std::vector<const toylib::ToylibElement*> intp = toylibInterface::getNeighbors(mesh, chain, &c);
+  std::vector<const toylib::ToylibElement*> intp =
+      toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh, chain, &c);
   assert(intp.size() == 9);
 
   std::vector<const toylib::ToylibElement*> intpLo{intp.begin(), intp.begin() + 3};

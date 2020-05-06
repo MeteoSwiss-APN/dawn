@@ -27,6 +27,9 @@
 namespace dawn {
 namespace codegen {
 namespace cuda {
+
+std::unordered_set<std::string> MSCodeGen::globalNames_;
+
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties,
@@ -705,20 +708,31 @@ void MSCodeGen::generateCudaKernelCode() {
     for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
       for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
         if(interval.has_value()) {
-          ss_ << "__constant__ int stage" << stage->getStageID() << "Global" << iterators.at(index)
-              << "Indices_[2];\n";
+          std::string stageName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                  iterators.at(index) + "Indices";
+          if(globalNames_.find(stageName) == globalNames_.end()) {
+            ss_ << "__constant__ int " << stageName << "_[2];\n";
+            globalNames_.insert(stageName);
+          }
         }
       }
     }
-    ss_ << "__constant__ unsigned globalOffsets_[2];\n";
 
-    MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
-    offsetFunc.addArg("unsigned int min");
-    offsetFunc.addArg("unsigned int max");
-    offsetFunc.addArg("unsigned int val");
-    offsetFunc.startBody();
-    offsetFunc.addStatement("return (min <= val && val < max)");
-    offsetFunc.commit();
+    if(globalNames_.find("globalOffsets") == globalNames_.end()) {
+      ss_ << "__constant__ unsigned globalOffsets_[2];\n";
+      globalNames_.insert("globalOffsets");
+    }
+
+    if(globalNames_.find("checkOffset") == globalNames_.end()) {
+      MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
+      offsetFunc.addArg("unsigned int min");
+      offsetFunc.addArg("unsigned int max");
+      offsetFunc.addArg("unsigned int val");
+      offsetFunc.startBody();
+      offsetFunc.addStatement("return (min <= val && val < max)");
+      offsetFunc.commit();
+      globalNames_.insert("checkOffset");
+    }
   }
 
   std::string fnDecl = "";

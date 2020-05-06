@@ -84,6 +84,8 @@ message StencilFunction {
  *     GlobalVariableMap
 \*===------------------------------------------------------------------------------------------===*/
 
+// TODO this needs to be changed to accept a type independent of a value if we
+// want it to be 1-to-1 with the SIR structures.
 // @brief Value of a global variable
 message GlobalVariableValue {
   // Type and value of the variable

@@ -54,6 +54,13 @@ void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   scope_.top()->ScopeDepth--;
 }
 
+void StatementMapper::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
+  DAWN_ASSERT(initializedWithBlockStmt_);
+
+  appendNewStatement(stmt);
+  stmt->getBlockStmt()->accept(*this);
+}
+
 void StatementMapper::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   appendNewStatement(stmt);

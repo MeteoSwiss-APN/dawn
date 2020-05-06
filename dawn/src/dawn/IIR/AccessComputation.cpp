@@ -250,6 +250,10 @@ public:
     removeLastChildAccesses();
   }
 
+  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     appendNewAccesses();
     stmt->getExpr()->accept(*this);
