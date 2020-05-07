@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "16": "field_a",
-   "17": "field_b"
+   "17": "field_b",
+   "16": "field_a"
   },
   "accessIDToType": {
    "16": 6,
@@ -24,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "17": {
+   "16": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "16": {
+   "17": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -108,7 +108,7 @@
                    "data": {
                     "accessID": 16
                    },
-                   "ID": 108
+                   "ID": 21
                   }
                  },
                  "op": "=",
@@ -135,14 +135,14 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 107
+                   "ID": 20
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 109
+                 "ID": 22
                 }
                },
                "loc": {
@@ -171,7 +171,7 @@
                  }
                 }
                },
-               "ID": 106
+               "ID": 23
               }
              }
             ],
@@ -180,7 +180,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 105
+            "ID": 29
            }
           },
           "doMethodID": 0,
@@ -197,7 +197,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 27,
+      "multiStageID": 90,
       "Caches": {}
      }
     ],
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }

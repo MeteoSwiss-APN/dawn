@@ -6,9 +6,9 @@
    "29": "global"
   },
   "accessIDToType": {
+   "31": 6,
    "29": 0,
-   "30": 6,
-   "31": 6
+   "30": 6
   },
   "literalIDToName": {
    "-61": "0",
@@ -47,24 +47,6 @@
    }
   },
   "idToStencilCall": {
-   "67": {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_67",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "data": {},
-     "ID": 68
-    }
-   },
    "62": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
@@ -81,6 +63,24 @@
      },
      "data": {},
      "ID": 63
+    }
+   },
+   "67": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_67",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 68
     }
    }
   },
@@ -139,7 +139,7 @@
                    "data": {
                     "accessID": 31
                    },
-                   "ID": 80
+                   "ID": 41
                   }
                  },
                  "op": "=",
@@ -156,7 +156,7 @@
                      "data": {
                       "accessID": 29
                      },
-                     "ID": 78
+                     "ID": 39
                     }
                    },
                    "op": "*",
@@ -183,21 +183,21 @@
                      "data": {
                       "accessID": 30
                      },
-                     "ID": 79
+                     "ID": 40
                     }
                    },
                    "loc": {
                     "Line": 33,
                     "Column": 64
                    },
-                   "ID": 77
+                   "ID": 38
                   }
                  },
                  "loc": {
                   "Line": 33,
                   "Column": 52
                  },
-                 "ID": 81
+                 "ID": 42
                 }
                },
                "loc": {
@@ -233,7 +233,7 @@
                  }
                 }
                },
-               "ID": 76
+               "ID": 43
               }
              }
             ],
@@ -242,7 +242,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 75
+            "ID": 66
            }
           },
           "doMethodID": 0,
@@ -259,7 +259,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 64,
+      "multiStageID": 75,
       "Caches": {}
      }
     ],
@@ -305,7 +305,7 @@
                    "data": {
                     "accessID": 31
                    },
-                   "ID": 87
+                   "ID": 53
                   }
                  },
                  "op": "=",
@@ -322,7 +322,7 @@
                      "data": {
                       "accessID": 29
                      },
-                     "ID": 85
+                     "ID": 51
                     }
                    },
                    "op": "*",
@@ -349,21 +349,21 @@
                      "data": {
                       "accessID": 30
                      },
-                     "ID": 86
+                     "ID": 52
                     }
                    },
                    "loc": {
                     "Line": 35,
                     "Column": 64
                    },
-                   "ID": 84
+                   "ID": 50
                   }
                  },
                  "loc": {
                   "Line": 35,
                   "Column": 52
                  },
-                 "ID": 88
+                 "ID": 54
                 }
                },
                "loc": {
@@ -382,14 +382,14 @@
                   }
                  },
                  "readAccess": {
-                  "29": {
+                  "30": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "30": {
+                  "29": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -399,7 +399,7 @@
                  }
                 }
                },
-               "ID": 83
+               "ID": 55
               }
              }
             ],
@@ -408,7 +408,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 82
+            "ID": 72
            }
           },
           "doMethodID": 1,
@@ -425,7 +425,7 @@
        }
       ],
       "loopOrder": "Forward",
-      "multiStageID": 70,
+      "multiStageID": 76,
       "Caches": {}
      }
     ],
@@ -597,5 +597,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "/home/eddied/Work/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }
