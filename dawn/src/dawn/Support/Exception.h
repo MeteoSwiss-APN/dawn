@@ -67,11 +67,6 @@ struct LogicError : public CompileError {
       : CompileError(message, file, loc.Line, loc.Column) {}
 };
 
-struct SyntacticError : public CompileError {
-  SyntacticError(const std::string& message = "Syntactic Error", const std::string& file = "",
-                 unsigned line = 0);
-};
-
 } // namespace dawn
 
 #endif // DAWN_SUPPORT_EXCEPTION_H

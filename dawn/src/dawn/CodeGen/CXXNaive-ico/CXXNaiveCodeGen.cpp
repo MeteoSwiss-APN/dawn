@@ -20,6 +20,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
@@ -93,20 +94,13 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  DiagnosticsEngine diagnostics;
-  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloSize);
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in code generation");
-  }
+  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
 
   return CG.generateCode();
 }
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx,
-                                       DiagnosticsEngine& engine, int maxHaloPoint)
-    : CodeGen(ctx, engine, maxHaloPoint) {}
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
+    : CodeGen(ctx, maxHaloPoint) {}
 
 CXXNaiveIcoCodeGen::~CXXNaiveIcoCodeGen() {}
 
@@ -527,23 +521,22 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       const auto& fields = stencilFun->getCalleeFields();
 
       if(fields.empty()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                stencilInstantiation->getMetaData().getStencilLocation());
-        diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilInstantiation->getMetaData().getStencilLocation());
       }
 
       MemberFunction stencilFunMethod = stencilWrapperClass.addMemberFunction(
           std::string("static ") + (stencilFun->hasReturn() ? "double" : "void"), stencilFunName);
 
       if(fields.empty() && !stencilFun->hasReturn()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
-        diag << "no storages referenced in stencil function '" << stencilFun->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil function '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilFun->getStencilFunction()->Loc);
       }
 
       // Each stencil function call will pass the (i,j,k) position

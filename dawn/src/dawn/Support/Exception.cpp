@@ -40,7 +40,4 @@ int CompileError::getLine() const { return line_; }
 
 const char* CompileError::what() const throw() { return getMessage().c_str(); }
 
-SyntacticError::SyntacticError(const std::string& message, const std::string& file, unsigned line)
-    : CompileError(message, file, line) {}
-
 } // namespace dawn

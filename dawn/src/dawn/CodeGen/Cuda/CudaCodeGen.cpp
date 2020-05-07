@@ -56,22 +56,16 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  DiagnosticsEngine diagnostics;
   const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
-  CudaCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloSize, options.nsms,
-                 options.MaxBlocksPerSM, domain_size);
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in code generation");
-  }
+  CudaCodeGen CG(stencilInstantiationMap, options.MaxHaloSize, options.nsms, options.MaxBlocksPerSM,
+                 domain_size);
 
   return CG.generateCode();
 }
 
-CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                         int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
-    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
+CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
+                         int maxBlocksPerSM, const Array3i& domainSize)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
