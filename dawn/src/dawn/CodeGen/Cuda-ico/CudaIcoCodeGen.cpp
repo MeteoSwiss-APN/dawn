@@ -105,7 +105,7 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClassCtor.addStatement("NumCells = mesh.cells().size()");
   gpuMeshClassCtor.addStatement("NumEdges = mesh.edges().size()");
   for(auto chain : chains) {
-    gpuMeshClassCtor.addStatement("gpuErrchk(cudaMalloc((void**)" + chainToTableString(chain) +
+    gpuMeshClassCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(chain) +
                                   ", sizeof(int) * " + chainToDenseSizeStringHostMesh(chain) +
                                   "* " + chainToSparseSizeString(chain) + "))");
     gpuMeshClassCtor.addStatement(
@@ -218,8 +218,8 @@ void CudaIcoCodeGen::generateRunFun(
       }
       kernelCall << ")";
       runFun.addStatement(kernelCall.str());
-      runFun.addStatement("cudaPeekAtLastError()");
-      runFun.addStatement("cudaDeviceSynchronize()");
+      runFun.addStatement("gpuErrchk(cudaPeekAtLastError())");
+      runFun.addStatement("gpuErrchk(cudaDeviceSynchronize())");
     }
   }
 
@@ -294,10 +294,11 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
 
       copyBackFun.addBlockStatement("", [&]() {
         copyBackFun.addStatement("dawn::float_type* host_buf = new dawn::float_type[" +
-                                 field.second.Name + ".numElements()" + "]");
-        copyBackFun.addStatement("gpuErrchk(cudaMemcpy((dawn::float_type*) host_buf, " +
-                                 field.second.Name + "_, " + field.second.Name +
-                                 ".numElements(), cudaMemcpyDeviceToHost))");
+                                 field.second.Name + ".numElements()]");
+        copyBackFun.addStatement(
+            "gpuErrchk(cudaMemcpy((dawn::float_type*) host_buf, " + field.second.Name + "_, " +
+            field.second.Name +
+            ".numElements()*sizeof(dawn::float_type), cudaMemcpyDeviceToHost))");
         if(dims.isDense()) {
           copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
                                    ".data(), kSize_, mesh_." +

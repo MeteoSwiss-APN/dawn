@@ -111,9 +111,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   std::string denseOffset =
       "kIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
-  if(unstrDims.isDense()) {
+  if(unstrDims.isDense()) { // dense field accesses
     std::string resArgName;
-    if(!parentIsReduction_ && parentIsForLoop_ &&
+    if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
       resArgName = denseOffset + " + nbhIdx";
@@ -121,7 +121,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       resArgName = denseOffset + " + pidx";
     }
     ss_ << getName(expr) << "[" << resArgName << "]";
-  } else {
+  } else { // sparse field accesses
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
 
