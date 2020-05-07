@@ -41,9 +41,6 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
     // Do we need to run the analysis for this stencil?
     bool mergeDoMethodsOfStencil =
         attributes.has(sir::Attr::Kind::MergeDoMethods) || options.MergeDoMethods;
-    bool mergeStagesOfStencil = attributes.has(sir::Attr::Kind::MergeStages) || options.MergeStages;
-    if(!mergeStagesOfStencil && !mergeDoMethodsOfStencil)
-      continue;
 
     // Note that the underlying assumption is that stages in the same multi-stage are guaranteed to
     // have no counter loop-oorder vertical dependencies. We can thus treat each multi-stage in
@@ -57,9 +54,6 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
 
         // If our Do-Methods already spans the entire axis, we don't want to destroy that property
         bool mergeDoMethodsOfStage = curStage.getEnclosingInterval() != stencilAxis;
-        if(!mergeDoMethodsOfStage && !mergeDoMethodsOfStencil) {
-          continue;
-        }
 
         // Try to merge each Do-Method of our `curStage`
         for(auto curDoMethodIt = curStage.childrenBegin();
@@ -112,19 +106,17 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
                                                                 *candidateDepGraph, *curDepGraph);
 
                 if(newDepGraph.isDAG() && !hasHorizontalReadBeforeWriteConflict(newDepGraph)) {
-                  if(mergeStagesOfStencil) {
-                    candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
-                                                  std::move(newDepGraph));
-                    for(auto& doMethod : candidateStage.getChildren()) {
-                      doMethod->update(iir::NodeUpdateType::level);
-                    }
-                    candidateStage.update(iir::NodeUpdateType::level);
-                    mergedDoMethod = true;
-
-                    // We moved one Do-Method away and thus broke our full axis
-                    mergeDoMethodsOfStage = true;
-                    break;
+                  candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
+                                                std::move(newDepGraph));
+                  for(auto& doMethod : candidateStage.getChildren()) {
+                    doMethod->update(iir::NodeUpdateType::level);
                   }
+                  candidateStage.update(iir::NodeUpdateType::level);
+                  mergedDoMethod = true;
+
+                  // We moved one Do-Method away and thus broke our full axis
+                  mergeDoMethodsOfStage = true;
+                  break;
                 }
               }
             } else {
