@@ -59,10 +59,8 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   // Save existing formatter and set to gtclang
   auto infoFormatter = dawn::info.formatter();
   auto warnFormatter = dawn::warn.formatter();
-  auto errorFormatter = dawn::error.formatter();
-  dawn::info.formatter(makeGTClangFormatter(dawn::LoggingLevel::Info));
-  dawn::warn.formatter(makeGTClangFormatter(dawn::LoggingLevel::Warning));
-  dawn::error.formatter(makeGTClangFormatter(dawn::LoggingLevel::Error));
+  dawn::info.formatter(makeGTClangFormatter("[INFO]"));
+  dawn::warn.formatter(makeGTClangFormatter("[WARNING]"));
 
   GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -89,7 +87,6 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   // Reset formatters
   dawn::info.formatter(infoFormatter);
   dawn::warn.formatter(warnFormatter);
-  dawn::error.formatter(errorFormatter);
 
   return ReturnValue{ret, returnSIR};
 }
@@ -115,10 +112,8 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   // Save existing formatter and set to gtclang
   auto infoFormatter = dawn::info.formatter();
   auto warnFormatter = dawn::warn.formatter();
-  auto errorFormatter = dawn::error.formatter();
-  dawn::info.formatter(makeGTClangFormatter(dawn::LoggingLevel::Info));
-  dawn::warn.formatter(makeGTClangFormatter(dawn::LoggingLevel::Warning));
-  dawn::error.formatter(makeGTClangFormatter(dawn::LoggingLevel::Error));
+  dawn::info.formatter(makeGTClangFormatter("[INFO]"));
+  dawn::warn.formatter(makeGTClangFormatter("[WARNING]"));
 
   gtclang::GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -150,7 +145,6 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   // Reset formatters
   dawn::info.formatter(infoFormatter);
   dawn::warn.formatter(warnFormatter);
-  dawn::error.formatter(errorFormatter);
 
   return stencilIR;
 }

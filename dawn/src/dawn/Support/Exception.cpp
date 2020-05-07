@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Support/Exception.h"
-#include <cstring>
 
 namespace dawn {
 
@@ -35,11 +34,12 @@ std::string CompileError::getFile() const { return file_; }
 
 unsigned CompileError::getLine() const { return line_; }
 
-const char* CompileError::what() const throw() {
-  return getMessage().c_str();
-}
+const char* CompileError::what() const throw() { return getMessage().c_str(); }
 
 SemanticError::SemanticError(const std::string& message, const std::string& file, unsigned line)
+    : CompileError(message, file, line) {}
+
+SyntacticError::SyntacticError(const std::string& message, const std::string& file, unsigned line)
     : CompileError(message, file, line) {}
 
 } // namespace dawn

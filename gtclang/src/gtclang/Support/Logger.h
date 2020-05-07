@@ -21,7 +21,7 @@
 
 namespace gtclang {
 
-dawn::Logger::Formatter makeGTClangFormatter(dawn::LoggingLevel level);
+dawn::Logger::Formatter makeGTClangFormatter(const std::string& prefix);
 
 } // namespace gtclang
 

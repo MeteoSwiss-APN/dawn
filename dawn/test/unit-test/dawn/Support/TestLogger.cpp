@@ -64,7 +64,7 @@ TEST(Logger, CustomFormatter) {
 
 TEST(Logger, iterate) {
   std::ostringstream buffer;
-  Logger log(makeDefaultFormatter("[LOG]"), buffer);
+  Logger log([](const std::string& msg, const std::string& file, int line) { return msg; }, buffer);
   log(__FILE__, __LINE__) << "A message";
   log(__FILE__, __LINE__) << "Another message";
   auto iter = log.begin();

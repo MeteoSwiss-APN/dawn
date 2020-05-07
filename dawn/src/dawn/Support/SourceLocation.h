@@ -38,6 +38,8 @@ struct SourceLocation {
 
   bool isValid() const { return (Line != -1 && Column != -1); }
 
+  explicit operator std::string() const;
+
   int Line;
   int Column;
 };

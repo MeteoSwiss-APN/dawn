@@ -23,8 +23,6 @@
 
 namespace dawn {
 
-enum class LoggingLevel { Info, Warning, Error, Fatal };
-
 class Logger;
 
 class LoggerProxy {
@@ -89,7 +87,6 @@ Logger::Formatter makeDefaultFormatter(const std::string prefix);
 
 extern Logger info;
 extern Logger warn;
-extern Logger error;
 
 } // namespace dawn
 
@@ -100,6 +97,5 @@ extern Logger error;
 
 #define DAWN_LOG_INFO_IMPL() dawn::info(__FILE__, __LINE__)
 #define DAWN_LOG_WARNING_IMPL() dawn::warn(__FILE__, __LINE__)
-#define DAWN_LOG_ERROR_IMPL() dawn::error(__FILE__, __LINE__)
 
 #endif

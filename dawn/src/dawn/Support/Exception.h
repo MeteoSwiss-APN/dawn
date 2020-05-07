@@ -45,6 +45,11 @@ struct SemanticError : public CompileError {
                 unsigned line = 0);
 };
 
+struct SyntacticError : public CompileError {
+  SyntacticError(const std::string& message = "Syntactic Error", const std::string& file = "",
+                 unsigned line = 0);
+};
+
 } // namespace dawn
 
 #endif // DAWN_SUPPORT_EXCEPTION_H

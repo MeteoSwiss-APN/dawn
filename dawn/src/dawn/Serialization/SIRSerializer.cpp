@@ -20,6 +20,7 @@
 #include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Unreachable.h"
@@ -52,7 +53,7 @@ public:
       DAWN_LOG(WARNING) << "Protobuf: " << message;
       break;
     case google::protobuf::LOGLEVEL_ERROR:
-      DAWN_LOG(ERROR) << "Protobuf: " << message;
+      throw SyntacticError(std::string("[FATAL] Protobuf error: ") + message);
       break;
     case google::protobuf::LOGLEVEL_FATAL:
       throw std::runtime_error(std::string("[FATAL] Protobuf error occurred: ") + message);
