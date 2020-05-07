@@ -56,10 +56,13 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(!optionsParser.parse(args, clangArgs))
     return ReturnValue{1, returnSIR};
 
-  // Initialize the Logger
-  auto logger = std::make_unique<Logger>();
-  if(context->getOptions().Verbose)
-    dawn::Logger::getSingleton().registerLogger(logger.get());
+  // Save existing formatter and set to gtclang
+  auto infoFormatter = dawn::info.formatter();
+  auto warnFormatter = dawn::warn.formatter();
+  auto errorFormatter = dawn::error.formatter();
+  dawn::info.formatter(makeGTClangFormatter(dawn::LoggingLevel::Info));
+  dawn::warn.formatter(makeGTClangFormatter(dawn::LoggingLevel::Warning));
+  dawn::error.formatter(makeGTClangFormatter(dawn::LoggingLevel::Error));
 
   GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -83,6 +86,11 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
 
   includeChecker.Restore();
 
+  // Reset formatters
+  dawn::info.formatter(infoFormatter);
+  dawn::warn.formatter(warnFormatter);
+  dawn::error.formatter(errorFormatter);
+
   return ReturnValue{ret, returnSIR};
 }
 
@@ -104,10 +112,13 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   clangArgs.push_back("gtc-parse");
   clangArgs.push_back(fileName.c_str());
 
-  // Initialize the Logger
-  auto logger = std::make_unique<gtclang::Logger>();
-  if(options.Verbose)
-    dawn::Logger::getSingleton().registerLogger(logger.get());
+  // Save existing formatter and set to gtclang
+  auto infoFormatter = dawn::info.formatter();
+  auto warnFormatter = dawn::warn.formatter();
+  auto errorFormatter = dawn::error.formatter();
+  dawn::info.formatter(makeGTClangFormatter(dawn::LoggingLevel::Info));
+  dawn::warn.formatter(makeGTClangFormatter(dawn::LoggingLevel::Warning));
+  dawn::error.formatter(makeGTClangFormatter(dawn::LoggingLevel::Error));
 
   gtclang::GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -135,6 +146,11 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   }
 
   includeChecker.Restore();
+
+  // Reset formatters
+  dawn::info.formatter(infoFormatter);
+  dawn::warn.formatter(warnFormatter);
+  dawn::error.formatter(errorFormatter);
 
   return stencilIR;
 }

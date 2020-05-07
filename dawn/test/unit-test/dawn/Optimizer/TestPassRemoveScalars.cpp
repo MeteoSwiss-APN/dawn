@@ -19,6 +19,7 @@
 #include "dawn/Unittest/UnittestUtils.h"
 
 #include <gtest/gtest.h>
+#include <sstream>
 
 using namespace dawn;
 using namespace astgen;
@@ -464,9 +465,6 @@ TEST(TestRemoveScalars, test_else_01) {
 TEST(TestRemoveScalars, warn_compound_assignments) {
   using namespace dawn::iir;
 
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
-
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
   auto varA =
@@ -491,22 +489,19 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
   OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
+  std::ostringstream output;
+  dawn::info.stream(output);
+
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find(
+                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+            std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_increment) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -531,22 +526,19 @@ TEST(TestRemoveScalars, warn_increment) {
   OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
+  std::ostringstream output;
+  dawn::info.stream(output);
+
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find(
+                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+            std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_01) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -574,22 +566,19 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
   OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
+  std::ostringstream output;
+  dawn::info.stream(output);
+
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find(
+                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+            std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_02) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -617,22 +606,19 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
   OptimizerContext optimizer(diag, optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
+  std::ostringstream output;
+  dawn::info.stream(output);
+
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find(
+                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+            std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_03) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -657,6 +643,9 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
                       b.ifStmt(b.at(myBool), b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                       b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
+  std::ostringstream output;
+  dawn::info.stream(output);
+
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DiagnosticsEngine diag;
   OptimizerContext optimizer(diag, optimizerOptions,
@@ -664,13 +653,10 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find(
+                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
+            std::string::npos);
 }
 
 } // namespace

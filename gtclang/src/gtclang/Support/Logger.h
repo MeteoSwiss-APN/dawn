@@ -21,14 +21,7 @@
 
 namespace gtclang {
 
-/// @brief Logger implementation
-/// @ingroup support
-class Logger : public dawn::LoggerInterface {
-public:
-  /// @brief Log `message` of severity `level` at position `file:line`
-  virtual void log(dawn::LoggingLevel level, const std::string& message, const char* file,
-                   int line) override;
-};
+dawn::Logger::Formatter makeGTClangFormatter(dawn::LoggingLevel level);
 
 } // namespace gtclang
 

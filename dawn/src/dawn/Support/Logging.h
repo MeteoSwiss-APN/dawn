@@ -15,120 +15,91 @@
 #ifndef DAWN_SUPPORT_LOGGING_H
 #define DAWN_SUPPORT_LOGGING_H
 
-#include <memory>
+#include <functional>
+#include <iostream>
+#include <list>
 #include <sstream>
 #include <string>
 
 namespace dawn {
 
-/// @enum LoggingLevel
-/// @brief Severity levels
-/// @ingroup support
-enum class LoggingLevel : int { Fatal, Error, Warning, Info };
+enum class LoggingLevel { Info, Warning, Error, Fatal };
 
-/// @brief Logging interface
-/// @ingroup support
-class LoggerInterface {
-public:
-  virtual ~LoggerInterface() {}
-
-  /// @brief Log `message` of severity `level` at position `file:line`
-  ///
-  /// @param level     Severity level
-  /// @param message   Message to log
-  /// @param file      File from which the logging was issued
-  /// @param line      Line in `file` from which the logging was issued
-  virtual void log(LoggingLevel level, const std::string& message, const char* file, int line) = 0;
-};
-
-namespace internal {
+class Logger;
 
 class LoggerProxy {
-  LoggingLevel level_;
-  std::reference_wrapper<std::stringstream> ss_;
-  const char* file_;
-  int line_;
-
 public:
-  LoggerProxy(const LoggerProxy&) = default;
-  LoggerProxy(LoggingLevel level, std::stringstream& ss, const char* file, int line);
-
+  LoggerProxy(Logger& logger, const std::string& source, int line);
+  LoggerProxy(const LoggerProxy& other);
   ~LoggerProxy();
 
-  template <class StreamableValueType>
-  LoggerProxy& operator<<(StreamableValueType&& value) {
-    ss_.get() << value;
+  template <typename Streamable>
+  LoggerProxy& operator<<(Streamable&& obj) {
+    ss_ << obj;
     return *this;
   }
-};
 
-} // namespace internal
-
-/// @brief Dawn Logger adapter
-///
-/// This is the interface for logging from Dawn. `DefaultLogger` is provided and used by default,
-/// but if you would like to register your own, you need to implement the `LoggerInterface` and call
-/// `registerLogger` on an instance.
-///
-/// @ingroup support
-class Logger {
-  static Logger* instance_;
-  LoggerInterface* logger_;
+private:
+  Logger& logger_;
   std::stringstream ss_;
-  bool isDefault_;
-
-public:
-  /// @brief Initialize Logger object
-  Logger();
-  ~Logger();
-
-  /// @brief Register a Logger (this does @b not take ownership of the object).
-  ///
-  /// The user is responsible for deleting the default logger if a new one is registered to avoid a
-  /// memory leak.
-  void registerLogger(LoggerInterface* logger);
-
-  /// @brief Get the current logger or NULL if no logger is currently registered.
-  LoggerInterface* getLogger();
-
-  /// @name Start logging
-  /// @{
-  internal::LoggerProxy logFatal(const char* file, int line);
-  internal::LoggerProxy logError(const char* file, int line);
-  internal::LoggerProxy logWarning(const char* file, int line);
-  internal::LoggerProxy logInfo(const char* file, int line);
-  /// @}
-
-  /// @brief Log `message` of severity `level` at position `file:line`
-  void log(LoggingLevel level, const std::string& message, const char* file, int line);
-
-  /// @brief Get singleton instance
-  static Logger& getSingleton();
+  const std::string source_;
+  const int line_;
 };
 
-/// @brief Simple logger
-/// @ingroup support
-class DawnLogger : public LoggerInterface {
-  LoggingLevel level_;
-
+class Logger {
 public:
-  /// Default logging level: Warning
-  DawnLogger(LoggingLevel level = LoggingLevel::Warning);
+  using MessageContainer = std::list<std::string>;
+  using Formatter = std::function<std::string(const std::string&, const std::string&, int)>;
 
-  /// Override log method
-  void log(LoggingLevel level, const std::string& message, const char* file, int line) override;
+  Logger(Formatter fmt, std::ostream& os = std::cout);
+
+  LoggerProxy operator()(const std::string& source, int line);
+
+  void enqueue(const std::string& msg, const std::string& file, int line);
+
+  // Get and set ostream
+  std::ostream& stream() const;
+  void stream(std::ostream& os);
+
+  // Get and set Formatter
+  Formatter formatter() const;
+  void formatter(const Formatter& fmt);
+
+  // Reset storage
+  void clear();
+
+  // Expose container of messages
+  using iterator = MessageContainer::iterator;
+  iterator begin();
+  iterator end();
+
+  using const_iterator = MessageContainer::const_iterator;
+  const_iterator begin() const;
+  const_iterator end() const;
+
+  MessageContainer::size_type size() const;
+
+private:
+  Formatter fmt_;
+  std::ostream* os_;
+  MessageContainer data_;
 };
+
+Logger::Formatter makeDefaultFormatter(const std::string prefix);
+
+extern Logger info;
+extern Logger warn;
+extern Logger error;
+
+} // namespace dawn
 
 /// @macro DAWN_LOG
 /// @brief Loggging macros
 /// @ingroup support
 #define DAWN_LOG(Level) DAWN_LOG_##Level##_IMPL()
 
-#define DAWN_LOG_FATAL_IMPL() dawn::Logger::getSingleton().logFatal(__FILE__, __LINE__)
-#define DAWN_LOG_ERROR_IMPL() dawn::Logger::getSingleton().logError(__FILE__, __LINE__)
-#define DAWN_LOG_WARNING_IMPL() dawn::Logger::getSingleton().logWarning(__FILE__, __LINE__)
-#define DAWN_LOG_INFO_IMPL() dawn::Logger::getSingleton().logInfo(__FILE__, __LINE__)
-
-} // namespace dawn
+#define DAWN_LOG_INFO_IMPL() dawn::info(__FILE__, __LINE__)
+#define DAWN_LOG_WARNING_IMPL() dawn::warn(__FILE__, __LINE__)
+#define DAWN_LOG_ERROR_IMPL() dawn::error(__FILE__, __LINE__)
 
 #endif

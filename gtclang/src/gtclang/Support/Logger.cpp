@@ -16,50 +16,77 @@
 
 #include "gtclang/Support/Logger.h"
 #include "dawn/Support/Format.h"
-#include "llvm/Support/raw_ostream.h"
 #include <chrono>
+#include <sstream>
+
+namespace {
+enum Code {
+  FG_RED = 31,
+  FG_GREEN = 32,
+  FG_BLUE = 34,
+  FG_DEFAULT = 39,
+
+  BG_RED = 41,
+  BG_GREEN = 42,
+  BG_BLUE = 44,
+  BG_DEFAULT = 49
+};
+
+class Change {
+  Code code;
+
+public:
+  Change(Code _code) : code(_code) {}
+
+  friend std::ostream& operator<<(std::ostream& os, const Change& chng) {
+    return os << "\033[" << chng.code << "m";
+  }
+};
+
+Change red(FG_RED);
+Change green(FG_GREEN);
+Change blue(FG_BLUE);
+Change reset(FG_DEFAULT);
+} // namespace
 
 namespace gtclang {
 
-void Logger::log(dawn::LoggingLevel level, const std::string& message, const char* file, int line) {
-  using namespace llvm;
+dawn::Logger::Formatter makeGTClangFormatter(dawn::LoggingLevel level) {
+  return [level](const std::string& message, const std::string& file, int line) -> std::string {
+    // Get current date-time (up to ms accuracy)
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    auto now_ms = now.time_since_epoch();
+    auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(now_ms);
+    auto tm_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now_ms - now_sec);
 
-  StringRef fileStr(file);
-  fileStr = fileStr.substr(fileStr.find_last_of('/') + 1);
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    struct tm* localTime = std::localtime(&currentTime);
 
-  // Get current date-time (up to ms accuracy)
-  std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-  auto now_ms = now.time_since_epoch();
-  auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(now_ms);
-  auto tm_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now_ms - now_sec);
+    auto timeStr = dawn::format("%02i:%02i:%02i.%03i", localTime->tm_hour, localTime->tm_min,
+                                localTime->tm_sec, tm_ms.count());
 
-  std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-  struct tm* localTime = std::localtime(&currentTime);
+    std::stringstream ss;
+    ss << "[" << timeStr << "] ";
 
-  auto timeStr = dawn::format("%02i:%02i:%02i.%03i", localTime->tm_hour, localTime->tm_min,
-                              localTime->tm_sec, tm_ms.count());
+    switch(level) {
+    case dawn::LoggingLevel::Info:
+      ss << "[INFO]";
+      break;
+    case dawn::LoggingLevel::Warning:
+      ss << red << "[WARN]" << reset;
+      break;
+    case dawn::LoggingLevel::Error:
+      ss << red << "[ERROR]" << reset;
+      break;
+    case dawn::LoggingLevel::Fatal:
+      ss << red << "[FATAL]" << reset;
+      break;
+    }
 
-  outs() << "[" << timeStr << "] ";
+    ss << " [" << file << ":" << line << "] " << message << "\n";
 
-  switch(level) {
-  case dawn::LoggingLevel::Info:
-    outs() << "[INFO]";
-    break;
-  case dawn::LoggingLevel::Warning:
-    outs().changeColor(raw_ostream::MAGENTA, true) << "[WARN]";
-    outs().resetColor();
-    break;
-  case dawn::LoggingLevel::Error:
-    outs().changeColor(raw_ostream::RED, true) << "[ERROR]";
-    outs().resetColor();
-    break;
-  case dawn::LoggingLevel::Fatal:
-    outs().changeColor(raw_ostream::RED, true) << "[FATAL]";
-    outs().resetColor();
-    break;
-  }
-
-  outs() << " [" << fileStr << ":" << line << "] " << message << "\n";
+    return ss.str();
+  };
 }
 
 } // namespace gtclang

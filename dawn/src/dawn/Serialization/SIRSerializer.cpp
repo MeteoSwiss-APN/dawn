@@ -55,7 +55,7 @@ public:
       DAWN_LOG(ERROR) << "Protobuf: " << message;
       break;
     case google::protobuf::LOGLEVEL_FATAL:
-      DAWN_LOG(FATAL) << "Protobuf: " << message;
+      throw std::runtime_error(std::string("[FATAL] Protobuf error occurred: ") + message);
       break;
     }
 

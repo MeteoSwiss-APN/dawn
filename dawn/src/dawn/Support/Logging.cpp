@@ -21,108 +21,51 @@
 
 namespace dawn {
 
-internal::LoggerProxy::LoggerProxy(LoggingLevel level, std::stringstream& ss, const char* file,
-                                   int line)
-    : level_(level), ss_(ss), file_(file), line_(line) {}
-
-internal::LoggerProxy::~LoggerProxy() {
-  Logger::getSingleton().log(level_, ss_.get().str(), file_, line_);
-  ss_.get().str("");
-  ss_.get().clear();
+Logger::Formatter makeDefaultFormatter(const std::string prefix) {
+  return [prefix](const std::string& msg, const std::string& file, int line) {
+    return prefix + " " + "[" + file + ":" + std::to_string(line) + "] " + msg;
+  };
 }
 
-Logger* Logger::instance_ = nullptr;
+LoggerProxy::LoggerProxy(const LoggerProxy& other)
+    : logger_(other.logger_), ss_(other.ss_.str()), source_(other.source_), line_(other.line_) {}
 
-Logger::Logger() : isDefault_(true) { registerLogger(new DawnLogger); }
-Logger::~Logger() {
-  if(isDefault_)
-    delete logger_;
+LoggerProxy::LoggerProxy(Logger& logger, const std::string& source, int line)
+    : logger_(logger), source_(source), line_(line) {}
+
+LoggerProxy::~LoggerProxy() { logger_.enqueue(ss_.str(), source_, line_); }
+
+Logger::Logger(Formatter fmt, std::ostream& os) : fmt_(fmt), os_(&os), data_() {}
+
+void Logger::enqueue(const std::string& msg, const std::string& file, int line) {
+  data_.push_back(fmt_(msg, file, line));
+  *os_ << data_.back();
 }
 
-void Logger::registerLogger(LoggerInterface* logger) {
-  isDefault_ = false;
-  logger_ = logger;
+LoggerProxy Logger::operator()(const std::string& source, int line) {
+  return LoggerProxy(*this, source, line);
 }
 
-LoggerInterface* Logger::getLogger() { return logger_; }
+// Get and set ostream
+std::ostream& Logger::stream() const { return *os_; }
+void Logger::stream(std::ostream& os) { os_ = &os; }
 
-internal::LoggerProxy Logger::logFatal(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Fatal, ss_, file, line);
-}
+// Get and set Formatter
+Logger::Formatter Logger::formatter() const { return fmt_; }
+void Logger::formatter(const Formatter& fmt) { fmt_ = fmt; }
 
-internal::LoggerProxy Logger::logError(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Error, ss_, file, line);
-}
+// Reset storage
+void Logger::clear() { data_.clear(); }
 
-internal::LoggerProxy Logger::logWarning(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Warning, ss_, file, line);
-}
+// Expose container of messages
+Logger::iterator Logger::begin() { return std::begin(data_); }
+Logger::iterator Logger::end() { return std::end(data_); }
+Logger::const_iterator Logger::begin() const { return std::begin(data_); }
+Logger::const_iterator Logger::end() const { return std::end(data_); }
+Logger::MessageContainer::size_type Logger::size() const { return std::size(data_); }
 
-internal::LoggerProxy Logger::logInfo(const char* file, int line) {
-  return internal::LoggerProxy(LoggingLevel::Info, ss_, file, line);
-}
-
-void Logger::log(LoggingLevel level, const std::string& message, const char* file, int line) {
-  if(logger_ != nullptr) {
-    logger_->log(level, message, file, line);
-  }
-}
-
-Logger& Logger::getSingleton() {
-  if(instance_ == nullptr) {
-    instance_ = new Logger;
-  }
-  return *instance_;
-}
-
-DawnLogger::DawnLogger(LoggingLevel level) : level_(level) {}
-
-void DawnLogger::log(LoggingLevel level, const std::string& message, const char* file, int line) {
-  fs::path filePath(file);
-  const std::string fileStr = filePath.stem();
-
-  std::stringstream ss;
-
-  // Get current date-time (up to ms accuracy)
-  std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-  auto now_ms = now.time_since_epoch();
-  auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(now_ms);
-  auto tm_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now_ms - now_sec);
-
-  std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-  struct tm* localTime = std::localtime(&currentTime);
-
-  auto timeStr = dawn::format("%02i:%02i:%02i.%03i", localTime->tm_hour, localTime->tm_min,
-                              localTime->tm_sec, tm_ms.count());
-
-  ss << "[" << timeStr << "] [" << fileStr << ":" << line << "] [";
-
-  switch(level) {
-  case LoggingLevel::Fatal:
-    ss << "FATAL";
-    break;
-  case LoggingLevel::Error:
-    ss << "ERROR";
-    break;
-  case LoggingLevel::Warning:
-    ss << "WARN";
-    break;
-  case LoggingLevel::Info:
-    ss << "INFO";
-    break;
-  }
-
-  ss << "] " << message << "\n";
-
-  const int levelInt = static_cast<int>(level_);
-  const bool shouldPrintMessage =
-      (level == LoggingLevel::Fatal && levelInt >= static_cast<int>(LoggingLevel::Fatal)) ||
-      (level == LoggingLevel::Error && levelInt >= static_cast<int>(LoggingLevel::Error)) ||
-      (level == LoggingLevel::Warning && levelInt >= static_cast<int>(LoggingLevel::Warning)) ||
-      (level == LoggingLevel::Info && levelInt >= static_cast<int>(LoggingLevel::Info));
-
-  if(shouldPrintMessage)
-    std::cerr << ss.str();
-}
+Logger info(makeDefaultFormatter("[INFO]"), std::cout);
+Logger warn(makeDefaultFormatter("[WARN]"), std::cout);
+Logger error(makeDefaultFormatter("[ERROR"), std::cerr);
 
 } // namespace dawn
