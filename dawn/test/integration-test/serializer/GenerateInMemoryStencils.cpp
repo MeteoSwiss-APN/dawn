@@ -31,7 +31,7 @@
 #include "dawn/SIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Unittest/IIRBuilder.h"
 

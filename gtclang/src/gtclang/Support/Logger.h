@@ -14,13 +14,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 
 #ifndef GTCLANG_SUPPORT_LOGGER_H
 #define GTCLANG_SUPPORT_LOGGER_H
 
 namespace gtclang {
 
+/// @brief Make a Logger::Formatter for GTClang
 dawn::Logger::Formatter makeGTClangFormatter(const std::string& prefix);
 
 } // namespace gtclang

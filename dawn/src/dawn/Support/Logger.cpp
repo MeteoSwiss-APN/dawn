@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
@@ -65,7 +65,6 @@ Logger::const_iterator Logger::end() const { return std::end(data_); }
 Logger::MessageContainer::size_type Logger::size() const { return std::size(data_); }
 
 Logger info(makeDefaultFormatter("[INFO]"), std::cout);
-Logger warn(makeDefaultFormatter("[WARN]"), std::cout);
-Logger error(makeDefaultFormatter("[ERROR"), std::cerr);
+Logger warn(makeDefaultFormatter("[WARN]"), std::cerr);
 
 } // namespace dawn

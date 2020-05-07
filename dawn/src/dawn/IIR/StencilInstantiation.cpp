@@ -29,7 +29,7 @@
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/Twine.h"

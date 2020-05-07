@@ -25,7 +25,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Exception.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <deque>
 #include <iterator>
 #include <memory>

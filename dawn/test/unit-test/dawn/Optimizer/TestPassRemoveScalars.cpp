@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestUtils.h"

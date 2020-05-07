@@ -22,7 +22,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>

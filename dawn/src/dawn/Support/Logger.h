@@ -44,6 +44,8 @@ private:
   const int line_;
 };
 
+/// @brief Logging interface
+/// @ingroup support
 class Logger {
 public:
   using MessageContainer = std::list<std::string>;
@@ -85,6 +87,7 @@ private:
 
 Logger::Formatter makeDefaultFormatter(const std::string prefix);
 
+// Loggers used for information and warnings
 extern Logger info;
 extern Logger warn;
 
