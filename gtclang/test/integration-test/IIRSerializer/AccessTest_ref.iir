@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "19": "a",
-   "20": "b"
+   "20": "b",
+   "19": "a"
   },
   "accessIDToType": {
    "19": 6,
@@ -24,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "19": {
+   "20": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "20": {
+   "19": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -65,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "AccessTest"
  },
  "internalIR": {
   "gridType": "Cartesian",

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <algorithm>
+#include <assert.h>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -407,41 +408,52 @@ template <typename O, typename T>
 class SparseData {
 public:
   SparseData(size_t num_k_levels, size_t dense_size, size_t sparse_size)
-      : data_(num_k_levels, std::vector<std::vector<T>>(dense_size, std::vector<T>(sparse_size))) {}
+      : data_(num_k_levels, std::vector<std::vector<T>>(dense_size, std::vector<T>(sparse_size))),
+        dense_size_(dense_size), sparse_size_(sparse_size) {}
   T& operator()(const O& elem, size_t sparse_idx, size_t k_level) {
+    assert(sparse_idx < sparse_size_);
+    assert(elem.id() < dense_size_);
     return data_[k_level][elem.id()][sparse_idx];
   }
   T const& operator()(const O& elem, size_t sparse_idx, size_t k_level) const {
+    assert(sparse_idx < sparse_size_);
+    assert(elem.id() < dense_size_);
     return data_[k_level][elem.id()][sparse_idx];
   }
   T& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) {
+    assert(sparse_idx < sparse_size_);
+    assert(elem->id() < dense_size_);
     return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
   }
   T const& operator()(ToylibElement const* elem, size_t sparse_idx, size_t k_level) const {
+    assert(sparse_idx < sparse_size_);
+    assert(elem->id() < dense_size_);
     return data_[k_level][static_cast<const O*>(elem)->id()][sparse_idx];
   }
   int k_size() const { return data_.size(); }
 
 private:
   std::vector<std::vector<std::vector<T>>> data_;
+  size_t dense_size_;
+  size_t sparse_size_;
 };
 
 template <typename T>
 class SparseFaceData : public SparseData<Face, T> {
 public:
-  SparseFaceData(Grid const& grid, int k_size, int sparse_size)
+  SparseFaceData(Grid const& grid, int sparse_size, int k_size)
       : SparseData<Face, T>(k_size, grid.faces().size(), sparse_size) {}
 };
 template <typename T>
 class SparseVertexData : public SparseData<Vertex, T> {
 public:
-  SparseVertexData(Grid const& grid, int k_size, int sparse_size)
+  SparseVertexData(Grid const& grid, int sparse_size, int k_size)
       : SparseData<Vertex, T>(k_size, grid.vertices().size(), sparse_size) {}
 };
 template <typename T>
 class SparseEdgeData : public SparseData<Edge, T> {
 public:
-  SparseEdgeData(Grid const& grid, int k_size, int sparse_size)
+  SparseEdgeData(Grid const& grid, int sparse_size, int k_size)
       : SparseData<Edge, T>(k_size, grid.all_edges().size(), sparse_size) {}
 };
 

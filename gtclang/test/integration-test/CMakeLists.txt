@@ -14,9 +14,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(dummy_source ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dummy.cpp)
-file(WRITE ${dummy_source} "int main() { return 0; }")
-
 add_subdirectory(CodeGen)
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)

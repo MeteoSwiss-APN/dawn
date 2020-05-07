@@ -104,4 +104,4 @@ TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_02) {
   }
 }
 
-} // anonymous namespace
+} // dawn namespace

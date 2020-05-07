@@ -12,26 +12,19 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Assert.h"
-#include "dawn/Support/STLExtras.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
-#include <gtest/gtest.h>
+#include "dawn/CodeGen/Options.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
-std::string TestEnvironment::path_ = "";
+#include <memory>
+#include <string>
 
-int main(int argc, char* argv[]) {
+namespace dawn {
 
-  // Initialize gtest
-  testing::InitGoogleTest(&argc, argv);
+std::shared_ptr<iir::StencilInstantiation> getGlobalIndexStencil();
+std::shared_ptr<iir::StencilInstantiation> getLaplacianStencil();
+std::shared_ptr<iir::StencilInstantiation> getNonOverlappingInterval();
 
-  if(argc > 1) {
-    DAWN_ASSERT_MSG((argc == 2), "wrong number of arguments");
+void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencilInstantiation,
+             codegen::Backend backend, const std::string& ref_file);
 
-    std::string path = argv[1];
-
-    TestEnvironment::path_ = path;
-    ::testing::AddGlobalTestEnvironment(new TestEnvironment());
-  }
-
-  return RUN_ALL_TESTS();
-}
+} // namespace dawn

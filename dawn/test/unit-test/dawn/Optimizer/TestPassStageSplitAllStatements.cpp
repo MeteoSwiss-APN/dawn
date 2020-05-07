@@ -12,17 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
-#include "dawn/Unittest/CompilerUtil.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -33,33 +30,33 @@ using namespace astgen;
 
 namespace {
 
-class TestPassStageSplitAllStatements : public ::testing::Test {
-protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-  std::shared_ptr<iir::StencilInstantiation> instantiation_;
+std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::string& filename) {
+  UIDGenerator::getInstance()->reset();
+  auto instantiation = IIRSerializer::deserialize(filename);
+  DiagnosticsEngine diag;
+  OptimizerContext context(diag, {}, {{instantiation->getName(), instantiation}});
 
-  void runPass(const std::string& filename) {
-    dawn::UIDGenerator::getInstance()->reset();
-    instantiation_ = CompilerUtil::load(filename, options_, context_, TestEnvironment::path_);
+  PassStageSplitAllStatements pass(context);
+  pass.run(instantiation);
+  EXPECT_TRUE(!diag.hasErrors());
 
-    ASSERT_TRUE(CompilerUtil::runPass<dawn::PassStageSplitAllStatements>(context_, instantiation_));
-  }
-};
+  return instantiation;
+}
 
-TEST_F(TestPassStageSplitAllStatements, NoStmt) {
-  runPass("input/test_stage_split_all_statements_no_stmt.iir");
+TEST(TestPassStageSplitAllStatements, NoStmt) {
+  auto instantiation = initializeInstantiation("input/test_stage_split_all_statements_no_stmt.iir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
   ASSERT_EQ(1, multistage->getChildren().size());
   ASSERT_EQ(0, multistage->getChild(0)->getSingleDoMethod().getAST().getStatements().size());
 }
 
-TEST_F(TestPassStageSplitAllStatements, OneStmt) {
+TEST(TestPassStageSplitAllStatements, OneStmt) {
   // var a;
-  runPass("input/test_stage_split_all_statements_one_stmt.iir");
+  auto instantiation =
+      initializeInstantiation("input/test_stage_split_all_statements_one_stmt.iir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
   ASSERT_EQ(1, multistage->getChildren().size());
   auto firstDoMethod = multistage->getChild(0)->getSingleDoMethod().getAST();
   ASSERT_EQ(1, firstDoMethod.getStatements().size());
@@ -67,12 +64,13 @@ TEST_F(TestPassStageSplitAllStatements, OneStmt) {
                                                        /*compareData = */ false));
 }
 
-TEST_F(TestPassStageSplitAllStatements, TwoStmts) {
+TEST(TestPassStageSplitAllStatements, TwoStmts) {
   // var a;
   // var b;
-  runPass("input/test_stage_split_all_statements_two_stmt.iir");
+  auto instantiation =
+      initializeInstantiation("input/test_stage_split_all_statements_two_stmt.iir");
 
-  auto const& multistage = instantiation_->getStencils()[0]->getChild(0);
+  auto const& multistage = instantiation->getStencils()[0]->getChild(0);
   ASSERT_EQ(2, multistage->getChildren().size());
   auto firstDoMethod = multistage->getChild(0)->getSingleDoMethod().getAST();
   ASSERT_EQ(1, firstDoMethod.getStatements().size());

@@ -54,7 +54,9 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(body_ast, interval, SIR.VerticalRegion.Forward)
+    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, SIR.VerticalRegion.Forward
+    )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
@@ -63,7 +65,10 @@ def main(args: argparse.Namespace):
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast([vertical_region_stmt]),
-                [sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()), sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian())],
+                [
+                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                ],
             )
         ],
     )
@@ -73,7 +78,7 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend="cuda")
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDA)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
@@ -82,8 +87,15 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a simple copy-shift stencil using Dawn compiler")
+    parser = argparse.ArgumentParser(
+        description="Generate a simple copy-shift stencil using Dawn compiler"
+    )
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print the generated SIR",
     )
     main(parser.parse_args())

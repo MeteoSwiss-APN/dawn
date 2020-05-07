@@ -255,6 +255,10 @@ public:
     scope_.top()->ScopeDepth--;
   }
 
+  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     if(scope_.top()->ScopeDepth == 1)
       pushBackStatement(stmt);

@@ -17,22 +17,12 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
+#include "dawn/Serialization/IIRSerializer.h"
+
 #include <stdexcept>
 
 namespace dawn {
 namespace codegen {
-
-std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit) {
-  std::string code;
-  for(const auto& p : translationUnit->getPPDefines())
-    code += p + "\n";
-
-  code += translationUnit->getGlobals() + "\n\n";
-  for(const auto& p : translationUnit->getStencils())
-    code += p.second;
-
-  return code;
-}
 
 codegen::Backend parseBackendString(const std::string& backendStr) {
   if(backendStr == "gt" || backendStr == "gridtools") {
@@ -65,6 +55,36 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& con
   }
   // This line should not be needed but the compiler seems to complain if it is not present.
   return nullptr;
+}
+
+std::string run(const std::map<std::string, std::string>& stencilInstantiationMap,
+                dawn::IIRSerializer::Format format, dawn::codegen::Backend backend,
+                const dawn::codegen::Options& options) {
+  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
+  for(auto [name, instStr] : stencilInstantiationMap) {
+    internalMap.insert(
+        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
+  }
+  return dawn::codegen::generate(dawn::codegen::run(internalMap, backend, options));
+}
+
+/// @brief Run code generation on a single stencil instantiation
+std::unique_ptr<TranslationUnit>
+run(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation, Backend backend,
+    const Options& options) {
+  return run({{stencilInstantiation->getName(), stencilInstantiation}}, backend, options);
+}
+
+std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit) {
+  std::string code;
+  for(const auto& p : translationUnit->getPPDefines())
+    code += p + "\n";
+
+  code += translationUnit->getGlobals() + "\n\n";
+  for(const auto& p : translationUnit->getStencils())
+    code += p.second;
+
+  return code;
 }
 
 } // namespace codegen

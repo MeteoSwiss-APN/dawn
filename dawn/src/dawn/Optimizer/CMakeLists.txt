@@ -15,9 +15,11 @@
 add_library(DawnOptimizer
   CreateVersionAndRename.cpp
   CreateVersionAndRename.h
+  Driver.cpp
+  Driver.h
   OptimizerContext.cpp
   OptimizerContext.h
-  OptimizerOptions.h
+  Options.h
   Options.inc
   Pass.h
   PassDataLocalityMetric.cpp

@@ -13,33 +13,28 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "GenerateInMemoryStencils.h"
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Serialization/IIRSerializer.h"
-
+#include "dawn/Support/UIDGenerator.h"
 #include <memory>
 
-using namespace dawn;
-
 int main(int argc, char* argv[]) {
-  Options compileOptions;
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(compileOptions);
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
+  dawn::UIDGenerator::getInstance()->reset();
+  dawn::IIRSerializer::serialize("reference_iir/copy_stencil.iir",
+                                 createCopyStencilIIRInMemory(dawn::ast::GridType::Cartesian),
+                                 dawn::IIRSerializer::Format::Json);
 
-  UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/copy_stencil.iir",
-                           createCopyStencilIIRInMemory(optimizer), IIRSerializer::Format::Json);
+  dawn::UIDGenerator::getInstance()->reset();
+  dawn::IIRSerializer::serialize("reference_iir/lap_stencil.iir",
+                                 createLapStencilIIRInMemory(dawn::ast::GridType::Cartesian),
+                                 dawn::IIRSerializer::Format::Json);
 
-  UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/lap_stencil.iir", createLapStencilIIRInMemory(optimizer),
-                           IIRSerializer::Format::Json);
+  dawn::UIDGenerator::getInstance()->reset();
+  dawn::IIRSerializer::serialize("reference_iir/unstructured_sum_edge_to_cells.iir",
+                                 createUnstructuredSumEdgeToCellsIIRInMemory(),
+                                 dawn::IIRSerializer::Format::Json);
 
-  UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/unstructured_sum_edge_to_cells.iir",
-                           createUnstructuredSumEdgeToCellsIIRInMemory(optimizer),
-                           IIRSerializer::Format::Json);
-  UIDGenerator::getInstance()->reset();
-  IIRSerializer::serialize("reference_iir/unstructured_mixed_copies.iir",
-                           createUnstructuredMixedCopies(optimizer), IIRSerializer::Format::Json);
+  dawn::UIDGenerator::getInstance()->reset();
+  dawn::IIRSerializer::serialize("reference_iir/unstructured_mixed_copies.iir",
+                                 createUnstructuredMixedCopies(),
+                                 dawn::IIRSerializer::Format::Json);
 }

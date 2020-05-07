@@ -14,7 +14,6 @@
 
 #include "GenerateInMemoryStencils.h"
 
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -38,11 +37,8 @@
 
 using namespace dawn;
 
-std::shared_ptr<iir::StencilInstantiation>
-createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
-  auto target = std::make_shared<iir::StencilInstantiation>(optimizer.getSIR()->GridType,
-                                                            optimizer.getSIR()->GlobalVariableMap,
-                                                            optimizer.getSIR()->StencilFunctions);
+std::shared_ptr<iir::StencilInstantiation> createCopyStencilIIRInMemory(ast::GridType gridType) {
+  auto target = std::make_shared<iir::StencilInstantiation>(gridType);
 
   ///////////////// Generation of the IIR
   sir::Attr attributes;
@@ -138,11 +134,8 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   return target;
 }
 
-std::shared_ptr<iir::StencilInstantiation>
-createLapStencilIIRInMemory(OptimizerContext& optimizer) {
-  auto target = std::make_shared<iir::StencilInstantiation>(optimizer.getSIR()->GridType,
-                                                            optimizer.getSIR()->GlobalVariableMap,
-                                                            optimizer.getSIR()->StencilFunctions);
+std::shared_ptr<iir::StencilInstantiation> createLapStencilIIRInMemory(ast::GridType gridType) {
+  auto target = std::make_shared<iir::StencilInstantiation>(gridType);
 
   ///////////////// Generation of the IIR
   sir::Attr attributes;
@@ -328,8 +321,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   return target;
 }
 
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
+std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredSumEdgeToCellsIIRInMemory() {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -338,7 +330,7 @@ createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
   auto out_f = b.field("out_field", LocType::Cells);
   auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
 
-  auto stencil_instantiation = b.build(
+  auto stencilInstantiation = b.build(
       "generated",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
@@ -351,11 +343,10 @@ createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer) {
                              b.at(out_f), b.reduceOverNeighborExpr(
                                               Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                               b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
-  return stencil_instantiation;
+  return stencilInstantiation;
 }
 
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createUnstructuredMixedCopies(dawn::OptimizerContext& optimizer) {
+std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredMixedCopies() {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -365,7 +356,7 @@ createUnstructuredMixedCopies(dawn::OptimizerContext& optimizer) {
   auto in_e = b.field("in_e", LocType::Edges);
   auto out_e = b.field("out_e", LocType::Edges);
 
-  auto stencil_instantiation = b.build(
+  auto stencilInstantiation = b.build(
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
@@ -373,5 +364,5 @@ createUnstructuredMixedCopies(dawn::OptimizerContext& optimizer) {
                                              b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
           b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                              b.stmt(b.assignExpr(b.at(out_e), b.at(in_e))))))));
-  return stencil_instantiation;
+  return stencilInstantiation;
 }

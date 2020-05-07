@@ -74,6 +74,8 @@ public:
 
   void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
 
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override;
+
   void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
 
   void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;

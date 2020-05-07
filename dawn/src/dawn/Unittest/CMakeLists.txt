@@ -13,8 +13,6 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnUnittest
-  CompilerUtil.cpp
-  CompilerUtil.h
   IIRBuilder.h
   IIRBuilder.cpp
   UnittestUtils.h

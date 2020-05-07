@@ -14,44 +14,24 @@
 
 include(GoogleTest)
 
-if(DAWN_REQUIRE_UNSTRUCTURED_TESTING)
-  find_package(eckit REQUIRED)
-  find_package(atlas REQUIRED)
-else()
-  find_package(eckit QUIET)
-  if(NOT eckit_FOUND)
-    message(STATUS "Could not locate eckit.")
-  endif()
-  find_package(atlas QUIET)
-  if(NOT atlas_FOUND)
-    message(STATUS "Could not locate atlas.")
-  endif()
-endif()
+set(AtlasExecutable ${PROJECT_NAME}AtlasInterfaceUnittest)
+add_executable(${AtlasExecutable}
+  TestAtlasInterface.cpp
+)
 
-if(eckit_FOUND AND atlas_FOUND)
+set(ToylibExecutable ${PROJECT_NAME}ToylibInterfaceUnittest)
+add_executable(${ToylibExecutable}
+  TestToylibInterface.cpp
+)
 
-  set(AtlasExecutable ${PROJECT_NAME}AtlasInterfaceUnittest)
-  add_executable(${AtlasExecutable}
-    TestAtlasInterface.cpp
-  )
+target_add_dawn_standard_props(${AtlasExecutable})
+target_add_dawn_standard_props(${ToylibExecutable})
 
-  set(ToylibExecutable ${PROJECT_NAME}ToylibInterfaceUnittest)
-  add_executable(${ToylibExecutable}
-    TestToylibInterface.cpp
-  )
+target_include_directories(${AtlasExecutable} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(${ToylibExecutable} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-  target_add_dawn_standard_props(${AtlasExecutable})
-  target_add_dawn_standard_props(${ToylibExecutable})
+target_link_libraries(${AtlasExecutable} atlas eckit gtest gtest_main)
+target_link_libraries(${ToylibExecutable} toylib gtest gtest_main)
 
-  target_include_directories(${AtlasExecutable} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_include_directories(${ToylibExecutable} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
-  target_link_libraries(${AtlasExecutable} atlas eckit gtest gtest_main)
-  target_link_libraries(${ToylibExecutable} toylib gtest gtest_main)
-
-  gtest_discover_tests(${AtlasExecutable} TEST_PREFIX "Dawn::Unit::Interface::" DISCOVERY_TIMEOUT 30)
-  gtest_discover_tests(${ToylibExecutable} TEST_PREFIX "Dawn::Unit::Interface::" DISCOVERY_TIMEOUT 30)
-
-else()
-  message(STATUS "unstructured interface tests require both eckit and atlas. Disabling...")
-endif()
+gtest_discover_tests(${AtlasExecutable} TEST_PREFIX "Dawn::Unit::Interface::" DISCOVERY_TIMEOUT 30)
+gtest_discover_tests(${ToylibExecutable} TEST_PREFIX "Dawn::Unit::Interface::" DISCOVERY_TIMEOUT 30)

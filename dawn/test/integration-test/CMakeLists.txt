@@ -14,5 +14,10 @@
 
 add_subdirectory(from-sir)
 add_subdirectory(serializer)
-add_subdirectory(unstructured)
+
+include(HasUnstructuredDeps)
+if (HAS_UNSTRUCTURED_DEPS)
+  add_subdirectory(unstructured)
+endif()
+
 add_subdirectory(dawn4py-tests)

@@ -14,8 +14,6 @@
 
 #include "TestFromSIR.h"
 
-using namespace dawn;
-
 namespace dawn {
 
 class TestMultiStage : public TestFromSIR {};
@@ -413,4 +411,5 @@ TEST_F(TestMultiStage, test_compute_read_access_interval_04) {
       iir::MultiInterval{iir::Interval{0, 0, -1, -1}, iir::Interval{0, sir::Interval::End, 1, 1}};
   ASSERT_EQ(b1_interval, multinterval);
 }
+
 } // namespace dawn

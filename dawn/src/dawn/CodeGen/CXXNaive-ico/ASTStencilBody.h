@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -32,15 +33,37 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cxxnaiveico {
 
+// quick visitor to check whether a statement contains a reduceOverNeighborExpr
+class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
+  std::optional<std::shared_ptr<iir::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
+
+public:
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override {
+    foundReduction_ = stmt;
+    return;
+  }
+  bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
+  const iir::ReductionOverNeighborExpr& foundReduceOverNeighborExpr() {
+    DAWN_ASSERT(foundReduction_.has_value());
+    return *foundReduction_.value();
+  }
+};
+
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
 /// @ingroup cxxnaiveico
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
   RangeToString offsetPrinter_;
+
+  // arg names for field access exprs
   std::string denseArgName_ = "loc";
   std::string sparseArgName_ = "loc";
+
   bool parentIsReduction_ = false;
+  bool parentIsForLoop_ = false;
+
+  size_t reductionDepth_ = 0;
 
   /// The stencil function we are currently generating or NULL
   std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;
@@ -75,6 +98,16 @@ public:
   using Base = ASTCodeGenCXX;
   using Base::visit;
 
+  static std::string LoopLinearIndexVarName() { return "for_loop_idx"; }
+  static std::string LoopNeighborIndexVarName() { return "inner_loc"; }
+  static std::string ReductionIndexVarName(size_t level) {
+    return "red_loc" + std::to_string(level);
+  }
+  static std::string ReductionSparseIndexVarName(size_t level) {
+    return "sparse_dimension_idx" + std::to_string(level);
+  }
+  static std::string StageIndexVarName() { return "loc"; }
+
   /// @brief constructor
   ASTStencilBody(const iir::StencilMetaInformation& metadata, StencilContext stencilContext);
 
@@ -82,11 +115,12 @@ public:
 
   /// @name Statement implementation
   /// @{
+  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
   /// @}
 
   /// @name Expression implementation
@@ -95,6 +129,7 @@ public:
   void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)

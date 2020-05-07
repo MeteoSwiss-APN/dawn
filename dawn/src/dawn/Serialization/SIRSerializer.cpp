@@ -98,6 +98,15 @@ ProtobufLogger* ProtobufLogger::instance_ = nullptr;
 
 } // anonymous namespace
 
+SIRSerializer::Format SIRSerializer::parseFormatString(const std::string& format) {
+  if(format == "Byte" || format == "byte" || format == "BYTE")
+    return SIRSerializer::Format::Byte;
+  else if(format == "Json" || format == "json" || format == "JSON")
+    return SIRSerializer::Format::Json;
+  else
+    throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
+}
+
 //===------------------------------------------------------------------------------------------===//
 //     Serialization
 //===------------------------------------------------------------------------------------------===//
@@ -181,30 +190,30 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
 
   // SIR.GlobalVariableMap
   auto mapProto = sirProto.mutable_global_variables()->mutable_map();
-  for(const auto& nameValuePair : *sir->GlobalVariableMap) {
-    const std::string& name = nameValuePair.first;
-    const sir::Global& value = nameValuePair.second;
+  for(const auto& [name, value] : *sir->GlobalVariableMap) {
 
+    // is_constexpr
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
-    if(value.has_value()) {
-      switch(value.getType()) {
-      case sir::Value::Kind::Boolean:
-        valueProto.set_boolean_value(value.getValue<bool>());
-        break;
-      case sir::Value::Kind::Integer:
-        valueProto.set_integer_value(value.getValue<int>());
-        break;
-      case sir::Value::Kind::Double:
-        valueProto.set_double_value(value.getValue<double>());
-        break;
-      case sir::Value::Kind::Float:
-        valueProto.set_float_value(value.getValue<float>());
-        break;
-      case sir::Value::Kind::String:
-        valueProto.set_string_value(value.getValue<std::string>());
-        break;
-      }
+
+    // Value
+    switch(value.getType()) {
+    case sir::Value::Kind::Boolean:
+      valueProto.set_boolean_value(value.has_value() ? value.getValue<bool>() : bool());
+      break;
+    case sir::Value::Kind::Integer:
+      valueProto.set_integer_value(value.has_value() ? value.getValue<int>() : int());
+      break;
+    case sir::Value::Kind::Double:
+      valueProto.set_double_value(value.has_value() ? value.getValue<double>() : double());
+      break;
+    case sir::Value::Kind::Float:
+      valueProto.set_float_value(value.has_value() ? value.getValue<float>() : float());
+      break;
+    case sir::Value::Kind::String:
+      valueProto.set_string_value(value.has_value() ? value.getValue<std::string>()
+                                                    : std::string());
+      break;
     }
 
     mapProto->insert({name, valueProto});
@@ -537,6 +546,32 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
       stmt->push_back(makeStmt(s));
 
     return stmt;
+  }
+  case dawn::proto::statements::Stmt::kLoopStmt: {
+    const auto& stmtProto = statementProto.loop_stmt();
+    const auto& blockStmt = makeStmt(stmtProto.statements());
+    DAWN_ASSERT_MSG(blockStmt->getKind() == ast::Stmt::Kind::BlockStmt, "Expected a BlockStmt.");
+
+    switch(stmtProto.loop_descriptor().desc_case()) {
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
+
+      ast::NeighborChain chain;
+      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+        chain.push_back(getLocationTypeFromProtoLocationType(
+            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+      }
+      auto stmt =
+          sir::makeLoopStmt(std::move(chain), std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt),
+                            makeLocation(stmtProto));
+      return stmt;
+    }
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {
+      dawn_unreachable("general loop bounds not implemented!\n");
+      break;
+    }
+    default:
+      dawn_unreachable("descriptor not set!\n");
+    }
   }
   case dawn::proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();

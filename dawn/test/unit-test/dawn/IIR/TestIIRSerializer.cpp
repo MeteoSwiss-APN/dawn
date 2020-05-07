@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/ASTExpr.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
@@ -303,6 +302,30 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
                                           b.reduceOverNeighborExpr(
                                               Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                               b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
+}
+
+TEST_F(IIRSerializerTest, IIRTestsLoop) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto out_f = b.field("vn", {LocType::Edges, LocType::Cells, LocType::Vertices});
+  auto in_f = b.field("uVert", LocType::Vertices);
+
+  auto stencil_instantiation = b.build(
+      "sparseAssignment",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Parallel,
+          b.stage(
+              LocType::Edges,
+              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                         b.loopStmtChain(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))),
+                                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
   auto deserializedAndSerialized =
       IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));

@@ -291,24 +291,6 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   }
 }
 
-// quick visitor to check whether a statement contains a reduceOverNeighborExpr
-namespace {
-class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
-  std::optional<std::shared_ptr<iir::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
-
-public:
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override {
-    foundReduction_ = stmt;
-    return;
-  }
-  bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
-  const iir::ReductionOverNeighborExpr& foundReduceOverNeighborExpr() {
-    DAWN_ASSERT(foundReduction_.has_value());
-    return *foundReduction_.value();
-  }
-};
-} // namespace
-
 void CXXNaiveIcoCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
@@ -337,47 +319,6 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
           return p.second.IsTemporary;
         });
-
-    // we currently want to reject stencils with sparse fields combined with nested reductions
-    // step 1) lets figure out if there are sparse fields
-    bool hasSparseField = false;
-    for(const auto& fieldIt : nonTempFields) {
-      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          fieldIt.second.field.getFieldDimensions().getHorizontalFieldDimension());
-      hasSparseField |= unstructuredDims.isSparse();
-    }
-    for(const auto& fieldIt : tempFields) {
-      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          fieldIt.second.field.getFieldDimensions().getHorizontalFieldDimension());
-      hasSparseField |= unstructuredDims.isSparse();
-    }
-    // step 2) lets figure out if there are (nested) reductions
-    bool hasNestedReductions = false;
-    for(const auto& multiStage : stencil->getChildren()) {
-      for(const auto& stage : multiStage->getChildren()) {
-        for(const auto& doMethodPtr : stage->getChildren()) {
-          const iir::DoMethod& doMethod = *doMethodPtr;
-          for(const auto& stmt : doMethod.getAST().getStatements()) {
-            FindReduceOverNeighborExpr findReduceOverNeighborExpr;
-            stmt->accept(findReduceOverNeighborExpr);
-            if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-              FindReduceOverNeighborExpr findNestedReduceOverNeighborExpr;
-              findReduceOverNeighborExpr.foundReduceOverNeighborExpr().getRhs()->accept(
-                  findNestedReduceOverNeighborExpr);
-              if(findNestedReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-                hasNestedReductions = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if(hasNestedReductions && hasSparseField) {
-      dawn_unreachable("currently, nested reductions are only allowed if there are no sparse "
-                       "dimensions, and vice versa!\n");
-    }
 
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
@@ -533,21 +474,6 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                     if(!doMethod.getInterval().overlaps(interval))
                       continue;
 
-                    bool needsSparseDimIdx = false;
-                    for(const auto& stmt : doMethod.getAST().getStatements()) {
-                      FindReduceOverNeighborExpr findReduceOverNeighborExpr;
-                      stmt->accept(findReduceOverNeighborExpr);
-                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-                        needsSparseDimIdx = true;
-                        break;
-                      }
-                    }
-
-                    if(needsSparseDimIdx) {
-                      StencilRunMethod.ss() << "int m_sparse_dimension_idx = 0;\n";
-                    }
-
-                    bool firstReduceExpr = true;
                     for(const auto& stmt : doMethod.getAST().getStatements()) {
 
                       // if this statement contains a ReduceOverNeighbrExpr but isnt the
@@ -555,14 +481,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                       FindReduceOverNeighborExpr findReduceOverNeighborExpr;
                       stmt->accept(findReduceOverNeighborExpr);
                       if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-                        if(!firstReduceExpr) {
-                          StencilRunMethod.ss() << "m_sparse_dimension_idx = 0;\n";
-                        }
-                        firstReduceExpr = false;
+                        StencilRunMethod.ss() << "{\n";
+                        StencilRunMethod.ss()
+                            << "int " << ASTStencilBody::ReductionSparseIndexVarName(0)
+                            << " = 0;\n";
                       }
 
                       stmt->accept(stencilBodyCXXVisitor);
                       StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+
+                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+                        StencilRunMethod.ss() << "}\n";
+                      }
                     }
                   }
                 });

@@ -14,7 +14,7 @@ RUN apt update && apt install -y --no-install-recommends \
     build-essential openssh-client git \
     kitware-archive-keyring cmake ninja-build \
     gcc-8 g++-8 \
-    llvm-9-dev libclang-9-dev \
+    llvm-9-dev libclang-9-dev libclang-cpp9 \
     python3 libpython3-dev python3-pip python3-setuptools python3-wheel \
     libboost-dev && apt clean
 RUN python3 -m pip install --upgrade pip

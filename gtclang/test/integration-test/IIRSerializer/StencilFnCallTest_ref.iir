@@ -1,6 +1,7 @@
 {
  "metadata": {
   "accessIDToName": {
+   "36": "__local_fn_36",
    "16": "a",
    "17": "b",
    "35": "__local_fn_35"
@@ -66,7 +67,7 @@
    "Line": 29,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "StencilFnCallTest"
  },
  "internalIR": {
   "gridType": "Cartesian",

@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Support/FileUtil.h"
+#include "dawn/Support/FileSystem.h"
 
 namespace dawn {
 
@@ -28,7 +28,8 @@ PassStageMerger::PassStageMerger(OptimizerContext& context) : Pass(context, "Pas
 
 bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   const auto& options = context_.getOptions();
-  std::string filenameWE = getFilenameWithoutExtension(instantiation->getMetaData().getFileName());
+  const std::string filenameWE =
+      fs::path(instantiation->getMetaData().getFileName()).filename().stem();
   if(options.ReportPassStageMerger)
     instantiation->jsonDump(filenameWE + "_before.json");
 

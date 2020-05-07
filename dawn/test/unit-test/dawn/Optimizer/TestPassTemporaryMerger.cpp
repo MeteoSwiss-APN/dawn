@@ -12,16 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Compiler/Options.h"
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -32,23 +30,20 @@ namespace {
 
 class TestPassTemporaryMerger : public ::testing::Test {
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
+  OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
-  dawn::DiagnosticsEngine diag_;
+  DiagnosticsEngine diag_;
 
   explicit TestPassTemporaryMerger() {
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-    context_ = std::make_unique<OptimizerContext>(diag_, options_, sir);
-    dawn::UIDGenerator::getInstance()->reset();
+    context_ = std::make_unique<OptimizerContext>(diag_, options_,
+                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
+    UIDGenerator::getInstance()->reset();
   }
 
   void runTest(const std::string& filename,
                const std::unordered_set<std::string>& mergedFields = {}) {
     // Deserialize IIR
-    std::string filepath = filename;
-    if(!TestEnvironment::path_.empty())
-      filepath = TestEnvironment::path_ + "/" + filepath;
-    auto instantiation = IIRSerializer::deserialize(filepath);
+    auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage splitter pass
     PassStageSplitter stageSplitPass(*context_);

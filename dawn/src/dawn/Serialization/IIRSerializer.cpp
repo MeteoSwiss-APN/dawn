@@ -33,6 +33,15 @@
 
 namespace dawn {
 
+IIRSerializer::Format IIRSerializer::parseFormatString(const std::string& format) {
+  if(format == "Byte" || format == "byte" || format == "BYTE")
+    return IIRSerializer::Format::Byte;
+  else if(format == "Json" || format == "json" || format == "JSON")
+    return IIRSerializer::Format::Json;
+  else
+    throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
+}
+
 proto::enums::LocationType
 optionalLocationTypeToProto(std::optional<ast::LocationType> locationType) {
   if(locationType.has_value()) {
@@ -387,9 +396,8 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
 
           auto protoStmt = protoDoMethod->mutable_ast();
           ProtoStmtBuilder builder(protoStmt, ast::StmtData::IIR_DATA_TYPE);
-          auto ptr = std::make_shared<ast::BlockStmt>(
-              domethod->getAST()); // TODO takes a copy to allow using shared_from_this()
-          ptr->accept(builder);
+
+          domethod->getASTPtr()->accept(builder);
         }
         protoStage->set_locationtype(optionalLocationTypeToProto(stage->getLocationType()));
       }

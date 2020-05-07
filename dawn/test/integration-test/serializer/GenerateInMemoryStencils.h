@@ -12,22 +12,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GENERATE_IN_MEMORY_STENCILS
-#define GENERATE_IN_MEMORY_STENCILS
+#ifndef GENERATE_IN_MEMORY_STENCILS_H
+#define GENERATE_IN_MEMORY_STENCILS_H
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-
 #include <memory>
 
 std::shared_ptr<dawn::iir::StencilInstantiation>
-createCopyStencilIIRInMemory(dawn::OptimizerContext& optimizer);
+createCopyStencilIIRInMemory(dawn::ast::GridType gridType);
+
 std::shared_ptr<dawn::iir::StencilInstantiation>
-createLapStencilIIRInMemory(dawn::OptimizerContext& optimizer);
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createUnstructuredSumEdgeToCellsIIRInMemory(dawn::OptimizerContext& optimizer);
-std::shared_ptr<dawn::iir::StencilInstantiation>
-createUnstructuredMixedCopies(dawn::OptimizerContext& optimizer);
+createLapStencilIIRInMemory(dawn::ast::GridType gridType);
+
+std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredSumEdgeToCellsIIRInMemory();
+
+std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredMixedCopies();
 
 #endif

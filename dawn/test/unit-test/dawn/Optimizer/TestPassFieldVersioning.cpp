@@ -17,7 +17,6 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
-#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -38,13 +37,8 @@ protected:
   std::unique_ptr<OptimizerContext> context_;
 
   void raceConditionTest(const std::string& filename) {
-    std::string fullFileName = filename;
-    if(!TestEnvironment::path_.empty() && filename.at(0) != '/') {
-      fullFileName = TestEnvironment::path_ + "/" + filename;
-    }
     context_->getDiagnostics().clear();
-    std::shared_ptr<iir::StencilInstantiation> instantiation =
-        IIRSerializer::deserialize(fullFileName);
+    auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to fail...
     dawn::PassFieldVersioning pass(*context_);
@@ -53,13 +47,8 @@ protected:
   }
 
   std::shared_ptr<iir::StencilInstantiation> versioningTest(const std::string& filename) {
-    std::string fullFileName = filename;
-    if(!TestEnvironment::path_.empty() && filename.at(0) != '/') {
-      fullFileName = TestEnvironment::path_ + "/" + filename;
-    }
     context_->getDiagnostics().clear();
-    std::shared_ptr<iir::StencilInstantiation> instantiation =
-        IIRSerializer::deserialize(fullFileName);
+    auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
     dawn::PassFieldVersioning pass(*context_);

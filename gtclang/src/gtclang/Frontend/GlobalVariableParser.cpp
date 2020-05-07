@@ -15,12 +15,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GlobalVariableParser.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Unreachable.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/ASTUtils.h"
 #include "gtclang/Support/ClangCompat/SourceLocation.h"
-#include "gtclang/Support/FileUtil.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/AST/AST.h"
 #include <cstdlib>
@@ -94,7 +94,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
 
   DAWN_LOG(INFO)
       << "Parsing globals at "
-      << getFilename(recordDecl->getLocation().printToString(context_->getSourceManager())).str()
+      << fs::path(recordDecl->getLocation().printToString(context_->getSourceManager())).filename()
       << " ...";
 
   recordDecl_ = recordDecl;

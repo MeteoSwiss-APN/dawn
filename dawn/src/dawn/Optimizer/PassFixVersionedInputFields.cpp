@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
-#include "dawn-c/ErrorHandling.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"

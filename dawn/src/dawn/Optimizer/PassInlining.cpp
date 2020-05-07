@@ -98,6 +98,10 @@ public:
     scopeDepth_--;
   }
 
+  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   void appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
     stmt->getData<iir::IIRStmtData>().StackTrace = oldStmt_->getData<iir::IIRStmtData>().StackTrace;
     if(scopeDepth_ == 1) {
