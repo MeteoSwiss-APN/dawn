@@ -82,21 +82,22 @@ DiagnosticProxy Logger::operator()(const std::string& file, int line, const std:
   return DiagnosticProxy(*this, file, line, source, loc);
 }
 
-void Logger::enqueue(std::string msg, const std::string& file, int line) {
-  if(msg.back() != '\n')
-    msg += '\n';
-  data_.push_back(msgFmt_(msg, file, line));
-  if(show_)
+void Logger::doEnqueue(const std::string& message) {
+  data_.push_back(message);
+  if(show_) {
     *os_ << data_.back();
+    if(data_.back().back() != '\n')
+      *os_ << '\n';
+  }
+}
+
+void Logger::enqueue(std::string msg, const std::string& file, int line) {
+  doEnqueue(msgFmt_(msg, file, line));
 }
 
 void Logger::enqueue(std::string msg, const std::string& file, int line, const std::string& source,
                      SourceLocation loc) {
-  if(msg.back() != '\n')
-    msg += '\n';
-  data_.push_back(diagFmt_(msg, file, line, source, loc));
-  if(show_)
-    *os_ << data_.back();
+  doEnqueue(diagFmt_(msg, file, line, source, loc));
 }
 
 std::ostream& Logger::stream() const { return *os_; }

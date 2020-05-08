@@ -31,14 +31,14 @@ TEST(Logger, message_formatting) {
   std::ostringstream buffer;
   Logger log(makeMessageFormatter("LOG"), makeDiagnosticFormatter(), buffer);
   log("TestLogger.cpp", 42) << "Message";
-  EXPECT_EQ(buffer.str(), "[TestLogger.cpp:42] LOG: Message");
+  EXPECT_EQ(buffer.str(), "[TestLogger.cpp:42] LOG: Message\n");
 }
 
 TEST(Logger, diagnostic_formatting) {
   std::ostringstream buffer;
   Logger log(makeMessageFormatter(), makeDiagnosticFormatter("LOG"), buffer);
   log("TestLogger.cpp", 42, "test.input", SourceLocation(42, 4)) << "Message";
-  EXPECT_EQ(buffer.str(), "[TestLogger.cpp:42] test.input:42:4: LOG: Message");
+  EXPECT_EQ(buffer.str(), "[TestLogger.cpp:42] test.input:42:4: LOG: Message\n");
 }
 
 TEST(Logger, stream) {

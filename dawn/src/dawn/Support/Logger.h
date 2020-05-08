@@ -134,6 +134,8 @@ public:
   Container::size_type size() const;
 
 private:
+  void doEnqueue(const std::string& message);
+
   MessageFormatter msgFmt_;
   DiagnosticFormatter diagFmt_;
   std::ostream* os_;
