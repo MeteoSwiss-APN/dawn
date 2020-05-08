@@ -190,30 +190,30 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
 
   // SIR.GlobalVariableMap
   auto mapProto = sirProto.mutable_global_variables()->mutable_map();
-  for(const auto& nameValuePair : *sir->GlobalVariableMap) {
-    const std::string& name = nameValuePair.first;
-    const sir::Global& value = nameValuePair.second;
+  for(const auto& [name, value] : *sir->GlobalVariableMap) {
 
+    // is_constexpr
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
-    if(value.has_value()) {
-      switch(value.getType()) {
-      case sir::Value::Kind::Boolean:
-        valueProto.set_boolean_value(value.getValue<bool>());
-        break;
-      case sir::Value::Kind::Integer:
-        valueProto.set_integer_value(value.getValue<int>());
-        break;
-      case sir::Value::Kind::Double:
-        valueProto.set_double_value(value.getValue<double>());
-        break;
-      case sir::Value::Kind::Float:
-        valueProto.set_float_value(value.getValue<float>());
-        break;
-      case sir::Value::Kind::String:
-        valueProto.set_string_value(value.getValue<std::string>());
-        break;
-      }
+
+    // Value
+    switch(value.getType()) {
+    case sir::Value::Kind::Boolean:
+      valueProto.set_boolean_value(value.has_value() ? value.getValue<bool>() : bool());
+      break;
+    case sir::Value::Kind::Integer:
+      valueProto.set_integer_value(value.has_value() ? value.getValue<int>() : int());
+      break;
+    case sir::Value::Kind::Double:
+      valueProto.set_double_value(value.has_value() ? value.getValue<double>() : double());
+      break;
+    case sir::Value::Kind::Float:
+      valueProto.set_float_value(value.has_value() ? value.getValue<float>() : float());
+      break;
+    case sir::Value::Kind::String:
+      valueProto.set_string_value(value.has_value() ? value.getValue<std::string>()
+                                                    : std::string());
+      break;
     }
 
     mapProto->insert({name, valueProto});

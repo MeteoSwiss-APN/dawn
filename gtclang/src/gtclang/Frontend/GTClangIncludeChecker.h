@@ -17,6 +17,7 @@
 #ifndef GTCLANG_FRONTEND_INCLUDEPROCESSOR_H
 #define GTCLANG_FRONTEND_INCLUDEPROCESSOR_H
 
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
 #include <string>
 #include <vector>
