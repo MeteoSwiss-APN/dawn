@@ -21,8 +21,11 @@
 
 namespace gtclang {
 
-/// @brief Make a Logger::Formatter for GTClang
-dawn::Logger::Formatter makeGTClangFormatter(const std::string& prefix);
+/// @brief Make a Logger::MessageFormatter for GTClang
+dawn::Logger::MessageFormatter makeGTClangMessageFormatter(const std::string& prefix);
+
+/// @brief Make a Logger::DiagnosticFormatter for GTClang
+dawn::Logger::DiagnosticFormatter makeGTClangDiagnosticFormatter(const std::string& prefix);
 
 } // namespace gtclang
 

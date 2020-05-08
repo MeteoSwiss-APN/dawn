@@ -491,13 +491,12 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
 
   std::ostringstream output;
   dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
   passRemoveScalars.run(stencil);
-  ASSERT_NE(output.str().find(
-                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-            std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_increment) {
@@ -528,13 +527,12 @@ TEST(TestRemoveScalars, warn_increment) {
 
   std::ostringstream output;
   dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
   passRemoveScalars.run(stencil);
-  ASSERT_NE(output.str().find(
-                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-            std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_01) {
@@ -568,13 +566,12 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
 
   std::ostringstream output;
   dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
   passRemoveScalars.run(stencil);
-  ASSERT_NE(output.str().find(
-                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-            std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_02) {
@@ -608,13 +605,12 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
 
   std::ostringstream output;
   dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
   passRemoveScalars.run(stencil);
-  ASSERT_NE(output.str().find(
-                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-            std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_03) {
@@ -645,6 +641,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
 
   std::ostringstream output;
   dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DiagnosticsEngine diag;
@@ -654,9 +651,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
   passRemoveScalars.run(stencil);
-  ASSERT_NE(output.str().find(
-                "Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-            std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 } // namespace

@@ -21,53 +21,136 @@
 
 namespace dawn {
 
-Logger::Formatter makeDefaultFormatter(const std::string prefix) {
-  return [prefix](const std::string& msg, const std::string& file, int line) {
-    return prefix + " " + "[" + file + ":" + std::to_string(line) + "] " + msg;
+Logger::MessageFormatter makeMessageFormatter(const std::string type) {
+  return [type](const std::string& msg, const std::string& file, int line) {
+    std::stringstream ss;
+    ss << "[" << file << ":" << line << "] ";
+    if(type != "")
+      ss << type << ": ";
+    ss << msg;
+    return ss.str();
   };
 }
 
-LoggerProxy::LoggerProxy(const LoggerProxy& other)
-    : logger_(other.logger_), ss_(other.ss_.str()), source_(other.source_), line_(other.line_) {}
-
-LoggerProxy::LoggerProxy(Logger& logger, const std::string& source, int line)
-    : logger_(logger), source_(source), line_(line) {}
-
-LoggerProxy::~LoggerProxy() { logger_.enqueue(ss_.str(), source_, line_); }
-
-Logger::Logger(Formatter fmt, std::ostream& os) : fmt_(fmt), os_(&os), data_() {}
-
-void Logger::enqueue(const std::string& msg, const std::string& file, int line) {
-  data_.push_back(fmt_(msg, file, line));
-  *os_ << data_.back();
+Logger::DiagnosticFormatter makeDiagnosticFormatter(const std::string type) {
+  return [type](const std::string& msg, const std::string& file, int line,
+                const std::string& source, SourceLocation loc) {
+    std::stringstream ss;
+    ss << "[" << file << ":" << line << "]";
+    if(source != "")
+      ss << " " << source;
+    if(loc.Line >= 0) {
+      ss << ":" << loc.Line;
+    }
+    if(loc.Column >= 0) {
+      ss << ":" << loc.Column;
+    }
+    if(type != "")
+      ss << ": " << type;
+    ss << ": " << msg;
+    return ss.str();
+  };
 }
 
-LoggerProxy Logger::operator()(const std::string& source, int line) {
-  return LoggerProxy(*this, source, line);
+MessageProxy::MessageProxy(const MessageProxy& other)
+    : logger_(other.logger_), ss_(other.ss_.str()), file_(other.file_), line_(other.line_) {}
+
+MessageProxy::MessageProxy(Logger& logger, const std::string& file, int line)
+    : logger_(logger), file_(file), line_(line) {}
+
+MessageProxy::~MessageProxy() { logger_.enqueue(ss_.str(), file_, line_); }
+
+DiagnosticProxy::DiagnosticProxy(const DiagnosticProxy& other)
+    : logger_(other.logger_), ss_(other.ss_.str()), file_(other.file_), line_(other.line_),
+      source_(other.source_), loc_(other.loc_) {}
+
+DiagnosticProxy::DiagnosticProxy(Logger& logger, const std::string& file, int line,
+                                 const std::string& source, SourceLocation loc)
+    : logger_(logger), file_(file), line_(line), source_(source), loc_(loc) {}
+
+DiagnosticProxy::~DiagnosticProxy() { logger_.enqueue(ss_.str(), file_, line_, source_, loc_); }
+
+Logger::Logger(MessageFormatter msgFmt, DiagnosticFormatter diagFmt, std::ostream& os, bool show)
+    : msgFmt_(msgFmt), diagFmt_(diagFmt), os_(&os), data_(), show_(show) {}
+
+MessageProxy Logger::operator()(const std::string& file, int line) {
+  return MessageProxy(*this, file, line);
 }
 
-// Get and set ostream
+DiagnosticProxy Logger::operator()(const std::string& file, int line, const std::string& source,
+                                   SourceLocation loc) {
+  return DiagnosticProxy(*this, file, line, source, loc);
+}
+
+void Logger::enqueue(std::string msg, const std::string& file, int line) {
+  if(msg.back() != '\n')
+    msg += '\n';
+  data_.push_back(msgFmt_(msg, file, line));
+  if(show_)
+    *os_ << data_.back();
+}
+
+void Logger::enqueue(std::string msg, const std::string& file, int line, const std::string& source,
+                     SourceLocation loc) {
+  if(msg.back() != '\n')
+    msg += '\n';
+  data_.push_back(diagFmt_(msg, file, line, source, loc));
+  if(show_)
+    *os_ << data_.back();
+}
+
 std::ostream& Logger::stream() const { return *os_; }
 void Logger::stream(std::ostream& os) { os_ = &os; }
 
-// Get and set Formatter
-Logger::Formatter Logger::formatter() const { return fmt_; }
-void Logger::formatter(const Formatter& fmt) { fmt_ = fmt; }
+Logger::MessageFormatter Logger::messageFormatter() const { return msgFmt_; }
+void Logger::messageFormatter(const MessageFormatter& msgFmt) { msgFmt_ = msgFmt; }
 
-// Reset storage
+Logger::DiagnosticFormatter Logger::diagnosticFormatter() const { return diagFmt_; }
+void Logger::diagnosticFormatter(const DiagnosticFormatter& diagFmt) { diagFmt_ = diagFmt; }
+
 void Logger::clear() { data_.clear(); }
+
+void Logger::show() { show_ = true; }
+void Logger::hide() { show_ = false; }
 
 // Expose container of messages
 Logger::iterator Logger::begin() { return std::begin(data_); }
 Logger::iterator Logger::end() { return std::end(data_); }
 Logger::const_iterator Logger::begin() const { return std::begin(data_); }
 Logger::const_iterator Logger::end() const { return std::end(data_); }
-Logger::MessageContainer::size_type Logger::size() const { return std::size(data_); }
+Logger::Container::size_type Logger::size() const { return std::size(data_); }
 
 namespace log {
-Logger info(makeDefaultFormatter("[INFO]"), std::cout);
-Logger warn(makeDefaultFormatter("[WARN]"), std::cerr);
-Logger error(makeDefaultFormatter("[ERROR]"), std::cerr);
+
+Logger info(makeMessageFormatter("INFO"), makeDiagnosticFormatter("INFO"), std::cout, false);
+Logger warn(makeMessageFormatter("WARNING"), makeDiagnosticFormatter("WARNING"), std::cout, true);
+Logger error(makeMessageFormatter("ERROR"), makeDiagnosticFormatter("ERROR"), std::cerr, true);
+
+void setVerbosity(Level level) {
+  switch(level) {
+  case Level::All:
+    info.show();
+    warn.show();
+    error.show();
+    break;
+  case Level::Warnings:
+    info.hide();
+    warn.show();
+    error.show();
+    break;
+  case Level::Errors:
+    info.hide();
+    warn.hide();
+    error.show();
+    break;
+  case Level::None:
+    info.hide();
+    warn.hide();
+    error.hide();
+    break;
+  }
+}
+
 } // namespace log
 
 } // namespace dawn
