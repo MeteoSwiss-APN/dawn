@@ -57,10 +57,12 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
     return ReturnValue{1, returnSIR};
 
   // Save existing formatter and set to gtclang
-  auto infoFormatter = dawn::info.formatter();
-  auto warnFormatter = dawn::warn.formatter();
-  dawn::info.formatter(makeGTClangFormatter("[INFO]"));
-  dawn::warn.formatter(makeGTClangFormatter("[WARNING]"));
+  auto infoFormatter = dawn::log::info.formatter();
+  auto warnFormatter = dawn::log::warn.formatter();
+  auto errorFormatter = dawn::log::error.formatter();
+  dawn::log::info.formatter(makeGTClangFormatter("[INFO]"));
+  dawn::log::warn.formatter(makeGTClangFormatter("[WARNING]"));
+  dawn::log::error.formatter(makeGTClangFormatter("[ERROR]"));
 
   GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -85,8 +87,9 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   includeChecker.Restore();
 
   // Reset formatters
-  dawn::info.formatter(infoFormatter);
-  dawn::warn.formatter(warnFormatter);
+  dawn::log::info.formatter(infoFormatter);
+  dawn::log::warn.formatter(warnFormatter);
+  dawn::log::error.formatter(errorFormatter);
 
   return ReturnValue{ret, returnSIR};
 }
@@ -110,10 +113,12 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   clangArgs.push_back(fileName.c_str());
 
   // Save existing formatter and set to gtclang
-  auto infoFormatter = dawn::info.formatter();
-  auto warnFormatter = dawn::warn.formatter();
-  dawn::info.formatter(makeGTClangFormatter("[INFO]"));
-  dawn::warn.formatter(makeGTClangFormatter("[WARNING]"));
+  auto infoFormatter = dawn::log::info.formatter();
+  auto warnFormatter = dawn::log::warn.formatter();
+  auto errorFormatter = dawn::log::error.formatter();
+  dawn::log::info.formatter(makeGTClangFormatter("[INFO]"));
+  dawn::log::warn.formatter(makeGTClangFormatter("[WARNING]"));
+  dawn::log::error.formatter(makeGTClangFormatter("[ERROR]"));
 
   gtclang::GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -143,8 +148,9 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   includeChecker.Restore();
 
   // Reset formatters
-  dawn::info.formatter(infoFormatter);
-  dawn::warn.formatter(warnFormatter);
+  dawn::log::info.formatter(infoFormatter);
+  dawn::log::warn.formatter(warnFormatter);
+  dawn::log::error.formatter(errorFormatter);
 
   return stencilIR;
 }

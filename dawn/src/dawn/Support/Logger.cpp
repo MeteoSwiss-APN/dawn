@@ -64,7 +64,10 @@ Logger::const_iterator Logger::begin() const { return std::begin(data_); }
 Logger::const_iterator Logger::end() const { return std::end(data_); }
 Logger::MessageContainer::size_type Logger::size() const { return std::size(data_); }
 
+namespace log {
 Logger info(makeDefaultFormatter("[INFO]"), std::cout);
 Logger warn(makeDefaultFormatter("[WARN]"), std::cerr);
+Logger error(makeDefaultFormatter("[ERROR]"), std::cerr);
+} // namespace log
 
 } // namespace dawn

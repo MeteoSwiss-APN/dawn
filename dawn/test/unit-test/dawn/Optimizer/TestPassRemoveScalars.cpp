@@ -490,7 +490,7 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   std::ostringstream output;
-  dawn::info.stream(output);
+  dawn::log::info.stream(output);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -527,7 +527,7 @@ TEST(TestRemoveScalars, warn_increment) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   std::ostringstream output;
-  dawn::info.stream(output);
+  dawn::log::info.stream(output);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -567,7 +567,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   std::ostringstream output;
-  dawn::info.stream(output);
+  dawn::log::info.stream(output);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -607,7 +607,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   std::ostringstream output;
-  dawn::info.stream(output);
+  dawn::log::info.stream(output);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -644,7 +644,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
                       b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   std::ostringstream output;
-  dawn::info.stream(output);
+  dawn::log::info.stream(output);
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DiagnosticsEngine diag;

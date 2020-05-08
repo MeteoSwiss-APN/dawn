@@ -87,9 +87,13 @@ private:
 
 Logger::Formatter makeDefaultFormatter(const std::string prefix);
 
+namespace log {
 // Loggers used for information and warnings
 extern Logger info;
 extern Logger warn;
+extern Logger error;
+
+} // namespace log
 
 } // namespace dawn
 
@@ -98,7 +102,8 @@ extern Logger warn;
 /// @ingroup support
 #define DAWN_LOG(Level) DAWN_LOG_##Level##_IMPL()
 
-#define DAWN_LOG_INFO_IMPL() dawn::info(__FILE__, __LINE__)
-#define DAWN_LOG_WARNING_IMPL() dawn::warn(__FILE__, __LINE__)
+#define DAWN_LOG_INFO_IMPL() dawn::log::info(__FILE__, __LINE__)
+#define DAWN_LOG_WARNING_IMPL() dawn::log::warn(__FILE__, __LINE__)
+#define DAWN_LOG_ERROR_IMPL() dawn::log::warn(__FILE__, __LINE__)
 
 #endif
