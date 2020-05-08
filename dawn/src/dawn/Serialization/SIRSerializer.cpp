@@ -53,10 +53,10 @@ public:
       DAWN_LOG(WARNING) << "Protobuf: " << message;
       break;
     case google::protobuf::LOGLEVEL_ERROR:
-      throw SyntacticError(std::string("[FATAL] Protobuf error: ") + message);
+      throw SyntacticError(std::string("[ERROR] Protobuf error: ") + message);
       break;
     case google::protobuf::LOGLEVEL_FATAL:
-      throw std::runtime_error(std::string("[FATAL] Protobuf error occurred: ") + message);
+      throw SyntacticError(std::string("[FATAL] Protobuf error occurred: ") + message);
       break;
     }
 
