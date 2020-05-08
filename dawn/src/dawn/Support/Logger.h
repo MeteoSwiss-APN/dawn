@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_LOGGING_H
-#define DAWN_SUPPORT_LOGGING_H
+#ifndef DAWN_SUPPORT_LOGGER_H
+#define DAWN_SUPPORT_LOGGER_H
 
 #include <functional>
 #include <iostream>
