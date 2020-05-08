@@ -76,14 +76,14 @@ DiagnosticProxy Logger::operator()(const std::string& file, int line, const std:
 void Logger::enqueue(const std::string& msg, const std::string& file, int line) {
   data_.push_back(msgFmt_(msg, file, line));
   if(show_)
-    *os << data_.back();
+    *os_ << data_.back();
 }
 
 void Logger::enqueue(const std::string& msg, const std::string& file, int line,
                      const std::string& source, SourceLocation loc) {
   data_.push_back(diagFmt_(msg, file, line, source, loc));
   if(show_)
-    *os << data_.back();
+    *os_ << data_.back();
 }
 
 std::ostream& Logger::stream() const { return *os_; }
