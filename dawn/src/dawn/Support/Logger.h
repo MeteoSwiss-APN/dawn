@@ -25,14 +25,14 @@ namespace dawn {
 
 class Logger;
 
-class SourceLineLoggerProxy {
+class LoggerProxy {
 public:
-  SourceLineLoggerProxy(Logger& logger, const std::string& source, int line);
-  SourceLineLoggerProxy(const SourceLineLoggerProxy& other);
-  ~SourceLineLoggerProxy();
+  LoggerProxy(Logger& logger, const std::string& source, int line);
+  LoggerProxy(const LoggerProxy& other);
+  ~LoggerProxy();
 
   template <typename Streamable>
-  SourceLineLoggerProxy& operator<<(Streamable&& obj) {
+  LoggerProxy& operator<<(Streamable&& obj) {
     ss_ << obj;
     return *this;
   }
@@ -44,23 +44,6 @@ private:
   const int line_;
 };
 
-class BasicLoggerProxy {
-public:
-  BasicLoggerProxy(Logger& logger);
-  BasicLoggerProxy(const BasicLoggerProxy& other);
-  ~BasicLoggerProxy();
-
-  template <typename Streamable>
-  BasicLoggerProxy& operator<<(Streamable&& obj) {
-    ss_ << obj;
-    return *this;
-  }
-
-private:
-  Logger& logger_;
-  std::stringstream ss_;
-};
-
 /// @brief Logging interface
 /// @ingroup support
 class Logger {
@@ -70,11 +53,9 @@ public:
 
   Logger(Formatter fmt, std::ostream& os = std::cout);
 
-  SourceLineLoggerProxy operator()(const std::string& source, int line);
-  BasicLoggerProxy operator()();
+  LoggerProxy operator()(const std::string& source, int line);
 
   void enqueue(const std::string& msg, const std::string& file, int line);
-  void enqueue(const std::string& msg);
 
   // Get and set ostream
   std::ostream& stream() const;

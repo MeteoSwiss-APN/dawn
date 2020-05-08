@@ -27,20 +27,13 @@ Logger::Formatter makeDefaultFormatter(const std::string prefix) {
   };
 }
 
-SourceLineLoggerProxy::SourceLineLoggerProxy(const SourceLineLoggerProxy& other)
+LoggerProxy::LoggerProxy(const LoggerProxy& other)
     : logger_(other.logger_), ss_(other.ss_.str()), source_(other.source_), line_(other.line_) {}
 
-SourceLineLoggerProxy::SourceLineLoggerProxy(Logger& logger, const std::string& source, int line)
+LoggerProxy::LoggerProxy(Logger& logger, const std::string& source, int line)
     : logger_(logger), source_(source), line_(line) {}
 
-SourceLineLoggerProxy::~SourceLineLoggerProxy() { logger_.enqueue(ss_.str(), source_, line_); }
-
-BasicLoggerProxy::BasicLoggerProxy(const BasicLoggerProxy& other)
-    : logger_(other.logger_), ss_(other.ss_.str()) {}
-
-BasicLoggerProxy::BasicLoggerProxy(Logger& logger) : logger_(logger) {}
-
-BasicLoggerProxy::~BasicLoggerProxy() { logger_.enqueue(ss_.str()); }
+LoggerProxy::~LoggerProxy() { logger_.enqueue(ss_.str(), source_, line_); }
 
 Logger::Logger(Formatter fmt, std::ostream& os) : fmt_(fmt), os_(&os), data_() {}
 
@@ -49,16 +42,9 @@ void Logger::enqueue(const std::string& msg, const std::string& file, int line) 
   *os_ << data_.back();
 }
 
-void Logger::enqueue(const std::string& msg) {
-  data_.push_back(msg);
-  *os_ << data_.back();
+LoggerProxy Logger::operator()(const std::string& source, int line) {
+  return LoggerProxy(*this, source, line);
 }
-
-SourceLineLoggerProxy Logger::operator()(const std::string& source, int line) {
-  return SourceLineLoggerProxy(*this, source, line);
-}
-
-BasicLoggerProxy Logger::operator()() { return BasicLoggerProxy(*this); }
 
 // Get and set ostream
 std::ostream& Logger::stream() const { return *os_; }
