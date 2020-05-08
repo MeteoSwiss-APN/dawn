@@ -17,6 +17,7 @@
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
@@ -27,6 +28,7 @@
 #include <algorithm>
 #include <memory>
 #include <numeric>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -161,6 +163,27 @@ void CudaIcoCodeGen::generateRunFun(
       std::string kName =
           cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage);
       kernelCall << kName;
+
+      // which nbh tables need to be passed / which templates need to be defined?
+      CollectChainStrings chainStringCollector;
+      for(const auto& doMethod : stage->getChildren()) {
+        doMethod->getAST().accept(chainStringCollector);
+      }
+      auto chains = chainStringCollector.getChains();
+
+      if(chains.size() != 0) {
+        kernelCall << "<";
+        bool first = true;
+        for(auto chain : chains) {
+          if(!first) {
+            kernelCall << ", ";
+          }
+          kernelCall << chainToSparseSizeString(chain);
+          first = false;
+        }
+        kernelCall << ">";
+      }
+
       switch(*stage->getLocationType()) {
       case ast::LocationType::Cells:
         kernelCall << "<<<"
@@ -195,12 +218,6 @@ void CudaIcoCodeGen::generateRunFun(
       // we always need the k size
       kernelCall << "kSize_, ";
 
-      // which nbh tables need to be passed?
-      CollectChainStrings chainStringCollector;
-      for(const auto& doMethod : stage->getChildren()) {
-        doMethod->getAST().accept(chainStringCollector);
-      }
-      auto chains = chainStringCollector.getChains();
       for(auto chain : chains) {
         kernelCall << "mesh_." + chainToTableString(chain) + ", ";
       }
@@ -376,8 +393,31 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       //--------------------------------------
       // signature of kernel
       //--------------------------------------
+
+      // which nbh tables / size templates need to be passed?
+      CollectChainStrings chainStringCollector;
+      for(const auto& doMethod : stage->getChildren()) {
+        doMethod->getAST().accept(chainStringCollector);
+      }
+      auto chains = chainStringCollector.getChains();
+
+      std::string retString = "__global__ void";
+      if(chains.size() != 0) {
+        std::stringstream ss;
+        ss << "template<";
+        bool first = true;
+        for(auto chain : chains) {
+          if(!first) {
+            ss << ", ";
+          }
+          ss << "int " << chainToSparseSizeString(chain);
+          first = false;
+        }
+        ss << ">";
+        retString = ss.str() + retString;
+      }
       MemberFunction cudaKernel(
-          "__global__ void",
+          retString,
           cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage), ssSW);
 
       // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
@@ -396,12 +436,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       // we always need the k size
       cudaKernel.addArg("int kSize");
 
-      // which nbh tables need to be passed?
-      CollectChainStrings chainStringCollector;
-      for(const auto& doMethod : stage->getChildren()) {
-        doMethod->getAST().accept(chainStringCollector);
-      }
-      auto chains = chainStringCollector.getChains();
       for(auto chain : chains) {
         cudaKernel.addArg("const int *" + chainToTableString(chain));
       }
@@ -463,7 +497,22 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
-  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
+  CollectChainStrings chainCollector;
+  std::set<std::vector<ast::LocationType>> chains;
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
+    doMethod->getAST().accept(chainCollector);
+    chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
+  }
+  std::stringstream ss;
+  bool first = true;
+  for(auto chain : chains) {
+    if(!first) {
+      ss << ", ";
+    }
+    ss << "int " + chainToSparseSizeString(chain) << " ";
+    first = false;
+  }
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag, " + ss.str());
 
   stencilWrapperClass.changeAccessibility("public");
 
@@ -511,14 +560,12 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  // temporary "solution"
   std::vector<std::string> ppDefines{
-      "#include \"atlas_interface.hpp\"",
+      "#include \"driver-includes/unstructured_interface.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
-      "#define E_C_V_SIZE 4",
       "#define BLOCK_SIZE 128",
       "#define DEVICE_MISSING_VALUE -1",
       "using namespace gridtools::dawn;",
