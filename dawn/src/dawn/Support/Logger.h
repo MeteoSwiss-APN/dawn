@@ -142,10 +142,10 @@ private:
 };
 
 /// @brief create a basic (default) message formatter
-Logger::MessageFormatter makeMessageFormatter(const std::string prefix);
+Logger::MessageFormatter makeMessageFormatter(const std::string type = "");
 
 /// @brief create a basic (default) diagnostic formatter
-Logger::DiagnosticFormatter makeDiagnosticFormatter(const std::string prefix);
+Logger::DiagnosticFormatter makeDiagnosticFormatter(const std::string type = "");
 
 namespace log {
 // Loggers used for information and warnings

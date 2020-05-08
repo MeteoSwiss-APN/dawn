@@ -23,23 +23,32 @@ namespace dawn {
 
 Logger::MessageFormatter makeMessageFormatter(const std::string type) {
   return [type](const std::string& msg, const std::string& file, int line) {
-    return "[" + file + ":" + std::to_string(line) + "] " + type + ": " + msg;
+    std::stringstream ss;
+    ss << "[" << file << ":" << line << "] ";
+    if(type != "")
+      ss << type << ": ";
+    ss << msg;
+    return ss.str();
   };
 }
 
 Logger::DiagnosticFormatter makeDiagnosticFormatter(const std::string type) {
   return [type](const std::string& msg, const std::string& file, int line,
                 const std::string& source, SourceLocation loc) {
-    std::string diagnostic = "[" + file + ":" + std::to_string(line) + "]" + type + " at " + source;
     std::stringstream ss;
+    ss << "[" << file << ":" << line << "]";
+    if(source != "")
+      ss << " " << source;
     if(loc.Line >= 0) {
       ss << ":" << loc.Line;
     }
     if(loc.Column >= 0) {
       ss << ":" << loc.Column;
     }
-    diagnostic += ss.str() + ": " + msg;
-    return diagnostic;
+    if(type != "")
+      ss << " " << type;
+    ss << ": " << msg;
+    return ss.str();
   };
 }
 
