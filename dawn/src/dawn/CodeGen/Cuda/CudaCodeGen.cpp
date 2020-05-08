@@ -500,34 +500,29 @@ void CudaCodeGen::generateStencilRunMethod(
       return !metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
     });
 
-    auto tempStencilFieldsNonLocalCached =
-        makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-          const int accessID = p.first;
-          if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
-            return false;
-          for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
-            if(!ms->isCached(accessID))
-              continue;
-            if(ms->getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
-              return false;
-          }
-
-          return true;
-        });
+    auto tempMSFieldsNonLocalCached = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
+      const int accessID = p.first;
+      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
+        return false;
+      if(!multiStage.isCached(accessID))
+        return true;
+      if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
+        return false;
+      return true;
+    });
 
     // create all the data views
     for(const auto& fieldPair : msNonTempFields) {
       // TODO have the same FieldInfo in ms level so that we dont need to query
-      // stencilInstantiation
-      // all the time for name and IsTmpField
+      // stencilInstantiation all the time for name and IsTmpField
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       stencilRunMethod.addStatement(c_gt() + "data_view<" + paramNameToType.at(fieldName) + "> " +
                                     fieldName + "= " + c_gt() + "make_device_view(" + fieldName +
                                     "_ds)");
     }
-    for(const auto& fieldPair : tempStencilFieldsNonLocalCached) {
-      const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
+    for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
+      const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       stencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                     c_gt() + "make_device_view( m_" + fieldName + ")");
     }
@@ -593,17 +588,6 @@ void CudaCodeGen::generateStencilRunMethod(
     if(!globalsMap.empty()) {
       kernelCall = kernelCall + "m_globals,";
     }
-
-    auto tempMSFieldsNonLocalCached = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-      const int accessID = p.first;
-      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
-        return false;
-      if(!multiStage.isCached(accessID))
-        return true;
-      if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
-        return false;
-      return true;
-    });
 
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
