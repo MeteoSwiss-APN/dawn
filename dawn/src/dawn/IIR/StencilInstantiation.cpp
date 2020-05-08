@@ -26,7 +26,6 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/Logger.h"

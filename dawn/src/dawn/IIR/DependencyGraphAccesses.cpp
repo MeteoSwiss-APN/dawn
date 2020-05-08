@@ -16,6 +16,7 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Json.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -532,7 +533,7 @@ void DependencyGraphAccesses::clear() {
   VertexIDToAccessIDMap_.clear();
 }
 
-void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const {
+void DependencyGraphAccesses::toJSON(const std::string& file) const {
   StencilMetaInformation const& metaData = metaData_;
 
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
@@ -595,9 +596,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
   std::ofstream ofs;
   ofs.open(file);
   if(!ofs.is_open()) {
-    DiagnosticsBuilder diag(DiagnosticsKind::Error);
-    diag << "failed to open file: \"" << file << "\"";
-    diagEngine.report(diag);
+    DAWN_LOG(WARNING) << "Failed to open file: " << file;
   }
 
   ofs << jgraph.dump(2);
