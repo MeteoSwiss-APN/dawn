@@ -15,11 +15,11 @@
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Support/FileSystem.h"
-#include "dawn/Support/Unreachable.h"
-
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
+#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/FileSystem.h"
+#include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 
@@ -35,7 +35,7 @@ bool PassStageReordering::run(
   if(context_.getOptions().ReportPassStageReordering)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
       continue;
 
@@ -52,15 +52,14 @@ bool PassStageReordering::run(
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, context_);
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencil, context_);
+    stencilInstantiation->getIIR()->replace(stencil, newStencil, stencilInstantiation->getIIR());
+    newStencil->update(iir::NodeUpdateType::levelAndTreeAbove);
 
-    stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
-    // TODO why is stencilPtr still used? (it was replaced in the previous statement)
-    stencilPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-
-    if(!stencilPtr)
+    if(!newStencil)
       return false;
   }
+
   if(context_.getOptions().ReportPassStageReordering)
     stencilInstantiation->jsonDump(filenameWE + "_after.json");
 

@@ -34,6 +34,7 @@ ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
   auto const& stageDAG = *stencil->getStageDependencyGraph();
   newStencil->setStageDependencyGraph(iir::DependencyGraphStage(stageDAG));
 
+  int totalNewStages = 0;
   for(auto [msIdx, multiStage] : enumerate(stencil->getChildren())) {
     iir::LoopOrderKind stageLoopOrder = multiStage->getLoopOrder();
     newStencil->insertChild(std::make_unique<iir::MultiStage>(metadata, stageLoopOrder));
@@ -44,7 +45,8 @@ ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
       // any dependencies
       int stageIdx = newNumStages - 1;
       for(; stageIdx >= 0; --stageIdx) {
-        if(stageDAG.depends(stage->getStageID(), newStencil->getStage(stageIdx)->getStageID()))
+        int newStageID = newStencil->getStage(totalNewStages + stageIdx)->getStageID();
+        if(stageDAG.depends(stage->getStageID(), newStageID))
           break;
       }
 
@@ -52,6 +54,7 @@ ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
       newStencil->insertStage(stagePos, std::move(stage));
       newNumStages += 1;
     }
+    totalNewStages += newNumStages;
   }
 
   return newStencil;
