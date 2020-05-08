@@ -12,7 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// TODO Name this "Logger"
 #include "dawn/Support/Logger.h"
 #include <algorithm>
 #include <gtest/gtest.h>
