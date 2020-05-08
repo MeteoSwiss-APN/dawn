@@ -165,7 +165,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
          ast::GridType::Unstructured) {
         optimizer.pushBackPass<PassSetStageGraph>();
         optimizer.pushBackPass<PassSetDependencyGraph>();
-        optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
+        //optimizer.pushBackPass<PassStageReordering>(reorderStrategy);
         // moved stages around ...
         optimizer.pushBackPass<PassSetSyncStage>();
         // if we want this info around, we should probably run this also
