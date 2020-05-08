@@ -46,7 +46,7 @@ Logger::DiagnosticFormatter makeDiagnosticFormatter(const std::string type) {
       ss << ":" << loc.Column;
     }
     if(type != "")
-      ss << " " << type;
+      ss << ": " << type;
     ss << ": " << msg;
     return ss.str();
   };
@@ -82,14 +82,18 @@ DiagnosticProxy Logger::operator()(const std::string& file, int line, const std:
   return DiagnosticProxy(*this, file, line, source, loc);
 }
 
-void Logger::enqueue(const std::string& msg, const std::string& file, int line) {
+void Logger::enqueue(std::string msg, const std::string& file, int line) {
+  if(msg.back() != '\n')
+    msg += '\n';
   data_.push_back(msgFmt_(msg, file, line));
   if(show_)
     *os_ << data_.back();
 }
 
-void Logger::enqueue(const std::string& msg, const std::string& file, int line,
-                     const std::string& source, SourceLocation loc) {
+void Logger::enqueue(std::string msg, const std::string& file, int line, const std::string& source,
+                     SourceLocation loc) {
+  if(msg.back() != '\n')
+    msg += '\n';
   data_.push_back(diagFmt_(msg, file, line, source, loc));
   if(show_)
     *os_ << data_.back();

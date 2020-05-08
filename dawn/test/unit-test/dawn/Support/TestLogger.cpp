@@ -31,14 +31,14 @@ TEST(Logger, message_formatting) {
   std::ostringstream buffer;
   Logger log(makeMessageFormatter("LOG"), makeDiagnosticFormatter(), buffer);
   log("TestLogger.cpp", 42) << "Message";
-  EXPECT_EQ(buffer, "[TestLogger.cpp:42] LOG: Message");
+  EXPECT_EQ(buffer.str(), "[TestLogger.cpp:42] LOG: Message");
 }
 
 TEST(Logger, diagnostic_formatting) {
   std::ostringstream buffer;
   Logger log(makeMessageFormatter(), makeDiagnosticFormatter("LOG"), buffer);
   log("TestLogger.cpp", 42, "test.input", SourceLocation(42, 4)) << "Message";
-  EXPECT_EQ(buffer, "[TestLogger.cpp:42] test.input:42:4: LOG: Message");
+  EXPECT_EQ(buffer.str(), "[TestLogger.cpp:42] test.input:42:4: LOG: Message");
 }
 
 TEST(Logger, stream) {
@@ -98,7 +98,7 @@ TEST(Logger, custom_DiagnosticFormatter) {
                   const std::string& source,
                   SourceLocation loc) { return std::string(std::rbegin(msg), std::rend(msg)); },
                buffer);
-    log("TestLogger.cpp", 42) << "message";
+    log("TestLogger.cpp", 42, "", SourceLocation()) << "message";
     const std::string firstMessage = *log.begin();
     EXPECT_EQ(firstMessage[0], 'e');
     EXPECT_EQ(firstMessage[6], 'm');
@@ -119,11 +119,11 @@ TEST(Logger, show_and_hide) {
   std::ostringstream buffer;
   Logger log(makeMessageFormatter(), makeDiagnosticFormatter(), buffer, false);
   log("TestLogger.cpp", 42) << "A message\n";
-  EXPECT_EQ(buffer, "");
+  EXPECT_EQ(buffer.str(), "");
   EXPECT_EQ(log.size(), 1);
   log.show();
   log("TestLogger.cpp", 42) << "A message\n";
-  EXPECT_NE(buffer, "");
+  EXPECT_NE(buffer.str(), "");
   EXPECT_EQ(log.size(), 2);
 }
 

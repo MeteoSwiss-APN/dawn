@@ -90,8 +90,8 @@ public:
 
   /// @brief Add a new message -- called from Proxy objects
   /// {
-  void enqueue(const std::string& msg, const std::string& file, int line);
-  void enqueue(const std::string& msg, const std::string& file, int line, const std::string& source,
+  void enqueue(std::string msg, const std::string& file, int line);
+  void enqueue(std::string msg, const std::string& file, int line, const std::string& source,
                SourceLocation loc);
   /// }
 
