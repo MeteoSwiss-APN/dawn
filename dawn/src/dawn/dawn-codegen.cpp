@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     ("i,input", "Input IIR file. If unset, uses stdin.", cxxopts::value<std::string>())
     ("o,out", "Output filename. If unset, writes code to stdout.", cxxopts::value<std::string>())
     ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect code to file.")
-    ("b,backend", "Backend code generator: [gridtools|gt, c++-naive|naive, cxx-naive-ico|naive-ico, cuda, cxx-opt].",
+    ("b,backend", "Backend code generator: [gridtools|gt, c++-naive|naive, cxx-naive-ico|naive-ico, cuda, cuda-ico, cxx-opt].",
         cxxopts::value<std::string>()->default_value("c++-naive"))
     ("h,help", "Display usage.");
 
