@@ -69,8 +69,10 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     IntegrityChecker integrityChecker(instantiation.get());
     integrityChecker.run();
 
-    MultiStageChecker multiStageChecker(instantiation.get(), context_.getOptions().MaxHaloPoints);
-    multiStageChecker.run();
+    if(iir->getGridType() != ast::GridType::Unstructured) {
+      MultiStageChecker multiStageChecker(instantiation.get(), context_.getOptions().MaxHaloPoints);
+      multiStageChecker.run();
+    }
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
   }
