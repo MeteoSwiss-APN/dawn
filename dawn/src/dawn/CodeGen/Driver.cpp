@@ -15,6 +15,7 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/Cuda-ico/CudaIcoCodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -33,6 +34,9 @@ codegen::Backend parseBackendString(const std::string& backendStr) {
     return codegen::Backend::CXXNaiveIco;
   } else if(backendStr == "cuda" || backendStr == "CUDA") {
     return codegen::Backend::CUDA;
+  } else if(backendStr == "cuda-ico" || backendStr == "CUDAIco" || backendStr == "CUDA-Ico" ||
+            backendStr == "CUDA-ICO") {
+    return codegen::Backend::CUDAIco;
   } else {
     throw std::invalid_argument("Backend not supported");
   }
@@ -50,6 +54,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& con
     return cxxnaiveico::run(context, options);
   case Backend::GridTools:
     return gt::run(context, options);
+  case Backend::CUDAIco:
+    return cudaico::run(context, options);
   case Backend::CXXOpt:
     throw std::invalid_argument("Backend not supported");
   }

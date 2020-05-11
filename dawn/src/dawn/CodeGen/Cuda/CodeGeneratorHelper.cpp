@@ -42,6 +42,14 @@ std::string CodeGeneratorHelper::buildCudaKernelName(
          "_ms" + std::to_string(ms->getID()) + "_kernel";
 }
 
+std::string CodeGeneratorHelper::buildCudaKernelName(
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const std::unique_ptr<iir::MultiStage>& ms, const std::unique_ptr<iir::Stage>& stage) {
+  return instantiation->getName() + "_stencil" + std::to_string(ms->getParent()->getStencilID()) +
+         "_ms" + std::to_string(ms->getID()) + "_s" + std::to_string(stage->getStageID()) +
+         "_kernel";
+}
+
 std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
     const IndexRange<const std::map<int, iir::Field>>& tempFields,
