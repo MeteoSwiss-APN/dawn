@@ -128,20 +128,24 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
+  runFun.addStatement("int dK = (kSize_ + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
   for(auto stageLoc : stageLocType) {
     switch(stageLoc) {
     case ast::LocationType::Cells:
-      runFun.addStatement("dim3 dGC((mesh_.NumCells + BLOCK_SIZE - 1) / BLOCK_SIZE)");
+      runFun.addStatement("dim3 dGC((mesh_.NumCells + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + "
+                          "BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
       break;
     case ast::LocationType::Edges:
-      runFun.addStatement("dim3 dGE((mesh_.NumEdges + BLOCK_SIZE - 1) / BLOCK_SIZE)");
+      runFun.addStatement("dim3 dGE((mesh_.NumEdges + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + "
+                          "BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
       break;
     case ast::LocationType::Vertices:
-      runFun.addStatement("dim3 dGV((mesh_.NumVertices + BLOCK_SIZE - 1) / BLOCK_SIZE)");
+      runFun.addStatement("dim3 dGV((mesh_.NumVertices + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + "
+                          "BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
       break;
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE)");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, BLOCK_SIZE, 1)");
 
   // start timers
   runFun.addStatement("sbase::start()");
@@ -455,6 +459,9 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
+      cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
+      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD");
+      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD");
       switch(loc) {
       case ast::LocationType::Cells:
         cudaKernel.addBlockStatement("if (pidx >= NumCells)",
@@ -471,7 +478,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       }
 
       // k loop
-      cudaKernel.addBlockStatement("for(int kIter = 0; kIter < kSize; kIter++)", [&]() {
+      cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
         // Generate Do-Method
         for(const auto& doMethodPtr : stage->getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
@@ -566,8 +573,9 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
-      "#define BLOCK_SIZE 128",
+      "#define BLOCK_SIZE 16",
       "#define DEVICE_MISSING_VALUE -1",
+      "#define LEVELS_PER_THREAD 1",
       "using namespace gridtools::dawn;",
   };
 
