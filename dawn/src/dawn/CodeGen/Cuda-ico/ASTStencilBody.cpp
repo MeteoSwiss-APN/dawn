@@ -33,6 +33,9 @@ public:
     return;
   }
   bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
+  std::shared_ptr<dawn::iir::ReductionOverNeighborExpr> reduceOverNeighborExpr() const {
+    return *foundReduction_;
+  }
 };
 } // namespace
 
@@ -98,7 +101,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   if(reductionFinder.hasReduceOverNeighborExpr()) {
     expr->getRight()->accept(*this);
     expr->getLeft()->accept(*this);
-    ss_ << expr->getOp() << "lhs";
+
+    ss_ << expr->getOp()
+        << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID());
   } else {
     expr->getLeft()->accept(*this);
     ss_ << " " << expr->getOp() << " ";
@@ -147,12 +152,14 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  ss_ << "::dawn::float_type lhs = ";
+  std::string lhs_name = "lhs_" + std::to_string(expr->getID());
+  std::string weights_name = "weights_" + std::to_string(expr->getID());
+  ss_ << "::dawn::float_type " << lhs_name << " = ";
   expr->getInit()->accept(*this);
   ss_ << ";\n";
   auto weights = expr->getWeights();
   if(weights.has_value()) {
-    ss_ << "::dawn::float_type weights[" << weights->size() << "] = {";
+    ss_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
     bool first = true;
     for(auto weight : *weights) {
       if(!first) {
@@ -172,9 +179,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"
       << "]);\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  ss_ << "lhs " << expr->getOp() << "=";
+  ss_ << lhs_name << " " << expr->getOp() << "=";
   if(weights.has_value()) {
-    ss_ << " weights[nbhIter] * ";
+    ss_ << " " << weights_name << "[nbhIter] * ";
   }
   expr->getRhs()->accept(*this);
   ss_ << ";}\n";
