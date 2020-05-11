@@ -155,10 +155,6 @@ void CudaIcoCodeGen::generateRunFun(
 
       // fields used in the stencil
       const auto fields = support::orderMap(stage->getFields());
-      auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-        return !stencilInstantiation->getMetaData().isAccessType(
-            iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
-      });
 
       //--------------------------------------
       // signature of kernel
@@ -228,7 +224,7 @@ void CudaIcoCodeGen::generateRunFun(
 
       // field arguments (correct cv specifier)
       bool first = true;
-      for(const auto& fieldPair : nonTempFields) {
+      for(const auto& fieldPair : fields) {
         if(!first) {
           kernelCall << ", ";
         }
@@ -314,12 +310,12 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
           field.second.field.getFieldDimensions().getHorizontalFieldDimension());
 
       copyBackFun.addBlockStatement("", [&]() {
-        copyBackFun.addStatement("dawn::float_type* host_buf = new dawn::float_type[" +
+        copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
                                  field.second.Name + ".numElements()]");
         copyBackFun.addStatement(
-            "gpuErrchk(cudaMemcpy((dawn::float_type*) host_buf, " + field.second.Name + "_, " +
+            "gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " + field.second.Name + "_, " +
             field.second.Name +
-            ".numElements()*sizeof(dawn::float_type), cudaMemcpyDeviceToHost))");
+            ".numElements()*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
         if(dims.isDense()) {
           copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
                                    ".data(), kSize_, mesh_." +
@@ -355,7 +351,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     // generate members (fields + kSize + gpuMesh)
     stencilClass.changeAccessibility("private");
     for(auto field : support::orderMap(stencil.getFields())) {
-      stencilClass.addMember("dawn::float_type*", field.second.Name + "_");
+      stencilClass.addMember("::dawn::float_type*", field.second.Name + "_");
     }
     stencilClass.addMember("int", "kSize_ = 0");
     stencilClass.addMember("GpuTriMesh", "mesh_");
@@ -389,10 +385,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // fields used in the stencil
       const auto fields = support::orderMap(stage->getFields());
-      auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-        return !stencilInstantiation->getMetaData().isAccessType(
-            iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
-      });
 
       //--------------------------------------
       // signature of kernel
@@ -445,10 +437,10 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       }
 
       // field arguments (correct cv specifier)
-      for(const auto& fieldPair : nonTempFields) {
+      for(const auto& fieldPair : fields) {
         std::string cvstr = fieldPair.second.getIntend() == dawn::iir::Field::IntendKind::Input
-                                ? "const ::dawn::float_type * "
-                                : "::dawn::float_type * ";
+                                ? "const ::dawn::float_type * __restrict__ "
+                                : "::dawn::float_type * __restrict__ ";
         cudaKernel.addArg(cvstr + stencilInstantiation->getMetaData().getFieldNameFromAccessID(
                                       fieldPair.second.getAccessID()));
       }
@@ -551,16 +543,12 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
 std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
 
-  DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
+  DAWN_LOG(INFO) << "Starting code generation for ...";
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_) {
-    std::shared_ptr<iir::StencilInstantiation> origSI = nameStencilCtxPair.second;
-    // TODO the clone seems to be broken
-    //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
-    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI;
-
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
     std::string code = generateStencilInstantiation(stencilInstantiation);
     if(code.empty())
       return nullptr;

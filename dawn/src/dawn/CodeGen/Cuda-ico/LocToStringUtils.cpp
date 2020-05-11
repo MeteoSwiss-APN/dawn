@@ -118,13 +118,13 @@ std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc) {
 std::string locToDenseTypeString(dawn::ast::LocationType loc) {
   switch(loc) {
   case dawn::ast::LocationType::Cells:
-    return "dawn::cell_field_t<LibTag, dawn::float_type>";
+    return "dawn::cell_field_t<LibTag, ::dawn::float_type>";
     break;
   case dawn::ast::LocationType::Edges:
-    return "dawn::edge_field_t<LibTag, dawn::float_type>";
+    return "dawn::edge_field_t<LibTag, ::dawn::float_type>";
     break;
   case dawn::ast::LocationType::Vertices:
-    return "dawn::vertex_field_t<LibTag, dawn::float_type>";
+    return "dawn::vertex_field_t<LibTag, ::dawn::float_type>";
     break;
   default:
     dawn_unreachable("");
@@ -133,13 +133,13 @@ std::string locToDenseTypeString(dawn::ast::LocationType loc) {
 std::string locToSparseTypeString(dawn::ast::LocationType loc) {
   switch(loc) {
   case dawn::ast::LocationType::Cells:
-    return "dawn::sparse_cell_field_t<LibTag, dawn::float_type>";
+    return "dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>";
     break;
   case dawn::ast::LocationType::Edges:
-    return "dawn::sparse_edge_field_t<LibTag, dawn::float_type>";
+    return "dawn::sparse_edge_field_t<LibTag, ::dawn::float_type>";
     break;
   case dawn::ast::LocationType::Vertices:
-    return "dawn::sparse_vertex_field_t<LibTag, dawn::float_type>";
+    return "dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>";
     break;
   default:
     dawn_unreachable("");

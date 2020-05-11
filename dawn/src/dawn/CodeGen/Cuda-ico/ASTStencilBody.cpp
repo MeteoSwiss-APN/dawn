@@ -67,9 +67,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   parentIsForLoop_ = true;
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = __ldg(&" << chainToTableString(maybeChainPtr->getChain()) << "["
+  ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getChain()) << "["
       << "pidx * " << chainToSparseSizeString(maybeChainPtr->getChain()) << " + nbhIter"
-      << "]);\n";
+      << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
   stmt->getBlockStmt()->accept(*this);
@@ -103,7 +103,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
     expr->getLeft()->accept(*this);
 
     ss_ << expr->getOp()
-        << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID());
+        << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID()) << ";}\n";
   } else {
     expr->getLeft()->accept(*this);
     ss_ << " " << expr->getOp() << " ";
@@ -140,7 +140,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   std::string callee = expr->getCallee();
-  // temporary hack to remove the "math::" prefix
+  // TODO: temporary hack to remove the "math::" prefix
   ss_ << callee.substr(6, callee.size()) << "(";
 
   std::size_t numArgs = expr->getArguments().size();
@@ -154,6 +154,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
   std::string lhs_name = "lhs_" + std::to_string(expr->getID());
   std::string weights_name = "weights_" + std::to_string(expr->getID());
+  ss_ << "{";
   ss_ << "::dawn::float_type " << lhs_name << " = ";
   expr->getInit()->accept(*this);
   ss_ << ";\n";
@@ -168,16 +169,16 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
       weight->accept(*this);
       first = false;
     }
-    ss_ << "};";
+    ss_ << "};\n";
   }
   ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
       << "; nbhIter++)";
 
   parentIsReduction_ = true;
   ss_ << "{\n";
-  ss_ << "int nbhIdx = __ldg(&" << chainToTableString(expr->getNbhChain()) << "["
+  ss_ << "int nbhIdx = " << chainToTableString(expr->getNbhChain()) << "["
       << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"
-      << "]);\n";
+      << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   ss_ << lhs_name << " " << expr->getOp() << "=";
   if(weights.has_value()) {

@@ -35,22 +35,6 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
-// // quick visitor to check whether a statement contains a reduceOverNeighborExpr
-// class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
-//   std::optional<std::shared_ptr<iir::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
-
-// public:
-//   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override {
-//     foundReduction_ = stmt;
-//     return;
-//   }
-//   bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
-//   const iir::ReductionOverNeighborExpr& foundReduceOverNeighborExpr() {
-//     DAWN_ASSERT(foundReduction_.has_value());
-//     return *foundReduction_.value();
-//   }
-// };
-
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
 /// @ingroup cxxnaiveico
 class ASTStencilBody : public ASTCodeGenCXX {
@@ -70,16 +54,6 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
   using Base::visit;
-
-  // static std::string LoopLinearIndexVarName() { return "for_loop_idx"; }
-  // static std::string LoopNeighborIndexVarName() { return "inner_loc"; }
-  // static std::string ReductionIndexVarName(size_t level) {
-  //   return "red_loc" + std::to_string(level);
-  // }
-  // static std::string ReductionSparseIndexVarName(size_t level) {
-  //   return "sparse_dimension_idx" + std::to_string(level);
-  // }
-  // static std::string StageIndexVarName() { return "loc"; }
 
   /// @brief constructor
   ASTStencilBody(const iir::StencilMetaInformation& metadata);
