@@ -37,17 +37,14 @@ protected:
   std::unique_ptr<OptimizerContext> context_;
 
   void raceConditionTest(const std::string& filename) {
-    context_->getDiagnostics().clear();
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to fail...
     dawn::PassFieldVersioning pass(*context_);
-    ASSERT_FALSE(pass.run(instantiation));
-    ASSERT_TRUE(context_->getDiagnostics().hasErrors());
+    EXPECT_ANY_THROW(pass.run(instantiation));
   }
 
   std::shared_ptr<iir::StencilInstantiation> versioningTest(const std::string& filename) {
-    context_->getDiagnostics().clear();
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
