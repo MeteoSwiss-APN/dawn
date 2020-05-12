@@ -18,6 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"
 #include <deque>
@@ -73,10 +74,9 @@ bool PassStageSplitter::run(
               if(hasHorizontalReadBeforeWriteConflict(conditionalBlockGraph)) {
                 // Since splitting inside a conditional block is not supported, report and return an
                 // error.
-                DiagnosticsBuilder diag(DiagnosticsKind::Error, stmt->getSourceLocation());
-                diag << "Read-before-Write conflict inside conditional block is not supported.";
-                context_.getDiagnostics().report(diag);
-                return false;
+                throw SyntacticError(
+                    "Read-before-Write conflict inside conditional block is not supported.",
+                    stencilInstantiation->getMetaData().getFileName(), stmt->getSourceLocation());
               }
             }
 

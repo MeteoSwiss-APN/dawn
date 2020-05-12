@@ -24,6 +24,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include <iostream>
 #include <set>
@@ -85,8 +86,9 @@ static void reportRaceCondition(const iir::Stmt& statement,
       stack.emplace(std::make_tuple(frame->Callee, frame->Loc));
   }
 
-  DAWN_DIAG(ERROR, instantiation.getMetaData().getFileName(), statement.getSourceLocation())
-      << createDiagnosticStackTrace("detected during instantiation of stencil call: ", stack);
+  throw SemanticError(ss.str() + createDiagnosticStackTrace(
+                                     "detected during instantiation of stencil call: ", stack),
+                      instantiation.getMetaData().getFileName(), statement.getSourceLocation());
 }
 
 } // namespace
@@ -241,7 +243,8 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     if(context_.getOptions().DumpRaceConditionGraph)
       graph.toDot("rc_" + instantiation->getName() + ".dot");
     reportRaceCondition(statement, *instantiation);
-    return RCKind::Unresolvable;
+    // The function call above throws, so do not need a return here any longer. Will refactor
+    // further later. return RCKind::Unresolvable;
   }
 
   // Get AccessIDs of the LHS and RHS
@@ -257,7 +260,8 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       if(context_.getOptions().DumpRaceConditionGraph)
         graph.toDot("rc_" + instantiation->getName() + ".dot");
       reportRaceCondition(statement, *instantiation);
-      return RCKind::Unresolvable;
+      // The function call above throws, so do not need a return here any longer. Will refactor
+      // further later. return RCKind::Unresolvable;
     }
   }
 
