@@ -88,9 +88,9 @@ bool PassStageSplitter::run(
             splitterIndices.push_front(stmtIndex);
             graphs.push_front(std::move(oldGraph));
 
-            if(context_.getOptions().ReportPassStageSplit)
-              std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                        << ": split:" << stmt->getSourceLocation().Line << "\n";
+            DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(),
+                      stmt->getSourceLocation())
+                << stencilInstantiation->getName() << ": split stage";
 
             // Clear the new graph an process the current statements again
             newGraph.clear();
@@ -131,9 +131,9 @@ bool PassStageSplitter::run(
     }
   }
 
-  if(context_.getOptions().ReportPassStageSplit && !numSplit)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no split\n";
+  if(!numSplit)
+    DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), SourceLocation())
+        << stencilInstantiation->getName() << ": no split";
 
   return true;
 }
