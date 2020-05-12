@@ -40,8 +40,7 @@ TEST(TestLocalVarType, test_cartesian_01) {
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
@@ -74,8 +73,7 @@ TEST(TestLocalVarType, test_cartesian_02) {
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
@@ -109,8 +107,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_01) {
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
@@ -148,8 +145,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_02) {
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
@@ -196,8 +192,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_03) {
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varD))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
@@ -250,8 +245,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varD))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
@@ -306,8 +300,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
                              b.stmt(b.assignExpr(b.at(varD), b.at(f_c))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -358,8 +351,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
                                      b.stmt(b.assignExpr(b.at(varB), b.at(varC))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -409,8 +401,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_01) {
                                                       b.declareVar(varC))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -462,8 +453,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_02) {
                                                       b.declareVar(varC))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -511,8 +501,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_03) {
                              b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -560,8 +549,7 @@ TEST(TestLocalVarType, test_unstructured_nested_if_01) {
               b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -610,8 +598,7 @@ TEST(TestLocalVarType, test_unstructured_nested_if_02) {
               b.stmt(b.assignExpr(b.at(varB), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -651,8 +638,7 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
                                                                 ast::LocationType::Edges}))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
@@ -686,8 +672,7 @@ TEST(TestLocalVarType, test_throw_unstructured_01) {
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -721,8 +706,7 @@ TEST(TestLocalVarType, test_throw_unstructured_02) {
                              b.stmt(b.assignExpr(b.at(varA), b.at(f_c))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -762,8 +746,7 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
                                      b.stmt(b.assignExpr(b.at(varC), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -795,8 +778,7 @@ TEST(TestLocalVarType, test_throw_unstructured_04) {
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(1.0))))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -833,8 +815,7 @@ TEST(TestLocalVarType, test_throw_unstructured_05) {
                                      b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -866,8 +847,7 @@ TEST(TestLocalVarType, test_throw_unstructured_06) {
                            b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -904,8 +884,7 @@ TEST(TestLocalVarType, test_throw_nested_if_01) {
                                    b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(1.0))))))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -948,8 +927,7 @@ TEST(TestLocalVarType, test_throw_nested_if_02) {
               b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown

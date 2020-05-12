@@ -16,7 +16,6 @@
 #define DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
 
 #include "dawn/Optimizer/PassManager.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
 #include <memory>
@@ -53,7 +52,6 @@ public:
   };
 
 private:
-  DiagnosticsEngine& diagnostics_;
   OptimizerContextOptions options_;
 
   const std::shared_ptr<SIR> SIR_;
@@ -65,11 +63,10 @@ private:
 
 public:
   /// @brief Initialize the context with a SIR
-  OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
-                   const std::shared_ptr<SIR>& SIR);
+  OptimizerContext(OptimizerContextOptions options, const std::shared_ptr<SIR>& SIR);
 
   /// @brief Initialize the context with a stencil instantiation map
-  OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+  OptimizerContext(OptimizerContextOptions options,
                    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
                        stencilInstantiationMap);
 
@@ -77,9 +74,6 @@ public:
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& getStencilInstantiationMap();
   const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   getStencilInstantiationMap() const;
-
-  /// @brief Check if there are errors
-  bool hasErrors() const { return getDiagnostics().hasErrors(); }
 
   /// @brief Get the PassManager
   PassManager& getPassManager() { return passManager_; }
@@ -91,10 +85,6 @@ public:
   /// @brief Get options
   const OptimizerContextOptions& getOptions() const;
   OptimizerContextOptions& getOptions();
-
-  /// @brief Get the diagnostics engine
-  const DiagnosticsEngine& getDiagnostics() const;
-  DiagnosticsEngine& getDiagnostics();
 
   /// @brief Get the hardware configuration
   const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_; }

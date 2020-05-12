@@ -16,6 +16,7 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringSwitch.h"
@@ -73,10 +74,7 @@ OptimizerContext::OptimizerContextOptions createContextOptionsFromOptions(const 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options) {
-  DiagnosticsEngine diagnostics;
-  diagnostics.setFilename(stencilIR->Filename);
-
-  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options), stencilIR);
+  OptimizerContext optimizer(createContextOptionsFromOptions(options), stencilIR);
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
@@ -100,6 +98,7 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   // validation checks after parallelisation
   optimizer.pushBackPass<PassValidation>();
 
+  dawn::log::error.clear();
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
     // Run optimization passes
     auto& instantiation = stencil.second;
@@ -112,10 +111,8 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
   }
 
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in lowering");
+  if(dawn::log::error.size() > 0) {
+    throw CompileError("An error occured in lowering");
   }
 
   return run(optimizer.getStencilInstantiationMap(), groups, options);
@@ -125,7 +122,6 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const std::list<PassGroup>& groups, const Options& options) {
-  DiagnosticsEngine diagnostics;
 
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
@@ -141,8 +137,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   }
 
   // Initialize optimizer
-  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options),
-                             stencilInstantiationMap);
+  OptimizerContext optimizer(createContextOptionsFromOptions(options), stencilInstantiationMap);
 
   for(auto group : groups) {
     switch(group) {
@@ -265,6 +260,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 
   //===-----------------------------------------------------------------------------------------
 
+  dawn::log::error.clear();
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
     // Run optimization passes
     auto& instantiation = stencil.second;
@@ -290,10 +286,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     }
   }
 
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in optimization");
+  if(dawn::log::error.size() > 0) {
+    throw CompileError("An error occured in optimization");
   }
 
   return optimizer.getStencilInstantiationMap();

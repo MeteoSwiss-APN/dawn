@@ -29,11 +29,8 @@ bool PassManager::runAllPassesOnStencilInstantiation(
   for(auto& pass : passes_) {
     for(const auto& dependency : pass->getDependencies())
       if(std::find(passesRan.begin(), passesRan.end(), dependency) == passesRan.end()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error);
-        diag << "invalid pass registration: optimizer pass '" << pass->getName() << "' depends on '"
-             << dependency << "'";
-        context.getDiagnostics().report(diag);
-        return false;
+        throw LogicError(std::string("Invalid pass registration: optimizer pass '") +
+                         pass->getName() + "' depends on '" + dependency + "'");
       }
 
     if(!runPassOnStencilInstantiation(context, instantiation, pass.get()))

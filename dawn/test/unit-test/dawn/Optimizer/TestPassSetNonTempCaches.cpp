@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -30,10 +29,9 @@ TEST(TestPassSetNonTempCaches, NoCache1) {
   */
   std::shared_ptr<iir::StencilInstantiation> instantiation =
       IIRSerializer::deserialize("input/TestNonTempCache_01.iir");
-  DiagnosticsEngine diag;
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_ =
-      std::make_unique<OptimizerContext>(diag, options_, nullptr);
+      std::make_unique<OptimizerContext>(options_, nullptr);
   context_->getOptions().UseNonTempCaches = true;
   PassSetNonTempCaches pass(*context_);
   pass.run(instantiation);
@@ -50,10 +48,9 @@ TEST(TestPassSetNonTempCaches, NoCache2) {
   */
   std::shared_ptr<iir::StencilInstantiation> instantiation =
       IIRSerializer::deserialize("input/TestNonTempCache_02.iir");
-  DiagnosticsEngine diag;
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_ =
-      std::make_unique<OptimizerContext>(diag, options_, nullptr);
+      std::make_unique<OptimizerContext>(options_, nullptr);
   context_->getOptions().UseNonTempCaches = true;
   PassSetNonTempCaches pass(*context_);
   pass.run(instantiation);
@@ -69,10 +66,9 @@ TEST(TestPassSetNonTempCaches, MultipleCaches1) {
   */
   std::shared_ptr<iir::StencilInstantiation> instantiation =
       IIRSerializer::deserialize("input/TestNonTempCache_03.iir");
-  DiagnosticsEngine diag;
   dawn::OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_ =
-      std::make_unique<OptimizerContext>(diag, options_, nullptr);
+      std::make_unique<OptimizerContext>(options_, nullptr);
   context_->getOptions().SetNonTempCaches = true;
   PassSetNonTempCaches pass(*context_);
   pass.run(instantiation);

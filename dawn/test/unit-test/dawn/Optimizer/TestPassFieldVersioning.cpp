@@ -16,7 +16,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -27,13 +26,10 @@ namespace {
 
 class TestPassFieldVersioning : public ::testing::Test {
 public:
-  TestPassFieldVersioning() {
-    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
-  }
+  TestPassFieldVersioning() { context_ = std::make_unique<OptimizerContext>(options_, nullptr); }
 
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
-  DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
   void raceConditionTest(const std::string& filename) {
