@@ -31,11 +31,6 @@ add_library(DawnSupport
   Compiler.h
   ComparisonHelpers.h
   ContainerUtils.h
-  DiagnosticsEngine.cpp
-  DiagnosticsEngine.h
-  DiagnosticsMessage.h
-  DiagnosticsQueue.cpp
-  DiagnosticsQueue.h
   DoubleSidedMap.h
   EditDistance.h
   Exception.h
