@@ -28,6 +28,7 @@
 #include "dawn/Support/Logger.h"
 #include <iostream>
 #include <set>
+#include <sstream>
 
 #include "dawn/Optimizer/CreateVersionAndRename.h"
 namespace dawn {
@@ -274,25 +275,23 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       renameCandiates.insert(AccessID);
   }
 
-  if(context_.getOptions().ReportPassFieldVersioning)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
-              << ": rename:" << statement.getSourceLocation().Line;
-
+  std::stringstream ss;
+  ss << instantiation->getName() << ": rename:" << statement.getSourceLocation().Line;
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
     int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
                                              index, assignment->getRight(), RenameDirection::Above);
 
-    if(context_.getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ")
-                << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
-                << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
+    ss << (numRenames != 0 ? ", " : " ")
+       << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
+       << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
 
     numRenames++;
   }
 
-  if(context_.getOptions().ReportPassFieldVersioning && numRenames > 0)
-    std::cout << "\n";
+  if(numRenames > 0)
+    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
+        << ss.str() + "\n";
 
   numRenames_ += numRenames;
   return RCKind::Fixed;
