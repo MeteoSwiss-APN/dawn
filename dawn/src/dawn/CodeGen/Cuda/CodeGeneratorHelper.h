@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
 #include "dawn/IIR/Cache.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
 #include <map>
@@ -84,6 +85,12 @@ public:
   static std::string
   buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                       const std::unique_ptr<iir::MultiStage>& ms);
+
+  /// @brief compose the cuda kernel name of a stencil instantiation
+  static std::string
+  buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                      const std::unique_ptr<iir::MultiStage>& ms,
+                      const std::unique_ptr<iir::Stage>& stage);
 };
 
 } // namespace cuda
