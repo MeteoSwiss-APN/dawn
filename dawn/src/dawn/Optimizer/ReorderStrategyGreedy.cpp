@@ -20,9 +20,11 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/Support/Exception.h"
 #include <algorithm>
 #include <optional>
 #include <set>
+#include <sstream>
 #include <vector>
 
 namespace dawn {
@@ -147,17 +149,17 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
               break;
             } else if(lastChance) {
               // Our stage exceeds the maximum allowed boundary extents... nothing we can do
-              DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
-              diag << "stencil '" << instantiation->getName()
-                   << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
-                   << ")";
-              context.getDiagnostics().report(diag);
-              return nullptr;
+              std::stringstream ss;
+              ss << "Stencil '" << instantiation->getName()
+                 << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent << ")";
+              throw SemanticError(ss.str());
             }
           }
-          DAWN_ASSERT_MSG(!lastChance,
-                          "merging stage in empty multi-stage failed (this probably means the "
-                          "stage graph contains cycles - i.e is not a DAG!)");
+          if(lastChance) {
+            throw SemanticError(
+                "merging stage in empty multi-stage failed (this probably means the "
+                "stage graph contains cycles - i.e is not a DAG!)");
+          }
         }
 
         // Advance to the next multi-stage
