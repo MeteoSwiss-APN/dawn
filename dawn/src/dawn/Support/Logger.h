@@ -20,7 +20,9 @@
 #include <iostream>
 #include <list>
 #include <sstream>
+#include <stack>
 #include <string>
+#include <tuple>
 
 namespace dawn {
 
@@ -148,6 +150,12 @@ Logger::MessageFormatter makeMessageFormatter(const std::string type = "");
 
 /// @brief create a basic (default) diagnostic formatter
 Logger::DiagnosticFormatter makeDiagnosticFormatter(const std::string type = "");
+
+/// @brief Stack Track object for diagnostics
+using DiagnosticStack = std::stack<std::tuple<std::string, SourceLocation>>;
+
+/// @brief Create a stack trace string for diagnostics
+std::string createDiagnosticStackTrace(const std::string& prefix, const DiagnosticStack& stack);
 
 namespace log {
 // Loggers used for information and warnings

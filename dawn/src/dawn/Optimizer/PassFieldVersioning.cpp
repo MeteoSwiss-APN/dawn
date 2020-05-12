@@ -24,6 +24,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Logger.h"
 #include <iostream>
 #include <set>
 
@@ -68,31 +69,27 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 
 /// @brief Report a race condition in the given `statement`
 static void reportRaceCondition(const iir::Stmt& statement,
-                                iir::StencilInstantiation& instantiation,
-                                OptimizerContext& context) {
-  DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.getSourceLocation());
-
+                                iir::StencilInstantiation& instantiation) {
+  std::stringstream ss;
   if(isa<iir::IfStmt>(&statement)) {
-    diag << "unresolvable race-condition in body of if-statement";
+    ss << "Unresolvable race-condition in body of if-statement\n";
   } else {
-    diag << "unresolvable race-condition in statement";
+    ss << "Unresolvable race-condition in statement\n";
   }
-
-  context.getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
+  dawn::DiagnosticStack stack;
   if(statement.getData<iir::IIRStmtData>().StackTrace) {
-    const std::vector<ast::StencilCall*>& stackTrace =
-        *statement.getData<iir::IIRStmtData>().StackTrace;
-    for(int i = stackTrace.size() - 1; i >= 0; --i) {
-      DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
-      note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
-      context.getDiagnostics().report(note);
-    }
+    const auto& stackTrace = *statement.getData<iir::IIRStmtData>().StackTrace;
+    for(const auto& frame : stackTrace)
+      stack.emplace(std::make_tuple(frame->Callee, frame->Loc));
   }
+
+  DAWN_DIAG(ERROR, instantiation.getMetaData().getFileName(), statement.getSourceLocation())
+      << createDiagnosticStackTrace("detected during instantiation of stencil call: ", stack);
 }
 
-} // anonymous namespace
+} // namespace
 
 PassFieldVersioning::PassFieldVersioning(OptimizerContext& context)
     : Pass(context, "PassFieldVersioning", true), numRenames_(0) {}
@@ -153,9 +150,9 @@ bool PassFieldVersioning::run(
     }
   }
 
-  if(context_.getOptions().ReportPassFieldVersioning && numRenames_ == 0)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no rename\n";
+  if(numRenames_ == 0)
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": no rename";
+
   return true;
 }
 
@@ -243,7 +240,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   if(!assignment) {
     if(context_.getOptions().DumpRaceConditionGraph)
       graph.toDot("rc_" + instantiation->getName() + ".dot");
-    reportRaceCondition(statement, *instantiation, context_);
+    reportRaceCondition(statement, *instantiation);
     return RCKind::Unresolvable;
   }
 
@@ -259,7 +256,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     if(!scc.count(LHSAccessID)) {
       if(context_.getOptions().DumpRaceConditionGraph)
         graph.toDot("rc_" + instantiation->getName() + ".dot");
-      reportRaceCondition(statement, *instantiation, context_);
+      reportRaceCondition(statement, *instantiation);
       return RCKind::Unresolvable;
     }
   }
