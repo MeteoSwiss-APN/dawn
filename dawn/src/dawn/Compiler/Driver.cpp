@@ -17,7 +17,7 @@
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Iterator.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringSwitch.h"
 
 #include "dawn/Optimizer/OptimizerContext.h"

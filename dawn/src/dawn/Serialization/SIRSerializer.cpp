@@ -20,8 +20,9 @@
 #include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
@@ -52,10 +53,10 @@ public:
       DAWN_LOG(WARNING) << "Protobuf: " << message;
       break;
     case google::protobuf::LOGLEVEL_ERROR:
-      DAWN_LOG(ERROR) << "Protobuf: " << message;
+      throw SyntacticError(std::string("[ERROR] Protobuf error: ") + message);
       break;
     case google::protobuf::LOGLEVEL_FATAL:
-      DAWN_LOG(FATAL) << "Protobuf: " << message;
+      throw SyntacticError(std::string("[FATAL] Protobuf error occurred: ") + message);
       break;
     }
 

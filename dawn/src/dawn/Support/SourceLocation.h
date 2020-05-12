@@ -36,7 +36,9 @@ struct SourceLocation {
   SourceLocation& operator=(SourceLocation&&) = default;
   /// @}
 
-  bool isValid() const { return (Line != -1 && Column != -1); }
+  bool isValid() const { return (Line >= 0 && Column >= 0); }
+
+  explicit operator std::string() const;
 
   int Line;
   int Column;

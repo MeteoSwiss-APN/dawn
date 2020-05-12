@@ -56,10 +56,20 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(!optionsParser.parse(args, clangArgs))
     return ReturnValue{1, returnSIR};
 
-  // Initialize the Logger
-  auto logger = std::make_unique<Logger>();
-  if(context->getOptions().Verbose)
-    dawn::Logger::getSingleton().registerLogger(logger.get());
+  // Save existing formatter and set to gtclang
+  auto infoMessageFormatter = dawn::log::info.messageFormatter();
+  auto warnMessageFormatter = dawn::log::warn.messageFormatter();
+  auto errorMessageFormatter = dawn::log::error.messageFormatter();
+  dawn::log::info.messageFormatter(makeGTClangMessageFormatter("[INFO]"));
+  dawn::log::warn.messageFormatter(makeGTClangMessageFormatter("[WARNING]"));
+  dawn::log::error.messageFormatter(makeGTClangMessageFormatter("[ERROR]"));
+
+  auto infoDiagnosticFormatter = dawn::log::info.diagnosticFormatter();
+  auto warnDiagnosticFormatter = dawn::log::warn.diagnosticFormatter();
+  auto errorDiagnosticFormatter = dawn::log::error.diagnosticFormatter();
+  dawn::log::info.diagnosticFormatter(makeGTClangDiagnosticFormatter("[INFO]"));
+  dawn::log::warn.diagnosticFormatter(makeGTClangDiagnosticFormatter("[WARNING]"));
+  dawn::log::error.diagnosticFormatter(makeGTClangDiagnosticFormatter("[ERROR]"));
 
   GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -83,6 +93,15 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
 
   includeChecker.Restore();
 
+  // Reset formatters
+  dawn::log::info.messageFormatter(infoMessageFormatter);
+  dawn::log::warn.messageFormatter(warnMessageFormatter);
+  dawn::log::error.messageFormatter(errorMessageFormatter);
+
+  dawn::log::info.diagnosticFormatter(infoDiagnosticFormatter);
+  dawn::log::warn.diagnosticFormatter(warnDiagnosticFormatter);
+  dawn::log::error.diagnosticFormatter(errorDiagnosticFormatter);
+
   return ReturnValue{ret, returnSIR};
 }
 
@@ -104,10 +123,20 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   clangArgs.push_back("gtc-parse");
   clangArgs.push_back(fileName.c_str());
 
-  // Initialize the Logger
-  auto logger = std::make_unique<gtclang::Logger>();
-  if(options.Verbose)
-    dawn::Logger::getSingleton().registerLogger(logger.get());
+  // Save existing formatter and set to gtclang
+  auto infoMessageFormatter = dawn::log::info.messageFormatter();
+  auto warnMessageFormatter = dawn::log::warn.messageFormatter();
+  auto errorMessageFormatter = dawn::log::error.messageFormatter();
+  dawn::log::info.messageFormatter(makeGTClangMessageFormatter("[INFO]"));
+  dawn::log::warn.messageFormatter(makeGTClangMessageFormatter("[WARNING]"));
+  dawn::log::error.messageFormatter(makeGTClangMessageFormatter("[ERROR]"));
+
+  auto infoDiagnosticFormatter = dawn::log::info.diagnosticFormatter();
+  auto warnDiagnosticFormatter = dawn::log::warn.diagnosticFormatter();
+  auto errorDiagnosticFormatter = dawn::log::error.diagnosticFormatter();
+  dawn::log::info.diagnosticFormatter(makeGTClangDiagnosticFormatter("[INFO]"));
+  dawn::log::warn.diagnosticFormatter(makeGTClangDiagnosticFormatter("[WARNING]"));
+  dawn::log::error.diagnosticFormatter(makeGTClangDiagnosticFormatter("[ERROR]"));
 
   gtclang::GTClangIncludeChecker includeChecker;
   if(clangArgs.size() > 1)
@@ -135,6 +164,15 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   }
 
   includeChecker.Restore();
+
+  // Reset formatters
+  dawn::log::info.messageFormatter(infoMessageFormatter);
+  dawn::log::warn.messageFormatter(warnMessageFormatter);
+  dawn::log::error.messageFormatter(errorMessageFormatter);
+
+  dawn::log::info.diagnosticFormatter(infoDiagnosticFormatter);
+  dawn::log::warn.diagnosticFormatter(warnDiagnosticFormatter);
+  dawn::log::error.diagnosticFormatter(errorDiagnosticFormatter);
 
   return stencilIR;
 }

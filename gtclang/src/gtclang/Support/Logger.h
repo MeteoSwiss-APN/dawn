@@ -14,21 +14,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 
 #ifndef GTCLANG_SUPPORT_LOGGER_H
 #define GTCLANG_SUPPORT_LOGGER_H
 
 namespace gtclang {
 
-/// @brief Logger implementation
-/// @ingroup support
-class Logger : public dawn::LoggerInterface {
-public:
-  /// @brief Log `message` of severity `level` at position `file:line`
-  virtual void log(dawn::LoggingLevel level, const std::string& message, const char* file,
-                   int line) override;
-};
+/// @brief Make a Logger::MessageFormatter for GTClang
+dawn::Logger::MessageFormatter makeGTClangMessageFormatter(const std::string& prefix);
+
+/// @brief Make a Logger::DiagnosticFormatter for GTClang
+dawn::Logger::DiagnosticFormatter makeGTClangDiagnosticFormatter(const std::string& prefix);
 
 } // namespace gtclang
 

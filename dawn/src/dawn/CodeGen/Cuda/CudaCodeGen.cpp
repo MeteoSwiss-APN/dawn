@@ -26,7 +26,7 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Iterator.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
 #include <numeric>

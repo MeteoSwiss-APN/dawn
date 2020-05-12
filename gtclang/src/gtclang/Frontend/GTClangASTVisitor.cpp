@@ -17,7 +17,7 @@
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/FileSystem.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/ClangCompat/SourceLocation.h"
 #include "clang/AST/ASTContext.h"
