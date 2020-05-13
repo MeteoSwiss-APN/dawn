@@ -22,7 +22,7 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/MultiStage.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
