@@ -19,7 +19,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <deque>
 #include <iostream>
 #include <iterator>

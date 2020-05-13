@@ -23,7 +23,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <iostream>
 #include <set>
 #include <unordered_map>

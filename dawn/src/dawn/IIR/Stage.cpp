@@ -25,7 +25,7 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/ASTVisitor.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <algorithm>
 #include <iterator>
 #include <set>

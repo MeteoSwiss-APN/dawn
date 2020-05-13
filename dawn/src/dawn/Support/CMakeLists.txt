@@ -47,8 +47,8 @@ add_library(DawnSupport
   IndexRange.h
   Iterator.h
   Json.h
-  Logging.cpp
-  Logging.h
+  Logger.cpp
+  Logger.h
   MathExtras.h
   NonCopyable.h
   Printing.h

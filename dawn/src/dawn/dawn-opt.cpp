@@ -20,7 +20,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Json.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 
 #include <cxxopts.hpp>
 #include <fstream>

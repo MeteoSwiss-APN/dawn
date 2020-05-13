@@ -20,7 +20,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>

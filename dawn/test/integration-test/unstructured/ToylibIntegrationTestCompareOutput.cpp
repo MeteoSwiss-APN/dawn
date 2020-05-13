@@ -22,7 +22,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "UnstructuredVerifier.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "interface/toylib_interface.hpp"
 #include "toylib/toylib.hpp"
 

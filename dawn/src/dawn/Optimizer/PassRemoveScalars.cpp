@@ -20,7 +20,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -234,8 +234,8 @@ bool PassRemoveScalars::run(
   // Check if we have unsupported statements. If we do, warn the user and skip the pass execution.
   for(const auto& stmt : iterateIIROverStmt(*stencilInstantiation->getIIR())) {
     if(isStatementUnsupported(stmt, stencilInstantiation->getMetaData())) {
-      DAWN_LOG(INFO) << "Unsupported statement at line " << stmt->getSourceLocation()
-                     << ". Skipping removal of scalar variables.";
+      DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), stmt->getSourceLocation())
+          << "Unsupported statement. Skipping removal of scalar variables...";
       return true;
     }
   }
@@ -245,11 +245,9 @@ bool PassRemoveScalars::run(
     auto removedScalars = removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
     if(context_.getOptions().ReportPassRemoveScalars) {
       for(const auto& varName : removedScalars) {
-        std::cout << "PASS: " << getName() << ": " << stencilInstantiation->getName()
-                  << ": DoMethod: " << doMethod->getID() << " removed variable: " << varName
-                  << std::endl;
+        DAWN_LOG(INFO) << stencilInstantiation->getName() << ": DoMethod: " << doMethod->getID()
+                       << " removed variable: " << varName;
       }
-      std::cout.flush();
     }
     // Recompute extents of fields
     doMethod->update(iir::NodeUpdateType::level);

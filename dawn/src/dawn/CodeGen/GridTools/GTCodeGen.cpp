@@ -23,7 +23,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/DiagnosticsEngine.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <map>
 #include <optional>

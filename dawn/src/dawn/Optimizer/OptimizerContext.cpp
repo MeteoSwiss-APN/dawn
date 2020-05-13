@@ -26,7 +26,7 @@
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
 #include <stack>
 
