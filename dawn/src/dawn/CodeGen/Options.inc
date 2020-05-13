@@ -37,6 +37,8 @@ OPT(int, MaxHaloSize, 3, "max-halo-size", "",
     "Set the maximum number of allowed halo points", "<N>", true, false)
 OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
     "Make use of the parallel execution policy", "", false, true)
+OPT(bool, RunWithSync, true, "run-with-sync", "",
+    "Generate run methods with storage synchronization", "", false, true)
 OPT(int, MaxBlocksPerSM, 0, "max-blocks-sm", "",
     "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
 OPT(int, nsms, 0, "nsms", "", "Number of (CUDA) SMs", "<nsms>", true, false)

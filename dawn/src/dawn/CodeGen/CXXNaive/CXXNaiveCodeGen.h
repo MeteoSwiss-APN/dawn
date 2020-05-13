@@ -74,7 +74,7 @@ private:
   void
   generateStencilWrapperRun(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties, bool withSync = true) const;
+                            const CodeGenProperties& codeGenProperties) const;
 };
 } // namespace cxxnaive
 } // namespace codegen

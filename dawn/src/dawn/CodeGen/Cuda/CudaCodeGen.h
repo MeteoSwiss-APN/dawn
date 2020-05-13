@@ -45,7 +45,7 @@ class CudaCodeGen : public CodeGen {
 public:
   ///@brief constructor
   CudaCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints,
-              int nsms, int maxBlocksPerSM, const Array3i& domainSize);
+              int nsms, int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync = true);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -53,6 +53,7 @@ public:
     int nsms;
     int maxBlocksPerSM;
     Array3i domainSize;
+    bool runWithSync;
   };
 
 private:
@@ -100,7 +101,7 @@ private:
   void
   generateStencilWrapperRun(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties, bool withSync = true) const;
+                            const CodeGenProperties& codeGenProperties) const;
 
   void
   generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass,

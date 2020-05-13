@@ -39,7 +39,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
   DiagnosticsEngine diagnostics;
-  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize);
+  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize,
+               options.RunWithSync);
   if(diagnostics.hasDiags()) {
     for(const auto& diag : diagnostics.getQueue())
       DAWN_LOG(INFO) << diag->getMessage();
@@ -50,9 +51,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 }
 
 GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                     bool useParallelEP, int maxHaloPoints)
+                     bool useParallelEP, int maxHaloPoints, bool runWithSync)
     : CodeGen(ctx, engine, maxHaloPoints),
-      mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}
+      mplContainerMaxSize_(20), codeGenOptions_{useParallelEP, runWithSync} {}
 
 GTCodeGen::~GTCodeGen() {}
 
@@ -246,8 +247,7 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperSyncMethod(stencilWrapperClass);
 
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, true);
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, false);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
     generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
@@ -300,7 +300,7 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
 void GTCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const CodeGenProperties& codeGenProperties, bool withSync) const {
+    const CodeGenProperties& codeGenProperties) const {
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   // Create the StencilID -> stencil name map
@@ -328,8 +328,7 @@ void GTCodeGen::generateStencilWrapperRun(
   }
 
   // Generate the run method by generate code for the stencil description AST
-  std::string methodName = withSync ? "run" : "runWithoutSync";
-  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", methodName);
+  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
 
   std::vector<std::string> apiFieldNames;
 
@@ -344,8 +343,9 @@ void GTCodeGen::generateStencilWrapperRun(
   }
 
   RunMethod.startBody();
-
   RangeToString apiFieldArgs(",", "", "");
+
+  bool withSync = codeGenOptions_.runWithSync_;
   if(withSync) {
     RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
   }

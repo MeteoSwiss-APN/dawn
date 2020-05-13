@@ -34,6 +34,10 @@ TEST(Cuda, LaplacianStencil) {
   runTest(dawn::getLaplacianStencil(), backend, "reference/laplacian_stencil.cu");
 }
 
+TEST(Cuda, LaplacianStencilNoSync) {
+  runTest(dawn::getLaplacianStencil(), backend, "reference/laplacian_stencil_nosync.cu", false);
+}
+
 TEST(Cuda, ConditionalStencil) {
   runTest(dawn::IIRSerializer::deserialize("input/conditional_stencil.iir"), backend,
           "reference/conditional_stencil.cu");

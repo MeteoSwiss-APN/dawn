@@ -59,7 +59,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   DiagnosticsEngine diagnostics;
   const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
   CudaCodeGen CG(stencilInstantiationMap, diagnostics, options.MaxHaloSize, options.nsms,
-                 options.MaxBlocksPerSM, domain_size);
+                 options.MaxBlocksPerSM, domain_size, options.RunWithSync);
   if(diagnostics.hasDiags()) {
     for(const auto& diag : diagnostics.getQueue())
       DAWN_LOG(INFO) << diag->getMessage();
@@ -70,8 +70,10 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 }
 
 CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                         int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize)
-    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
+                         int maxHaloPoints, int nsms, int maxBlocksPerSM,
+                         const Array3i& domainSize, bool runWithSync)
+    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize,
+                                                           runWithSync} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
@@ -136,8 +138,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperSyncMethod(stencilWrapperClass);
 
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, true);
-  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties, false);
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   generateStencilWrapperPublicMemberFunctions(stencilWrapperClass, codeGenProperties);
 
@@ -420,11 +421,10 @@ void CudaCodeGen::generateStencilWrapperMembers(
 void CudaCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const CodeGenProperties& codeGenProperties, bool withSync) const {
+    const CodeGenProperties& codeGenProperties) const {
   const auto& metadata = stencilInstantiation->getMetaData();
   // Generate the run method by generate code for the stencil description AST
-  std::string methodName = withSync ? "run" : "runWithoutSync";
-  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", methodName, "");
+  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
   std::vector<std::string> apiFieldNames;
 
   for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
@@ -441,6 +441,7 @@ void CudaCodeGen::generateStencilWrapperRun(
 
   RangeToString apiFieldArgs(",", "", "");
 
+  bool withSync = codeGenOptions_.runWithSync;
   if(withSync) {
     RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
   }
