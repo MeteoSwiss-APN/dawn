@@ -39,7 +39,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
   DiagnosticsEngine diagnostics;
-  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize);
+  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize,
+               options.RunWithSync);
   if(diagnostics.hasDiags()) {
     for(const auto& diag : diagnostics.getQueue())
       DAWN_LOG(INFO) << diag->getMessage();
@@ -50,9 +51,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 }
 
 GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                     bool useParallelEP, int maxHaloPoints)
+                     bool useParallelEP, int maxHaloPoints, bool runWithSync)
     : CodeGen(ctx, engine, maxHaloPoints),
-      mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}
+      mplContainerMaxSize_(20), codeGenOptions_{useParallelEP, runWithSync} {}
 
 GTCodeGen::~GTCodeGen() {}
 
@@ -342,9 +343,12 @@ void GTCodeGen::generateStencilWrapperRun(
   }
 
   RunMethod.startBody();
-
   RangeToString apiFieldArgs(",", "", "");
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+
+  bool withSync = codeGenOptions_.runWithSync_;
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
 
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
                                       stencilIDToRunArguments);
@@ -355,7 +359,9 @@ void GTCodeGen::generateStencilWrapperRun(
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   RunMethod.commit();
 }
 void GTCodeGen::generateStencilWrapperCtr(

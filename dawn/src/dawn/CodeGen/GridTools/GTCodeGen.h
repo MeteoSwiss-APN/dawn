@@ -45,7 +45,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 class GTCodeGen : public CodeGen {
 public:
   GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine, bool useParallelEP,
-            int maxHaloPoints);
+            int maxHaloPoints, bool runWithSync = true);
   virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
@@ -134,6 +134,7 @@ private:
   /// Use the parallel keyword for mulistages
   struct GTCodeGenOptions {
     bool useParallelEP_;
+    bool runWithSync_;
   } codeGenOptions_;
 };
 
