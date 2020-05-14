@@ -58,14 +58,14 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     const Options& options) {
   const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
   CudaCodeGen CG(stencilInstantiationMap, options.MaxHaloSize, options.nsms, options.MaxBlocksPerSM,
-                 domain_size);
+                 domain_size, options.RunWithSync);
 
   return CG.generateCode();
 }
 
 CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
-                         int maxBlocksPerSM, const Array3i& domainSize)
-    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize} {}
+                         int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize, runWithSync} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
@@ -433,7 +433,10 @@ void CudaCodeGen::generateStencilWrapperRun(
 
   RangeToString apiFieldArgs(",", "", "");
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  bool withSync = codeGenOptions_.runWithSync;
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
@@ -443,7 +446,9 @@ void CudaCodeGen::generateStencilWrapperRun(
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   RunMethod.commit();
 }
 

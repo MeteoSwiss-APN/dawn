@@ -38,13 +38,16 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  GTCodeGen CG(stencilInstantiationMap, options.UseParallelEP, options.MaxHaloSize);
+  GTCodeGen CG(stencilInstantiationMap, options.UseParallelEP, options.MaxHaloSize,
+               options.RunWithSync);
 
   return CG.generateCode();
 }
 
-GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, bool useParallelEP, int maxHaloPoints)
-    : CodeGen(ctx, maxHaloPoints), mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}
+GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, bool useParallelEP, int maxHaloPoints,
+                     bool runWithSync)
+    : CodeGen(ctx, maxHaloPoints),
+      mplContainerMaxSize_(20), codeGenOptions_{useParallelEP, runWithSync} {}
 
 GTCodeGen::~GTCodeGen() {}
 
@@ -334,9 +337,12 @@ void GTCodeGen::generateStencilWrapperRun(
   }
 
   RunMethod.startBody();
-
   RangeToString apiFieldArgs(",", "", "");
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+
+  bool withSync = codeGenOptions_.runWithSync_;
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
 
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
                                       stencilIDToRunArguments);
@@ -347,7 +353,9 @@ void GTCodeGen::generateStencilWrapperRun(
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
-  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  if(withSync) {
+    RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+  }
   RunMethod.commit();
 }
 void GTCodeGen::generateStencilWrapperCtr(

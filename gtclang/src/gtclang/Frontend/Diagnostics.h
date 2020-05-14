@@ -17,7 +17,6 @@
 #ifndef GTCLANG_FRONTEND_DIAGNOSTICS
 #define GTCLANG_FRONTEND_DIAGNOSTICS
 
-#include "dawn/Support/DiagnosticsMessage.h"
 #include "dawn/Support/NonCopyable.h"
 #include "clang/Basic/Diagnostic.h"
 
@@ -43,9 +42,6 @@ public:
     return this->report(clang::SourceLocation(), kind);
   }
   clang::DiagnosticBuilder report(clang::SourceRange range, DiagKind kind);
-
-  /// @brief Format DAWN diagnostics message and issue it to the client
-  void report(const dawn::DiagnosticsMessage& diag);
 
   /// @brief Get the Clang diagnostics engine
   clang::DiagnosticsEngine& getDiagnosticsEngine() { return *diags_; }
