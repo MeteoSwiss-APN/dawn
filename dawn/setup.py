@@ -57,13 +57,14 @@ with open(os.path.join(DAWN_DIR, "version.txt"), mode="r") as f:
 shutil.copyfile(os.path.join(DAWN_DIR, "version.txt"), os.path.join(DAWN4PY_DIR, "version.txt"))
 
 # Copy additional C++ headers for the generated code
-target_path = os.path.join(DAWN4PY_DIR, "_external_src", "driver-includes")
-if os.path.exists(target_path):
-    shutil.rmtree(target_path)
-shutil.copytree(
-    os.path.join(DAWN_DIR, "src", "driver-includes"), target_path,
-)
 
+for srcdir in ["driver-includes", "interface"]:
+  target_path = os.path.join(DAWN4PY_DIR, "_external_src", srcdir)
+  if os.path.exists(target_path):
+    shutil.rmtree(target_path)
+  shutil.copytree(
+      os.path.join(DAWN_DIR, "src", srcdir), target_path,
+  )
 
 # Based on:
 #   https://www.benjack.io/2018/02/02/python-cpp-revisited.html
