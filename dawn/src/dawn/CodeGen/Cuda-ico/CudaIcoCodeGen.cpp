@@ -556,6 +556,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   }
 
   std::vector<std::string> ppDefines{
+      "#include <vector>",
       "#include \"driver-includes/unstructured_interface.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
