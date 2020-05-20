@@ -23,7 +23,7 @@
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/Unreachable.h"
-#include <iterator>
+
 #include <numeric>
 #include <optional>
 #include <ostream>
