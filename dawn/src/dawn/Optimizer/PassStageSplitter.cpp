@@ -21,8 +21,8 @@
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"
+
 #include <deque>
-#include <iostream>
 #include <iterator>
 #include <unordered_set>
 
@@ -132,8 +132,7 @@ bool PassStageSplitter::run(
   }
 
   if(!numSplit)
-    DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), SourceLocation())
-        << stencilInstantiation->getName() << ": no split";
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": no split";
 
   return true;
 }

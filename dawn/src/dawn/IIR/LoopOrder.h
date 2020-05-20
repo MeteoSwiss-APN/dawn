@@ -16,6 +16,7 @@
 #define DAWN_IIR_LOOPORDER_H
 
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 namespace iir {

@@ -22,6 +22,7 @@
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Renaming.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <set>
@@ -321,16 +322,14 @@ bool dawn::PassSetNonTempCaches::run(
                 [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
                   return lhs.name < rhs.name;
                 });
-      std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
       for(const auto& nametoCache : allCachedFields) {
-        std::cout << " Cached: " << nametoCache.name
-                  << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
-                  << nametoCache.cache.getIOPolicyAsString();
+        DAWN_LOG(INFO) << stencilInstantiation->getName() << ": Cached: " << nametoCache.name
+                       << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
+                       << nametoCache.cache.getIOPolicyAsString();
       }
       if(allCachedFields.size() == 0) {
-        std::cout << " no fields cached";
+        DAWN_LOG(INFO) << stencilInstantiation->getName() << ": No fields cached";
       }
-      std::cout << std::endl;
     }
   }
 

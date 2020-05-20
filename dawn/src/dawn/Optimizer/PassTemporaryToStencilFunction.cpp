@@ -27,7 +27,10 @@
 #include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/RemoveIf.hpp"
+
+#include <sstream>
 
 namespace dawn {
 
@@ -736,21 +739,16 @@ bool PassTemporaryToStencilFunction::run(
           }
         }
 
-        if(context_.getOptions().ReportPassTmpToFunction) {
-          std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName()
-                    << "\n";
-
-          if(temporaryFieldExprToFunction.empty())
-            std::cout << "no replacement found\n";
-
-          for(auto tmpFieldPair : temporaryFieldExprToFunction) {
-            int accessID = tmpFieldPair.first;
-            auto tmpProperties = tmpFieldPair.second;
-            std::cout << " [ replace tmp:" << metadata.getFieldNameFromAccessID(accessID)
-                      << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
-                      << " ] ";
-          }
+        std::ostringstream ss;
+        for(auto tmpFieldPair : temporaryFieldExprToFunction) {
+          int accessID = tmpFieldPair.first;
+          auto tmpProperties = tmpFieldPair.second;
+          ss << " [ replace tmp:" << metadata.getFieldNameFromAccessID(accessID)
+             << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line << " ] ";
         }
+        if(temporaryFieldExprToFunction.empty())
+          ss << "no replacement found";
+        DAWN_LOG(INFO) << stencilInstantiation->getName() << ss.str();
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements

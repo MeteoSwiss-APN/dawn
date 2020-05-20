@@ -88,7 +88,7 @@ public:
 
   /// @brief Report message with file, line in dawn source and source,loc in input DSL code.
   DiagnosticProxy operator()(const std::string& file, int line, const std::string& source,
-                             SourceLocation loc);
+                             SourceLocation loc = SourceLocation());
 
   /// @brief Add a new message -- called from Proxy objects
   /// {

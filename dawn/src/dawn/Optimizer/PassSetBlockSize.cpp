@@ -17,6 +17,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Array.h"
+#include "dawn/Support/Logger.h"
 #include <algorithm>
 
 namespace dawn {
@@ -62,16 +63,13 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
 
   IIR->setBlockSize(blockSize);
 
-  if(context_.getOptions().ReportPassSetBlockSize) {
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << ": blockSize"
-              << "[" << blockSize[0] << "," << blockSize[1] << "," << blockSize[2] << "]"
-              << std::endl;
-  }
+  DAWN_LOG(INFO) << stencilInstantiation->getName() << ": blockSize"
+                 << "[" << blockSize[0] << "," << blockSize[1] << "," << blockSize[2] << "]";
 
   // Notice that gridtools does not supported yet setting different block sizes, therefore the block
   // size of the IIR is currently ignored by GT
 
   return true;
-}
+} // namespace dawn
 
 } // namespace dawn

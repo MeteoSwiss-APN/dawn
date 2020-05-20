@@ -20,12 +20,19 @@
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"
+
 #include <deque>
-#include <iostream>
 #include <iterator>
 #include <unordered_set>
 
 namespace dawn {
+
+typedef std::function<void(iir::MultiStage::child_reverse_iterator_t&,
+                           iir::DependencyGraphAccesses&, iir::LoopOrderKind&, iir::LoopOrderKind&,
+                           std::deque<iir::MultiStage::SplitIndex>&, int, int, int&,
+                           const std::string&, const std::string&, const std::string&,
+                           const OptimizerContext::OptimizerContextOptions&)>
+    SplitterFunction;
 
 PassMultiStageSplitter::PassMultiStageSplitter(OptimizerContext& context,
                                                MultiStageSplittingStrategy strategy)
@@ -37,17 +44,13 @@ int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {
   return 0;
 }
 
-std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
-                   iir::LoopOrderKind&, iir::LoopOrderKind&,
-                   std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
-                   const std::string&, const OptimizerContext::OptimizerContextOptions&)>
-multiStageSplitterOptimized() {
+SplitterFunction multiStageSplitterOptimized() {
   return [&](iir::MultiStage::child_reverse_iterator_t& stageIt,
              iir::DependencyGraphAccesses& graph, iir::LoopOrderKind userSpecifiedLoopOrder,
              iir::LoopOrderKind& curLoopOrder,
              std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
-             int multiStageIndex, int& numSplit, const std::string& StencilName,
-             const std::string& PassName,
+             int multiStageIndex, int& numSplit, const std::string& fileName,
+             const std::string& StencilName, const std::string& PassName,
              const OptimizerContext::OptimizerContextOptions& options) {
     iir::Stage& stage = (**stageIt);
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
@@ -68,10 +71,8 @@ multiStageSplitterOptimized() {
         splitterIndices.emplace_front(
             iir::MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
 
-        if(options.ReportPassMultiStageSplit)
-          std::cout << "\nPASS: " << PassName << ": " << StencilName << ": split:"
-                    << doMethod.getAST().getStatements()[stmtIndex]->getSourceLocation().Line
-                    << " looporder:" << curLoopOrder << "\n";
+        DAWN_DIAG(INFO, fileName, doMethod.getAST().getStatements()[stmtIndex]->getSourceLocation())
+            << StencilName << ": split, looporder: " << curLoopOrder;
 
         if(options.DumpSplitGraphs)
           graph.toDot(format("stmt_vd_ms%i_%02i.dot", multiStageIndex, numSplit));
@@ -92,18 +93,14 @@ multiStageSplitterOptimized() {
     }
   };
 }
-std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
-                   iir::LoopOrderKind&, iir::LoopOrderKind&,
-                   std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
-                   const std::string&, const OptimizerContext::OptimizerContextOptions&)>
-multiStageSplitterDebug() {
 
+SplitterFunction multiStageSplitterDebug() {
   return [&](iir::MultiStage::child_reverse_iterator_t& stageIt,
              iir::DependencyGraphAccesses& graph, iir::LoopOrderKind& userSpecifiedLoopOrder,
              iir::LoopOrderKind& curLoopOrder,
              std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
-             int multiStageIndex, int& numSplit, const std::string& StencilName,
-             const std::string& PassName,
+             int multiStageIndex, int& numSplit, const std::string& fileName,
+             const std::string& StencilName, const std::string& PassName,
              const OptimizerContext::OptimizerContextOptions& options) {
     DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
     iir::Stage& stage = (**stageIt);
@@ -159,20 +156,13 @@ multiStageSplitterDebug() {
 bool PassMultiStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
-                     iir::LoopOrderKind&, iir::LoopOrderKind&,
-                     std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
-                     const std::string&, const OptimizerContext::OptimizerContextOptions&)>
-      multistagesplitter;
-
-  if(strategy_ == MultiStageSplittingStrategy::Optimized) {
-    multistagesplitter = multiStageSplitterOptimized();
-  } else {
-    multistagesplitter = multiStageSplitterDebug();
-  }
+  SplitterFunction multistagesplitter = (strategy_ == MultiStageSplittingStrategy::Optimized)
+                                            ? multiStageSplitterOptimized()
+                                            : multiStageSplitterDebug();
 
   iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
   int numSplit = 0;
+  std::string fileName = stencilInstantiation->getMetaData().getFileName();
   std::string StencilName = stencilInstantiation->getName();
   std::string PassName = getName();
   auto options = context_.getOptions();
@@ -201,7 +191,8 @@ bool PassMultiStageSplitter::run(
           ++stageIt, --stageIndex) {
 
         multistagesplitter(stageIt, graph, userSpecifiedLoopOrder, curLoopOrder, splitterIndices,
-                           stageIndex, multiStageIndex, numSplit, StencilName, PassName, options);
+                           stageIndex, multiStageIndex, numSplit, fileName, StencilName, PassName,
+                           options);
       }
       if(context_.getOptions().DumpSplitGraphs)
         graph.toDot(format("stmt_vd_m%i_%02i.dot", multiStageIndex, numSplit));
@@ -219,8 +210,7 @@ bool PassMultiStageSplitter::run(
   }
 
   if(!numSplit)
-    DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), SourceLocation())
-        << stencilInstantiation->getName() << ": no split\n";
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": no split";
 
   return true;
 }

@@ -14,7 +14,6 @@
 
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
 
 namespace dawn {
 namespace iir {

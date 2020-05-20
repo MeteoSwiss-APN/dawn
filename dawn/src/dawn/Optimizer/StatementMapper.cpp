@@ -78,8 +78,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   // We can only have 1 return statement
   if(curFunc->hasReturn()) {
     DAWN_DIAG(ERROR, metadata_.getFileName(), curFunc->getStencilFunction()->Loc)
-        << std::string("Multiple return-statement in stencil function '") + curFunc->getName() +
-               "'";
+        << "Multiple return-statement in stencil function '" << curFunc->getName() << "'";
   }
   scope_.top()->FunctionInstantiation->setReturn(true);
 

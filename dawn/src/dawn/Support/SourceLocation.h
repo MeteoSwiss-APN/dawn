@@ -16,6 +16,7 @@
 #define DAWN_SUPPORT_SOURCELOCATION_H
 
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 

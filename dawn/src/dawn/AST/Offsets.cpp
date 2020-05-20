@@ -19,7 +19,6 @@
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
 
 namespace dawn::ast {
 
@@ -176,14 +175,14 @@ std::string to_string(cartesian_, Offsets const& offsets, std::string const& sep
 }
 
 std::string to_string(Offsets const& offset) {
-  return offset_dispatch(offset.horizontalOffset(),
-                         [&](CartesianOffset const&) { return to_string(cartesian, offset); },
-                         [&](UnstructuredOffset const&) { return to_string(unstructured, offset); },
-                         [&]() {
-                           using namespace std::string_literals;
-                           return "<no_horizontal_offset>,"s +
-                                  std::to_string(offset.verticalOffset());
-                         });
+  return offset_dispatch(
+      offset.horizontalOffset(),
+      [&](CartesianOffset const&) { return to_string(cartesian, offset); },
+      [&](UnstructuredOffset const&) { return to_string(unstructured, offset); },
+      [&]() {
+        using namespace std::string_literals;
+        return "<no_horizontal_offset>,"s + std::to_string(offset.verticalOffset());
+      });
 }
 
 Offsets operator+(Offsets o1, Offsets const& o2) { return o1 += o2; }

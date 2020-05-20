@@ -16,8 +16,10 @@
 #define DAWN_SUPPORT_ARRAY_H
 
 #include "dawn/Support/HashCombine.h"
+
 #include <array>
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 

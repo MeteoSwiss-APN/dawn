@@ -23,10 +23,10 @@
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
+
 #include <cstdlib>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <stack>
 
 namespace dawn {

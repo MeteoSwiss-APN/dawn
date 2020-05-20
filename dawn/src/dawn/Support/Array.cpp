@@ -14,7 +14,6 @@
 
 #include "dawn/Support/Array.h"
 #include "dawn/Support/StringUtil.h"
-#include <iostream>
 
 namespace dawn {
 
