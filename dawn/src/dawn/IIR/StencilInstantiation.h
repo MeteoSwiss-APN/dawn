@@ -25,6 +25,7 @@
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -44,7 +45,7 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Dump the StencilInstantiation to stdout
-  void dump() const;
+  void dump(std::ostream& os) const;
 
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(
@@ -117,7 +118,7 @@ public:
       const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
-  void reportAccesses() const;
+  void reportAccesses(std::ostream& os) const;
 
   /// @brief This method computes the derived info for the stencil instantiation, including
   /// node types and stage extents (associated to redundant computations)

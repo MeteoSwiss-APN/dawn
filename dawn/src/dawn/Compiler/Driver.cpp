@@ -282,7 +282,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     }
 
     if(options.DumpStencilInstantiation) {
-      instantiation->dump();
+      instantiation->dump(dawn::log::info.stream());
     }
   }
 

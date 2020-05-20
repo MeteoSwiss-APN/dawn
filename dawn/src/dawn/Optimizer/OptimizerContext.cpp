@@ -653,7 +653,7 @@ bool OptimizerContext::fillIIRFromSIR(
       stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 
   if(getOptions().ReportAccesses) {
-    stencilInstantiation->reportAccesses();
+    stencilInstantiation->reportAccesses(dawn::log::info.stream());
   }
 
   for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {

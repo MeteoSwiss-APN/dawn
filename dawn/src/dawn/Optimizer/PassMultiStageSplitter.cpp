@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Logger.h"
 #include <deque>
 #include <iostream>
 #include <iterator>
@@ -217,9 +218,9 @@ bool PassMultiStageSplitter::run(
     }
   }
 
-  if(context_.getOptions().ReportPassMultiStageSplit && !numSplit)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no split\n";
+  if(!numSplit)
+    DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), SourceLocation())
+        << stencilInstantiation->getName() << ": no split\n";
 
   return true;
 }
