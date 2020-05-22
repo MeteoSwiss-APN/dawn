@@ -76,9 +76,9 @@
 #ifndef GRIDTOOLS_DAWN_NO_INCLUDE
 #include <gridtools/stencil_composition/stencil_composition.hpp>
 #include <gridtools/storage/storage_facility.hpp>
-#endif
 
 #include "storage_runtime.hpp"
+#endif
 
 #ifdef GRIDTOOLS_DAWN_CUDA
 #include "timer_cuda.hpp"
