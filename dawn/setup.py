@@ -37,7 +37,7 @@ AUTHOR = "MeteoSwiss / ETH Zurich / Vulcan"
 DAWN_DIR = os.path.dirname(__file__)
 DAWN4PY_DIR = os.path.join(DAWN_DIR, "src", "dawn4py")
 
-BUILD_JOBS = os.cpu_count()
+BUILD_JOBS = os.getenv("BUILD_JOBS", default=str(os.cpu_count()))
 
 # Select protobuf version
 with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
@@ -141,7 +141,7 @@ class CMakeBuild(build_ext):
         # Run CMake build
         print("-" * 10, "Building extensions", "-" * 40)
         cfg = "Debug" if self.debug else "Release"
-        build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
+        build_args = ["--config", cfg, "-j", BUILD_JOBS]
         self.spawn([cmake, "--build", build_dir, "--target", "python"] + build_args)
 
     @staticmethod
