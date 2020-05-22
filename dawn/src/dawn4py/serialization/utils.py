@@ -22,7 +22,7 @@ Convenience functions to serialize/deserialize and print SIR and IIR objects.
 import textwrap
 
 from enum import Enum
-from collections import Iterable
+from collections.abc import Iterable
 from typing import List, TypeVar, NewType
 
 from google.protobuf import json_format
