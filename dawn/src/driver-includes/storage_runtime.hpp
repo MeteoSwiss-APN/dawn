@@ -105,7 +105,6 @@ using storage_t = storage_ijk_t;
 #elif DAWN_STORAGE_TYPE == DAWN_STORAGE_CUDA
 #define GT_BACKEND_DECISION_viewmaker(x) make_device_view(x)
 #define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply_gpu
-
-
+#endif
 } // namespace dawn
 } // namespace gridtools

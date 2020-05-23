@@ -30,7 +30,8 @@
 #endif
 
 // Default storage type is HOST
-#pragma once
+#ifndef DAWN_STORAGE_TYPE
+#define DAWN_STORAGE_TYPE DAWN_STORAGE_HOST
 #endif
 
 // Default grid type is structured
@@ -83,5 +84,4 @@
 #include "timer_cuda.hpp"
 #endif
 
-
-
+#endif

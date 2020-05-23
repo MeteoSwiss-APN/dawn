@@ -81,6 +81,5 @@ using float_type = float;
 using float_type = double;
 #else
 #error DAWN_PRECISION is invalid
-
-
+#endif
 } // namespace dawn
