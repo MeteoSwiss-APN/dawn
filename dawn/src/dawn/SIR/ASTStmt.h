@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTSTMT_H
-#define DAWN_SIR_ASTSTMT_H
+#pragma once
 
 #include "dawn/AST/ASTStmt.h"
 
@@ -88,5 +87,3 @@ using LoopStmt = ast::LoopStmt;
 
 } // namespace sir
 } // namespace dawn
-
-#endif

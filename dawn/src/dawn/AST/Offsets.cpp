@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_OFFSETS_CPP
-#define DAWN_AST_OFFSETS_CPP
+#pragma once
 
 #include "Offsets.h"
 
@@ -189,4 +188,5 @@ std::string to_string(Offsets const& offset) {
 Offsets operator+(Offsets o1, Offsets const& o2) { return o1 += o2; }
 } // namespace dawn::ast
 
-#endif
+
+

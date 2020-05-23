@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTSTRINGIFER_H
-#define DAWN_SIR_ASTSTRINGIFER_H
+#pragma once
 
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/SIR/ASTFwd.h"
@@ -35,5 +34,3 @@ extern inline std::ostream& operator<<(std::ostream& os, const std::shared_ptr<s
 }
 } // namespace sir
 } // namespace dawn
-
-#endif

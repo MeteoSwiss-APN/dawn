@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSTAGEREORDERING_H
-#define DAWN_OPTIMIZER_PASSSTAGEREORDERING_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Optimizer/ReorderStrategy.h"
@@ -39,5 +38,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

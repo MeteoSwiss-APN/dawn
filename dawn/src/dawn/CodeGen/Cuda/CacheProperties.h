@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CACHEPROPERTIES_H
-#define DAWN_CODEGEN_CACHEPROPERTIES_H
+#pragma once
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/MultiStage.h"
 #include <memory>
@@ -104,5 +103,3 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

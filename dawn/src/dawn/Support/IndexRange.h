@@ -11,8 +11,7 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#ifndef DAWN_SUPPORT_INDEXRANGE_H
-#define DAWN_SUPPORT_INDEXRANGE_H
+#pragma once
 
 #include <functional>
 #include <iterator>
@@ -220,5 +219,3 @@ struct iterator_traits<dawn::IndexRangeIterator<Cont>> {
 };
 
 } // namespace std
-
-#endif

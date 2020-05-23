@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_DIAGNOSTICMESSAGE_H
-#define DAWN_SUPPORT_DIAGNOSTICMESSAGE_H
+#pragma once
 
 #include "dawn/Support/SourceLocation.h"
 #include <sstream>
@@ -99,5 +98,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_REMOVEIF_H
-#define DAWN_REMOVEIF_H
+#pragma once
 #include <list>
 
 namespace dawn {
@@ -44,4 +43,5 @@ bool RemoveIf(Container& cont, UnaryPredicate p) {
 
 } // namespace dawn
 
-#endif
+
+

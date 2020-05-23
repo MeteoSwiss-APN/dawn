@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_REPLACING_H
-#define DAWN_OPTIMIZER_REPLACING_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
@@ -56,5 +55,3 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
 /// @}
 
 } // namespace dawn
-
-#endif

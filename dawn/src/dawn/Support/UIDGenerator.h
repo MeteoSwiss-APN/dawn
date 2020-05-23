@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_UIDGENERATOR
-#define DAWN_SUPPORT_UIDGENERATOR
+#pragma once
 
 #include "dawn/Support/NonCopyable.h"
 
@@ -40,5 +39,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

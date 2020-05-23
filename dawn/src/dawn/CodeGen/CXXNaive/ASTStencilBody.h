@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
-#define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
+#pragma once
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -101,5 +100,3 @@ public:
 } // namespace cxxnaive
 } // namespace codegen
 } // namespace dawn
-
-#endif

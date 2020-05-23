@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
-#define DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
+#pragma once
 
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/DiagnosticsEngine.h"
@@ -120,5 +119,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

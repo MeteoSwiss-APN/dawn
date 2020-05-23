@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTUTIL_H
-#define DAWN_AST_ASTUTIL_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
@@ -93,4 +92,3 @@ public:
 
 } // namespace ast
 } // namespace dawn
-#endif

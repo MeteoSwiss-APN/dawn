@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_DIAGNOSTICSENGINE_H
-#define DAWN_SUPPORT_DIAGNOSTICSENGINE_H
+#pragma once
 
 #include "dawn/Support/DiagnosticsMessage.h"
 #include "dawn/Support/DiagnosticsQueue.h"
@@ -53,5 +52,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

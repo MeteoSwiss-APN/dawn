@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_DOMETHOD_H
-#define DAWN_IIR_DOMETHOD_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -148,5 +147,3 @@ auto iterateIIROverStmt(const RootNode& root) {
   return allStmts;
 }
 } // namespace dawn
-
-#endif

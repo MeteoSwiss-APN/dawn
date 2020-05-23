@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_AST_H
-#define DAWN_AST_AST_H
+#pragma once
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
@@ -71,5 +70,3 @@ public:
 };
 } // namespace ast
 } // namespace dawn
-
-#endif

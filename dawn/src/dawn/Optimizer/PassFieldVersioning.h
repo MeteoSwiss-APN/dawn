@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
-#define DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
+#pragma once
 
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/Optimizer/Pass.h"
@@ -85,5 +84,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

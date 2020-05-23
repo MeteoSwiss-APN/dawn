@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTVISITOR_H
-#define DAWN_AST_ASTVISITOR_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 #include <memory>
@@ -314,5 +313,3 @@ public:
 
 } // namespace ast
 } // namespace dawn
-
-#endif

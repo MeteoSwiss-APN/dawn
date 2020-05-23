@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_MULTISTAGE_H
-#define DAWN_IIR_MULTISTAGE_H
+#pragma once
 
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNode.h"
@@ -202,5 +201,3 @@ public:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_FIELD_H
-#define DAWN_IIR_FIELD_H
+#pragma once
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/IIR/Extents.h"
@@ -161,5 +160,3 @@ struct hash<dawn::iir::Field> {
 };
 
 } // namespace std
-
-#endif

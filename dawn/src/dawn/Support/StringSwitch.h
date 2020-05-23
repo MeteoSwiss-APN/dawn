@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_STRINGSWITCH_H
-#define DAWN_SUPPORT_STRINGSWITCH_H
+#pragma once
 
 #include "dawn/Support/StringRef.h"
 #include <cstring>
@@ -216,5 +215,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

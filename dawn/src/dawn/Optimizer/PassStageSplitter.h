@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSTAGESPLITTER_H
-#define DAWN_OPTIMIZER_PASSSTAGESPLITTER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -35,5 +34,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

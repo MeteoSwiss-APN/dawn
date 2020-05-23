@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ACCESSES_H
-#define DAWN_IIR_ACCESSES_H
+#pragma once
 
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/Extents.h"
@@ -99,5 +98,3 @@ public:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

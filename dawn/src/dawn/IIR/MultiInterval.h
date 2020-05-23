@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_MULTIINTERVAL_H
-#define DAWN_IIR_MULTIINTERVAL_H
+#pragma once
 
 #include "dawn/IIR/Interval.h"
 #include <list>
@@ -53,5 +52,3 @@ public:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

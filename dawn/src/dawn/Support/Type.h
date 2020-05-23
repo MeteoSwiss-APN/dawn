@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_TYPE_H
-#define DAWN_SUPPORT_TYPE_H
+#pragma once
 
 #include <iosfwd>
 #include <string>
@@ -114,5 +113,3 @@ struct Type::TypeInfo<double> {
 extern std::ostream& operator<<(std::ostream& os, Type type);
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
-#define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
+#pragma once
 
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/Stage.h"
@@ -96,5 +95,3 @@ public:
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_CUDACODEGEN_H
-#define DAWN_CODEGEN_CUDA_CUDACODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -131,5 +130,3 @@ private:
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

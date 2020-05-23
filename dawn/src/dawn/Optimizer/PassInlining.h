@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSINLINING_H
-#define DAWN_OPTIMIZER_PASSINLINING_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -49,5 +48,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

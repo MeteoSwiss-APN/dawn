@@ -11,8 +11,7 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===/
-#ifndef DAWN_OPTIMIZER_TEMPORARYHANDLING_H
-#define DAWN_OPTIMIZER_TEMPORARYHANDLING_H
+#pragma once
 #include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
@@ -41,5 +40,3 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
                                          iir::Stencil* stencil, int AccessID,
                                          const iir::Stencil::Lifetime& lifetime);
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_TEMPORARYHANDLING_H
