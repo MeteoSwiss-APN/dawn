@@ -14,15 +14,16 @@
 
 #pragma once
 
+#include <cstddef>
 #include <array>
 
 namespace gridtools {
 namespace dawn {
 
-template <size_t N>
+template <std::size_t N>
 std::array<int, N> operator+(std::array<int, N> const& lhs, std::array<int, N> const& rhs) {
   std::array<int, N> res;
-  for(size_t i = 0; i < N; ++i) {
+  for(std::size_t i = 0; i < N; ++i) {
     res[i] = lhs[i] + rhs[i];
   }
   return res;
