@@ -59,12 +59,12 @@ shutil.copyfile(os.path.join(DAWN_DIR, "version.txt"), os.path.join(DAWN4PY_DIR,
 # Copy additional C++ headers for the generated code
 
 for srcdir in ["driver-includes", "interface"]:
-  target_path = os.path.join(DAWN4PY_DIR, "_external_src", srcdir)
-  if os.path.exists(target_path):
-    shutil.rmtree(target_path)
-  shutil.copytree(
-      os.path.join(DAWN_DIR, "src", srcdir), target_path,
-  )
+    target_path = os.path.join(DAWN4PY_DIR, "_external_src", srcdir)
+    if os.path.exists(target_path):
+        shutil.rmtree(target_path)
+    shutil.copytree(
+        os.path.join(DAWN_DIR, "src", srcdir), target_path,
+    )
 
 # Based on:
 #   https://www.benjack.io/2018/02/02/python-cpp-revisited.html
@@ -130,9 +130,10 @@ class CMakeBuild(build_ext):
         # Run CMake configure
         print("-" * 10, "Running CMake prepare", "-" * 40)
         cmake_args += [
-            "-DPYTHON_EXECUTABLE=" + sys.executable,
             "-DBUILD_TESTING=OFF",
             "-DDAWN_REQUIRE_PYTHON=ON",
+            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython3_EXECUTABLE={sys.executable}",
         ]
         if not self.inplace:
             cmake_args.append("-DDAWN4PY_MODULE_DIR=" + self.build_lib)
