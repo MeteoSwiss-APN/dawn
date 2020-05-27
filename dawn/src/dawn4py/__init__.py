@@ -57,7 +57,7 @@ def _serialize_sir(sir: Union[serialization.SIR.SIR, str, bytes]):
 def _serialize_instantiations(stencil_instantiation_map: dict):
     # Determine serializer_format based on first stencil instantiation in the dict
     serializer_format = IIRSerializerFormat.Byte
-    si = stencil_instantiation_map[0]
+    si = stencil_instantiation_map.values()[0]
     if isinstance(si, str) and si.lstrip().startswith("{") and si.rstrip().endswith("}"):
         serializer_format = IIRSerializerFormat.Json
 
