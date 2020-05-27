@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STENCILINSTANTIATION_H
-#define DAWN_IIR_STENCILINSTANTIATION_H
+#pragma once
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/IIR.h"
@@ -128,5 +127,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_DRIVER_H
-#define DAWN_CODEGEN_DRIVER_H
+#pragma once
 
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
@@ -50,5 +49,3 @@ std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit);
 
 } // namespace codegen
 } // namespace dawn
-
-#endif

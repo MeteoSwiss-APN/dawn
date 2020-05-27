@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
-#define DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -141,5 +140,3 @@ private:
 } // namespace gt
 } // namespace codegen
 } // namespace dawn
-
-#endif

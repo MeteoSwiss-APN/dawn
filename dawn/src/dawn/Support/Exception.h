@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_EXCEPTION_H
-#define DAWN_SUPPORT_EXCEPTION_H
+#pragma once
 
 #include "dawn/Support/SourceLocation.h"
 #include <exception>
@@ -68,5 +67,3 @@ struct LogicError : public CompileError {
 };
 
 } // namespace dawn
-
-#endif // DAWN_SUPPORT_EXCEPTION_H

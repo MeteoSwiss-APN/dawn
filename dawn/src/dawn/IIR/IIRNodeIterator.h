@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_IIRNODEITERATOR_H
-#define DAWN_IIR_IIRNODEITERATOR_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
@@ -201,5 +200,3 @@ struct iterator_traits<dawn::iir::IIRNodeIterator<RootNode, LeafNode>> {
       typename iterator_traits<typename LeafNode::ChildIterator>::iterator_category;
 };
 } // namespace std
-
-#endif

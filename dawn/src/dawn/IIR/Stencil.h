@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STENCIL_H
-#define DAWN_IIR_STENCIL_H
+#pragma once
 
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -309,5 +308,3 @@ private:
 } // namespace iir
 
 } // namespace dawn
-
-#endif

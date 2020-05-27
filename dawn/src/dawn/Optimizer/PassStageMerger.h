@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSTAGEMERGER_H
-#define DAWN_OPTIMIZER_PASSSTAGEMERGER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -41,5 +40,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

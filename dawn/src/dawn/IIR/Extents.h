@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_EXTENTS_H
-#define DAWN_IIR_EXTENTS_H
+#pragma once
 
 #include "LoopOrder.h"
 
@@ -343,5 +342,3 @@ struct hash<dawn::iir::Extents> {
 };
 
 } // namespace std
-
-#endif

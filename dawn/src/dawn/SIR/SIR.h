@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_SIR_H
-#define DAWN_SIR_SIR_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
@@ -602,5 +601,3 @@ struct SIR : public dawn::NonCopyable {
 };
 
 } // namespace dawn
-
-#endif

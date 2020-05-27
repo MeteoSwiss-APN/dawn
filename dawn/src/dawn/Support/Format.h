@@ -17,8 +17,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_FORMAT_H
-#define DAWN_SUPPORT_FORMAT_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 
@@ -43,5 +42,3 @@ namespace dawn {
 using tfm::format;
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_DAWN_H
-#define DAWN_DAWN_H
+#pragma once
 
 #ifdef DAWN_DOXYGEN_INVOKED
 /**
@@ -44,5 +43,3 @@
 
 #include "dawn/Compiler/Compiler.h"
 #include "dawn/SIR/SIR.h"
-
-#endif

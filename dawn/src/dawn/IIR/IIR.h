@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_IIR_H
-#define DAWN_IIR_IIR_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ControlFlowDescriptor.h"
@@ -113,5 +112,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_SIRSERIALIZER_H
-#define DAWN_SIR_SIRSERIALIZER_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -71,5 +70,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

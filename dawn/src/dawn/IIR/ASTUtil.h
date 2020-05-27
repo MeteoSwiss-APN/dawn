@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTUTIL_H
-#define DAWN_IIR_ASTUTIL_H
+#pragma once
 
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/IIR/ASTFwd.h"
@@ -84,5 +83,3 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 using ASTHelper = ast::ASTHelper;
 } // namespace iir
 } // namespace dawn
-
-#endif

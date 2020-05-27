@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSINTERVALPARTITIONER_H
-#define DAWN_OPTIMIZER_PASSINTERVALPARTITIONER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Support/Assert.h"
@@ -47,5 +46,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

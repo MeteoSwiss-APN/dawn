@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_DEPENDENCYGRAPH_H
-#define DAWN_IIR_DEPENDENCYGRAPH_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
@@ -278,5 +277,3 @@ protected:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

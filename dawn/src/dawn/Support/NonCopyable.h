@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_NONCOPYABLE_H
-#define DAWN_SUPPORT_NONCOPYABLE_H
+#pragma once
 
 namespace dawn {
 
@@ -31,5 +30,3 @@ protected:
 };
 
 } // namespace dawn
-
-#endif

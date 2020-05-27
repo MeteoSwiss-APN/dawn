@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXUTIL_H
-#define DAWN_CODEGEN_CXXUTIL_H
+#pragma once
 
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
@@ -677,5 +676,3 @@ auto c_gt_intent = []() { return Twine("gridtools::intent::"); };
 } // namespace codegen
 
 } // namespace dawn
-
-#endif

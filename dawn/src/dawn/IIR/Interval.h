@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_INTERVAL_H
-#define DAWN_IIR_INTERVAL_H
+#pragma once
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/SIR/SIR.h"
@@ -331,5 +330,3 @@ struct hash<dawn::iir::IntervalProperties> {
 };
 
 } // namespace std
-
-#endif

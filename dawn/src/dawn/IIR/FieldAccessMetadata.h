@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_FIELDACCESSMETADATA_H
-#define DAWN_IIR_FIELDACCESSMETADATA_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Json.h"
@@ -253,5 +252,3 @@ struct FieldAccessMetadata {
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_IIRNODE_H
-#define DAWN_IIR_IIRNODE_H
+#pragma once
 
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/Support/Assert.h"
@@ -679,5 +678,3 @@ private:
 } // namespace dawn
 
 #undef PROTECT_TEMPLATE
-
-#endif

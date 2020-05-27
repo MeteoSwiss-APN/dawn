@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVEICO_CXXNAIVECODEGEN_H
-#define DAWN_CODEGEN_CXXNAIVEICO_CXXNAIVECODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -78,5 +77,3 @@ private:
 } // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn
-
-#endif

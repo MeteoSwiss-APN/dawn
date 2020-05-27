@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_LOGGER_H
-#define DAWN_SUPPORT_LOGGER_H
+#pragma once
 
 #include "dawn/Support/SourceLocation.h"
 #include <functional>
@@ -188,5 +187,3 @@ void setVerbosity(Level level);
 #define DAWN_DIAG_INFO_IMPL(file, loc) dawn::log::info(__FILE__, __LINE__, file, loc)
 #define DAWN_DIAG_WARNING_IMPL(file, loc) dawn::log::warn(__FILE__, __LINE__, file, loc)
 #define DAWN_DIAG_ERROR_IMPL(file, loc) dawn::log::error(__FILE__, __LINE__, file, loc)
-
-#endif

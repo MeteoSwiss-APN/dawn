@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_IIRSERIALIZER_H
-#define DAWN_IIR_IIRSERIALIZER_H
+#pragma once
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
@@ -127,5 +126,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif // DAWN_IIR_IIRSERIALIZER_H

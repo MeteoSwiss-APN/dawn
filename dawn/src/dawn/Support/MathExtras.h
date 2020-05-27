@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_MATHEXTRAS_H
-#define DAWN_SUPPORT_MATHEXTRAS_H
+#pragma once
 
 #include <cstdint>
 
@@ -34,5 +33,3 @@ inline std::uint64_t nextPowerOf2(std::uint64_t A) {
 }
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTMATCHER_H
-#define DAWN_AST_ASTMATCHER_H
+#pragma once
 
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -69,5 +68,3 @@ private:
 
 } // namespace iir
 } // namespace dawn
-
-#endif // DAWN_AST_ASTMATCHER_H

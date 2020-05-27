@@ -16,8 +16,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_SMALLSTRING_H
-#define DAWN_SUPPORT_SMALLSTRING_H
+#pragma once
 
 #include "dawn/Support/SmallVector.h"
 #include "dawn/Support/StringRef.h"
@@ -262,5 +261,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

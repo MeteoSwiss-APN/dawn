@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_COMPILER_DRIVER_H
-#define DAWN_COMPILER_DRIVER_H
+#pragma once
 
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
@@ -68,5 +67,3 @@ std::string compile(const std::string& sir, SIRSerializer::Format format,
                     codegen::Backend backend, const codegen::Options& codegenOptions);
 
 } // namespace dawn
-
-#endif

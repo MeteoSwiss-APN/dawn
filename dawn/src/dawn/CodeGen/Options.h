@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_OPTIONS_H
-#define DAWN_CODEGEN_OPTIONS_H
+#pragma once
 
 namespace dawn {
 namespace codegen {
@@ -33,5 +32,3 @@ struct Options {
 
 } // namespace codegen
 } // namespace dawn
-
-#endif

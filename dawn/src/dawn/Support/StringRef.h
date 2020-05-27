@@ -16,8 +16,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_STRINGREF_H
-#define DAWN_SUPPORT_STRINGREF_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
@@ -672,5 +671,3 @@ struct isPodLike<StringRef> {
 /// @}
 
 } // namespace dawn
-
-#endif

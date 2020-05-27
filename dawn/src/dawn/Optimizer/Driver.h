@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_DRIVER_H
-#define DAWN_OPTIMIZER_DRIVER_H
+#pragma once
 
 #include "dawn/Optimizer/Options.h"
 
@@ -28,5 +27,3 @@ std::list<PassGroup> defaultPassGroups();
 /// TODO Driver methods will go here when OptimizerContext is removed.
 
 } // namespace dawn
-
-#endif

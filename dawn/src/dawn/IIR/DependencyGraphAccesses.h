@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
-#define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DependencyGraph.h"
@@ -181,5 +180,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

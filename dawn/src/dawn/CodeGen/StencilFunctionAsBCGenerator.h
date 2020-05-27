@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_STENCILFUNCTIONASBCGENERATOR_H
-#define DAWN_CODEGEN_STENCILFUNCTIONASBCGENERATOR_H
+#pragma once
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CXXUtil.h"
@@ -90,4 +89,3 @@ public:
 };
 } // namespace codegen
 } // namespace dawn
-#endif

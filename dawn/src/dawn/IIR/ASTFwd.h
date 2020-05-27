@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTFWD_H
-#define DAWN_IIR_ASTFWD_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 
@@ -53,5 +52,3 @@ using ASTHelper = ast::ASTHelper;
 using ASTVisitor = ast::ASTVisitor;
 } // namespace iir
 } // namespace dawn
-
-#endif

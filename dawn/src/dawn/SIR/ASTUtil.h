@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTUTIL_H
-#define DAWN_SIR_ASTUTIL_H
+#pragma once
 
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/SIR/ASTFwd.h"
@@ -79,5 +78,3 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 using ASTHelper = ast::ASTHelper;
 } // namespace sir
 } // namespace dawn
-
-#endif
