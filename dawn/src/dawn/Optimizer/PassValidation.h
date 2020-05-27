@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
-#define DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/SIR/SIR.h"
@@ -41,5 +40,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H

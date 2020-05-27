@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_TYPETRAITS_H
-#define DAWN_SUPPORT_TYPETRAITS_H
+#pragma once
 
 #include <type_traits>
 #include <utility>
@@ -94,5 +93,3 @@ struct and_<Cond, Conds...> : std::conditional<Cond::value, and_<Conds...>, std:
 /// @}
 
 } // namespace dawn
-
-#endif

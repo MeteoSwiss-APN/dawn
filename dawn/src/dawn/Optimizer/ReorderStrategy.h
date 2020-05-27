@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_REORDERSTRATEGY_H
-#define DAWN_OPTIMIZER_REORDERSTRATEGY_H
+#pragma once
 
 #include <memory>
 
@@ -48,5 +47,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

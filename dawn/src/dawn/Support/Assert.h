@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ASSERT_H
-#define DAWN_SUPPORT_ASSERT_H
+#pragma once
 
 #include "dawn/Support/Compiler.h"
 
@@ -49,7 +48,5 @@ extern void assertionFailedMsg(char const* expr, char const* msg, char const* fu
   (DAWN_BUILTIN_LIKELY(!!(expr))                                                                   \
        ? ((void)0)                                                                                 \
        : dawn::assertionFailedMsg(#expr, msg, DAWN_CURRENT_FUNCTION, __FILE__, __LINE__))
-
-#endif
 
 #endif

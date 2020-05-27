@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTFWD_H
-#define DAWN_AST_ASTFWD_H
+#pragma once
 
 namespace dawn {
 namespace ast {
@@ -50,5 +49,3 @@ class ASTHelper;
 class ASTVisitor; //   Compiler complains if declared as class
 } // namespace ast
 } // namespace dawn
-
-#endif

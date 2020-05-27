@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_MSCODEGEN_H
-#define DAWN_CODEGEN_CUDA_MSCODEGEN_H
+#pragma once
 
 #include <sstream>
 #include <unordered_set>
@@ -167,5 +166,3 @@ private:
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

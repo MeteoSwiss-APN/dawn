@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSTEMPORARYTOSTENCILFUNCTION_H
-#define DAWN_OPTIMIZER_PASSTEMPORARYTOSTENCILFUNCTION_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Support/Assert.h"
@@ -63,5 +62,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

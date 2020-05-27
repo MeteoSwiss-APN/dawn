@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_STRINGUTIL_H
-#define DAWN_SUPPORT_STRINGUTIL_H
+#pragma once
 
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/STLExtras.h"
@@ -131,5 +130,3 @@ extern std::string decimalToOrdinal(int dec);
 /// @}
 
 } // namespace dawn
-
-#endif

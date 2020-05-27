@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTCONVERTER_H
-#define DAWN_IIR_ASTCONVERTER_H
+#pragma once
 
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/SIR/ASTStmt.h"
@@ -53,5 +52,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

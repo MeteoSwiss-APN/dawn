@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ARRAYREF_H
-#define DAWN_SUPPORT_ARRAYREF_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
@@ -497,5 +496,3 @@ inline bool operator!=(ArrayRef<T> LHS, ArrayRef<T> RHS) {
 } // namespace dawn
 
 /// @}
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_INTEGRITYCHECKER_H
-#define DAWN_OPTIMIZER_INTEGRITYCHECKER_H
+#pragma once
 
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -56,5 +55,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_INTEGRITYCHECKER_H

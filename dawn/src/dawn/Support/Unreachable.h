@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_UNREACHABLE_H
-#define DAWN_SUPPORT_UNREACHABLE_H
+#pragma once
 
 #include "dawn/Support/Compiler.h"
 
@@ -47,5 +46,3 @@ dawn_unreachable_internal(const char* msg = nullptr, const char* file = nullptr,
 /// @}
 
 } // namespace dawn
-
-#endif

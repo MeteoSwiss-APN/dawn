@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILFUNCTIONPARAMVISITOR_H
-#define DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILFUNCTIONPARAMVISITOR_H
+#pragma once
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/IIR/Interval.h"
@@ -64,5 +63,3 @@ public:
 } // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn
-
-#endif

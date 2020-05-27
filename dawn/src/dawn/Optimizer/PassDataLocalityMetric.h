@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSDATALOCALITYMETRIC_H
-#define DAWN_OPTIMIZER_PASSDATALOCALITYMETRIC_H
+#pragma once
 
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/Optimizer/Pass.h"
@@ -52,5 +51,3 @@ std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerA
     const iir::MultiStage& multiStage);
 
 } // namespace dawn
-
-#endif

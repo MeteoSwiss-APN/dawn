@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTSTMT_H
-#define DAWN_IIR_ASTSTMT_H
+#pragma once
 
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/Accesses.h"
@@ -143,5 +142,3 @@ int getAccessID(const std::shared_ptr<VarDeclStmt>& stmt);
 
 } // namespace iir
 } // namespace dawn
-
-#endif

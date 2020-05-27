@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_OFFSET_H
-#define DAWN_AST_OFFSET_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
@@ -219,4 +218,3 @@ std::string to_string(unstructured_, Offsets const& offset);
 std::string to_string(Offsets const& offset);
 
 } // namespace dawn::ast
-#endif

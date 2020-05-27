@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTSTRINGIFER_H
-#define DAWN_AST_ASTSTRINGIFER_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 #include <iosfwd>
@@ -46,5 +45,3 @@ extern std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Expr>& s
 /// @}
 } // namespace ast
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ACCESSUTILS_H
-#define DAWN_IIR_ACCESSUTILS_H
+#pragma once
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/Field.h"
@@ -49,5 +48,3 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
 
 } // namespace AccessUtils
 } // namespace dawn
-
-#endif // DAWN_IIR_ACCESSUTILS_H

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_SOURCELOCATION_H
-#define DAWN_SUPPORT_SOURCELOCATION_H
+#pragma once
 
 #include <iosfwd>
 
@@ -49,5 +48,3 @@ extern bool operator!=(const SourceLocation& a, const SourceLocation& b);
 extern std::ostream& operator<<(std::ostream& os, const SourceLocation& sourceLocation);
 
 } // namespace dawn
-
-#endif

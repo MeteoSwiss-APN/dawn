@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_CONTAINERUTILS_H
-#define DAWN_SUPPORT_CONTAINERUTILS_H
+#pragma once
 #include <map>
 #include <unordered_map>
 
@@ -31,5 +30,3 @@ std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap) {
 
 } // namespace support
 } // namespace dawn
-
-#endif

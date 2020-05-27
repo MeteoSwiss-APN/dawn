@@ -17,8 +17,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ITERATOR_H
-#define DAWN_SUPPORT_ITERATOR_H
+#pragma once
 
 #include <easy_iterator.hpp>
 
@@ -27,5 +26,3 @@ namespace dawn {
 using namespace easy_iterator;
 
 } // namespace dawn
-
-#endif // DAWN_SUPPORT_ITERATOR_H

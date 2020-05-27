@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMITZER_READBEFOREWRITECONFLICT_H
-#define DAWN_OPTIMITZER_READBEFOREWRITECONFLICT_H
+#pragma once
 
 #include "dawn/IIR/LoopOrder.h"
 
@@ -106,5 +105,3 @@ hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses& graph,
 bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses& graph);
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTEXPR_H
-#define DAWN_AST_ASTEXPR_H
+#pragma once
 
 #include "ASTVisitorHelpers.h"
 #include "LocationType.h"
@@ -682,5 +681,3 @@ public:
 
 } // namespace ast
 } // namespace dawn
-
-#endif
