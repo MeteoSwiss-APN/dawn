@@ -70,6 +70,6 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
   // size of the IIR is currently ignored by GT
 
   return true;
-} // namespace dawn
+}
 
 } // namespace dawn

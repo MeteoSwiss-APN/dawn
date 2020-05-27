@@ -276,7 +276,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   }
 
   std::stringstream ss;
-  ss << instantiation->getName() << ": rename:" << statement.getSourceLocation().Line;
+  ss << instantiation->getName() << ": rename:";
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
     int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
@@ -292,6 +292,9 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   if(numRenames > 0)
     DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
         << ss.str();
+  else
+    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
+        << instantiation->getName() << ": No renames performed";
 
   numRenames_ += numRenames;
   return RCKind::Fixed;

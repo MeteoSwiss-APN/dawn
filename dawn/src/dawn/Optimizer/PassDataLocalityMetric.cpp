@@ -346,6 +346,8 @@ bool PassDataLocalityMetric::run(
 
       stencilIdx++;
     }
+
+    DAWN_LOG(INFO) << "Reads: " << perStencilNumReads << ", Writes: " << perStencilNumWrites;
   }
 
   return true;

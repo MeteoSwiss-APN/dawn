@@ -15,6 +15,7 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
@@ -230,14 +231,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                          vertices);
+    getInputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                           vertices);
+    getOutputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
   }
@@ -596,7 +597,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
   std::ofstream ofs;
   ofs.open(file);
   if(!ofs.is_open()) {
-    DAWN_LOG(WARNING) << "Failed to open file: " << file;
+    throw CompileError(std::string("Failed to open file: ") + file);
   }
 
   ofs << jgraph.dump(2);
