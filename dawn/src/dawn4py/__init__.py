@@ -50,13 +50,15 @@ def _serialize_sir(sir: Union[serialization.SIR.SIR, str, bytes]):
     elif isinstance(sir, str) and sir.lstrip().startswith("{") and sir.rstrip().endswith("}"):
         serializer_format = SIRSerializerFormat.Json
     elif not isinstance(sir, bytes):
-        raise ValueError(f"Unrecognized SIR data format")
+        raise ValueError("Unrecognized SIR data format")
     return sir, serializer_format
 
 
 def _serialize_instantiations(stencil_instantiation_map: dict):
     # Determine serializer_format based on first stencil instantiation in the dict
     serializer_format = IIRSerializerFormat.Byte
+    if len(stencil_instantiation_map) == 0:
+        raise ValueError("No stencil instantiations found")
     si = list(stencil_instantiation_map.values())[0]
     if isinstance(si, str) and si.lstrip().startswith("{") and si.rstrip().endswith("}"):
         serializer_format = IIRSerializerFormat.Json
