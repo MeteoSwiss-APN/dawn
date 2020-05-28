@@ -42,7 +42,7 @@ namespace cuda{
 struct globals {
   double dt;
 
-  globals() : dt(0.000000){
+  globals() : dt(0){
   }
 };
 } // namespace cuda
