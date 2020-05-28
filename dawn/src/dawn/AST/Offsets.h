@@ -22,7 +22,8 @@
 #include <memory>
 #include <string>
 
-namespace dawn::ast {
+namespace dawn {
+namespace ast {
 
 class Offsets;
 
@@ -217,4 +218,5 @@ std::string to_string(unstructured_, Offsets const& offset);
 
 std::string to_string(Offsets const& offset);
 
-} // namespace dawn::ast
+} // namespace ast
+} // namespace dawn
