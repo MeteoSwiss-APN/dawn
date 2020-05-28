@@ -55,7 +55,14 @@ def test_compilation(grid_sir_with_reference_code):
         dawn4py.compile(sir, backend=backend)
         dawn4py.codegen(
             dawn4py.optimize(
-                dawn4py.lower_and_optimize(sir, groups=[]), groups=dawn4py.default_pass_groups()
+                dawn4py.lower_and_optimize(sir, groups=[]),
+                groups=[
+                    dawn4py.PassGroup.SetStageName,
+                    dawn4py.PassGroup.StageReordering,
+                    # dawn4py.PassGroup.StageMerger,
+                    dawn4py.PassGroup.SetCaches,
+                    dawn4py.PassGroup.SetBlockSize,
+                ],
             ),
             backend=backend,
         )
