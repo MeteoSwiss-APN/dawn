@@ -65,7 +65,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       dawn::IIRSerializer::Format format,
       dawn::codegen::Backend backend,
       const dawn::codegen::Options& options) {
-      return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
+        return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
     },
     "Generate code from the stencil instantiation map.",
     py::arg("stencil_instantiation_map"),
@@ -77,7 +77,7 @@ PYBIND11_MODULE(_dawn4py, m) {
   m.def("compile_sir", [](const std::string& sir, dawn::SIRSerializer::Format format,
       const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
       dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
-      return dawn::compile(sir, format, groups, optimizerOptions, backend, codegenOptions);
+        return dawn::compile(sir, format, groups, optimizerOptions, backend, codegenOptions);
     },
     "Compile the stencil IR: lower, optimize, and generate code.",
     "Runs the default_pass_groups() unless the 'groups' argument is passed.",
