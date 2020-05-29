@@ -274,11 +274,10 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                    << "`";
 
     if(options.SerializeIIR) {
-      const dawn::IIRSerializer::Format serializationKind =
-          options.SerializeIIR ? dawn::IIRSerializer::parseFormatString(options.IIRFormat)
-                               : dawn::IIRSerializer::Format::Json;
-      dawn::IIRSerializer::serialize(instantiation->getName() + ".iir", instantiation,
-                                     serializationKind);
+      const IIRSerializer::Format serializationKind =
+          options.SerializeIIR ? IIRSerializer::parseFormatString(options.IIRFormat)
+                               : IIRSerializer::Format::Json;
+      IIRSerializer::serialize(instantiation->getName() + ".iir", instantiation, serializationKind);
     }
 
     if(options.DumpStencilInstantiation) {
@@ -293,36 +292,30 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   return optimizer.getStencilInstantiationMap();
 }
 
-std::map<std::string, std::string> run(const std::string& sir, dawn::SIRSerializer::Format format,
-                                       const std::list<dawn::PassGroup>& groups,
-                                       const dawn::Options& options) {
-  auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-  auto optimizedSIM = dawn::run(stencilIR, groups, options);
+std::map<std::string, std::string> run(const std::string& sir, SIRSerializer::Format format,
+                                       const std::list<PassGroup>& groups, const Options& options) {
+  auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
+  auto optimizedSIM = run(stencilIR, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
-  const dawn::IIRSerializer::Format outputFormat = format == dawn::SIRSerializer::Format::Byte
-                                                       ? dawn::IIRSerializer::Format::Byte
-                                                       : dawn::IIRSerializer::Format::Json;
   for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, outputFormat)));
+    instantiationStringMap.insert(std::make_pair(
+        name, IIRSerializer::serializeToString(instantiation, IIRSerializer::Format::Json)));
   }
   return instantiationStringMap;
 }
 
 std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap,
-    dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-    const dawn::Options& options) {
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
+run(const std::map<std::string, std::string>& stencilInstantiationMap, IIRSerializer::Format format,
+    const std::list<PassGroup>& groups, const Options& options) {
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> internalMap;
   for(auto [name, instStr] : stencilInstantiationMap) {
-    internalMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
+    internalMap.insert(std::make_pair(name, IIRSerializer::deserializeFromString(instStr, format)));
   }
-  auto optimizedSIM = dawn::run(internalMap, groups, options);
+  auto optimizedSIM = run(internalMap, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
   for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, format)));
+    instantiationStringMap.insert(std::make_pair(
+        name, IIRSerializer::serializeToString(instantiation, IIRSerializer::Format::Json)));
   }
   return instantiationStringMap;
 }
@@ -335,12 +328,11 @@ std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& st
   return codegen::run(run(stencilIR, passGroups, optimizerOptions), backend, codegenOptions);
 }
 
-std::string compile(const std::string& sir, dawn::SIRSerializer::Format format,
-                    const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
-                    dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
-  auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-  return dawn::codegen::generate(
-      dawn::compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
+std::string compile(const std::string& sir, SIRSerializer::Format format,
+                    const std::list<PassGroup>& groups, const Options& optimizerOptions,
+                    codegen::Backend backend, const codegen::Options& codegenOptions) {
+  auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
+  return codegen::generate(compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
 }
 
 } // namespace dawn

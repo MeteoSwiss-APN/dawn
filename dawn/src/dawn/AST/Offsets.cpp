@@ -12,14 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
-
-#include "Offsets.h"
-
+#include "dawn/AST/Offsets.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Unreachable.h"
 
-namespace dawn::ast {
+namespace dawn {
+namespace ast {
 
 // HorizontalOffsetImpl
 std::unique_ptr<HorizontalOffsetImpl> HorizontalOffsetImpl::clone() const { return cloneImpl(); }
@@ -185,7 +182,6 @@ std::string to_string(Offsets const& offset) {
 }
 
 Offsets operator+(Offsets o1, Offsets const& o2) { return o1 += o2; }
-} // namespace dawn::ast
 
-
-
+} // namespace ast
+} // namespace dawn

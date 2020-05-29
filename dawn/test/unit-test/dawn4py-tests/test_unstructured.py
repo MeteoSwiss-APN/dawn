@@ -47,5 +47,11 @@ def test_sir_serialization(name):
 
 def test_compilation(unstructured_sir_with_reference_code):
     sir, reference_code = unstructured_sir_with_reference_code
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
+    dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
+    dawn4py.codegen(
+        dawn4py.optimize(
+            dawn4py.lower_and_optimize(sir, groups=[]), groups=dawn4py.default_pass_groups()
+        ),
+        backend=dawn4py.CodeGenBackend.CXXNaiveIco,
+    )
     # TODO There was no test here...
