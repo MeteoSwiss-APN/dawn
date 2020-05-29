@@ -30,6 +30,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <variant>
 #include <vector>
@@ -577,7 +578,7 @@ struct SIR : public dawn::NonCopyable {
   SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
-  void dump();
+  void dump(std::ostream& os);
 
   /// @brief Compares two SIRs for equality in contents
   ///

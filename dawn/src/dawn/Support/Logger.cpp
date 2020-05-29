@@ -16,8 +16,9 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
+
 #include <chrono>
-#include <iostream>
+#include <sstream>
 
 namespace dawn {
 
@@ -120,6 +121,23 @@ Logger::iterator Logger::end() { return std::end(data_); }
 Logger::const_iterator Logger::begin() const { return std::begin(data_); }
 Logger::const_iterator Logger::end() const { return std::end(data_); }
 Logger::Container::size_type Logger::size() const { return std::size(data_); }
+
+std::string createDiagnosticStackTrace(const std::string& prefix,
+                                       const DiagnosticStack& inputStack) {
+  auto stack = inputStack;
+  std::stringstream ss;
+  while(!stack.empty()) {
+    ss << prefix;
+    const auto& [call, loc] = stack.top();
+    ss << call;
+    if(loc.isValid())
+      ss << " at " << loc.Line << ":" << loc.Column;
+    ss << '\n';
+    stack.pop();
+  }
+
+  return ss.str();
+}
 
 namespace log {
 

@@ -15,8 +15,6 @@
 #include "dawn/AST/Offsets.h"
 #include "dawn/Support/Assert.h"
 
-#include <iostream>
-
 namespace dawn {
 namespace ast {
 

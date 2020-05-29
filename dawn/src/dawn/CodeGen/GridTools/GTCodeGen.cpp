@@ -22,7 +22,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <map>
@@ -38,21 +38,15 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  DiagnosticsEngine diagnostics;
-  GTCodeGen CG(stencilInstantiationMap, diagnostics, options.UseParallelEP, options.MaxHaloSize,
+  GTCodeGen CG(stencilInstantiationMap, options.UseParallelEP, options.MaxHaloSize,
                options.RunWithSync);
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in code generation");
-  }
 
   return CG.generateCode();
 }
 
-GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                     bool useParallelEP, int maxHaloPoints, bool runWithSync)
-    : CodeGen(ctx, engine, maxHaloPoints),
+GTCodeGen::GTCodeGen(const StencilInstantiationContext& ctx, bool useParallelEP, int maxHaloPoints,
+                     bool runWithSync)
+    : CodeGen(ctx, maxHaloPoints),
       mplContainerMaxSize_(20), codeGenOptions_{useParallelEP, runWithSync} {}
 
 GTCodeGen::~GTCodeGen() {}
@@ -491,12 +485,10 @@ void GTCodeGen::generateStencilClasses(
           return !f.second.IsTemporary;
         });
     if(stencil.isEmpty()) {
-      DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                              stencilInstantiation->getMetaData().getStencilLocation());
-      diag << "empty stencil '" << stencilInstantiation->getName()
-           << "', this would result in invalid gridtools code";
-      diagEngine.report(diag);
-      return;
+      throw SemanticError(std::string("Empty stencil '") + stencilInstantiation->getName() +
+                              "', this would result in invalid gridtools code",
+                          stencilInstantiation->getMetaData().getFileName(),
+                          stencilInstantiation->getMetaData().getStencilLocation());
     }
 
     // Check for horizontal iteration spaces
@@ -585,11 +577,11 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
 
         if(fields.empty() && !stencilFun->hasReturn()) {
-          DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
-          diag << "no storages referenced in stencil function '" << stencilFun->getName()
-               << "', this would result in invalid gridtools code";
-          diagEngine.report(diag);
-          return;
+          throw SemanticError(std::string("No storages referenced in stencil '") +
+                                  stencilInstantiation->getName() +
+                                  "', this would result in invalid gridtools code",
+                              stencilInstantiation->getMetaData().getFileName(),
+                              stencilInstantiation->getMetaData().getStencilLocation());
         }
 
         // If we have a return argument, we generate a special `__out` field
@@ -755,11 +747,11 @@ void GTCodeGen::generateStencilClasses(
         // Field declaration
         std::vector<std::string> arglist;
         if(fields.empty()) {
-          DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                  stencilInstantiation->getMetaData().getStencilLocation());
-          diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
-               << "', this would result in invalid gridtools code";
-          diagEngine.report(diag);
+          throw SemanticError(std::string("No storages referenced in stencil '") +
+                                  stencilInstantiation->getName() +
+                                  "', this would result in invalid gridtools code",
+                              stencilInstantiation->getMetaData().getFileName(),
+                              stencilInstantiation->getMetaData().getStencilLocation());
         }
 
         std::size_t accessorIdx = 0;

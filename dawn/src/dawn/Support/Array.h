@@ -15,8 +15,10 @@
 #pragma once
 
 #include "dawn/Support/HashCombine.h"
+
 #include <array>
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 

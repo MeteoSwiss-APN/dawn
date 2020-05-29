@@ -52,9 +52,8 @@ TEST(TestCaching, test_global_iteration_space_01) {
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // optimizer and compiler (required to run caching pass)
-  DiagnosticsEngine diag;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -95,9 +94,8 @@ TEST(TestCaching, test_global_iteration_space_02) {
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // optimizer and compiler (required to run caching pass)
-  DiagnosticsEngine diag;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -139,9 +137,8 @@ TEST(TestCaching, test_global_iteration_space_03) {
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // optimizer (required to run caching pass)
-  DiagnosticsEngine diag;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -179,9 +176,8 @@ TEST(TestCaching, test_global_iteration_space_04) {
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // optimizer and compiler (required to run caching pass)
-  DiagnosticsEngine diag;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)
@@ -219,9 +215,8 @@ TEST(TestCaching, test_global_iteration_space_05) {
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // optimizer and compiler (required to run caching pass)
-  DiagnosticsEngine diag;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single compiler pass (caching)

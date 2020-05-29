@@ -21,8 +21,10 @@
 #include "dawn/Support/SmallVector.h"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/Unreachable.h"
+
 #include <cassert>
 #include <iosfwd>
+#include <ostream>
 #include <string>
 
 namespace dawn {

@@ -24,6 +24,7 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Unittest/UnittestUtils.h"
 
 #include <fstream>
@@ -39,31 +40,34 @@ std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::st
   UIDGenerator::getInstance()->reset();
   auto stencilIR = SIRSerializer::deserialize(sirFilename);
 
-  DiagnosticsEngine diag;
-  OptimizerContext context(diag, {}, stencilIR);
+  OptimizerContext context({}, stencilIR);
   auto stencilInstantiationMap = context.getStencilInstantiationMap();
   DAWN_ASSERT(stencilInstantiationMap.size() == 1);
   auto instantiation = std::begin(stencilInstantiationMap)->second;
 
   {
+    dawn::log::error.clear();
     dawn::PassLocalVarType pass(context);
     pass.run(instantiation);
-    EXPECT_TRUE(!diag.hasErrors());
+    EXPECT_EQ(dawn::log::error.size(), 0);
   }
   {
+    dawn::log::error.clear();
     dawn::PassRemoveScalars pass(context);
     pass.run(instantiation);
-    EXPECT_TRUE(!diag.hasErrors());
+    EXPECT_EQ(dawn::log::error.size(), 0);
   }
   {
+    dawn::log::error.clear();
     dawn::PassStageSplitAllStatements pass(context);
     pass.run(instantiation);
-    EXPECT_TRUE(!diag.hasErrors());
+    EXPECT_EQ(dawn::log::error.size(), 0);
   }
   {
+    dawn::log::error.clear();
     dawn::PassSetStageLocationType pass(context);
     pass.run(instantiation);
-    EXPECT_TRUE(!diag.hasErrors());
+    EXPECT_EQ(dawn::log::error.size(), 0);
   }
 
   return instantiation;

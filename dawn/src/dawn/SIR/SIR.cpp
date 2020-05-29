@@ -22,7 +22,6 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 namespace dawn {
@@ -689,7 +688,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 SIR::SIR(const ast::GridType gridType)
     : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
 
-void SIR::dump() { std::cout << *this << std::endl; }
+void SIR::dump(std::ostream& os) { os << *this << std::endl; }
 
 const char* sir::Value::typeToString(sir::Value::Kind type) {
   switch(type) {

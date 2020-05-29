@@ -31,11 +31,10 @@ class TestPassStageMerger : public ::testing::Test {
 protected:
   OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<OptimizerContext> context_;
-  DiagnosticsEngine diag_;
 
   explicit TestPassStageMerger() {
     options_.MergeStages = options_.MergeDoMethods = true;
-    context_ = std::make_unique<OptimizerContext>(diag_, options_,
+    context_ = std::make_unique<OptimizerContext>(options_,
                                                   std::make_shared<SIR>(ast::GridType::Cartesian));
     UIDGenerator::getInstance()->reset();
   }

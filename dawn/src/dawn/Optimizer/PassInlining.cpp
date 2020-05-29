@@ -23,7 +23,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
-#include <iostream>
+
 #include <stack>
 #include <unordered_map>
 #include <vector>

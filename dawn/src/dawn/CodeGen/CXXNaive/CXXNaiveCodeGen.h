@@ -43,8 +43,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 class CXXNaiveCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                  int maxHaloPoint);
+  CXXNaiveCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint);
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 

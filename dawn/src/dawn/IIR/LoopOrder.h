@@ -15,6 +15,7 @@
 #pragma once
 
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 namespace iir {

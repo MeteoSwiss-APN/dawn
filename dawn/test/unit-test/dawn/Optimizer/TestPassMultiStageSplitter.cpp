@@ -29,17 +29,13 @@ namespace {
 
 class TestPassMultiStageSplitter : public ::testing::Test {
 public:
-  TestPassMultiStageSplitter() {
-    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
-  }
+  TestPassMultiStageSplitter() { context_ = std::make_unique<OptimizerContext>(options_, nullptr); }
 
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
-  DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
   std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
-    context_->getDiagnostics().clear();
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...

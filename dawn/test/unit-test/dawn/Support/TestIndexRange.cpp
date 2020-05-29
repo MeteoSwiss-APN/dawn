@@ -14,7 +14,7 @@
 
 #include "dawn/Support/IndexRange.h"
 #include <gtest/gtest.h>
-#include <iostream>
+#include <ostream>
 #include <vector>
 
 namespace dawn {

@@ -44,8 +44,8 @@ class CudaIcoCodeGen : public CodeGen {
 
 public:
   ///@brief constructor
-  CudaIcoCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                 int maxHaloPoints, int nsms, int maxBlocksPerSM, const Array3i& domainSize);
+  CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
+                 int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync = true);
   virtual ~CudaIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -53,6 +53,7 @@ public:
     int nsms;
     int maxBlocksPerSM;
     Array3i domainSize;
+    bool runWithSync;
   };
 
 private:

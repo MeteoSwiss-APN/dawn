@@ -21,7 +21,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/TemporaryHandling.h"
-#include <iostream>
+#include "dawn/Support/Logger.h"
 #include <memory>
 #include <stack>
 #include <unordered_map>
@@ -81,11 +81,11 @@ struct Temporary {
   // TODO remove the dump and should tne lifetime go into the Field as derived info?
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
-    std::cout << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
-              << " {"
-              << "\n  Type="
-              << (type_ == iir::TemporaryScope::LocalVariable ? "LocalVariable" : "Field")
-              << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}\n";
+    DAWN_LOG(INFO) << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
+                   << " {"
+                   << "\n  Type="
+                   << (type_ == iir::TemporaryScope::LocalVariable ? "LocalVariable" : "Field")
+                   << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}";
   }
 };
 
@@ -155,8 +155,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
       const Temporary& temporary = AccessIDTemporaryPair.second;
 
       auto report = [&](const char* action) {
-        std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": " << action
-                  << ":" << instantiation->getOriginalNameFromAccessID(accessID) << std::endl;
+        DAWN_LOG(INFO) << instantiation->getName() << ": " << action << ": "
+                       << instantiation->getOriginalNameFromAccessID(accessID);
       };
 
       // we promote local variables into temporary fields if they are accessed out

@@ -18,6 +18,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
 
@@ -33,12 +34,12 @@ namespace {
 std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::string& filename) {
   UIDGenerator::getInstance()->reset();
   auto instantiation = IIRSerializer::deserialize(filename);
-  DiagnosticsEngine diag;
-  OptimizerContext context(diag, {}, {{instantiation->getName(), instantiation}});
+  OptimizerContext context({}, {{instantiation->getName(), instantiation}});
 
+  dawn::log::error.clear();
   PassStageSplitAllStatements pass(context);
   pass.run(instantiation);
-  EXPECT_TRUE(!diag.hasErrors());
+  EXPECT_EQ(dawn::log::error.size(), 0);
 
   return instantiation;
 }

@@ -20,7 +20,6 @@
 #include "dawn/Support/Unreachable.h"
 
 #include <algorithm>
-#include <iostream>
 
 namespace dawn::iir {
 
@@ -150,16 +149,16 @@ void UnstructuredExtent::limitImpl(HorizontalExtentImpl const& other) {
 
 // HorizontalExtent
 HorizontalExtent::HorizontalExtent(ast::HorizontalOffset const& hOffset) {
-  *this = offset_dispatch(hOffset,
-                          [](ast::CartesianOffset const& cOffset) {
-                            return HorizontalExtent(ast::cartesian, cOffset.offsetI(),
-                                                    cOffset.offsetI(), cOffset.offsetJ(),
-                                                    cOffset.offsetJ());
-                          },
-                          [](ast::UnstructuredOffset const& uOffset) {
-                            return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
-                          },
-                          []() { return HorizontalExtent(); });
+  *this = offset_dispatch(
+      hOffset,
+      [](ast::CartesianOffset const& cOffset) {
+        return HorizontalExtent(ast::cartesian, cOffset.offsetI(), cOffset.offsetI(),
+                                cOffset.offsetJ(), cOffset.offsetJ());
+      },
+      [](ast::UnstructuredOffset const& uOffset) {
+        return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+      },
+      []() { return HorizontalExtent(); });
 }
 HorizontalExtent::HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
 HorizontalExtent::HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
@@ -373,18 +372,17 @@ std::string to_string(const Extents& extent) {
 
   using namespace std::string_literals;
   return "["s +
-         extent_dispatch(extent.horizontalExtent(),
-                         [&](CartesianExtent const& hExtents) {
-                           return "("s + std::to_string(hExtents.iMinus()) + "," +
-                                  std::to_string(hExtents.iPlus()) + "),(" +
-                                  std::to_string(hExtents.jMinus()) + "," +
-                                  std::to_string(hExtents.jPlus()) + ")";
-                         },
-                         [&](UnstructuredExtent const& hExtents) {
-                           return hExtents.hasExtent() ? "<has_horizontal_extent>"s
-                                                       : "<no_horizontal_extent>"s;
-                         },
-                         [&]() { return "<no_horizontal_extent>"s; }) +
+         extent_dispatch(
+             extent.horizontalExtent(),
+             [&](CartesianExtent const& hExtents) {
+               return "("s + std::to_string(hExtents.iMinus()) + "," +
+                      std::to_string(hExtents.iPlus()) + "),(" + std::to_string(hExtents.jMinus()) +
+                      "," + std::to_string(hExtents.jPlus()) + ")";
+             },
+             [&](UnstructuredExtent const& hExtents) {
+               return hExtents.hasExtent() ? "<has_horizontal_extent>"s : "<no_horizontal_extent>"s;
+             },
+             [&]() { return "<no_horizontal_extent>"s; }) +
          ",(" + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus()) + ")]";
 }
 

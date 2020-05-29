@@ -43,8 +43,8 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine, bool useParallelEP,
-            int maxHaloPoints, bool runWithSync = true);
+  GTCodeGen(const StencilInstantiationContext& ctx, bool useParallelEP, int maxHaloPoints,
+            bool runWithSync = true);
   virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;

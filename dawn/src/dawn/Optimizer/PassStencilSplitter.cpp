@@ -19,7 +19,6 @@
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"
-#include <iostream>
 
 namespace dawn {
 

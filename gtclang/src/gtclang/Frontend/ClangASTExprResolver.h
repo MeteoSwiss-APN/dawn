@@ -18,6 +18,7 @@
 #define GTCLANG_FRONTEND_CLANGASTEXPRRESOLVER_H
 
 #include "dawn/SIR/ASTFwd.h"
+#include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "gtclang/Frontend/Diagnostics.h"
 #include "clang/AST/ASTFwd.h"

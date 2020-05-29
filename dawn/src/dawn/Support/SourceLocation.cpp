@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Support/SourceLocation.h"
-#include <iostream>
+
 #include <string>
 
 namespace dawn {

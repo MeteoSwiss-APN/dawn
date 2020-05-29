@@ -20,7 +20,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Unittest/IIRBuilder.h"
@@ -154,10 +153,9 @@ bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiatio
 class createEmptyOptimizerContext : public ::testing::Test {
 protected:
   virtual void SetUp() override {
-    dawn::DiagnosticsEngine diag;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
     dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = std::make_unique<OptimizerContext>(diag, options, sir);
+    context_ = std::make_unique<OptimizerContext>(options, sir);
   }
   virtual void TearDown() override {}
   std::unique_ptr<OptimizerContext> context_;

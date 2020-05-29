@@ -19,8 +19,8 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
-#include <iostream>
 
 namespace dawn {
 
@@ -96,8 +96,8 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    if(context_.getOptions().ReportPassTemporaryMerger)
-      std::cout << TemporaryDAG.toDot() << std::endl;
+    // TODO Should this be an optional dump?
+    DAWN_LOG(INFO) << TemporaryDAG.toDot();
 
     if(TemporaryDAG.empty())
       continue;
@@ -158,10 +158,9 @@ bool PassTemporaryMerger::run(
       std::sort(renameCandidatesNames.begin(), renameCandidatesNames.end());
 
       // Print the rename candidates in alphabetical order
-      if(context_.getOptions().ReportPassTemporaryMerger &&
-         AccessIDOfRenameCandidates.size() >= 2) {
-        std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                  << ": merging: " << RangeToString(", ", "", "\n")(renameCandidatesNames);
+      if(AccessIDOfRenameCandidates.size() >= 2) {
+        DAWN_LOG(INFO) << stencilInstantiation->getName()
+                       << ": merging: " << RangeToString(", ", "", "\n")(renameCandidatesNames);
       }
 
       // Rename all other fields of the color to the AccessID of the first field in alphabetical
@@ -179,9 +178,8 @@ bool PassTemporaryMerger::run(
     stencilIdx++;
   }
 
-  if(context_.getOptions().ReportPassTemporaryMerger && !merged)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no merge\n";
+  if(!merged)
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": No merge";
 
   return true;
 }

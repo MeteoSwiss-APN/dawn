@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/GridType.h"
-#include <iostream>
+#include <ostream>
 
 namespace dawn {
 
