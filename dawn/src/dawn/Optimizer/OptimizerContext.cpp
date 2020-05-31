@@ -658,8 +658,6 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 toStencilInstantiationMap(const SIR& stencilIR) {
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
-  // FillIIR()
-  // {
   std::vector<std::shared_ptr<sir::StencilFunction>> iirStencilFunctions;
   // Convert the asts of sir::StencilFunctions to iir
   std::transform(stencilIR.StencilFunctions.begin(), stencilIR.StencilFunctions.end(),
@@ -683,7 +681,6 @@ toStencilInstantiationMap(const SIR& stencilIR) {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
     }
   }
-  // }
 
   return stencilInstantiationMap;
 }
