@@ -64,8 +64,6 @@ private:
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
-  void fillIIR();
-
 public:
   /// @brief Initialize the context with a SIR
   OptimizerContext(OptimizerContextOptions options, const std::shared_ptr<SIR>& SIR);
@@ -103,14 +101,10 @@ public:
   }
 
   /// @brief fillIIRFromSIR
+  /// @param name
   /// @param stencilInstantation
-  /// @param SIRStencil
-  /// @param fullSIR
   /// @return
-  bool fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantation,
-                      const std::shared_ptr<sir::Stencil> SIRStencil,
-                      const std::shared_ptr<SIR> fullSIR);
-  bool restoreIIR(std::string const& name,
+  bool restoreIIR(const std::string& name,
                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
 };
 

@@ -691,8 +691,9 @@ toStencilInstantiationMap(const SIR& stencilIR) {
 OptimizerContext::OptimizerContext(OptimizerContextOptions options, const std::shared_ptr<SIR>& SIR)
     : options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
-  if(SIR)
-    fillIIR();
+  if(SIR) {
+    stencilInstantiationMap_ = toStencilInstantiationMap(*SIR_);
+  }
 }
 
 OptimizerContext::OptimizerContext(
@@ -704,62 +705,6 @@ OptimizerContext::OptimizerContext(
   for(auto& [name, stencilInstantiation] : stencilInstantiationMap) {
     restoreIIR(name, stencilInstantiation);
   }
-}
-
-bool OptimizerContext::fillIIRFromSIR(
-    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
-  DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
-  DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
-  auto& metadata = stencilInstantiation->getMetaData();
-  metadata.setStencilName(SIRStencil->Name);
-  metadata.setFileName(fullSIR->Filename);
-  metadata.setStencilLocation(SIRStencil->Loc);
-
-  // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
-  // indentify the field).
-  for(const auto& field : SIRStencil->Fields) {
-    metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
-                                          : iir::FieldAccessType::APIField),
-                      field->Name, sir::FieldDimensions(field->Dimensions));
-  }
-
-  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),
-                                               fullSIR->Stencils, *fullSIR->GlobalVariableMap);
-
-  //  Converting to AST with iir data
-  auto AST = convertToIIRAST(*SIRStencil->StencilDescAst);
-  AST->accept(stencilDeclMapper);
-
-  //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
-  stencilDeclMapper.cleanupStencilDeclAST();
-
-  //  // Repair broken references to temporaries i.e promote them to real fields
-  PassTemporaryType::fixTemporariesSpanningMultipleStencils(
-      stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
-
-  if(getOptions().ReportAccesses) {
-    stencilInstantiation->reportAccesses(dawn::log::info.stream());
-  }
-
-  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
-    MS->update(NodeUpdateType::levelAndTreeAbove);
-  }
-  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
-
-  // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
-    }
-    stage.update(iir::NodeUpdateType::level);
-  }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
-    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-
-  return true;
 }
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
@@ -778,35 +723,7 @@ const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() 
 
 OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
 
-void OptimizerContext::fillIIR() {
-  DAWN_ASSERT(SIR_);
-  std::vector<std::shared_ptr<sir::StencilFunction>> iirStencilFunctions;
-  // Convert the asts of sir::StencilFunctions to iir
-  std::transform(SIR_->StencilFunctions.begin(), SIR_->StencilFunctions.end(),
-                 std::back_inserter(iirStencilFunctions),
-                 [&](const std::shared_ptr<sir::StencilFunction>& sirSF) {
-                   auto iirSF = std::make_shared<sir::StencilFunction>(*sirSF);
-                   for(auto& ast : iirSF->Asts)
-                     ast = convertToIIRAST(*ast);
-
-                   return iirSF;
-                 });
-
-  for(const auto& stencil : SIR_->Stencils) {
-    DAWN_ASSERT(stencil);
-    if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
-      stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<iir::StencilInstantiation>(getSIR()->GridType,
-                                                                     getSIR()->GlobalVariableMap,
-                                                                     iirStencilFunctions)));
-      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
-    } else {
-      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
-    }
-  }
-}
-
-bool OptimizerContext::restoreIIR(std::string const& name,
+bool OptimizerContext::restoreIIR(const std::string& name,
                                   std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilName(stencilInstantiation->getName());
