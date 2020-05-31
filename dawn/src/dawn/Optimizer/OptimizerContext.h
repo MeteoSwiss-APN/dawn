@@ -28,6 +28,12 @@ struct Stencil;
 namespace iir {
 class StencilInstantiation;
 }
+/// @brief Naively lower an SIR to a stencil instantiation map
+///
+/// This only transforms the SIR to IIR and creates some metadata. It will still need to be run with
+/// the parallel pass group to create valid IIR.
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
+toStencilInstantiationMap(const SIR& stencilIR);
 
 struct HardwareConfig {
   /// Maximum number of fields concurrently in shared memory
