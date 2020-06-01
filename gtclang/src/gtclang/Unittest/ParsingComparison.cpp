@@ -27,6 +27,7 @@
 #include "llvm/ProfileData/InstrProf.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+
 #include <fstream>
 
 namespace gtclang {
@@ -93,7 +94,7 @@ struct VerticalRegion : public NestableFunctions {
 
 struct StencilBase : public dawn::codegen::Structure {
   StencilBase(const std::string& type, const std::string& name, std::stringstream& s)
-      : Structure(type.str().c_str(), name, s) {}
+      : Structure(type.c_str(), name, s) {}
 
   Statement addStorage(const std::string& memberName) {
     Statement member(ss(), IndentLevel + 1);
