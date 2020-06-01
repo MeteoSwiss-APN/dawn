@@ -61,6 +61,8 @@ std::string Interval::toStringGen() const {
   return ss.str();
 }
 
+Interval::operator std::string() const { return toString(); }
+
 std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   auto printLevel = [&](int level, int offset) -> void {
     if(level == sir::Interval::Start)
