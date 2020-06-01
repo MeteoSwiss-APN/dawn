@@ -30,18 +30,16 @@ namespace {
 class TestPassMultiStageMerger : public ::testing::Test {
 public:
   explicit TestPassMultiStageMerger() {
-    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
+    context_ = std::make_unique<OptimizerContext>(options_, nullptr);
     dawn::UIDGenerator::getInstance()->reset();
   }
 
 protected:
   dawn::OptimizerContext::OptimizerContextOptions options_;
-  DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
   void runTest(const std::string& filename, const std::vector<unsigned>& expNumStages,
                const std::vector<iir::LoopOrderKind>& expLoopOrders) {
-    context_->getDiagnostics().clear();
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage graph pass

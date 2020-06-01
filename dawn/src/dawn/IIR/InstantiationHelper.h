@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_INSTANTIATIONHELPER_H
-#define DAWN_IIR_INSTANTIATIONHELPER_H
+#pragma once
 
 #include "dawn/Support/NonCopyable.h"
 #include <string>
@@ -51,5 +50,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

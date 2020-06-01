@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
-#define DAWN_OPTIMIZER_OPTIMIZEROPTIONS_H
+#pragma once
 
 #include <string>
 
@@ -47,5 +46,3 @@ struct Options {
 };
 
 } // namespace dawn
-
-#endif

@@ -25,6 +25,6 @@ std::shared_ptr<iir::StencilInstantiation> getLaplacianStencil();
 std::shared_ptr<iir::StencilInstantiation> getNonOverlappingInterval();
 
 void runTest(const std::shared_ptr<dawn::iir::StencilInstantiation> stencilInstantiation,
-             codegen::Backend backend, const std::string& ref_file);
+             codegen::Backend backend, const std::string& ref_file, bool withSync = true);
 
 } // namespace dawn

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSMANAGER_H
-#define DAWN_OPTIMIZER_PASSMANAGER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Optimizer/PassValidation.h"
@@ -53,5 +52,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

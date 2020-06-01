@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
-#ifndef DAWN_IIR_IIRBUILDER_H
-#define DAWN_IIR_IIRBUILDER_H
+#pragma once
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
@@ -351,5 +350,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

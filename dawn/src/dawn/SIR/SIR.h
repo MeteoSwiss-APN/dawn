@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_SIR_H
-#define DAWN_SIR_SIR_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
@@ -31,6 +30,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <variant>
 #include <vector>
@@ -578,7 +578,7 @@ struct SIR : public dawn::NonCopyable {
   SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
-  void dump();
+  void dump(std::ostream& os);
 
   /// @brief Compares two SIRs for equality in contents
   ///
@@ -602,5 +602,3 @@ struct SIR : public dawn::NonCopyable {
 };
 
 } // namespace dawn
-
-#endif

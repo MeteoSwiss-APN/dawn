@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSETBOUNDARYCONDITIONS_H
-#define DAWN_OPTIMIZER_PASSSETBOUNDARYCONDITIONS_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include <unordered_map>
@@ -56,5 +55,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

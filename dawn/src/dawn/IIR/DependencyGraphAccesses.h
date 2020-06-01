@@ -12,13 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
-#define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/TypeTraits.h"
 #include <functional>
 #include <set>
@@ -172,7 +170,7 @@ public:
   void clear();
 
   /// @brief Serialize the graph to JSON
-  void toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const;
+  void toJSON(const std::string& file) const;
 
   /// @fn exceedsMaxBoundaryPoints
   /// @brief Check if any field, referenced in `graph`, exceeds the maximum number of boundary
@@ -182,5 +180,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

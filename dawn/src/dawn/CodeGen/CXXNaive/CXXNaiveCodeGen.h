@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
-#define DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -44,8 +43,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 class CXXNaiveCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveCodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                  int maxHaloPoint);
+  CXXNaiveCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint);
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -79,5 +77,3 @@ private:
 } // namespace cxxnaive
 } // namespace codegen
 } // namespace dawn
-
-#endif

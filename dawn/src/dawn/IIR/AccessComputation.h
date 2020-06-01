@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ACCESSCOMPUTATION_H
-#define DAWN_IIR_ACCESSCOMPUTATION_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
@@ -53,5 +52,3 @@ void computeAccesses(
 /// @}
 
 } // namespace dawn
-
-#endif

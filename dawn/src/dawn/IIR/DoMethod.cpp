@@ -29,7 +29,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <limits>
 #include <memory>
 

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_ASTCODEGENCXX_H
-#define DAWN_CODEGEN_ASTCODEGENCXX_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
@@ -78,5 +77,3 @@ public:
 
 } // namespace codegen
 } // namespace dawn
-
-#endif

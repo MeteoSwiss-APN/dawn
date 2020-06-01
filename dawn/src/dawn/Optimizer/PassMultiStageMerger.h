@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSMULTISTAGEMERGER_H
-#define DAWN_OPTIMIZER_PASSMULTISTAGEMERGER_H
+#pragma once
 
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/MultiStage.h"
@@ -39,5 +38,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

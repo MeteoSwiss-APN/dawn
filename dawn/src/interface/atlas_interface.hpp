@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_INTERFACE_ATLAS_INTERFACE_H_
-#define DAWN_INTERFACE_ATLAS_INTERFACE_H_
+#pragma once
 
 #include "atlas/mesh.h"
 #include <algorithm>
@@ -297,4 +296,5 @@ auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
 }
 
 } // namespace atlasInterface
-#endif
+
+

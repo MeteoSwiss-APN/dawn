@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
-#define DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
+#pragma once
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -70,5 +69,3 @@ public:
 } // namespace gt
 } // namespace codegen
 } // namespace dawn
-
-#endif

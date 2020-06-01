@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ASTSERIALIZER_H
-#define DAWN_SUPPORT_ASTSERIALIZER_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 #include "dawn/AST/ASTStmt.h"
@@ -145,5 +144,3 @@ std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProt
 
 std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto,
                                   ast::StmtData::DataType dataType, int& maxID);
-
-#endif // DAWN_SUPPORT_ASTSERIALIZER_H

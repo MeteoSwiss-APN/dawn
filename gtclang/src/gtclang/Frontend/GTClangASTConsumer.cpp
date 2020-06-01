@@ -23,7 +23,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/Diagnostics.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
@@ -47,7 +47,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <ctime>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -119,7 +118,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   SIR->GlobalVariableMap = globalsParser.getGlobalVariableMap();
 
   if(context_->getOptions().DumpSIR) {
-    SIR->dump();
+    SIR->dump(std::cout);
   }
 
   parentAction_->setSIR(SIR);

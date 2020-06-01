@@ -37,7 +37,7 @@ AUTHOR = "MeteoSwiss / ETH Zurich / Vulcan"
 DAWN_DIR = os.path.dirname(__file__)
 DAWN4PY_DIR = os.path.join(DAWN_DIR, "src", "dawn4py")
 
-BUILD_JOBS = os.cpu_count()
+BUILD_JOBS = os.getenv("BUILD_JOBS", default=str(os.cpu_count()))
 
 # Select protobuf version
 with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
@@ -57,13 +57,14 @@ with open(os.path.join(DAWN_DIR, "version.txt"), mode="r") as f:
 shutil.copyfile(os.path.join(DAWN_DIR, "version.txt"), os.path.join(DAWN4PY_DIR, "version.txt"))
 
 # Copy additional C++ headers for the generated code
-target_path = os.path.join(DAWN4PY_DIR, "_external_src", "driver-includes")
-if os.path.exists(target_path):
-    shutil.rmtree(target_path)
-shutil.copytree(
-    os.path.join(DAWN_DIR, "src", "driver-includes"), target_path,
-)
 
+for srcdir in ["driver-includes", "interface"]:
+    target_path = os.path.join(DAWN4PY_DIR, "_external_src", srcdir)
+    if os.path.exists(target_path):
+        shutil.rmtree(target_path)
+    shutil.copytree(
+        os.path.join(DAWN_DIR, "src", srcdir), target_path,
+    )
 
 # Based on:
 #   https://www.benjack.io/2018/02/02/python-cpp-revisited.html
@@ -129,9 +130,10 @@ class CMakeBuild(build_ext):
         # Run CMake configure
         print("-" * 10, "Running CMake prepare", "-" * 40)
         cmake_args += [
-            "-DPYTHON_EXECUTABLE=" + sys.executable,
             "-DBUILD_TESTING=OFF",
             "-DDAWN_REQUIRE_PYTHON=ON",
+            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython3_EXECUTABLE={sys.executable}",
         ]
         if not self.inplace:
             cmake_args.append("-DDAWN4PY_MODULE_DIR=" + self.build_lib)
@@ -140,7 +142,7 @@ class CMakeBuild(build_ext):
         # Run CMake build
         print("-" * 10, "Building extensions", "-" * 40)
         cfg = "Debug" if self.debug else "Release"
-        build_args = ["--config", cfg, "-j", str(BUILD_JOBS)]
+        build_args = ["--config", cfg, "-j", BUILD_JOBS]
         self.spawn([cmake, "--build", build_dir, "--target", "python"] + build_args)
 
     @staticmethod

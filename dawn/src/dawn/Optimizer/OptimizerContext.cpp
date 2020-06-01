@@ -26,7 +26,7 @@
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
 #include <stack>
 
@@ -402,14 +402,17 @@ public:
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
+    dawn::log::error.clear();
     StatementMapper statementMapper(instantiation_.get(), context_, scope_.top()->StackTrace,
                                     doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getAST().getStatements().size() << " statements";
 
-    if(context_.getDiagnostics().hasErrors())
+    // Exit if there were any errors in the statement mapper.
+    if(dawn::log::error.size() > 0)
       return;
+
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
@@ -598,19 +601,18 @@ public:
 };
 } // namespace
 
-OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
-                                   const std::shared_ptr<SIR>& SIR)
-    : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
+OptimizerContext::OptimizerContext(OptimizerContextOptions options, const std::shared_ptr<SIR>& SIR)
+    : options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
   if(SIR)
     fillIIR();
 }
 
 OptimizerContext::OptimizerContext(
-    DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
+    OptimizerContextOptions options,
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
         stencilInstantiationMap)
-    : diagnostics_(diagnostics), options_(options), SIR_() {
+    : options_(options), SIR_() {
   DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
   for(auto& [name, stencilInstantiation] : stencilInstantiationMap) {
     restoreIIR(name, stencilInstantiation);
@@ -651,7 +653,7 @@ bool OptimizerContext::fillIIRFromSIR(
       stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 
   if(getOptions().ReportAccesses) {
-    stencilInstantiation->reportAccesses();
+    stencilInstantiation->reportAccesses(dawn::log::info.stream());
   }
 
   for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
@@ -683,10 +685,6 @@ const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 OptimizerContext::getStencilInstantiationMap() const {
   return stencilInstantiationMap_;
 }
-
-const DiagnosticsEngine& OptimizerContext::getDiagnostics() const { return diagnostics_; }
-
-DiagnosticsEngine& OptimizerContext::getDiagnostics() { return diagnostics_; }
 
 const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() const {
   return options_;

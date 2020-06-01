@@ -26,17 +26,15 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/Twine.h"
 #include <cstdlib>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <stack>
 #include <string>
 
@@ -228,27 +226,27 @@ void StencilInstantiation::jsonDump(std::string filename) const {
 
 template <int Level>
 struct PrintDescLine {
-  PrintDescLine(const Twine& name) {
-    std::cout << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name.str() << "\n"
-              << MakeIndent<Level>::value << "{\n\033[0m";
+  PrintDescLine(std::ostream& os, const Twine& name) : os_(os) {
+    os_ << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name.str() << "\n"
+        << MakeIndent<Level>::value << "{\n\033[0m";
   }
-  ~PrintDescLine() {
-    std::cout << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level);
-  }
+  ~PrintDescLine() { os_ << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level); }
+
+  std::ostream& os_;
 };
 
-void StencilInstantiation::dump() const {
-  std::cout << "StencilInstantiation : " << getName() << "\n";
+void StencilInstantiation::dump(std::ostream& os) const {
+  os << "StencilInstantiation : " << getName() << "\n";
 
   int i = 0;
   for(const auto& stencil : getStencils()) {
-    PrintDescLine<1> iline("Stencil_" + Twine(i));
+    PrintDescLine<1> iline(os, "Stencil_" + Twine(i));
 
     int j = 0;
     const auto& multiStages = stencil->getChildren();
     for(const auto& multiStage : multiStages) {
-      PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
-                             loopOrderToString(multiStage->getLoopOrder()) + "]");
+      PrintDescLine<2> jline(os, Twine("MultiStage_") + Twine(j) + " [" +
+                                     loopOrderToString(multiStage->getLoopOrder()) + "]");
 
       int k = 0;
       const auto& stages = multiStage->getChildren();
@@ -262,57 +260,52 @@ void StencilInstantiation::dump() const {
           globidx += "J: " + iterSpace[1]->toString() + " ";
         }
 
-        PrintDescLine<3> kline(Twine("Stage_") + Twine(k) + Twine(" ") + Twine(globidx));
+        PrintDescLine<3> kline(os, Twine("Stage_") + Twine(k) + Twine(" ") + Twine(globidx));
 
         int l = 0;
         const auto& doMethods = stage->getChildren();
         for(const auto& doMethod : doMethods) {
-          PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
-                                 doMethod->getInterval().toString());
+          PrintDescLine<4> lline(os, Twine("Do_") + Twine(l) + " " +
+                                         doMethod->getInterval().toString());
 
           const auto& stmts = doMethod->getAST().getStatements();
           for(std::size_t m = 0; m < stmts.size(); ++m) {
-            std::cout << "\033[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
-                      << "\033[0m";
-            std::cout << stmts[m]->getData<IIRStmtData>().CallerAccesses->toString(
-                             [&](int AccessID) {
-                               return getMetaData().getNameFromAccessID(AccessID);
-                             },
-                             6 * DAWN_PRINT_INDENT)
-                      << "\n";
+            os << "\033[1m" << ast::ASTStringifier::toString(stmts[m], 5 * DAWN_PRINT_INDENT)
+               << "\033[0m";
+            os << stmts[m]->getData<IIRStmtData>().CallerAccesses->toString(
+                      [&](int AccessID) { return getMetaData().getNameFromAccessID(AccessID); },
+                      6 * DAWN_PRINT_INDENT)
+               << "\n";
           }
           l += 1;
         }
-        std::cout << "\033[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
-                  << "Extents: " << stage->getExtents() << std::endl
-                  << "\033[0m";
+        os << "\033[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+           << "Extents: " << stage->getExtents() << "\n"
+           << "\033[0m";
         k += 1;
       }
       j += 1;
     }
     ++i;
   }
-  std::cout.flush();
 }
 
-void StencilInstantiation::reportAccesses() const {
+void StencilInstantiation::reportAccesses(std::ostream& os) const {
   // Stencil functions
   for(const auto& stencilFun : metadata_.getStencilFunctionInstantiations()) {
     const auto& stmts = stencilFun->getStatements();
 
     for(std::size_t i = 0; i < stmts.size(); ++i) {
-      std::cout << "\nACCESSES: line " << stmts[i]->getSourceLocation().Line << ": "
-                << stmts[i]->getData<iir::IIRStmtData>().CalleeAccesses->reportAccesses(
-                       stencilFun.get())
-                << "\n";
+      os << "\nACCESSES: line " << stmts[i]->getSourceLocation().Line << ": "
+         << stmts[i]->getData<iir::IIRStmtData>().CalleeAccesses->reportAccesses(stencilFun.get())
+         << "\n";
     }
   }
 
   // Stages
   for(const auto& stmt : iterateIIROverStmt(*getIIR())) {
-    std::cout << "\nACCESSES: line " << stmt->getSourceLocation().Line << ": "
-              << stmt->getData<iir::IIRStmtData>().CallerAccesses->reportAccesses(metadata_)
-              << "\n";
+    os << "\nACCESSES: line " << stmt->getSourceLocation().Line << ": "
+       << stmt->getData<iir::IIRStmtData>().CallerAccesses->reportAccesses(metadata_) << "\n";
   }
 }
 

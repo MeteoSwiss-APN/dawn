@@ -25,7 +25,6 @@
 
 #include "dawn/IIR/Interval.h"
 #include <algorithm>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <unordered_set>

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_CONFIG_H
-#define DAWN_SUPPORT_CONFIG_H
+#pragma once
 
 // Major version of DAWN
 #define DAWN_VERSION_MAJOR ${VERSION_MAJOR}
@@ -30,4 +29,5 @@
 // DAWN full version string
 #define DAWN_FULL_VERSION_STR "${DAWN_FULL_VERSION}"
 
-#endif
+
+

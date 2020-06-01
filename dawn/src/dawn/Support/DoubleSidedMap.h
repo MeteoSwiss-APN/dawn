@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_DOUBLESIDEDMAP_H
-#define DAWN_SUPPORT_DOUBLESIDEDMAP_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include <unordered_map>
@@ -58,4 +57,3 @@ public:
   const std::unordered_map<Key2, Key1>& getReverseMap() const { return reverseMap_; }
 };
 } // namespace dawn
-#endif

@@ -24,12 +24,13 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Support/Logging.h"
-#include "dawn/Support/Unreachable.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
 #include <deque>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 namespace dawn {
 namespace {
@@ -83,9 +84,8 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
       dawn_unreachable("unsupported loop descriptor!\n");
     }
   }
-  DAWN_LOG(ERROR) << "Couldn't deduce location type for statement at line "
-                  << stmt->getSourceLocation() << ".";
-  dawn_unreachable("Couldn't deduce location type.");
+  throw SemanticError(std::string("Couldn't deduce location type for statement at line ") +
+                      static_cast<std::string>(stmt->getSourceLocation()) + ".");
 }
 
 } // namespace

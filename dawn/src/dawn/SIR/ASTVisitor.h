@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTVISITOR_H
-#define DAWN_SIR_ASTVISITOR_H
+#pragma once
 
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/ASTFwd.h"
@@ -31,5 +30,3 @@ using ASTVisitorForwardingNonConst = ast::ASTVisitorForwardingNonConst;
 using ASTVisitorDisabled = ast::ASTVisitorDisabled;
 } // namespace sir
 } // namespace dawn
-
-#endif

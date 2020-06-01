@@ -16,8 +16,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_SMALLVECTOR_H
-#define DAWN_SUPPORT_SMALLVECTOR_H
+#pragma once
 
 #include "dawn/Support/AlignOf.h"
 #include "dawn/Support/Assert.h"
@@ -901,5 +900,3 @@ inline void swap(dawn::SmallVector<T, N>& LHS, dawn::SmallVector<T, N>& RHS) {
 }
 
 } // namespace std
-
-#endif

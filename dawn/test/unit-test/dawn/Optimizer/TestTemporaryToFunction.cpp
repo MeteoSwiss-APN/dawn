@@ -32,16 +32,14 @@ class TestPassTemporaryToFunction : public ::testing::Test {
 public:
   TestPassTemporaryToFunction() {
     options_.TmpToStencilFunction = true;
-    context_ = std::make_unique<OptimizerContext>(diagnostics_, options_, nullptr);
+    context_ = std::make_unique<OptimizerContext>(options_, nullptr);
   }
 
 protected:
   OptimizerContext::OptimizerContextOptions options_;
-  DiagnosticsEngine diagnostics_;
   std::unique_ptr<OptimizerContext> context_;
 
   std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
-    context_->getDiagnostics().clear();
     auto instantiation = IIRSerializer::deserialize(filename);
     EXPECT_TRUE(instantiation->getIIR()->getChildren().size() == 1);
     for(auto& stmt : iterateIIROverStmt(*instantiation->getIIR())) {

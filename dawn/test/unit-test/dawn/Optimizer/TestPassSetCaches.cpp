@@ -32,10 +32,9 @@ class TestPassSetCaches : public ::testing::Test {
 protected:
   OptimizerContext::OptimizerContextOptions options_;
   std::unique_ptr<dawn::OptimizerContext> context_;
-  DiagnosticsEngine diag_;
 
   explicit TestPassSetCaches() {
-    context_ = std::make_unique<OptimizerContext>(diag_, options_,
+    context_ = std::make_unique<OptimizerContext>(options_,
                                                   std::make_shared<SIR>(ast::GridType::Cartesian));
     UIDGenerator::getInstance()->reset();
   }

@@ -16,14 +16,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_TWINE_H
-#define DAWN_SUPPORT_TWINE_H
+#pragma once
 
 #include "dawn/Support/SmallVector.h"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/Unreachable.h"
+
 #include <cassert>
 #include <iosfwd>
+#include <ostream>
 #include <string>
 
 namespace dawn {
@@ -515,5 +516,3 @@ inline std::ostream& operator<<(std::ostream& OS, const Twine& RHS) {
 /// @}
 
 } // namespace dawn
-
-#endif

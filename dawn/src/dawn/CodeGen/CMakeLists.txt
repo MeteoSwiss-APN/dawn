@@ -50,6 +50,12 @@ add_library(DawnCodeGen
   Cuda/ASTStencilFunctionParamVisitor.h
   Cuda/MSCodeGen.cpp
   Cuda/MSCodeGen.h
+  Cuda-ico/ASTStencilBody.h
+  Cuda-ico/ASTStencilBody.cpp
+  Cuda-ico/CudaIcoCodeGen.h
+  Cuda-ico/CudaIcoCodeGen.cpp
+  Cuda-ico/LocToStringUtils.h
+  Cuda-ico/LocToStringUtils.cpp
   Driver.cpp
   Driver.h
   GridTools/ASTStencilBody.cpp

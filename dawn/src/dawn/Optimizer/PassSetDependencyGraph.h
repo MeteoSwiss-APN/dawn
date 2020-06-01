@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSETDEPENDENCYGRAPH_H
-#define DAWN_OPTIMIZER_PASSSETDEPENDENCYGRAPH_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -29,5 +28,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_PASSSETDEPENDENCYGRAPH_H

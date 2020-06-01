@@ -21,7 +21,7 @@
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
+#include <iomanip>
 #include <sstream>
 
 namespace dawn {
@@ -688,7 +688,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 SIR::SIR(const ast::GridType gridType)
     : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
 
-void SIR::dump() { std::cout << *this << std::endl; }
+void SIR::dump(std::ostream& os) { os << *this << std::endl; }
 
 const char* sir::Value::typeToString(sir::Value::Kind type) {
   switch(type) {
@@ -722,6 +722,7 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
 }
 
 std::string sir::Value::toString() const {
+  std::ostringstream out;
   DAWN_ASSERT(has_value());
   switch(type_) {
   case Kind::Boolean:
@@ -729,9 +730,12 @@ std::string sir::Value::toString() const {
   case Kind::Integer:
     return std::to_string(std::get<int>(*value_));
   case Kind::Double:
-    return std::to_string(std::get<double>(*value_));
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+        << std::get<double>(*value_);
+    return out.str();
   case Kind::Float:
-    return std::to_string(std::get<float>(*value_));
+    out << std::setprecision(std::numeric_limits<float>::digits10 + 1) << std::get<float>(*value_);
+    return out.str();
   case Kind::String:
     return std::get<std::string>(*value_);
   default:

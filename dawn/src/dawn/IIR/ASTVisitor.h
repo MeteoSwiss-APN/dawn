@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTVISITOR_H
-#define DAWN_IIR_ASTVISITOR_H
+#pragma once
 
 #include "dawn/AST/ASTVisitor.h"
 
@@ -30,5 +29,3 @@ using ASTVisitorForwardingNonConst = ast::ASTVisitorForwardingNonConst;
 using ASTVisitorDisabled = ast::ASTVisitorDisabled;
 } // namespace iir
 } // namespace dawn
-
-#endif

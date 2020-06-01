@@ -13,33 +13,31 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Support/Exception.h"
-#include <cstring>
 
 namespace dawn {
 
-CompileError::CompileError(const std::string& message, const std::string& file, unsigned line)
-    : message_(message), file_(file), line_(line) {}
+CompileError::CompileError(const std::string& message, const std::string& file, int line,
+                           int column)
+    : message_(message), file_(file), line_(line), column_(column) {}
 
 std::string CompileError::getMessage() const {
   std::string message = message_;
   if(!file_.empty()) {
     message += " in file '" + file_ + "'";
   }
-  if(line_ > 0) {
+  if(line_ >= 0) {
     message += " at line " + std::to_string(line_);
+  }
+  if(column_ >= 0) {
+    message += " at column " + std::to_string(column_);
   }
   return message;
 }
 
 std::string CompileError::getFile() const { return file_; }
 
-unsigned CompileError::getLine() const { return line_; }
+int CompileError::getLine() const { return line_; }
 
-const char* CompileError::what() const throw() {
-  return getMessage().c_str();
-}
-
-SemanticError::SemanticError(const std::string& message, const std::string& file, unsigned line)
-    : CompileError(message, file, line) {}
+const char* CompileError::what() const throw() { return getMessage().c_str(); }
 
 } // namespace dawn

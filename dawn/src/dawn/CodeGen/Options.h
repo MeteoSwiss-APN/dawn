@@ -12,14 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_OPTIONS_H
-#define DAWN_CODEGEN_OPTIONS_H
+#pragma once
 
 namespace dawn {
 namespace codegen {
 
 /// @brief CodeGen backends
-enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDA, CXXOpt };
+enum class Backend { GridTools, CXXNaive, CXXNaiveIco, CUDAIco, CUDA, CXXOpt };
 
 /// @brief Options for all codegen backends combined.
 ///
@@ -33,5 +32,3 @@ struct Options {
 
 } // namespace codegen
 } // namespace dawn
-
-#endif

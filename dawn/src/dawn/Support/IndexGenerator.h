@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_INDEXGENERATOR_H
-#define DAWN_SUPPORT_INDEXGENERATOR_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include <limits>
@@ -48,4 +47,3 @@ public:
 };
 
 } // namespace dawn
-#endif

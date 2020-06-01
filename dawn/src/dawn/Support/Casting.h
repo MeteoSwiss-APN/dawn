@@ -17,8 +17,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_CASTING_H
-#define DAWN_SUPPORT_CASTING_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
@@ -324,5 +323,3 @@ inline std::shared_ptr<T> dyn_pointer_cast(const std::shared_ptr<U>& ptr) noexce
 }
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CODEGENPROPERTIES_H
-#define DAWN_CODEGEN_CODEGENPROPERTIES_H
+#pragma once
 
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -125,4 +124,3 @@ private:
 };
 } // namespace codegen
 } // namespace dawn
-#endif

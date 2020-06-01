@@ -17,8 +17,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_JSON_H
-#define DAWN_SUPPORT_JSON_H
+#pragma once
 
 #include <nlohmann_json.hpp>
 
@@ -36,5 +35,3 @@ using nlohmann::json;
 } // namespace json
 
 } // namespace dawn
-
-#endif

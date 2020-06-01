@@ -29,7 +29,7 @@
 #include "dawn/SIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
 
 #include <gtest/gtest.h>
@@ -284,4 +284,4 @@ TEST(TestIIRDeserializer, UnstructuredMixedCopies) {
   EXPECT_EQ(writes2it->second, iir::Extents(dawn::ast::cartesian, 0, 0, 0, 0, 0, 0));
 }
 
-} // anonymous namespace
+} // namespace dawn

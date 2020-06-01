@@ -12,15 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CODEGEN_H
-#define DAWN_CODEGEN_CODEGEN_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/IndexRange.h"
 #include <memory>
 
@@ -35,7 +33,6 @@ using StencilInstantiationContext =
 class CodeGen {
 protected:
   const StencilInstantiationContext& context_;
-  DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;
   } codeGenOptions;
@@ -78,7 +75,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(const StencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints);
+  CodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints);
   virtual ~CodeGen() {}
 
   /// @brief Generate code
@@ -113,5 +110,3 @@ public:
 
 } // namespace codegen
 } // namespace dawn
-
-#endif

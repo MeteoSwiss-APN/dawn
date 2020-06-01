@@ -18,10 +18,11 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
+
 #include <deque>
-#include <iostream>
 #include <iterator>
 #include <unordered_set>
 
@@ -73,10 +74,9 @@ bool PassStageSplitter::run(
               if(hasHorizontalReadBeforeWriteConflict(conditionalBlockGraph)) {
                 // Since splitting inside a conditional block is not supported, report and return an
                 // error.
-                DiagnosticsBuilder diag(DiagnosticsKind::Error, stmt->getSourceLocation());
-                diag << "Read-before-Write conflict inside conditional block is not supported.";
-                context_.getDiagnostics().report(diag);
-                return false;
+                throw SyntacticError(
+                    "Read-before-Write conflict inside conditional block is not supported.",
+                    stencilInstantiation->getMetaData().getFileName(), stmt->getSourceLocation());
               }
             }
 
@@ -88,9 +88,9 @@ bool PassStageSplitter::run(
             splitterIndices.push_front(stmtIndex);
             graphs.push_front(std::move(oldGraph));
 
-            if(context_.getOptions().ReportPassStageSplit)
-              std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                        << ": split:" << stmt->getSourceLocation().Line << "\n";
+            DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(),
+                      stmt->getSourceLocation())
+                << stencilInstantiation->getName() << ": split stage";
 
             // Clear the new graph an process the current statements again
             newGraph.clear();
@@ -131,9 +131,8 @@ bool PassStageSplitter::run(
     }
   }
 
-  if(context_.getOptions().ReportPassStageSplit && !numSplit)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no split\n";
+  if(!numSplit)
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": no split";
 
   return true;
 }

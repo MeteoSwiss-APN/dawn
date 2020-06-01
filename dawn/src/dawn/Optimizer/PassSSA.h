@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSSA_H
-#define DAWN_OPTIMIZER_PASSSSA_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -34,5 +33,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

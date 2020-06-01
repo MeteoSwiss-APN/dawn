@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STAGE_H
-#define DAWN_IIR_STAGE_H
+#pragma once
 
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Extents.h"
@@ -255,5 +254,3 @@ public:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

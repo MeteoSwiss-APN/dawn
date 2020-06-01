@@ -13,17 +13,22 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Support/SourceLocation.h"
-#include <iostream>
+
+#include <string>
 
 namespace dawn {
 
-std::ostream& operator<<(std::ostream& os, const SourceLocation& sourceLocation) {
-  return (os << sourceLocation.Line << ":" << sourceLocation.Column);
+SourceLocation::operator std::string() const {
+  return std::to_string(Line) + ":" + std::to_string(Column);
 }
 
-extern bool operator==(const SourceLocation& a, const SourceLocation& b) {
+std::ostream& operator<<(std::ostream& os, const SourceLocation& sourceLocation) {
+  return os << static_cast<std::string>(sourceLocation);
+}
+
+bool operator==(const SourceLocation& a, const SourceLocation& b) {
   return a.Line == b.Line && a.Column == b.Column;
 }
-extern bool operator!=(const SourceLocation& a, const SourceLocation& b) { return !(a == b); }
+bool operator!=(const SourceLocation& a, const SourceLocation& b) { return !(a == b); }
 
 } // namespace dawn

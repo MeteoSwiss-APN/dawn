@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_CREATEVERSIONANDRENAME_H
-#define DAWN_OPTIMIZER_CREATEVERSIONANDRENAME_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include <memory>
@@ -65,5 +64,3 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
                            std::shared_ptr<iir::Expr>& expr, RenameDirection dir);
 
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_CREATEVERSIONANDRENAME_H

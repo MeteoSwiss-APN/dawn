@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_COMPILER_DRIVER_H
-#define DAWN_COMPILER_DRIVER_H
+#pragma once
 
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
@@ -39,6 +38,10 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options = {});
 
 /// @brief Lower to IIR and run groups. Use strings in place of C++ structures.
+///
+/// NOTE: This method always returns the stencil instantiations as json string objects, not
+/// bytes, as this greatly simplifies the conversion.
+/// See https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html for more details.
 std::map<std::string, std::string> run(const std::string& sir, dawn::SIRSerializer::Format format,
                                        const std::list<dawn::PassGroup>& groups,
                                        const dawn::Options& options = {});
@@ -50,6 +53,10 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     const std::list<PassGroup>& groups, const Options& options = {});
 
 /// @brief Run groups. Use strings in place of C++ structures.
+///
+/// NOTE: This method always returns the stencil instantiations as json string objects, not bytes,
+/// as this greatly simplifies the conversion.
+/// See https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html for more details.
 std::map<std::string, std::string>
 run(const std::map<std::string, std::string>& stencilInstantiationMap, IIRSerializer::Format format,
     const std::list<PassGroup>& groups, const Options& options = {});
@@ -68,5 +75,3 @@ std::string compile(const std::string& sir, SIRSerializer::Format format,
                     codegen::Backend backend, const codegen::Options& codegenOptions);
 
 } // namespace dawn
-
-#endif

@@ -13,12 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestUtils.h"
 
 #include <gtest/gtest.h>
+#include <sstream>
 
 using namespace dawn;
 using namespace astgen;
@@ -67,8 +68,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -123,8 +123,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   int varBID = metadata.getAccessIDFromName("varB");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -173,8 +172,7 @@ TEST(TestRemoveScalars, test_cartesian_scalar_01) {
   int varBID = metadata.getAccessIDFromName("varB");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -223,8 +221,7 @@ TEST(TestRemoveScalars, test_cartesian_scalar_02) {
   int varBID = metadata.getAccessIDFromName("varB");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -273,8 +270,7 @@ TEST(TestRemoveScalars, test_global_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -322,8 +318,7 @@ TEST(TestRemoveScalars, test_if_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -375,8 +370,7 @@ TEST(TestRemoveScalars, test_if_02) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -432,8 +426,7 @@ TEST(TestRemoveScalars, test_else_01) {
   int varAID = metadata.getAccessIDFromName("varA");
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   PassRemoveScalars passRemoveScalars(optimizer);
@@ -464,9 +457,6 @@ TEST(TestRemoveScalars, test_else_01) {
 TEST(TestRemoveScalars, warn_compound_assignments) {
   using namespace dawn::iir;
 
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
-
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
   auto varA =
@@ -487,26 +477,21 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
                                      b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  std::ostringstream output;
+  dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_increment) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -527,26 +512,21 @@ TEST(TestRemoveScalars, warn_increment) {
                              b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  std::ostringstream output;
+  dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_01) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -570,26 +550,21 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  std::ostringstream output;
+  dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_02) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -613,26 +588,21 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
+
+  std::ostringstream output;
+  dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 TEST(TestRemoveScalars, warn_condition_adimensional_03) {
   using namespace dawn::iir;
-
-  delete dawn::Logger::getSingleton().getLogger();
-  dawn::Logger::getSingleton().registerLogger(new dawn::DawnLogger(dawn::LoggingLevel::Info));
 
   UnstructuredIIRBuilder b;
   auto f_e = b.field("f_e", ast::LocationType::Edges);
@@ -657,20 +627,18 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
                       b.ifStmt(b.at(myBool), b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                       b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
+  std::ostringstream output;
+  dawn::log::info.stream(output);
+  dawn::log::setVerbosity(dawn::log::Level::All);
+
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DiagnosticsEngine diag;
-  OptimizerContext optimizer(diag, optimizerOptions,
+  OptimizerContext optimizer(optimizerOptions,
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassRemoveScalars) and expect info in output
   PassRemoveScalars passRemoveScalars(optimizer);
-  testing::internal::CaptureStderr();
   passRemoveScalars.run(stencil);
-  std::cout.flush();
-  std::string output = testing::internal::GetCapturedStderr();
-  ASSERT_NE(
-      output.find("Unsupported statement at line -1:-1. Skipping removal of scalar variables."),
-      std::string::npos);
+  ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
 
 } // namespace

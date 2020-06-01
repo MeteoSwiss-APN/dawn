@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_HASHCOMBINE_H
-#define DAWN_SUPPORT_HASHCOMBINE_H
+#pragma once
 
 #include <functional>
 
@@ -48,5 +47,3 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
 /// @}
 
 } // namespace dawn
-
-#endif

@@ -19,8 +19,8 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 
 namespace dawn {

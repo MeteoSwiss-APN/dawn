@@ -21,7 +21,7 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include <iostream>
+
 #include <stack>
 
 namespace dawn {

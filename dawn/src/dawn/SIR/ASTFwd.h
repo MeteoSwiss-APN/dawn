@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTFWD_H
-#define DAWN_SIR_ASTFWD_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 
@@ -52,5 +51,3 @@ using ASTHelper = ast::ASTHelper;
 using ASTVisitor = ast::ASTVisitor;
 } // namespace sir
 } // namespace dawn
-
-#endif

@@ -90,9 +90,8 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   }
 
   // create stencil instantiation context
-  dawn::DiagnosticsEngine diagnostics;
   auto optimizer = std::make_unique<dawn::OptimizerContext>(
-      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
+      dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 

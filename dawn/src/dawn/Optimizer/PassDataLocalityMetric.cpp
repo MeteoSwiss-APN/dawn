@@ -20,8 +20,10 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <deque>
+#include <sstream>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -306,11 +308,12 @@ PassDataLocalityMetric::PassDataLocalityMetric(OptimizerContext& context)
 bool PassDataLocalityMetric::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
+  std::stringstream ss;
   if(context_.getOptions().ReportDataLocalityMetric) {
-    std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
+    const std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
     const int paddingLength = std::max(int(TERMINAL_CHAR_WIDTH - title.size()), 0);
-    std::cout << std::string((paddingLength) / 2, '-') << title
-              << std::string((paddingLength + 1) / 2, '-') << "\n";
+    ss << std::string((paddingLength) / 2, '-') << title
+       << std::string((paddingLength + 1) / 2, '-') << "\n";
 
     std::size_t perStencilNumReads = 0, perStencilNumWrites = 0;
 
@@ -318,21 +321,23 @@ bool PassDataLocalityMetric::run(
     for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
       const iir::Stencil& stencil = *stencilPtr;
 
-      std::cout << "Stencil " << stencilIdx << ":\n";
+      ss << "Stencil " << stencilIdx << ":\n";
 
       int multiStageIdx = 0;
       for(const auto& multiStagePtr : stencil.getChildren()) {
         const iir::MultiStage& multiStage = *multiStagePtr;
 
-        std::cout << "  MultiStage " << multiStageIdx << ":\n";
+        ss << "  MultiStage " << multiStageIdx << ":\n";
 
         auto readAndWrite =
             computeReadWriteAccessesMetric(stencilInstantiation, context_, multiStage);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 
-        std::cout << format("    %-20s %15i\n", "Reads", numReads);
-        std::cout << format("    %-20s %15i\n", "Writes", numWrites);
+        ss << format("    %-20s %15i\n", "Reads", numReads);
+        ss << format("    %-20s %15i\n", "Writes", numWrites);
+
+        DAWN_LOG(INFO) << ss.str();
 
         perStencilNumReads += numReads;
         perStencilNumWrites += numWrites;
@@ -342,10 +347,7 @@ bool PassDataLocalityMetric::run(
       stencilIdx++;
     }
 
-    std::cout << format("\n  %-22s %15s\n", "", std::string(15, '='));
-    std::cout << format("  %-22s %15i\n", "Reads", perStencilNumReads);
-    std::cout << format("  %-22s %15i\n", "Writes", perStencilNumWrites);
-    std::cout << std::string(51, '-') << std::endl;
+    DAWN_LOG(INFO) << "Reads: " << perStencilNumReads << ", Writes: " << perStencilNumWrites;
   }
 
   return true;

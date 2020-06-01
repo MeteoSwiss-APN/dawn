@@ -16,8 +16,9 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Iterator.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringSwitch.h"
 
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -73,10 +74,7 @@ OptimizerContext::OptimizerContextOptions createContextOptionsFromOptions(const 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options) {
-  DiagnosticsEngine diagnostics;
-  diagnostics.setFilename(stencilIR->Filename);
-
-  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options), stencilIR);
+  OptimizerContext optimizer(createContextOptionsFromOptions(options), stencilIR);
 
   // required passes to have proper, parallelized IR
   optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
@@ -93,6 +91,7 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   // validation checks after parallelisation
   optimizer.pushBackPass<PassValidation>();
 
+  dawn::log::error.clear();
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
     // Run optimization passes
     auto& instantiation = stencil.second;
@@ -105,10 +104,8 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
   }
 
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in lowering");
+  if(dawn::log::error.size() > 0) {
+    throw CompileError("An error occured in lowering");
   }
 
   return run(optimizer.getStencilInstantiationMap(), groups, options);
@@ -118,7 +115,6 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const std::list<PassGroup>& groups, const Options& options) {
-  DiagnosticsEngine diagnostics;
 
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::Kind;
@@ -134,8 +130,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   }
 
   // Initialize optimizer
-  OptimizerContext optimizer(diagnostics, createContextOptionsFromOptions(options),
-                             stencilInstantiationMap);
+  OptimizerContext optimizer(createContextOptionsFromOptions(options), stencilInstantiationMap);
 
   for(auto group : groups) {
     switch(group) {
@@ -277,6 +272,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 
   //===-----------------------------------------------------------------------------------------
 
+  dawn::log::error.clear();
   for(auto& stencil : optimizer.getStencilInstantiationMap()) {
     // Run optimization passes
     auto& instantiation = stencil.second;
@@ -290,57 +286,48 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
                    << "`";
 
     if(options.SerializeIIR) {
-      const dawn::IIRSerializer::Format serializationKind =
-          options.SerializeIIR ? dawn::IIRSerializer::parseFormatString(options.IIRFormat)
-                               : dawn::IIRSerializer::Format::Json;
-      dawn::IIRSerializer::serialize(instantiation->getName() + ".iir", instantiation,
-                                     serializationKind);
+      const IIRSerializer::Format serializationKind =
+          options.SerializeIIR ? IIRSerializer::parseFormatString(options.IIRFormat)
+                               : IIRSerializer::Format::Json;
+      IIRSerializer::serialize(instantiation->getName() + ".iir", instantiation, serializationKind);
     }
 
     if(options.DumpStencilInstantiation) {
-      instantiation->dump();
+      instantiation->dump(dawn::log::info.stream());
     }
   }
 
-  if(diagnostics.hasDiags()) {
-    for(const auto& diag : diagnostics.getQueue())
-      DAWN_LOG(INFO) << diag->getMessage();
-    throw std::runtime_error("An error occured in optimization");
+  if(dawn::log::error.size() > 0) {
+    throw CompileError("An error occured in optimization");
   }
 
   return optimizer.getStencilInstantiationMap();
 }
 
-std::map<std::string, std::string> run(const std::string& sir, dawn::SIRSerializer::Format format,
-                                       const std::list<dawn::PassGroup>& groups,
-                                       const dawn::Options& options) {
-  auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-  auto optimizedSIM = dawn::run(stencilIR, groups, options);
+std::map<std::string, std::string> run(const std::string& sir, SIRSerializer::Format format,
+                                       const std::list<PassGroup>& groups, const Options& options) {
+  auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
+  auto optimizedSIM = run(stencilIR, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
-  const dawn::IIRSerializer::Format outputFormat = format == dawn::SIRSerializer::Format::Byte
-                                                       ? dawn::IIRSerializer::Format::Byte
-                                                       : dawn::IIRSerializer::Format::Json;
   for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, outputFormat)));
+    instantiationStringMap.insert(std::make_pair(
+        name, IIRSerializer::serializeToString(instantiation, IIRSerializer::Format::Json)));
   }
   return instantiationStringMap;
 }
 
 std::map<std::string, std::string>
-run(const std::map<std::string, std::string>& stencilInstantiationMap,
-    dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-    const dawn::Options& options) {
-  std::map<std::string, std::shared_ptr<dawn::iir::StencilInstantiation>> internalMap;
+run(const std::map<std::string, std::string>& stencilInstantiationMap, IIRSerializer::Format format,
+    const std::list<PassGroup>& groups, const Options& options) {
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> internalMap;
   for(auto [name, instStr] : stencilInstantiationMap) {
-    internalMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::deserializeFromString(instStr, format)));
+    internalMap.insert(std::make_pair(name, IIRSerializer::deserializeFromString(instStr, format)));
   }
-  auto optimizedSIM = dawn::run(internalMap, groups, options);
+  auto optimizedSIM = run(internalMap, groups, options);
   std::map<std::string, std::string> instantiationStringMap;
   for(auto [name, instantiation] : optimizedSIM) {
-    instantiationStringMap.insert(
-        std::make_pair(name, dawn::IIRSerializer::serializeToString(instantiation, format)));
+    instantiationStringMap.insert(std::make_pair(
+        name, IIRSerializer::serializeToString(instantiation, IIRSerializer::Format::Json)));
   }
   return instantiationStringMap;
 }
@@ -353,12 +340,11 @@ std::unique_ptr<codegen::TranslationUnit> compile(const std::shared_ptr<SIR>& st
   return codegen::run(run(stencilIR, passGroups, optimizerOptions), backend, codegenOptions);
 }
 
-std::string compile(const std::string& sir, dawn::SIRSerializer::Format format,
-                    const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
-                    dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
-  auto stencilIR = dawn::SIRSerializer::deserializeFromString(sir, format);
-  return dawn::codegen::generate(
-      dawn::compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
+std::string compile(const std::string& sir, SIRSerializer::Format format,
+                    const std::list<PassGroup>& groups, const Options& optimizerOptions,
+                    codegen::Backend backend, const codegen::Options& codegenOptions) {
+  auto stencilIR = SIRSerializer::deserializeFromString(sir, format);
+  return codegen::generate(compile(stencilIR, groups, optimizerOptions, backend, codegenOptions));
 }
 
 } // namespace dawn

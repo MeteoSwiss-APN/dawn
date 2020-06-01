@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ACCESSTONAMEMAPPER_H
-#define DAWN_IIR_ACCESSTONAMEMAPPER_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
@@ -55,5 +54,3 @@ private:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

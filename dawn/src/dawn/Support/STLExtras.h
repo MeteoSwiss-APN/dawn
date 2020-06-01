@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_STLEXTRAS_H
-#define DAWN_SUPPORT_STLEXTRAS_H
+#pragma once
 
 #include "dawn/Support/Compiler.h"
 #include <algorithm>
@@ -183,5 +182,3 @@ struct is_callable<
 /// @}
 
 } // namespace dawn
-
-#endif

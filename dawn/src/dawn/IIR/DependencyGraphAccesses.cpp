@@ -15,7 +15,9 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Json.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -229,14 +231,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                          vertices);
+    getInputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                           vertices);
+    getOutputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
   }
@@ -532,7 +534,7 @@ void DependencyGraphAccesses::clear() {
   VertexIDToAccessIDMap_.clear();
 }
 
-void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const {
+void DependencyGraphAccesses::toJSON(const std::string& file) const {
   StencilMetaInformation const& metaData = metaData_;
 
   std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
@@ -595,9 +597,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
   std::ofstream ofs;
   ofs.open(file);
   if(!ofs.is_open()) {
-    DiagnosticsBuilder diag(DiagnosticsKind::Error);
-    diag << "failed to open file: \"" << file << "\"";
-    diagEngine.report(diag);
+    throw CompileError(std::string("Failed to open file: ") + file);
   }
 
   ofs << jgraph.dump(2);

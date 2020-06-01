@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_REORDERSTRATEGYGREEDY_H
-#define DAWN_OPTIMIZER_REORDERSTRATEGYGREEDY_H
+#pragma once
 
 #include "dawn/Optimizer/ReorderStrategy.h"
 
@@ -34,5 +33,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

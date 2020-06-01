@@ -15,9 +15,9 @@
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/SmallVector.h"
+
 #include <bitset>
 #include <climits>
-#include <iostream>
 
 namespace dawn {
 
