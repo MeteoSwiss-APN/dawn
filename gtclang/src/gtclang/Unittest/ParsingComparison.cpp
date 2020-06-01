@@ -134,7 +134,7 @@ struct Stencil : public StencilBase {
 };
 
 struct Globals : public StencilBase {
-  Globals(std::stringstream& s) : StencilBase("globals", std::string::createNull(), s) {}
+  Globals(std::stringstream& s) : StencilBase("globals", "", s) {}
   virtual NestableFunctions addDoMethod(const std::string& type) = delete;
   virtual Statement addOffset(const std::string& offsetName) = delete;
   virtual ~Globals() {}
