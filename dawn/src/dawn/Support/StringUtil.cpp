@@ -58,4 +58,31 @@ std::string indent(const std::string& string, int amount) {
   return oss.str();
 }
 
+bool equals_lower(const std::string& a, const std::string& b) {
+  return std::equal(a.begin(), a.end(), b.begin(), b.end(),
+                    [](char a, char b) { return tolower(a) == tolower(b); });
+}
+
+bool startwith_lower(std::string str, std::string match) {
+  // Convert str to lower case
+  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+  // Convert match to lower case
+  std::transform(match.begin(), match.end(), match.begin(), ::tolower);
+  if(str.find(match) == 0)
+    return true;
+  else
+    return false;
+}
+
+bool endswith_lower(std::string str, std::string match) {
+  // Convert str to lower case
+  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+  // Convert match to lower case
+  std::transform(match.begin(), match.end(), match.begin(), ::tolower);
+  if(str.find(match) + match.size() == str.size())
+    return true;
+  else
+    return false;
+}
+
 } // namespace dawn
