@@ -607,9 +607,9 @@ void GTCodeGen::generateStencilClasses(
               iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
           auto const& vExtents = extents.verticalExtent();
 
-          extent.addTemplate(hExtents.iMinus() + ", " + hExtents.iPlus());
-          extent.addTemplate(hExtents.jMinus() + ", " + hExtents.jPlus());
-          extent.addTemplate(vExtents.minus() + ", " + vExtents.plus());
+          extent.addTemplate(std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()));
+          extent.addTemplate(std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()));
+          extent.addTemplate(std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
@@ -769,9 +769,9 @@ void GTCodeGen::generateStencilClasses(
               iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
           auto const& fieldVExtents = extents.verticalExtent();
 
-          extent.addTemplate(fieldHExtents.iMinus() + ", " + fieldHExtents.iPlus());
-          extent.addTemplate(fieldHExtents.jMinus() + ", " + fieldHExtents.jPlus());
-          extent.addTemplate(fieldVExtents.minus() + ", " + fieldVExtents.plus());
+          extent.addTemplate(std::to_string(fieldHExtents.iMinus()) + ", " + std::to_string(fieldHExtents.iPlus()));
+          extent.addTemplate(std::to_string(fieldHExtents.jMinus()) + ", " + std::to_string(fieldHExtents.jPlus()));
+          extent.addTemplate(std::to_string(fieldVExtents.minus()) + ", " + std::to_string(fieldVExtents.plus()));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
