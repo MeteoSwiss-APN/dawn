@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/SmallVector.h"
+#include "gtclang/Support/SmallVector.h"
 
-namespace dawn {
+namespace gtclang {
 
 void SmallVectorBase::grow_pod(void* FirstEl, size_t MinSizeInBytes, size_t TSize) {
   size_t CurSizeBytes = size_in_bytes();
@@ -40,4 +40,4 @@ void SmallVectorBase::grow_pod(void* FirstEl, size_t MinSizeInBytes, size_t TSiz
   this->CapacityX = (char*)this->BeginX + NewCapacityInBytes;
 }
 
-} // namespace dawn
+} // namespace gtclang

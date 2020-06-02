@@ -21,8 +21,8 @@
 #include "dawn/Support/AlignOf.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
-#include "dawn/Support/MathExtras.h"
 #include "dawn/Support/TypeTraits.h"
+#include "gtclang/Support/MathExtras.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -34,7 +34,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace dawn {
+namespace gtclang {
 
 /// @brief This is all the non-templated stuff common to all SmallVectors
 class SmallVectorBase {
@@ -883,7 +883,7 @@ static inline size_t capacity_in_bytes(const SmallVector<T, N>& X) {
   return X.capacity_in_bytes();
 }
 
-} // namespace dawn
+} // namespace gtclang
 
 namespace std {
 

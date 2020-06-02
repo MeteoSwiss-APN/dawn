@@ -12,14 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/StringRef.h"
+#include "gtclang/Support/StringRef.h"
 #include "dawn/Support/EditDistance.h"
-#include "dawn/Support/SmallVector.h"
+#include "gtclang/Support/SmallVector.h"
 
 #include <bitset>
 #include <climits>
 
-namespace dawn {
+namespace gtclang {
 
 const size_t StringRef::npos;
 
@@ -476,4 +476,4 @@ bool getAsSignedInteger(StringRef Str, unsigned Radix, long long& Result) {
 
 std::ostream& operator<<(std::ostream& stream, const StringRef& S) { return (stream << S.str()); }
 
-} // namespace dawn
+} // namespace gtclang

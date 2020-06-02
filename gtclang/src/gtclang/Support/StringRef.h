@@ -28,7 +28,7 @@
 #include <string>
 #include <utility>
 
-namespace dawn {
+namespace gtclang {
 
 template <typename T>
 class SmallVectorImpl;
@@ -670,4 +670,4 @@ struct isPodLike<StringRef> {
 
 /// @}
 
-} // namespace dawn
+} // namespace gtclang

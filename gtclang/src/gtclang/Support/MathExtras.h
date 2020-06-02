@@ -16,7 +16,7 @@
 
 #include <cstdint>
 
-namespace dawn {
+namespace gtclang {
 
 /// @brief Returns the next power of two (in 64-bits) that is strictly greater than A. Returns zero
 /// on overflow.
@@ -32,4 +32,4 @@ inline std::uint64_t nextPowerOf2(std::uint64_t A) {
   return A + 1;
 }
 
-} // namespace dawn
+} // namespace gtclang
