@@ -256,7 +256,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+                                "\"" + stencilWrapperClass.getName() + "\"");
 
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
