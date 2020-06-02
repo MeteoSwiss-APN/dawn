@@ -77,6 +77,9 @@ class Field {
 public:
   T const& operator()(int f, int k) const { return atlas_field_(f, k); }
   T& operator()(int f, int k) { return atlas_field_(f, k); }
+  T* data() { return atlas_field_.data(); }
+  const T* data() const { return atlas_field_.data(); }
+  int numElements() const { return atlas_field_.shape(0) * atlas_field_.shape(1); }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
@@ -99,6 +102,11 @@ public:
   }
   T& operator()(int elem_idx, int sparse_dim_idx, int level) {
     return sparse_dimension_(elem_idx, level, sparse_dim_idx);
+  }
+  T* data() { return sparse_dimension_.data(); }
+  const T* data() const { return sparse_dimension_.data(); }
+  int numElements() const {
+    return sparse_dimension_.shape(0) * sparse_dimension_.shape(1) * sparse_dimension_.shape(2);
   }
 
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
@@ -296,5 +304,3 @@ auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
 }
 
 } // namespace atlasInterface
-
-
