@@ -422,6 +422,12 @@ ArrayRef<T> makeArrayRef(const std::vector<T>& Vec) {
   return Vec;
 }
 
+/// @brief Construct an ArrayRef from an std::initializer_list.
+template <typename T>
+ArrayRef<T> makeArrayRef(const std::initializer_list<T>& Vec) {
+  return Vec;
+}
+
 /// @brief Construct an ArrayRef from a std::basic_string<T> .
 template <typename T>
 ArrayRef<T> makeArrayRef(const std::basic_string<T>& Str) {

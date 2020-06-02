@@ -1,10 +1,12 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _
-//                         | |
-//                       __| | __ ___      ___ ___
-//                      / _` |/ _` \ \ /\ / / '_  |
-//                     | (_| | (_| |\ V  V /| | | |
-//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -12,13 +14,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/ArrayRef.h"
-#include "dawn/Support/SmallVector.h"
+#include "gtclang/Support/SmallVector.h"
+
 #include <gtest/gtest.h>
 #include <list>
 #include <stdarg.h>
 
-using namespace dawn;
+using namespace gtclang;
 
 namespace {
 
@@ -857,21 +859,22 @@ TEST(SmallVectorTest, EmplaceBack) {
 }
 
 TEST(SmallVectorTest, InitializerList) {
-  SmallVector<int, 2> V1 = {};
+  using Vector = SmallVector<int, 2>;
+  Vector V1 = {};
   EXPECT_TRUE(V1.empty());
   V1 = {0, 0};
-  EXPECT_TRUE(makeArrayRef(V1).equals({0, 0}));
+  EXPECT_EQ(V1, Vector({0, 0}));
   V1 = {-1, -1};
-  EXPECT_TRUE(makeArrayRef(V1).equals({-1, -1}));
+  EXPECT_EQ(V1, Vector({-1, -1}));
 
-  SmallVector<int, 2> V2 = {1, 2, 3, 4};
-  EXPECT_TRUE(makeArrayRef(V2).equals({1, 2, 3, 4}));
+  Vector V2 = {1, 2, 3, 4};
+  EXPECT_EQ(V2, Vector({1, 2, 3, 4}));
   V2.assign({4});
-  EXPECT_TRUE(makeArrayRef(V2).equals({4}));
+  EXPECT_EQ(V2, Vector({4}));
   V2.append({3, 2});
-  EXPECT_TRUE(makeArrayRef(V2).equals({4, 3, 2}));
+  EXPECT_EQ(V2, Vector({4, 3, 2}));
   V2.insert(V2.begin() + 1, 5);
-  EXPECT_TRUE(makeArrayRef(V2).equals({4, 5, 3, 2}));
+  EXPECT_EQ(V2, Vector({4, 5, 3, 2}));
 }
 
 } // anonymous namespace
