@@ -35,8 +35,6 @@ add_library(GTClangSupport
   SmallVector.h
   StringRef.cpp
   StringRef.h
-  Twine.cpp
-  Twine.h
 )
 
 target_add_gtclang_standard_props(GTClangSupport)

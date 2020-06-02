@@ -20,7 +20,6 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Twine.h"
 #include "dawn/Support/Unreachable.h"
 #include "gtclang/Unittest/GTClang.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
