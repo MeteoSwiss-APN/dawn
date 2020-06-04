@@ -29,7 +29,8 @@ public:
   PassValidation(OptimizerContext& context);
 
   /// @brief Pass run implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+           const Options& options = {}) override;
 
   /// @brief IIR validation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,

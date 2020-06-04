@@ -119,7 +119,8 @@ PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
     : Pass(context, "PassSetBoundaryCondition") {}
 
 bool PassSetBoundaryCondition::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
     DAWN_LOG(INFO) << stencilInstantiation->getName() << " : No boundary conditions applied";

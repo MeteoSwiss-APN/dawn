@@ -94,7 +94,8 @@ struct Temporary {
 PassTemporaryType::PassTemporaryType(OptimizerContext& context)
     : Pass(context, "PassTemporaryType", true) {}
 
-bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                            const Options& options) {
   const auto& metadata = instantiation->getMetaData();
 
   report_.clear();

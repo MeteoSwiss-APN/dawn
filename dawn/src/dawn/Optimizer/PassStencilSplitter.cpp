@@ -47,7 +47,8 @@ PassStencilSplitter::PassStencilSplitter(OptimizerContext& context, int maxNumbe
 }
 
 bool PassStencilSplitter::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   if(!context_.getOptions().SplitStencils)
     return true;
 

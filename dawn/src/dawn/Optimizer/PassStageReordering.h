@@ -31,7 +31,8 @@ public:
   PassStageReordering(OptimizerContext& context, ReorderStrategy::Kind strategy);
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 
 private:
   ReorderStrategy::Kind strategy_;

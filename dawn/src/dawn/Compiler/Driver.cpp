@@ -105,7 +105,7 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
 
     DAWN_LOG(INFO) << "Starting parallelization passes for `" << instantiation->getName()
                    << "` ...";
-    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
+    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(instantiation, options))
       throw std::runtime_error("An error occurred.");
 
     DAWN_LOG(INFO) << "Done with parallelization passes for `" << instantiation->getName() << "`";
@@ -267,7 +267,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 
     DAWN_LOG(INFO) << "Starting optimization and analysis passes for `" << instantiation->getName()
                    << "` ...";
-    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(optimizer, instantiation))
+    if(!optimizer.getPassManager().runAllPassesOnStencilInstantiation(instantiation, options))
       throw std::runtime_error("An error occurred.");
 
     DAWN_LOG(INFO) << "Done with optimization and analysis passes for `" << instantiation->getName()

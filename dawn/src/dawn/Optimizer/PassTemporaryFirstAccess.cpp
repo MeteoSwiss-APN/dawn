@@ -71,7 +71,8 @@ PassTemporaryFirstAccess::PassTemporaryFirstAccess(OptimizerContext& context)
     : Pass(context, "PassTemporaryFirstAccess", true) {}
 
 bool PassTemporaryFirstAccess::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     std::unordered_map<int, iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;

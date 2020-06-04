@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "dawn/Optimizer/Options.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -56,7 +58,8 @@ public:
 
   /// @brief Run the the Pass
   /// @returns `true` on success, `false` otherwise
-  virtual bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) = 0;
+  virtual bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                   const Options& options) = 0;
 
   /// @brief Get the name of the Pass
   const std::string& getName() const { return name_; }

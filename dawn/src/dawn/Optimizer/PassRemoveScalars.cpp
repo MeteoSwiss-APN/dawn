@@ -229,8 +229,8 @@ bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
 }
 } // namespace
 
-bool PassRemoveScalars::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const Options& options) {
   // Check if we have unsupported statements. If we do, warn the user and skip the pass execution.
   for(const auto& stmt : iterateIIROverStmt(*stencilInstantiation->getIIR())) {
     if(isStatementUnsupported(stmt, stencilInstantiation->getMetaData())) {

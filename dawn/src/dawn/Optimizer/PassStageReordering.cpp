@@ -29,7 +29,8 @@ PassStageReordering::PassStageReordering(OptimizerContext& context, ReorderStrat
 }
 
 bool PassStageReordering::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   const std::string filenameWE =
       fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
   if(context_.getOptions().ReportPassStageReodering)

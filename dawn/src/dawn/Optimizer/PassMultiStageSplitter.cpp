@@ -27,11 +27,10 @@
 
 namespace dawn {
 
-typedef std::function<void(iir::MultiStage::child_reverse_iterator_t&,
-                           iir::DependencyGraphAccesses&, iir::LoopOrderKind&, iir::LoopOrderKind&,
-                           std::deque<iir::MultiStage::SplitIndex>&, int, int, int&,
-                           const std::string&, const std::string&, const std::string&,
-                           const OptimizerContext::OptimizerContextOptions&)>
+typedef std::function<void(
+    iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&, iir::LoopOrderKind&,
+    iir::LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int, int, int&,
+    const std::string&, const std::string&, const std::string&, const Options&)>
     SplitterFunction;
 
 PassMultiStageSplitter::PassMultiStageSplitter(OptimizerContext& context,
@@ -50,8 +49,7 @@ SplitterFunction multiStageSplitterOptimized() {
              iir::LoopOrderKind& curLoopOrder,
              std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
              int multiStageIndex, int& numSplit, const std::string& fileName,
-             const std::string& StencilName, const std::string& PassName,
-             const OptimizerContext::OptimizerContextOptions& options) {
+             const std::string& StencilName, const std::string& PassName, const Options& options) {
     iir::Stage& stage = (**stageIt);
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
@@ -100,8 +98,7 @@ SplitterFunction multiStageSplitterDebug() {
              iir::LoopOrderKind& curLoopOrder,
              std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
              int multiStageIndex, int& numSplit, const std::string& fileName,
-             const std::string& StencilName, const std::string& PassName,
-             const OptimizerContext::OptimizerContextOptions& options) {
+             const std::string& StencilName, const std::string& PassName, const Options& options) {
     DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
     iir::Stage& stage = (**stageIt);
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
@@ -154,7 +151,8 @@ SplitterFunction multiStageSplitterDebug() {
 } // namespace
 
 bool PassMultiStageSplitter::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
 
   SplitterFunction multistagesplitter = (strategy_ == MultiStageSplittingStrategy::Optimized)
                                             ? multiStageSplitterOptimized()
@@ -165,7 +163,6 @@ bool PassMultiStageSplitter::run(
   std::string fileName = stencilInstantiation->getMetaData().getFileName();
   std::string StencilName = stencilInstantiation->getName();
   std::string PassName = getName();
-  auto options = context_.getOptions();
 
   // Iterate over all stages in all multistages of all stencils
   for(const auto& stencil : stencilInstantiation->getStencils()) {

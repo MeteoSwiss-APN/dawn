@@ -28,7 +28,8 @@ PassTemporaryMerger::PassTemporaryMerger(OptimizerContext& context)
     : Pass(context, "PassTemporaryMerger") {}
 
 bool PassTemporaryMerger::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   using Edge = iir::DependencyGraphAccesses::Edge;
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   const iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();

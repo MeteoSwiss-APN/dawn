@@ -23,7 +23,8 @@ PassPrintStencilGraph::PassPrintStencilGraph(OptimizerContext& context)
     : Pass(context, "PassPrintStencilGraph") {}
 
 bool PassPrintStencilGraph::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
 
   int stencilIdx = 0;
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {

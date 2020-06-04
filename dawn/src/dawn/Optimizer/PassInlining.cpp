@@ -483,7 +483,8 @@ tryInlineStencilFunction(PassInlining::InlineStrategy strategy,
 PassInlining::PassInlining(OptimizerContext& context, InlineStrategy strategy)
     : Pass(context, "PassInlining", true), strategy_(strategy) {}
 
-bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                       const Options& options) {
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 

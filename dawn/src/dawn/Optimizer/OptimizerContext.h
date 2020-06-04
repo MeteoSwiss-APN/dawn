@@ -35,6 +35,7 @@ class StencilInstantiation;
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 toStencilInstantiationMap(const SIR& stencilIR);
 
+// TODO These are no longer used
 struct HardwareConfig {
   /// Maximum number of fields concurrently in shared memory
   int SMemMaxFields = 8;

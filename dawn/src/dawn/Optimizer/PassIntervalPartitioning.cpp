@@ -21,7 +21,8 @@
 namespace dawn {
 
 bool PassIntervalPartitioning::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     for(auto& multiStage : stencilPtr->getChildren()) {

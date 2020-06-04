@@ -45,6 +45,12 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
+// Hardware options
+OPT(int, SMemMaxFields, 8, "smem-max-fields", "",
+    "Maximum number of fields concurrently in shared memory", "", true, false)
+OPT(int, TexCacheMaxFields, 3, "tex-cache-max-fields", "",
+    "Maximum number of fields concurrently in the texture cache", "", true, false)
+
 OPT(bool, SplitStencils, false, "split-stencils", "",
     "Split stencil whose number of fields exceeds a threshold", "", false, true)
 OPT(bool, MergeStages, false, "merge-stages", "",

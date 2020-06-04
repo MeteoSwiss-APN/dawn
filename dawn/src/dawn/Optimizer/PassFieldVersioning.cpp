@@ -98,7 +98,8 @@ PassFieldVersioning::PassFieldVersioning(OptimizerContext& context)
     : Pass(context, "PassFieldVersioning", true), numRenames_(0) {}
 
 bool PassFieldVersioning::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   numRenames_ = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {

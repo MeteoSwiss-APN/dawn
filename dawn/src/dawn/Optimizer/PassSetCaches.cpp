@@ -155,7 +155,8 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 
 PassSetCaches::PassSetCaches(OptimizerContext& context) : Pass(context, "PassSetCaches") {}
 
-bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                        const Options& options) {
   const auto& metadata = instantiation->getMetaData();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {

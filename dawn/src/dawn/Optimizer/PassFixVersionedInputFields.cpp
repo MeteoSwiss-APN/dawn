@@ -124,7 +124,8 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
 };
 
 bool PassFixVersionedInputFields::run(
-    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
+    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation,
+    const Options& options) {
   for(const auto& stencil : stencilInstantiation->getStencils()) {
     // Inserting multistages below, so can't use IterateIIROver here
     for(auto msiter = stencil->childrenBegin(); msiter != stencil->childrenEnd(); ++msiter) {

@@ -37,14 +37,13 @@ public:
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool runAllPassesOnStencilInstantiation(
-      OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+      const std::shared_ptr<iir::StencilInstantiation>& instantiation, const Options& options);
 
   /// @brief Run the given pass on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool
-  runPassOnStencilInstantiation(OptimizerContext& context,
-                                const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                                Pass* pass);
+  runPassOnStencilInstantiation(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                                const Options& options, Pass* pass);
 
   /// @brief Get all registered passes
   std::list<std::unique_ptr<Pass>>& getPasses() { return passes_; }

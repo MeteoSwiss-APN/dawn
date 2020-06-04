@@ -31,8 +31,8 @@ namespace dawn {
 PassStageSplitter::PassStageSplitter(OptimizerContext& context)
     : Pass(context, "PassStageSplitter", true) {}
 
-bool PassStageSplitter::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassStageSplitter::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const Options& options) {
   int numSplit = 0;
 
   // Iterate over all stages in all multistages of all stencils

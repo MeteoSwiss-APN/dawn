@@ -91,7 +91,8 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
 } // namespace
 
 bool PassSetStageLocationType::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   for(const auto& stage : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
     iir::DoMethod& doMethod = stage->getSingleDoMethod();
     const auto& stmts = doMethod.getAST().getStatements();

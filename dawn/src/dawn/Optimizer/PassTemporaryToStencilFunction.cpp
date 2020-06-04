@@ -569,7 +569,8 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
 }
 
 bool PassTemporaryToStencilFunction::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
 
   const auto& metadata = stencilInstantiation->getMetaData();
 

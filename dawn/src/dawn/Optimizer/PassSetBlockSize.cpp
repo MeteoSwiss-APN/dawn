@@ -24,7 +24,8 @@ namespace dawn {
 
 PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {}
 
-bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           const Options& options) {
   const auto& IIR = stencilInstantiation->getIIR();
 
   Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().BlockSizeI),

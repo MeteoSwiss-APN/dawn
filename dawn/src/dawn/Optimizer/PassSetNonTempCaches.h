@@ -43,7 +43,8 @@ public:
   PassSetNonTempCaches(OptimizerContext& context);
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 
   std::vector<std::string>& getCachedFieldNames();
 };

@@ -73,7 +73,8 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
 
 PassSetSyncStage::PassSetSyncStage(OptimizerContext& context) : Pass(context, "PassSetSyncStage") {}
 
-bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                           const Options& options) {
   // Update derived info
   instantiation->computeDerivedInfo();
 

@@ -26,7 +26,8 @@ PassStageMerger::PassStageMerger(OptimizerContext& context) : Pass(context, "Pas
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                          const Options& options) {
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())

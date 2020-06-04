@@ -60,12 +60,12 @@ PYBIND11_MODULE(_dawn4py, m) {
   py::class_<dawn::Options>(m, "OptimizerOptions")
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
                        int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
-                       int BlockSizeK, bool SplitStencils, bool MergeStages, bool MergeDoMethods,
-                       bool DisableKCaches, bool UseNonTempCaches, bool PassVerbose,
-                       bool ReportAccesses, bool SerializeIIR, const std::string& IIRFormat,
-                       bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
-                       bool DumpRaceConditionGraph, bool DumpStencilInstantiation,
-                       bool DumpStencilGraph) {
+                       int BlockSizeK, int SMemMaxFields, int TexCacheMaxFields, bool SplitStencils,
+                       bool MergeStages, bool MergeDoMethods, bool DisableKCaches,
+                       bool UseNonTempCaches, bool PassVerbose, bool ReportAccesses,
+                       bool SerializeIIR, const std::string& IIRFormat, bool DumpSplitGraphs,
+                       bool DumpStageGraph, bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
+                       bool DumpStencilInstantiation, bool DumpStencilGraph) {
              return dawn::Options{MaxHaloPoints,
                                   ReorderStrategy,
                                   MaxFieldsPerStencil,
@@ -73,6 +73,8 @@ PYBIND11_MODULE(_dawn4py, m) {
                                   BlockSizeI,
                                   BlockSizeJ,
                                   BlockSizeK,
+                                  SMemMaxFields,
+                                  TexCacheMaxFields,
                                   SplitStencils,
                                   MergeStages,
                                   MergeDoMethods,
@@ -92,6 +94,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
            py::arg("max_fields_per_stencil") = 40, py::arg("max_cut_mss") = false,
            py::arg("block_size_i") = 0, py::arg("block_size_j") = 0, py::arg("block_size_k") = 0,
+           py::arg("s_mem_max_fields") = 8, py::arg("tex_cache_max_fields") = 3,
            py::arg("split_stencils") = false, py::arg("merge_stages") = false,
            py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
            py::arg("use_non_temp_caches") = false, py::arg("pass_verbose") = false,
@@ -107,6 +110,8 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_i", &dawn::Options::BlockSizeI)
       .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
+      .def_readwrite("s_mem_max_fields", &dawn::Options::SMemMaxFields)
+      .def_readwrite("tex_cache_max_fields", &dawn::Options::TexCacheMaxFields)
       .def_readwrite("split_stencils", &dawn::Options::SplitStencils)
       .def_readwrite("merge_stages", &dawn::Options::MergeStages)
       .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
@@ -133,6 +138,8 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_i=" << self.BlockSizeI << ",\n    "
            << "block_size_j=" << self.BlockSizeJ << ",\n    "
            << "block_size_k=" << self.BlockSizeK << ",\n    "
+           << "s_mem_max_fields=" << self.SMemMaxFields << ",\n    "
+           << "tex_cache_max_fields=" << self.TexCacheMaxFields << ",\n    "
            << "split_stencils=" << self.SplitStencils << ",\n    "
            << "merge_stages=" << self.MergeStages << ",\n    "
            << "merge_do_methods=" << self.MergeDoMethods << ",\n    "
