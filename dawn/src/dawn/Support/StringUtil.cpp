@@ -58,12 +58,12 @@ std::string indent(const std::string& string, int amount) {
   return oss.str();
 }
 
-bool equals_lower(const std::string& a, const std::string& b) {
+bool equalsLower(const std::string& a, const std::string& b) {
   return std::equal(a.begin(), a.end(), b.begin(), b.end(),
                     [](char a, char b) { return tolower(a) == tolower(b); });
 }
 
-bool startwith_lower(std::string str, std::string match) {
+bool startWithLower(std::string str, std::string match) {
   // Convert str to lower case
   std::transform(str.begin(), str.end(), str.begin(), ::tolower);
   // Convert match to lower case
@@ -74,7 +74,7 @@ bool startwith_lower(std::string str, std::string match) {
     return false;
 }
 
-bool endswith_lower(std::string str, std::string match) {
+bool endsWithLower(std::string str, std::string match) {
   // Convert str to lower case
   std::transform(str.begin(), str.end(), str.begin(), ::tolower);
   // Convert match to lower case

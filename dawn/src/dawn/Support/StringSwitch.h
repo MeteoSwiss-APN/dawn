@@ -159,7 +159,7 @@ public:
   // Case-insensitive case matchers.
   template <unsigned N>
   inline StringSwitch& CaseLower(const char (&S)[N], const T& Value) {
-    if(!Result && equals_lower(Str, S))
+    if(!Result && equalsLower(Str, S))
       Result = &Value;
 
     return *this;
@@ -167,7 +167,7 @@ public:
 
   template <unsigned N>
   inline StringSwitch& EndsWithLower(const char (&S)[N], const T& Value) {
-    if(!Result && endswith_lower(Str, S))
+    if(!Result && endsWithLower(Str, S))
       Result = &Value;
 
     return *this;
@@ -175,7 +175,7 @@ public:
 
   template <unsigned N>
   inline StringSwitch& StartsWithLower(const char (&S)[N], const T& Value) {
-    if(!Result && startswith_lower(Str, S))
+    if(!Result && startsWithLower(Str, S))
       Result = &Value;
 
     return *this;
