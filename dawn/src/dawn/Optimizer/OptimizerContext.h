@@ -28,6 +28,11 @@ struct Stencil;
 namespace iir {
 class StencilInstantiation;
 }
+
+// TODO Remove this
+/// @brief Update nodes and fill derived info.
+void restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
+
 /// @brief Naively lower an SIR to a stencil instantiation map
 ///
 /// This only transforms the SIR to IIR and creates some metadata. It will still need to be run with
@@ -93,20 +98,6 @@ public:
   /// @brief Get the hardware configuration
   const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_; }
   HardwareConfig& getHardwareConfiguration() { return hardwareConfiguration_; }
-
-  /// @brief Create a new pass at the end of the pass list
-  template <class T, typename... Args>
-  void pushBackPass(Args&&... args) {
-    std::unique_ptr<T> pass = std::make_unique<T>(std::forward<Args>(args)...);
-    passManager_.getPasses().push_back(std::move(pass));
-  }
-
-  /// @brief fillIIRFromSIR
-  /// @param name
-  /// @param stencilInstantation
-  /// @return
-  bool restoreIIR(const std::string& name,
-                  std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
 };
 
 } // namespace dawn

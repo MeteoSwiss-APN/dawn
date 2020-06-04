@@ -34,6 +34,13 @@ class PassManager : public NonCopyable {
   std::unordered_map<std::string, int> passCounter_;
 
 public:
+  /// @brief Create a new pass at the end of the pass list
+  template <class T, typename... Args>
+  void pushBackPass(Args&&... args) {
+    std::unique_ptr<T> pass = std::make_unique<T>(std::forward<Args>(args)...);
+    passes_.push_back(std::move(pass));
+  }
+
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool runAllPassesOnStencilInstantiation(

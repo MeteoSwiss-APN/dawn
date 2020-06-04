@@ -654,6 +654,37 @@ void fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiat
 
 } // namespace
 
+void restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
+  auto& metadata = stencilInstantiation->getMetaData();
+  metadata.setStencilName(stencilInstantiation->getName());
+  if(metadata.getFileName().empty())
+    metadata.setFileName("<unknown>");
+
+  for(const auto& MS : iterateIIROver<MultiStage>(*stencilInstantiation->getIIR())) {
+    MS->update(NodeUpdateType::levelAndTreeAbove);
+  }
+  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
+
+  // Iterate all statements (top -> bottom)
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
+    iir::Stage& stage = *stagePtr;
+    for(const auto& doMethod : stage.getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
+    stage.update(iir::NodeUpdateType::level);
+  }
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
+    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  // fix extents of stages since they are not stored in the iir but computed from the accesses
+  // contained in the DoMethods
+  stencilInstantiation->computeDerivedInfo();
+
+  PassSetStageName pass;
+  pass.run(stencilInstantiation);
+}
+
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 toStencilInstantiationMap(const SIR& stencilIR) {
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
@@ -682,6 +713,10 @@ toStencilInstantiationMap(const SIR& stencilIR) {
     }
   }
 
+  for(auto [name, instantiation] : stencilInstantiationMap) {
+    restoreIIR(instantiation);
+  }
+
   return stencilInstantiationMap;
 }
 
@@ -699,8 +734,8 @@ OptimizerContext::OptimizerContext(
         stencilInstantiationMap)
     : options_(options), SIR_() {
   DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
-  for(auto& [name, stencilInstantiation] : stencilInstantiationMap) {
-    restoreIIR(name, stencilInstantiation);
+  for(auto& nameAndInstantiation : stencilInstantiationMap) {
+    restoreIIR(nameAndInstantiation.second);
   }
 }
 
@@ -719,39 +754,5 @@ const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() 
 }
 
 OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
-
-bool OptimizerContext::restoreIIR(const std::string& name,
-                                  std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
-  auto& metadata = stencilInstantiation->getMetaData();
-  metadata.setStencilName(stencilInstantiation->getName());
-  if(metadata.getFileName().empty())
-    metadata.setFileName("<unknown>");
-
-  stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
-
-  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
-    MS->update(NodeUpdateType::levelAndTreeAbove);
-  }
-  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
-
-  // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
-    }
-    stage.update(iir::NodeUpdateType::level);
-  }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
-    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-
-  // fix extents of stages since they are not stored in the iir but computed from the accesses
-  // contained in the DoMethods
-  stencilInstantiation->computeDerivedInfo();
-
-  PassSetStageName pass;
-  return pass.run(stencilInstantiation);
-}
 
 } // namespace dawn
