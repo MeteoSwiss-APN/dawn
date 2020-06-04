@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "Pass.h"
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
