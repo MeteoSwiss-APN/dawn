@@ -660,7 +660,8 @@ bool PassTemporaryToStencilFunction::run(
                   StatementMapper statementMapper(
                       stencilInstantiation.get(), *stmt->getData<iir::IIRStmtData>().StackTrace,
                       tmpStmtDoMethod, sirInterval,
-                      stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr);
+                      stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr,
+                      options.KeepVarnames);
 
                   std::shared_ptr<iir::BlockStmt> blockStmt =
                       iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{stmt});

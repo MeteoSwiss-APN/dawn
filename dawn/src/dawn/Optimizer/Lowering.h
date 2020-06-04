@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "dawn/Optimizer/Options.h"
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
@@ -38,6 +39,6 @@ void restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation)
 /// This only transforms the SIR to IIR and creates some metadata. It will still need to be run with
 /// the parallel pass group to create valid IIR.
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-toStencilInstantiationMap(const SIR& stencilIR);
+toStencilInstantiationMap(const SIR& stencilIR, const Options& options = {});
 
 } // namespace dawn

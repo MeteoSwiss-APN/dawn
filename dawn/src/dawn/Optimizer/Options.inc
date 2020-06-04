@@ -59,6 +59,8 @@ OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
 OPT(bool, DisableKCaches, false, "disable-kcaches", "",
     "Disable use of the k-caches", "", false, true)
+OPT(bool, KeepVarnames, false, "keep-varnames", "",
+    "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
 
 OPT(bool, PassVerbose, false, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)

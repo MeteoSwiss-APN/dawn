@@ -70,7 +70,7 @@ std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
     const Options& options) {
 
-  auto stencilInstantiationMap = toStencilInstantiationMap(*stencilIR);
+  auto stencilInstantiationMap = toStencilInstantiationMap(*stencilIR, options);
 
   PassManager passManager;
 

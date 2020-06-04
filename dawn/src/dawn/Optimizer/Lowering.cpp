@@ -84,6 +84,7 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
 
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   iir::StencilMetaInformation& metadata_;
+  const Options& options_;
   std::stack<std::shared_ptr<Scope>> scope_;
 
   sir::Stencil* sirStencil_;
@@ -98,8 +99,9 @@ public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              sir::Stencil* sirStencil,
                              const std::vector<std::shared_ptr<sir::Stencil>>& stencils,
-                             const sir::GlobalVariableMap& globalVariableMap)
-      : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
+                             const sir::GlobalVariableMap& globalVariableMap,
+                             const Options& options)
+      : instantiation_(instantiation), metadata_(instantiation->getMetaData()), options_(options),
         sirStencil_(sirStencil), stencils_(stencils) {
     DAWN_ASSERT(instantiation);
     // Create the initial scope
@@ -348,7 +350,7 @@ public:
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
 
-    int AccessID = metadata_.addStmt(false, stmt);
+    int AccessID = metadata_.addStmt(options_.KeepVarnames, stmt);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -599,7 +601,8 @@ public:
 };
 
 void fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                    const std::shared_ptr<sir::Stencil> SIRStencil, const SIR& fullSIR) {
+                    const std::shared_ptr<sir::Stencil> SIRStencil, const SIR& fullSIR,
+                    const Options& options) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
   auto& metadata = stencilInstantiation->getMetaData();
@@ -616,7 +619,8 @@ void fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiat
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),
-                                               fullSIR.Stencils, *fullSIR.GlobalVariableMap);
+                                               fullSIR.Stencils, *fullSIR.GlobalVariableMap,
+                                               options);
 
   //  Converting to AST with iir data
   auto AST = convertToIIRAST(*SIRStencil->StencilDescAst);
@@ -687,7 +691,7 @@ void restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation)
 }
 
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
-toStencilInstantiationMap(const SIR& stencilIR) {
+toStencilInstantiationMap(const SIR& stencilIR, const Options& options) {
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap;
 
   std::vector<std::shared_ptr<sir::StencilFunction>> iirStencilFunctions;
@@ -708,7 +712,7 @@ toStencilInstantiationMap(const SIR& stencilIR) {
           stencil->Name, std::make_shared<iir::StencilInstantiation>(stencilIR.GridType,
                                                                      stencilIR.GlobalVariableMap,
                                                                      iirStencilFunctions)));
-      fillIIRFromSIR(stencilInstantiationMap.at(stencil->Name), stencil, stencilIR);
+      fillIIRFromSIR(stencilInstantiationMap.at(stencil->Name), stencil, stencilIR, options);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
     }
