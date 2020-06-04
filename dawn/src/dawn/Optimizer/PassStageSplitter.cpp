@@ -28,9 +28,6 @@
 
 namespace dawn {
 
-PassStageSplitter::PassStageSplitter(OptimizerContext& context)
-    : Pass(context, "PassStageSplitter", true) {}
-
 bool PassStageSplitter::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                             const Options& options) {
   int numSplit = 0;
@@ -80,7 +77,7 @@ bool PassStageSplitter::run(const std::shared_ptr<iir::StencilInstantiation>& st
               }
             }
 
-            if(context_.getOptions().DumpSplitGraphs)
+            if(options.DumpSplitGraphs)
               oldGraph.toDot(
                   format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
@@ -102,7 +99,7 @@ bool PassStageSplitter::run(const std::shared_ptr<iir::StencilInstantiation>& st
           oldGraph = newGraph;
         }
 
-        if(context_.getOptions().DumpSplitGraphs)
+        if(options.DumpSplitGraphs)
           newGraph.toDot(
               format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 

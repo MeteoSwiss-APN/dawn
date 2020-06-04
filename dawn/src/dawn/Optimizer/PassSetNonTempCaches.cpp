@@ -289,9 +289,6 @@ private:
   }
 };
 
-PassSetNonTempCaches::PassSetNonTempCaches(OptimizerContext& context)
-    : Pass(context, "PassSetNonTempCaches") {}
-
 // TODO delete this pass
 bool dawn::PassSetNonTempCaches::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -301,35 +298,29 @@ bool dawn::PassSetNonTempCaches::run(
     const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
-    if(context_.getOptions().SetNonTempCaches) {
-      for(const auto& multiStagePtr : stencil.getChildren()) {
-        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, options);
-        organizer.process();
-        for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
-          cachedFieldNames_.push_back(nametoCache.name);
-        }
+    for(const auto& multiStagePtr : stencil.getChildren()) {
+      GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, options);
+      organizer.process();
+      for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
+        cachedFieldNames_.push_back(nametoCache.name);
+      }
 
-        if(context_.getOptions().ReportPassSetNonTempCaches) {
-          for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
-            allCachedFields.push_back(nametoCache);
-          }
-        }
+      for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
+        allCachedFields.push_back(nametoCache);
       }
     }
     // Output
-    if(context_.getOptions().ReportPassSetNonTempCaches) {
-      std::sort(allCachedFields.begin(), allCachedFields.end(),
-                [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
-                  return lhs.name < rhs.name;
-                });
-      for(const auto& nametoCache : allCachedFields) {
-        DAWN_LOG(INFO) << stencilInstantiation->getName() << ": Cached: " << nametoCache.name
-                       << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
-                       << nametoCache.cache.getIOPolicyAsString();
-      }
-      if(allCachedFields.size() == 0) {
-        DAWN_LOG(INFO) << stencilInstantiation->getName() << ": No fields cached";
-      }
+    std::sort(allCachedFields.begin(), allCachedFields.end(),
+              [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
+                return lhs.name < rhs.name;
+              });
+    for(const auto& nametoCache : allCachedFields) {
+      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": Cached: " << nametoCache.name
+                     << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
+                     << nametoCache.cache.getIOPolicyAsString();
+    }
+    if(allCachedFields.size() == 0) {
+      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": No fields cached";
     }
   }
 

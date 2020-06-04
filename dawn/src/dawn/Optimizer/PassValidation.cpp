@@ -21,8 +21,6 @@
 
 namespace dawn {
 
-PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassValidation") {}
-
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                          const Options& options) {
   return run(instantiation, "");

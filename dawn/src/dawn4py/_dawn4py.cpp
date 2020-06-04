@@ -61,11 +61,11 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
                        int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
                        int BlockSizeK, int SMemMaxFields, int TexCacheMaxFields, bool SplitStencils,
-                       bool MergeStages, bool MergeDoMethods, bool DisableKCaches,
-                       bool UseNonTempCaches, bool PassVerbose, bool ReportAccesses,
-                       bool SerializeIIR, const std::string& IIRFormat, bool DumpSplitGraphs,
-                       bool DumpStageGraph, bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
-                       bool DumpStencilInstantiation, bool DumpStencilGraph) {
+                       bool MergeStages, bool MergeDoMethods, bool DisableKCaches, bool PassVerbose,
+                       bool ReportAccesses, bool SerializeIIR, const std::string& IIRFormat,
+                       bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
+                       bool DumpRaceConditionGraph, bool DumpStencilInstantiation,
+                       bool DumpStencilGraph) {
              return dawn::Options{MaxHaloPoints,
                                   ReorderStrategy,
                                   MaxFieldsPerStencil,
@@ -79,7 +79,6 @@ PYBIND11_MODULE(_dawn4py, m) {
                                   MergeStages,
                                   MergeDoMethods,
                                   DisableKCaches,
-                                  UseNonTempCaches,
                                   PassVerbose,
                                   ReportAccesses,
                                   SerializeIIR,
@@ -97,11 +96,10 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("s_mem_max_fields") = 8, py::arg("tex_cache_max_fields") = 3,
            py::arg("split_stencils") = false, py::arg("merge_stages") = false,
            py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
-           py::arg("use_non_temp_caches") = false, py::arg("pass_verbose") = false,
-           py::arg("report_accesses") = false, py::arg("serialize_iir") = false,
-           py::arg("iir_format") = "json", py::arg("dump_split_graphs") = false,
-           py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
-           py::arg("dump_race_condition_graph") = false,
+           py::arg("pass_verbose") = false, py::arg("report_accesses") = false,
+           py::arg("serialize_iir") = false, py::arg("iir_format") = "json",
+           py::arg("dump_split_graphs") = false, py::arg("dump_stage_graph") = false,
+           py::arg("dump_temporary_graphs") = false, py::arg("dump_race_condition_graph") = false,
            py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
       .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
       .def_readwrite("reorder_strategy", &dawn::Options::ReorderStrategy)
@@ -116,7 +114,6 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("merge_stages", &dawn::Options::MergeStages)
       .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
       .def_readwrite("disable_k_caches", &dawn::Options::DisableKCaches)
-      .def_readwrite("use_non_temp_caches", &dawn::Options::UseNonTempCaches)
       .def_readwrite("pass_verbose", &dawn::Options::PassVerbose)
       .def_readwrite("report_accesses", &dawn::Options::ReportAccesses)
       .def_readwrite("serialize_iir", &dawn::Options::SerializeIIR)
@@ -144,7 +141,6 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "merge_stages=" << self.MergeStages << ",\n    "
            << "merge_do_methods=" << self.MergeDoMethods << ",\n    "
            << "disable_k_caches=" << self.DisableKCaches << ",\n    "
-           << "use_non_temp_caches=" << self.UseNonTempCaches << ",\n    "
            << "pass_verbose=" << self.PassVerbose << ",\n    "
            << "report_accesses=" << self.ReportAccesses << ",\n    "
            << "serialize_iir=" << self.SerializeIIR << ",\n    "

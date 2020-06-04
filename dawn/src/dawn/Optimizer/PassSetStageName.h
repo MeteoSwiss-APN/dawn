@@ -24,7 +24,7 @@ namespace dawn {
 /// @ingroup optimizer
 class PassSetStageName : public Pass {
 public:
-  PassSetStageName(OptimizerContext& context);
+  PassSetStageName() : Pass("PassSetStageName") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

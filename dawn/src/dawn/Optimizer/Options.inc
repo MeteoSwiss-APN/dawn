@@ -59,8 +59,6 @@ OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
 OPT(bool, DisableKCaches, false, "disable-kcaches", "",
     "Disable use of the k-caches", "", false, true)
-OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
-    "Allows for caching of non-temporary fields", "", false, true)
 
 OPT(bool, PassVerbose, false, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)

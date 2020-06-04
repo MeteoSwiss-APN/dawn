@@ -23,18 +23,13 @@
 
 namespace dawn {
 
-PassStageReordering::PassStageReordering(OptimizerContext& context, ReorderStrategy::Kind strategy)
-    : Pass(context, "PassStageReordering"), strategy_(strategy) {
-  dependencies_.push_back("PassSetStageGraph");
-}
-
 bool PassStageReordering::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {
   const std::string filenameWE =
       fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
-  if(context_.getOptions().ReportPassStageReodering)
-    stencilInstantiation->jsonDump(filenameWE + "_before.json");
+
+  // stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
@@ -53,7 +48,7 @@ bool PassStageReordering::run(
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, context_);
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, options);
 
     stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
     // TODO why is stencilPtr still used? (it was replaced in the previous statement)
@@ -62,8 +57,8 @@ bool PassStageReordering::run(
     if(!stencilPtr)
       return false;
   }
-  if(context_.getOptions().ReportPassStageReodering)
-    stencilInstantiation->jsonDump(filenameWE + "_after.json");
+
+  // stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;
 }

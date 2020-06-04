@@ -29,14 +29,7 @@ namespace {
 
 class TestPassTemporaryType : public ::testing::Test {
 protected:
-  std::unique_ptr<OptimizerContext> context_;
-  OptimizerContext::OptimizerContextOptions options_;
-
-  explicit TestPassTemporaryType() {
-    context_ = std::make_unique<OptimizerContext>(options_,
-                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
-    UIDGenerator::getInstance()->reset();
-  }
+  explicit TestPassTemporaryType() { UIDGenerator::getInstance()->reset(); }
 
   void runTest(const std::string& filename, const std::unordered_set<std::string>& demotedFields,
                const std::unordered_set<std::string>& promotedFields = {}) {
@@ -44,11 +37,11 @@ protected:
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
+    PassStageSplitter stageSplitPass;
     EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
-    PassTemporaryType tempTypePass(*context_);
+    PassTemporaryType tempTypePass;
     EXPECT_TRUE(tempTypePass.run(instantiation));
 
     // Apply AST matcher to find all field access expressions

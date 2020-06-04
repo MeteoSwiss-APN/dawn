@@ -115,9 +115,6 @@ public:
   void reset() { stencilCallsToReplace_.clear(); }
 };
 
-PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
-    : Pass(context, "PassSetBoundaryCondition") {}
-
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {

@@ -33,9 +33,6 @@ typedef std::function<void(
     const std::string&, const std::string&, const std::string&, const Options&)>
     SplitterFunction;
 
-PassMultiStageSplitter::PassMultiStageSplitter(OptimizerContext& context,
-                                               MultiStageSplittingStrategy strategy)
-    : Pass(context, "PassMultiStageSplitter", true), strategy_(strategy) {}
 namespace {
 
 int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {
@@ -191,7 +188,7 @@ bool PassMultiStageSplitter::run(
                            stageIndex, multiStageIndex, numSplit, fileName, StencilName, PassName,
                            options);
       }
-      if(context_.getOptions().DumpSplitGraphs)
+      if(options.DumpSplitGraphs)
         graph.toDot(format("stmt_vd_m%i_%02i.dot", multiStageIndex, numSplit));
 
       if(!splitterIndices.empty()) {

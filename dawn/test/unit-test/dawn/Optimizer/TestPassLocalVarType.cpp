@@ -44,7 +44,7 @@ TEST(TestLocalVarType, test_cartesian_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -77,7 +77,7 @@ TEST(TestLocalVarType, test_cartesian_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -111,7 +111,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -149,7 +149,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -196,7 +196,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_03) {
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -249,7 +249,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
                              std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -304,7 +304,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -355,7 +355,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -405,7 +405,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -457,7 +457,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -505,7 +505,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_03) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -553,7 +553,7 @@ TEST(TestLocalVarType, test_unstructured_nested_if_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -602,7 +602,7 @@ TEST(TestLocalVarType, test_unstructured_nested_if_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -642,7 +642,7 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
 
   int varAID = stencil->getMetaData().getAccessIDFromName("varA");
@@ -676,7 +676,7 @@ TEST(TestLocalVarType, test_throw_unstructured_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -710,7 +710,7 @@ TEST(TestLocalVarType, test_throw_unstructured_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -750,7 +750,7 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -782,7 +782,7 @@ TEST(TestLocalVarType, test_throw_unstructured_04) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -819,7 +819,7 @@ TEST(TestLocalVarType, test_throw_unstructured_05) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -851,7 +851,7 @@ TEST(TestLocalVarType, test_throw_unstructured_06) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -888,7 +888,7 @@ TEST(TestLocalVarType, test_throw_nested_if_01) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 
@@ -931,7 +931,7 @@ TEST(TestLocalVarType, test_throw_nested_if_02) {
                              std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
-  PassLocalVarType passLocalVarType(optimizer);
+  PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
 }
 

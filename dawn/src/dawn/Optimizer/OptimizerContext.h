@@ -97,7 +97,7 @@ public:
   /// @brief Create a new pass at the end of the pass list
   template <class T, typename... Args>
   void pushBackPass(Args&&... args) {
-    std::unique_ptr<T> pass = std::make_unique<T>(*this, std::forward<Args>(args)...);
+    std::unique_ptr<T> pass = std::make_unique<T>(std::forward<Args>(args)...);
     passManager_.getPasses().push_back(std::move(pass));
   }
 

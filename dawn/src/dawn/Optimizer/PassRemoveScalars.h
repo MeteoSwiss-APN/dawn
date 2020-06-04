@@ -30,7 +30,7 @@ namespace dawn {
 /// This pass is necessary to generate legal IIR
 class PassRemoveScalars : public Pass {
 public:
-  PassRemoveScalars(OptimizerContext& context) : Pass(context, "PassRemoveScalars") {}
+  PassRemoveScalars() : Pass("PassRemoveScalars") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

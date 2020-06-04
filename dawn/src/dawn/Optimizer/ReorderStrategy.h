@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "dawn/Optimizer/Options.h"
+
 #include <memory>
 
 namespace dawn {
@@ -43,7 +45,7 @@ public:
   /// @returns New stencil with the reordered stages
   virtual std::unique_ptr<iir::Stencil> reorder(iir::StencilInstantiation* instantiation,
                                                 const std::unique_ptr<iir::Stencil>& stencilPtr,
-                                                OptimizerContext& context) = 0;
+                                                const Options& options) = 0;
 };
 
 } // namespace dawn

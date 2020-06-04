@@ -21,7 +21,7 @@ namespace dawn {
 /// @brief This Pass sets the dependency graph of a do-method
 class PassSetDependencyGraph : public Pass {
 public:
-  PassSetDependencyGraph(OptimizerContext& context);
+  PassSetDependencyGraph() : Pass("PassSetDependencyGraph") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

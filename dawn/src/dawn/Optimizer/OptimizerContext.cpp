@@ -750,7 +750,7 @@ bool OptimizerContext::restoreIIR(const std::string& name,
   // contained in the DoMethods
   stencilInstantiation->computeDerivedInfo();
 
-  PassSetStageName pass(*this);
+  PassSetStageName pass;
   return pass.run(stencilInstantiation);
 }
 

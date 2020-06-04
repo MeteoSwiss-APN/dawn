@@ -29,7 +29,7 @@ namespace dawn {
 ///
 class PassSetSyncStage : public Pass {
 public:
-  PassSetSyncStage(OptimizerContext& context);
+  PassSetSyncStage() : Pass("PassSetSyncStage") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

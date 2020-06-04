@@ -24,9 +24,6 @@
 
 namespace dawn {
 
-PassTemporaryMerger::PassTemporaryMerger(OptimizerContext& context)
-    : Pass(context, "PassTemporaryMerger") {}
-
 bool PassTemporaryMerger::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {
@@ -129,7 +126,7 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    if(context_.getOptions().DumpTemporaryGraphs)
+    if(options.DumpTemporaryGraphs)
       TemporaryDAG.toDot(format("tmp_stencil_%i.dot", stencilIdx));
 
     // Color the temporary graph

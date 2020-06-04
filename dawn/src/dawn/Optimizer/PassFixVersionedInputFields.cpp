@@ -28,9 +28,6 @@
 
 namespace dawn {
 
-PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {}
-
 /// @brief Creates the assignment statement
 static std::shared_ptr<ast::Stmt>
 createAssignmentStatement(int assignmentID, int assigneeID,

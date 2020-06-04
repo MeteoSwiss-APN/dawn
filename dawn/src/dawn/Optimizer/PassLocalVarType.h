@@ -32,7 +32,7 @@ namespace dawn {
 /// This pass is necessary to generate legal IIR
 class PassLocalVarType : public Pass {
 public:
-  PassLocalVarType(OptimizerContext& context) : Pass(context, "PassLocalVarType") {}
+  PassLocalVarType() : Pass("PassLocalVarType") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

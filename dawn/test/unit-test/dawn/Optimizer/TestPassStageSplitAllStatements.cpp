@@ -34,10 +34,9 @@ namespace {
 std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::string& filename) {
   UIDGenerator::getInstance()->reset();
   auto instantiation = IIRSerializer::deserialize(filename);
-  OptimizerContext context({}, {{instantiation->getName(), instantiation}});
 
   dawn::log::error.clear();
-  PassStageSplitAllStatements pass(context);
+  PassStageSplitAllStatements pass;
   pass.run(instantiation);
   EXPECT_EQ(dawn::log::error.size(), 0);
 

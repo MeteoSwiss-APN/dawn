@@ -67,9 +67,6 @@ public:
 
 } // anonymous namespace
 
-PassTemporaryFirstAccess::PassTemporaryFirstAccess(OptimizerContext& context)
-    : Pass(context, "PassTemporaryFirstAccess", true) {}
-
 bool PassTemporaryFirstAccess::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {

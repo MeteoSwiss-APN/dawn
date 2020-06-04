@@ -18,9 +18,6 @@
 
 namespace dawn {
 
-PassSetDependencyGraph::PassSetDependencyGraph(OptimizerContext& context)
-    : Pass(context, "PassSetDependencyGraph") {}
-
 bool PassSetDependencyGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {

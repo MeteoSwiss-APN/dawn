@@ -26,11 +26,8 @@ namespace {
 using namespace dawn;
 
 TEST(TestPassIntervalPartitioning, test_interval_partition) {
-  OptimizerContext::OptimizerContextOptions options;
-  std::unique_ptr<OptimizerContext> context;
   std::unordered_set<iir::Interval> expected;
 
-  options.IntervalPartitioning = true;
   dawn::UIDGenerator::getInstance()->reset();
   expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
   expected.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
@@ -41,7 +38,7 @@ TEST(TestPassIntervalPartitioning, test_interval_partition) {
   auto instantiation = IIRSerializer::deserialize("input/test_interval_partition.iir");
 
   // Expect pass to succeed...
-  PassIntervalPartitioning intervalPartitioningPass(*context);
+  PassIntervalPartitioning intervalPartitioningPass;
   EXPECT_TRUE(intervalPartitioningPass.run(instantiation));
 
   const auto& stencils = instantiation->getIIR()->getChildren();

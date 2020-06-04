@@ -38,7 +38,7 @@ namespace dawn {
 ///   - merging after reordering is straight-forward
 class PassSetStageLocationType : public Pass {
 public:
-  PassSetStageLocationType(OptimizerContext& context) : Pass(context, "PassSetStageLocationType") {}
+  PassSetStageLocationType() : Pass("PassSetStageLocationType") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

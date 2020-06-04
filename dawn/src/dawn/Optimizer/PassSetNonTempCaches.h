@@ -40,7 +40,7 @@ class PassSetNonTempCaches : public Pass {
   std::vector<std::string> cachedFieldNames_;
 
 public:
-  PassSetNonTempCaches(OptimizerContext& context);
+  PassSetNonTempCaches() : Pass("PassSetNonTempCaches"), cachedFieldNames_() {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

@@ -30,14 +30,7 @@ using namespace dawn::iir;
 
 class TestPassSetCaches : public ::testing::Test {
 protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<dawn::OptimizerContext> context_;
-
-  explicit TestPassSetCaches() {
-    context_ = std::make_unique<OptimizerContext>(options_,
-                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
-    UIDGenerator::getInstance()->reset();
-  }
+  explicit TestPassSetCaches() { UIDGenerator::getInstance()->reset(); }
 
   void runTest(const std::string& filename, int nMultiStages,
                const std::vector<std::vector<std::string>>& fieldNames,
@@ -46,11 +39,11 @@ protected:
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
+    PassStageSplitter stageSplitPass;
     EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
-    PassSetCaches setCachesPass(*context_);
+    PassSetCaches setCachesPass;
     EXPECT_TRUE(setCachesPass.run(instantiation));
 
     auto& stencils = instantiation->getStencils();

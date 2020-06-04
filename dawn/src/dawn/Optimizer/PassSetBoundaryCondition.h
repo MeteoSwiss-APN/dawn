@@ -42,7 +42,8 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassSetBoundaryCondition : public Pass {
 public:
-  PassSetBoundaryCondition(OptimizerContext& context);
+  PassSetBoundaryCondition()
+      : Pass("PassSetBoundaryCondition"), boundaryConditionInserted_(), StencilBCsApplied_() {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

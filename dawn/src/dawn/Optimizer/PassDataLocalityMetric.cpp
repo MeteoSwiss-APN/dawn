@@ -305,54 +305,48 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
 }
 
-PassDataLocalityMetric::PassDataLocalityMetric(OptimizerContext& context)
-    : Pass(context, "PassDataLocalityMetric") {}
-
 bool PassDataLocalityMetric::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {
 
   std::stringstream ss;
-  if(context_.getOptions().ReportDataLocalityMetric) {
-    const std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
-    const int paddingLength = std::max(int(TERMINAL_CHAR_WIDTH - title.size()), 0);
-    ss << std::string((paddingLength) / 2, '-') << title
-       << std::string((paddingLength + 1) / 2, '-') << "\n";
+  const std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
+  const int paddingLength = std::max(int(TERMINAL_CHAR_WIDTH - title.size()), 0);
+  ss << std::string((paddingLength) / 2, '-') << title << std::string((paddingLength + 1) / 2, '-')
+     << "\n";
 
-    std::size_t perStencilNumReads = 0, perStencilNumWrites = 0;
+  std::size_t perStencilNumReads = 0, perStencilNumWrites = 0;
 
-    int stencilIdx = 0;
-    for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-      const iir::Stencil& stencil = *stencilPtr;
+  int stencilIdx = 0;
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    const iir::Stencil& stencil = *stencilPtr;
 
-      ss << "Stencil " << stencilIdx << ":\n";
+    ss << "Stencil " << stencilIdx << ":\n";
 
-      int multiStageIdx = 0;
-      for(const auto& multiStagePtr : stencil.getChildren()) {
-        const iir::MultiStage& multiStage = *multiStagePtr;
+    int multiStageIdx = 0;
+    for(const auto& multiStagePtr : stencil.getChildren()) {
+      const iir::MultiStage& multiStage = *multiStagePtr;
 
-        ss << "  MultiStage " << multiStageIdx << ":\n";
+      ss << "  MultiStage " << multiStageIdx << ":\n";
 
-        auto readAndWrite =
-            computeReadWriteAccessesMetric(stencilInstantiation, options, multiStage);
+      auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, options, multiStage);
 
-        std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
+      std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 
-        ss << format("    %-20s %15i\n", "Reads", numReads);
-        ss << format("    %-20s %15i\n", "Writes", numWrites);
+      ss << format("    %-20s %15i\n", "Reads", numReads);
+      ss << format("    %-20s %15i\n", "Writes", numWrites);
 
-        DAWN_LOG(INFO) << ss.str();
+      DAWN_LOG(INFO) << ss.str();
 
-        perStencilNumReads += numReads;
-        perStencilNumWrites += numWrites;
-        multiStageIdx++;
-      }
-
-      stencilIdx++;
+      perStencilNumReads += numReads;
+      perStencilNumWrites += numWrites;
+      multiStageIdx++;
     }
 
-    DAWN_LOG(INFO) << "Reads: " << perStencilNumReads << ", Writes: " << perStencilNumWrites;
+    stencilIdx++;
   }
+
+  DAWN_LOG(INFO) << "Reads: " << perStencilNumReads << ", Writes: " << perStencilNumWrites;
 
   return true;
 }

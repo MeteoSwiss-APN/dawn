@@ -227,6 +227,7 @@ bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
 
   return false;
 }
+
 } // namespace
 
 bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -243,11 +244,9 @@ bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& st
     // Local variables are local to a DoMethod. Remove scalar local variables from the statements
     // and metadata in this DoMethod.
     auto removedScalars = removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
-    if(context_.getOptions().ReportPassRemoveScalars) {
-      for(const auto& varName : removedScalars) {
-        DAWN_LOG(INFO) << stencilInstantiation->getName() << ": DoMethod: " << doMethod->getID()
-                       << " removed variable: " << varName;
-      }
+    for(const auto& varName : removedScalars) {
+      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": DoMethod: " << doMethod->getID()
+                     << " removed variable: " << varName;
     }
     // Recompute extents of fields
     doMethod->update(iir::NodeUpdateType::level);
