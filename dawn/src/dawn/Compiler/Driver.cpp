@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/Driver.h"
+#include "dawn/CodeGen/Driver.h"
 
 namespace dawn {
 

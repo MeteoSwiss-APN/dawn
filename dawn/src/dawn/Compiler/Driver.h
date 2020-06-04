@@ -14,12 +14,11 @@
 
 #pragma once
 
-#include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Driver.h"
 #include "dawn/Optimizer/Options.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 
 namespace dawn {
