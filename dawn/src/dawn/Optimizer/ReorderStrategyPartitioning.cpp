@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
 

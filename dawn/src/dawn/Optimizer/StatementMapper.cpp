@@ -14,7 +14,6 @@
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 

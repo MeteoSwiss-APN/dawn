@@ -16,7 +16,6 @@
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"

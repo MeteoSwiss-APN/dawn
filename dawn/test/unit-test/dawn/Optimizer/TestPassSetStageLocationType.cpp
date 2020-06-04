@@ -16,7 +16,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Lowering.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSetStageLocationType.h"

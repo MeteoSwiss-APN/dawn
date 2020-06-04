@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include <vector>

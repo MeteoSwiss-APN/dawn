@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Logger.h"
 #include <algorithm>

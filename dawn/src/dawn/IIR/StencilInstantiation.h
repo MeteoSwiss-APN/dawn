@@ -30,8 +30,6 @@
 #include <unordered_map>
 
 namespace dawn {
-class OptimizerContext;
-
 namespace iir {
 
 enum class TemporaryScope { LocalVariable, StencilTemporary };

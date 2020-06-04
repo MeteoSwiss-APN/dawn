@@ -15,7 +15,6 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Logger.h"

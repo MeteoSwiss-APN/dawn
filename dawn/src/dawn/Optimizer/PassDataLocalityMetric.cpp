@@ -18,7 +18,6 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/Options.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"

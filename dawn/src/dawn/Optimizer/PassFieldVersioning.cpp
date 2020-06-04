@@ -23,7 +23,6 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/CreateVersionAndRename.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"

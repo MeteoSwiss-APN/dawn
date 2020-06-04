@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"

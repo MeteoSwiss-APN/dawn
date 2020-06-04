@@ -14,7 +14,6 @@
 
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Unreachable.h"
 

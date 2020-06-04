@@ -12,7 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Serialization/IIRSerializer.h"
 

@@ -14,7 +14,6 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
 

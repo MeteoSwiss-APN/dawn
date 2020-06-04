@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Lowering.h"
 #include "dawn/IIR/ASTConverter.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
@@ -28,6 +28,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
+
 #include <stack>
 
 namespace dawn {
@@ -719,40 +720,5 @@ toStencilInstantiationMap(const SIR& stencilIR) {
 
   return stencilInstantiationMap;
 }
-
-OptimizerContext::OptimizerContext(OptimizerContextOptions options, const std::shared_ptr<SIR>& SIR)
-    : options_(options), SIR_(SIR) {
-  DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
-  if(SIR) {
-    stencilInstantiationMap_ = toStencilInstantiationMap(*SIR_);
-  }
-}
-
-OptimizerContext::OptimizerContext(
-    OptimizerContextOptions options,
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> const&
-        stencilInstantiationMap)
-    : options_(options), SIR_() {
-  DAWN_LOG(INFO) << "Intializing OptimizerContext from stencil instantiation map ... ";
-  for(auto& nameAndInstantiation : stencilInstantiationMap) {
-    restoreIIR(nameAndInstantiation.second);
-  }
-}
-
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-OptimizerContext::getStencilInstantiationMap() {
-  return stencilInstantiationMap_;
-}
-
-const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-OptimizerContext::getStencilInstantiationMap() const {
-  return stencilInstantiationMap_;
-}
-
-const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() const {
-  return options_;
-}
-
-OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
 
 } // namespace dawn

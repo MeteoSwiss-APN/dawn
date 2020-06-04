@@ -21,7 +21,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logger.h"
 #include <set>

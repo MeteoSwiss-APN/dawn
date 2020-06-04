@@ -17,7 +17,6 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/STLExtras.h"
@@ -150,26 +149,12 @@ bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiatio
   return true;
 }
 
-class createEmptyOptimizerContext : public ::testing::Test {
+class IIRSerializerTest : public ::testing::Test {
 protected:
-  virtual void SetUp() override {
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-    dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = std::make_unique<OptimizerContext>(options, sir);
+  virtual void SetUp() {
+    referenceInstantiation = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
   }
-  virtual void TearDown() override {}
-  std::unique_ptr<OptimizerContext> context_;
-};
-
-class IIRSerializerTest : public createEmptyOptimizerContext {
-protected:
-  virtual void SetUp() override {
-    createEmptyOptimizerContext::SetUp();
-    referenceInstantiation = std::make_shared<iir::StencilInstantiation>(
-        context_->getSIR()->GridType, context_->getSIR()->GlobalVariableMap,
-        context_->getSIR()->StencilFunctions);
-  }
-  virtual void TearDown() override { referenceInstantiation.reset(); }
+  virtual void TearDown() { referenceInstantiation.reset(); }
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
     return IIRSerializer::deserializeFromString(

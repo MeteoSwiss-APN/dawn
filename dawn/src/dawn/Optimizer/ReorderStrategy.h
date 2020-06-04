@@ -19,7 +19,7 @@
 #include <memory>
 
 namespace dawn {
-class OptimizerContext;
+
 namespace iir {
 class Stencil;
 class StencilInstantiation;

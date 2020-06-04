@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/Driver.h"
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/Optimizer/Lowering.h"
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Exception.h"
@@ -22,7 +23,6 @@
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringSwitch.h"
 
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"

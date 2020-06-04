@@ -15,7 +15,6 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"

@@ -17,7 +17,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <optional>

@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -38,10 +37,6 @@ TEST(TestLocalVarType, test_cartesian_01) {
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -72,10 +67,6 @@ TEST(TestLocalVarType, test_cartesian_02) {
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(fIJ))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -105,10 +96,6 @@ TEST(TestLocalVarType, test_cartesian_propagation_01) {
                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -143,10 +130,6 @@ TEST(TestLocalVarType, test_cartesian_propagation_02) {
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(varA), b.at(fIJ))),
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -190,10 +173,6 @@ TEST(TestLocalVarType, test_cartesian_propagation_03) {
                              b.declareVar(varD), b.stmt(b.assignExpr(b.at(varB), b.at(varA))),
                              b.stmt(b.assignExpr(b.at(varD), b.at(varB))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varD))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -243,10 +222,6 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
                              b.stmt(b.assignExpr(b.at(varD), b.at(varB))),
                              b.stmt(b.assignExpr(b.at(varB), b.at(fIJ))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varD))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Cartesian));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -299,10 +274,6 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
                              b.stmt(b.assignExpr(b.at(varB), b.at(varD))),
                              b.stmt(b.assignExpr(b.at(varD), b.at(f_c))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -350,10 +321,6 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
                                      b.stmt(b.assignExpr(b.at(varA), b.at(varB))),
                                      b.stmt(b.assignExpr(b.at(varB), b.at(varC))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -399,10 +366,6 @@ TEST(TestLocalVarType, test_unstructured_if_condition_01) {
                                               b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(3.0)))),
                                               b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(5.0))),
                                                       b.declareVar(varC))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -452,10 +415,6 @@ TEST(TestLocalVarType, test_unstructured_if_condition_02) {
                                               b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(5.0))),
                                                       b.declareVar(varC))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -500,10 +459,6 @@ TEST(TestLocalVarType, test_unstructured_if_condition_03) {
                                       b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(3.0))))),
                              b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -547,10 +502,6 @@ TEST(TestLocalVarType, test_unstructured_nested_if_01) {
                        b.block(b.ifStmt(b.binaryExpr(b.at(varB), b.lit(0.0), Op::greater),
                                         b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(5.0))))))),
               b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
@@ -597,10 +548,6 @@ TEST(TestLocalVarType, test_unstructured_nested_if_02) {
                                         b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(5.0))))))),
               b.stmt(b.assignExpr(b.at(varB), b.at(f_e))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -637,10 +584,6 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
                                                                {ast::LocationType::Cells,
                                                                 ast::LocationType::Edges}))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType)
   PassLocalVarType passLocalVarType;
   passLocalVarType.run(stencil);
@@ -671,10 +614,6 @@ TEST(TestLocalVarType, test_throw_unstructured_01) {
           b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
@@ -704,10 +643,6 @@ TEST(TestLocalVarType, test_throw_unstructured_02) {
                              b.declareVar(varA), b.declareVar(varB),
                              b.stmt(b.assignExpr(b.at(varB), b.binaryExpr(b.at(f_e), b.at(varA)))),
                              b.stmt(b.assignExpr(b.at(varA), b.at(f_c))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
@@ -745,10 +680,6 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
                                      b.stmt(b.assignExpr(b.at(varA), b.at(f_c))),
                                      b.stmt(b.assignExpr(b.at(varC), b.at(f_e))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
@@ -776,10 +707,6 @@ TEST(TestLocalVarType, test_throw_unstructured_04) {
                            dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
                            b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(1.0))))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
@@ -814,10 +741,6 @@ TEST(TestLocalVarType, test_throw_unstructured_05) {
                                               b.block(b.stmt(b.assignExpr(b.at(varB), b.at(f_c))))),
                                      b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
   EXPECT_THROW(passLocalVarType.run(stencil), std::runtime_error);
@@ -845,10 +768,6 @@ TEST(TestLocalVarType, test_throw_unstructured_06) {
                                                                     {ast::LocationType::Cells,
                                                                      ast::LocationType::Edges}))),
                            b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
@@ -882,10 +801,6 @@ TEST(TestLocalVarType, test_throw_nested_if_01) {
                   b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
                   b.block(b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
                                    b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(1.0))))))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;
@@ -925,10 +840,6 @@ TEST(TestLocalVarType, test_throw_nested_if_02) {
                        b.block(b.ifStmt(b.binaryExpr(b.at(varB), b.lit(0.0), Op::greater),
                                         b.block(b.stmt(b.assignExpr(b.at(varC), b.lit(2.0))))))),
               b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
-
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
   PassLocalVarType passLocalVarType;

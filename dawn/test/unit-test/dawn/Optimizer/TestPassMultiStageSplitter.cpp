@@ -16,7 +16,6 @@
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
 

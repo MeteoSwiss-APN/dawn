@@ -19,7 +19,6 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logger.h"
 
 #include <tuple>

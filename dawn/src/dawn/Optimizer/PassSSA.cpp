@@ -17,7 +17,6 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/CreateVersionAndRename.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include <unordered_set>
 
 namespace dawn {
