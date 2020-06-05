@@ -450,15 +450,15 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD");
       switch(loc) {
       case ast::LocationType::Cells:
-        cudaKernel.addBlockStatement("if (pidx >= NumCells)",
+        cudaKernel.addBlockStatement("if (pidx >= NumCells || kidx >= k_size)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Edges:
-        cudaKernel.addBlockStatement("if (pidx >= NumEdges)",
+        cudaKernel.addBlockStatement("if (pidx >= NumEdges || kidx >= k_size)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Vertices:
-        cudaKernel.addBlockStatement("if (pidx >= NumVertices)",
+        cudaKernel.addBlockStatement("if (pidx >= NumVertices || kidx >= k_size)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       }
