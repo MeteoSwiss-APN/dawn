@@ -450,21 +450,24 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD");
       switch(loc) {
       case ast::LocationType::Cells:
-        cudaKernel.addBlockStatement("if (pidx >= NumCells || kidx >= k_size)",
+        cudaKernel.addBlockStatement("if (pidx >= NumCells)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Edges:
-        cudaKernel.addBlockStatement("if (pidx >= NumEdges || kidx >= k_size)",
+        cudaKernel.addBlockStatement("if (pidx >= NumEdges)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Vertices:
-        cudaKernel.addBlockStatement("if (pidx >= NumVertices || kidx >= k_size)",
+        cudaKernel.addBlockStatement("if (pidx >= NumVertices)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       }
 
       // k loop
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
+        cudaKernel.addBlockStatement("if (kIter >= k_size)",
+                                     [&]() { cudaKernel.addStatement("return"); });
+
         // Generate Do-Method
         for(const auto& doMethodPtr : stage->getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
