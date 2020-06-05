@@ -465,7 +465,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // k loop
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
-        cudaKernel.addBlockStatement("if (kIter >= k_size)",
+        cudaKernel.addBlockStatement("if (kIter >= kSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
 
         // Generate Do-Method
