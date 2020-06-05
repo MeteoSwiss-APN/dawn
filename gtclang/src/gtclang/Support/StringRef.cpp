@@ -1,10 +1,12 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _
-//                         | |
-//                       __| | __ ___      ___ ___
-//                      / _` |/ _` \ \ /\ / / '_  |
-//                     | (_| | (_| |\ V  V /| | | |
-//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -12,14 +14,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/StringRef.h"
+#include "gtclang/Support/StringRef.h"
 #include "dawn/Support/EditDistance.h"
-#include "dawn/Support/SmallVector.h"
+#include "gtclang/Support/SmallVector.h"
 
 #include <bitset>
 #include <climits>
 
-namespace dawn {
+namespace gtclang {
 
 const size_t StringRef::npos;
 
@@ -104,7 +106,7 @@ int StringRef::compare_numeric(StringRef RHS) const {
 // Compute the edit distance between the two given strings.
 unsigned StringRef::edit_distance(StringRef Other, bool AllowReplacements,
                                   unsigned MaxEditDistance) const {
-  return computeEditDistance(makeArrayRef(data(), size()), makeArrayRef(Other.data(), Other.size()),
+  return computeEditDistance(dawn::makeArrayRef(data(), size()), dawn::makeArrayRef(Other.data(), Other.size()),
                              AllowReplacements, MaxEditDistance);
 }
 
@@ -476,4 +478,4 @@ bool getAsSignedInteger(StringRef Str, unsigned Radix, long long& Result) {
 
 std::ostream& operator<<(std::ostream& stream, const StringRef& S) { return (stream << S.str()); }
 
-} // namespace dawn
+} // namespace gtclang

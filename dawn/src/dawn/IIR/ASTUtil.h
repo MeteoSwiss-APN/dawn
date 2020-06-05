@@ -17,7 +17,6 @@
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/ArrayRef.h"
 #include <memory>
 #include <unordered_map>
 

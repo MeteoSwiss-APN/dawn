@@ -1,10 +1,12 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _
-//                         | |
-//                       __| | __ ___      ___ ___
-//                      / _` |/ _` \ \ /\ / / '_  |
-//                     | (_| | (_| |\ V  V /| | | |
-//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -21,8 +23,9 @@
 #include "dawn/Support/AlignOf.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
-#include "dawn/Support/MathExtras.h"
 #include "dawn/Support/TypeTraits.h"
+#include "dawn/Support/ArrayRef.h"
+#include "gtclang/Support/MathExtras.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -34,7 +37,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace dawn {
+namespace gtclang {
 
 /// @brief This is all the non-templated stuff common to all SmallVectors
 class SmallVectorBase {
@@ -71,7 +74,7 @@ private:
   // Allocate raw space for N elements of type T.  If T has a ctor or dtor, we
   // don't want it to be automatically run, so we need to represent the space as
   // something else.  Use an array of char of sufficient alignment.
-  typedef AlignedCharArrayUnion<T> U;
+  typedef dawn::AlignedCharArrayUnion<T> U;
   U FirstEl;
   // Space after 'FirstEl' is clobbered, do not add any instance vars after it.
 
@@ -301,8 +304,8 @@ public:
 /// This class consists of common code factored out of the SmallVector class to
 /// reduce code duplication based on the SmallVector 'N' template parameter.
 template <typename T>
-class SmallVectorImpl : public SmallVectorTemplateBase<T, isPodLike<T>::value> {
-  typedef SmallVectorTemplateBase<T, isPodLike<T>::value> SuperClass;
+class SmallVectorImpl : public SmallVectorTemplateBase<T, dawn::isPodLike<T>::value> {
+  typedef SmallVectorTemplateBase<T, dawn::isPodLike<T>::value> SuperClass;
 
 public:
   typedef typename SuperClass::iterator iterator;
@@ -312,7 +315,7 @@ public:
 protected:
   // Default ctor - Initialize to empty.
   explicit SmallVectorImpl(unsigned N)
-      : SmallVectorTemplateBase<T, isPodLike<T>::value>(N * sizeof(T)) {}
+      : SmallVectorTemplateBase<T, dawn::isPodLike<T>::value>(N * sizeof(T)) {}
 
 public:
   SmallVectorImpl(const SmallVectorImpl&) = delete;
@@ -883,19 +886,19 @@ static inline size_t capacity_in_bytes(const SmallVector<T, N>& X) {
   return X.capacity_in_bytes();
 }
 
-} // namespace dawn
+} // namespace gtclang
 
 namespace std {
 
 /// @brief Implement std::swap in terms of SmallVector swap
 template <typename T>
-inline void swap(dawn::SmallVectorImpl<T>& LHS, dawn::SmallVectorImpl<T>& RHS) {
+inline void swap(gtclang::SmallVectorImpl<T>& LHS, gtclang::SmallVectorImpl<T>& RHS) {
   LHS.swap(RHS);
 }
 
 /// @brief Implement std::swap in terms of SmallVector swap
 template <typename T, unsigned N>
-inline void swap(dawn::SmallVector<T, N>& LHS, dawn::SmallVector<T, N>& RHS) {
+inline void swap(gtclang::SmallVector<T, N>& LHS, gtclang::SmallVector<T, N>& RHS) {
   LHS.swap(RHS);
 }
 

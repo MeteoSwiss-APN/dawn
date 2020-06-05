@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/Support/StringRef.h"
 
 namespace dawn {
 namespace iir {
@@ -22,19 +21,19 @@ static std::string makeNameImpl(const char* prefix, const std::string& name, int
   return prefix + name + "_" + std::to_string(AccessID);
 }
 
-static std::string extractNameImpl(StringRef prefix, const std::string& name) {
-  StringRef nameRef(name);
+static std::string extractNameImpl(const std::string& prefix, const std::string& name) {
+  std::string nameRef(name);
 
   // Remove leading `prefix`
   std::size_t leadingLocalPos = nameRef.find(prefix);
-  nameRef = nameRef.drop_front(leadingLocalPos != StringRef::npos ? prefix.size() : 0);
+  nameRef = nameRef.substr(leadingLocalPos != std::string::npos ? prefix.size() : 0);
 
   // Remove trailing `_X` where X is the AccessID
   std::size_t trailingAccessIDPos = nameRef.find_last_of('_');
-  nameRef = nameRef.drop_back(
-      trailingAccessIDPos != StringRef::npos ? nameRef.size() - trailingAccessIDPos : 0);
+  nameRef = nameRef.substr(
+      0, trailingAccessIDPos != std::string::npos ? nameRef.size() - trailingAccessIDPos : 0);
 
-  return nameRef.empty() ? name : nameRef.str();
+  return nameRef.empty() ? name : nameRef;
 }
 
 std::string InstantiationHelper::makeLocalVariablename(const std::string& name, int AccessID) {
@@ -57,8 +56,14 @@ std::string InstantiationHelper::makeStencilCallCodeGenName(int StencilID) {
   return "__code_gen_" + std::to_string(StencilID);
 }
 
+namespace {
+bool startswith(std::string string, std::string prefix) {
+  return string.substr(0, prefix.size()) == prefix;
+}
+} // namespace
+
 bool InstantiationHelper::isStencilCallCodeGenName(const std::string& name) {
-  return StringRef(name).startswith("__code_gen_");
+  return startswith(name, "__code_gen_");
 }
 
 } // namespace iir

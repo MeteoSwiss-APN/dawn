@@ -1,10 +1,12 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _
-//                         | |
-//                       __| | __ ___      ___ ___
-//                      / _` |/ _` \ \ /\ / / '_  |
-//                     | (_| | (_| |\ V  V /| | | |
-//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -12,13 +14,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/SmallVector.h"
-#include "dawn/Support/StringRef.h"
+#include "gtclang/Support/SmallVector.h"
+#include "gtclang/Support/StringRef.h"
 #include <gtest/gtest.h>
 
-using namespace dawn;
+using namespace gtclang;
 
-namespace dawn {
+namespace gtclang {
 
 std::ostream& operator<<(std::ostream& OS, const std::pair<StringRef, StringRef>& P);
 
@@ -27,7 +29,7 @@ std::ostream& operator<<(std::ostream& OS, const std::pair<StringRef, StringRef>
   return OS;
 }
 
-} // namespace dawn
+} // namespace gtclang
 
 static_assert(!std::is_assignable<StringRef, std::string>::value,
               "Assigning from prvalue std::string");
@@ -570,7 +572,7 @@ TEST(StringRefTest, getAsInteger) {
   uint32_t U32;
   uint64_t U64;
 
-  for(size_t i = 0; i < array_lengthof(Unsigned); ++i) {
+  for(size_t i = 0; i < dawn::array_lengthof(Unsigned); ++i) {
     bool U8Success = StringRef(Unsigned[i].Str).getAsInteger(0, U8);
     if(static_cast<uint8_t>(Unsigned[i].Expected) == Unsigned[i].Expected) {
       ASSERT_FALSE(U8Success);
@@ -606,7 +608,7 @@ TEST(StringRefTest, getAsInteger) {
   int32_t S32;
   int64_t S64;
 
-  for(size_t i = 0; i < array_lengthof(Signed); ++i) {
+  for(size_t i = 0; i < dawn::array_lengthof(Signed); ++i) {
     bool S8Success = StringRef(Signed[i].Str).getAsInteger(0, S8);
     if(static_cast<int8_t>(Signed[i].Expected) == Signed[i].Expected) {
       ASSERT_FALSE(S8Success);
@@ -661,7 +663,7 @@ static const char* BadStrings[] = {"" // empty string
 
 TEST(StringRefTest, getAsUnsignedIntegerBadStrings) {
   unsigned long long U64;
-  for(size_t i = 0; i < array_lengthof(BadStrings); ++i) {
+  for(size_t i = 0; i < dawn::array_lengthof(BadStrings); ++i) {
     bool IsBadNumber = StringRef(BadStrings[i]).getAsInteger(0, U64);
     ASSERT_TRUE(IsBadNumber);
   }
@@ -742,7 +744,7 @@ TEST(StringRefTest, consumeIntegerUnsigned) {
   uint32_t U32;
   uint64_t U64;
 
-  for(size_t i = 0; i < array_lengthof(ConsumeUnsigned); ++i) {
+  for(size_t i = 0; i < dawn::array_lengthof(ConsumeUnsigned); ++i) {
     StringRef Str = ConsumeUnsigned[i].Str;
     bool U8Success = Str.consumeInteger(0, U8);
     if(static_cast<uint8_t>(ConsumeUnsigned[i].Expected) == ConsumeUnsigned[i].Expected) {
@@ -791,7 +793,7 @@ TEST(StringRefTest, consumeIntegerSigned) {
   int32_t S32;
   int64_t S64;
 
-  for(size_t i = 0; i < array_lengthof(ConsumeSigned); ++i) {
+  for(size_t i = 0; i < dawn::array_lengthof(ConsumeSigned); ++i) {
     StringRef Str = ConsumeSigned[i].Str;
     bool S8Success = Str.consumeInteger(0, S8);
     if(static_cast<int8_t>(ConsumeSigned[i].Expected) == ConsumeSigned[i].Expected) {

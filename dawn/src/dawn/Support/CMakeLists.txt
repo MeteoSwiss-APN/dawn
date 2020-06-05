@@ -44,23 +44,15 @@ add_library(DawnSupport
   Json.h
   Logger.cpp
   Logger.h
-  MathExtras.h
   NonCopyable.h
   Printing.h
   RemoveIf.hpp
-  SmallString.h
-  SmallVector.cpp
-  SmallVector.h
   SourceLocation.cpp
   SourceLocation.h
   STLExtras.h
-  StringRef.cpp
-  StringRef.h
   StringSwitch.h
   StringUtil.cpp
   StringUtil.h
-  Twine.cpp
-  Twine.h
   Type.cpp
   Type.h
   TypeTraits.h

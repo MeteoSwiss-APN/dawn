@@ -19,6 +19,8 @@ set(test_name ${PROJECT_NAME}UnittestSupport)
 add_executable(${test_name}
   TestStringUtil.cpp
   TestMain.cpp
+  TestSmallVector.cpp
+  TestStringRef.cpp
 )
 
 target_add_gtclang_standard_props(${test_name})
