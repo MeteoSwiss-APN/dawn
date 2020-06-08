@@ -28,7 +28,7 @@ namespace dawn {
 class verifier {
 public:
   verifier(const domain& dom,
-           double precision = std::is_same<::dawn::float_type, double>::value ? 1e-10 : 1e-6)
+           double precision = std::is_same<::dawn::float_type, double>::value ? 1e-10 : 1e-5)
       : m_domain(dom), m_precision(precision) {}
 
   template <class FunctorType, class... StorageTypes>
@@ -142,7 +142,7 @@ public:
               std::cerr << "( " << i << ", " << j << ", " << k << " ) : "
                         << " " << storage1.name() << " = " << value1 << " ; "
                         << " " << storage2.name() << " = " << value2
-                        << "  error: " << std::fabs((value2 - value1) / (value2)) << std::endl;
+                        << "  error: " << std::fabs((value1 - value2) / (value1)) << std::endl;
             }
             verified = false;
           }
@@ -208,13 +208,9 @@ private:
   bool compare_below_threashold(value_type expected, value_type actual,
                                 value_type precision) const {
     if(std::fabs(expected) < 1e-3 && std::fabs(actual) < 1e-3) {
-      if(std::fabs(expected - actual) < precision)
-        return true;
-    } else {
-      if(std::fabs((expected - actual) / (precision * expected)) < 1.0)
-        return true;
+      return std::fabs(expected - actual) < precision;
     }
-    return false;
+    return std::fabs((expected - actual) / expected) < precision;
   }
 
   template <class StorageType, class FunctorType>
@@ -334,7 +330,7 @@ private:
 
 private:
   domain m_domain;
-  double m_precision;
+  ::dawn::float_type m_precision;
 };
 } // namespace dawn
 } // namespace gridtools
