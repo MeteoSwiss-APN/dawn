@@ -730,11 +730,11 @@ std::string sir::Value::toString() const {
   case Kind::Integer:
     return std::to_string(std::get<int>(*value_));
   case Kind::Double:
-    out << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+    out << std::setprecision(std::numeric_limits<double>::max_digits10)
         << std::get<double>(*value_);
     return out.str();
   case Kind::Float:
-    out << std::setprecision(std::numeric_limits<float>::digits10 + 1) << std::get<float>(*value_);
+    out << std::setprecision(std::numeric_limits<float>::max_digits10) << std::get<float>(*value_);
     return out.str();
   case Kind::String:
     return std::get<std::string>(*value_);
