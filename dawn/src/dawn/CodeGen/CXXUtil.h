@@ -661,10 +661,10 @@ struct Struct : public Structure {
       : Structure("struct", name, s, templateName) {}
 };
 
-auto c_gt = []() { return std::string("gridtools::"); };
-auto c_dgt = []() { return std::string("gridtools::dawn::"); };
-auto c_gt_enum = []() { return std::string("gridtools::enumtype::"); };
-auto c_gt_intent = []() { return std::string("gridtools::intent::"); };
+const std::string c_gt = "gridtools::";
+const std::string c_dgt = "gridtools::dawn::";
+const std::string c_gt_enum = "gridtools::enumtype::";
+const std::string c_gt_intent = "gridtools::intent::";
 
 } // namespace codegen
 

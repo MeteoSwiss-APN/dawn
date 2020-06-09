@@ -790,7 +790,7 @@ void MSCodeGen::generateCudaKernelCode() {
   // then the temporary field arguments
   for(const auto& fieldPair : tempFieldsNonLocalCached) {
     if(useCodeGenTemporaries_) {
-      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
+      cudaKernel.addArg(c_gt + "data_view<TmpStorage>" +
                         metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()) + "_dv");
     } else {
       cudaKernel.addArg("::dawn::float_type * const " +

@@ -249,7 +249,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
       }
 
       for(const auto& field : tempFields) {
-        paramNameToType.emplace(field.second.Name, c_dgt() + "storage_t");
+        paramNameToType.emplace(field.second.Name, c_dgt + "storage_t");
       }
     }
   }
@@ -461,7 +461,7 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
   stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
   auto globalOffsetFunc =
       stencilClass.addMemberFunction("static std::array<unsigned int, 2>", "computeGlobalOffsets");
-  globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
+  globalOffsetFunc.addArg("int rank, const " + c_dgt + "domain& dom, int xcols, int ycols");
   globalOffsetFunc.startBody();
   globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
   globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
