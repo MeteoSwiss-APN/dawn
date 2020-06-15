@@ -465,6 +465,9 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // k loop
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
+        cudaKernel.addBlockStatement("if (kIter >= kSize)",
+                                     [&]() { cudaKernel.addStatement("return"); });
+
         // Generate Do-Method
         for(const auto& doMethodPtr : stage->getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
