@@ -472,6 +472,13 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         for(const auto& doMethodPtr : stage->getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
           for(const auto& stmt : doMethod.getAST().getStatements()) {
+            FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+            stmt->accept(findReduceOverNeighborExpr);
+            stencilBodyCXXVisitor.setFirstPass();
+            for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
+              redExpr->accept(stencilBodyCXXVisitor);
+            }
+            stencilBodyCXXVisitor.setSecondPass();
             stmt->accept(stencilBodyCXXVisitor);
             cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
           }

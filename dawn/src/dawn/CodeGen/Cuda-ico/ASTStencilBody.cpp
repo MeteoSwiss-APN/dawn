@@ -22,23 +22,6 @@ namespace dawn {
 namespace codegen {
 namespace cudaico {
 
-namespace {
-class FindReduceOverNeighborExpr : public dawn::ast::ASTVisitorForwarding {
-  std::optional<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>> foundReduction_ =
-      std::nullopt;
-
-public:
-  void visit(const std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>& stmt) override {
-    foundReduction_ = stmt;
-    return;
-  }
-  bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
-  std::shared_ptr<dawn::iir::ReductionOverNeighborExpr> reduceOverNeighborExpr() const {
-    return *foundReduction_;
-  }
-};
-} // namespace
-
 void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   indent_ += DAWN_PRINT_INDENT;
   auto indent = std::string(indent_, ' ');
@@ -48,15 +31,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   }
   indent_ -= DAWN_PRINT_INDENT;
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
-  if(scopeDepth_ == 0)
-    ss_ << std::string(indent_, ' ');
 
-  ss_ << "return ";
-
-  stmt->getExpr()->accept(*this);
-  ss_ << ";\n";
-}
 void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
@@ -93,22 +68,29 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr)
 void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
   DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+  DAWN_ASSERT_MSG(0, "Return not allowed in this context");
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+  DAWN_ASSERT_MSG(0, "Var Access not allowed in this context");
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
-  FindReduceOverNeighborExpr reductionFinder;
-  expr->getRight()->accept(reductionFinder);
-  if(reductionFinder.hasReduceOverNeighborExpr()) {
-    expr->getRight()->accept(*this);
-    expr->getLeft()->accept(*this);
+  // FindReduceOverNeighborExpr reductionFinder;
+  // expr->getRight()->accept(reductionFinder);
+  // if(reductionFinder.hasReduceOverNeighborExpr()) {
+  //   expr->getRight()->accept(*this);
+  //   expr->getLeft()->accept(*this);
 
-    ss_ << expr->getOp()
-        << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID()) << ";}\n";
-  } else {
-    expr->getLeft()->accept(*this);
-    ss_ << " " << expr->getOp() << " ";
-    expr->getRight()->accept(*this);
-  }
+  //   ss_ << expr->getOp()
+  //       << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID()) << ";}\n";
+  // } else {
+  expr->getLeft()->accept(*this);
+  ss_ << " " << expr->getOp() << " ";
+  expr->getRight()->accept(*this);
+  // }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
@@ -152,9 +134,19 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  DAWN_ASSERT_MSG(!parentIsReduction_,
+                  "Nested Reductions not yet supported for CUDA code generation");
+
   std::string lhs_name = "lhs_" + std::to_string(expr->getID());
+
+  if(!firstPass_) {
+    ss_ << " " << lhs_name << " ";
+    return;
+  }
+
+  parentIsReduction_ = true;
+
   std::string weights_name = "weights_" + std::to_string(expr->getID());
-  ss_ << "{";
   ss_ << "::dawn::float_type " << lhs_name << " = ";
   expr->getInit()->accept(*this);
   ss_ << ";\n";
@@ -174,7 +166,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
       << "; nbhIter++)";
 
-  parentIsReduction_ = true;
   ss_ << "{\n";
   ss_ << "int nbhIdx = " << chainToTableString(expr->getNbhChain()) << "["
       << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"
