@@ -515,7 +515,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     ss << "int " + chainToSparseSizeString(chain) << " ";
     first = false;
   }
-  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag, " + ss.str());
+  std::string templates = chains.empty() ? "typename LibTag" : "typename LibTag, " + ss.str();
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, templates);
 
   stencilWrapperClass.changeAccessibility("public");
 
