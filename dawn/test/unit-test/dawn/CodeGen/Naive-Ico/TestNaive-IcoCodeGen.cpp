@@ -22,6 +22,8 @@ namespace {
 
 constexpr auto backend = dawn::codegen::Backend::CXXNaiveIco;
 
-TEST(NaiveIco, Reductions) { runTest(dawn::getReductionsStencil(), backend); }
+TEST(NaiveIco, Reductions) {
+  runTest(dawn::getReductionsStencil(), backend, "reference/reductions_cpp-naive-ico.cpp");
+}
 
 } // namespace

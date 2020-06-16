@@ -78,19 +78,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
-  // FindReduceOverNeighborExpr reductionFinder;
-  // expr->getRight()->accept(reductionFinder);
-  // if(reductionFinder.hasReduceOverNeighborExpr()) {
-  //   expr->getRight()->accept(*this);
-  //   expr->getLeft()->accept(*this);
-
-  //   ss_ << expr->getOp()
-  //       << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID()) << ";}\n";
-  // } else {
   expr->getLeft()->accept(*this);
   ss_ << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
-  // }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {

@@ -22,6 +22,8 @@ namespace {
 
 constexpr auto backend = dawn::codegen::Backend::CUDAIco;
 
-TEST(CudaIco, Reductions) { runTest(dawn::getReductionsStencil(), backend); }
+TEST(CudaIco, Reductions) {
+  runTest(dawn::getReductionsStencil(), backend, "reference/reductions_cuda-ico.cu");
+}
 
 } // namespace
