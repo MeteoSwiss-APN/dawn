@@ -3,6 +3,8 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
+#include <gtest/gtest.h>
+
 namespace dawn {
 
 std::shared_ptr<iir::StencilInstantiation> getReductionsStencil() {
@@ -40,11 +42,26 @@ std::shared_ptr<iir::StencilInstantiation> getReductionsStencil() {
 }
 
 void runTest(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-             codegen::Backend backend) {
+             codegen::Backend backend, const std::string& refFile) {
   dawn::codegen::Options options;
 
   auto tu = dawn::codegen::run(stencilInstantiation, backend, options);
   const std::string code = dawn::codegen::generate(tu);
+
+  // FILE* fp = 0;
+  // if(backend == codegen::Backend::CUDAIco) {
+  //   fp = fopen("reductions_cuda-ico.cu", "w+");
+  // }
+  // if(backend == codegen::Backend::CXXNaiveIco) {
+  //   fp = fopen("reductions_cpp-naive-ico.cpp", "w+");
+  // }
+
+  // fprintf(fp, "%s", code.c_str());
+  // fclose(fp);
+
+  std::ifstream t(refFile);
+  const std::string ref((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+  ASSERT_EQ(code, ref) << "Generated code does not match reference code";
 }
 
 } // namespace dawn

@@ -24,6 +24,6 @@ namespace dawn {
 std::shared_ptr<iir::StencilInstantiation> getReductionsStencil();
 
 void runTest(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-             codegen::Backend backend);
+             codegen::Backend backend, const std::string& refFile);
 
 } // namespace dawn
