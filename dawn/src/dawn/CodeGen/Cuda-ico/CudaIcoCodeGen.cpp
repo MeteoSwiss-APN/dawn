@@ -472,6 +472,13 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         for(const auto& doMethodPtr : stage->getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
           for(const auto& stmt : doMethod.getAST().getStatements()) {
+            FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+            stmt->accept(findReduceOverNeighborExpr);
+            stencilBodyCXXVisitor.setFirstPass();
+            for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
+              redExpr->accept(stencilBodyCXXVisitor);
+            }
+            stencilBodyCXXVisitor.setSecondPass();
             stmt->accept(stencilBodyCXXVisitor);
             cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
           }
@@ -508,7 +515,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     ss << "int " + chainToSparseSizeString(chain) << " ";
     first = false;
   }
-  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag, " + ss.str());
+  std::string templates = chains.empty() ? "typename LibTag" : "typename LibTag, " + ss.str();
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, templates);
 
   stencilWrapperClass.changeAccessibility("public");
 

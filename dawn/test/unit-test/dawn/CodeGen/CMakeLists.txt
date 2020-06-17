@@ -27,3 +27,15 @@ foreach(backend IN ITEMS Cuda Naive)
     DISCOVERY_TIMEOUT 30
   )
 endforeach()
+
+foreach(backend IN ITEMS Cuda-Ico Naive-Ico)
+  set(executable ${PROJECT_NAME}UnittestCodeGen${backend})
+  add_executable(${executable} ${backend}/Test${backend}CodeGen.cpp UnstructuredStencils.cpp)
+  target_add_dawn_standard_props(${executable})
+  target_include_directories(${executable} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+  target_link_libraries(${executable} DawnUnittest gtest gtest_main)
+  gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::UnstructuredCodeGen::"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DISCOVERY_TIMEOUT 30
+  )
+endforeach()

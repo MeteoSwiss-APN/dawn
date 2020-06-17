@@ -75,4 +75,4 @@ add_library(DawnCodeGen
 )
 
 target_add_dawn_standard_props(DawnCodeGen)
-target_link_libraries(DawnCodeGen PUBLIC DawnSupport DawnIIR)
+target_link_libraries(DawnCodeGen PUBLIC DawnSerialization DawnSupport DawnIIR)

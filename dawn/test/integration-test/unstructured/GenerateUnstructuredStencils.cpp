@@ -258,40 +258,6 @@ int main() {
     using LocType = dawn::ast::LocationType;
 
     UnstructuredIIRBuilder b;
-    auto cell_f = b.field("cell_field", LocType::Cells);
-    auto edge_f = b.field("edge_field", LocType::Edges);
-
-    auto stencilInstantiation = b.build(
-        "gradient",
-        b.stencil(b.multistage(
-            dawn::iir::LoopOrderKind::Parallel,
-            b.stage(
-                LocType::Edges,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                           b.stmt(b.assignExpr(
-                               b.at(edge_f), b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), {LocType::Edges, LocType::Cells},
-                                                 std::vector<float>({1., -1.})))))),
-            b.stage(
-                LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                           b.stmt(b.assignExpr(
-                               b.at(cell_f), b.reduceOverNeighborExpr<float>(
-                                                 Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
-                                                 b.lit(0.), {LocType::Cells, LocType::Edges},
-                                                 std::vector<float>({0.5, 0., 0., 0.5})))))))));
-
-    std::ofstream of("generated/generated_gradient.hpp");
-    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
-    of << dawn::codegen::generate(tu) << std::endl;
-  }
-
-  {
-    using namespace dawn::iir;
-    using LocType = dawn::ast::LocationType;
-
-    UnstructuredIIRBuilder b;
     auto edge_f = b.field("edge_field", LocType::Edges);
     auto node_f = b.field("vertex_field", LocType::Vertices);
 
