@@ -633,11 +633,9 @@ void fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiat
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 
-  // Options are not available here
-  // TODO Move this elsewhere or delete
-  // if(getOptions().ReportAccesses) {
-  //   stencilInstantiation->reportAccesses(dawn::log::info.stream());
-  // }
+  if(options.ReportAccesses) {
+    stencilInstantiation->reportAccesses(dawn::log::info.stream());
+  }
 
   for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
     MS->update(NodeUpdateType::levelAndTreeAbove);

@@ -28,7 +28,8 @@ bool PassStageReordering::run(
   const std::string filenameWE =
       fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
 
-  // stencilInstantiation->jsonDump(filenameWE + "_before.json");
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_before_stage_reordering.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
@@ -57,7 +58,8 @@ bool PassStageReordering::run(
       return false;
   }
 
-  // stencilInstantiation->jsonDump(filenameWE + "_after.json");
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_after_stage_reordering.json");
 
   return true;
 }

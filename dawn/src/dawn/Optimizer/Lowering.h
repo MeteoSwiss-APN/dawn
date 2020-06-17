@@ -30,14 +30,14 @@ namespace iir {
 class StencilInstantiation;
 }
 
-// TODO Remove this
-/// @brief Update nodes and fill derived info.
+/// @brief Update nodes, sets stage names, and fill derived info
 void restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
 
 /// @brief Naively lower an SIR to a stencil instantiation map
 ///
 /// This only transforms the SIR to IIR and creates some metadata. It will still need to be run with
 /// the parallel pass group to create valid IIR.
+/// This calls restoreIIR.
 std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>
 toStencilInstantiationMap(const SIR& stencilIR, const Options& options = {});
 

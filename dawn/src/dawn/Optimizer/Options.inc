@@ -80,7 +80,9 @@ OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
 OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
     "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
 OPT(bool, DumpStencilInstantiation, false, "dump-si", "",
-    "dump every stencilInstantiation to the standard output", "", false, true)
+    "Dump every stencil instantiation to the standard output", "", false, true)
+OPT(bool, WriteStencilInstantiation, false, "write-si", "",
+    "Write stencil instantiation to JSON files before and after stage reordering", "", false, true)
 OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",
     "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
 

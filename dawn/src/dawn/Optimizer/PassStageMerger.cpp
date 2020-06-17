@@ -39,7 +39,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   const std::string filenameWE =
       fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
 
-  // stencilInstantiation->jsonDump(filenameWE + "_before.json");
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_before_stage_merger.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
@@ -193,7 +194,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     }
   }
 
-  // stencilInstantiation->jsonDump(filenameWE + "_after.json");
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_after_stage_merger.json");
 
   return true;
 }

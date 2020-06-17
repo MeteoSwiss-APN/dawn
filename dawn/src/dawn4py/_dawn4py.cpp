@@ -65,7 +65,8 @@ PYBIND11_MODULE(_dawn4py, m) {
                        bool KeepVarnames, bool PassVerbose, bool ReportAccesses, bool SerializeIIR,
                        const std::string& IIRFormat, bool DumpSplitGraphs, bool DumpStageGraph,
                        bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
-                       bool DumpStencilInstantiation, bool DumpStencilGraph) {
+                       bool DumpStencilInstantiation, bool WriteStencilInstantiation,
+                       bool DumpStencilGraph) {
              return dawn::Options{MaxHaloPoints,
                                   ReorderStrategy,
                                   MaxFieldsPerStencil,
@@ -89,6 +90,7 @@ PYBIND11_MODULE(_dawn4py, m) {
                                   DumpTemporaryGraphs,
                                   DumpRaceConditionGraph,
                                   DumpStencilInstantiation,
+                                  WriteStencilInstantiation,
                                   DumpStencilGraph};
            }),
            py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
@@ -102,7 +104,8 @@ PYBIND11_MODULE(_dawn4py, m) {
            py::arg("iir_format") = "json", py::arg("dump_split_graphs") = false,
            py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
            py::arg("dump_race_condition_graph") = false,
-           py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
+           py::arg("dump_stencil_instantiation") = false,
+           py::arg("write_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
       .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
       .def_readwrite("reorder_strategy", &dawn::Options::ReorderStrategy)
       .def_readwrite("max_fields_per_stencil", &dawn::Options::MaxFieldsPerStencil)
@@ -126,6 +129,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("dump_temporary_graphs", &dawn::Options::DumpTemporaryGraphs)
       .def_readwrite("dump_race_condition_graph", &dawn::Options::DumpRaceConditionGraph)
       .def_readwrite("dump_stencil_instantiation", &dawn::Options::DumpStencilInstantiation)
+      .def_readwrite("write_stencil_instantiation", &dawn::Options::WriteStencilInstantiation)
       .def_readwrite("dump_stencil_graph", &dawn::Options::DumpStencilGraph)
       .def("__repr__", [](const dawn::Options& self) {
         std::ostringstream ss;
@@ -156,6 +160,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_temporary_graphs=" << self.DumpTemporaryGraphs << ",\n    "
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
+           << "write_stencil_instantiation=" << self.WriteStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph;
         return "OptimizerOptions(\n    " + ss.str() + "\n)";
       });
