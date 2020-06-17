@@ -15,6 +15,7 @@
 #include "dawn/Compiler/Driver.h"
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/Optimizer/PassSimplifyStatements.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Iterator.h"
@@ -32,6 +33,7 @@
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
+#include "dawn/Optimizer/PassSimplifyStatements.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
@@ -79,6 +81,7 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
 
   // required passes to have proper, parallelized IR
+  optimizer.pushBackPass<PassSimplifyStatements>();
   optimizer.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   optimizer.pushBackPass<PassFieldVersioning>();
   optimizer.pushBackPass<PassMultiStageSplitter>(
