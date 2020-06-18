@@ -31,7 +31,6 @@
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/RemoveIf.hpp"
-#include "dawn/Support/Twine.h"
 #include <cstdlib>
 #include <fstream>
 #include <functional>
@@ -226,8 +225,8 @@ void StencilInstantiation::jsonDump(std::string filename) const {
 
 template <int Level>
 struct PrintDescLine {
-  PrintDescLine(std::ostream& os, const Twine& name) : os_(os) {
-    os_ << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name.str() << "\n"
+  PrintDescLine(std::ostream& os, const std::string& name) : os_(os) {
+    os_ << MakeIndent<Level>::value << format("\033[1;3%im", Level) << name << "\n"
         << MakeIndent<Level>::value << "{\n\033[0m";
   }
   ~PrintDescLine() { os_ << MakeIndent<Level>::value << format("\033[1;3%im}\n\033[0m", Level); }
@@ -240,12 +239,12 @@ void StencilInstantiation::dump(std::ostream& os) const {
 
   int i = 0;
   for(const auto& stencil : getStencils()) {
-    PrintDescLine<1> iline(os, "Stencil_" + Twine(i));
+    PrintDescLine<1> iline(os, "Stencil_" + std::to_string(i));
 
     int j = 0;
     const auto& multiStages = stencil->getChildren();
     for(const auto& multiStage : multiStages) {
-      PrintDescLine<2> jline(os, Twine("MultiStage_") + Twine(j) + " [" +
+      PrintDescLine<2> jline(os, "MultiStage_" + std::to_string(j) + " [" +
                                      loopOrderToString(multiStage->getLoopOrder()) + "]");
 
       int k = 0;
@@ -260,13 +259,13 @@ void StencilInstantiation::dump(std::ostream& os) const {
           globidx += "J: " + iterSpace[1]->toString() + " ";
         }
 
-        PrintDescLine<3> kline(os, Twine("Stage_") + Twine(k) + Twine(" ") + Twine(globidx));
+        PrintDescLine<3> kline(os, "Stage_" + std::to_string(k) + " " + globidx);
 
         int l = 0;
         const auto& doMethods = stage->getChildren();
         for(const auto& doMethod : doMethods) {
-          PrintDescLine<4> lline(os, Twine("Do_") + Twine(l) + " " +
-                                         doMethod->getInterval().toString());
+          PrintDescLine<4> lline(os, "Do_" + std::to_string(l) + " " +
+                                         std::string(doMethod->getInterval()));
 
           const auto& stmts = doMethod->getAST().getStatements();
           for(std::size_t m = 0; m < stmts.size(); ++m) {

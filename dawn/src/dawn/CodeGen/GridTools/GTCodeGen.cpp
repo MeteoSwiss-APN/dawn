@@ -169,7 +169,7 @@ void GTCodeGen::generatePlaceholderDefinitions(
     // Fields
     stencilClass.addTypeDef("p_" + fieldInfo.Name)
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
-        .addTemplate(Twine(accessorIdx))
+        .addTemplate(accessorIdx)
         .addTemplate(codeGenProperties.getParamType(stencilInstantiation, fieldInfo));
     ++accessorIdx;
   }
@@ -178,7 +178,7 @@ void GTCodeGen::generatePlaceholderDefinitions(
     stencilClass.addTypeDef("globals_gp_t").addType(c_gt() + "global_parameter<backend_t,globals>");
     stencilClass.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
-        .addTemplate(Twine(accessorIdx))
+        .addTemplate(accessorIdx)
         .addTemplate("globals_gp_t");
   }
 }
@@ -437,7 +437,7 @@ void GTCodeGen::generateStencilWrapperMembers(
   stencilWrapperClass.addMember("const " + c_dgt() + "domain", "m_dom");
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+                                "\"" + stencilWrapperClass.getName() + "\"");
 
   // globals member
   if(!globalsMap.empty()) {
@@ -607,13 +607,13 @@ void GTCodeGen::generateStencilClasses(
               iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
           auto const& vExtents = extents.verticalExtent();
 
-          extent.addTemplate(Twine(hExtents.iMinus()) + ", " + Twine(hExtents.iPlus()));
-          extent.addTemplate(Twine(hExtents.jMinus()) + ", " + Twine(hExtents.jPlus()));
-          extent.addTemplate(Twine(vExtents.minus()) + ", " + Twine(vExtents.plus()));
+          extent.addTemplate(std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()));
+          extent.addTemplate(std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()));
+          extent.addTemplate(std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
-              .addTemplate(Twine(accessorID))
+              .addTemplate(accessorID)
               .addTemplate(c_gt_intent() + ((fields[m].getIntend() == iir::Field::IntendKind::Input)
                                                 ? "in"
                                                 : "inout"))
@@ -626,7 +626,7 @@ void GTCodeGen::generateStencilClasses(
         if(stencilFun->hasGlobalVariables()) {
           StencilFunStruct.addTypeDef("globals")
               .addType(c_gt() + "global_accessor")
-              .addTemplate(Twine(accessorID));
+              .addTemplate(accessorID);
           accessorID++;
           arglist.push_back("globals");
         }
@@ -721,8 +721,7 @@ void GTCodeGen::generateStencilClasses(
                   c_gt() + "cache_io_policy::" + cache.getIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
                   ">(p_" + metadata.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
-                  "())")
-              .str();
+                  "())");
         });
       }
 
@@ -732,8 +731,8 @@ void GTCodeGen::generateStencilClasses(
         const auto& stagePtr = *stageIt;
         const iir::Stage& stage = *stagePtr;
 
-        Structure StageStruct =
-            stencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
+        Structure StageStruct = stencilClass.addStruct("stage_" + std::to_string(multiStageIdx) +
+                                                       "_" + std::to_string(stageIdx));
 
         ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
              << ", " + c_gt() + "extent< ";
@@ -770,13 +769,13 @@ void GTCodeGen::generateStencilClasses(
               iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
           auto const& fieldVExtents = extents.verticalExtent();
 
-          extent.addTemplate(Twine(fieldHExtents.iMinus()) + ", " + Twine(fieldHExtents.iPlus()));
-          extent.addTemplate(Twine(fieldHExtents.jMinus()) + ", " + Twine(fieldHExtents.jPlus()));
-          extent.addTemplate(Twine(fieldVExtents.minus()) + ", " + Twine(fieldVExtents.plus()));
+          extent.addTemplate(std::to_string(fieldHExtents.iMinus()) + ", " + std::to_string(fieldHExtents.iPlus()));
+          extent.addTemplate(std::to_string(fieldHExtents.jMinus()) + ", " + std::to_string(fieldHExtents.jPlus()));
+          extent.addTemplate(std::to_string(fieldVExtents.minus()) + ", " + std::to_string(fieldVExtents.plus()));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
-              .addTemplate(Twine(accessorIdx))
+              .addTemplate(accessorIdx)
               .addTemplate(c_gt_intent() +
                            ((field.getIntend() == iir::Field::IntendKind::Input) ? "in" : "inout"))
               .addTemplate(extent);
@@ -792,7 +791,7 @@ void GTCodeGen::generateStencilClasses(
         if(stage.hasGlobalVariables()) {
           StageStruct.addTypeDef("globals")
               .addType(c_gt() + "global_accessor")
-              .addTemplate(Twine(accessorIdx));
+              .addTemplate(accessorIdx);
 
           ssMS << "p_"
                << "globals"
@@ -941,9 +940,9 @@ void GTCodeGen::generateStencilClasses(
         (!domainMapPlaceholders.empty() ? RangeToString(", ", "", ",")(domainMapPlaceholders) : "");
 
     // This is a memory leak.. but nothing we can do ;)
-    StencilConstructor.addStatement(Twine("m_stencil = " + c_gt() +
-                                          "make_computation<backend_t>(grid_, " + plchdrStr +
-                                          RangeToString(", ", "", ")")(makeComputation)));
+    StencilConstructor.addStatement("m_stencil = " + c_gt() +
+                                    "make_computation<backend_t>(grid_, " + plchdrStr +
+                                    RangeToString(", ", "", ")")(makeComputation));
     StencilConstructor.commit();
 
     stencilClass.addComment("Members");
@@ -951,7 +950,7 @@ void GTCodeGen::generateStencilClasses(
     auto plchdrs = CodeGenUtils::buildPlaceholderList(stencilInstantiation->getMetaData(),
                                                       stencilFields, globalsMap);
 
-    stencilType = c_gt().str() + "computation" + RangeToString(",", "<", ">")(plchdrs);
+    stencilType = c_gt() + "computation" + RangeToString(",", "<", ">")(plchdrs);
 
     stencilClass.addMember(stencilType, "m_stencil");
 

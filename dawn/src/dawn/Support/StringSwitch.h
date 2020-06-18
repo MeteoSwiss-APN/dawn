@@ -14,7 +14,9 @@
 
 #pragma once
 
-#include "dawn/Support/StringRef.h"
+#include "dawn/Support/Assert.h"
+#include "dawn/Support/StringUtil.h"
+
 #include <cstring>
 
 namespace dawn {
@@ -40,13 +42,13 @@ namespace dawn {
 template <typename T, typename R = T>
 class StringSwitch {
   /// The string we are matching.
-  StringRef Str;
+  const std::string& Str;
 
   /// The pointer to the result of this switch statement, once known, null before that.
   const T* Result;
 
 public:
-  inline explicit StringSwitch(StringRef S) : Str(S), Result(nullptr) {}
+  inline explicit StringSwitch(const std::string& S) : Str(S), Result(nullptr) {}
 
   // StringSwitch is not copyable.
   StringSwitch(const StringSwitch&) = delete;
@@ -157,7 +159,7 @@ public:
   // Case-insensitive case matchers.
   template <unsigned N>
   inline StringSwitch& CaseLower(const char (&S)[N], const T& Value) {
-    if(!Result && Str.equals_lower(StringRef(S, N - 1)))
+    if(!Result && equalsLower(Str, S))
       Result = &Value;
 
     return *this;
@@ -165,7 +167,7 @@ public:
 
   template <unsigned N>
   inline StringSwitch& EndsWithLower(const char (&S)[N], const T& Value) {
-    if(!Result && Str.endswith_lower(StringRef(S, N - 1)))
+    if(!Result && endsWithLower(Str, S))
       Result = &Value;
 
     return *this;
@@ -173,7 +175,7 @@ public:
 
   template <unsigned N>
   inline StringSwitch& StartsWithLower(const char (&S)[N], const T& Value) {
-    if(!Result && Str.startswith_lower(StringRef(S, N - 1)))
+    if(!Result && startsWithLower(Str, S))
       Result = &Value;
 
     return *this;

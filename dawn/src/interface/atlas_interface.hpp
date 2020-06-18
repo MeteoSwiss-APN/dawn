@@ -77,6 +77,9 @@ class Field {
 public:
   T const& operator()(int f, int k) const { return atlas_field_(f, k); }
   T& operator()(int f, int k) { return atlas_field_(f, k); }
+  T* data() { return atlas_field_.data(); }
+  const T* data() const { return atlas_field_.data(); }
+  int numElements() const { return atlas_field_.shape(0) * atlas_field_.shape(1); }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
@@ -100,6 +103,11 @@ public:
   T& operator()(int elem_idx, int sparse_dim_idx, int level) {
     return sparse_dimension_(elem_idx, level, sparse_dim_idx);
   }
+  T* data() { return sparse_dimension_.data(); }
+  const T* data() const { return sparse_dimension_.data(); }
+  int numElements() const {
+    return sparse_dimension_.shape(0) * sparse_dimension_.shape(1) * sparse_dimension_.shape(2);
+  }
 
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
       : sparse_dimension_(sparse_dimension) {}
@@ -119,11 +127,17 @@ atlas::Mesh meshType(atlasTag);
 
 int indexType(atlasTag);
 
-auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
-auto getEdges(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.edges().size()); }
-auto getVertices(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.nodes().size()); }
+inline auto getCells(atlasTag, atlas::Mesh const& m) {
+  return utility::irange(0, m.cells().size());
+}
+inline auto getEdges(atlasTag, atlas::Mesh const& m) {
+  return utility::irange(0, m.edges().size());
+}
+inline auto getVertices(atlasTag, atlas::Mesh const& m) {
+  return utility::irange(0, m.nodes().size());
+}
 
-std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
+inline std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {
     int nbhIdx = conn(idx, n);
@@ -134,7 +148,7 @@ std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn
   return neighs;
 }
 
-std::vector<int> getNeighs(const atlas::mesh::Nodes::Connectivity& conn, int idx) {
+inline std::vector<int> getNeighs(const atlas::mesh::Nodes::Connectivity& conn, int idx) {
   std::vector<int> neighs;
   for(int n = 0; n < conn.cols(idx); ++n) {
     int nbhIdx = conn(idx, n);
@@ -153,7 +167,7 @@ struct key_hash : public std::unary_function<key_t, std::size_t> {
     return size_t(std::get<0>(k)) ^ size_t(std::get<1>(k));
   }
 };
-
+namespace {
 // recursive function collecting neighbors succesively
 void getNeighborsImpl(
     const std::unordered_map<key_t, std::function<std::vector<int>(int)>, key_hash>& nbhTables,
@@ -183,6 +197,7 @@ void getNeighborsImpl(
     getNeighborsImpl(nbhTables, chain, targetType, newFront, result);
   }
 }
+} // namespace
 
 template <typename T>
 struct NotDuplicateOrOrigin {
@@ -203,8 +218,8 @@ private:
 };
 
 // entry point, kicks off the recursive function above if required
-std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
-                              std::vector<dawn::LocationType> chain, int idx) {
+inline std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
+                                     std::vector<dawn::LocationType> chain, int idx) {
 
   // target type is at the end of the chain (we collect all neighbors of this type "along" the
   // chain)
@@ -296,5 +311,3 @@ auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
 }
 
 } // namespace atlasInterface
-
-

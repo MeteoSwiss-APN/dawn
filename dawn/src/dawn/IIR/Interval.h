@@ -181,8 +181,8 @@ public:
   bool upperLevelIsEnd() const { return upper_.isEnd(); }
 
   /// @brief Convert interval to string
+  explicit operator std::string() const;
   std::string toString() const;
-
   std::string toStringGen() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Interval& interval);

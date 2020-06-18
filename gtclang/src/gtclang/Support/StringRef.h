@@ -1,10 +1,12 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _
-//                         | |
-//                       __| | __ ___      ___ ___
-//                      / _` |/ _` \ \ /\ / / '_  |
-//                     | (_| | (_| |\ V  V /| | | |
-//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -21,6 +23,7 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
 #include "dawn/Support/STLExtras.h"
+#include <functional>
 #include <algorithm>
 #include <cstring>
 #include <iosfwd>
@@ -28,7 +31,7 @@
 #include <string>
 #include <utility>
 
-namespace dawn {
+namespace gtclang {
 
 template <typename T>
 class SmallVectorImpl;
@@ -252,7 +255,7 @@ public:
   ///
   /// @returns The index of the first character satisfying @p F starting from @p From, or npos if
   /// not found.
-  inline size_t find_if(function_ref<bool(char)> F, size_t From = 0) const {
+  inline size_t find_if(std::function<bool(char)> F, size_t From = 0) const {
     StringRef S = drop_front(From);
     while(!S.empty()) {
       if(F(S.front()))
@@ -266,7 +269,7 @@ public:
   ///
   /// @returns The index of the first character not satisfying @p F starting from @p From, or npos
   /// if not found.
-  inline size_t find_if_not(function_ref<bool(char)> F, size_t From = 0) const {
+  inline size_t find_if_not(std::function<bool(char)> F, size_t From = 0) const {
     return find_if([F](char c) { return !F(c); }, From);
   }
 
@@ -479,13 +482,13 @@ public:
 
   /// @brief Return the longest prefix of 'this' such that every character in the prefix satisfies
   /// the given predicate.
-  inline StringRef take_while(function_ref<bool(char)> F) const {
+  inline StringRef take_while(std::function<bool(char)> F) const {
     return substr(0, find_if_not(F));
   }
 
   /// @brief Return the longest prefix of 'this' such that no character in the prefix satisfies
   /// the given predicate.
-  inline StringRef take_until(function_ref<bool(char)> F) const { return substr(0, find_if(F)); }
+  inline StringRef take_until(std::function<bool(char)> F) const { return substr(0, find_if(F)); }
 
   /// @brief Return a StringRef equal to 'this' but with the first @p N elements dropped
   inline StringRef drop_front(size_t N = 1) const {
@@ -501,11 +504,11 @@ public:
 
   /// @brief Return a StringRef equal to 'this', but with all characters satisfying the given
   /// predicate dropped from the beginning of the string
-  inline StringRef drop_while(function_ref<bool(char)> F) const { return substr(find_if_not(F)); }
+  inline StringRef drop_while(std::function<bool(char)> F) const { return substr(find_if_not(F)); }
 
   /// @brief Return a StringRef equal to 'this', but with all characters not satisfying the given
   /// predicate dropped from the beginning of the string
-  inline StringRef drop_until(function_ref<bool(char)> F) const { return substr(find_if(F)); }
+  inline StringRef drop_until(std::function<bool(char)> F) const { return substr(find_if(F)); }
 
   /// @brief Returns true if this StringRef has the given prefix and removes that prefix
   inline bool consume_front(StringRef Prefix) {
@@ -670,4 +673,4 @@ struct isPodLike<StringRef> {
 
 /// @}
 
-} // namespace dawn
+} // namespace gtclang

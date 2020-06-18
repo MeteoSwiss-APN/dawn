@@ -29,6 +29,12 @@ add_library(GTClangSupport
   StringUtil.h
   ASTUtils.cpp
   ASTUtils.h
+  MathExtras.h
+  SmallString.h
+  SmallVector.cpp
+  SmallVector.h
+  StringRef.cpp
+  StringRef.h
 )
 
 target_add_gtclang_standard_props(GTClangSupport)
