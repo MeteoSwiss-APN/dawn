@@ -15,6 +15,7 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/Logger.h"
 
 #include <cxxopts.hpp>
 #include <fstream>
@@ -97,6 +98,10 @@ int main(int argc, char* argv[]) {
   if(result.count("help")) {
     std::cout << options.help() << std::endl;
     return 0;
+  }
+
+  if(result.count("verbose")) {
+    dawn::log::setVerbosity(dawn::log::Level::All);
   }
 
   // Get input = string

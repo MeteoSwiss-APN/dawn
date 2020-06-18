@@ -266,6 +266,11 @@ if __name__ == "__main__":
                 "dawn::codegen::Backend",
                 os.path.join(DAWN_CPP_SRC_ROOT, "CodeGen", "Options.h"),
             ),
+            (
+                "LogLevel",
+                "dawn::log::Level",
+                os.path.join(DAWN_CPP_SRC_ROOT, "Support", "Logger.h"),
+            ),
         ):
             values = []
             if "::" in c_name:

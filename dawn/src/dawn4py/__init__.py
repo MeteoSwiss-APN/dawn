@@ -26,7 +26,8 @@ from . import serialization
 from ._dawn4py import SIRSerializerFormat, IIRSerializerFormat
 from ._dawn4py import OptimizerOptions, CodeGenOptions
 from ._dawn4py import PassGroup, CodeGenBackend
-from ._dawn4py import default_pass_groups
+from ._dawn4py import LogLevel
+from ._dawn4py import default_pass_groups, set_verbosity
 
 try:
     import os

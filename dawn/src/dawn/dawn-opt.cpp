@@ -184,6 +184,10 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
+  if(result.count("verbose")) {
+    dawn::log::setVerbosity(dawn::log::Level::All);
+  }
+
   // Determine the list of pass groups to run
   std::list<dawn::PassGroup> passGroups;
   if(result.count("default-opt") > 0) {
