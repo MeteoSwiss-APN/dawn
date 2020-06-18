@@ -385,6 +385,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
             setInterval(protoStage->mutable_j_range(), &interval);
           }
         }
+        *protoStage->mutable_extents() = makeProtoExtents(stage->getExtents());
 
         // adding it's children
         for(const auto& domethod : stage->getChildren()) {

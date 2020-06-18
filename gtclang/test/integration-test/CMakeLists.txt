@@ -64,13 +64,6 @@ add_integration_test(Diagnostics/err_stencilfun_invalid_argument_type.cpp)
 add_integration_test(Diagnostics/err_stencilfun_invalid_call.cpp)
 add_integration_test(Diagnostics/err_stencilfun_vertical_region.cpp)
 
-add_integration_test(IIRSerializer/AccessTest.cpp)
-add_integration_test(IIRSerializer/CopyTest.cpp)
-add_integration_test(IIRSerializer/NestedStencils.cpp)
-add_integration_test(IIRSerializer/StencilFnCallTest.cpp)
-
-add_integration_test(Regression/globals_dependencies_issue401.cpp)
-
 add_integration_test(SIR/AccessTest.cpp)
 add_integration_test(SIR/CopyTest.cpp)
 add_integration_test(SIR/StencilFnCallTest.cpp)

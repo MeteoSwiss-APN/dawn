@@ -80,6 +80,7 @@ message Stage {
     dawn.proto.statements.Interval i_range = 3; // Global index space in the I dimension
     dawn.proto.statements.Interval j_range = 4; // Global index space in the J dimension
     dawn.proto.enums.LocationType locationType = 5;
+    dawn.proto.statements.Extents extents = 6;
 }
 
 // @brief The Protobuf description of all the required members to describe a MultiStage of the IIR
