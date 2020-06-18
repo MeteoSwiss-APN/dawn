@@ -62,8 +62,6 @@ OPT(bool, DisableKCaches, false, "disable-kcaches", "",
 OPT(bool, KeepVarnames, false, "keep-varnames", "",
     "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
 
-OPT(bool, PassVerbose, false, "pass-verbose", "",
-    "Compile in verbose mode", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "",
     "Detailed report on the accesses of each statement", "", false, true)
 

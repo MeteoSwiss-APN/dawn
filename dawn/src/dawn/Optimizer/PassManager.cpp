@@ -50,7 +50,7 @@ bool PassManager::runPassOnStencilInstantiation(
     return false;
   }
 
-  if(options.PassVerbose) {
+  if(options.WriteStencilInstantiation) {
     instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
                             "_Log.json");
   }
