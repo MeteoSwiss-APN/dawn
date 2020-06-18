@@ -19,7 +19,6 @@
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/Support/Logger.h"
 #include <memory>
@@ -91,10 +90,8 @@ struct Temporary {
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType(OptimizerContext& context)
-    : Pass(context, "PassTemporaryType", true) {}
-
-bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                            const Options& options) {
   const auto& metadata = instantiation->getMetaData();
 
   report_.clear();
@@ -168,8 +165,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) ||
            instantiation->isIDAccessedMultipleMSs(accessID)) {
 
-          if(context_.getOptions().ReportPassTemporaryType)
-            report("promote");
+          report("promote");
 
           report_.push_back(Report{accessID, TmpActionMod::promote});
           promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), accessID,
@@ -183,8 +179,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
            temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, accessID) &&
            !instantiation->isIDAccessedMultipleMSs(accessID)) {
 
-          if(context_.getOptions().ReportPassTemporaryType)
-            report("demote");
+          report("demote");
 
           report_.push_back(Report{accessID, TmpActionMod::demote});
           demoteTemporaryFieldToLocalVariable(instantiation.get(), stencilPtr.get(), accessID,

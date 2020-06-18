@@ -14,7 +14,6 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageReordering.h"
@@ -29,24 +28,17 @@ namespace {
 
 class TestPassStageReordering : public ::testing::Test {
 protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-
-  explicit TestPassStageReordering() {
-    context_ = std::make_unique<OptimizerContext>(options_,
-                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
-    UIDGenerator::getInstance()->reset();
-  }
+  explicit TestPassStageReordering() { UIDGenerator::getInstance()->reset(); }
 
   void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage graph pass
-    PassSetStageGraph stageGraphPass(*context_);
+    PassSetStageGraph stageGraphPass;
     EXPECT_TRUE(stageGraphPass.run(instantiation));
 
     // Run dependency graph pass
-    PassSetDependencyGraph dependencyGraphPass(*context_);
+    PassSetDependencyGraph dependencyGraphPass;
     EXPECT_TRUE(dependencyGraphPass.run(instantiation));
 
     // Collect pre-reordering stage IDs
@@ -59,7 +51,7 @@ protected:
     EXPECT_EQ(stageOrders.size(), prevStageIDs.size());
 
     // Expect pass to succeed...
-    PassStageReordering stageReorderPass(*context_, dawn::ReorderStrategy::Kind::Greedy);
+    PassStageReordering stageReorderPass(dawn::ReorderStrategy::Kind::Greedy);
     EXPECT_TRUE(stageReorderPass.run(instantiation));
 
     // Collect post-reordering stage IDs

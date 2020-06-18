@@ -16,7 +16,6 @@
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
 #include <optional>
@@ -153,9 +152,8 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 
 } // anonymous namespace
 
-PassSetCaches::PassSetCaches(OptimizerContext& context) : Pass(context, "PassSetCaches") {}
-
-bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                        const Options& options) {
   const auto& metadata = instantiation->getMetaData();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
@@ -215,8 +213,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
     }
 
     // Set K-Caches
-    if(!context_.getOptions().DisableKCaches ||
-       stencil.getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
+    if(!options.DisableKCaches || stencil.getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
 
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {

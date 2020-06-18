@@ -23,10 +23,11 @@ namespace dawn {
 /// @ingroup optimizer
 class PassTemporaryFirstAccess : public Pass {
 public:
-  PassTemporaryFirstAccess(OptimizerContext& context);
+  PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

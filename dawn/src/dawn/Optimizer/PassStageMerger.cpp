@@ -16,25 +16,21 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/FileSystem.h"
 
 namespace dawn {
 
-PassStageMerger::PassStageMerger(OptimizerContext& context) : Pass(context, "PassStageMerger") {
-  dependencies_.push_back("PassSetStageGraph");
-}
-
-bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                          const Options& options) {
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
         sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
-  bool MergeStages = context_.getOptions().MergeStages;
-  bool MergeDoMethods = context_.getOptions().MergeDoMethods;
+  bool MergeStages = options.MergeStages;
+  bool MergeDoMethods = options.MergeDoMethods;
 
   // ... Nope
   if(!MergeDoMethods && !stencilNeedsMergePass)
@@ -42,8 +38,9 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
   const std::string filenameWE =
       fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
-  if(context_.getOptions().ReportPassStageMerger)
-    stencilInstantiation->jsonDump(filenameWE + "_before.json");
+
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_before_stage_merger.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
@@ -197,8 +194,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     }
   }
 
-  if(context_.getOptions().ReportPassStageMerger)
-    stencilInstantiation->jsonDump(filenameWE + "_after.json");
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_after_stage_merger.json");
 
   return true;
 }

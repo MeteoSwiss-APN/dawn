@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "Pass.h"
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
@@ -27,10 +27,10 @@ namespace dawn {
 ///
 class PassStageSplitAllStatements : public Pass {
 public:
-  PassStageSplitAllStatements(OptimizerContext& context)
-      : Pass(context, "PassStageSplitAllStatements") {}
+  PassStageSplitAllStatements() : Pass("PassStageSplitAllStatements") {}
 
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

@@ -60,12 +60,13 @@ PYBIND11_MODULE(_dawn4py, m) {
   py::class_<dawn::Options>(m, "OptimizerOptions")
       .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
                        int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
-                       int BlockSizeK, bool SplitStencils, bool MergeStages, bool MergeDoMethods,
-                       bool DisableKCaches, bool UseNonTempCaches, bool KeepVarnames,
-                       bool PassVerbose, bool ReportAccesses, bool SerializeIIR,
+                       int BlockSizeK, int SMemMaxFields, int TexCacheMaxFields, bool SplitStencils,
+                       bool MergeStages, bool MergeDoMethods, bool DisableKCaches,
+                       bool KeepVarnames, bool PassVerbose, bool ReportAccesses, bool SerializeIIR,
                        const std::string& IIRFormat, bool DumpSplitGraphs, bool DumpStageGraph,
                        bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
-                       bool DumpStencilInstantiation, bool DumpStencilGraph) {
+                       bool DumpStencilInstantiation, bool WriteStencilInstantiation,
+                       bool DumpStencilGraph) {
              return dawn::Options{MaxHaloPoints,
                                   ReorderStrategy,
                                   MaxFieldsPerStencil,
@@ -73,11 +74,12 @@ PYBIND11_MODULE(_dawn4py, m) {
                                   BlockSizeI,
                                   BlockSizeJ,
                                   BlockSizeK,
+                                  SMemMaxFields,
+                                  TexCacheMaxFields,
                                   SplitStencils,
                                   MergeStages,
                                   MergeDoMethods,
                                   DisableKCaches,
-                                  UseNonTempCaches,
                                   KeepVarnames,
                                   PassVerbose,
                                   ReportAccesses,
@@ -88,19 +90,22 @@ PYBIND11_MODULE(_dawn4py, m) {
                                   DumpTemporaryGraphs,
                                   DumpRaceConditionGraph,
                                   DumpStencilInstantiation,
+                                  WriteStencilInstantiation,
                                   DumpStencilGraph};
            }),
            py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
            py::arg("max_fields_per_stencil") = 40, py::arg("max_cut_mss") = false,
            py::arg("block_size_i") = 0, py::arg("block_size_j") = 0, py::arg("block_size_k") = 0,
+           py::arg("s_mem_max_fields") = 8, py::arg("tex_cache_max_fields") = 3,
            py::arg("split_stencils") = false, py::arg("merge_stages") = false,
            py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
-           py::arg("use_non_temp_caches") = false, py::arg("keep_varnames") = false,
-           py::arg("pass_verbose") = false, py::arg("report_accesses") = false,
-           py::arg("serialize_iir") = false, py::arg("iir_format") = "json",
-           py::arg("dump_split_graphs") = false, py::arg("dump_stage_graph") = false,
-           py::arg("dump_temporary_graphs") = false, py::arg("dump_race_condition_graph") = false,
-           py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
+           py::arg("keep_varnames") = false, py::arg("pass_verbose") = false,
+           py::arg("report_accesses") = false, py::arg("serialize_iir") = false,
+           py::arg("iir_format") = "json", py::arg("dump_split_graphs") = false,
+           py::arg("dump_stage_graph") = false, py::arg("dump_temporary_graphs") = false,
+           py::arg("dump_race_condition_graph") = false,
+           py::arg("dump_stencil_instantiation") = false,
+           py::arg("write_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
       .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
       .def_readwrite("reorder_strategy", &dawn::Options::ReorderStrategy)
       .def_readwrite("max_fields_per_stencil", &dawn::Options::MaxFieldsPerStencil)
@@ -108,11 +113,12 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_i", &dawn::Options::BlockSizeI)
       .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
+      .def_readwrite("s_mem_max_fields", &dawn::Options::SMemMaxFields)
+      .def_readwrite("tex_cache_max_fields", &dawn::Options::TexCacheMaxFields)
       .def_readwrite("split_stencils", &dawn::Options::SplitStencils)
       .def_readwrite("merge_stages", &dawn::Options::MergeStages)
       .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
       .def_readwrite("disable_k_caches", &dawn::Options::DisableKCaches)
-      .def_readwrite("use_non_temp_caches", &dawn::Options::UseNonTempCaches)
       .def_readwrite("keep_varnames", &dawn::Options::KeepVarnames)
       .def_readwrite("pass_verbose", &dawn::Options::PassVerbose)
       .def_readwrite("report_accesses", &dawn::Options::ReportAccesses)
@@ -123,6 +129,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("dump_temporary_graphs", &dawn::Options::DumpTemporaryGraphs)
       .def_readwrite("dump_race_condition_graph", &dawn::Options::DumpRaceConditionGraph)
       .def_readwrite("dump_stencil_instantiation", &dawn::Options::DumpStencilInstantiation)
+      .def_readwrite("write_stencil_instantiation", &dawn::Options::WriteStencilInstantiation)
       .def_readwrite("dump_stencil_graph", &dawn::Options::DumpStencilGraph)
       .def("__repr__", [](const dawn::Options& self) {
         std::ostringstream ss;
@@ -135,11 +142,12 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_i=" << self.BlockSizeI << ",\n    "
            << "block_size_j=" << self.BlockSizeJ << ",\n    "
            << "block_size_k=" << self.BlockSizeK << ",\n    "
+           << "s_mem_max_fields=" << self.SMemMaxFields << ",\n    "
+           << "tex_cache_max_fields=" << self.TexCacheMaxFields << ",\n    "
            << "split_stencils=" << self.SplitStencils << ",\n    "
            << "merge_stages=" << self.MergeStages << ",\n    "
            << "merge_do_methods=" << self.MergeDoMethods << ",\n    "
            << "disable_k_caches=" << self.DisableKCaches << ",\n    "
-           << "use_non_temp_caches=" << self.UseNonTempCaches << ",\n    "
            << "keep_varnames=" << self.KeepVarnames << ",\n    "
            << "pass_verbose=" << self.PassVerbose << ",\n    "
            << "report_accesses=" << self.ReportAccesses << ",\n    "
@@ -152,6 +160,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_temporary_graphs=" << self.DumpTemporaryGraphs << ",\n    "
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
+           << "write_stencil_instantiation=" << self.WriteStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph;
         return "OptimizerOptions(\n    " + ss.str() + "\n)";
       });

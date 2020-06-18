@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
@@ -67,11 +66,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement left
@@ -122,11 +117,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
   int varAID = metadata.getAccessIDFromName("varA");
   int varBID = metadata.getAccessIDFromName("varB");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there are 2 statements left
@@ -171,11 +162,7 @@ TEST(TestRemoveScalars, test_cartesian_scalar_01) {
   int varAID = metadata.getAccessIDFromName("varA");
   int varBID = metadata.getAccessIDFromName("varB");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement left
@@ -220,11 +207,7 @@ TEST(TestRemoveScalars, test_cartesian_scalar_02) {
   int varAID = metadata.getAccessIDFromName("varA");
   int varBID = metadata.getAccessIDFromName("varB");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement left
@@ -269,11 +252,7 @@ TEST(TestRemoveScalars, test_global_01) {
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
@@ -317,11 +296,7 @@ TEST(TestRemoveScalars, test_if_01) {
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
@@ -369,11 +344,7 @@ TEST(TestRemoveScalars, test_if_02) {
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
@@ -425,11 +396,7 @@ TEST(TestRemoveScalars, test_else_01) {
   auto& metadata = stencil->getMetaData();
   int varAID = metadata.getAccessIDFromName("varA");
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
 
   // Check that there is 1 statement
@@ -476,16 +443,12 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
                                      b.stmt(b.assignExpr(b.at(varA), b.lit(3.0), Op::multiply)),
                                      b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   std::ostringstream output;
   dawn::log::info.stream(output);
   dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
   ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
@@ -511,16 +474,12 @@ TEST(TestRemoveScalars, warn_increment) {
                              b.declareVar(varA), b.stmt(b.unaryExpr(b.at(varA), Op::increment)),
                              b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   std::ostringstream output;
   dawn::log::info.stream(output);
   dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
   ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
@@ -549,16 +508,12 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   std::ostringstream output;
   dawn::log::info.stream(output);
   dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
   ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
@@ -587,16 +542,12 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   std::ostringstream output;
   dawn::log::info.stream(output);
   dawn::log::setVerbosity(dawn::log::Level::All);
 
   // run single pass (PassRemoveScalars) and expect info in output
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
   ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }
@@ -631,12 +582,8 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
   dawn::log::info.stream(output);
   dawn::log::setVerbosity(dawn::log::Level::All);
 
-  OptimizerContext::OptimizerContextOptions optimizerOptions;
-  OptimizerContext optimizer(optimizerOptions,
-                             std::make_shared<dawn::SIR>(ast::GridType::Unstructured));
-
   // run single pass (PassRemoveScalars) and expect info in output
-  PassRemoveScalars passRemoveScalars(optimizer);
+  PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
   ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
 }

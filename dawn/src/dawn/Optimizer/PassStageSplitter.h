@@ -27,10 +27,11 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageSplitter : public Pass {
 public:
-  PassStageSplitter(OptimizerContext& context);
+  PassStageSplitter() : Pass("PassStageSplitter") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

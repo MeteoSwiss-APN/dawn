@@ -23,8 +23,6 @@
 #include <unordered_map>
 
 namespace dawn {
-class OptimizerContext;
-
 namespace iir {
 class Accesses;
 class StencilMetaInformation;

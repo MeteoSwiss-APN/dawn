@@ -16,7 +16,6 @@
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"
@@ -24,11 +23,9 @@
 
 namespace dawn {
 
-PassTemporaryMerger::PassTemporaryMerger(OptimizerContext& context)
-    : Pass(context, "PassTemporaryMerger") {}
-
 bool PassTemporaryMerger::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   using Edge = iir::DependencyGraphAccesses::Edge;
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   const iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
@@ -128,7 +125,7 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    if(context_.getOptions().DumpTemporaryGraphs)
+    if(options.DumpTemporaryGraphs)
       TemporaryDAG.toDot(format("tmp_stencil_%i.dot", stencilIdx));
 
     // Color the temporary graph

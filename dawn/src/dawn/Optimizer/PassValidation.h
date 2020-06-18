@@ -26,10 +26,11 @@ namespace dawn {
 /// This pass is read-only and is hence not in the debug-group
 class PassValidation : public Pass {
 public:
-  PassValidation(OptimizerContext& context);
+  PassValidation() : Pass("PassValidation") {}
 
   /// @brief Pass run implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+           const Options& options = {}) override;
 
   /// @brief IIR validation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,

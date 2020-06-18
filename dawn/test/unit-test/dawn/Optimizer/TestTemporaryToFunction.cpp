@@ -17,7 +17,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -30,16 +29,7 @@ using namespace dawn;
 namespace {
 
 class TestPassTemporaryToFunction : public ::testing::Test {
-public:
-  TestPassTemporaryToFunction() {
-    options_.TmpToStencilFunction = true;
-    context_ = std::make_unique<OptimizerContext>(options_, nullptr);
-  }
-
 protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-
   std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
     auto instantiation = IIRSerializer::deserialize(filename);
     EXPECT_TRUE(instantiation->getIIR()->getChildren().size() == 1);
@@ -48,7 +38,7 @@ protected:
     }
 
     // run temp to function passs
-    PassTemporaryToStencilFunction tmpToFun(*context_);
+    PassTemporaryToStencilFunction tmpToFun;
     tmpToFun.run(instantiation);
 
     return instantiation;

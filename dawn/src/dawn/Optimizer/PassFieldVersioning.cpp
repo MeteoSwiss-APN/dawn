@@ -23,7 +23,6 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/CreateVersionAndRename.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
@@ -94,11 +93,9 @@ static void reportRaceCondition(const iir::Stmt& statement,
 
 } // namespace
 
-PassFieldVersioning::PassFieldVersioning(OptimizerContext& context)
-    : Pass(context, "PassFieldVersioning", true), numRenames_(0) {}
-
 bool PassFieldVersioning::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   numRenames_ = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -130,7 +127,7 @@ bool PassFieldVersioning::run(
 
           // Try to resolve race-conditions by using double buffering if necessary
           auto rc = fixRaceCondition(stencilInstantiation, newGraph, stencil, doMethod, loopOrder,
-                                     stageIdx, stmtIndex);
+                                     stageIdx, stmtIndex, options.DumpRaceConditionGraph);
 
           if(rc == RCKind::Unresolvable) {
             // Nothing we can do ... bail out
@@ -162,7 +159,7 @@ bool PassFieldVersioning::run(
 PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     const std::shared_ptr<iir::StencilInstantiation> instantiation,
     iir::DependencyGraphAccesses const& graph, iir::Stencil& stencil, iir::DoMethod& doMethod,
-    iir::LoopOrderKind loopOrder, int stageIdx, int index) {
+    iir::LoopOrderKind loopOrder, int stageIdx, int index, bool dump) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
@@ -241,7 +238,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
   if(!assignment) {
-    if(context_.getOptions().DumpRaceConditionGraph)
+    if(dump)
       graph.toDot("rc_" + instantiation->getName() + ".dot");
     reportRaceCondition(statement, *instantiation);
     // The function call above throws, so do not need a return here any longer. Will refactor
@@ -258,7 +255,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // If the LHSAccessID is not part of the SCC, we cannot resolve the race-condition
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
-      if(context_.getOptions().DumpRaceConditionGraph)
+      if(dump)
         graph.toDot("rc_" + instantiation->getName() + ".dot");
       reportRaceCondition(statement, *instantiation);
       // The function call above throws, so do not need a return here any longer. Will refactor

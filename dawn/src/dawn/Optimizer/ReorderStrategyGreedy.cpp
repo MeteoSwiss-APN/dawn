@@ -18,7 +18,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Exception.h"
 #include <algorithm>
@@ -88,7 +87,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 std::unique_ptr<iir::Stencil>
 ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
                               const std::unique_ptr<iir::Stencil>& stencilPtr,
-                              OptimizerContext& context) {
+                              const Options& options) {
   iir::Stencil& stencil = *stencilPtr;
 
   auto const& stageDAG = *stencil.getStageDependencyGraph();
@@ -101,7 +100,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
-  const int maxBoundaryExtent = context.getOptions().MaxHaloPoints;
+  const int maxBoundaryExtent = options.MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
     newStencil->insertChild(std::make_unique<iir::MultiStage>(metadata, loopOrder));
