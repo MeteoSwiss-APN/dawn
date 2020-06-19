@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(laplacian_driver LANGUAGES CXX)
 
 find_package(Dawn REQUIRED)
-find_package(GridTools 1.1.2 REQUIRED)
+find_package(GridTools 1.1.3 REQUIRED)
 
 add_executable(laplacian_driver laplacian_driver.cpp)
 target_compile_features(laplacian_driver PUBLIC cxx_std_14)

@@ -30,7 +30,7 @@ if(NOT GridTools_FOUND)
   set(GT_INSTALL_EXAMPLES OFF)
 
   FetchContent_Declare(GridTools
-    URL https://github.com/GridTools/gridtools/archive/v1.1.2.tar.gz
+    URL https://github.com/GridTools/gridtools/archive/v1.1.3.tar.gz
   )
 
   FetchContent_GetProperties(GridTools)
