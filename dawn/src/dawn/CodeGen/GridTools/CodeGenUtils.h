@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GRIDTOOLS_CODEGENUTILS_H
-#define DAWN_CODEGEN_GRIDTOOLS_CODEGENUTILS_H
+#pragma once
 
 #include "dawn/IIR/Stencil.h"
 #include <map>
@@ -35,5 +34,3 @@ struct CodeGenUtils {
 } // namespace gt
 } // namespace codegen
 } // namespace dawn
-
-#endif

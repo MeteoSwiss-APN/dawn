@@ -12,43 +12,24 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(protos IIR/IIR.proto)
+# Defines dawn_iir_proto_files
+include(proto/DawnIIR.cmake)
 
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES iir_proto_cpp_files
-  OUT_INCLUDE_DIRS iir_proto_include_dirs
-  PROTOS ${protos}
+  PROTOS ${dawn_iir_proto_files}
   INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PACKG IIR
   LANGUAGE cpp
 )
+set(iir_proto_header_files ${iir_proto_cpp_files})
+list(FILTER iir_proto_header_files INCLUDE REGEX ".+\\.h?h$")
+install(FILES ${iir_proto_header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/IIR/IIR)
 
-if(ENABLE_PYTHON)
-  # Generate python proto files
-  include(DawnProtobufGenerate)
-  dawn_protobuf_generate(
-    OUT_FILES iir_proto_python_files
-    PROTOS ${protos}
-    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    PACKG IIR
-    LANGUAGE python
-  )
-
-  set(output_dir ${PROJECT_SOURCE_DIR}/src/dawn4py/serialization/IIR)
-
-  string(REGEX REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${output_dir}
-    iir_proto_python_build_files "${iir_proto_python_files}")
-
-  add_custom_command(OUTPUT ${iir_proto_python_build_files}
-    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${output_dir}
-    DEPENDS ${iir_proto_python_files}
-  )
-endif()
-
-add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files} ${iir_proto_python_build_files})
+add_library(DawnIIRProto OBJECT ${iir_proto_cpp_files})
+target_compile_features(DawnIIRProto PUBLIC cxx_std_11)
 set_target_properties(DawnIIRProto PROPERTIES ${DAWN_TARGET_PROPERTIES})
 
 # Generated files need to be compiled with the protobuf headers and SIR headers
@@ -57,6 +38,7 @@ target_include_directories(DawnIIRProto
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
+# ... and linked to protobuf
 target_link_libraries(DawnIIRProto PUBLIC DawnSIRProto protobuf::libprotobuf)
 
 add_library(DawnIIR
@@ -74,6 +56,8 @@ add_library(DawnIIR
   ASTUtil.h
   ASTUtil.cpp
   ASTVisitor.h
+  ASTMatcher.cpp
+  ASTMatcher.h
   Accesses.cpp
   Accesses.h
   AccessUtils.cpp
@@ -109,6 +93,8 @@ add_library(DawnIIR
   IIR.h
   IIRNode.h
   IIRNodeIterator.h
+  LocalVariable.cpp
+  LocalVariable.h
   LoopOrder.cpp
   LoopOrder.h
   MultiInterval.cpp
@@ -127,10 +113,15 @@ add_library(DawnIIR
   StencilInstantiation.h
   StencilMetaInformation.cpp
   StencilMetaInformation.h
+  $<TARGET_OBJECTS:DawnIIRProto>
   )
 
 target_add_dawn_standard_props(DawnIIR)
 target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
+# The include path below is necessary for the C++ proto headers
+target_include_directories(DawnIIR
+  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/dawn/IIR>
+)
 
 # TODO add this if CLAW needs it (-> Matthias)
 # if(DAWN_JAVA)

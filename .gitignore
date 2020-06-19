@@ -24,3 +24,6 @@ _local_/*
 
 # Ignore python editable installs
 *.egg-info/
+
+# Ignore pip files
+pip-wheel-metadata/

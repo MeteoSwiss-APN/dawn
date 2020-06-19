@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_LOOPORDER_H
-#define DAWN_IIR_LOOPORDER_H
+#pragma once
 
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 namespace iir {
@@ -51,5 +51,3 @@ void increment(int& lev, LoopOrderKind order, int step);
 bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order);
 } // namespace iir
 } // namespace dawn
-
-#endif

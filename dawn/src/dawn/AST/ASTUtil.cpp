@@ -41,6 +41,10 @@ public:
       s->accept(*this);
   }
 
+  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   void visit(const std::shared_ptr<ExprStmt>& stmt) override {
     if(stmt->getExpr() == oldExpr_)
       stmt->setExpr(newExpr_);
@@ -244,7 +248,7 @@ enum class OpKind {
 /// @brief String to OpKind
 ///
 /// Note that we do not evaluate bit-wise operations and the modulo operator
-OpKind toOpKind(const char* op) {
+OpKind toOpKind(const std::string& op) {
   return StringSwitch<OpKind>(op)
       .Case("+", OpKind::Plus)
       .Case("-", OpKind::Minus)
@@ -273,7 +277,7 @@ static bool evalImpl(ResultType& result, ValueTypes... operands) {
 //
 // Unary operations
 //
-bool evalUnary(const char* opStr, double& result, double operand) {
+bool evalUnary(const std::string& opStr, double& result, double operand) {
   switch(toOpKind(opStr)) {
   case OpKind::Negate:
   case OpKind::Minus:
@@ -288,7 +292,7 @@ bool evalUnary(const char* opStr, double& result, double operand) {
 //
 // Binary operations
 //
-bool evalBinary(const char* opStr, double& result, double op1, double op2) {
+bool evalBinary(const std::string& opStr, double& result, double op1, double op2) {
   switch(toOpKind(opStr)) {
   case OpKind::Plus:
     return evalImpl<std::plus<double>>(result, op1, op2);
@@ -342,6 +346,10 @@ public:
   bool isValid() const { return valid_; }
 
   void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+    dawn_unreachable("cannot evaluate stmt");
+  }
+
+  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
@@ -490,33 +498,6 @@ bool evalExprAsInteger(const std::shared_ptr<Expr>& expr, int& result,
 bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
                        const std::unordered_map<std::string, double>& variableMap) {
   return evalExprImpl(expr, result, variableMap);
-}
-
-/// @brief helper to find all the fields in a statement
-class FieldFinder : public ASTVisitorForwarding {
-public:
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
-    auto fieldFromExpression = sir::Field(expr->getName());
-    auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
-    if(iter == allFields_.end())
-      allFields_.push_back(fieldFromExpression);
-    ASTVisitorForwarding::visit(expr);
-  }
-
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
-    stmt->getVerticalRegion()->Ast->accept(*this);
-  }
-
-  const std::vector<sir::Field>& getFields() const { return allFields_; }
-
-private:
-  std::vector<sir::Field> allFields_;
-};
-
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast) {
-  FieldFinder finder;
-  ast->accept(finder);
-  return finder.getFields();
 }
 
 } // namespace ast

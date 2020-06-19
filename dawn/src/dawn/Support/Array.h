@@ -12,12 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ARRAY_H
-#define DAWN_SUPPORT_ARRAY_H
+#pragma once
 
 #include "dawn/Support/HashCombine.h"
+
 #include <array>
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 
@@ -55,5 +56,3 @@ struct hash<dawn::Array3i> {
 };
 
 } // namespace std
-
-#endif

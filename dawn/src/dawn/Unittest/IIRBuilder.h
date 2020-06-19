@@ -12,9 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
-#ifndef DAWN_IIR_IIRBUILDER_H
-#define DAWN_IIR_IIRBUILDER_H
+#pragma once
 
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
@@ -45,7 +46,9 @@ enum class Op {
   lessEqual,
   logicalAnd,
   locigalOr,
-  logicalNot
+  logicalNot,
+  increment,
+  decrement
 };
 enum class AccessType { r, rw };
 enum class HOffsetType { withOffset, noOffset };
@@ -88,12 +91,20 @@ private:
       return "||";
     case Op::logicalNot:
       return "!";
+    case Op::increment:
+      return "++";
+    case Op::decrement:
+      return "--";
     }
     dawn_unreachable("Unreachable");
   }
 
 protected:
   struct Field {
+    int id;
+    std::string name;
+  };
+  struct GlobalVar {
     int id;
     std::string name;
   };
@@ -107,36 +118,53 @@ public:
   IIRBuilder(const ast::GridType gridType)
       : si_(std::make_shared<iir::StencilInstantiation>(gridType)) {}
 
-  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
+  template <typename T>
+  GlobalVar globalvar(std::string const& name, T&& v) {
+    DAWN_ASSERT(si_);
+    int accessID =
+        si_->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable, name);
+    auto&& global = sir::Global(std::forward<T>(v));
+    si_->getIIR()->insertGlobalVariable(name, std::move(global));
+    return {accessID, name};
+  }
+
+  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float,
+                    std::vector<std::shared_ptr<iir::Expr>>&& initList = {},
+                    std::optional<LocalVariableType> localVarType = std::nullopt);
 
   template <class TWeight>
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    ast::Expr::LocationType lhs_location,
-                                                    ast::Expr::LocationType rhs_location,
+                                                    const std::vector<ast::LocationType>& chain,
                                                     const std::vector<TWeight>&& weights) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
-    std::vector<sir::Value> vWeights;
+    std::vector<std::shared_ptr<ast::Expr>> vWeights;
     for(const auto& it : weights) {
-      vWeights.push_back(sir::Value(it));
+      vWeights.push_back(std::make_shared<ast::LiteralAccessExpr>(std::to_string(it),
+                                                                  Type::TypeInfo<TWeight>::Type));
     }
 
     auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
         toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}),
-        std::move(rhs), std::move(init), vWeights, lhs_location, rhs_location);
+        std::move(rhs), std::move(init), vWeights, chain);
     expr->setID(si_->nextUID());
 
     return expr;
   }
 
+  std::shared_ptr<iir::Expr>
+  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                         std::shared_ptr<iir::Expr>&& init,
+                         const std::vector<ast::LocationType>& chain,
+                         const std::vector<std::shared_ptr<iir::Expr>>&& weights);
+
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    ast::Expr::LocationType lhs_location,
-                                                    ast::Expr::LocationType rhs_location);
+                                                    const std::vector<ast::LocationType>& chain);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                        std::shared_ptr<iir::Expr>&& rhs, Op operation);
+                                        std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);
 
   std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs,
@@ -163,6 +191,8 @@ public:
 
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, ast::Offsets const& offset);
 
+  std::shared_ptr<iir::Expr> at(GlobalVar const& var);
+
   std::shared_ptr<iir::Expr> at(LocalVar const& var);
 
   std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
@@ -178,42 +208,53 @@ public:
                                     std::shared_ptr<iir::Stmt>&& caseThen,
                                     std::shared_ptr<iir::Stmt>&& caseElse = {nullptr});
 
+  std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
+                                           std::vector<ast::LocationType>&& chain);
+
+  std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
+                                           std::vector<ast::LocationType>&& chain);
+
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
-                                         Stmts&&... stmts) {
+  std::unique_ptr<iir::DoMethod> doMethod(iir::Interval interval, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
+    auto ret = std::make_unique<iir::DoMethod>(interval, si_->getMetaData());
     ret->setID(si_->nextUID());
     [[maybe_unused]] int x[] = {
         (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
-    computeAccesses(si_.get(), ret->getAST().getStatements());
+    computeAccesses(si_->getMetaData(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
   }
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
-                                         int offsetLow, int offsetHigh, Stmts&&... stmts) {
+  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                          Stmts&&... stmts) {
+    return doMethod(iir::Interval(s, e), stmts...);
+  }
+
+  template <typename... Stmts>
+  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+                                          int offsetLow, int offsetHigh, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e, offsetLow, offsetHigh),
                                                si_->getMetaData());
     ret->setID(si_->nextUID());
     [[maybe_unused]] int x[] = {
         (DAWN_ASSERT(stmts), ret->getAST().push_back(std::move(stmts)), 0)...};
-    computeAccesses(si_.get(), ret->getAST().getStatements());
+    computeAccesses(si_->getMetaData(), ret->getAST().getStatements());
     ret->updateLevel();
     return ret;
   }
 
   // specialized builder for the stage that accepts a location type
   template <typename... DoMethods>
-  std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
+  std::unique_ptr<iir::Stage> stage(ast::LocationType type, DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     ret->setLocationType(type);
-    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
   }
@@ -226,7 +267,22 @@ public:
     iir::Stage::IterationSpace iterationSpace;
     iterationSpace[direction] = interval;
     ret->setIterationSpace(iterationSpace);
-    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
+    return ret;
+  }
+
+  // specialized builder for the stage that accepts a global index
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(Interval intervalI, Interval intervalJ,
+                                    DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    iir::Stage::IterationSpace iterationSpace;
+    iterationSpace[0] = intervalI;
+    iterationSpace[1] = intervalJ;
+    ret->setIterationSpace(iterationSpace);
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
   }
@@ -261,7 +317,7 @@ public:
   }
 
   // generates the final instantiation context
-  dawn::codegen::stencilInstantiationContext build(std::string const& name,
+  std::shared_ptr<iir::StencilInstantiation> build(std::string const& name,
                                                    std::unique_ptr<iir::Stencil> stencil);
 
 protected:
@@ -270,14 +326,15 @@ protected:
 
 class UnstructuredIIRBuilder : public IIRBuilder {
 public:
-  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Triangular) {}
+  UnstructuredIIRBuilder() : IIRBuilder(ast::GridType::Unstructured) {}
   using IIRBuilder::at;
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access, HOffsetType hOffset,
                                 int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, HOffsetType hOffset, int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
-  Field field(std::string const& name, ast::Expr::LocationType location);
+  Field field(std::string const& name, ast::LocationType denseLocation);
+  Field field(std::string const& name, ast::NeighborChain sparseChain);
 };
 
 class CartesianIIRBuilder : public IIRBuilder {
@@ -289,8 +346,7 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
   Field field(std::string const& name, FieldType ft = FieldType::ijk);
+  Field tmpField(std::string const& name, FieldType ft = FieldType::ijk);
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

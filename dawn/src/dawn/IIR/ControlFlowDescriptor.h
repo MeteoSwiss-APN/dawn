@@ -11,8 +11,7 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#ifndef DAWN_IIR_CONTROLFLOWDESCRIPTOR_H
-#define DAWN_IIR_CONTROLFLOWDESCRIPTOR_H
+#pragma once
 
 #include "dawn/IIR/ASTStmt.h"
 #include <set>
@@ -51,5 +50,3 @@ public:
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

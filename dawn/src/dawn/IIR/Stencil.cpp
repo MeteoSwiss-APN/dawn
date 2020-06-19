@@ -19,8 +19,8 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 
 namespace dawn {
@@ -83,10 +83,6 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 
 json::json Stencil::FieldInfo::jsonDump() const {
   json::json node;
-
-  auto const& cartDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(Dimensions);
-  node["dim"] = format("[%i,%i,%i]", cartDimensions.I(), cartDimensions.J(), cartDimensions.K());
   node["field"] = field.jsonDump();
   node["IsTemporary"] = IsTemporary;
   return node;
@@ -132,7 +128,7 @@ void Stencil::updateFromChildren() {
 
     std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
     bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::StencilTemporary, accessID);
-    auto specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
+    auto specifiedDimension = metadata_.getFieldDimensions(accessID);
 
     derivedInfo_.fields_.emplace(
         std::make_pair(accessID, FieldInfo{isTemporary, fieldName, specifiedDimension, field}));
@@ -325,11 +321,11 @@ bool Stencil::compareDerivedInfo() const {
   }
   return equal;
 }
-void Stencil::setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG) {
-  derivedInfo_.stageDependencyGraph_ = stageDAG;
+void Stencil::setStageDependencyGraph(DependencyGraphStage&& stageDAG) {
+  derivedInfo_.stageDependencyGraph_ = std::move(stageDAG);
 }
 
-const std::shared_ptr<DependencyGraphStage>& Stencil::getStageDependencyGraph() const {
+const std::optional<DependencyGraphStage>& Stencil::getStageDependencyGraph() const {
   return derivedInfo_.stageDependencyGraph_;
 }
 

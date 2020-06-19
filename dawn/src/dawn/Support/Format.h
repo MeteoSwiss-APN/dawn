@@ -17,17 +17,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_FORMAT_H
-#define DAWN_SUPPORT_FORMAT_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 
 #define TINYFORMAT_ERROR(reason) DAWN_ASSERT_MSG(0, reason)
 #define TINYFORMAT_USE_VARIADIC_TEMPLATES
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#include <tinyformat/tinyformat.h>
-#pragma GCC diagnostic pop
+#include <tinyformat.h>
 
 namespace dawn {
 
@@ -46,5 +42,3 @@ namespace dawn {
 using tfm::format;
 
 } // namespace dawn
-
-#endif

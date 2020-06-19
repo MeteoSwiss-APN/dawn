@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_CACHE_H
-#define DAWN_IIR_CACHE_H
+#pragma once
 
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/HashCombine.h"
@@ -127,5 +126,3 @@ struct hash<dawn::iir::Cache> {
 };
 
 } // namespace std
-
-#endif

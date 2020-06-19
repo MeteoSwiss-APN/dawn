@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_DOMETHOD_H
-#define DAWN_IIR_DOMETHOD_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -28,7 +28,6 @@ namespace dawn {
 namespace iir {
 
 class Stage;
-class DependencyGraphAccesses;
 class StencilMetaInformation;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific
@@ -40,24 +39,18 @@ class DoMethod : public IIRNode<Stage, DoMethod, void> {
   long unsigned int id_;
 
   struct DerivedInfo {
-    DerivedInfo() : dependencyGraph_(nullptr) {}
-    DerivedInfo(DerivedInfo&&) = default;
-    DerivedInfo(const DerivedInfo&) = default;
-    DerivedInfo& operator=(DerivedInfo&&) = default;
-    DerivedInfo& operator=(const DerivedInfo&) = default;
-
     DerivedInfo clone() const;
 
     void clear();
 
     /// Declaration of the fields of this doMethod
     std::unordered_map<int, Field> fields_;
-    std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
+    std::optional<DependencyGraphAccesses> dependencyGraph_;
   };
 
   const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
-  iir::BlockStmt ast_;
+  std::shared_ptr<iir::BlockStmt> ast_;
 
 public:
   static constexpr const char* name = "DoMethod";
@@ -78,14 +71,14 @@ public:
   Interval& getInterval();
   const Interval& getInterval() const;
   inline unsigned long int getID() const { return id_; }
-  const std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph() const;
+  const std::optional<DependencyGraphAccesses>& getDependencyGraph() const;
   /// @}
 
   /// @name Setters
   /// @{
   void setInterval(Interval const& interval);
   void setID(const long unsigned int id) { id_ = id; }
-  void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
+  void setDependencyGraph(DependencyGraphAccesses&& DG);
   /// @}
 
   virtual void clearDerivedInfo() override;
@@ -113,6 +106,11 @@ public:
   /// The fields are computed during `DoMethod::update`.
   const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
 
+  /// @brief Get a map from field name to its dimensions for each field referenced in the DoMethod
+  ///
+  /// The fields are computed during `DoMethod::update`.
+  const std::unordered_map<std::string, sir::FieldDimensions> getFieldDimensionsByName() const;
+
   bool hasField(int accessID) const { return derivedInfo_.fields_.count(accessID); }
 
   /// @brief field getter
@@ -131,9 +129,10 @@ public:
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 
-  void setAST(iir::BlockStmt&& ast) { ast_ = std::move(ast); }
-  iir::BlockStmt const& getAST() const { return ast_; }
-  iir::BlockStmt& getAST() { return ast_; }
+  void setAST(std::shared_ptr<BlockStmt> ast) { ast_ = ast; }
+  iir::BlockStmt const& getAST() const { return *ast_; }
+  iir::BlockStmt& getAST() { return *ast_; }
+  std::shared_ptr<iir::BlockStmt> getASTPtr() { return ast_; }
 };
 
 } // namespace iir
@@ -148,5 +147,3 @@ auto iterateIIROverStmt(const RootNode& root) {
   return allStmts;
 }
 } // namespace dawn
-
-#endif

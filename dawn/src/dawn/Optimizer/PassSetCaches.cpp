@@ -17,8 +17,8 @@
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
 #include <optional>
 #include <set>
 #include <vector>
@@ -202,12 +202,9 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
             iir::Cache& cache =
                 MS.setCache(iir::Cache::CacheType::IJ, iir::Cache::IOPolicy::local, accessID);
 
-            if(context_.getOptions().ReportPassSetCaches) {
-              std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
-                        << msIdx << ": " << instantiation->getOriginalNameFromAccessID(accessID)
-                        << ":" << cache.getTypeAsString() << ":" << cache.getIOPolicyAsString()
-                        << std::endl;
-            }
+            DAWN_LOG(INFO) << instantiation->getName() << ": MS" << msIdx << ": "
+                           << instantiation->getOriginalNameFromAccessID(accessID) << ":"
+                           << cache.getTypeAsString() << ":" << cache.getIOPolicyAsString();
           }
 
           if(isOutput(field))
@@ -247,6 +244,35 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               (field.getIntend() == iir::Field::IntendKind::Input &&
                field.getExtents().isPointwise())))
             continue;
+
+          // If the Field about to be cached is in a stage with a global index
+          // it can in fact only be chached if all subsequent stages have compatible iteration
+          // spaces
+
+          // find first stage in which the field is used
+          int stageIter = 0;
+          for(const auto& stage : ms.getChildren()) {
+            if(stage->getFields().count(field.getAccessID()) && stage->hasIterationSpace()) {
+              break;
+            }
+            stageIter++;
+          }
+
+          // check if subsequent uses are compatible
+          auto firstUsageWithGlobalIndex = ms.getChildren().begin();
+          std::advance(firstUsageWithGlobalIndex, stageIter);
+          bool incompatibleIterationSpaces = false;
+          for(auto it = firstUsageWithGlobalIndex; it != ms.getChildren().end(); it++) {
+            bool stageUsesField = it->get()->getFields().count(field.getAccessID());
+            if(stageUsesField &&
+               !firstUsageWithGlobalIndex->get()->iterationSpaceCompatible(*it->get())) {
+              incompatibleIterationSpaces = true;
+              break;
+            }
+          }
+          if(incompatibleIterationSpaces) {
+            continue;
+          }
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
@@ -298,15 +324,11 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               ms.setCache(iir::Cache::CacheType::K, cacheCandidate.policy_, field.getAccessID(),
                           interval, enclosingAccessedInterval, cacheCandidate.window_);
 
-          if(context_.getOptions().ReportPassSetCaches) {
-            std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
-                      << MSIndex << ": "
-                      << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
-                      << cache.getTypeAsString() << ":" << cache.getIOPolicyAsString()
-                      << (cache.getWindow() ? (std::string(":") + cache.getWindow()->toString())
-                                            : "")
-                      << std::endl;
-          }
+          DAWN_LOG(INFO) << instantiation->getName() << ": MS" << MSIndex << ": "
+                         << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
+                         << cache.getTypeAsString() << ":" << cache.getIOPolicyAsString()
+                         << (cache.getWindow() ? (std::string(":") + cache.getWindow()->toString())
+                                               : "");
         }
       }
     }

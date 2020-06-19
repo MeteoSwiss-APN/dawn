@@ -26,6 +26,7 @@
 #include "llvm/ProfileData/InstrProf.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+
 #include <fstream>
 
 namespace gtclang {
@@ -61,24 +62,24 @@ using namespace gtclang::dsl;
 };
 
 struct NestableFunctions : public dawn::codegen::MemberFunction {
-  NestableFunctions(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s,
+  NestableFunctions(const std::string& type, const std::string& name, std::stringstream& s,
                     int il = 0)
       : MemberFunction(type, name, s, il) {}
 
-  NestableFunctions addFunction(const dawn::Twine& returntype, const dawn::Twine& name) {
+  NestableFunctions addFunction(const std::string& returntype, const std::string& name) {
     NestableFunctions nf(returntype, name, ss(), IndentLevel + 1);
     return nf;
   }
 
-  NestableFunctions addVerticalRegion(const dawn::Twine& min, const dawn::Twine& max) {
-    NestableFunctions nf(dawn::Twine::createNull(), "vertical_region", ss(), IndentLevel + 1);
+  NestableFunctions addVerticalRegion(const std::string& min, const std::string& max) {
+    NestableFunctions nf("", "vertical_region", ss(), IndentLevel + 1);
     nf.addArg(min).addArg(max);
     nf.startBody();
     return nf;
   }
 
-  NestableFunctions addIfStatement(const dawn::Twine& ifCondition) {
-    NestableFunctions ifStatement(dawn::Twine::createNull(), "if", ss(), IndentLevel + 1);
+  NestableFunctions addIfStatement(const std::string& ifCondition) {
+    NestableFunctions ifStatement("", "if", ss(), IndentLevel + 1);
     ifStatement.addArg(ifCondition);
     ifStatement.startBody();
     return ifStatement;
@@ -86,27 +87,27 @@ struct NestableFunctions : public dawn::codegen::MemberFunction {
 };
 
 struct VerticalRegion : public NestableFunctions {
-  VerticalRegion(const dawn::Twine& name, std::stringstream& s, int il = 0)
-      : NestableFunctions(dawn::Twine::createNull(), name, s, il) {}
+  VerticalRegion(const std::string& name, std::stringstream& s, int il = 0)
+      : NestableFunctions("", name, s, il) {}
 };
 
 struct StencilBase : public dawn::codegen::Structure {
-  StencilBase(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s)
-      : Structure(type.str().c_str(), name, s) {}
+  StencilBase(const std::string& type, const std::string& name, std::stringstream& s)
+      : Structure(type.c_str(), name, s) {}
 
-  Statement addStorage(const dawn::Twine& memberName) {
+  Statement addStorage(const std::string& memberName) {
     Statement member(ss(), IndentLevel + 1);
     member << "storage"
            << " " << memberName;
     return member;
   }
 
-  NestableFunctions addDoMethod(const dawn::Twine& type) {
+  NestableFunctions addDoMethod(const std::string& type) {
     NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
     return nf;
   }
 
-  Statement addOffset(const dawn::Twine& offsetName) {
+  Statement addOffset(const std::string& offsetName) {
     Statement member(ss(), IndentLevel + 1);
     member << "offset"
            << " " << offsetName;
@@ -115,10 +116,10 @@ struct StencilBase : public dawn::codegen::Structure {
 };
 
 struct StencilFunction : public StencilBase {
-  StencilFunction(const dawn::Twine& name, std::stringstream& s)
+  StencilFunction(const std::string& name, std::stringstream& s)
       : StencilBase("stencil_function", name, s) {}
 
-  virtual NestableFunctions addDoMethod(const dawn::Twine& type) {
+  virtual NestableFunctions addDoMethod(const std::string& type) {
     NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
     nf.startBody();
     return nf;
@@ -128,13 +129,13 @@ struct StencilFunction : public StencilBase {
 };
 
 struct Stencil : public StencilBase {
-  Stencil(const dawn::Twine& name, std::stringstream& s) : StencilBase("stencil", name, s) {}
+  Stencil(const std::string& name, std::stringstream& s) : StencilBase("stencil", name, s) {}
 };
 
 struct Globals : public StencilBase {
-  Globals(std::stringstream& s) : StencilBase("globals", dawn::Twine::createNull(), s) {}
-  virtual NestableFunctions addDoMethod(const dawn::Twine& type) = delete;
-  virtual Statement addOffset(const dawn::Twine& offsetName) = delete;
+  Globals(std::stringstream& s) : StencilBase("globals", "", s) {}
+  virtual NestableFunctions addDoMethod(const std::string& type) = delete;
+  virtual Statement addOffset(const std::string& offsetName) = delete;
   virtual ~Globals() {}
 };
 
@@ -183,20 +184,52 @@ private:
   std::string filename_;
 };
 
+class FieldFinder : public dawn::ast::ASTVisitorForwarding {
+public:
+  virtual void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) {
+    auto fieldFromExpression = dawn::sir::Field(
+        expr->getName(),
+        dawn::sir::FieldDimensions(
+            dawn::sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), true));
+
+    auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
+    if(iter == allFields_.end())
+      allFields_.push_back(fieldFromExpression);
+    dawn::ast::ASTVisitorForwarding::visit(expr);
+  }
+
+  virtual void visit(const std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>& stmt) {
+    stmt->getVerticalRegion()->Ast->accept(*this);
+  }
+
+  const std::vector<dawn::sir::Field>& getFields() const { return allFields_; }
+
+private:
+  std::vector<dawn::sir::Field> allFields_;
+};
+
+extern std::vector<dawn::sir::Field>
+getFieldFromStencilAST(const std::shared_ptr<dawn::ast::AST>& ast) {
+  FieldFinder finder;
+  ast->accept(finder);
+  return finder.getFields();
+}
+
 CompareResult ParsingComparison::compare(const ParsedString& ps,
                                          const std::shared_ptr<dawn::sir::Stmt>& stmt) {
   std::unique_ptr<dawn::SIR> test01SIR =
       std::make_unique<dawn::SIR>(dawn::ast::GridType::Cartesian);
   wrapStatementInStencil(test01SIR, stmt);
   test01SIR->Filename = "In Memory Generated SIR";
-  std::string localPath = "Frontend/" + UnittestEnvironment::getSingleton().testCaseName() +
-                          "/" + UnittestEnvironment::getSingleton().testName();
+  std::string localPath = "Frontend/" + UnittestEnvironment::getSingleton().testCaseName() + "/" +
+                          UnittestEnvironment::getSingleton().testName();
   std::string fileName =
       dawn::format("TestStencil_%i.cpp", UnittestEnvironment::getSingleton().getUniqueID());
   FileWriter writer(localPath, fileName);
   writer.addParsedString(ps);
-  auto out = GTClang::run({writer.getFileName(), "-fno-codegen"},
-                          UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
+  std::pair<bool, std::shared_ptr<dawn::SIR>> out =
+      GTClang::run({writer.getFileName(), "-fno-codegen"},
+                   UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
   if(!out.first) {
     return CompareResult{"could not parse file " + writer.getFileName(), false};
   }
@@ -232,7 +265,7 @@ void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
                 std::make_shared<sir::AST>(std::make_shared<sir::BlockStmt>(*blockstmt)),
                 std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
                 sir::VerticalRegion::LoopOrderKind::Forward))}));
-    auto allFields = dawn::sir::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
+    auto allFields = getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
     for(const auto& a : allFields) {
       sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
     }

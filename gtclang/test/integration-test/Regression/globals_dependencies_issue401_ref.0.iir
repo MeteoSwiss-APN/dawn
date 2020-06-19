@@ -6,9 +6,9 @@
    "29": "global"
   },
   "accessIDToType": {
+   "29": 0,
    "30": 6,
-   "31": 6,
-   "29": 0
+   "31": 6
   },
   "literalIDToName": {
    "-61": "0",
@@ -30,16 +30,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "30": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "31": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -83,7 +87,7 @@
   "boundaryCallToExtent": {},
   "allocatedFieldIDs": [],
   "stencilLocation": {
-   "Line": 26,
+   "Line": 29,
    "Column": 8
   },
   "stencilName": "copystencil"
@@ -129,13 +133,13 @@
                    ],
                    "negate_offset": false,
                    "loc": {
-                    "Line": 30,
+                    "Line": 33,
                     "Column": 52
                    },
                    "data": {
                     "accessID": 31
                    },
-                   "ID": 82
+                   "ID": 41
                   }
                  },
                  "op": "=",
@@ -146,13 +150,13 @@
                      "name": "global",
                      "is_external": true,
                      "loc": {
-                      "Line": 30,
+                      "Line": 33,
                       "Column": 64
                      },
                      "data": {
                       "accessID": 29
                      },
-                     "ID": 80
+                     "ID": 39
                     }
                    },
                    "op": "*",
@@ -173,31 +177,31 @@
                      ],
                      "negate_offset": false,
                      "loc": {
-                      "Line": 30,
+                      "Line": 33,
                       "Column": 73
                      },
                      "data": {
                       "accessID": 30
                      },
-                     "ID": 81
+                     "ID": 40
                     }
                    },
                    "loc": {
-                    "Line": 30,
+                    "Line": 33,
                     "Column": 64
                    },
-                   "ID": 79
+                   "ID": 38
                   }
                  },
                  "loc": {
-                  "Line": 30,
+                  "Line": 33,
                   "Column": 52
                  },
-                 "ID": 83
+                 "ID": 42
                 }
                },
                "loc": {
-                "Line": 30,
+                "Line": 33,
                 "Column": 52
                },
                "data": {
@@ -229,7 +233,7 @@
                  }
                 }
                },
-               "ID": 78
+               "ID": 43
               }
              }
             ],
@@ -238,7 +242,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 77
+            "ID": 66
            }
           },
           "doMethodID": 0,
@@ -250,7 +254,8 @@
           }
          }
         ],
-        "stageID": 65
+        "stageID": 65,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
@@ -294,13 +299,13 @@
                    ],
                    "negate_offset": false,
                    "loc": {
-                    "Line": 32,
+                    "Line": 35,
                     "Column": 52
                    },
                    "data": {
                     "accessID": 31
                    },
-                   "ID": 89
+                   "ID": 53
                   }
                  },
                  "op": "=",
@@ -311,13 +316,13 @@
                      "name": "global",
                      "is_external": true,
                      "loc": {
-                      "Line": 32,
+                      "Line": 35,
                       "Column": 64
                      },
                      "data": {
                       "accessID": 29
                      },
-                     "ID": 87
+                     "ID": 51
                     }
                    },
                    "op": "*",
@@ -338,31 +343,31 @@
                      ],
                      "negate_offset": false,
                      "loc": {
-                      "Line": 32,
+                      "Line": 35,
                       "Column": 73
                      },
                      "data": {
                       "accessID": 30
                      },
-                     "ID": 88
+                     "ID": 52
                     }
                    },
                    "loc": {
-                    "Line": 32,
+                    "Line": 35,
                     "Column": 64
                    },
-                   "ID": 86
+                   "ID": 50
                   }
                  },
                  "loc": {
-                  "Line": 32,
+                  "Line": 35,
                   "Column": 52
                  },
-                 "ID": 90
+                 "ID": 54
                 }
                },
                "loc": {
-                "Line": 32,
+                "Line": 35,
                 "Column": 52
                },
                "data": {
@@ -394,7 +399,7 @@
                  }
                 }
                },
-               "ID": 85
+               "ID": 55
               }
              }
             ],
@@ -403,7 +408,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 84
+            "ID": 72
            }
           },
           "doMethodID": 1,
@@ -415,7 +420,8 @@
           }
          }
         ],
-        "stageID": 71
+        "stageID": 71,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
@@ -441,7 +447,7 @@
            "name": "global",
            "is_external": true,
            "loc": {
-            "Line": 29,
+            "Line": 32,
             "Column": 8
            },
            "data": {
@@ -458,7 +464,7 @@
             "type_id": "Integer"
            },
            "loc": {
-            "Line": 29,
+            "Line": 32,
             "Column": 18
            },
            "data": {
@@ -468,14 +474,14 @@
           }
          },
          "loc": {
-          "Line": 29,
+          "Line": 32,
           "Column": 8
          },
          "ID": 34
         }
        },
        "loc": {
-        "Line": 29,
+        "Line": 32,
         "Column": 8
        },
        "data": {},
@@ -512,7 +518,7 @@
               "name": "global",
               "is_external": true,
               "loc": {
-               "Line": 31,
+               "Line": 34,
                "Column": 7
               },
               "data": {
@@ -529,7 +535,7 @@
                "type_id": "Integer"
               },
               "loc": {
-               "Line": 31,
+               "Line": 34,
                "Column": 16
               },
               "data": {
@@ -539,14 +545,14 @@
              }
             },
             "loc": {
-             "Line": 31,
+             "Line": 34,
              "Column": 7
             },
             "ID": 48
            }
           },
           "loc": {
-           "Line": 31,
+           "Line": 34,
            "Column": 7
           },
           "data": {},
@@ -573,7 +579,7 @@
         }
        ],
        "loc": {
-        "Line": 29,
+        "Line": 32,
         "Column": 21
        },
        "data": {},
@@ -581,7 +587,7 @@
       }
      },
      "loc": {
-      "Line": 29,
+      "Line": 32,
       "Column": 5
      },
      "data": {},
@@ -591,5 +597,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "/Users/johannd/Code/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }

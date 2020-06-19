@@ -13,20 +13,43 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 
 namespace dawn {
+
+namespace {
+sir::HorizontalFieldDimension
+getHorizontalFieldDimensionFromVar(iir::StencilInstantiation const* instantiation, int accessID) {
+  auto cartesian = instantiation->getIIR()->getGridType() == ast::GridType::Cartesian;
+  if(cartesian) {
+    return sir::HorizontalFieldDimension(ast::cartesian, {true, true});
+  } else {
+    auto locType =
+        instantiation->getMetaData().getLocalVariableDataFromAccessID(accessID).getLocationType();
+    return sir::HorizontalFieldDimension(ast::unstructured, locType);
+  }
+}
+} // namespace
+
 void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiation,
                                           iir::Stencil* stencil, int accessID,
                                           const iir::Stencil::Lifetime& lifetime,
                                           iir::TemporaryScope temporaryScope) {
   std::string varname = instantiation->getMetaData().getFieldNameFromAccessID(accessID);
+
+  // Figure out dimensions
+  sir::FieldDimensions fieldDims =
+      sir::FieldDimensions{getHorizontalFieldDimensionFromVar(instantiation, accessID), true};
+
+  // Compute name of field
   std::string fieldname = iir::InstantiationHelper::makeTemporaryFieldname(
       iir::InstantiationHelper::extractLocalVariablename(varname), accessID);
 
@@ -81,9 +104,11 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
   }
-  // Register the field
+
+  // Register the field in the metadata
   instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::StencilTemporary, accessID,
                                                   fieldname);
+  instantiation->getMetaData().setFieldDimensions(accessID, std::move(fieldDims));
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
@@ -132,10 +157,12 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   DAWN_ASSERT_MSG(assignmentExpr,
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
-  // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<iir::Stmt> varDeclStmt =
-      iir::makeVarDeclStmt(Type(BuiltinTypeID::Float), varname, 0, "=",
-                           std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
+  // Remove the field
+  instantiation->getMetaData().removeAccessID(AccessID);
+
+  // Create the new `VarDeclStmt` which will replace the old `ExprStmt` and register the variable
+  std::shared_ptr<iir::Stmt> varDeclStmt = instantiation->getMetaData().declareVar(
+      true, varname, Type(BuiltinTypeID::Float), assignmentExpr->getRight(), AccessID);
 
   // Replace the statement
   varDeclStmt->getData<iir::IIRStmtData>().StackTrace =
@@ -145,13 +172,6 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
       oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
   blockStmt.replaceChildren(oldStatement, varDeclStmt);
-
-  // Remove the field
-  instantiation->getMetaData().removeAccessID(AccessID);
-
-  // Register the variable
-  instantiation->getMetaData().addAccessIDNamePair(AccessID, varname);
-  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

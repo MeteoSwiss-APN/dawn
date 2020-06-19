@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_MULTISTAGE_H
-#define DAWN_IIR_MULTISTAGE_H
+#pragma once
 
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNode.h"
@@ -118,11 +117,10 @@ public:
 
   /// @brief Get the dependency graph of the multi-stage incorporating those stages whose extended
   /// interval overlaps with `interval`
-  std::shared_ptr<DependencyGraphAccesses>
-  getDependencyGraphOfInterval(const Interval& interval) const;
+  DependencyGraphAccesses getDependencyGraphOfInterval(const Interval& interval) const;
 
   /// @brief Get the dependency graph of the multi-stage incorporating all stages
-  std::shared_ptr<DependencyGraphAccesses> getDependencyGraphOfAxis() const;
+  DependencyGraphAccesses getDependencyGraphOfAxis() const;
 
   /// @brief Set a cache
   iir::Cache& setCache(iir::Cache::CacheType type, iir::Cache::IOPolicy policy, int AccessID,
@@ -203,5 +201,3 @@ public:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

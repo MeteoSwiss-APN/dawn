@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_EXTENTS_H
-#define DAWN_IIR_EXTENTS_H
+#pragma once
 
 #include "LoopOrder.h"
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 
 #include <array>
@@ -173,6 +173,9 @@ public:
   bool isPointwise() const;
   void limit(HorizontalExtent const& other);
 
+  bool hasType() const;
+  ast::GridType getType() const;
+
 private:
   std::unique_ptr<HorizontalExtentImpl> impl_;
 };
@@ -185,8 +188,8 @@ template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
   using PlainT = std::remove_reference_t<T>;
   static_assert(std::is_base_of_v<HorizontalExtentImpl, PlainT>,
-                "Can only be casted to a valid horizontal extent implementation");
-  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+                "Can only be cast to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be cast to const");
   static PlainT nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
@@ -339,5 +342,3 @@ struct hash<dawn::iir::Extents> {
 };
 
 } // namespace std
-
-#endif

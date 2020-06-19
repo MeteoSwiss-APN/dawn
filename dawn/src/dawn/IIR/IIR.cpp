@@ -21,7 +21,6 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 
 namespace dawn {
@@ -38,7 +37,7 @@ void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields
       Stencil::FieldInfo dField = destinationFields.at(fieldPair.first);
 
       DAWN_ASSERT(dField.Name == sField.Name);
-      DAWN_ASSERT(dField.Dimensions == sField.Dimensions);
+      DAWN_ASSERT(dField.field.getFieldDimensions() == sField.field.getFieldDimensions());
       DAWN_ASSERT(dField.IsTemporary == sField.IsTemporary);
 
       mergeField(sField.field, dField.field);

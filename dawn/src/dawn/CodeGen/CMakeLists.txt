@@ -50,6 +50,14 @@ add_library(DawnCodeGen
   Cuda/ASTStencilFunctionParamVisitor.h
   Cuda/MSCodeGen.cpp
   Cuda/MSCodeGen.h
+  Cuda-ico/ASTStencilBody.h
+  Cuda-ico/ASTStencilBody.cpp
+  Cuda-ico/CudaIcoCodeGen.h
+  Cuda-ico/CudaIcoCodeGen.cpp
+  Cuda-ico/LocToStringUtils.h
+  Cuda-ico/LocToStringUtils.cpp
+  Driver.cpp
+  Driver.h
   GridTools/ASTStencilBody.cpp
   GridTools/ASTStencilBody.h
   GridTools/ASTStencilDesc.cpp
@@ -58,6 +66,8 @@ add_library(DawnCodeGen
   GridTools/CodeGenUtils.h
   GridTools/GTCodeGen.cpp
   GridTools/GTCodeGen.h
+  Options.h
+  Options.inc
   StencilFunctionAsBCGenerator.cpp
   StencilFunctionAsBCGenerator.h
   TranslationUnit.cpp
@@ -65,4 +75,4 @@ add_library(DawnCodeGen
 )
 
 target_add_dawn_standard_props(DawnCodeGen)
-target_link_libraries(DawnCodeGen PUBLIC DawnSupport DawnIIR)
+target_link_libraries(DawnCodeGen PUBLIC DawnSerialization DawnSupport DawnIIR)

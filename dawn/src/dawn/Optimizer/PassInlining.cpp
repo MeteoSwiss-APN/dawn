@@ -21,9 +21,9 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
-#include <iostream>
+
 #include <stack>
 #include <unordered_map>
 #include <vector>
@@ -98,6 +98,10 @@ public:
     scopeDepth_--;
   }
 
+  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   void appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
     stmt->getData<iir::IIRStmtData>().StackTrace = oldStmt_->getData<iir::IIRStmtData>().StackTrace;
     if(scopeDepth_ == 1) {
@@ -117,23 +121,21 @@ public:
     if(AccessIDOfCaller_ == 0) {
       // We are *not* called within an arugment list of a stencil function, meaning we can store the
       // return value in a local variable.
-      int AccessID = instantiation_->nextUID();
-      auto returnVarName = iir::InstantiationHelper::makeLocalVariablename(
-          curStencilFunctioninstantiation_->getName(), AccessID);
 
-      newExpr_ = std::make_shared<iir::VarAccessExpr>(returnVarName);
-      auto newStmt =
-          iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float, CVQualifier::Const), returnVarName,
-                               0, "=", std::vector<std::shared_ptr<iir::Expr>>{stmt->getExpr()});
+      // Declare and register the variable
+      const bool keepVarName = false; // We want the full name (completed with access ID)
+      auto newStmt = metadata_.declareVar(keepVarName, curStencilFunctioninstantiation_->getName(),
+                                          dawn::Type(BuiltinTypeID::Float, CVQualifier::Const),
+                                          stmt->getExpr());
+      // Add it to the AST
       appendNewStatement(newStmt);
 
-      // Register the variable
-      metadata_.addAccessIDNamePair(AccessID, returnVarName);
-      newStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(AccessID);
-      // TODO recheck this
-      std::dynamic_pointer_cast<iir::VarAccessExpr>(newExpr_)
-          ->getData<iir::IIRAccessExprData>()
-          .AccessID = std::make_optional(AccessID);
+      // Set the access ID to the access expression
+      auto varAccessExpr = std::make_shared<iir::VarAccessExpr>(newStmt->getName());
+      varAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
+          std::make_optional(iir::getAccessID(newStmt));
+
+      newExpr_ = varAccessExpr;
 
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
@@ -147,8 +149,21 @@ public:
       appendNewStatement(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
+
+      // First figure out the dimensions
+      // TODO sparse_dim: Should be supported: should use same code used for checks on correct
+      // dimensionality in statements.
+      if(instantiation_->getIIR()->getGridType() != ast::GridType::Cartesian)
+        dawn_unreachable(
+            "Currently promotion to temporary field is not supported for unstructured grids.");
+      sir::FieldDimensions fieldDims{sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                                     true};
+      // Register the temporary in the metadata
       metadata_.insertAccessOfType(iir::FieldAccessType::StencilTemporary, AccessIDOfCaller_,
                                    returnFieldName);
+      metadata_.setFieldDimensions(AccessIDOfCaller_, std::move(fieldDims));
+
+      // Update the access expression with the access id of the field
       std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
           ->getData<iir::IIRAccessExprData>()
           .AccessID = std::make_optional(AccessIDOfCaller_);
@@ -171,6 +186,7 @@ public:
     int AccessID = iir::getAccessID(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     metadata_.addAccessIDNamePair(AccessID, name);
+    metadata_.addAccessIDToLocalVariableDataPair(AccessID, iir::LocalVariableData{});
 
     // Push back the statement and move on
     appendNewStatement(stmt);
@@ -464,13 +480,10 @@ tryInlineStencilFunction(PassInlining::InlineStrategy strategy,
 
 } // anonymous namespace
 
-PassInlining::PassInlining(OptimizerContext& context, bool activate, InlineStrategy strategy)
-    : Pass(context, "PassInlining", true), activate_(activate), strategy_(strategy) {}
+PassInlining::PassInlining(OptimizerContext& context, InlineStrategy strategy)
+    : Pass(context, "PassInlining", true), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-
-  if(!activate_)
-    return true;
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
@@ -485,7 +498,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
         if(inliner.inlineCandiatesFound()) {
           auto& newStmtList = inliner.getNewStatements();
           // Compute the accesses of the new statements
-          computeAccesses(stencilInstantiation.get(), newStmtList);
+          computeAccesses(stencilInstantiation->getMetaData(), newStmtList);
           // Erase the old stmt ...
           stmtIt = doMethod->getAST().erase(stmtIt);
 

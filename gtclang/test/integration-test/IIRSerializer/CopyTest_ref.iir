@@ -5,8 +5,8 @@
    "10": "field_b"
   },
   "accessIDToType": {
-   "10": 6,
-   "9": 6
+   "9": 6,
+   "10": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -23,16 +23,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "9": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "10": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -61,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "CopyTest"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -104,7 +108,7 @@
                    "data": {
                     "accessID": 9
                    },
-                   "ID": 27
+                   "ID": 14
                   }
                  },
                  "op": "=",
@@ -131,14 +135,14 @@
                    "data": {
                     "accessID": 10
                    },
-                   "ID": 26
+                   "ID": 13
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 28
+                 "ID": 15
                 }
                },
                "loc": {
@@ -167,7 +171,7 @@
                  }
                 }
                },
-               "ID": 25
+               "ID": 16
               }
              }
             ],
@@ -176,7 +180,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 24
+            "ID": 22
            }
           },
           "doMethodID": 0,
@@ -188,7 +192,8 @@
           }
          }
         ],
-        "stageID": 21
+        "stageID": 21,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
@@ -224,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "CopyTest.cpp"
 }

@@ -29,7 +29,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <limits>
 #include <memory>
 
@@ -56,22 +56,24 @@ public:
   }
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
     auto data = expr->getData<iir::IIRAccessExprData>();
-    std::string realName = metadata_.getNameFromAccessID(data.AccessID.value());
+    int accessID = *data.AccessID;
+    std::string realName = metadata_.getNameFromAccessID(accessID);
     expr->setName(realName);
   }
 };
 } // namespace
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
-      metaData_(metaData), ast_{std::make_unique<iir::IIRStmtData>()} {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData),
+      ast_(std::make_shared<BlockStmt>(std::make_unique<iir::IIRStmtData>())) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
-  cloneMS->ast_ = iir::BlockStmt{ast_};
+  cloneMS->ast_ = std::make_shared<BlockStmt>(*ast_.get());
+
   return cloneMS;
 }
 
@@ -79,8 +81,8 @@ Interval& DoMethod::getInterval() { return interval_; }
 
 const Interval& DoMethod::getInterval() const { return interval_; }
 
-void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG) {
-  derivedInfo_.dependencyGraph_ = DG;
+void DoMethod::setDependencyGraph(DependencyGraphAccesses&& DG) {
+  derivedInfo_.dependencyGraph_ = std::move(DG);
 }
 
 std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
@@ -117,14 +119,14 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
 
 void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
-const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
+const std::optional<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return derivedInfo_.dependencyGraph_;
 }
 
 DoMethod::DerivedInfo DoMethod::DerivedInfo::clone() const {
   DerivedInfo clone;
   clone.fields_ = fields_;
-  clone.dependencyGraph_ = dependencyGraph_ ? dependencyGraph_->clone() : nullptr;
+  clone.dependencyGraph_ = dependencyGraph_;
   return clone;
 }
 
@@ -191,6 +193,16 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   return node;
 }
 
+const std::unordered_map<std::string, sir::FieldDimensions>
+DoMethod::getFieldDimensionsByName() const {
+  std::unordered_map<std::string, sir::FieldDimensions> fieldDimensionsByName;
+  for(const auto& it : getFields()) {
+    fieldDimensionsByName.insert(
+        {metaData_.getFieldNameFromAccessID(it.first), it.second.getFieldDimensions()});
+  }
+  return fieldDimensionsByName;
+}
+
 void DoMethod::updateLevel() {
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
@@ -221,14 +233,9 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, getInterval(),
-                                       metaData_.getLocationTypeFromAccessID(AccessID));
-      } else {
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, getInterval());
-      }
+      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                     extents, getInterval(),
+                                     metaData_.getFieldDimensions(AccessID));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -240,14 +247,8 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, getInterval(),
-                                      metaData_.getLocationTypeFromAccessID(AccessID));
-      } else {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, getInterval());
-      }
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
+                                    getInterval(), metaData_.getFieldDimensions(AccessID));
     }
   }
 

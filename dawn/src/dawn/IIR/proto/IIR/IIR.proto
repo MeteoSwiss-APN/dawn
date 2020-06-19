@@ -77,7 +77,9 @@ message DoMethod {
 message Stage {
     repeated DoMethod doMethods = 1;
     int32 stageID = 2;
-
+    dawn.proto.statements.Interval i_range = 3; // Global index space in the I dimension
+    dawn.proto.statements.Interval j_range = 4; // Global index space in the J dimension
+    dawn.proto.enums.LocationType locationType = 5;
 }
 
 // @brief The Protobuf description of all the required members to describe a MultiStage of the IIR
@@ -216,7 +218,7 @@ message StencilMetaInfo {
     map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 9;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 10;
+    map<int32, dawn.proto.statements.FieldDimensions> fieldIDtoDimensions = 10;
 
     // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> idToStencilCall = 11;

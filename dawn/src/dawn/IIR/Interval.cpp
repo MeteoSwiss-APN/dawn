@@ -25,7 +25,6 @@
 
 #include "dawn/IIR/Interval.h"
 #include <algorithm>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <unordered_set>
@@ -61,6 +60,8 @@ std::string Interval::toStringGen() const {
 
   return ss.str();
 }
+
+Interval::operator std::string() const { return toString(); }
 
 std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   auto printLevel = [&](int level, int offset) -> void {

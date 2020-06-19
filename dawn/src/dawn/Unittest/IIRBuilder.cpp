@@ -12,10 +12,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 //
+// TODO there are death tests which rely on the following code to die, needs refactoring
+#include "dawn/AST/LocationType.h"
+#ifdef NDEBUG
+#undef NDEBUG
+#define HAD_NDEBUG
+#endif
+#include "dawn/Support/Assert.h"
+#ifdef HAD_NDEBUG
+#define NDEBUG
+#undef HAD_NDEBUG
+#endif
+
 #include "IIRBuilder.h"
 
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
+#include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 namespace iir {
@@ -41,13 +57,13 @@ Array3i asArray(FieldType ft) {
 }
 } // namespace
 
-dawn::codegen::stencilInstantiationContext
-IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil) {
+std::shared_ptr<iir::StencilInstantiation>
+IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencilIIR) {
   DAWN_ASSERT(si_);
   // setup the whole stencil instantiation
-  auto stencil_id = stencil->getStencilID();
+  auto stencil_id = stencilIIR->getStencilID();
   si_->getMetaData().setStencilName(name);
-  si_->getIIR()->insertChild(std::move(stencil), si_->getIIR());
+  si_->getIIR()->insertChild(std::move(stencilIIR), si_->getIIR());
 
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencil_id));
@@ -63,35 +79,56 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   }
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
+    iir::Stage& stageIIR = *stagePtr;
+    for(const auto& doMethodIIR : stageIIR.getChildren()) {
+      doMethodIIR->update(iir::NodeUpdateType::level);
     }
-    stage.update(iir::NodeUpdateType::level);
+    stageIIR.update(iir::NodeUpdateType::level);
   }
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
     stagePtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
   // create stencil instantiation context
-  dawn::DiagnosticsEngine diagnostics;
   auto optimizer = std::make_unique<dawn::OptimizerContext>(
-      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
+      dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
-  dawn::codegen::stencilInstantiationContext map;
-  map[new_si->getName()] = std::move(new_si);
+  if(new_si->getIIR()->getGridType() == ast::GridType::Unstructured) {
+    auto [checkResultDimensions, errorLocDimension] =
+        UnstructuredDimensionChecker::checkDimensionsConsistency(*new_si->getIIR().get(),
+                                                                 new_si->getMetaData());
+    DAWN_ASSERT_MSG(checkResultDimensions, "Dimensions consistency check failed.");
+    auto [checkResultWeights, errorLocWeights] =
+        WeightChecker::CheckWeights(*new_si->getIIR().get(), new_si->getMetaData());
+    DAWN_ASSERT_MSG(checkResultWeights, "Found invalid weights");
+  }
+  DAWN_ASSERT(GridTypeChecker::checkGridTypeConsistency(*new_si->getIIR().get()));
 
-  return map;
+  dawn::codegen::StencilInstantiationContext map;
+  return new_si;
 }
 
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
-    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
-    ast::Expr::LocationType lhs_location, ast::Expr::LocationType rhs_location) {
+std::shared_ptr<iir::Expr>
+IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                   std::shared_ptr<iir::Expr>&& init,
+                                   const std::vector<ast::LocationType>& chain) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), lhs_location, rhs_location);
+      std::move(init), chain);
+  expr->setID(si_->nextUID());
+  return expr;
+}
+
+std::shared_ptr<iir::Expr>
+IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                   std::shared_ptr<iir::Expr>&& init,
+                                   const std::vector<ast::LocationType>& chain,
+                                   const std::vector<std::shared_ptr<iir::Expr>>&& weights) {
+  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+      toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
+      std::move(init), move(weights), chain);
   expr->setID(si_->nextUID());
   return expr;
 }
@@ -111,7 +148,8 @@ std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& l
 std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation) {
   DAWN_ASSERT(si_);
   auto ret = std::make_shared<iir::UnaryOperator>(
-      std::move(expr), toStr(operation, {Op::plus, Op::minus, Op::logicalNot}));
+      std::move(expr),
+      toStr(operation, {Op::plus, Op::minus, Op::increment, Op::decrement, Op::logicalNot}));
   ret->setID(si_->nextUID());
   return ret;
 }
@@ -133,10 +171,15 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
+IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID dataType,
+                                          std::vector<std::shared_ptr<iir::Expr>>&& initList,
+                                          std::optional<LocalVariableType> localVarType) {
   DAWN_ASSERT(si_);
-  auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::vector<std::shared_ptr<Expr>>{});
+  auto iirStmt = makeVarDeclStmt(Type{dataType}, name, 0, "=", std::move(initList));
   int id = si_->getMetaData().addStmt(true, iirStmt);
+  if(localVarType.has_value()) {
+    si_->getMetaData().getLocalVariableDataFromAccessID(id).setType(*localVarType);
+  }
   return {id, name, iirStmt};
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
@@ -146,6 +189,14 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
   expr->setID(si_->nextUID());
 
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
+  return expr;
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::GlobalVar const& var) {
+  DAWN_ASSERT(si_);
+  auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
+  expr->setIsExternal(true);
+  expr->setID(si_->nextUID());
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
@@ -167,6 +218,20 @@ std::shared_ptr<iir::Stmt> IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond,
   auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen), std::move(caseElse));
   return stmt;
 }
+std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
+                                                     std::vector<ast::LocationType>&& chain) {
+  DAWN_ASSERT(si_);
+  auto stmt = iir::makeLoopStmt(std::move(chain), std::move(body));
+  return stmt;
+}
+
+std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
+                                                     std::vector<ast::LocationType>&& chain) {
+  DAWN_ASSERT(si_);
+  auto bStmt = iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{body});
+  auto stmt = iir::makeLoopStmt(std::move(chain), std::move(bStmt));
+  return stmt;
+}
 
 std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
@@ -174,13 +239,28 @@ std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   return var.decl;
 }
 
-IIRBuilder::Field CartesianIIRBuilder::field(std::string const& name, FieldType ft) {
+IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
-  sir::FieldDimension dimensions(
-      ast::cartesian, {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1, fieldMaskArray[2] == 1});
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, dimensions);
+  sir::FieldDimensions dimensions(
+      sir::HorizontalFieldDimension{ast::cartesian,
+                                    {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
+      fieldMaskArray[2] == 1);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, std::move(dimensions));
   return {id, name};
+}
+
+IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldType ft) {
+  DAWN_ASSERT(si_);
+  auto fieldMaskArray = asArray(ft);
+  sir::FieldDimensions dimensions(
+      sir::HorizontalFieldDimension{ast::cartesian,
+                                    {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
+      fieldMaskArray[2] == 1);
+  int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name,
+                                          std::move(dimensions));
+  std::string newName = si_->getMetaData().getFieldNameFromAccessID(id);
+  return {id, newName};
 }
 
 std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {
@@ -196,11 +276,20 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::Expr::LocationType location) {
+                                                ast::LocationType location) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name,
-                                       sir::FieldDimension(ast::cartesian, {true, true, true}),
-                                       location);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::APIField, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, true));
+  return {id, name};
+}
+
+IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
+                                                ast::NeighborChain sparseChain) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::APIField, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, true));
   return {id, name};
 }
 

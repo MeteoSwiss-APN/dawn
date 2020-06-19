@@ -15,44 +15,44 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GTClangASTConsumer.h"
-#include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/AST/GridType.h"
+#include "dawn/CodeGen/Driver.h"
+#include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/Compiler/Driver.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Support/Config.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
+#include "dawn/Support/Logger.h"
 #include "gtclang/Frontend/ClangFormat.h"
+#include "gtclang/Frontend/Diagnostics.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "gtclang/Frontend/GTClangContext.h"
-#include "gtclang/Frontend/GlobalVariableParser.h"
-#include "gtclang/Frontend/StencilParser.h"
 #include "gtclang/Support/ClangCompat/FileSystem.h"
 #include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
 #include "gtclang/Support/Config.h"
 #include "gtclang/Support/FileUtil.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Support/StringUtil.h"
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/FileManager.h"
-#include "clang/Basic/TokenKinds.h"
-#include "clang/Basic/Version.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
-#include "llvm/ADT/StringSwitch.h"
-#include "llvm/Support/FileSystem.h"
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_os_ostream.h"
+#include "llvm/Support/raw_ostream.h"
+
+#include <algorithm>
 #include <cstdio>
 #include <ctime>
-#include <iostream>
 #include <memory>
-#include <system_error>
+#include <string>
 
 namespace gtclang {
+
+namespace {
 
 /// @brief Get current time-stamp
 static const std::string currentDateTime() {
@@ -62,15 +62,7 @@ static const std::string currentDateTime() {
   return buf;
 }
 
-/// @brief Extract the DAWN options from the GTClang options
-static std::unique_ptr<dawn::Options> makeDAWNOptions(const Options& options) {
-  auto DAWNOptions = std::make_unique<dawn::Options>();
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  DAWNOptions->NAME = options.NAME;
-#include "dawn/Compiler/Options.inc"
-#undef OPT
-  return DAWNOptions;
-}
+} // anonymous namespace
 
 GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, const std::string& file,
                                        GTClangASTAction* parentAction)
@@ -98,7 +90,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   DAWN_LOG(INFO) << "Done parsing translation unit";
 
   if(context_->getASTContext().getDiagnostics().hasErrorOccurred()) {
-    DAWN_LOG(INFO) << "Erros occurred. Aborting";
+    DAWN_LOG(INFO) << "Errors occurred. Aborting";
     return;
   }
 
@@ -126,62 +118,121 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   SIR->GlobalVariableMap = globalsParser.getGlobalVariableMap();
 
   if(context_->getOptions().DumpSIR) {
-    SIR->dump();
+    SIR->dump(std::cout);
   }
 
   parentAction_->setSIR(SIR);
 
-  // Compile the SIR to GridTools
-  dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()).get());
-  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit = Compiler.compile(SIR);
-
-  // Report diagnostics from Dawn
-  if(Compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diags : Compiler.getDiagnostics().getQueue()) {
-      context_->getDiagnostics().report(*diags);
-    }
-  }
-
-  if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
-    DAWN_LOG(INFO) << "Errors in Dawn. Aborting";
+  // Return early if not using dawn (gtc-parse)
+  if(!context_->useDawn())
     return;
+
+  // Compile the SIR using Dawn
+  std::list<dawn::PassGroup> passGroup;
+
+  if(context_->getOptions().SSA)
+    passGroup.push_back(dawn::PassGroup::SSA);
+
+  if(context_->getOptions().PrintStencilGraph)
+    passGroup.push_back(dawn::PassGroup::PrintStencilGraph);
+
+  if(context_->getOptions().SetStageName || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::SetStageName);
+
+  if(context_->getOptions().StageReordering || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::StageReordering);
+
+  if(context_->getOptions().MergeStages || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::StageMerger);
+
+  if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
+                 [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
+                   return stencilPtr->Attributes.has(dawn::sir::Attr::Kind::MergeTemporaries);
+                 }) ||
+     context_->getOptions().TemporaryMerger) {
+    passGroup.push_back(dawn::PassGroup::TemporaryMerger);
   }
+
+  if(context_->getOptions().Inlining)
+    passGroup.push_back(dawn::PassGroup::Inlining);
+
+  if(context_->getOptions().IntervalPartitioning)
+    passGroup.push_back(dawn::PassGroup::IntervalPartitioning);
+
+  if(context_->getOptions().TmpToStencilFunction)
+    passGroup.push_back(dawn::PassGroup::TmpToStencilFunction);
+
+  if(context_->getOptions().SetNonTempCaches)
+    passGroup.push_back(dawn::PassGroup::SetNonTempCaches);
+
+  if(context_->getOptions().SetCaches || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::SetCaches);
+
+  if(context_->getOptions().SetBlockSize || context_->getOptions().DefaultOptimization)
+    passGroup.push_back(dawn::PassGroup::SetBlockSize);
+
+  if(context_->getOptions().DataLocalityMetric)
+    passGroup.push_back(dawn::PassGroup::DataLocalityMetric);
+
+  // if nothing is passed, we fill the group with the default if no-optimization is not specified
+  if(!context_->getOptions().DisableOptimization && passGroup.size() == 0)
+    passGroup = dawn::defaultPassGroups();
+
+  if(context_->getOptions().DisableOptimization && passGroup.size() > 0)
+    DAWN_ASSERT_MSG(false, "Inconsistent arguments: no-opt present together with optimization");
+
+  // Inline at end if serializing or if the codegen backend is CUDA
+  if(context_->getOptions().SerializeIIR ||
+     (context_->getOptions().CodeGen &&
+      dawn::codegen::parseBackendString(context_->getOptions().Backend) ==
+          dawn::codegen::Backend::CUDA))
+    passGroup.push_back(dawn::PassGroup::Inlining);
 
   // Determine filename of generated file (by default we append "_gen" to the filename)
-  std::string generatedFilename;
-  if(context_->getOptions().OutputFile.empty())
-    generatedFilename = llvm::StringRef(file_).split(".cpp").first.str() + "_gen.cpp";
-  else {
-    const auto& OutputFile = context_->getOptions().OutputFile;
-    llvm::SmallVector<char, 40> path(OutputFile.data(), OutputFile.data() + OutputFile.size());
-    llvm::sys::fs::make_absolute(path);
-    generatedFilename.assign(path.data(), path.size());
+  const std::string generatedPrefix = fs::path(file_).filename().stem();
+  std::string generatedFileName;
+  if(context_->getOptions().OutputFile.empty()) {
+    generatedFileName = generatedPrefix + "_gen.cpp";
+  } else {
+    generatedFileName = context_->getOptions().OutputFile;
   }
 
+  dawn::Options optimizerOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  optimizerOptions.NAME = context_->getOptions().NAME;
+#include "dawn/Optimizer/Options.inc"
+#undef OPT
+  dawn::codegen::Options codegenOptions;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  codegenOptions.NAME = context_->getOptions().NAME;
+#include "dawn/CodeGen/Options.inc"
+#undef OPT
+
   if(context_->getOptions().WriteSIR) {
-    llvm::SmallVector<char, 40> filename = llvm::SmallVector<char, 40>(
-        generatedFilename.data(), generatedFilename.data() + generatedFilename.size());
-
-    llvm::sys::path::replace_extension(filename, llvm::Twine(".sir"));
-
-    std::string generatedSIR(filename.data(), filename.data() + filename.size());
-    DAWN_LOG(INFO) << "Generating SIR file " << generatedFilename;
+    const std::string generatedSIR =
+        std::string(fs::path(generatedFileName).filename().stem()) + ".sir";
+    DAWN_LOG(INFO) << "Generating SIR file " << generatedSIR;
 
     if(context_->getOptions().SIRFormat == "json") {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Json);
     } else if(context_->getOptions().SIRFormat == "byte") {
       dawn::SIRSerializer::serialize(generatedSIR, SIR.get(), dawn::SIRSerializer::Format::Byte);
-
     } else {
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
 
+  auto stencilInstantiationMap = dawn::run(SIR, passGroup, optimizerOptions);
+
   // Do we generate code?
   if(!context_->getOptions().CodeGen) {
-    DAWN_LOG(INFO) << "Skipping code-generation";
+    DAWN_LOG(INFO) << "Skipping code generation";
     return;
   }
+
+  auto DawnTranslationUnit = dawn::codegen::run(
+      stencilInstantiationMap, dawn::codegen::parseBackendString(context_->getOptions().Backend),
+      codegenOptions);
 
   // Create new in-memory FS
   llvm::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
@@ -193,12 +244,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   std::string code;
   if(context_->getOptions().Serialized) {
     DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
-    std::cout << "Data was loaded from serialized IR, codegen " << std::endl;
-
+    // Would call generate here but that adds PPDefines as well
     code += DawnTranslationUnit->getGlobals();
-
     code += "\n\n";
-
     for(auto p : DawnTranslationUnit->getStencils()) {
       code += p.second;
     }
@@ -210,9 +258,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
         llvm::MemoryBuffer::getMemBufferCopy(SM.getBufferData(SM.getMainFileID()));
 
     // Create the generated file
-    DAWN_LOG(INFO) << "Creating generated file " << generatedFilename;
+    DAWN_LOG(INFO) << "Creating generated file " << generatedFileName;
     clang::FileID generatedFileID =
-        createInMemoryFile(generatedFilename, generatedCode.get(), sources, files, memFS.get());
+        createInMemoryFile(generatedFileName, generatedCode.get(), sources, files, memFS.get());
 
     // Replace clang DSL with gridtools
     clang::Rewriter rewriter(sources, context_->getASTContext().getLangOpts());
@@ -234,11 +282,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
             "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
       } else {
         num_stencils_generated++;
-      }
-      if(context_->getOptions().DeserializeIIR != "" && num_stencils_generated > 1) {
-        DAWN_LOG(ERROR)
-            << "more than one stencil present in DSL but only one stencil deserialized from IIR";
-        return;
       }
     }
 
@@ -293,7 +336,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().OutputFile.empty()) {
     ost = std::make_shared<llvm::raw_os_ostream>(std::cout);
   } else {
-    ost = std::make_shared<llvm::raw_fd_ostream>(generatedFilename, ec, flags);
+    ost = std::make_shared<llvm::raw_fd_ostream>(generatedFileName, ec, flags);
   }
 
   // Write file to specified output

@@ -20,7 +20,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
 #include <vector>
@@ -29,7 +30,7 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaiveico {
 
-// Requirement for the atlas interface:
+// Requirement for a interface:
 //
 // - Tag: No requirement on the tag. Might be used for ADL.
 //
@@ -52,13 +53,15 @@ namespace cxxnaiveico {
 // - A function `<Location>Type const& deref(X const& x)` should be defined,
 //   where X is decltype(*get<Locations>(...).begin())
 //
-// - The following combinatorial of functions should be defined, where Weight is an arithmetic type:
+// - The following functions should be defined, where Weight is an arithmetic type:
 //
 //   template<typename Init, typename Op>
-//   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op)
+//   Init reduce(Tag, MeshType, reduceTo, Init,
+//   std::vector<dawn::LocationType>, Op)
 //
 //   template<typename Init, typename Op, typename Weight>
-//   Init reduce<Location>To<Location>(Tag, MeshType, <Location>Type, Init, Op, std::vector<Weight>)
+//   Init reduce(Tag, MeshType, reduceTo, Init,
+//   std::vector<dawn::LocationType>, Op, std::vector<Weight>)
 //
 //   where Op must be callable as
 //     Op(Init, ValueType);
@@ -87,9 +90,17 @@ std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 }
 } // namespace
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                                       int maxHaloPoint)
-    : CodeGen(ctx, engine, maxHaloPoint) {}
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options) {
+  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
+
+  return CG.generateCode();
+}
+
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
+    : CodeGen(ctx, maxHaloPoint) {}
 
 CXXNaiveIcoCodeGen::~CXXNaiveIcoCodeGen() {}
 
@@ -167,13 +178,13 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   StencilWrapperConstructor.addArg("const dawn::mesh_t<LibTag> &mesh");
   StencilWrapperConstructor.addArg("int k_size");
 
-  auto getLocationTypeString = [](ast::Expr::LocationType type) {
+  auto getLocationTypeString = [](ast::LocationType type) {
     switch(type) {
-    case ast::Expr::LocationType::Cells:
+    case ast::LocationType::Cells:
       return "cell_";
-    case ast::Expr::LocationType::Vertices:
+    case ast::LocationType::Vertices:
       return "vertex_";
-    case ast::Expr::LocationType::Edges:
+    case ast::LocationType::Edges:
       return "edge_";
     default:
       dawn_unreachable("unexpected type");
@@ -181,11 +192,19 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     }
   };
   for(auto APIfieldID : APIFields) {
-    std::string typeString =
-        getLocationTypeString(metadata.getLocationTypeFromAccessID(APIfieldID));
-
-    StencilWrapperConstructor.addArg("dawn::" + typeString + "field_t<LibTag, double>& " +
-                                     metadata.getNameFromAccessID(APIfieldID));
+    if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+           metadata.getFieldDimensions(APIfieldID).getHorizontalFieldDimension())
+           .isDense()) {
+      std::string typeString =
+          getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
+      StencilWrapperConstructor.addArg("dawn::" + typeString + "field_t<LibTag, double>& " +
+                                       metadata.getNameFromAccessID(APIfieldID));
+    } else {
+      std::string typeString =
+          getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
+      StencilWrapperConstructor.addArg("dawn::sparse_" + typeString + "field_t<LibTag, double>& " +
+                                       metadata.getNameFromAccessID(APIfieldID));
+    }
   }
 
   // add the ctr initialization of each stencil
@@ -237,7 +256,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+                                "\"" + stencilWrapperClass.getName() + "\"");
 
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
@@ -295,37 +314,53 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
           return p.second.IsTemporary;
         });
 
-    Structure StencilClass = stencilWrapperClass.addStruct(stencilName);
+    Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                          StencilContext::SC_Stencil);
 
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
-      switch(info.field.getLocation()) {
-      case ast::Expr::LocationType::Cells:
-        return std::string("dawn::cell_field_t<LibTag, double>");
-      case ast::Expr::LocationType::Vertices:
-        return std::string("dawn::vertex_field_t<LibTag, double>");
-      case ast::Expr::LocationType::Edges:
-        return std::string("dawn::edge_field_t<LibTag, double>");
-      default:
-        dawn_unreachable("invalid location");
-        return std::string("");
+      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          info.field.getFieldDimensions().getHorizontalFieldDimension());
+      if(unstructuredDims.isDense()) {
+        switch(unstructuredDims.getDenseLocationType()) {
+        case ast::LocationType::Cells:
+          return std::string("dawn::cell_field_t<LibTag, double>");
+        case ast::LocationType::Vertices:
+          return std::string("dawn::vertex_field_t<LibTag, double>");
+        case ast::LocationType::Edges:
+          return std::string("dawn::edge_field_t<LibTag, double>");
+        default:
+          dawn_unreachable("invalid location");
+          return std::string("");
+        }
+      } else {
+        switch(unstructuredDims.getDenseLocationType()) {
+        case ast::LocationType::Cells:
+          return std::string("dawn::sparse_cell_field_t<LibTag, double>");
+        case ast::LocationType::Vertices:
+          return std::string("dawn::sparse_vertex_field_t<LibTag, double>");
+        case ast::LocationType::Edges:
+          return std::string("dawn::sparse_edge_field_t<LibTag, double>");
+        default:
+          dawn_unreachable("invalid location");
+          return std::string("");
+        }
       }
     };
 
-    StencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
-    StencilClass.addMember("int", "m_k_size");
+    stencilClass.addMember("dawn::mesh_t<LibTag> const&", "m_mesh");
+    stencilClass.addMember("int", "m_k_size");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
+      stencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
 
-    StencilClass.changeAccessibility("public");
+    stencilClass.changeAccessibility("public");
 
-    auto stencilClassCtr = StencilClass.addConstructor();
+    auto stencilClassCtr = stencilClass.addConstructor();
 
     stencilClassCtr.addArg("dawn::mesh_t<LibTag> const &mesh");
     stencilClassCtr.addArg("int k_size");
@@ -348,12 +383,12 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     stencilClassCtr.commit();
 
     // virtual dtor
-    MemberFunction stencilClassDtr = StencilClass.addDestructor(false);
+    MemberFunction stencilClassDtr = stencilClass.addDestructor(false);
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
     // synchronize storages method
-    MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
+    MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
     // for(auto fieldIt : nonTempFields) {
@@ -362,14 +397,17 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     syncStoragesMethod.commit();
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Unstructured);
+
     //
     // Run-Method
     //
-    MemberFunction StencilRunMethod = StencilClass.addMemberFunction("void", "run", "");
+    MemberFunction StencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
     StencilRunMethod.startBody();
 
     // TODO the generic deref should be moved to a different namespace
-    StencilRunMethod.addStatement("using dawn::deref;");
+    StencilRunMethod.addStatement("using dawn::deref");
 
     // StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil->getChildren()) {
@@ -383,10 +421,12 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       for(const auto& usedField : usedFields) {
         auto field = stencilFields.at(usedField.first);
         // auto storageName = field.IsTemporary ? "tmp_storage_t" :
-        // StencilTemplates[usedField.first]; StencilRunMethod.addStatement(c_gt() + "data_view<" +
-        // storageName + "> " + field.Name +
-        //                               "= " + c_gt() + "make_host_view(m_" + field.Name + ")");
-        // StencilRunMethod.addStatement("std::array<int,3> " + field.Name + "_offsets{0,0,0}");
+        // StencilTemplates[usedField.first]; StencilRunMethod.addStatement(c_gt() +
+        // "data_view<" + storageName + "> " + field.Name +
+        //                               "= " + c_gt() + "make_host_view(m_" + field.Name +
+        //                               ")");
+        // StencilRunMethod.addStatement("std::array<int,3> " + field.Name +
+        // "_offsets{0,0,0}");
       }
       auto intervals_set = multiStage.getIntervals();
       std::vector<iir::Interval> intervals_v;
@@ -397,37 +437,56 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       if((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
-      auto getLoop = [](ast::Expr::LocationType type) {
+      auto getLoop = [](ast::LocationType type) {
         switch(type) {
-        case ast::Expr::LocationType::Cells:
+        case ast::LocationType::Cells:
           return "for(auto const& loc : getCells(LibTag{}, m_mesh))";
-        case ast::Expr::LocationType::Vertices:
+        case ast::LocationType::Vertices:
           return "for(auto const& loc : getVertices(LibTag{}, m_mesh))";
-        case ast::Expr::LocationType::Edges:
+        case ast::LocationType::Edges:
           return "for(auto const& loc : getEdges(LibTag{}, m_mesh))";
         default:
           dawn_unreachable("invalid type");
           return "";
         }
       };
-      for(auto interval : partitionIntervals) {
 
+      for(auto interval : partitionIntervals) {
         StencilRunMethod.addBlockStatement(
             makeKLoop((multiStage.getLoopOrder() == iir::LoopOrderKind::Backward), interval), [&] {
               // for each interval, we generate naive nested loops
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
-                std::string loopCode = getLoop(stage.getLocationType());
+                DAWN_ASSERT_MSG(stage.getLocationType().has_value(),
+                                "Stage must have a location type");
+                std::string loopCode = getLoop(*stage.getLocationType());
                 StencilRunMethod.addBlockStatement(loopCode, [&] {
                   // Generate Do-Method
                   for(const auto& doMethodPtr : stage.getChildren()) {
                     const iir::DoMethod& doMethod = *doMethodPtr;
                     if(!doMethod.getInterval().overlaps(interval))
                       continue;
+
                     for(const auto& stmt : doMethod.getAST().getStatements()) {
+
+                      // if this statement contains a ReduceOverNeighbrExpr but isnt the
+                      // first one we need to reset the neighborhood iterator
+                      FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+                      stmt->accept(findReduceOverNeighborExpr);
+                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+                        StencilRunMethod.ss() << "{\n";
+                        StencilRunMethod.ss()
+                            << "int " << ASTStencilBody::ReductionSparseIndexVarName(0)
+                            << " = 0;\n";
+                      }
+
                       stmt->accept(stencilBodyCXXVisitor);
                       StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+
+                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+                        StencilRunMethod.ss() << "}\n";
+                      }
                     }
                   }
                 });
@@ -445,6 +504,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
+  // TODO: this method is broken, it's on cartesian
 
   const auto& metadata = stencilInstantiation->getMetaData();
   // stencil functions
@@ -461,23 +521,22 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       const auto& fields = stencilFun->getCalleeFields();
 
       if(fields.empty()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                stencilInstantiation->getMetaData().getStencilLocation());
-        diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilInstantiation->getMetaData().getStencilLocation());
       }
 
       MemberFunction stencilFunMethod = stencilWrapperClass.addMemberFunction(
           std::string("static ") + (stencilFun->hasReturn() ? "double" : "void"), stencilFunName);
 
       if(fields.empty() && !stencilFun->hasReturn()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
-        diag << "no storages referenced in stencil function '" << stencilFun->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil function '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilFun->getStencilFunction()->Loc);
       }
 
       // Each stencil function call will pass the (i,j,k) position
@@ -485,8 +544,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       stencilFunMethod.addArg("const int j");
       stencilFunMethod.addArg("const int k");
 
-      const auto& stencilProp = codeGenProperties.getStencilProperties(
-          StencilContext::SC_StencilFunction, stencilFunName);
+      // const auto& stencilProp = codeGenProperties.getStencilProperties(
+      //    StencilContext::SC_StencilFunction, stencilFunName);
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
@@ -494,14 +553,15 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
           continue;
         const std::string argName = exprArg->Name;
 
-        DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
-        const std::string argType = stencilProp->paramNameToType_[argName];
-        // each parameter being passed to a stencil function, is wrapped around the param_wrapper
-        // that contains the storage and the offset, in order to resolve offset passed to the
-        // storage during the function call. For example:
+        // TODO: the following commented lines are broken (using gridtools::data_view)
+        //        DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
+        //        const std::string argType = stencilProp->paramNameToType_[argName];
+        // each parameter being passed to a stencil function, is wrapped around the
+        // param_wrapper that contains the storage and the offset, in order to resolve
+        // offset passed to the storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
-                                argName);
+        //        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType
+        //        + ">> pw_" + argName);
       }
 
       // add global parameter
@@ -517,10 +577,13 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
 
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
-
-        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
-                         << paramName << " = pw_" << paramName << ".dview_;";
-        stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
+        // TODO: the following commented lines are broken (using gridtools::data_view)
+        //        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m)
+        //        + "> "
+        //                         << paramName << " = pw_" << paramName << ".dview_;";
+        //        stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName
+        //        <<
+        //        ".offsets_;";
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
@@ -552,6 +615,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
 
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define DAWN_GENERATED 1");
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVEICO");
   ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
   DAWN_LOG(INFO) << "Done generating code";

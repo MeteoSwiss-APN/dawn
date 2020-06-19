@@ -27,10 +27,13 @@
 namespace dawn {
 namespace codegen {
 namespace cuda {
+
+std::unordered_set<std::string> MSCodeGen::globalNames_;
+
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties,
-                     CudaCodeGen::CudaCodeGenOptions options)
+                     CudaCodeGen::CudaCodeGenOptions options, bool iterationSpaceSet)
     : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
       metadata_(stencilInstantiation->getMetaData()), cacheProperties_(cacheProperties),
       useCodeGenTemporaries_(CodeGeneratorHelper::useTemporaries(
@@ -38,7 +41,8 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
                              ms->hasMemAccessTemporaries()),
       cudaKernelName_(CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_)),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
-      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)), options_(options) {}
+      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)), options_(options),
+      iterationSpaceSet_(iterationSpaceSet) {}
 
 void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
@@ -677,7 +681,6 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
 }
 
 void MSCodeGen::generateCudaKernelCode() {
-
   iir::Extents maxExtents(ast::cartesian);
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms_)) {
     maxExtents.merge(stage->getExtents());
@@ -699,6 +702,38 @@ void MSCodeGen::generateCudaKernelCode() {
     const int accessID = p.first;
     return ms_->isMemAccessTemporary(accessID);
   });
+
+  if(iterationSpaceSet_) {
+    std::string iterators = "IJ";
+    for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
+      for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
+        if(interval.has_value()) {
+          std::string stageName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                  iterators.at(index) + "Indices";
+          if(globalNames_.find(stageName) == globalNames_.end()) {
+            ss_ << "__constant__ int " << stageName << "_[2];\n";
+            globalNames_.insert(stageName);
+          }
+        }
+      }
+    }
+
+    if(globalNames_.find("globalOffsets") == globalNames_.end()) {
+      ss_ << "__constant__ unsigned globalOffsets_[2];\n";
+      globalNames_.insert("globalOffsets");
+    }
+
+    if(globalNames_.find("checkOffset") == globalNames_.end()) {
+      MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
+      offsetFunc.addArg("unsigned int min");
+      offsetFunc.addArg("unsigned int max");
+      offsetFunc.addArg("unsigned int val");
+      offsetFunc.startBody();
+      offsetFunc.addStatement("return (min <= val && val < max)");
+      offsetFunc.commit();
+      globalNames_.insert("checkOffset");
+    }
+  }
 
   std::string fnDecl = "";
   if(useCodeGenTemporaries_)
@@ -860,11 +895,15 @@ void MSCodeGen::generateCudaKernelCode() {
     Array3i dims{-1, -1, -1};
     for(const auto& fieldInfo : ms_->getParent()->getFields()) {
       if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
-        auto const& cartDim =
-            sir::dimension_cast<sir::CartesianFieldDimension const&>(fieldInfo.second.Dimensions);
+        DAWN_ASSERT_MSG(
+            dawn::sir::dimension_isa<dawn::sir::CartesianFieldDimension>(
+                fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension()),
+            "Field has non cartesian horizontal dimension");
+        auto const& cartDim = sir::dimension_cast<sir::CartesianFieldDimension const&>(
+            fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension());
         dims[0] = cartDim.I() == 1;
         dims[1] = cartDim.J() == 1;
-        dims[2] = cartDim.K() == 1;
+        dims[2] = fieldInfo.second.field.getFieldDimensions().K() == 1;
         break;
       }
     }
@@ -965,14 +1004,14 @@ void MSCodeGen::generateCudaKernelCode() {
                    CodeGeneratorHelper::generateStrideName(2, index.second);
 
             cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
-                                  "interval and the parallel execution block ");
+                                  "interval and the parallel execution block");
             cudaKernel.addStatement("idx" + index.first + " += " + step);
           }
         }
       }
       if(useCodeGenTemporaries_) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
-                              "interval and the parallel execution block ");
+                              "interval and the parallel execution block");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
                                 ", blockIdx.z * " + std::to_string(blockSize_[2]) +
                                 ") * kstride_tmp");
@@ -1020,23 +1059,41 @@ void MSCodeGen::generateCudaKernelCode() {
           cudaKernel.addStatement("__syncthreads()");
         }
 
-        cudaKernel.addBlockStatement(
-            "if(iblock >= " + std::to_string(hExtent.iMinus()) +
-                " && iblock <= block_size_i -1 + " + std::to_string(hExtent.iPlus()) +
-                " && jblock >= " + std::to_string(hExtent.jMinus()) +
-                " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus()) + ")",
-            [&]() {
-              // Generate Do-Method
-              for(const auto& doMethodPtr : stage.getChildren()) {
-                const iir::DoMethod& doMethod = *doMethodPtr;
-                if(!doMethod.getInterval().overlaps(interval))
-                  continue;
-                for(const auto& stmt : doMethod.getAST().getStatements()) {
-                  stmt->accept(stencilBodyCXXVisitor);
-                  cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
-                }
+        std::string guard = "if(iblock >= " + std::to_string(hExtent.iMinus()) +
+                            " && iblock <= block_size_i -1 + " + std::to_string(hExtent.iPlus()) +
+                            " && jblock >= " + std::to_string(hExtent.jMinus()) +
+                            " && jblock <= block_size_j -1 + " + std::to_string(hExtent.jPlus());
+
+        if(std::any_of(stage.getIterationSpace().cbegin(), stage.getIterationSpace().cend(),
+                       [](const auto& p) -> bool { return p.has_value(); })) {
+          std::string iterators = "IJ";
+          for(const auto& stage : iterateIIROver<iir::Stage>(*(stencilInstantiation_->getIIR()))) {
+            std::string prefix = "stage" + std::to_string(stage->getStageID()) + "Global";
+            for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
+              if(interval.has_value()) {
+                std::string arrName = prefix + iterators.at(index) + "Indices";
+                guard += " && checkOffset(" + arrName + "_[0], " + arrName +
+                         "_[1], globalOffsets_[" + std::to_string(index) + "] + " +
+                         (char)std::tolower(iterators.at(index)) + "block)";
               }
-            });
+            }
+          }
+        }
+
+        guard += ")";
+
+        cudaKernel.addBlockStatement(guard, [&]() {
+          // Generate Do-Method
+          for(const auto& doMethodPtr : stage.getChildren()) {
+            const iir::DoMethod& doMethod = *doMethodPtr;
+            if(!doMethod.getInterval().overlaps(interval))
+              continue;
+            for(const auto& stmt : doMethod.getAST().getStatements()) {
+              stmt->accept(stencilBodyCXXVisitor);
+              cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+            }
+          }
+        });
         // only add sync if there are data dependencies
         if(intervalRequiresSync(interval, stage)) {
           cudaKernel.addStatement("__syncthreads()");

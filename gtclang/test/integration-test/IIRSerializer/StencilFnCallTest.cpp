@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fwrite-iir -fno-codegen
-// EXPECTED_FILE: OUTPUT:%filename%.0.iir REFERENCE:%filename%_ref.iir IGNORE:filename
+// EXPECTED_FILE: OUTPUT:StencilFnCallTest.iir REFERENCE:%filename%_ref.iir IGNORE:filename
 
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 
@@ -26,7 +26,7 @@ stencil_function fn {
   Do { return a; }
 };
 
-stencil Test {
+stencil StencilFnCallTest {
   storage a, b;
 
   Do { vertical_region(k_start, k_end) b = fn(a); }

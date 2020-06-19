@@ -17,15 +17,19 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
+#include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>
+#include <memory>
 #include <stack>
+#include <stdexcept>
 #include <tuple>
 
 namespace dawn {
@@ -49,10 +53,10 @@ public:
       DAWN_LOG(WARNING) << "Protobuf: " << message;
       break;
     case google::protobuf::LOGLEVEL_ERROR:
-      DAWN_LOG(ERROR) << "Protobuf: " << message;
+      throw SyntacticError(std::string("[ERROR] Protobuf error: ") + message);
       break;
     case google::protobuf::LOGLEVEL_FATAL:
-      DAWN_LOG(FATAL) << "Protobuf: " << message;
+      throw SyntacticError(std::string("[FATAL] Protobuf error occurred: ") + message);
       break;
     }
 
@@ -95,6 +99,15 @@ ProtobufLogger* ProtobufLogger::instance_ = nullptr;
 
 } // anonymous namespace
 
+SIRSerializer::Format SIRSerializer::parseFormatString(const std::string& format) {
+  if(format == "Byte" || format == "byte" || format == "BYTE")
+    return SIRSerializer::Format::Byte;
+  else if(format == "Json" || format == "json" || format == "JSON")
+    return SIRSerializer::Format::Json;
+  else
+    throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
+}
+
 //===------------------------------------------------------------------------------------------===//
 //     Serialization
 //===------------------------------------------------------------------------------------------===//
@@ -111,11 +124,9 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   case ast::GridType::Cartesian:
     sirProto.set_gridtype(proto::enums::GridType::Cartesian);
     break;
-  case ast::GridType::Triangular:
-    sirProto.set_gridtype(proto::enums::GridType::Triangular);
+  case ast::GridType::Unstructured:
+    sirProto.set_gridtype(proto::enums::GridType::Unstructured);
     break;
-  default:
-    dawn_unreachable("invalid grid type");
   }
 
   // SIR.Filename
@@ -161,7 +172,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
       } else if(sir::Offset* offset = dyn_cast<sir::Offset>(arg.get())) {
         setOffset(argProto->mutable_offset_value(), offset);
       } else {
-        dawn_unreachable("invalid argument");
+        throw std::invalid_argument("Invalid argument: StencilFunction.Args");
       }
     }
 
@@ -180,30 +191,30 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
 
   // SIR.GlobalVariableMap
   auto mapProto = sirProto.mutable_global_variables()->mutable_map();
-  for(const auto& nameValuePair : *sir->GlobalVariableMap) {
-    const std::string& name = nameValuePair.first;
-    const sir::Global& value = nameValuePair.second;
+  for(const auto& [name, value] : *sir->GlobalVariableMap) {
 
+    // is_constexpr
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
-    if(value.has_value()) {
-      switch(value.getType()) {
-      case sir::Value::Kind::Boolean:
-        valueProto.set_boolean_value(value.getValue<bool>());
-        break;
-      case sir::Value::Kind::Integer:
-        valueProto.set_integer_value(value.getValue<int>());
-        break;
-      case sir::Value::Kind::Double:
-        valueProto.set_double_value(value.getValue<double>());
-        break;
-      case sir::Value::Kind::Float:
-        valueProto.set_float_value(value.getValue<float>());
-        break;
-      case sir::Value::Kind::String:
-        valueProto.set_string_value(value.getValue<std::string>());
-        break;
-      }
+
+    // Value
+    switch(value.getType()) {
+    case sir::Value::Kind::Boolean:
+      valueProto.set_boolean_value(value.has_value() ? value.getValue<bool>() : bool());
+      break;
+    case sir::Value::Kind::Integer:
+      valueProto.set_integer_value(value.has_value() ? value.getValue<int>() : int());
+      break;
+    case sir::Value::Kind::Double:
+      valueProto.set_double_value(value.has_value() ? value.getValue<double>() : double());
+      break;
+    case sir::Value::Kind::Float:
+      valueProto.set_float_value(value.has_value() ? value.getValue<float>() : float());
+      break;
+    case sir::Value::Kind::String:
+      valueProto.set_string_value(value.has_value() ? value.getValue<std::string>()
+                                                    : std::string());
+      break;
     }
 
     mapProto->insert({name, valueProto});
@@ -228,8 +239,6 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
           "cannot deserialize SIR: %s", ProtobufLogger::getInstance().getErrorMessagesAndReset()));
     break;
   }
-  default:
-    dawn_unreachable("invalid SerializationKind");
   }
 
   return str;
@@ -263,21 +272,11 @@ static SourceLocation makeLocation(const T& proto) {
 }
 
 static std::shared_ptr<sir::Field> makeField(const dawn::proto::statements::Field& fieldProto) {
-  auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
+  auto field = std::make_shared<sir::Field>(fieldProto.name(),
+                                            makeFieldDimensions(fieldProto.field_dimensions()),
+                                            makeLocation(fieldProto));
   field->IsTemporary = fieldProto.is_temporary();
-  if(!fieldProto.field_dimensions().empty()) {
-    auto throwException = [&fieldProto](const char* member) {
-      throw std::runtime_error(
-          format("Field::%s (loc %s) exceeds 3 dimensions", member, makeLocation(fieldProto)));
-    };
-    if(fieldProto.field_dimensions().size() > 3)
-      throwException("field_dimensions");
 
-    field->fieldDimensions = sir::FieldDimension(
-        dawn::ast::cartesian, std::array<bool, 3>({(bool)fieldProto.field_dimensions()[0],
-                                                   (bool)fieldProto.field_dimensions()[1],
-                                                   (bool)fieldProto.field_dimensions()[2]}));
-  }
   return field;
 }
 
@@ -479,7 +478,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
       offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
       break;
     default:
-      dawn_unreachable("unknown offset");
+      throw std::invalid_argument("Unknown offset");
     }
 
     Array3i argumentOffset{{0, 0, 0}};
@@ -510,43 +509,30 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
     const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
-    std::vector<dawn::sir::Value> weights;
+    std::vector<std::shared_ptr<sir::Expr>> weights;
 
     for(const auto& weightProto : exprProto.weights()) {
-      switch(weightProto.Value_case()) {
-      case proto::statements::Weight::kBooleanValue:
-        weights.push_back(dawn::sir::Value(weightProto.boolean_value()));
-        break;
-      case proto::statements::Weight::kFloatValue:
-        weights.push_back(dawn::sir::Value(weightProto.float_value()));
-        break;
-      case proto::statements::Weight::kDoubleValue:
-        weights.push_back(dawn::sir::Value(weightProto.double_value()));
-        break;
-      case proto::statements::Weight::kIntegerValue:
-        weights.push_back(dawn::sir::Value(weightProto.integer_value()));
-        break;
-      case proto::statements::Weight::kStringValue:
-        dawn_unreachable("string type for weight encountered in serialization (weights need to be "
-                         "of arithmetic type)\n");
-        break;
-      case proto::statements::Weight::VALUE_NOT_SET:
-        dawn_unreachable("weight with undefined value encountered!\n");
-        break;
-      }
+      weights.push_back(makeExpr(weightProto));
+    }
+
+    ast::NeighborChain chain;
+    for(int i = 0; i < exprProto.chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
     }
 
     if(weights.size() > 0) {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights);
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, chain,
+          makeLocation(exprProto));
     } else {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
-          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+          exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), chain,
+          makeLocation(exprProto));
     }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
   default:
-    dawn_unreachable("expr not set");
+    throw std::out_of_range("expr not set");
   }
   return nullptr;
 }
@@ -561,6 +547,32 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
       stmt->push_back(makeStmt(s));
 
     return stmt;
+  }
+  case dawn::proto::statements::Stmt::kLoopStmt: {
+    const auto& stmtProto = statementProto.loop_stmt();
+    const auto& blockStmt = makeStmt(stmtProto.statements());
+    DAWN_ASSERT_MSG(blockStmt->getKind() == ast::Stmt::Kind::BlockStmt, "Expected a BlockStmt.");
+
+    switch(stmtProto.loop_descriptor().desc_case()) {
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
+
+      ast::NeighborChain chain;
+      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+        chain.push_back(getLocationTypeFromProtoLocationType(
+            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+      }
+      auto stmt =
+          sir::makeLoopStmt(std::move(chain), std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt),
+                            makeLocation(stmtProto));
+      return stmt;
+    }
+    case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {
+      dawn_unreachable("general loop bounds not implemented!\n");
+      break;
+    }
+    default:
+      dawn_unreachable("descriptor not set!\n");
+    }
   }
   case dawn::proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
@@ -614,7 +626,7 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
   }
   case dawn::proto::statements::Stmt::STMT_NOT_SET:
   default:
-    dawn_unreachable("stmt not set");
+    throw std::out_of_range("stmt not set");
   }
   return nullptr;
 }
@@ -648,7 +660,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     break;
   }
   default:
-    dawn_unreachable("invalid serialization Kind");
+    throw std::invalid_argument("invalid serialization Kind");
   }
 
   // Convert protobuf SIR to SIR
@@ -661,11 +673,11 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     case dawn::proto::enums::GridType::Cartesian:
       sir = std::make_shared<SIR>(ast::GridType::Cartesian);
       break;
-    case dawn::proto::enums::GridType::Triangular:
-      sir = std::make_shared<SIR>(ast::GridType::Triangular);
+    case dawn::proto::enums::GridType::Unstructured:
+      sir = std::make_shared<SIR>(ast::GridType::Unstructured);
       break;
     default:
-      dawn_unreachable("unknown grid type");
+      throw std::out_of_range("Unknown grid type");
     }
 
     // SIR.Filename
@@ -716,7 +728,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
           break;
         case dawn::proto::statements::StencilFunctionArg::ARG_NOT_SET:
         default:
-          dawn_unreachable("argument not set");
+          throw std::out_of_range("argument not set");
         }
       }
 
@@ -745,6 +757,9 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
       case sir::proto::GlobalVariableValue::kIntegerValue:
         value = std::make_shared<Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
+      case sir::proto::GlobalVariableValue::kFloatValue:
+        value = std::make_shared<Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
+        break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
         value = std::make_shared<Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
@@ -754,7 +769,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:
-        dawn_unreachable("value not set");
+        throw std::out_of_range("value not set");
       }
 
       sir->GlobalVariableMap->emplace(sirName, std::move(*value));

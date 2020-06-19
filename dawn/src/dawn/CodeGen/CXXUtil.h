@@ -12,12 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXUTIL_H
-#define DAWN_CODEGEN_CXXUTIL_H
+#pragma once
 
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Twine.h"
 #include <functional>
 #include <sstream>
 
@@ -62,17 +61,7 @@ struct hasCommitImpl {
   static constexpr bool value = hasCommitImplDetail<T, void (T::*)()>::value;
 };
 
-inline std::string twineToStr(const Twine& twine) {
-  return twine.str() + (twine.isTriviallyEmpty() ? "" : " ");
-}
-
 } // namespace internal
-
-/// @brief Convert variadic pack to Twine
-template <typename T, typename... Args>
-inline Twine makeTwine(T&& arg, Args&&... args) {
-  return (Twine(arg) + ... + Twine(args));
-}
 
 /// @brief Clear the string stream and return it again
 inline std::stringstream& clear(std::stringstream& ss) {
@@ -191,12 +180,15 @@ struct Statement : public NewLine {
 struct Type : public Streamable {
   int hasTemplate = false;
 
-  Type(const Twine& name, std::stringstream& s, int il = 0) : Streamable(s, il) { ss() << name; }
+  Type(const std::string& name, std::stringstream& s, int il = 0) : Streamable(s, il) {
+    ss() << name;
+  }
   Type(Type&&) = default;
 
   /// @brief Add a template to the Type `type<name>`
   /// @{
-  Type& addTemplate(const Twine& name) {
+  template <typename T>
+  Type& addTemplate(const T& name) {
     if(!hasTemplate) {
       hasTemplate = true;
       ss() << "<" << name;
@@ -239,12 +231,12 @@ struct Using : public Statement {
   bool RHSDeclared = false;
 
   /// @brief Add typedef `using name = ...`
-  Using(const Twine& name, std::stringstream& s, int il = 0) : Statement(s, il) {
+  Using(const std::string& name, std::stringstream& s, int il = 0) : Statement(s, il) {
     ss() << "using " << name;
   }
 
   /// @brief Add a Type to the right-hand side of the using
-  Type addType(const Twine& name) {
+  Type addType(const std::string& name) {
     ss() << " = ";
     return Type(name, ss());
   }
@@ -259,12 +251,12 @@ struct Using : public Statement {
 /// @brief Definition of a `namespace`
 /// @ingroup codegen
 struct Namespace {
-  const Twine name_;
+  const std::string name_;
   std::stringstream& s_;
 
   ~Namespace() {}
   /// @brief Add `namespace`
-  Namespace(const Twine& name, std::stringstream& s) : name_(name), s_(s) {
+  Namespace(const std::string& name, std::stringstream& s) : name_(name), s_(s) {
     s_ << "namespace " << name_ << "{" << std::endl;
   }
 
@@ -288,22 +280,26 @@ struct MemberFunction : public NewLine {
   bool IsConst = false;
 
   /// @brief Declare function with return type (possibly empty) and the name of the function
-  MemberFunction(const Twine& returnType, const Twine& name, std::stringstream& s, int il = 0)
+  MemberFunction(const std::string& returnType, const std::string& name, std::stringstream& s,
+                 int il = 0)
       : NewLine(s, il), IndentLevel(il) {
-    ss() << internal::twineToStr(returnType) << name.str();
+    if(!returnType.empty()) {
+      ss() << returnType << " ";
+    }
+    ss() << name;
   }
 
   /// @brief Add an argument to the function
   ///
   /// This function can only be called *before* the body is added.
-  MemberFunction& addArg(const Twine& name) {
+  MemberFunction& addArg(const std::string& name) {
     DAWN_ASSERT(!IsBodyDeclared);
     ss() << (NumArgs++ == 0 ? "(" : ", ") << name;
     return *this;
   }
 
   /// @brief Add a an initializer (only used by constructors)
-  MemberFunction& addInit(const Twine& name) {
+  MemberFunction& addInit(const std::string& name) {
     DAWN_ASSERT(CanHaveInit && !IsBodyDeclared);
     finishArgs();
     ss() << (NumInits++ == 0 ? ": " : ", ") << name;
@@ -322,18 +318,17 @@ struct MemberFunction : public NewLine {
   /// @{
   template <class Sequence, class StrinfigyFunctor,
             class ValueType = typename std::decay<Sequence>::type::value_type>
-  MemberFunction& addArgs(const Twine& typeName, Sequence&& sequence,
+  MemberFunction& addArgs(const std::string& typeName, Sequence&& sequence,
                           StrinfigyFunctor&& stringifier) {
     DAWN_ASSERT(!IsBodyDeclared);
-    std::string typeNameStr = internal::twineToStr(typeName);
     ss() << RangeToString(", ", (NumArgs++ == 0 ? "(" : ", "), "")(
         sequence,
-        [&](const ValueType& value) -> std::string { return typeNameStr + stringifier(value); });
+        [&](const ValueType& value) -> std::string { return typeName + stringifier(value); });
     return *this;
   }
 
   template <class Sequence>
-  MemberFunction& addArgs(const Twine& typeName, Sequence&& sequence) {
+  MemberFunction& addArgs(const std::string& typeName, Sequence&& sequence) {
     return addArgs(typeName, std::forward<Sequence>(sequence),
                    RangeToString::DefaultStringifyFunctor());
   }
@@ -364,10 +359,10 @@ struct MemberFunction : public NewLine {
   /// @brief Add a statement to the function body
   ///
   /// This function can only be called *after* the body was added.
-  MemberFunction& addStatement(const Twine& arg) {
+  MemberFunction& addStatement(const std::string& arg) {
     startBody();
     Statement stmt(ss(), IndentLevel + 1);
-    stmt << arg.str();
+    stmt << arg;
     return *this;
   }
 
@@ -387,7 +382,7 @@ struct MemberFunction : public NewLine {
   ///
   /// This function can only be called *after* the body was added.
   template <class BlockBodyFunType>
-  MemberFunction& addBlockStatement(const Twine& init, BlockBodyFunType&& blockBodyFun) {
+  MemberFunction& addBlockStatement(const std::string& init, BlockBodyFunType&& blockBodyFun) {
     startBody();
     indentImpl(IndentLevel) << init << " {\n";
     IndentLevel++;
@@ -398,13 +393,13 @@ struct MemberFunction : public NewLine {
   }
 
   /// @brief Add a typedef
-  Using addTypeDef(const Twine& typeName) {
+  Using addTypeDef(const std::string& typeName) {
     indentImpl(IndentLevel + 1);
     return Using(typeName, ss());
   }
 
   /// @brief Add a comment
-  NewLine addComment(const Twine& comment) {
+  NewLine addComment(const std::string& comment) {
     indentImpl(IndentLevel + 1, true);
     NewLine nl(ss());
     nl << ("// " + comment);
@@ -444,16 +439,14 @@ struct Structure : public Statement {
   std::string StructureName;
   std::string SuffixMember;
 
-  Structure(const char* identifier, const Twine& name, std::stringstream& s,
-            const Twine& templateName = Twine::createNull(),
-            const Twine& derived = Twine::createNull(), int il = 0)
+  Structure(const char* identifier, const std::string& name, std::stringstream& s,
+            const std::string& templateName = "", const std::string& derived = "", int il = 0)
       : Statement(s), IndentLevel(il) {
-    StructureName = name.str();
-    if(!templateName.isTriviallyEmpty())
-      indentImpl(IndentLevel) << "template<" << templateName.str() << ">";
+    StructureName = name;
+    if(!templateName.empty())
+      indentImpl(IndentLevel) << "template<" << templateName << ">";
     indentImpl(IndentLevel, true) << identifier << " " << StructureName
-                                  << (derived.isTriviallyEmpty() ? std::string()
-                                                                 : " : public " + derived.str())
+                                  << (derived.empty() ? std::string() : " : public " + derived)
                                   << " {\n";
   }
 
@@ -465,10 +458,10 @@ struct Structure : public Statement {
   ///
   ///   } SuffixMember;
   /// @endcode
-  void addSuffixMember(const Twine& suffixMember) { SuffixMember = suffixMember.str(); }
+  void addSuffixMember(const std::string& suffixMember) { SuffixMember = suffixMember; }
 
   /// @brief Change the accessibility of the following members and methods
-  void changeAccessibility(const Twine& specifier) {
+  void changeAccessibility(const std::string& specifier) {
     NewLine nl(ss(), IndentLevel);
     nl << specifier << ":";
   }
@@ -484,7 +477,7 @@ struct Structure : public Statement {
   /// @endcode
   MemberFunction
   addCopyConstructor(ConstructorDefaultKind constructorKind = ConstructorDefaultKind::Custom) {
-    return addBuiltinConstructor(Twine("const ") + StructureName + "&", constructorKind);
+    return addBuiltinConstructor("const " + StructureName + "&", constructorKind);
   }
 
   /// @brief Add a move constructor
@@ -495,7 +488,7 @@ struct Structure : public Statement {
   /// @endcode
   MemberFunction
   addMoveConstructor(ConstructorDefaultKind constructorKind = ConstructorDefaultKind::Custom) {
-    return addBuiltinConstructor(Twine(StructureName) + "&&", constructorKind);
+    return addBuiltinConstructor(StructureName + "&&", constructorKind);
   }
 
   /// @brief Add a constructor
@@ -505,8 +498,8 @@ struct Structure : public Statement {
   ///   template< templateName >
   ///   Structure(...) {...}
   /// @endcode
-  MemberFunction addConstructor(const Twine& templateName = Twine::createNull()) {
-    MemberFunction memFun = addMemberFunction(Twine::createNull(), StructureName, templateName);
+  MemberFunction addConstructor(const std::string& templateName = "") {
+    MemberFunction memFun = addMemberFunction("", StructureName, templateName);
     memFun.CanHaveInit = true;
     return memFun;
   }
@@ -519,8 +512,7 @@ struct Structure : public Statement {
   ///   Structure(...) {...}
   /// @endcode
   MemberFunction addDestructor(bool isVirtual) {
-    return addMemberFunction(Twine::createNull(),
-                             (isVirtual ? Twine("virtual ~") : Twine("~")) + StructureName);
+    return addMemberFunction("", (isVirtual ? "virtual ~" : "~") + StructureName);
   }
 
   /// @brief Add a member function (method)
@@ -530,11 +522,11 @@ struct Structure : public Statement {
   ///   template< templateName >
   ///   returnType funcName(...) {...}
   /// @endcode
-  MemberFunction addMemberFunction(const Twine& returnType, const Twine& funcName,
-                                   const Twine& templateName = Twine::createNull()) {
+  MemberFunction addMemberFunction(const std::string& returnType, const std::string& funcName,
+                                   const std::string& templateName = "") {
     newlineImpl();
-    if(!templateName.isTriviallyEmpty())
-      indentImpl(IndentLevel + 1) << "template<" << templateName.str() << ">\n";
+    if(!templateName.empty())
+      indentImpl(IndentLevel + 1) << "template<" << templateName << ">\n";
     return MemberFunction(returnType, funcName, ss(), IndentLevel + 1);
   }
 
@@ -544,7 +536,7 @@ struct Structure : public Statement {
   /// @code
   ///   using typeName = ...
   /// @endcode
-  Using addTypeDef(const Twine& typeName) {
+  Using addTypeDef(const std::string& typeName) {
     indentImpl(IndentLevel + 1);
     return Using(typeName, ss());
   }
@@ -555,7 +547,7 @@ struct Structure : public Statement {
   /// @code
   ///   typeName memberName;
   /// @endcode
-  Statement addMember(const Twine& typeName, const Twine& memberName) {
+  Statement addMember(const std::string& typeName, const std::string& memberName) {
     Statement member(ss(), IndentLevel + 1);
     member << typeName << " " << memberName;
     return member;
@@ -567,7 +559,7 @@ struct Structure : public Statement {
   /// @code
   ///   // comment
   /// @endcode
-  NewLine addComment(const Twine& comment) {
+  NewLine addComment(const std::string& comment) {
     indentImpl(IndentLevel + 1, true);
     NewLine nl(ss());
     nl << "// " + comment;
@@ -580,7 +572,7 @@ struct Structure : public Statement {
   /// @code
   ///   statment;
   /// @endcode
-  Statement addStatement(const Twine& statment) {
+  Statement addStatement(const std::string& statment) {
     Statement stmt(ss(), IndentLevel + 1);
     stmt << statment;
     return stmt;
@@ -594,8 +586,8 @@ struct Structure : public Statement {
   ///    ...
   ///   };
   /// @endcode
-  Structure addStruct(const Twine& name, const Twine& templateName = Twine::createNull(),
-                      const Twine& derived = Twine::createNull()) {
+  Structure addStruct(const std::string& name, const std::string& templateName = "",
+                      const std::string& derived = "") {
     return Structure("struct", name, ss(), templateName, derived, IndentLevel + 1);
   }
 
@@ -607,9 +599,9 @@ struct Structure : public Statement {
   ///    ...
   ///   } member;
   /// @endcode
-  Structure addStructMember(const Twine& name, const Twine& member,
-                            const Twine& derived = Twine::createNull()) {
-    Structure s("struct", name, ss(), Twine::createNull(), derived, IndentLevel + 1);
+  Structure addStructMember(const std::string& name, const std::string& member,
+                            const std::string& derived = "") {
+    Structure s("struct", name, ss(), "", derived, IndentLevel + 1);
     s.addSuffixMember(member);
     return s;
   }
@@ -622,8 +614,8 @@ struct Structure : public Statement {
   ///    ...
   ///   };
   /// @endcode
-  Structure addClass(const Twine& name, const Twine& templateName = Twine::createNull()) {
-    return Structure("class", name, ss(), templateName, Twine::createNull(), IndentLevel + 1);
+  Structure addClass(const std::string& name, const std::string& templateName = "") {
+    return Structure("class", name, ss(), templateName, "", IndentLevel + 1);
   }
 
   void commitImpl() {
@@ -633,10 +625,10 @@ struct Structure : public Statement {
 
 protected:
   MemberFunction
-  addBuiltinConstructor(const Twine& arg,
+  addBuiltinConstructor(const std::string& arg,
                         ConstructorDefaultKind constructorKind = ConstructorDefaultKind::Custom) {
     newlineImpl();
-    MemberFunction ctor(Twine::createNull(), StructureName, ss(), IndentLevel + 1);
+    MemberFunction ctor("", StructureName, ss(), IndentLevel + 1);
     ctor.addArg(arg);
     switch(constructorKind) {
     case ConstructorDefaultKind::Default:
@@ -657,7 +649,7 @@ protected:
 /// @ingroup codegen
 struct Class : public Structure {
   using Structure::Structure;
-  Class(const Twine& name, std::stringstream& s, const Twine& templateName = Twine::createNull())
+  Class(const std::string& name, std::stringstream& s, const std::string& templateName = "")
       : Structure("class", name, s, templateName) {}
 };
 
@@ -665,17 +657,15 @@ struct Class : public Structure {
 /// @ingroup codegen
 struct Struct : public Structure {
   using Structure::Structure;
-  Struct(const Twine& name, std::stringstream& s, const Twine& templateName = Twine::createNull())
+  Struct(const std::string& name, std::stringstream& s, const std::string& templateName = "")
       : Structure("struct", name, s, templateName) {}
 };
 
-auto c_gt = []() { return Twine("gridtools::"); };
-auto c_dgt = []() { return Twine("gridtools::dawn::"); };
-auto c_gt_enum = []() { return Twine("gridtools::enumtype::"); };
-auto c_gt_intent = []() { return Twine("gridtools::intent::"); };
+auto c_gt = []() { return std::string("gridtools::"); };
+auto c_dgt = []() { return std::string("gridtools::dawn::"); };
+auto c_gt_enum = []() { return std::string("gridtools::enumtype::"); };
+auto c_gt_intent = []() { return std::string("gridtools::intent::"); };
 
 } // namespace codegen
 
 } // namespace dawn
-
-#endif

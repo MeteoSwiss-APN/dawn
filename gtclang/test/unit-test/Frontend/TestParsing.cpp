@@ -15,11 +15,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Unittest/ParsingComparison.h"
-#include "gtclang/Unittest/UnittestStmtSimplifier.h"
+#include "gtclang/Unittest/StmtSimplifier.h"
 #include <fstream>
 #include <gtest/gtest.h>
 
 using namespace gtclang;
+using namespace dawn;
 using namespace sirgen;
 
 namespace {
@@ -33,7 +34,7 @@ namespace {
 #define DAWN_EXPECT_NE(parsing, operation)                                                         \
   do {                                                                                             \
     auto output = ParsingComparison::getSingleton().compare(parsing, operation);                   \
-    EXPECT_FALSE(static_cast<bool>(output)) << "SIRs Match but should not"; \
+    EXPECT_FALSE(static_cast<bool>(output)) << "SIRs Match but should not";                        \
   } while(0)
 
 TEST(ParsingTest, Setup) {

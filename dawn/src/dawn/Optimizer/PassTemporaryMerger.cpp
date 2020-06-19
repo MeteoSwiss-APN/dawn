@@ -19,8 +19,8 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
-#include <iostream>
 
 namespace dawn {
 
@@ -35,14 +35,6 @@ bool PassTemporaryMerger::run(
 
   bool merged = false;
 
-  bool stencilNeedsMergePass = false;
-  for(const auto& stencilPtr : stencilInstantiation->getStencils())
-    stencilNeedsMergePass |=
-        stencilPtr->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries);
-
-  if(!(context_.getOptions().MergeTemporaries || stencilNeedsMergePass))
-    return true;
-
   // Pair of nodes to visit and AccessID of the last temporary (or -1 if no temporary has been
   // processed yet)
   std::vector<std::pair<std::size_t, int>> nodesToVisit;
@@ -56,7 +48,7 @@ bool PassTemporaryMerger::run(
     iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation->getMetaData());
     for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
-      AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
+      AccessesDAG.merge(multiStage.getDependencyGraphOfAxis());
     }
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 
@@ -88,7 +80,7 @@ bool PassTemporaryMerger::run(
           visitedNodes.insert(FromVertexID);
 
         // Follow edges of the current node and update the node extents
-        for(const Edge& edge : *adjacencyList[FromVertexID]) {
+        for(const Edge& edge : adjacencyList[FromVertexID]) {
           std::size_t ToVertexID = edge.ToVertexID;
           int ToAccessID = AccessesDAG.getIDFromVertexID(ToVertexID);
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
@@ -104,7 +96,8 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    std::cout << TemporaryDAG.toDot() << std::endl;
+    // TODO Should this be an optional dump?
+    DAWN_LOG(INFO) << TemporaryDAG.toDot();
 
     if(TemporaryDAG.empty())
       continue;
@@ -114,7 +107,7 @@ bool PassTemporaryMerger::run(
     std::unordered_set<int> temporaries;
     std::for_each(TemporaryDAG.getVertices().begin(), TemporaryDAG.getVertices().end(),
                   [&](const std::pair<int, Vertex>& vertexPair) {
-                    temporaries.emplace(vertexPair.second.value);
+                    temporaries.emplace(vertexPair.second.Value);
                   });
     auto LifeTimeMap = stencil.getLifetime(temporaries);
 
@@ -158,34 +151,35 @@ bool PassTemporaryMerger::run(
     for(const auto& colorRenameCandidatesPair : colorToAccessIDOfRenameCandidatesMap) {
       const std::vector<int>& AccessIDOfRenameCandidates = colorRenameCandidatesPair.second;
 
+      // Sort the rename candidates in alphabetical order
+      std::vector<std::string> renameCandidatesNames;
+      for(int AccessID : AccessIDOfRenameCandidates)
+        renameCandidatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
+      std::sort(renameCandidatesNames.begin(), renameCandidatesNames.end());
+
       // Print the rename candidates in alphabetical order
-      if(context_.getOptions().ReportPassTemporaryMerger &&
-         AccessIDOfRenameCandidates.size() >= 2) {
-        std::vector<std::string> renameCandidatesNames;
-        for(int AccessID : AccessIDOfRenameCandidates)
-          renameCandidatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
-        std::sort(renameCandidatesNames.begin(), renameCandidatesNames.end());
-        std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                  << ": merging: " << RangeToString(", ", "", "\n")(renameCandidatesNames);
+      if(AccessIDOfRenameCandidates.size() >= 2) {
+        DAWN_LOG(INFO) << stencilInstantiation->getName()
+                       << ": merging: " << RangeToString(", ", "", "\n")(renameCandidatesNames);
       }
 
-      int newAccessID = AccessIDOfRenameCandidates[0];
-
-      // Rename all other fields of the color to the AccessID of the first field (note that it
-      // wouldn't matter which AccessID we choose)
-      for(int i = 1; i < AccessIDOfRenameCandidates.size(); ++i) {
-        merged = true;
+      // Rename all other fields of the color to the AccessID of the first field in alphabetical
+      // order (note that it wouldn't matter which AccessID we choose).
+      int newAccessID = metadata.getAccessIDFromName(renameCandidatesNames[0]);
+      for(int i = 0; i < AccessIDOfRenameCandidates.size(); ++i) {
         int oldAccessID = AccessIDOfRenameCandidates[i];
-        renameAccessIDInStencil(stencilPtr.get(), oldAccessID, newAccessID);
+        if(oldAccessID != newAccessID) {
+          merged = true;
+          renameAccessIDInStencil(stencilPtr.get(), oldAccessID, newAccessID);
+        }
       }
     }
 
     stencilIdx++;
   }
 
-  if(context_.getOptions().ReportPassTemporaryMerger && !merged)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no merge\n";
+  if(!merged)
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": No merge";
 
   return true;
 }

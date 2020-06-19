@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_AST_H
-#define DAWN_IIR_AST_H
+#pragma once
 
 #include "dawn/AST/AST.h"
 #include "dawn/IIR/ASTStmt.h"
@@ -29,5 +28,3 @@ inline std::shared_ptr<ast::AST> makeAST() {
 using AST = ast::AST;
 } // namespace iir
 } // namespace dawn
-
-#endif

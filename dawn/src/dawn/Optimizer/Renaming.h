@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_RENAMING_H
-#define DAWN_OPTIMIZER_RENAMING_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
@@ -76,5 +75,3 @@ void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAcce
 void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* function,
                                            int oldAccessID, int newAccessID);
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STAGE_H
-#define DAWN_IIR_STAGE_H
+#pragma once
 
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Extents.h"
@@ -21,7 +20,6 @@
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/ContainerUtils.h"
 #include <deque>
 #include <memory>
@@ -49,8 +47,8 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
-  /// Location type of the stage (which loop it represents)
-  ast::Expr::LocationType type_ = ast::Expr::LocationType::Cells;
+  // Location type of the stage (which loop it represents)
+  std::optional<ast::LocationType> type_;
 
   /// Iteration space in the horizontal. If it is not instantiated, iteration over the full domain
   /// is assumed. This is built on top of the DerivedInfo::Extents class and for a full compute
@@ -70,7 +68,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
     std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
 
     // Further data (not cleared!)
-    Extents extents_;           // valid after PassComputeStageExtents
+    Extents extents_;           // valid after StencilInstantiation::computeDerivedInfo
     bool requiresSync_ = false; // valid after PassSetSyncStage
   };
 
@@ -85,9 +83,11 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  Stage(const StencilMetaInformation& metaData, int StageID,
+        IterationSpace iterationspace = {std::optional<Interval>(), std::optional<Interval>()});
+
   Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval,
         IterationSpace iterationspace = {std::optional<Interval>(), std::optional<Interval>()});
-  Stage(const StencilMetaInformation& metaData, int StageID);
 
   Stage(Stage&&) = default;
   /// @}
@@ -196,19 +196,22 @@ public:
   ///
   /// Calls `update()` in the end.
   void appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
-                      const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph);
+                      DependencyGraphAccesses&& dependencyGraph);
 
   /// @brief Split the stage at the given indices into separate stages.
   ///
   /// This stage will not be usable after this operations i.e it's members will be moved into the
   /// new stages. This function consumes the input argument `splitterIndices`.
   ///
-  /// If a vector of graphs is provided, it will be assigned to the new stages.
+  /// @return New stages
+  std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices);
+
+  /// @brief Split the stage at the given indices into separate stages and updates the stages with
+  /// graph.
   ///
   /// @return New stages
-  std::vector<std::unique_ptr<Stage>>
-  split(std::deque<int>& splitterIndices,
-        const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
+  std::vector<std::unique_ptr<Stage>> split(std::deque<int> const& splitterIndices,
+                                            std::deque<DependencyGraphAccesses>&& graphs);
 
   /// @brief Get the extent of the stage
   /// @{
@@ -226,20 +229,27 @@ public:
   bool getRequiresSync() const;
   /// @}
 
-  /// @brief Get the location type
-  /// @{
-  void setLocationType(ast::Expr::LocationType type);
-  ast::Expr::LocationType getLocationType() const;
-  /// @}
+  /// @brief setter for the location type
+  void setLocationType(ast::LocationType type);
 
+  /// @brief returns the location type of a stage
+  std::optional<ast::LocationType> getLocationType() const;
   /// @brief Get the horizontal iteration space
   /// @{
   void setIterationSpace(const IterationSpace& value);
   const IterationSpace& getIterationSpace() const;
+  bool hasIterationSpace() const;
   /// @}
+
+  /// @brief Are iteration spaces of this stage and another stage compatible?
+  ///
+  /// Iteration spaces are said to be compatible if they are either equal, or the iteration
+  /// space of the `other` stage is completely contained in this stages iteration space
+  /// If this stage contains an iteration space and the other does not, the iteration spaces are
+  /// incompatible If neither stage or just the other stage contains an iteration space they are
+  /// compatible
+  bool iterationSpaceCompatible(const Stage& other) const;
 };
 
 } // namespace iir
 } // namespace dawn
-
-#endif

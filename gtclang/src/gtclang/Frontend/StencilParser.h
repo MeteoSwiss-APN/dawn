@@ -152,6 +152,9 @@ private:
   std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
   parseVerticalRegion(clang::CXXForRangeStmt* verticalRegionDecl);
 
+  std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
+  parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl);
+
   /// @brief Parse a decription of a boundary condition
   std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>
   parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition);

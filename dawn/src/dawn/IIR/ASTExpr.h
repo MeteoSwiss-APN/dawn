@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTEXPR_H
-#define DAWN_IIR_ASTEXPR_H
+#pragma once
 
 #include "dawn/AST/ASTExpr.h"
 
@@ -62,5 +61,3 @@ int getAccessID(const std::shared_ptr<Expr>& expr);
 
 } // namespace iir
 } // namespace dawn
-
-#endif

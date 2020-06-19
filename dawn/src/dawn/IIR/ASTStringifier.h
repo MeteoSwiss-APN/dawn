@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTSTRINGIFER_H
-#define DAWN_IIR_ASTSTRINGIFER_H
+#pragma once
 
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/IIR/ASTFwd.h"
@@ -35,5 +34,3 @@ extern inline std::ostream& operator<<(std::ostream& os, const std::shared_ptr<E
 }
 } // namespace iir
 } // namespace dawn
-
-#endif

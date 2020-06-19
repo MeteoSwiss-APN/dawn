@@ -21,9 +21,28 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
+# GCC 8, still a common compiler, requires linking to a separate library for std::filesystem support.
+# Once that is no longer common we can remove this hack
+add_library(cpp_extra_libs INTERFACE)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+
+    target_link_libraries(cpp_extra_libs INTERFACE stdc++fs)
+endif()
+
+install(
+  TARGETS cpp_extra_libs
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
 function(add_dawn_library)
   foreach(_l IN LISTS ARGN)
+    # Link to cpp_extra_libs -- see above
+    target_link_libraries(${_l} PUBLIC cpp_extra_libs)
+    # Add to main project interface target
     target_link_libraries(${PROJECT_NAME} INTERFACE ${_l})
+    # Add to install target group
     install(
       TARGETS ${_l}
       EXPORT ${PROJECT_NAME}Targets
@@ -52,6 +71,9 @@ add_dawn_library(DawnIIRProto DawnIIR)
 add_subdirectory(Optimizer)
 add_dawn_library(DawnOptimizer)
 
+add_subdirectory(Validator)
+add_dawn_library(DawnValidator)
+
 add_subdirectory(Serialization)
 add_dawn_library(DawnSerialization)
 
@@ -64,3 +86,23 @@ add_dawn_library(DawnCompiler)
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(Unittest)
 endif()
+
+include(FetchCxxopts)
+
+add_executable(dawn-opt dawn-opt.cpp)
+target_link_libraries(dawn-opt Dawn cxxopts)
+set_target_properties(dawn-opt PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+install(
+  TARGETS dawn-opt
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+add_executable(dawn-codegen dawn-codegen.cpp)
+target_link_libraries(dawn-codegen Dawn cxxopts)
+set_target_properties(dawn-codegen PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+install(
+  TARGETS dawn-codegen
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

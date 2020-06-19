@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
-#define DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
+#pragma once
 
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/Interval.h"
@@ -37,5 +36,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

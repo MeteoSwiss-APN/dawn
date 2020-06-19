@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STENCIL_H
-#define DAWN_IIR_STENCIL_H
+#pragma once
 
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
@@ -29,7 +29,6 @@ namespace dawn {
 
 namespace iir {
 
-class DependencyGraphStage;
 class IIR;
 class StencilMetaInformation;
 
@@ -45,29 +44,24 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
 
 public:
   // FieldInfo desribes the properties of a given Field
-  // In the structured case, the dimensions is an array of numberes in x,y and z describing if the
-  // field is allowed to have extens in this dimension: [1,0,0] is a storage_i and cannot be
-  // accessed with field[j+1]
   struct FieldInfo {
-    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimension dim, const Field& f)
-        : Name(fieldName), Dimensions(dim), field(f), IsTemporary(t) {}
+    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimensions dim, const Field& f)
+        : Name(fieldName), field(f), IsTemporary(t) {}
 
     std::string Name;
-    dawn::sir::FieldDimension Dimensions;
     Field field;
     bool IsTemporary;
     json::json jsonDump() const;
 
     bool operator==(const FieldInfo& other) const {
-      return Name == other.Name && Dimensions == other.Dimensions && field == other.field &&
-             IsTemporary == other.IsTemporary;
+      return Name == other.Name && field == other.field && IsTemporary == other.IsTemporary;
     }
   };
 
 private:
   struct DerivedInfo {
     /// Dependency graph of the stages of this stencil
-    std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
+    std::optional<DependencyGraphStage> stageDependencyGraph_;
     /// field info properties
     std::unordered_map<int, FieldInfo> fields_;
 
@@ -255,8 +249,8 @@ public:
 
   /// @brief Get/Set the dependency graph of the stages
   /// @{
-  const std::shared_ptr<DependencyGraphStage>& getStageDependencyGraph() const;
-  void setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG);
+  const std::optional<DependencyGraphStage>& getStageDependencyGraph() const;
+  void setStageDependencyGraph(DependencyGraphStage&& stageDAG);
   /// @}
 
   /// @brief determines whether the stencil contains redundant computations, i.e. if any of the
@@ -314,5 +308,3 @@ private:
 } // namespace iir
 
 } // namespace dawn
-
-#endif

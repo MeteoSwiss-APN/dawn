@@ -27,7 +27,10 @@
 #include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/RemoveIf.hpp"
+
+#include <sstream>
 
 namespace dawn {
 
@@ -206,8 +209,10 @@ public:
 
       int genLineKey = static_cast<std::underlying_type<SourceLocation::ReservedSL>::type>(
           SourceLocation::ReservedSL::Generated);
-      tmpFunction_->Args.push_back(
-          std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
+      sir::FieldDimensions&& dims =
+          metadata_.getFieldDimensions(*expr->getData<iir::IIRAccessExprData>().AccessID);
+      tmpFunction_->Args.push_back(std::make_shared<sir::Field>(
+          expr->getName(), std::move(dims), SourceLocation(genLineKey, genLineKey)));
 
       accessIDs_.push_back(iir::getAccessID(expr));
     }
@@ -568,9 +573,6 @@ bool PassTemporaryToStencilFunction::run(
 
   const auto& metadata = stencilInstantiation->getMetaData();
 
-  if(!(context_.getOptions().PassTmpToFunction))
-    return true;
-
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     const auto& fields = stencilPtr->getFields();
 
@@ -671,7 +673,7 @@ bool PassTemporaryToStencilFunction::run(
 
                   const std::shared_ptr<iir::Stmt>& replacementStmt =
                       *(tmpStmtDoMethod.getAST().getStatements().begin());
-                  computeAccesses(stencilInstantiation.get(), replacementStmt);
+                  computeAccesses(stencilInstantiation->getMetaData(), replacementStmt);
 
                   doMethodPtr->getAST().replaceChildren(stmt, replacementStmt);
                   doMethodPtr->update(iir::NodeUpdateType::level);
@@ -737,19 +739,16 @@ bool PassTemporaryToStencilFunction::run(
           }
         }
 
-        std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName();
-
-        if(temporaryFieldExprToFunction.empty())
-          std::cout << "no replacement found";
-
+        std::ostringstream ss;
         for(auto tmpFieldPair : temporaryFieldExprToFunction) {
           int accessID = tmpFieldPair.first;
           auto tmpProperties = tmpFieldPair.second;
-          if(context_.getOptions().ReportPassTmpToFunction)
-            std::cout << " [ replace tmp:" << metadata.getFieldNameFromAccessID(accessID)
-                      << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
-                      << " ] ";
+          ss << " [ replace tmp:" << metadata.getFieldNameFromAccessID(accessID)
+             << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line << " ] ";
         }
+        if(temporaryFieldExprToFunction.empty())
+          ss << "no replacement found";
+        DAWN_LOG(INFO) << stencilInstantiation->getName() << ss.str();
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements

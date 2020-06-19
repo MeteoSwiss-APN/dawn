@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "36": "__local_fn_36",
    "16": "a",
-   "17": "b",
-   "36": "__local_fn_36"
+   "17": "b"
   },
   "accessIDToType": {
    "16": 6,
@@ -24,16 +24,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "16": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "17": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -62,7 +66,7 @@
    "Line": 29,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "StencilFnCallTest"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -114,7 +118,7 @@
                   "data": {
                    "accessID": 16
                   },
-                  "ID": 41
+                  "ID": 33
                  }
                 }
                ],
@@ -147,7 +151,7 @@
                "var_decl_stmt_data": {
                 "accessID": 36
                },
-               "ID": 40
+               "ID": 37
               }
              },
              {
@@ -177,7 +181,7 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 44
+                   "ID": 22
                   }
                  },
                  "op": "=",
@@ -192,14 +196,14 @@
                    "data": {
                     "accessID": 36
                    },
-                   "ID": 43
+                   "ID": 38
                   }
                  },
                  "loc": {
                   "Line": 32,
                   "Column": 59
                  },
-                 "ID": 45
+                 "ID": 23
                 }
                },
                "loc": {
@@ -228,7 +232,7 @@
                  }
                 }
                },
-               "ID": 42
+               "ID": 24
               }
              }
             ],
@@ -237,7 +241,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 39
+            "ID": 30
            }
           },
           "doMethodID": 0,
@@ -249,7 +253,8 @@
           }
          }
         ],
-        "stageID": 29
+        "stageID": 29,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
@@ -285,5 +290,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "StencilFnCallTest.cpp"
 }

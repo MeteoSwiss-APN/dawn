@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+git ls-files | grep -E "\.cpp$|\.h$" | xargs $(git config  --get clangFormat.binary) --style=file -i

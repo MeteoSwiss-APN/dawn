@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
-#include "dawn-c/ErrorHandling.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -23,11 +22,14 @@
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 
 #include <memory>
 
 namespace dawn {
+
+PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
+    : Pass(context, "PassFixVersionedInputFields", true) {}
 
 /// @brief Creates the assignment statement
 static std::shared_ptr<ast::Stmt>
@@ -120,11 +122,6 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
     }
   }
 };
-
-PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {
-  dependencies_.push_back("PassFieldVersioning");
-}
 
 bool PassFixVersionedInputFields::run(
     std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {

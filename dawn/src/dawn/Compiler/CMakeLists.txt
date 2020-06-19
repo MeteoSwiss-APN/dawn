@@ -13,11 +13,9 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnCompiler
-  DawnCompiler.h
-  DawnCompiler.cpp
-  Options.h
-  Options.inc
+  Driver.h
+  Driver.cpp
 )
 
 target_add_dawn_standard_props(DawnCompiler)
-target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnCodeGen DawnSerialization)
+target_link_libraries(DawnCompiler PUBLIC DawnSupport DawnSIR DawnOptimizer DawnValidator DawnCodeGen DawnSerialization)

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_SIR_H
-#define DAWN_SIR_SIR_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
@@ -28,10 +27,11 @@
 #include "dawn/Support/Type.h"
 #include <algorithm>
 #include <iosfwd>
+#include <map>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
-#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -150,6 +150,7 @@ struct StencilFunctionArg {
   SourceLocation Loc; ///< Source location
 
   bool operator==(const StencilFunctionArg& rhs) const;
+
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
@@ -164,66 +165,153 @@ private:
   virtual bool equalityImpl(const FieldDimensionImpl& other) const = 0;
 };
 
+/// @brief In the cartesian case, the horizontal dimension is an IJ-mask describing if the
+/// field is allowed to have extents in I and/or J: [1,0] is a storage_i and cannot be
+/// accessed with field[j+1]
+///
+/// @ingroup sir
 class CartesianFieldDimension : public FieldDimensionImpl {
-  bool maskI_, maskJ_, maskK_;
+  const std::array<bool, 2> mask_;
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<CartesianFieldDimension>(maskI_, maskJ_, maskK_);
+    return std::make_unique<CartesianFieldDimension>(mask_);
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
     auto const& otherCartesian = dynamic_cast<CartesianFieldDimension const&>(other);
-    return otherCartesian.I() == I() && otherCartesian.J() == J() && otherCartesian.K() == K();
+    return otherCartesian.I() == I() && otherCartesian.J() == J();
   }
 
 public:
-  bool I() const { return maskI_; }
-  bool J() const { return maskJ_; }
-  bool K() const { return maskK_; }
-  explicit CartesianFieldDimension(std::array<bool, 3> mask)
-      : maskI_(mask[0]), maskJ_(mask[1]), maskK_(mask[2]) {}
-  explicit CartesianFieldDimension(bool dimi, bool dimj, bool dimk)
-      : maskI_(dimi), maskJ_(dimj), maskK_(dimk) {}
+  bool I() const { return mask_[0]; }
+  bool J() const { return mask_[1]; }
+  explicit CartesianFieldDimension(std::array<bool, 2> mask) : mask_(mask) {}
 };
 
-class FieldDimension {
+/// @brief In the unstructured case, the horizontal dimension can be either dense or sparse.
+/// A field on dense corresponds to 1 value for each location of type defined by the "dense location
+/// type". A field on sparse corresponds to as many values as indirect neighbors defined through a
+/// neighbor chain.
+///
+/// Construct with a neighbor chain. If it is of size = 1, then the dimension is dense (with
+/// location type = single element of chain), otherwise sparse (with dense location type being the
+/// first element of the chain).
+///
+/// @ingroup sir
+class UnstructuredFieldDimension : public FieldDimensionImpl {
+  std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
+    return std::make_unique<UnstructuredFieldDimension>(neighborChain_);
+  }
+  virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
+    auto const& otherUnstructured = dynamic_cast<UnstructuredFieldDimension const&>(other);
+    return std::equal(neighborChain_.begin(), neighborChain_.end(),
+                      otherUnstructured.neighborChain_.begin());
+  }
+
+  bool chainIsValid() const;
+  const ast::NeighborChain neighborChain_;
+
+public:
+  explicit UnstructuredFieldDimension(const ast::NeighborChain neighborChain);
+  /// @brief Returns the neighbor chain encoding the sparse part (isSparse() must be true!).
+  const ast::NeighborChain& getNeighborChain() const;
+  /// @brief Returns the dense location (always present)
+  ast::LocationType getDenseLocationType() const { return neighborChain_[0]; }
+  /// @brief Returns the last sparse location type if there is a sparse part, otherwise returns the
+  /// dense part.
+  ast::LocationType getLastSparseLocationType() const { return neighborChain_.back(); }
+  bool isSparse() const { return neighborChain_.size() > 1; }
+  bool isDense() const { return !isSparse(); }
+  std::string toString() const;
+};
+
+class HorizontalFieldDimension {
   std::unique_ptr<FieldDimensionImpl> impl_;
 
 public:
-  FieldDimension(dawn::ast::cartesian_, std::array<bool, 3> mask)
+  // Construct a Cartesian horizontal field dimension with specified ij mask.
+  HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
+  // Construct a Unstructured horizontal field sparse dimension with specified neighbor chain
+  // (sparse part). Dense part is the first element of the chain.
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(neighborChain)) {}
+  // Construct a Unstructured horizontal field dense dimension with specified (dense) location type.
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::LocationType locationType)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(ast::NeighborChain{locationType})) {}
 
-  FieldDimension& operator=(const FieldDimension& other) {
+  HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
+  HorizontalFieldDimension(HorizontalFieldDimension&& other) { *this = other; };
+
+  HorizontalFieldDimension& operator=(const HorizontalFieldDimension& other) {
     impl_ = other.impl_->clone();
     return *this;
   }
-  bool operator==(const FieldDimension& other) const { return *impl_ == *other.impl_; }
-  FieldDimension& operator=(FieldDimension&& other) = default;
+  HorizontalFieldDimension& operator=(HorizontalFieldDimension&& other) {
+    impl_ = std::move(other.impl_);
+    return *this;
+  }
 
-  FieldDimension(const FieldDimension& other) { *this = other; }
-  FieldDimension(FieldDimension&& other) = default;
+  bool operator==(const HorizontalFieldDimension& other) const { return *impl_ == *other.impl_; }
+
+  ast::GridType getType() const;
 
   template <typename T>
-  friend T dimension_cast(FieldDimension const& dimension);
+  friend T dimension_cast(HorizontalFieldDimension const& dimension);
+  template <typename T>
+  friend bool dimension_isa(HorizontalFieldDimension const& dimension);
+};
+
+class FieldDimensions {
+public:
+  FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
+      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
+  FieldDimensions(const FieldDimensions&) = default;
+  FieldDimensions(FieldDimensions&&) = default;
+
+  FieldDimensions& operator=(const FieldDimensions&) = default;
+  FieldDimensions& operator=(FieldDimensions&&) = default;
+
+  bool operator==(const FieldDimensions& other) const {
+    return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
+  }
+
+  bool K() const { return maskK_; }
+  const HorizontalFieldDimension& getHorizontalFieldDimension() const {
+    return horizontalFieldDimension_;
+  }
+  std::string toString() const;
+
+private:
+  HorizontalFieldDimension horizontalFieldDimension_;
+  bool maskK_;
 };
 
 template <typename T>
-T dimension_cast(FieldDimension const& dimension) {
+T dimension_cast(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_reference_t<T>;
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
                 "Can only be casted to a valid field dimension implementation");
   static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
-  return dynamic_cast<T>(*dimension.impl_);
+  return *dynamic_cast<std::add_pointer_t<T>>(dimension.impl_.get());
+}
+
+template <typename T>
+bool dimension_isa(HorizontalFieldDimension const& dimension) {
+  using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid field dimension implementation");
+  return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
 }
 
 /// @brief Representation of a field
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
-  Field(const std::string& name, SourceLocation loc = SourceLocation())
+  Field(const std::string& name, FieldDimensions&& fieldDimensions,
+        SourceLocation loc = SourceLocation())
       : StencilFunctionArg{name, ArgumentKind::Field, loc}, IsTemporary(false),
-        fieldDimensions(dawn::ast::cartesian, {{0, 0, 0}}) {}
+        Dimensions(fieldDimensions) {}
 
   bool IsTemporary;
-  FieldDimension fieldDimensions;
-  ast::Expr::LocationType locationType = ast::Expr::LocationType::Cells;
+  FieldDimensions Dimensions;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == ArgumentKind::Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }
@@ -308,6 +396,12 @@ struct VerticalRegion {
                  const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
                  SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
+  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
+                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
+                 std::optional<Interval> iterationSpaceI, std::optional<Interval> iterationSpaceJ,
+                 SourceLocation loc = SourceLocation())
+      : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder),
+        IterationSpace({iterationSpaceI, iterationSpaceJ}) {}
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;
@@ -359,36 +453,36 @@ public:
 
   template <class T>
   Value(T value)
-      : value_{std::move(value)}, is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+      : value_{std::move(value)}, isConstexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   template <class T>
   Value(T value, bool is_constexpr)
       : value_{std::move(value)},
-        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+        isConstexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   Value(const Value& other)
-      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value& other)
-      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value&& other)
-      : value_{std::move(other.value_)}, is_constexpr_{other.isConstexpr()}, type_{
-                                                                                 other.getType()} {}
+      : value_{std::move(other.value_)}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {
+  }
 
-  Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+  Value(Kind type) : value_{}, isConstexpr_{false}, type_{type} {}
 
   virtual ~Value() = default;
 
   Value& operator=(const Value& other) {
     value_ = other.value_;
-    is_constexpr_ = other.isConstexpr();
+    isConstexpr_ = other.isConstexpr();
     type_ = other.getType();
     return *this;
   }
 
   /// @brief Get/Set if the variable is `constexpr`
-  virtual bool isConstexpr() const { return is_constexpr_; }
+  virtual bool isConstexpr() const { return isConstexpr_; }
 
   /// @brief `Type` to string
   static const char* typeToString(Kind type);
@@ -427,7 +521,7 @@ public:
 
 protected:
   std::optional<std::variant<bool, int, float, double, std::string>> value_;
-  bool is_constexpr_;
+  bool isConstexpr_;
   Kind type_;
 };
 
@@ -467,7 +561,8 @@ public:
   Global(Kind type) : Value(type) {}
 };
 
-using GlobalVariableMap = std::unordered_map<std::string, Global>;
+// Using ordered map to guarantee the same backend code will be generated
+using GlobalVariableMap = std::map<std::string, Global>;
 
 } // namespace sir
 
@@ -483,7 +578,7 @@ struct SIR : public dawn::NonCopyable {
   SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
-  void dump();
+  void dump(std::ostream& os);
 
   /// @brief Compares two SIRs for equality in contents
   ///
@@ -507,5 +602,3 @@ struct SIR : public dawn::NonCopyable {
 };
 
 } // namespace dawn
-
-#endif

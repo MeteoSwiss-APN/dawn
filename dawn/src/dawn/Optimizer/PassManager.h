@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSMANAGER_H
-#define DAWN_OPTIMIZER_PASSMANAGER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
+#include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/STLExtras.h"
 #include <list>
@@ -34,18 +34,6 @@ class PassManager : public NonCopyable {
   std::unordered_map<std::string, int> passCounter_;
 
 public:
-  /// @brief Create a new pass at the end of the pass list
-  template <class T, typename... Args>
-  void pushBackPass(Args&&... args) {
-    return passes_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-  }
-
-  /// @brief Create a new pass at the start of the pass list
-  template <class T, typename... Args>
-  void pushFrontPass(Args&&... args) {
-    return passes_.emplace_front(std::make_unique<T>(std::forward<Args>(args)...));
-  }
-
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool runAllPassesOnStencilInstantiation(
@@ -64,5 +52,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

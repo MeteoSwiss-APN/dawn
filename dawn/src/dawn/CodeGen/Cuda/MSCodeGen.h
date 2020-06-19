@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_MSCODEGEN_H
-#define DAWN_CODEGEN_CUDA_MSCODEGEN_H
+#pragma once
 
 #include <sstream>
+#include <unordered_set>
 
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
@@ -23,6 +23,7 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/Support/IndexRange.h"
+#include "dawn/Support/Iterator.h"
 
 namespace dawn {
 namespace iir {
@@ -56,11 +57,14 @@ private:
   Array3ui blockSize_;
   const bool solveKLoopInParallel_;
   CudaCodeGen::CudaCodeGenOptions options_;
+  bool iterationSpaceSet_;
+  static std::unordered_set<std::string> globalNames_;
 
 public:
   MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-            const CacheProperties& cacheProperties, CudaCodeGen::CudaCodeGenOptions options);
+            const CacheProperties& cacheProperties, CudaCodeGen::CudaCodeGenOptions options,
+            bool iterationSpaceSet = false);
 
   void generateCudaKernelCode();
 
@@ -162,5 +166,3 @@ private:
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

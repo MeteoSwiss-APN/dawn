@@ -17,20 +17,19 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Array.h"
+#include "dawn/Support/Logger.h"
 #include <algorithm>
 
 namespace dawn {
 
-PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {
-  dependencies_.push_back("PassComputeStageExtents");
-}
+PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {}
 
 bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& IIR = stencilInstantiation->getIIR();
 
-  Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().block_size_i),
-                     static_cast<unsigned int>(context_.getOptions().block_size_j),
-                     static_cast<unsigned int>(context_.getOptions().block_size_k)};
+  Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().BlockSizeI),
+                     static_cast<unsigned int>(context_.getOptions().BlockSizeJ),
+                     static_cast<unsigned int>(context_.getOptions().BlockSizeK)};
   if(std::all_of(blockSize.begin(), blockSize.end(), [](unsigned int size) { return size == 0; })) {
     bool verticalPattern = true;
     for(const auto& stage : iterateIIROver<iir::Stage>(*IIR)) {
@@ -64,11 +63,8 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
 
   IIR->setBlockSize(blockSize);
 
-  if(context_.getOptions().ReportPassSetBlockSize) {
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << ": blockSize"
-              << "[" << blockSize[0] << "," << blockSize[1] << "," << blockSize[2] << "]"
-              << std::endl;
-  }
+  DAWN_LOG(INFO) << stencilInstantiation->getName() << ": blockSize"
+                 << "[" << blockSize[0] << "," << blockSize[1] << "," << blockSize[2] << "]";
 
   // Notice that gridtools does not supported yet setting different block sizes, therefore the block
   // size of the IIR is currently ignored by GT

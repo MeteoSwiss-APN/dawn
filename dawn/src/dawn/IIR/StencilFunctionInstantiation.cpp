@@ -18,13 +18,15 @@
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
+
 #include <numeric>
 #include <optional>
+#include <ostream>
 
 namespace dawn {
 namespace iir {
@@ -391,9 +393,14 @@ void StencilFunctionInstantiation::update() {
       if(!isProvidedByStencilFunctionCall(AccessID) &&
          !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
-
+      auto&& dims = metadata_.isAccessType(FieldAccessType::Field, AccessID)
+                        ? metadata_.getFieldDimensions(AccessID)
+                        : sir::FieldDimensions(
+                              sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                              true); // TODO sparse_dim: this is a hack. Ideally we don't want
+                                     // to create Field when the argument is a function call.
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     std::optional<Extents>(), interval_);
+                                     std::optional<Extents>(), interval_, std::move(dims));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -404,8 +411,14 @@ void StencilFunctionInstantiation::update() {
          !metadata_.isAccessType(FieldAccessType::Field, AccessID))
         continue;
 
+      auto&& dims = metadata_.isAccessType(FieldAccessType::Field, AccessID)
+                        ? metadata_.getFieldDimensions(AccessID)
+                        : sir::FieldDimensions(
+                              sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                              true); // TODO sparse_dim: this is a hack. Ideally we don't want
+                                     // to create Field when the argument is a function call.
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                    std::optional<Extents>(), interval_);
+                                    std::optional<Extents>(), interval_, std::move(dims));
     }
   }
 
@@ -414,8 +427,14 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(
-          AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{}, interval_));
+      auto&& dims = metadata_.isAccessType(FieldAccessType::Field, AccessID)
+                        ? metadata_.getFieldDimensions(AccessID)
+                        : sir::FieldDimensions(
+                              sir::HorizontalFieldDimension(ast::cartesian, {true, true}),
+                              true); // TODO sparse_dim: this is a hack. Ideally we don't want
+                                     // to create Field when the argument is a function call.
+      inputFields.emplace(AccessID, Field(AccessID, Field::IntendKind::Input, Extents{}, Extents{},
+                                          interval_, std::move(dims)));
       unusedFields_.insert(AccessID);
     }
   }
@@ -557,53 +576,51 @@ std::string StencilFunctionInstantiation::getArgNameFromFunctionCall(std::string
   return "";
 }
 
-void StencilFunctionInstantiation::dump() const {
-  std::cout << "\nStencilFunction : " << getName() << " " << getInterval() << "\n";
-  std::cout << MakeIndent<1>::value << "Arguments:\n";
+void StencilFunctionInstantiation::dump(std::ostream& os) const {
+  os << "\nStencilFunction : " << getName() << " " << getInterval() << "\n";
+  os << MakeIndent<1>::value << "Arguments:\n";
 
   for(std::size_t argIdx = 0; argIdx < numArgs(); ++argIdx) {
 
-    std::cout << MakeIndent<2>::value << "arg(" << argIdx << ") : ";
+    os << MakeIndent<2>::value << "arg(" << argIdx << ") : ";
 
     if(isArgOffset(argIdx)) {
       int dim = getCallerOffsetOfArgOffset(argIdx)[0];
       int offset = getCallerOffsetOfArgOffset(argIdx)[1];
-      std::cout << "Offset : " << dim2str(dim);
+      os << "Offset : " << dim2str(dim);
       if(offset != 0)
-        std::cout << (offset > 0 ? "+" : "") << offset;
+        os << (offset > 0 ? "+" : "") << offset;
     } else if(isArgField(argIdx)) {
       sir::Field* field = dyn_cast<sir::Field>(function_->Args[argIdx].get());
-      std::cout << "Field : " << field->Name << " -> ";
+      os << "Field : " << field->Name << " -> ";
       if(isArgStencilFunctionInstantiation(argIdx)) {
-        std::cout << "stencil-function-call:"
-                  << getFunctionInstantiationOfArgField(argIdx)->getName();
+        os << "stencil-function-call:" << getFunctionInstantiationOfArgField(argIdx)->getName();
       } else {
         int callerAccessID = getCallerAccessIDOfArgField(argIdx);
-        std::cout << metadata_.getFieldNameFromAccessID(callerAccessID) << "  "
-                  << to_string(getCallerInitialOffsetFromAccessID(callerAccessID));
+        os << metadata_.getFieldNameFromAccessID(callerAccessID) << "  "
+           << to_string(getCallerInitialOffsetFromAccessID(callerAccessID));
       }
 
     } else {
-      std::cout << "Direction : " << dim2str(getCallerDimensionOfArgDirection(argIdx));
+      os << "Direction : " << dim2str(getCallerDimensionOfArgDirection(argIdx));
     }
-    std::cout << "\n";
+    os << "\n";
   }
 
-  std::cout << MakeIndent<1>::value << "Accesses (including initial offset):\n";
+  os << MakeIndent<1>::value << "Accesses (including initial offset):\n";
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    std::cout << "\033[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
-              << "\033[0m";
+    os << "\033[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+       << "\033[0m";
     const auto& callerAccesses =
         doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
-      std::cout << callerAccesses->toString(
-                       [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
-                       3 * DAWN_PRINT_INDENT)
-                << "\n";
+      os << callerAccesses->toString(
+                [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
+                3 * DAWN_PRINT_INDENT)
+         << "\n";
   }
-  std::cout.flush();
 }
 
 void StencilFunctionInstantiation::closeFunctionBindings() {

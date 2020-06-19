@@ -13,12 +13,14 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(dawn)
-add_subdirectory(dawn-c)
+add_subdirectory(toylib)
 
 if(ENABLE_PYTHON)
   add_subdirectory(dawn4py)
 endif()
 
 # install headers
-install(DIRECTORY . DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING PATTERN "*.h" PATTERN "dawn4py" EXCLUDE)
+foreach(dir IN ITEMS dawn driver-includes)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${dir} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inc")
+endforeach()

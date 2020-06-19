@@ -20,7 +20,6 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
 #include <sstream>
 
 namespace dawn {
@@ -53,6 +52,13 @@ public:
     curIndent_ -= DAWN_PRINT_INDENT;
 
     ss_ << std::string(curIndent_, ' ') << "}\n";
+    scopeDepth_--;
+  }
+
+  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
+    scopeDepth_++;
+    ss_ << "for (" << stmt->getIterationDescr().toString() << ")\n";
+    stmt->getBlockStmt()->accept(*this);
     scopeDepth_--;
   }
 
@@ -156,8 +162,32 @@ public:
     }
   }
   void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
+    auto getLocationTypeString = [](ast::LocationType type) {
+      switch(type) {
+      case ast::LocationType::Cells:
+        return "Cell";
+      case ast::LocationType::Edges:
+        return "Edge";
+      case ast::LocationType::Vertices:
+        return "Vertex";
+      default:
+        dawn_unreachable("unknown location type");
+        return "";
+      }
+    };
+
     ss_ << "Reduce (" << expr->getOp() << ", init = ";
     expr->getInit()->accept(*this);
+    ss_ << ", location = {";
+    bool first = true;
+    for(const auto& loc : expr->getNbhChain()) {
+      if(!first) {
+        ss_ << ", ";
+      }
+      ss_ << getLocationTypeString(loc);
+      first = false;
+    }
+    ss_ << "}";
     ss_ << "): ";
     expr->getRhs()->accept(*this);
   }

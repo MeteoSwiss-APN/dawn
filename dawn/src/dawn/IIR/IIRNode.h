@@ -12,18 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_IIRNODE_H
-#define DAWN_IIR_IIRNODE_H
+#pragma once
 
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <list>
 #include <memory>
+#include <ostream>
 #include <type_traits>
 #include <vector>
 
@@ -340,7 +339,7 @@ public:
   }
 
   /// @brief print tree of pointers
-  void printTree() { printTreeImpl<Child>(); }
+  void printTree(std::ostream& os) { printTreeImpl<Child>(os); }
 
   /// @brief replace a child node by another node (specialization for nodes with a parent node)
   /// @param inputChild child node that will be looked up and replaced
@@ -652,29 +651,30 @@ private:
 
   /// @brief print the tree of pointers (for debugging)
   template <typename TChild>
-  void printTreeImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
+  void printTreeImpl(std::ostream& os,
+                     typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
     for(const auto& child : getChildren()) {
       if(child->parentIsSet())
-        std::cout << "&child : " << &child << "  child.get() : " << child.get()
-                  << " child->getParentP() : " << parent_
-                  << " parent.get() : " << child->getParent().get() << std::endl;
+        os << "&child : " << &child << "  child.get() : " << child.get()
+           << " child->getParentP() : " << parent_ << " parent.get() : " << child->getParent().get()
+           << "\n";
       else
-        std::cout << "&child : " << &child << "  child.get() : " << child.get()
-                  << " child->getParentP() : " << parent_ << " parent.get() : "
-                  << "NULL" << std::endl;
+        os << "&child : " << &child << "  child.get() : " << child.get()
+           << " child->getParentP() : " << parent_ << " parent.get() : "
+           << "NULL"
+           << "\n";
     }
     for(const auto& child : children_) {
-      child->printTree();
+      child->printTree(os);
     }
   }
 
   template <typename TChild>
-  void printTreeImpl(typename std::enable_if<std::is_void<TChild>::value>::type* = 0) {}
+  void printTreeImpl(std::ostream& os,
+                     typename std::enable_if<std::is_void<TChild>::value>::type* = 0) {}
 };
 
 } // namespace iir
 } // namespace dawn
 
 #undef PROTECT_TEMPLATE
-
-#endif

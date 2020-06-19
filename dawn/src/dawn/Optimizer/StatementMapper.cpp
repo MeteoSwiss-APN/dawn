@@ -15,6 +15,8 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
 
 namespace dawn {
 StatementMapper::StatementMapper(
@@ -54,6 +56,13 @@ void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   scope_.top()->ScopeDepth--;
 }
 
+void StatementMapper::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
+  DAWN_ASSERT(initializedWithBlockStmt_);
+
+  appendNewStatement(stmt);
+  stmt->getBlockStmt()->accept(*this);
+}
+
 void StatementMapper::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   appendNewStatement(stmt);
@@ -68,10 +77,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
 
   // We can only have 1 return statement
   if(curFunc->hasReturn()) {
-    DiagnosticsBuilder diag(DiagnosticsKind::Error, curFunc->getStencilFunction()->Loc);
-    diag << "multiple return-statement in stencil function '" << curFunc->getName() << "'";
-    context_.getDiagnostics().report(diag);
-    return;
+    DAWN_DIAG(ERROR, metadata_.getFileName(), curFunc->getStencilFunction()->Loc)
+        << "Multiple return-statement in stencil function '" << curFunc->getName() << "'";
   }
   scope_.top()->FunctionInstantiation->setReturn(true);
 
@@ -94,8 +101,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   if(!stmt->getData<iir::VarDeclStmtData>().AccessID) {
-    // This is the first time we encounter this variable. We have to make sure the name is not
-    // already used in another scope!
+    // TODO: this code is almost a duplicate of `StencilMetaInformation::addStmt()`, but here it
+    // differs because it considers also the stencil function case. A common solution should be
+    // found.
+
+    // This is the first time we encounter this variable. We have to make sure the name is
+    // not already used in another scope!
     int accessID = instantiation_->nextUID();
 
     std::string globalName;
@@ -106,10 +117,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
 
     // We generate a new AccessID and insert it into the AccessMaps (using the global name)
     auto& function = scope_.top()->FunctionInstantiation;
-    if(function)
+    if(function) {
       function->getAccessIDToNameMap().emplace(accessID, globalName);
-    else
+    } else {
       metadata_.addAccessIDNamePair(accessID, globalName);
+      metadata_.addAccessIDToLocalVariableDataPair(accessID, iir::LocalVariableData{});
+    }
 
     stmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
 
@@ -194,11 +207,10 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
         // Select the correct overload
         ast = iirStencilFun->getASTOfInterval(interval.asSIRInterval());
         if(ast == nullptr) {
-          DiagnosticsBuilder diag(DiagnosticsKind::Error, expr->getSourceLocation());
-          diag << "no viable Do-Method overload for stencil function call '" << expr->getCallee()
-               << "'";
-          context_.getDiagnostics().report(diag);
-          dawn_unreachable("no viable do-method overload for stencil function call");
+          throw SyntacticError(
+              std::string("No viable Do-Method overload for stencil function call '") +
+                  expr->getCallee() + "'",
+              metadata_.getFileName(), expr->getSourceLocation());
         }
       } else {
         ast = iirStencilFun->Asts.front();

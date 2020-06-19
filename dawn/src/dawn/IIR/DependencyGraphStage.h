@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_DEPENDENCYGRAPHSTAGE_H
-#define DAWN_IIR_DEPENDENCYGRAPHSTAGE_H
+#pragma once
 
 #include "dawn/IIR/DependencyGraph.h"
 
@@ -64,5 +63,3 @@ public:
 
 } // namespace iir
 } // namespace dawn
-
-#endif

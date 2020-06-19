@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSETSYNCSTAGE_H
-#define DAWN_OPTIMIZER_PASSSETSYNCSTAGE_H
+#pragma once
 
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/Interval.h"
@@ -40,5 +39,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

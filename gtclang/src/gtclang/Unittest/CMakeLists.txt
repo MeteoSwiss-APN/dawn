@@ -30,12 +30,14 @@ add_library(GTClangUnittest
   GTClang.h
   UnittestEnvironment.cpp
   UnittestEnvironment.h
-  UnittestStmtSimplifier.h
-  UnittestStmtSimplifier.cpp
+  StmtSimplifier.h
+  StmtSimplifier.cpp
   ParsingComparison.h
   ParsingComparison.cpp
   ParsedString.h
   ParsedString.cpp
+  StmtSimplifier.h
+  StmtSimplifier.cpp
 )
 
 target_add_gtclang_standard_props(GTClangUnittest)

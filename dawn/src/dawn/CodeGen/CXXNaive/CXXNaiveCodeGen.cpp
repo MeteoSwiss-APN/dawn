@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
@@ -25,7 +26,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
 #include <string>
@@ -83,9 +85,17 @@ std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 }
 } // namespace
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                                 int maxHaloPoint)
-    : CodeGen(ctx, engine, maxHaloPoint) {}
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options) {
+  CXXNaiveCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
+
+  return CG.generateCode();
+}
+
+CXXNaiveCodeGen::CXXNaiveCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
+    : CodeGen(ctx, maxHaloPoint) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
@@ -220,7 +230,7 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+                                "\"" + stencilWrapperClass.getName() + "\"");
 
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
@@ -287,41 +297,11 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     stencilClass.addComment("Members");
-    bool iterationSpaceSet = false;
-    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-      if(stage->getIterationSpace()[0].has_value()) {
-        stencilClass.addMember("std::array<int, 2>",
-                               "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
-        iterationSpaceSet = true;
-      }
-      if(stage->getIterationSpace()[1].has_value()) {
-        stencilClass.addMember("std::array<int, 2>",
-                               "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
-        iterationSpaceSet = true;
-      }
-    }
+    bool iterationSpaceSet = hasGlobalIndices(stencil);
     if(iterationSpaceSet) {
-      stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
-      auto globalOffsetFunc = stencilClass.addMemberFunction("static std::array<unsigned int, 2>",
-                                                             "computeGlobalOffsets");
-      globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
-      globalOffsetFunc.startBody();
-      globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
-      globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
-      globalOffsetFunc.addStatement("unsigned int col = rankOnDefaultFace % ycols");
-      globalOffsetFunc.addStatement(
-          "return {col * (dom.isize() - dom.iplus()), row * (dom.jsize() - dom.jplus())}");
-
-      globalOffsetFunc.commit();
-
-      auto checkOffsetFunc = stencilClass.addMemberFunction("static bool", "checkOffset");
-      checkOffsetFunc.addArg("unsigned int min");
-      checkOffsetFunc.addArg("unsigned int max");
-      checkOffsetFunc.addArg("unsigned int val");
-      checkOffsetFunc.startBody();
-      checkOffsetFunc.addStatement("return (min <= val && val < max)");
-      checkOffsetFunc.commit();
+      generateGlobalIndices(stencil, stencilClass);
     }
+
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
@@ -384,6 +364,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
     // virtual dtor
 
     // synchronize storages method
+
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
 
     //
     // Run-Method
@@ -448,53 +431,59 @@ void CXXNaiveCodeGen::generateStencilClasses(
                 auto const& extents = iir::extent_cast<iir::CartesianExtent const&>(
                     stage.getExtents().horizontalExtent());
 
-                auto doMethodGenerator = [&]() {
-                  // Check if we need to execute this statement:
+                // Check if we need to execute this statement:
+                bool hasOverlappingInterval = false;
+                for(const auto& doMethodPtr : stage.getChildren()) {
+                  hasOverlappingInterval |= (doMethodPtr->getInterval().overlaps(interval));
+                }
 
-                  // Generate Do-Method
-                  for(const auto& doMethodPtr : stage.getChildren()) {
-                    const iir::DoMethod& doMethod = *doMethodPtr;
-                    if(!doMethod.getInterval().overlaps(interval))
-                      continue;
-                    for(const auto& stmt : doMethod.getAST().getStatements()) {
-                      stmt->accept(stencilBodyCXXVisitor);
-                      stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                if(hasOverlappingInterval) {
+                  auto doMethodGenerator = [&]() {
+                    // Generate Do-Method
+                    for(const auto& doMethodPtr : stage.getChildren()) {
+                      const iir::DoMethod& doMethod = *doMethodPtr;
+                      if(!doMethod.getInterval().overlaps(interval))
+                        continue;
+                      for(const auto& stmt : doMethod.getAST().getStatements()) {
+                        stmt->accept(stencilBodyCXXVisitor);
+                        stencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                      }
                     }
-                  }
-                };
+                  };
 
-                stencilRunMethod.addBlockStatement(
-                    makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
-                      stencilRunMethod.addBlockStatement(
-                          makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&] {
-                            if(std::any_of(stage.getIterationSpace().cbegin(),
-                                           stage.getIterationSpace().cend(),
-                                           [](const auto& p) -> bool { return p.has_value(); })) {
-                              std::string conditional = "if(";
-                              if(stage.getIterationSpace()[0]) {
-                                conditional += "checkOffset(stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalIIndices[0], stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalIIndices[1], globalOffsets[0] + i)";
-                              }
-                              if(stage.getIterationSpace()[1]) {
+                  stencilRunMethod.addBlockStatement(
+                      makeIJLoop(extents.iMinus(), extents.iPlus(), "m_dom", "i"), [&]() {
+                        stencilRunMethod.addBlockStatement(
+                            makeIJLoop(extents.jMinus(), extents.jPlus(), "m_dom", "j"), [&] {
+                              if(std::any_of(stage.getIterationSpace().cbegin(),
+                                             stage.getIterationSpace().cend(),
+                                             [](const auto& p) -> bool { return p.has_value(); })) {
+                                std::string conditional = "if(";
                                 if(stage.getIterationSpace()[0]) {
-                                  conditional += " && ";
+                                  conditional += "checkOffset(stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalIIndices[0], stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalIIndices[1], globalOffsets[0] + i)";
                                 }
-                                conditional += "checkOffset(stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalJIndices[0], stage" +
-                                               std::to_string(stage.getStageID()) +
-                                               "GlobalJIndices[1], globalOffsets[1] + j)";
+                                if(stage.getIterationSpace()[1]) {
+                                  if(stage.getIterationSpace()[0]) {
+                                    conditional += " && ";
+                                  }
+                                  conditional += "checkOffset(stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalJIndices[0], stage" +
+                                                 std::to_string(stage.getStageID()) +
+                                                 "GlobalJIndices[1], globalOffsets[1] + j)";
+                                }
+                                conditional += ")";
+                                stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
+                              } else {
+                                doMethodGenerator();
                               }
-                              conditional += ")";
-                              stencilRunMethod.addBlockStatement(conditional, doMethodGenerator);
-                            } else {
-                              doMethodGenerator();
-                            }
-                          });
-                    });
+                            });
+                      });
+                }
               }
             });
       }
@@ -527,12 +516,11 @@ void CXXNaiveCodeGen::generateStencilFunctions(
       const auto& fields = stencilFun->getCalleeFields();
 
       if(fields.empty()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                stencilInstantiation->getMetaData().getStencilLocation());
-        diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilInstantiation->getMetaData().getStencilLocation());
       }
 
       // list of template names of the stencil function declaration
@@ -548,11 +536,11 @@ void CXXNaiveCodeGen::generateStencilFunctions(
                                       [](const std::string& str) { return "class " + str; }));
 
       if(fields.empty() && !stencilFun->hasReturn()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
-        diag << "no storages referenced in stencil function '" << stencilFun->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil function '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilFun->getStencilFunction()->Loc);
       }
 
       // Each stencil function call will pass the (i,j,k) position
@@ -631,6 +619,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASS_H
-#define DAWN_OPTIMIZER_PASS_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -69,5 +68,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

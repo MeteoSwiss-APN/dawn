@@ -85,8 +85,8 @@ function(compile_target)
   # gtclang_dsl_defs.
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
-  add_test(NAME GTClang-${executable}
-    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+  add_test(NAME GTClang::Integration::CodeGen::${executable}
+    COMMAND ${executable} 12 12 10
   )
 endfunction()
 
@@ -133,7 +133,7 @@ function(compile_target_cuda)
 
 
   add_test(NAME GTClang-${executable}
-    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10
   )
 endfunction()
 
@@ -168,7 +168,7 @@ function(add_codegen_test)
 endfunction()
 
 add_codegen_test(TEST copy_stencil)
-add_codegen_test(TEST lap FLAGS -fpass-tmp-to-function)
+add_codegen_test(TEST lap FLAGS -ftmp-to-stencil-function)
 add_codegen_test(TEST conditional_stencil)
 add_codegen_test(TEST coriolis_stencil)
 add_codegen_test(TEST hori_diff_stencil_01)

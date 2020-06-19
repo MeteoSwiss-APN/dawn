@@ -11,15 +11,15 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 set(executable ${PROJECT_NAME}UnittestSIR)
 add_executable(${executable}
-  TestMain.cpp
   TestAST.cpp
   TestASTVisitor.cpp
   TestSIR.cpp
   TestSIRSerializer.cpp
 )
-target_link_libraries(${executable} PRIVATE DawnSIR DawnSerialization DawnUnittest gtest)
+target_link_libraries(${executable} PRIVATE DawnSIR DawnSerialization DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})
-add_test(NAME ${executable} COMMAND ${executable})
+gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::SIR::" DISCOVERY_TIMEOUT 30)

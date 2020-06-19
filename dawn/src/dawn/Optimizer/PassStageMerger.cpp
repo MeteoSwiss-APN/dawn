@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Support/FileUtil.h"
+#include "dawn/Support/FileSystem.h"
 
 namespace dawn {
 
@@ -37,11 +37,11 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   bool MergeDoMethods = context_.getOptions().MergeDoMethods;
 
   // ... Nope
-  if(!MergeStages && !MergeDoMethods && !stencilNeedsMergePass)
+  if(!MergeDoMethods && !stencilNeedsMergePass)
     return true;
 
-  std::string filenameWE =
-      getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
+  const std::string filenameWE =
+      fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
   if(context_.getOptions().ReportPassStageMerger)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
@@ -49,8 +49,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     iir::Stencil& stencil = *stencilPtr;
     auto stencilAxis = stencil.getAxis(false);
 
-    // Do we need to run the analysis for thist stencil?
-    const std::shared_ptr<iir::DependencyGraphStage>& stageDAG = stencil.getStageDependencyGraph();
+    // Do we need to run the analysis for this stencil?
+    auto const& stageDAG = *stencil.getStageDependencyGraph();
     bool MergeDoMethodsOfStencil =
         stencil.getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods) || MergeDoMethods;
     bool MergeStagesOfStencil =
@@ -60,7 +60,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     if(!MergeStagesOfStencil && !MergeDoMethodsOfStencil)
       continue;
 
-    // Note that the underyling assumption is that stages in the same multi-stage are guaranteed to
+    // Note that the underlying assumption is that stages in the same multi-stage are guaranteed to
     // have no counter loop-oorder vertical dependencies. We can thus treat each multi-stage in
     // isolation!
     for(const auto& multiStagePtr : stencil.getChildren()) {
@@ -96,6 +96,11 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             if(candidateStage.getIterationSpace() != curStage.getIterationSpace()) {
               continue;
             }
+            // can only merge stages with same location type (for Cartesian they are both
+            // std::nullopt)
+            if(candidateStage.getLocationType() != curStage.getLocationType()) {
+              continue;
+            }
 
             // Does the interval of `curDoMethod` overlap with any DoMethod interval in
             // `candidateStage`?
@@ -117,23 +122,22 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
               if(candidateDoMethodIt != candidateStage.childrenEnd()) {
 
-                // Check if we can append our `curDoMethod` to that `candiateDoMethod`. We need
+                // Check if we can append our `curDoMethod` to that `candidateDoMethod`. We need
                 // to check if the resulting dep. graph is a DAG and does not contain any horizontal
                 // dependencies
-                iir::DoMethod& candiateDoMethod = **candidateDoMethodIt;
+                iir::DoMethod& candidateDoMethod = **candidateDoMethodIt;
 
-                auto& candiateDepGraph = candiateDoMethod.getDependencyGraph();
+                auto& candidateDepGraph = candidateDoMethod.getDependencyGraph();
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
-                auto newDepGraph = std::make_shared<iir::DependencyGraphAccesses>(
-                    stencilInstantiation->getMetaData(), candiateDepGraph, curDepGraph);
+                auto newDepGraph = iir::DependencyGraphAccesses(stencilInstantiation->getMetaData(),
+                                                                *candidateDepGraph, *curDepGraph);
 
-                if(newDepGraph->isDAG() &&
-                   !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {
+                if(newDepGraph.isDAG() && !hasHorizontalReadBeforeWriteConflict(newDepGraph)) {
 
                   if(MergeStagesOfStencil) {
                     candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
-                                                  newDepGraph);
+                                                  std::move(newDepGraph));
                     for(auto& doMethod : candidateStage.getChildren()) {
                       doMethod->update(iir::NodeUpdateType::level);
                     }
@@ -161,7 +165,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             }
 
             // The `curStage` depends on `candidateStage`, we thus cannot go further upwards
-            if(stageDAG->depends(curStage.getStageID(), candidateStage.getStageID())) {
+            if(stageDAG.depends(curStage.getStageID(), candidateStage.getStageID())) {
               break;
             }
           }

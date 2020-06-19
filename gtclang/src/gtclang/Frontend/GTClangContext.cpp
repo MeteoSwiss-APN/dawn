@@ -21,7 +21,12 @@
 namespace gtclang {
 
 GTClangContext::GTClangContext()
-    : options_(std::make_unique<Options>()), diagnostics_(nullptr), astContext_(nullptr) {}
+    : options_(std::make_unique<Options>()), diagnostics_(nullptr), astContext_(nullptr),
+      useDawn_(true) {}
+
+bool& GTClangContext::useDawn() { return useDawn_; }
+
+const bool& GTClangContext::useDawn() const { return useDawn_; }
 
 Options& GTClangContext::getOptions() {
   DAWN_ASSERT(options_);

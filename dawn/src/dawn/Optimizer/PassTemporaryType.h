@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSTEMPORARYTYPE_H
-#define DAWN_OPTIMIZER_PASSTEMPORARYTYPE_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include <memory>
@@ -91,5 +90,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

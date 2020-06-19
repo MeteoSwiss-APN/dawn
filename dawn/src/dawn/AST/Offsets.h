@@ -12,17 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_OFFSET_H
-#define DAWN_AST_OFFSET_H
+#pragma once
 
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/Support/Unreachable.h"
 
+#include <array>
 #include <memory>
 #include <string>
-#include <array>
 
-namespace dawn::ast {
+namespace dawn {
+namespace ast {
 
 class Offsets;
 
@@ -108,6 +109,11 @@ public:
   template <typename CartFn, typename UnstructuredFn, typename ZeroFn>
   friend auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
                               UnstructuredFn const& unstructuredFn, ZeroFn const& zeroFn);
+
+  // impl may be a null ptr, i.e. HorizontalOffset may be in a uninitialized state and not
+  // associated with a grid type
+  bool hasType() const;
+  GridType getGridType() const;
 
 private:
   std::unique_ptr<HorizontalOffsetImpl> impl_;
@@ -212,5 +218,5 @@ std::string to_string(unstructured_, Offsets const& offset);
 
 std::string to_string(Offsets const& offset);
 
-} // namespace dawn::ast
-#endif
+} // namespace ast
+} // namespace dawn

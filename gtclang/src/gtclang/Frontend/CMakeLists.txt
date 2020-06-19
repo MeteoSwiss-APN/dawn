@@ -1,15 +1,15 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _       _                   
-##                        | |     | |                  
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                         _       _
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -34,6 +34,8 @@ add_library(GTClangFrontend
   GTClangASTVisitor.h
   GTClangContext.cpp
   GTClangContext.h
+  GTClangIncludeChecker.cpp
+  GTClangIncludeChecker.h
   GTClangPreprocessorAction.cpp
   GTClangPreprocessorAction.h
   StencilParser.cpp

@@ -12,23 +12,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_executable(DawnIntegrationTest
-  TestMain.cpp
-  TestIIRDeserializer.cpp
-  GenerateInMemoryStencils.cpp
-)
-target_add_dawn_standard_props(DawnIntegrationTest)
-target_link_libraries(DawnIntegrationTest Dawn DawnUnittest gtest)
-set_target_properties(DawnIntegrationTest PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-add_test(NAME DawnIntegrationTest
-  COMMAND $<TARGET_FILE:DawnIntegrationTest>
-)
+add_subdirectory(from-sir)
+add_subdirectory(serializer)
 
-add_executable(DawnUpdateIIRReferences
-  RegenerateIIRMain.cpp
-  GenerateInMemoryStencils.cpp
-)
-target_link_libraries(DawnUpdateIIRReferences Dawn gtest)
-target_add_dawn_standard_props(DawnUpdateIIRReferences)
-file(COPY reference_iir DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+include(HasUnstructuredDeps)
+if (HAS_UNSTRUCTURED_DEPS)
+  add_subdirectory(unstructured)
+endif()
+
+add_subdirectory(dawn4py-tests)

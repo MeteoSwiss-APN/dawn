@@ -21,7 +21,7 @@
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
+#include <iomanip>
 #include <sstream>
 
 namespace dawn {
@@ -437,6 +437,8 @@ CompareResult sir::Value::comparison(const sir::Value& rhs) const {
     return isEqualImpl<int>(*this, rhs, rhs.toString());
   case sir::Value::Kind::Double:
     return isEqualImpl<double>(*this, rhs, rhs.toString());
+  case sir::Value::Kind::Float:
+    return isEqualImpl<float>(*this, rhs, rhs.toString());
   case sir::Value::Kind::String:
     return isEqualImpl<std::string>(*this, rhs, rhs.toString());
   default:
@@ -563,6 +565,76 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
+bool UnstructuredFieldDimension::chainIsValid() const {
+  for(int chainIdx = 0; chainIdx < neighborChain_.size() - 1; chainIdx++) {
+    if(neighborChain_[chainIdx] == neighborChain_[chainIdx + 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain)
+    : neighborChain_(neighborChain) {
+  DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
+  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
+                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
+}
+
+const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
+  DAWN_ASSERT(isSparse());
+  return neighborChain_;
+}
+
+std::string UnstructuredFieldDimension::toString() const {
+  auto getLocationTypeString = [](const ast::LocationType type) {
+    switch(type) {
+    case ast::LocationType::Cells:
+      return std::string("cell");
+      break;
+    case ast::LocationType::Vertices:
+      return std::string("vertex");
+      break;
+    case ast::LocationType::Edges:
+      return std::string("edge");
+      break;
+    default:
+      dawn_unreachable("unexpected type");
+    }
+  };
+
+  std::string output = "", separator = "";
+  for(const auto elem : neighborChain_) {
+    output += separator + getLocationTypeString(elem);
+    separator = "->";
+  }
+  return output;
+}
+
+ast::GridType HorizontalFieldDimension::getType() const {
+  if(sir::dimension_isa<sir::CartesianFieldDimension>(*this)) {
+    return ast::GridType::Cartesian;
+  } else {
+    return ast::GridType::Unstructured;
+  }
+} // namespace sir
+
+std::string FieldDimensions::toString() const {
+  if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
+    const auto& cartesianDimensions =
+        sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
+    return format("[%i,%i,%i]", cartesianDimensions.I(), cartesianDimensions.J(), K());
+
+  } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
+    const auto& unstructuredDimension =
+        sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension());
+    return format("[%s,%i]", unstructuredDimension.toString(), K());
+
+  } else {
+    dawn_unreachable("Invalid horizontal field dimension");
+  }
+}
+
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
@@ -616,7 +688,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 SIR::SIR(const ast::GridType gridType)
     : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
 
-void SIR::dump() { std::cout << *this << std::endl; }
+void SIR::dump(std::ostream& os) { os << *this << std::endl; }
 
 const char* sir::Value::typeToString(sir::Value::Kind type) {
   switch(type) {
@@ -650,6 +722,7 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
 }
 
 std::string sir::Value::toString() const {
+  std::ostringstream out;
   DAWN_ASSERT(has_value());
   switch(type_) {
   case Kind::Boolean:
@@ -657,9 +730,12 @@ std::string sir::Value::toString() const {
   case Kind::Integer:
     return std::to_string(std::get<int>(*value_));
   case Kind::Double:
-    return std::to_string(std::get<double>(*value_));
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+        << std::get<double>(*value_);
+    return out.str();
   case Kind::Float:
-    return std::to_string(std::get<float>(*value_));
+    out << std::setprecision(std::numeric_limits<float>::digits10 + 1) << std::get<float>(*value_);
+    return out.str();
   case Kind::String:
     return std::get<std::string>(*value_);
   default:

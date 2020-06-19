@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_SIRSERIALIZER_H
-#define DAWN_SIR_SIRSERIALIZER_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -33,6 +32,9 @@ public:
     Json, ///< JSON serialization
     Byte  ///< Protobuf's internal byte format
   };
+
+  /// @brief Parse a format string to serialization type
+  static Format parseFormatString(const std::string& format);
 
   /// @brief Deserialize the SIR from `file`
   ///
@@ -68,5 +70,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

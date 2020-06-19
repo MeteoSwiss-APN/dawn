@@ -22,8 +22,8 @@ Convenience functions to serialize/deserialize and print SIR and IIR objects.
 import textwrap
 
 from enum import Enum
-from collections import Iterable
-from typing import List, TypeVar
+from collections.abc import Iterable
+from typing import List, TypeVar, NewType
 
 from google.protobuf import json_format
 
@@ -36,8 +36,9 @@ from .. import utils
 __all__ = [
     "make_sir",
     "make_stencil",
-    "make_stencil",
     "make_type",
+    "make_field_dimensions_cartesian",
+    "make_field_dimensions_unstructured",
     "make_field",
     "make_ast",
     "make_interval",
@@ -45,6 +46,7 @@ __all__ = [
     "make_stencil_call",
     "make_stmt",
     "make_block_stmt",
+    "make_loop_stmt",
     "make_expr_stmt",
     "make_return_stmt",
     "make_var_decl_stmt",
@@ -61,9 +63,12 @@ __all__ = [
     "make_fun_call_expr",
     "make_stencil_fun_call_expr",
     "make_stencil_fun_arg_expr",
+    "make_stencil_function_arg",
+    "make_stencil_function",
     "make_var_access_expr",
     "make_field_access_expr",
     "make_literal_access_expr",
+    "make_weights",
     "make_reduction_over_neighbor_expr",
     "to_bytes",
     "from_bytes",
@@ -100,13 +105,11 @@ StmtType = TypeVar(
     StencilCallDeclStmt,
     BoundaryConditionDeclStmt,
     IfStmt,
+    LoopStmt,
 )
 
-
-class LocationType(Enum):
-    Cell = 0
-    Edge = 1
-    Vertex = 2
+# Can't pass SIR.enums_pb2.LocationType as argument because it doesn't contain the value
+LocationTypeValue = NewType("LocationTypeValue", int)
 
 
 def make_sir(
@@ -178,28 +181,62 @@ def make_type(builtin_type_or_name, is_const: bool = False, is_volatile: bool = 
     return t
 
 
-def make_field(
-    name: str,
-    is_temporary: bool = False,
-    dimensions: List[int] = [1, 1, 1],
-    location_type: LocationType = LocationType.Cell,
-) -> Field:
+def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
+    """ Create FieldDimensions of cartesian type
+
+    :param mask: mask to identify which cartesian dimensions are legal (default is [1, 1, 1])
+    """
+
+    if mask is None:
+        mask = [1, 1, 1]
+    assert len(mask) == 3
+
+    horizontal_dim = CartesianDimension()
+    horizontal_dim.mask_cart_i = mask[0]
+    horizontal_dim.mask_cart_j = mask[1]
+
+    dims = FieldDimensions()
+    dims.cartesian_horizontal_dimension.CopyFrom(horizontal_dim)
+    dims.mask_k = mask[2]
+    return dims
+
+
+def make_field_dimensions_unstructured(
+    locations: List[LocationTypeValue], mask_k: int,
+) -> FieldDimensions:
+    """ Create FieldDimensions of unstructured type
+
+    :locations:    a list of location types of the field. first entry is the dense part, additional entries are the (optional) sparse part
+    :mask_k:       mask to identify if the vertical dimension is legal
+    :sparse_part:  optional sparse part encoded by a neighbor chain
+    """
+
+    assert len(locations) >= 1
+
+    horizontal_dim = UnstructuredDimension()
+    horizontal_dim.dense_location_type = locations[0]
+    sparse_part = len(locations) > 1
+    if sparse_part:
+        horizontal_dim.sparse_part.extend(locations)
+
+    dims = FieldDimensions()
+    dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
+    dims.mask_k = mask_k
+    return dims
+
+
+def make_field(name: str, dimensions: FieldDimensions, is_temporary: bool = False) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
+    :param dimensions:   dimensions of the field (use make_field_dimensions_*)
     :param is_temporary: Is it a temporary field?
-    :param dimensions:   mask list to identify dimensions contained by the field
     """
+
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
-    field.field_dimensions.extend(dimensions)
-    if location_type == LocationType.Cell:
-        field.location_type = Field.Cell
-    elif location_type == LocationType.Edge:
-        field.location_type = Field.Edge
-    elif location_type == LocationType.Vertex:
-        field.location_type = Field.Vertex
+    field.field_dimensions.CopyFrom(dimensions)
     return field
 
 
@@ -308,11 +345,13 @@ def make_stmt(stmt: StmtType):
     elif isinstance(stmt, VerticalRegionDeclStmt):
         wrapped_stmt.vertical_region_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, StencilCallDeclStmt):
-        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+        wrapped_stmt.stencil_call_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, BoundaryConditionDeclStmt):
-        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+        wrapped_stmt.boundary_condition_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, IfStmt):
         wrapped_stmt.if_stmt.CopyFrom(stmt)
+    elif isinstance(stmt, LoopStmt):
+        wrapped_stmt.loop_stmt.CopyFrom(stmt)
     else:
         raise SIRError("cannot create Stmt from type {}".format(type(stmt)))
     return wrapped_stmt
@@ -325,9 +364,23 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
     """
     stmt = BlockStmt()
     if isinstance(statements, Iterable):
-        stmt.statements.extend([make_stmt(s) for s in statements])
+        stmt.statements.extend([make_stmt(s) for s in statements if not isinstance(s, Field)])
     else:
         stmt.statements.extend([make_stmt(statements)])
+    return stmt
+
+
+def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue]) -> LoopStmt:
+    """ Create an For Loop
+
+    :param block: List of statements that compose the body of the loop
+    """
+    stmt = LoopStmt()
+    stmt.statements.CopyFrom(make_stmt(make_block_stmt(block)))
+    loop_descriptor_chain = LoopDescriptorChain()
+    loop_descriptor_chain.chain.extend(chain)
+    stmt.loop_descriptor.loop_descriptor_chain.CopyFrom(loop_descriptor_chain)
+
     return stmt
 
 
@@ -555,6 +608,26 @@ def make_fun_call_expr(callee: str, arguments: List[ExprType]) -> FunCallExpr:
     return expr
 
 
+def make_stencil_function_arg(arg):
+    result = StencilFunctionArg()
+    if isinstance(arg, Field):
+        result.field_value.CopyFrom(arg)
+    else:
+        raise SIRError("arg type not implemented in dawn4py")
+    return result
+
+
+def make_stencil_function(
+    name: str, asts: List[AST], intervals: List[Interval], arguments: List[StencilFunctionArg]
+):
+    result = StencilFunction()
+    result.name = name
+    result.asts.extend(asts)
+    result.intervals.extend(intervals)
+    result.arguments.extend(arguments)
+    return result
+
+
 def make_stencil_fun_call_expr(callee: str, arguments: List[ExprType]) -> StencilFunCallExpr:
     """ Create a StencilFunCallExpr
 
@@ -571,6 +644,7 @@ def make_unstructured_offset(has_offset: bool = False) -> UnstructuredOffset:
     unstructured_offset = UnstructuredOffset()
     unstructured_offset.has_offset = has_offset
     return unstructured_offset
+
 
 def make_stencil_fun_arg_expr(
     direction: Dimension.Direction, offset: int = 0, argument_index: int = -1
@@ -593,18 +667,17 @@ def make_stencil_fun_arg_expr(
 
 
 def make_unstructured_field_access_expr(
-    name: str,
-    horizontal_offset: UnstructuredOffset = None, 
-    vertical_offset: int = 0,
+    name: str, horizontal_offset: UnstructuredOffset = None, vertical_offset: int = 0,
 ) -> FieldAccessExpr:
     expr = FieldAccessExpr()
     expr.name = name
-    if (horizontal_offset is None):
+    if horizontal_offset is None:
         expr.unstructured_offset.CopyFrom(make_unstructured_offset(False))
     else:
         expr.unstructured_offset.CopyFrom(horizontal_offset)
     expr.vertical_offset = vertical_offset
     return expr
+
 
 def make_field_access_expr(
     name: str,
@@ -678,7 +751,8 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     :param type:    Builtin type id of the literal.
     """
     builtin_type = BuiltinType()
-    builtin_type.type_id = type
+    if builtin_type.type_id != type:
+        builtin_type.type_id = type
 
     expr = LiteralAccessExpr()
     expr.value = value
@@ -686,19 +760,44 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     return expr
 
 
+def make_weights(weights) -> List[Expr]:
+    """ Create a weights vector
+
+    :param weights:         List of weights expressed with python primitive types
+    """
+    assert len(weights) != 0
+    proto_weights = []
+    for weight in weights:
+        proto_weight = Expr()
+        proto_weight.CopyFrom(make_expr(weight))
+        proto_weights.append(proto_weight)
+
+    return proto_weights
+
+
 def make_reduction_over_neighbor_expr(
-    op: str, rhs: ExprType, init: ExprType
+    op: str,
+    rhs: ExprType,
+    init: ExprType,
+    chain: List[LocationTypeValue],
+    weights: List[ExprType] = None,
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
-    :param op:          Reduction operation performed for each neighbor
-    :param rhs:         Operation to be performed for each neighbor before reducing
-    :param init:        Initial value for reduction operation
+    :param op:              Reduction operation performed for each neighbor
+    :param rhs:             Operation to be performed for each neighbor before reducing
+    :param init:            Initial value for reduction operation
+    :param chain:           Neighbor chain definining the neighbors to reduce from and
+                            the location type to reduce to (first element)
+    :param weights:         Weights on neighbors (required to be of equal type)
     """
     expr = ReductionOverNeighborExpr()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
+    expr.chain.extend(chain)
+    if weights is not None and len(weights) != 0:
+        expr.weights.extend([make_expr(weight) for weight in weights])
     return expr
 
 
@@ -928,6 +1027,19 @@ class SIRPrinter:
 
         print(self.wrapper.fill("}"), file=self.file)
 
+    def visit_loop_stmt(self, stmt):
+        print(self.wrapper.fill("{"), file=self.file)
+        self._indent += self.indent_size
+        self.wrapper.initial_indent = " " * self._indent
+        #TODO fix print
+        print("for(" + stmt.loop_descriptor.loop_descriptor_chain.chain + ")")
+        self.visit_block_stmt(stmt.statements.block_stmt)
+
+        self._indent -= self.indent_size
+        self.wrapper.initial_indent = " " * self._indent
+
+        print(self.wrapper.fill("}"), file=self.file)
+
     def visit_body_stmt(self, stmt):
         if stmt.WhichOneof("stmt") == "var_decl_stmt":
             self.visit_var_decl_stmt(stmt.var_decl_stmt)
@@ -937,6 +1049,8 @@ class SIRPrinter:
             self.visit_if_stmt(stmt.if_stmt)
         elif stmt.WhichOneof("stmt") == "block_stmt":
             self.visit_block_stmt(stmt.block_stmt)
+        elif stmt.WhichOneof("stmt") == "loop_stmt":
+            self.visit_loop_stmt(stmt.loop_stmt)
         else:
             raise ValueError("Stmt not supported :" + stmt.WhichOneof("stmt"))
 
@@ -1026,16 +1140,42 @@ class SIRPrinter:
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
 
+    def visit_cartesian_field(self, field):
+        str_ = field.name + "("
+        dims_ = []
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_i == 1:
+            dims_.append("i")
+        if field.field_dimensions.cartesian_horizontal_dimension.mask_cart_j == 1:
+            dims_.append("j")
+        if field.field_dimensions.mask_k == 1:
+            dims_.append("k")
+        str_ += str(dims_) + ")"
+        return str_
+
+    def location_type_to_string(self, location_type):
+        return LocationType.Name(location_type)
+
+    def visit_unstructured_field(self, field):
+        str_ = field.name + "("
+        str_ += self.location_type_to_string(
+            field.field_dimensions.unstructured_horizontal_dimension.dense_location_type
+        )
+        str_ += ", "
+        for location_type in field.field_dimensions.unstructured_horizontal_dimension.sparse_part:
+            str_ += self.location_type_to_string(location_type) + "->"
+        str_ += ")"
+        return str_
+
     def visit_fields(self, fields):
         str_ = "field "
         for field in fields:
-            str_ += field.name
-            dims = ["i", "j", "k"]
-            dims_ = []
-            for i in range(0, 3):
-                if field.field_dimensions[i] != -1:
-                    dims_.append(dims[i])
-            str_ += str(dims_)
+            if (
+                field.field_dimensions.WhichOneof("horizontal_dimension")
+                == "cartesian_horizontal_dimension"
+            ):
+                str_ += self.visit_cartesian_field(field)
+            else:
+                str_ += self.visit_unstructured_field(field)
             str_ += ","
         print(self.wrapper.fill(str_), file=self.file)
 

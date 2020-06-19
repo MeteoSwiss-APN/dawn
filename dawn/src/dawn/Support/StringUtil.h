@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_STRINGUTIL_H
-#define DAWN_SUPPORT_STRINGUTIL_H
+#pragma once
 
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/STLExtras.h"
@@ -130,6 +129,16 @@ extern std::string decimalToOrdinal(int dec);
 
 /// @}
 
-} // namespace dawn
+/// @brief Checks if two strings are equal (case insensitive)
+/// @ingroup support
+bool equalsLower(const std::string& a, const std::string& b);
 
-#endif
+/// @brief Checks if str begins with match (case insensitive)
+/// @ingroup support
+bool startWithLower(std::string str, std::string match);
+
+/// @brief Checks if str ends with match (case insensitive)
+/// @ingroup support
+bool endsWithLower(std::string str, std::string match);
+
+} // namespace dawn

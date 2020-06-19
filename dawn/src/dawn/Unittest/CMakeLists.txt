@@ -15,9 +15,9 @@
 add_library(DawnUnittest
   IIRBuilder.h
   IIRBuilder.cpp
-  UnittestLogger.cpp
-  UnittestLogger.h
+  UnittestUtils.h
+  UnittestUtils.cpp
 )
 
 target_add_dawn_standard_props(DawnUnittest)
-target_link_libraries(DawnUnittest PUBLIC DawnSupport DawnIIR DawnOptimizer DawnCodeGen)
+target_link_libraries(DawnUnittest PUBLIC DawnCompiler DawnSupport DawnIIR DawnOptimizer DawnValidator DawnCodeGen)

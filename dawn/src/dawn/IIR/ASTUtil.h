@@ -12,13 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTUTIL_H
-#define DAWN_IIR_ASTUTIL_H
+#pragma once
 
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/ArrayRef.h"
 #include <memory>
 #include <unordered_map>
 
@@ -78,20 +76,9 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
                                   std::unordered_map<std::string, double>());
 /// @}
 
-/// @brief Find all the different fields used in a given statement
-///
-/// This method iterates trough the complete AST and returns a vector of all the fields used. This
-/// can be used to determine if Stencils are legal and for auto generation of new stencils.
-///
-/// @param ast              AST to evaluate
-/// @returns                a Vector of all the Fields used in the stencil
-/// @ingroup testing
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
 using ASTHelper = ast::ASTHelper;
 } // namespace iir
 } // namespace dawn
-
-#endif

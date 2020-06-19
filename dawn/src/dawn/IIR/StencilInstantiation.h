@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STENCILINSTANTIATION_H
-#define DAWN_IIR_STENCILINSTANTIATION_H
+#pragma once
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/IIR.h"
@@ -22,9 +21,9 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
-#include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -44,7 +43,7 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Dump the StencilInstantiation to stdout
-  void dump() const;
+  void dump(std::ostream& os) const;
 
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(
@@ -117,9 +116,13 @@ public:
       const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
-  void reportAccesses() const;
+  void reportAccesses(std::ostream& os) const;
+
+  /// @brief This method computes the derived info for the stencil instantiation, including
+  /// node types and stage extents (associated to redundant computations)
+  /// The method processes the stages of each multi-stage from the instantiation and
+  /// stores the computation in the `Extent` member of the Stage (@see Stage)
+  void computeDerivedInfo();
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

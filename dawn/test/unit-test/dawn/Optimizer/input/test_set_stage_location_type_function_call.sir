@@ -1,0 +1,140 @@
+{
+  "gridType": "Unstructured",
+  "filename": "../input/test_set_stage_location_type_function_call.sir",
+  "stencils": [
+    {
+      "ast": {
+        "root": {
+          "blockStmt": {
+            "statements": [
+              {
+                "verticalRegionDeclStmt": {
+                  "verticalRegion": {
+                    "ast": {
+                      "root": {
+                        "blockStmt": {
+                          "statements": [
+                            {
+                              "exprStmt": {
+                                "expr": {
+                                  "stencilFunCallExpr": {
+                                    "callee": "f",
+                                    "arguments": [
+                                      {
+                                        "fieldAccessExpr": {
+                                          "name": "out_cell",
+                                          "zeroOffset": {},
+                                          "argumentMap": [
+                                            -1,
+                                            -1,
+                                            -1
+                                          ],
+                                          "argumentOffset": [
+                                            0,
+                                            0,
+                                            0
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "name": "out_cell",
+          "fieldDimensions": {
+            "unstructuredHorizontalDimension": {
+              "denseLocationType": "Cell"
+            },
+            "maskK": 1
+          }
+        }
+      ],
+      "name": "generated"
+    }
+  ],
+  "stencilFunctions": [
+    {
+      "asts": [
+        {
+          "root": {
+            "blockStmt": {
+              "statements": [
+                {
+                  "exprStmt": {
+                    "expr": {
+                      "assignmentExpr": {
+                        "left": {
+                          "fieldAccessExpr": {
+                            "name": "out",
+                            "zeroOffset": {},
+                            "argumentMap": [
+                              -1,
+                              -1,
+                              -1
+                            ],
+                            "argumentOffset": [
+                              0,
+                              0,
+                              0
+                            ]
+                          }
+                        },
+                        "op": "=",
+                        "right": {
+                          "literalAccessExpr": {
+                            "value": "2.0",
+                            "type": {
+                              "typeId": "Float"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "intervals": [
+        {
+          "specialLowerLevel": "Start",
+          "specialUpperLevel": "End"
+        }
+      ],
+      "arguments": [
+        {
+          "fieldValue": {
+            "name": "out",
+            "fieldDimensions": {
+              "unstructuredHorizontalDimension": {
+                "denseLocationType": "Cell"
+              },
+              "maskK": 1
+            }
+          }
+        }
+      ],
+      "name": "f"
+    }
+  ]
+}

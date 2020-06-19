@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_INTERVAL_H
-#define DAWN_IIR_INTERVAL_H
+#pragma once
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/SIR/SIR.h"
@@ -182,8 +181,8 @@ public:
   bool upperLevelIsEnd() const { return upper_.isEnd(); }
 
   /// @brief Convert interval to string
+  explicit operator std::string() const;
   std::string toString() const;
-
   std::string toStringGen() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Interval& interval);
@@ -331,5 +330,3 @@ struct hash<dawn::iir::IntervalProperties> {
 };
 
 } // namespace std
-
-#endif

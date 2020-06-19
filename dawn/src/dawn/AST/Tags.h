@@ -13,8 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 //
 
-#ifndef DAWN_AST_TAGS
-#define DAWN_AST_TAGS
+#pragma once
 
 namespace dawn::ast {
 
@@ -22,5 +21,3 @@ struct unstructured_ {};
 struct cartesian_ {};
 
 } // namespace dawn::ast
-
-#endif

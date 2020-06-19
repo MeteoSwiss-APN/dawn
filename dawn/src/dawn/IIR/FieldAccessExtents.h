@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_FIELDACCESSEXTENTS_H
-#define DAWN_IIR_FIELDACCESSEXTENTS_H
+#pragma once
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/Json.h"
@@ -61,4 +60,3 @@ private:
 
 } // namespace iir
 } // namespace dawn
-#endif

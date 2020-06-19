@@ -23,16 +23,20 @@
    "variableVersionMap": {}
   },
   "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
+  "fieldIDtoDimensions": {
    "16": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    },
    "17": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
+    "cartesian_horizontal_dimension": {
+     "mask_cart_i": 1,
+     "mask_cart_j": 1
+    },
+    "mask_k": 1
    }
   },
   "idToStencilCall": {
@@ -61,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "NestedStencils"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -104,7 +108,7 @@
                    "data": {
                     "accessID": 16
                    },
-                   "ID": 112
+                   "ID": 21
                   }
                  },
                  "op": "=",
@@ -131,14 +135,14 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 111
+                   "ID": 20
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 113
+                 "ID": 22
                 }
                },
                "loc": {
@@ -167,7 +171,7 @@
                  }
                 }
                },
-               "ID": 110
+               "ID": 23
               }
              }
             ],
@@ -176,7 +180,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 109
+            "ID": 29
            }
           },
           "doMethodID": 0,
@@ -188,11 +192,12 @@
           }
          }
         ],
-        "stageID": 28
+        "stageID": 28,
+        "locationType": "LocationTypeUnknown"
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 108,
+      "multiStageID": 90,
       "Caches": {}
      }
     ],
@@ -224,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "/Users/johannd/Code/dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
 }

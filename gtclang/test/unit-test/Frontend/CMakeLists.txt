@@ -1,22 +1,25 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _       _                   
-##                        | |     | |                  
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                         _       _
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
 set(test_name ${PROJECT_NAME}UnittestFrontend)
 add_executable(${test_name}
   TestParsing.cpp
+  TestPreprocessing.cpp
+  TestSIRFrontend.cpp
   TestMain.cpp
 )
 
@@ -27,6 +30,5 @@ set_target_properties(${test_name} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
 )
 
-add_test(NAME ${test_name}
-  COMMAND $<TARGET_FILE:${test_name}> --gtest_output=xml:${test_name}_unittest.xml
-)
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+gtest_discover_tests(${test_name} TEST_PREFIX "GTClang::Unit::Frontend::" DISCOVERY_TIMEOUT 30)

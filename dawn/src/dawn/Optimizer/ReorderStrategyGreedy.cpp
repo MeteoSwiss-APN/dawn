@@ -20,8 +20,11 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/Support/Exception.h"
 #include <algorithm>
+#include <optional>
 #include <set>
+#include <sstream>
 #include <vector>
 
 namespace dawn {
@@ -29,7 +32,7 @@ namespace dawn {
 /// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
 /// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
 template <typename ReturnType =
-              std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
+              std::pair<std::optional<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
 ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder,
                       const iir::MultiStage& multiStage) {
   iir::LoopOrderKind multiStageLoopOrder = multiStage.getLoopOrder();
@@ -38,7 +41,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 
   // Merge stage into dependency graph
   const iir::DoMethod& doMethod = stage.getSingleDoMethod();
-  multiStageDependencyGraph->merge(doMethod.getDependencyGraph().get());
+  multiStageDependencyGraph.merge(*doMethod.getDependencyGraph());
 
   // Try all possible loop orders while *favoring* a parallel loop order. Note that a parallel loop
   // order can be changed to forward or backward.
@@ -65,21 +68,21 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
   else
     possibleLoopOrders.push_back(stageLoopOrder);
 
-  if(multiStageDependencyGraph->empty())
+  if(multiStageDependencyGraph.empty())
     return ReturnType(multiStageDependencyGraph, possibleLoopOrders.front());
 
   // If the resulting graph isn't a DAG anymore that isn't gonna work
-  if(!multiStageDependencyGraph->isDAG())
-    return ReturnType(nullptr, multiStageLoopOrder);
+  if(!multiStageDependencyGraph.isDAG())
+    return ReturnType(std::nullopt, multiStageLoopOrder);
 
   // Check all possible loop orders if there aren't any vertical conflicts
   for(auto loopOrder : possibleLoopOrders) {
-    auto conflict = hasVerticalReadBeforeWriteConflict(multiStageDependencyGraph.get(), loopOrder);
+    auto conflict = hasVerticalReadBeforeWriteConflict(multiStageDependencyGraph, loopOrder);
     if(!conflict.CounterLoopOrderConflict)
       return ReturnType(multiStageDependencyGraph, loopOrder);
   }
 
-  return ReturnType(nullptr, multiStageLoopOrder);
+  return ReturnType(std::nullopt, multiStageLoopOrder);
 }
 
 std::unique_ptr<iir::Stencil>
@@ -88,13 +91,13 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
                               OptimizerContext& context) {
   iir::Stencil& stencil = *stencilPtr;
 
-  iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
+  auto const& stageDAG = *stencil.getStageDependencyGraph();
 
   auto& metadata = instantiation->getMetaData();
   std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
       metadata, stencil.getStencilAttributes(), stencilPtr->getStencilID());
 
-  newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
+  newStencil->setStageDependencyGraph(iir::DependencyGraphStage(stageDAG));
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
@@ -146,17 +149,17 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
               break;
             } else if(lastChance) {
               // Our stage exceeds the maximum allowed boundary extents... nothing we can do
-              DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
-              diag << "stencil '" << instantiation->getName()
-                   << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
-                   << ")";
-              context.getDiagnostics().report(diag);
-              return nullptr;
+              std::stringstream ss;
+              ss << "Stencil '" << instantiation->getName()
+                 << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent << ")";
+              throw SemanticError(ss.str());
             }
           }
-          DAWN_ASSERT_MSG(!lastChance,
-                          "merging stage in empty multi-stage failed (this probably means the "
-                          "stage graph contains cycles - i.e is not a DAG!)");
+          if(lastChance) {
+            throw SemanticError(
+                "merging stage in empty multi-stage failed (this probably means the "
+                "stage graph contains cycles - i.e is not a DAG!)");
+          }
         }
 
         // Advance to the next multi-stage

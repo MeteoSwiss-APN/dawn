@@ -12,13 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ARRAYREF_H
-#define DAWN_SUPPORT_ARRAYREF_H
+#pragma once
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Compiler.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/Support/SmallVector.h"
 #include <array>
 #include <vector>
 
@@ -90,13 +88,6 @@ public:
 #pragma GCC diagnostic pop
 #endif
 
-  /// @brief Construct an ArrayRef from a SmallVector.
-  ///
-  /// This is templated in order to avoid instantiating SmallVectorTemplateCommon<T> whenever we
-  /// copy-construct an ArrayRef.
-  template <typename U>
-  ArrayRef(const SmallVectorTemplateCommon<T, U>& Vec) : data_(Vec.data()), length_(Vec.size()) {}
-
   /// @brief Construct an ArrayRef<const T*> from ArrayRef<T*>. This uses SFINAE to ensure that
   /// only ArrayRefs of pointers can be converted
   template <typename U>
@@ -110,16 +101,6 @@ public:
   template <typename U, typename A>
   ArrayRef(const std::vector<U*, A>& Vec,
            typename std::enable_if<std::is_convertible<U* const*, T const*>::value>::type* = 0)
-      : data_(Vec.data()), length_(Vec.size()) {}
-
-  /// @brief Construct an ArrayRef<const T*> from a SmallVector<T*>.
-  ///
-  /// This is templated in order to avoid instantiating SmallVectorTemplateCommon<T> whenever we
-  /// copy-construct an ArrayRef.
-  template <typename U, typename DummyT>
-  ArrayRef(
-      const SmallVectorTemplateCommon<U*, DummyT>& Vec,
-      typename std::enable_if<std::is_convertible<U* const*, T const*>::value>::type* = nullptr)
       : data_(Vec.data()), length_(Vec.size()) {}
 
   /// @}
@@ -297,9 +278,6 @@ public:
   /// @brief Construct a MutableArrayRef from a std::vector
   MutableArrayRef(std::vector<T>& Vec) : ArrayRef<T>(Vec) {}
 
-  /// @brief Construct an MutableArrayRef from a SmallVector.
-  MutableArrayRef(SmallVectorImpl<T>& Vec) : ArrayRef<T>(Vec) {}
-
   /// @brief Construct an ArrayRef from a std::array
   template <size_t N>
   constexpr MutableArrayRef(std::array<T, N>& Arr) : ArrayRef<T>(Arr) {}
@@ -444,6 +422,12 @@ ArrayRef<T> makeArrayRef(const std::vector<T>& Vec) {
   return Vec;
 }
 
+/// @brief Construct an ArrayRef from an std::initializer_list.
+template <typename T>
+ArrayRef<T> makeArrayRef(const std::initializer_list<T>& Vec) {
+  return Vec;
+}
+
 /// @brief Construct an ArrayRef from a std::basic_string<T> .
 template <typename T>
 ArrayRef<T> makeArrayRef(const std::basic_string<T>& Str) {
@@ -468,18 +452,6 @@ ArrayRef<T> makeArrayRef(const T (&Arr)[N]) {
   return ArrayRef<T>(Arr);
 }
 
-/// @brief Construct an ArrayRef from a SmallVector.
-template <typename T>
-ArrayRef<T> makeArrayRef(const SmallVectorImpl<T>& Vec) {
-  return Vec;
-}
-
-/// @brief Construct an ArrayRef from a SmallVector.
-template <typename T, unsigned N>
-ArrayRef<T> makeArrayRef(const SmallVector<T, N>& Vec) {
-  return Vec;
-}
-
 /// @brief ArrayRef Comparison Operators
 template <typename T>
 inline bool operator==(ArrayRef<T> LHS, ArrayRef<T> RHS) {
@@ -497,5 +469,3 @@ inline bool operator!=(ArrayRef<T> LHS, ArrayRef<T> RHS) {
 } // namespace dawn
 
 /// @}
-
-#endif

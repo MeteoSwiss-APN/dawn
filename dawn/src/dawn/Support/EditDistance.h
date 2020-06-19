@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_EDITDISTANCE_H
-#define DAWN_SUPPORT_EDITDISTANCE_H
+#pragma once
 
 #include "dawn/Support/ArrayRef.h"
 #include <algorithm>
@@ -108,5 +107,3 @@ inline unsigned computeEditDistance(const std::string& fromStr, const std::strin
 /// @}
 
 } // namespace dawn
-
-#endif

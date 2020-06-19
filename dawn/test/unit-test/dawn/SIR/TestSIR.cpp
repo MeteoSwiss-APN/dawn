@@ -73,16 +73,24 @@ TEST_F(SIRStencilTest, Location) {
 }
 
 TEST_F(SIRStencilTest, Fields) {
-  sir1->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
-  sir2->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  sir1->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
+  sir2->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   // Fields are not equal
-  sir1->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("bar"));
+  sir1->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("bar", makeFieldDimensions()));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Fields are equal again but bar in sir2 is a temporary
-  sir2->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("bar"));
+  sir2->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("bar", makeFieldDimensions()));
   sir2->Stencils[0]->Fields.back()->IsTemporary = true;
   SIR_EXCPECT_NE(sir1, sir2);
 }
@@ -131,8 +139,14 @@ TEST_F(SIRStencilFunctionTest, Location) {
 }
 
 TEST_F(SIRStencilFunctionTest, Arguments) {
-  sir1->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Field>("foo"));
-  sir2->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Field>("foo"));
+  auto makeFieldDimensions = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  };
+
+  sir1->StencilFunctions[0]->Args.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
+  sir2->StencilFunctions[0]->Args.emplace_back(
+      std::make_shared<sir::Field>("foo", makeFieldDimensions()));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   sir1->StencilFunctions[0]->Args.emplace_back(std::make_shared<sir::Offset>("foo"));

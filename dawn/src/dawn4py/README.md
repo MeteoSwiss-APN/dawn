@@ -17,21 +17,25 @@ pip install wheel
 Then you can install *dawn4py* directly from the GitHub repository:
 
 ```bash
-pip install dawn4py@git+https://github.com/MeteoSwiss-APN/dawn.git#subdirectory=dawn  # Add -v to see the compilation output  
+pip install dawn4py@git+https://github.com/MeteoSwiss-APN/dawn.git#subdirectory=dawn  # Add -v to see the compilation output
 ```
 
 Alternatively, you can clone locally the Dawn repository and install the Python bindings from there. This is specially useful if you plan to edit Dawn sources, since you can test your changes easily without reinstalling the package. In this case, we recommend you to add the `-e` option to the `pip install` command to perform an *editable* installation:
 
 ```bash
 git clone git@github.com:MeteoSwiss-APN/dawn.git
-pip install -e ./dawn/dawn  # Add -v at the end to see the compilation output  
+pip install -e ./dawn/dawn  # Add -v at the end to see the compilation output
 ```
 
 Changes in Python sources are instantly available in your environment. Changes in C++ sources require a recompilation of the CPython extension, which you can do by running the `develop` command of the `setup.py` script:
 
 ```bash
-cd ./dawn/dawn && python setup.py develop  
+cd ./dawn/dawn && python setup.py develop
 ```
+
+## Development
+
+Do not edit the `_dawn4py.cpp` file directly. Instead, run `dawn/scripts/refactor/make_pybind11_sources.py`.
 
 ## Examples
 

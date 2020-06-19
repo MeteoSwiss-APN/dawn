@@ -14,8 +14,9 @@
 
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/StringUtil.h"
+
 #include <gtest/gtest.h>
-#include <iostream>
+#include <ostream>
 #include <vector>
 
 namespace dawn {
