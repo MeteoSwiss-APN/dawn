@@ -49,17 +49,17 @@ RUN cd /usr/src/protobuf-3.10.1/python && \
     PROTOC=/usr/local/protobuf/bin/protoc python setup.py build && \
     mkdir -p /usr/local/protobuf/lib/python && \
     mv /usr/src/protobuf-3.10.1/python/build/lib/google /usr/local/protobuf/lib/python/google
-# ---------------------- GridTools ----------------------
-RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
-    tar -xz -C /usr/src
-RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
-    -DBUILD_TESTING=OFF \
-    -DINSTALL_TOOLS=OFF \
-    -DGT_INSTALL_EXAMPLES=OFF \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local/gridtools \
-    -GNinja && \
-    cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
-    rm -rf /usr/src/gridtools-1.0.4/build
+# # ---------------------- GridTools ----------------------
+# RUN curl -L https://github.com/GridTools/gridtools/archive/v1.0.4.tar.gz | \
+#     tar -xz -C /usr/src
+# RUN cmake -S /usr/src/gridtools-1.0.4 -B /usr/src/gridtools-1.0.4/build \
+#     -DBUILD_TESTING=OFF \
+#     -DINSTALL_TOOLS=OFF \
+#     -DGT_INSTALL_EXAMPLES=OFF \
+#     -DCMAKE_BUILD_TYPE=Release \
+#     -DCMAKE_INSTALL_PREFIX=/usr/local/gridtools \
+#     -GNinja && \
+#     cmake --build /usr/src/gridtools-1.0.4/build -j $(nproc) --target install && \
+#     rm -rf /usr/src/gridtools-1.0.4/build
 # Other python dependencies for using and testing dawn
 RUN python -m pip install pytest
