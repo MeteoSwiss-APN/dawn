@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "Pass.h"
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
@@ -32,10 +32,11 @@ namespace dawn {
 /// This pass is necessary to generate legal IIR
 class PassLocalVarType : public Pass {
 public:
-  PassLocalVarType(OptimizerContext& context) : Pass(context, "PassLocalVarType") {}
+  PassLocalVarType() : Pass("PassLocalVarType") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

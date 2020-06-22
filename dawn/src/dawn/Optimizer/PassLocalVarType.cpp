@@ -252,7 +252,8 @@ public:
 };
 } // namespace
 
-bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassLocalVarType::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           const Options& options) {
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
 
     // As this might not be the first run of this pass, need to clear the variables' types in order

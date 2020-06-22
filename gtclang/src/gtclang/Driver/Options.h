@@ -51,7 +51,6 @@ OPT(std::string, ConfigFile, "", "config", "",
 OPT(bool, DumpAST, false, "dump-ast", "", "Dump the clang AST of the preprocessed input to stdout", "", false, false)
 OPT(bool, ReportPassPreprocessor, false, "report-pass-preprocessor", "",
     "Print each line of the preprocessed source prepended by the line number (comments and indentation are removed)", "", false, true)
-OPT(bool, Verbose, false, "verbose", "", "Enable verbose output by using step-by-step logging", "", false, false)
   // clang-format on
 #undef OPT
 };

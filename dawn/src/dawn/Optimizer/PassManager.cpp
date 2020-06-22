@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include <vector>
@@ -23,7 +22,7 @@
 namespace dawn {
 
 bool PassManager::runAllPassesOnStencilInstantiation(
-    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const Options& options) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
@@ -33,7 +32,7 @@ bool PassManager::runAllPassesOnStencilInstantiation(
                          pass->getName() + "' depends on '" + dependency + "'");
       }
 
-    if(!runPassOnStencilInstantiation(context, instantiation, pass.get()))
+    if(!runPassOnStencilInstantiation(instantiation, options, pass.get()))
       return false;
 
     passesRan.emplace_back(pass->getName());
@@ -42,16 +41,16 @@ bool PassManager::runAllPassesOnStencilInstantiation(
 }
 
 bool PassManager::runPassOnStencilInstantiation(
-    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const Options& options,
     Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
-  if(!pass->run(instantiation)) {
+  if(!pass->run(instantiation, options)) {
     DAWN_LOG(WARNING) << "Done with " << pass->getName() << " : FAIL";
     return false;
   }
 
-  if(context.getOptions().PassVerbose) {
+  if(options.WriteStencilInstantiation) {
     instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
                             "_Log.json");
   }

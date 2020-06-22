@@ -74,10 +74,11 @@ public:
 
   // collection of reports with tmp promotion/demotion
   std::vector<Report> report_;
-  PassTemporaryType(OptimizerContext& context);
+  PassTemporaryType() : Pass("PassTemporaryType"), report_() {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 
   /// @brief Promote a temporary fields which span over multiple stencils to real (allocated)
   /// storage

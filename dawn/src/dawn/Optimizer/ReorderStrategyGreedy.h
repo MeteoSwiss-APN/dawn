@@ -29,7 +29,7 @@ public:
   /// @brief Apply the reordering strategy and return stencil
   virtual std::unique_ptr<iir::Stencil> reorder(iir::StencilInstantiation* instantiation,
                                                 const std::unique_ptr<iir::Stencil>& stencilPtr,
-                                                OptimizerContext& context) override;
+                                                const Options& options) override;
 };
 
 } // namespace dawn

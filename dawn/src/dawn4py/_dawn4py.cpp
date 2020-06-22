@@ -7,6 +7,8 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/Compiler/Driver.h"
 
+#include "dawn/Support/Logger.h"
+
 #include <list>
 #include <map>
 #include <string>
@@ -56,51 +58,61 @@ PYBIND11_MODULE(_dawn4py, m) {
       .value("CXXOpt", dawn::codegen::Backend::CXXOpt)
       .export_values();
 
+  py::enum_<dawn::log::Level>(m, "LogLevel")
+      .value("All", dawn::log::Level::All)
+      .value("Warnings", dawn::log::Level::Warnings)
+      .value("Errors", dawn::log::Level::Errors)
+      .value("None", dawn::log::Level::None)
+      .export_values();
+
   // Options structs
   py::class_<dawn::Options>(m, "OptimizerOptions")
-      .def(py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
-                       int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
-                       int BlockSizeK, bool SplitStencils, bool MergeStages, bool MergeDoMethods,
-                       bool DisableKCaches, bool UseNonTempCaches, bool KeepVarnames,
-                       bool PassVerbose, bool ReportAccesses, bool SerializeIIR,
-                       const std::string& IIRFormat, bool DumpSplitGraphs, bool DumpStageGraph,
-                       bool DumpTemporaryGraphs, bool DumpRaceConditionGraph,
-                       bool DumpStencilInstantiation, bool DumpStencilGraph) {
-             return dawn::Options{MaxHaloPoints,
-                                  ReorderStrategy,
-                                  MaxFieldsPerStencil,
-                                  MaxCutMSS,
-                                  BlockSizeI,
-                                  BlockSizeJ,
-                                  BlockSizeK,
-                                  SplitStencils,
-                                  MergeStages,
-                                  MergeDoMethods,
-                                  DisableKCaches,
-                                  UseNonTempCaches,
-                                  KeepVarnames,
-                                  PassVerbose,
-                                  ReportAccesses,
-                                  SerializeIIR,
-                                  IIRFormat,
-                                  DumpSplitGraphs,
-                                  DumpStageGraph,
-                                  DumpTemporaryGraphs,
-                                  DumpRaceConditionGraph,
-                                  DumpStencilInstantiation,
-                                  DumpStencilGraph};
-           }),
-           py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
-           py::arg("max_fields_per_stencil") = 40, py::arg("max_cut_mss") = false,
-           py::arg("block_size_i") = 0, py::arg("block_size_j") = 0, py::arg("block_size_k") = 0,
-           py::arg("split_stencils") = false, py::arg("merge_stages") = false,
-           py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
-           py::arg("use_non_temp_caches") = false, py::arg("keep_varnames") = false,
-           py::arg("pass_verbose") = false, py::arg("report_accesses") = false,
-           py::arg("serialize_iir") = false, py::arg("iir_format") = "json",
-           py::arg("dump_split_graphs") = false, py::arg("dump_stage_graph") = false,
-           py::arg("dump_temporary_graphs") = false, py::arg("dump_race_condition_graph") = false,
-           py::arg("dump_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
+      .def(
+          py::init([](int MaxHaloPoints, const std::string& ReorderStrategy,
+                      int MaxFieldsPerStencil, bool MaxCutMSS, int BlockSizeI, int BlockSizeJ,
+                      int BlockSizeK, int SMemMaxFields, int TexCacheMaxFields, bool SplitStencils,
+                      bool MergeStages, bool MergeDoMethods, bool DisableKCaches, bool KeepVarnames,
+                      bool ReportAccesses, bool SerializeIIR, const std::string& IIRFormat,
+                      bool DumpSplitGraphs, bool DumpStageGraph, bool DumpTemporaryGraphs,
+                      bool DumpRaceConditionGraph, bool DumpStencilInstantiation,
+                      bool WriteStencilInstantiation, bool DumpStencilGraph) {
+            return dawn::Options{MaxHaloPoints,
+                                 ReorderStrategy,
+                                 MaxFieldsPerStencil,
+                                 MaxCutMSS,
+                                 BlockSizeI,
+                                 BlockSizeJ,
+                                 BlockSizeK,
+                                 SMemMaxFields,
+                                 TexCacheMaxFields,
+                                 SplitStencils,
+                                 MergeStages,
+                                 MergeDoMethods,
+                                 DisableKCaches,
+                                 KeepVarnames,
+                                 ReportAccesses,
+                                 SerializeIIR,
+                                 IIRFormat,
+                                 DumpSplitGraphs,
+                                 DumpStageGraph,
+                                 DumpTemporaryGraphs,
+                                 DumpRaceConditionGraph,
+                                 DumpStencilInstantiation,
+                                 WriteStencilInstantiation,
+                                 DumpStencilGraph};
+          }),
+          py::arg("max_halo_points") = 3, py::arg("reorder_strategy") = "greedy",
+          py::arg("max_fields_per_stencil") = 40, py::arg("max_cut_mss") = false,
+          py::arg("block_size_i") = 0, py::arg("block_size_j") = 0, py::arg("block_size_k") = 0,
+          py::arg("s_mem_max_fields") = 8, py::arg("tex_cache_max_fields") = 3,
+          py::arg("split_stencils") = false, py::arg("merge_stages") = false,
+          py::arg("merge_do_methods") = true, py::arg("disable_k_caches") = false,
+          py::arg("keep_varnames") = false, py::arg("report_accesses") = false,
+          py::arg("serialize_iir") = false, py::arg("iir_format") = "json",
+          py::arg("dump_split_graphs") = false, py::arg("dump_stage_graph") = false,
+          py::arg("dump_temporary_graphs") = false, py::arg("dump_race_condition_graph") = false,
+          py::arg("dump_stencil_instantiation") = false,
+          py::arg("write_stencil_instantiation") = false, py::arg("dump_stencil_graph") = false)
       .def_readwrite("max_halo_points", &dawn::Options::MaxHaloPoints)
       .def_readwrite("reorder_strategy", &dawn::Options::ReorderStrategy)
       .def_readwrite("max_fields_per_stencil", &dawn::Options::MaxFieldsPerStencil)
@@ -108,13 +120,13 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("block_size_i", &dawn::Options::BlockSizeI)
       .def_readwrite("block_size_j", &dawn::Options::BlockSizeJ)
       .def_readwrite("block_size_k", &dawn::Options::BlockSizeK)
+      .def_readwrite("s_mem_max_fields", &dawn::Options::SMemMaxFields)
+      .def_readwrite("tex_cache_max_fields", &dawn::Options::TexCacheMaxFields)
       .def_readwrite("split_stencils", &dawn::Options::SplitStencils)
       .def_readwrite("merge_stages", &dawn::Options::MergeStages)
       .def_readwrite("merge_do_methods", &dawn::Options::MergeDoMethods)
       .def_readwrite("disable_k_caches", &dawn::Options::DisableKCaches)
-      .def_readwrite("use_non_temp_caches", &dawn::Options::UseNonTempCaches)
       .def_readwrite("keep_varnames", &dawn::Options::KeepVarnames)
-      .def_readwrite("pass_verbose", &dawn::Options::PassVerbose)
       .def_readwrite("report_accesses", &dawn::Options::ReportAccesses)
       .def_readwrite("serialize_iir", &dawn::Options::SerializeIIR)
       .def_readwrite("iir_format", &dawn::Options::IIRFormat)
@@ -123,6 +135,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("dump_temporary_graphs", &dawn::Options::DumpTemporaryGraphs)
       .def_readwrite("dump_race_condition_graph", &dawn::Options::DumpRaceConditionGraph)
       .def_readwrite("dump_stencil_instantiation", &dawn::Options::DumpStencilInstantiation)
+      .def_readwrite("write_stencil_instantiation", &dawn::Options::WriteStencilInstantiation)
       .def_readwrite("dump_stencil_graph", &dawn::Options::DumpStencilGraph)
       .def("__repr__", [](const dawn::Options& self) {
         std::ostringstream ss;
@@ -135,13 +148,13 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "block_size_i=" << self.BlockSizeI << ",\n    "
            << "block_size_j=" << self.BlockSizeJ << ",\n    "
            << "block_size_k=" << self.BlockSizeK << ",\n    "
+           << "s_mem_max_fields=" << self.SMemMaxFields << ",\n    "
+           << "tex_cache_max_fields=" << self.TexCacheMaxFields << ",\n    "
            << "split_stencils=" << self.SplitStencils << ",\n    "
            << "merge_stages=" << self.MergeStages << ",\n    "
            << "merge_do_methods=" << self.MergeDoMethods << ",\n    "
            << "disable_k_caches=" << self.DisableKCaches << ",\n    "
-           << "use_non_temp_caches=" << self.UseNonTempCaches << ",\n    "
            << "keep_varnames=" << self.KeepVarnames << ",\n    "
-           << "pass_verbose=" << self.PassVerbose << ",\n    "
            << "report_accesses=" << self.ReportAccesses << ",\n    "
            << "serialize_iir=" << self.SerializeIIR << ",\n    "
            << "iir_format="
@@ -152,6 +165,7 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "dump_temporary_graphs=" << self.DumpTemporaryGraphs << ",\n    "
            << "dump_race_condition_graph=" << self.DumpRaceConditionGraph << ",\n    "
            << "dump_stencil_instantiation=" << self.DumpStencilInstantiation << ",\n    "
+           << "write_stencil_instantiation=" << self.WriteStencilInstantiation << ",\n    "
            << "dump_stencil_graph=" << self.DumpStencilGraph;
         return "OptimizerOptions(\n    " + ss.str() + "\n)";
       });
@@ -189,49 +203,56 @@ PYBIND11_MODULE(_dawn4py, m) {
   m.def("default_pass_groups", &dawn::defaultPassGroups,
         "Return a list of default optimizer pass groups");
 
-  m.def("run_optimizer_sir",
-        [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& groups,
-           const dawn::Options& options) { return dawn::run(sir, format, groups, options); },
-        "Lower the stencil IR to a stencil instantiation map and (optionally) run optimization "
-        "passes.",
-        "A list of default optimization passes is returned from default_pass_groups().",
-        py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
-        py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
+  m.def("set_verbosity", &dawn::log::setVerbosity,
+        "Set the dawn logging level [default: LogLevel::Warnings]",
+        py::arg("level") = dawn::log::Level::Warnings);
 
-  m.def("run_optimizer_iir",
-        [](const std::map<std::string, std::string>& stencilInstantiationMap,
-           dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
-           const dawn::Options& options) {
-          return dawn::run(stencilInstantiationMap, format, groups, options);
-        },
-        "Optimize the stencil instantiation map.",
-        "A list of default optimization passes is returned from default_pass_groups().",
-        py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Byte,
-        py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
+  m.def(
+      "run_optimizer_sir",
+      [](const std::string& sir, dawn::SIRSerializer::Format format,
+         const std::list<dawn::PassGroup>& groups,
+         const dawn::Options& options) { return dawn::run(sir, format, groups, options); },
+      "Lower the stencil IR to a stencil instantiation map and (optionally) run optimization "
+      "passes.",
+      "A list of default optimization passes is returned from default_pass_groups().",
+      py::arg("sir"), py::arg("format") = dawn::SIRSerializer::Format::Byte,
+      py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
-  m.def("run_codegen",
-        [](const std::map<std::string, std::string>& stencilInstantiationMap,
-           dawn::IIRSerializer::Format format, dawn::codegen::Backend backend,
-           const dawn::codegen::Options& options) {
-          return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
-        },
-        "Generate code from the stencil instantiation map.", py::arg("stencil_instantiation_map"),
-        py::arg("format") = dawn::IIRSerializer::Format::Byte,
-        py::arg("backend") = dawn::codegen::Backend::GridTools,
-        py::arg("options") = dawn::codegen::Options());
+  m.def(
+      "run_optimizer_iir",
+      [](const std::map<std::string, std::string>& stencilInstantiationMap,
+         dawn::IIRSerializer::Format format, const std::list<dawn::PassGroup>& groups,
+         const dawn::Options& options) {
+        return dawn::run(stencilInstantiationMap, format, groups, options);
+      },
+      "Optimize the stencil instantiation map.",
+      "A list of default optimization passes is returned from default_pass_groups().",
+      py::arg("stencil_instantiation_map"), py::arg("format") = dawn::IIRSerializer::Format::Byte,
+      py::arg("groups") = std::list<dawn::PassGroup>(), py::arg("options") = dawn::Options());
 
-  m.def("compile_sir",
-        [](const std::string& sir, dawn::SIRSerializer::Format format,
-           const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
-           dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
-          return dawn::compile(sir, format, groups, optimizerOptions, backend, codegenOptions);
-        },
-        "Compile the stencil IR: lower, optimize, and generate code.",
-        "Runs the default_pass_groups() unless the 'groups' argument is passed.", py::arg("sir"),
-        py::arg("format") = dawn::SIRSerializer::Format::Byte,
-        py::arg("groups") = dawn::defaultPassGroups(),
-        py::arg("optimizer_options") = dawn::Options(),
-        py::arg("backend") = dawn::codegen::Backend::GridTools,
-        py::arg("codegen_options") = dawn::codegen::Options());
+  m.def(
+      "run_codegen",
+      [](const std::map<std::string, std::string>& stencilInstantiationMap,
+         dawn::IIRSerializer::Format format, dawn::codegen::Backend backend,
+         const dawn::codegen::Options& options) {
+        return dawn::codegen::run(stencilInstantiationMap, format, backend, options);
+      },
+      "Generate code from the stencil instantiation map.", py::arg("stencil_instantiation_map"),
+      py::arg("format") = dawn::IIRSerializer::Format::Byte,
+      py::arg("backend") = dawn::codegen::Backend::GridTools,
+      py::arg("options") = dawn::codegen::Options());
+
+  m.def(
+      "compile_sir",
+      [](const std::string& sir, dawn::SIRSerializer::Format format,
+         const std::list<dawn::PassGroup>& groups, const dawn::Options& optimizerOptions,
+         dawn::codegen::Backend backend, const dawn::codegen::Options& codegenOptions) {
+        return dawn::compile(sir, format, groups, optimizerOptions, backend, codegenOptions);
+      },
+      "Compile the stencil IR: lower, optimize, and generate code.",
+      "Runs the default_pass_groups() unless the 'groups' argument is passed.", py::arg("sir"),
+      py::arg("format") = dawn::SIRSerializer::Format::Byte,
+      py::arg("groups") = dawn::defaultPassGroups(), py::arg("optimizer_options") = dawn::Options(),
+      py::arg("backend") = dawn::codegen::Backend::GridTools,
+      py::arg("codegen_options") = dawn::codegen::Options());
 }

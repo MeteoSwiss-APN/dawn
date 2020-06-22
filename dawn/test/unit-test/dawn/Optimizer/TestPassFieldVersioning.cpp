@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
 
@@ -25,18 +24,12 @@ using namespace dawn;
 namespace {
 
 class TestPassFieldVersioning : public ::testing::Test {
-public:
-  TestPassFieldVersioning() { context_ = std::make_unique<OptimizerContext>(options_, nullptr); }
-
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-
   void raceConditionTest(const std::string& filename) {
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to fail...
-    dawn::PassFieldVersioning pass(*context_);
+    dawn::PassFieldVersioning pass;
     EXPECT_ANY_THROW(pass.run(instantiation));
   }
 
@@ -44,7 +37,7 @@ protected:
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
-    dawn::PassFieldVersioning pass(*context_);
+    dawn::PassFieldVersioning pass;
     pass.run(instantiation);
     return instantiation;
   }

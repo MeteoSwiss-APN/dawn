@@ -18,11 +18,9 @@
 
 namespace dawn {
 
-PassSetDependencyGraph::PassSetDependencyGraph(OptimizerContext& context)
-    : Pass(context, "PassSetDependencyGraph") {}
-
 bool PassSetDependencyGraph::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   const auto& IIR = stencilInstantiation->getIIR();
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*IIR)) {
     // and do the update of the Graphs

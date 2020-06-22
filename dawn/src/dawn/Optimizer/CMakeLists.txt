@@ -17,8 +17,8 @@ add_library(DawnOptimizer
   CreateVersionAndRename.h
   Driver.cpp
   Driver.h
-  OptimizerContext.cpp
-  OptimizerContext.h
+  Lowering.h
+  Lowering.cpp
   Options.h
   Options.inc
   Pass.h
@@ -101,4 +101,6 @@ add_library(DawnOptimizer
 )
 
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)
+target_link_libraries(DawnOptimizer
+  PUBLIC DawnSupport DawnIIR DawnValidator DawnSerialization
+)

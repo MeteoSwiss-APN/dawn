@@ -14,19 +14,18 @@
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 
 namespace dawn {
 StatementMapper::StatementMapper(
-    iir::StencilInstantiation* instantiation, OptimizerContext& context,
-    const std::vector<ast::StencilCall*>& stackTrace, iir::DoMethod& doMethod,
-    const iir::Interval& interval,
+    iir::StencilInstantiation* instantiation, const std::vector<ast::StencilCall*>& stackTrace,
+    iir::DoMethod& doMethod, const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
-    const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
-    : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
-      stackTrace_(stackTrace) {
+    const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
+    bool keepVarnames)
+    : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
+      stackTrace_(stackTrace), initializedWithBlockStmt_(false), keepVarnames_(keepVarnames) {
 
   // Create the initial scope
   scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
@@ -110,7 +109,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     int accessID = instantiation_->nextUID();
 
     std::string globalName;
-    if(context_.getOptions().KeepVarnames)
+    if(keepVarnames_)
       globalName = stmt->getName();
     else
       globalName = iir::InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);

@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"
@@ -41,14 +40,10 @@ static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, i
   return numFields <= maxNumFields;
 }
 
-PassStencilSplitter::PassStencilSplitter(OptimizerContext& context, int maxNumberOfFilelds)
-    : Pass(context, "PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
-  dependencies_.push_back("PassSetStageGraph");
-}
-
 bool PassStencilSplitter::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  if(!context_.getOptions().SplitStencils)
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
+  if(!options.SplitStencils)
     return true;
 
   // If we split a stencil, we need to recompute the stage graphs
@@ -154,7 +149,7 @@ bool PassStencilSplitter::run(
 
   // Recompute the stage graph of each stencil
   if(rerunPassSetStageGraph) {
-    PassSetStageGraph pass(context_);
+    PassSetStageGraph pass;
     pass.run(stencilInstantiation);
   }
 

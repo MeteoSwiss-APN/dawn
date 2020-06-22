@@ -33,10 +33,11 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageMerger : public Pass {
 public:
-  PassStageMerger(OptimizerContext& context);
+  PassStageMerger() : Pass("PassStageMerger") { dependencies_.push_back("PassSetStageGraph"); }
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

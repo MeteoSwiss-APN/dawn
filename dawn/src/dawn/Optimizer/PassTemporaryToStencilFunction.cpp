@@ -22,7 +22,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/SIR/AST.h"
@@ -299,7 +298,7 @@ class TmpReplacement : public iir::ASTVisitorPostOrder, public NonCopyable {
 protected:
   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation_;
   iir::StencilMetaInformation& metadata_;
-  OptimizerContext& context_;
+  const Options& options_;
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const iir::Interval interval_;
   const sir::Interval sirInterval_;
@@ -317,12 +316,12 @@ protected:
 
 public:
   TmpReplacement(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                 OptimizerContext& context,
+                 const Options& options,
                  std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
                  const iir::Interval& interval, const std::vector<ast::StencilCall*>& stackTrace)
       : stencilInstantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
-        context_(context),
+        options_(options),
         temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall),
         interval_(interval), sirInterval_(intervalToSIRInterval(interval)),
         stackTrace_(stackTrace) {}
@@ -471,7 +470,7 @@ public:
     }
 
     // recompute the list of <statement, accesses> pairs
-    StatementMapper statementMapper(stencilInstantiation_.get(), context_, stackTrace_,
+    StatementMapper statementMapper(stencilInstantiation_.get(), stackTrace_,
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);
 
@@ -512,9 +511,6 @@ public:
 };
 
 } // anonymous namespace
-
-PassTemporaryToStencilFunction::PassTemporaryToStencilFunction(OptimizerContext& context)
-    : Pass(context, "PassTemporaryToStencilFunction") {}
 
 SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
     const std::unique_ptr<iir::Stencil>& stencilPtr,
@@ -569,7 +565,8 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
 }
 
 bool PassTemporaryToStencilFunction::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
 
   const auto& metadata = stencilInstantiation->getMetaData();
 
@@ -648,7 +645,7 @@ bool PassTemporaryToStencilFunction::run(
                 DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().StackTrace);
 
                 // run the replacer visitor
-                TmpReplacement tmpReplacement(stencilInstantiation, context_,
+                TmpReplacement tmpReplacement(stencilInstantiation, options,
                                               temporaryFieldExprToFunction, interval,
                                               *stmt->getData<iir::IIRStmtData>().StackTrace);
                 stmt->acceptAndReplace(tmpReplacement);
@@ -661,9 +658,10 @@ bool PassTemporaryToStencilFunction::run(
                   iir::DoMethod tmpStmtDoMethod(doMethodInterval, metadata);
 
                   StatementMapper statementMapper(
-                      stencilInstantiation.get(), context_,
-                      *stmt->getData<iir::IIRStmtData>().StackTrace, tmpStmtDoMethod, sirInterval,
-                      stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr);
+                      stencilInstantiation.get(), *stmt->getData<iir::IIRStmtData>().StackTrace,
+                      tmpStmtDoMethod, sirInterval,
+                      stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr,
+                      options.KeepVarnames);
 
                   std::shared_ptr<iir::BlockStmt> blockStmt =
                       iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{stmt});

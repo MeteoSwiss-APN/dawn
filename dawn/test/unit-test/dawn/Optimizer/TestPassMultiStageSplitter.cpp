@@ -16,7 +16,6 @@
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Serialization/IIRSerializer.h"
 
@@ -28,19 +27,13 @@ using namespace dawn;
 namespace {
 
 class TestPassMultiStageSplitter : public ::testing::Test {
-public:
-  TestPassMultiStageSplitter() { context_ = std::make_unique<OptimizerContext>(options_, nullptr); }
-
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-
   std::shared_ptr<iir::StencilInstantiation> runPass(const std::string& filename) {
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
     auto mssSplitStrategy = dawn::PassMultiStageSplitter::MultiStageSplittingStrategy::Optimized;
-    PassMultiStageSplitter splitter(*context_, mssSplitStrategy);
+    PassMultiStageSplitter splitter(mssSplitStrategy);
     splitter.run(instantiation);
 
     return instantiation;

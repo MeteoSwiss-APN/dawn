@@ -45,6 +45,12 @@ OPT(int, BlockSizeI, 0, "block-size-i", "", "i block size for tiled computations
 OPT(int, BlockSizeJ, 0, "block-size-j", "", "j block size for tiled computations", "", true, false)
 OPT(int, BlockSizeK, 0, "block-size-k", "", "k block size for tiled computations", "", true, false)
 
+// Hardware options
+OPT(int, SMemMaxFields, 8, "smem-max-fields", "",
+    "Maximum number of fields concurrently in shared memory", "", true, false)
+OPT(int, TexCacheMaxFields, 3, "tex-cache-max-fields", "",
+    "Maximum number of fields concurrently in the texture cache", "", true, false)
+
 OPT(bool, SplitStencils, false, "split-stencils", "",
     "Split stencil whose number of fields exceeds a threshold", "", false, true)
 OPT(bool, MergeStages, false, "merge-stages", "",
@@ -53,13 +59,9 @@ OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true)
 OPT(bool, DisableKCaches, false, "disable-kcaches", "",
     "Disable use of the k-caches", "", false, true)
-OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
-    "Allows for caching of non-temporary fields", "", false, true)
 OPT(bool, KeepVarnames, false, "keep-varnames", "",
     "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
 
-OPT(bool, PassVerbose, false, "pass-verbose", "",
-    "Compile in verbose mode", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "",
     "Detailed report on the accesses of each statement", "", false, true)
 
@@ -76,7 +78,9 @@ OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
 OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
     "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
 OPT(bool, DumpStencilInstantiation, false, "dump-si", "",
-    "dump every stencilInstantiation to the standard output", "", false, true)
+    "Dump every stencil instantiation to the standard output", "", false, true)
+OPT(bool, WriteStencilInstantiation, false, "write-si", "",
+    "Write stencil instantiation to JSON files before and after stage reordering", "", false, true)
 OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",
     "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
 

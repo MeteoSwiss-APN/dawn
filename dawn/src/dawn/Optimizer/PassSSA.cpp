@@ -17,17 +17,12 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/CreateVersionAndRename.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include <unordered_set>
 
 namespace dawn {
 
-PassSSA::PassSSA(OptimizerContext& context) : Pass(context, "PassSSA") {}
-
-bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-
-  if(!context_.getOptions().SSA)
-    return true;
+bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                  const Options& options) {
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
