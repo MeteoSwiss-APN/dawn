@@ -40,7 +40,7 @@ using namespace gridtools::dawn;
 
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms118_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms107_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const a, ::dawn::float_type * const b, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
   ::dawn::float_type c_kcache[2];
@@ -126,9 +126,9 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
 c_kcache[1] = (c_kcache[1] / __ldg(&(b[idx111])));
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-::dawn::float_type __local_m_100 = ((::dawn::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
-d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_100);
+int __local_m_100 = ((::dawn::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
 c_kcache[1] = (c_kcache[1] * __local_m_100);
+d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_100);
   }
     // Flush of kcaches
 
@@ -155,7 +155,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
 
   // Final flush of kcaches
 }
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms119_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil_stencil49_ms108_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, ::dawn::float_type * const c, ::dawn::float_type * const d) {
 
   // Start kernel
   ::dawn::float_type d_kcache[2];
@@ -283,7 +283,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil_stencil49_ms118_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil_stencil49_ms107_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
       {;
       gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
@@ -296,7 +296,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil_stencil49_ms119_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil_stencil49_ms108_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
 
       // stopping timers
