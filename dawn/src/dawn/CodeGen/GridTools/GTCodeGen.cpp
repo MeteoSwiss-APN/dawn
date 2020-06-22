@@ -528,10 +528,11 @@ void GTCodeGen::generateStencilClasses(
           return !f.second.IsTemporary;
         });
     if(stencil.isEmpty()) {
-      throw SemanticError(std::string("Empty stencil '") + stencilInstantiation->getName() +
-                              "', this would result in invalid gridtools code",
-                          stencilInstantiation->getMetaData().getFileName(),
-                          stencilInstantiation->getMetaData().getStencilLocation());
+      //throw SemanticError(std::string("Empty stencil '") + stencilInstantiation->getName() +
+      DAWN_LOG(WARNING)<<(std::string("Empty stencil '") + stencilInstantiation->getName() +
+                              "', this would result in invalid gridtools code");//,
+                          //stencilInstantiation->getMetaData().getFileName(),
+                          //stencilInstantiation->getMetaData().getStencilLocation());
     }
 
     // Check for horizontal iteration spaces
@@ -620,11 +621,12 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
 
         if(fields.empty() && !stencilFun->hasReturn()) {
-          throw SemanticError(std::string("No storages referenced in stencil '") +
+          //throw SemanticError(std::string("No storages referenced in stencil '") +
+          DAWN_LOG(WARNING)<<(std::string("No storages referenced in stencil '") +
                                   stencilInstantiation->getName() +
-                                  "', this would result in invalid gridtools code",
-                              stencilInstantiation->getMetaData().getFileName(),
-                              stencilInstantiation->getMetaData().getStencilLocation());
+                                  "', this would result in invalid gridtools code");//,
+                              //stencilInstantiation->getMetaData().getFileName(),
+                              //stencilInstantiation->getMetaData().getStencilLocation());
         }
 
         // If we have a return argument, we generate a special `__out` field
@@ -789,11 +791,12 @@ void GTCodeGen::generateStencilClasses(
         // Field declaration
         std::vector<std::string> arglist;
         if(fields.empty()) {
-          throw SemanticError(std::string("No storages referenced in stencil '") +
-                                  stencilInstantiation->getName() +
-                                  "', this would result in invalid gridtools code",
-                              stencilInstantiation->getMetaData().getFileName(),
-                              stencilInstantiation->getMetaData().getStencilLocation());
+          //throw SemanticError(std::string("No storages referenced in stencil '") +
+          DAWN_LOG(WARNING)<< (std::string("No storages referenced in stencil '") +
+                              (stencilInstantiation->getName() +
+                                  "', this would result in invalid gridtools code")); //,
+                              //stencilInstantiation->getMetaData().getFileName(),
+                              //stencilInstantiation->getMetaData().getStencilLocation());
         }
 
         std::size_t accessorIdx = 0;
