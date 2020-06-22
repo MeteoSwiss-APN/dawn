@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassValidation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
@@ -23,14 +22,14 @@
 
 namespace dawn {
 
-PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassValidation") {}
-
-bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  return run(instantiation, "");
+bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const Options& options) {
+  return run(instantiation, options, "");
 }
 
 // TODO: explain what description is
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const Options& options,
                          const std::string& description) {
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
@@ -70,7 +69,7 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     integrityChecker.run();
 
     if(iir->getGridType() != ast::GridType::Unstructured) {
-      MultiStageChecker multiStageChecker(instantiation.get(), context_.getOptions().MaxHaloPoints);
+      MultiStageChecker multiStageChecker(instantiation.get(), options.MaxHaloPoints);
       multiStageChecker.run();
     }
   } catch(CompileError& error) {

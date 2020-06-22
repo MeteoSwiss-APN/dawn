@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "Pass.h"
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
@@ -38,10 +38,11 @@ namespace dawn {
 ///   - merging after reordering is straight-forward
 class PassSetStageLocationType : public Pass {
 public:
-  PassSetStageLocationType(OptimizerContext& context) : Pass(context, "PassSetStageLocationType") {}
+  PassSetStageLocationType() : Pass("PassSetStageLocationType") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

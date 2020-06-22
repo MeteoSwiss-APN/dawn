@@ -26,6 +26,7 @@
 #include "llvm/ProfileData/InstrProf.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+
 #include <fstream>
 
 namespace gtclang {
@@ -61,24 +62,24 @@ using namespace gtclang::dsl;
 };
 
 struct NestableFunctions : public dawn::codegen::MemberFunction {
-  NestableFunctions(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s,
+  NestableFunctions(const std::string& type, const std::string& name, std::stringstream& s,
                     int il = 0)
       : MemberFunction(type, name, s, il) {}
 
-  NestableFunctions addFunction(const dawn::Twine& returntype, const dawn::Twine& name) {
+  NestableFunctions addFunction(const std::string& returntype, const std::string& name) {
     NestableFunctions nf(returntype, name, ss(), IndentLevel + 1);
     return nf;
   }
 
-  NestableFunctions addVerticalRegion(const dawn::Twine& min, const dawn::Twine& max) {
-    NestableFunctions nf(dawn::Twine::createNull(), "vertical_region", ss(), IndentLevel + 1);
+  NestableFunctions addVerticalRegion(const std::string& min, const std::string& max) {
+    NestableFunctions nf("", "vertical_region", ss(), IndentLevel + 1);
     nf.addArg(min).addArg(max);
     nf.startBody();
     return nf;
   }
 
-  NestableFunctions addIfStatement(const dawn::Twine& ifCondition) {
-    NestableFunctions ifStatement(dawn::Twine::createNull(), "if", ss(), IndentLevel + 1);
+  NestableFunctions addIfStatement(const std::string& ifCondition) {
+    NestableFunctions ifStatement("", "if", ss(), IndentLevel + 1);
     ifStatement.addArg(ifCondition);
     ifStatement.startBody();
     return ifStatement;
@@ -86,27 +87,27 @@ struct NestableFunctions : public dawn::codegen::MemberFunction {
 };
 
 struct VerticalRegion : public NestableFunctions {
-  VerticalRegion(const dawn::Twine& name, std::stringstream& s, int il = 0)
-      : NestableFunctions(dawn::Twine::createNull(), name, s, il) {}
+  VerticalRegion(const std::string& name, std::stringstream& s, int il = 0)
+      : NestableFunctions("", name, s, il) {}
 };
 
 struct StencilBase : public dawn::codegen::Structure {
-  StencilBase(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s)
-      : Structure(type.str().c_str(), name, s) {}
+  StencilBase(const std::string& type, const std::string& name, std::stringstream& s)
+      : Structure(type.c_str(), name, s) {}
 
-  Statement addStorage(const dawn::Twine& memberName) {
+  Statement addStorage(const std::string& memberName) {
     Statement member(ss(), IndentLevel + 1);
     member << "storage"
            << " " << memberName;
     return member;
   }
 
-  NestableFunctions addDoMethod(const dawn::Twine& type) {
+  NestableFunctions addDoMethod(const std::string& type) {
     NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
     return nf;
   }
 
-  Statement addOffset(const dawn::Twine& offsetName) {
+  Statement addOffset(const std::string& offsetName) {
     Statement member(ss(), IndentLevel + 1);
     member << "offset"
            << " " << offsetName;
@@ -115,10 +116,10 @@ struct StencilBase : public dawn::codegen::Structure {
 };
 
 struct StencilFunction : public StencilBase {
-  StencilFunction(const dawn::Twine& name, std::stringstream& s)
+  StencilFunction(const std::string& name, std::stringstream& s)
       : StencilBase("stencil_function", name, s) {}
 
-  virtual NestableFunctions addDoMethod(const dawn::Twine& type) {
+  virtual NestableFunctions addDoMethod(const std::string& type) {
     NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
     nf.startBody();
     return nf;
@@ -128,13 +129,13 @@ struct StencilFunction : public StencilBase {
 };
 
 struct Stencil : public StencilBase {
-  Stencil(const dawn::Twine& name, std::stringstream& s) : StencilBase("stencil", name, s) {}
+  Stencil(const std::string& name, std::stringstream& s) : StencilBase("stencil", name, s) {}
 };
 
 struct Globals : public StencilBase {
-  Globals(std::stringstream& s) : StencilBase("globals", dawn::Twine::createNull(), s) {}
-  virtual NestableFunctions addDoMethod(const dawn::Twine& type) = delete;
-  virtual Statement addOffset(const dawn::Twine& offsetName) = delete;
+  Globals(std::stringstream& s) : StencilBase("globals", "", s) {}
+  virtual NestableFunctions addDoMethod(const std::string& type) = delete;
+  virtual Statement addOffset(const std::string& offsetName) = delete;
   virtual ~Globals() {}
 };
 

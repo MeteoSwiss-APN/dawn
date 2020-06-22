@@ -8,9 +8,9 @@
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 
 namespace dawn {
-PassSetLoopOrder::PassSetLoopOrder(OptimizerContext& context) : Pass(context, "PassSetLoopOrder") {}
-
-bool PassSetLoopOrder::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassSetLoopOrder::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
   for(auto& multiStage : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     // analysis is on a multistage level, clear the graph for each new one

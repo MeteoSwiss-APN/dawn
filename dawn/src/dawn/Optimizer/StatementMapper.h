@@ -61,18 +61,18 @@ class StatementMapper : public iir::ASTVisitor {
 
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
-  OptimizerContext& context_;
   const std::vector<ast::StencilCall*>& stackTrace_;
   std::stack<std::shared_ptr<Scope>> scope_;
-  bool initializedWithBlockStmt_ = false;
+  bool initializedWithBlockStmt_;
+  bool keepVarnames_;
 
 public:
   StatementMapper(
-      iir::StencilInstantiation* instantiation, OptimizerContext& context,
-      const std::vector<ast::StencilCall*>& stackTrace, iir::DoMethod& doMethod,
-      const iir::Interval& interval,
+      iir::StencilInstantiation* instantiation, const std::vector<ast::StencilCall*>& stackTrace,
+      iir::DoMethod& doMethod, const iir::Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
-      const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation);
+      const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
+      bool keepVarnames = false);
 
   Scope* getCurrentCandidateScope();
 

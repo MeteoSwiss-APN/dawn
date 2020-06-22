@@ -26,12 +26,18 @@ PYBIND11_MODULE(_dawn4py, m) {
   {{ PassGroup }}
   {{ CodeGenBackend }}
 
+  {{ LogLevel }}
+
   // Options structs
   {{ OptimizerOptions }}
   {{ CodeGenOptions }}
 
   m.def("default_pass_groups", &dawn::defaultPassGroups,
         "Return a list of default optimizer pass groups");
+
+  m.def("set_verbosity", &dawn::log::setVerbosity,
+        "Set the dawn logging level [default: LogLevel::Warnings]",
+        py::arg("level") = dawn::log::Level::Warnings);
 
   m.def("run_optimizer_sir", [](const std::string& sir,
       dawn::SIRSerializer::Format format,

@@ -21,15 +21,11 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logger.h"
 
 #include <memory>
 
 namespace dawn {
-
-PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {}
 
 /// @brief Creates the assignment statement
 static std::shared_ptr<ast::Stmt>
@@ -124,7 +120,8 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
 };
 
 bool PassFixVersionedInputFields::run(
-    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
+    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation,
+    const Options& options) {
   for(const auto& stencil : stencilInstantiation->getStencils()) {
     // Inserting multistages below, so can't use IterateIIROver here
     for(auto msiter = stencil->childrenBegin(); msiter != stencil->childrenEnd(); ++msiter) {

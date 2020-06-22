@@ -216,7 +216,7 @@ void CudaCodeGen::generateStencilClasses(
     }
 
     for(const auto& fieldPair : tempFields) {
-      paramNameToType.emplace(fieldPair.second.Name, c_dgt().str() + "storage_t");
+      paramNameToType.emplace(fieldPair.second.Name, c_dgt() + "storage_t");
     }
 
     iterationSpaceSet_ = hasGlobalIndices(stencil);
@@ -377,7 +377,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+                                "\"" + stencilWrapperClass.getName() + "\"");
 
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {

@@ -15,7 +15,6 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
@@ -30,14 +29,7 @@ namespace {
 
 class TestPassTemporaryMerger : public ::testing::Test {
 protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-
-  explicit TestPassTemporaryMerger() {
-    context_ = std::make_unique<OptimizerContext>(options_,
-                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
-    UIDGenerator::getInstance()->reset();
-  }
+  explicit TestPassTemporaryMerger() { UIDGenerator::getInstance()->reset(); }
 
   void runTest(const std::string& filename,
                const std::unordered_set<std::string>& mergedFields = {}) {
@@ -45,11 +37,11 @@ protected:
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage splitter pass
-    PassStageSplitter stageSplitPass(*context_);
+    PassStageSplitter stageSplitPass;
     EXPECT_TRUE(stageSplitPass.run(instantiation));
 
     // Expect pass to succeed...
-    PassTemporaryMerger tempMergerPass(*context_);
+    PassTemporaryMerger tempMergerPass;
     EXPECT_TRUE(tempMergerPass.run(instantiation));
 
     if(mergedFields.size() > 0) {

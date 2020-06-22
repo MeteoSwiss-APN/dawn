@@ -16,7 +16,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Lowering.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSetStageLocationType.h"
@@ -39,33 +39,31 @@ namespace {
 std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::string& sirFilename) {
   UIDGenerator::getInstance()->reset();
   auto stencilIR = SIRSerializer::deserialize(sirFilename);
-
-  OptimizerContext context({}, stencilIR);
-  auto stencilInstantiationMap = context.getStencilInstantiationMap();
+  auto stencilInstantiationMap = toStencilInstantiationMap(*stencilIR);
   DAWN_ASSERT(stencilInstantiationMap.size() == 1);
   auto instantiation = std::begin(stencilInstantiationMap)->second;
 
   {
     dawn::log::error.clear();
-    dawn::PassLocalVarType pass(context);
+    dawn::PassLocalVarType pass;
     pass.run(instantiation);
     EXPECT_EQ(dawn::log::error.size(), 0);
   }
   {
     dawn::log::error.clear();
-    dawn::PassRemoveScalars pass(context);
+    dawn::PassRemoveScalars pass;
     pass.run(instantiation);
     EXPECT_EQ(dawn::log::error.size(), 0);
   }
   {
     dawn::log::error.clear();
-    dawn::PassStageSplitAllStatements pass(context);
+    dawn::PassStageSplitAllStatements pass;
     pass.run(instantiation);
     EXPECT_EQ(dawn::log::error.size(), 0);
   }
   {
     dawn::log::error.clear();
-    dawn::PassSetStageLocationType pass(context);
+    dawn::PassSetStageLocationType pass;
     pass.run(instantiation);
     EXPECT_EQ(dawn::log::error.size(), 0);
   }

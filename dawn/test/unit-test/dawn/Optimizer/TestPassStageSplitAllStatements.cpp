@@ -15,7 +15,6 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Logger.h"
@@ -34,10 +33,9 @@ namespace {
 std::shared_ptr<iir::StencilInstantiation> initializeInstantiation(const std::string& filename) {
   UIDGenerator::getInstance()->reset();
   auto instantiation = IIRSerializer::deserialize(filename);
-  OptimizerContext context({}, {{instantiation->getName(), instantiation}});
 
   dawn::log::error.clear();
-  PassStageSplitAllStatements pass(context);
+  PassStageSplitAllStatements pass;
   pass.run(instantiation);
   EXPECT_EQ(dawn::log::error.size(), 0);
 

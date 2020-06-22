@@ -15,21 +15,19 @@
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Logger.h"
 #include <algorithm>
 
 namespace dawn {
 
-PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {}
-
-bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           const Options& options) {
   const auto& IIR = stencilInstantiation->getIIR();
 
-  Array3ui blockSize{static_cast<unsigned int>(context_.getOptions().BlockSizeI),
-                     static_cast<unsigned int>(context_.getOptions().BlockSizeJ),
-                     static_cast<unsigned int>(context_.getOptions().BlockSizeK)};
+  Array3ui blockSize{static_cast<unsigned int>(options.BlockSizeI),
+                     static_cast<unsigned int>(options.BlockSizeJ),
+                     static_cast<unsigned int>(options.BlockSizeK)};
   if(std::all_of(blockSize.begin(), blockSize.end(), [](unsigned int size) { return size == 0; })) {
     bool verticalPattern = true;
     for(const auto& stage : iterateIIROver<iir::Stage>(*IIR)) {

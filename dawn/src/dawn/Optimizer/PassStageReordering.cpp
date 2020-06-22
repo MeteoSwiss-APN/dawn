@@ -14,7 +14,9 @@
 
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/FileSystem.h"
+#include "dawn/Support/Unreachable.h"
+
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -23,19 +25,16 @@
 
 namespace dawn {
 
-PassStageReordering::PassStageReordering(OptimizerContext& context, ReorderStrategy::Kind strategy)
-    : Pass(context, "PassStageReordering"), strategy_(strategy) {
-  dependencies_.push_back("PassSetStageGraph");
-}
-
 bool PassStageReordering::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const Options& options) {
   const std::string filenameWE =
-      fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
-  if(context_.getOptions().ReportPassStageReordering)
-    stencilInstantiation->jsonDump(filenameWE + "_before.json");
+      fs::path(instantiation->getMetaData().getFileName()).filename().stem();
 
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
+  if(options.WriteStencilInstantiation)
+    instantiation->jsonDump(filenameWE + "_before_stage_reordering.json");
+
+  for(const auto& stencil : instantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
       continue;
 
@@ -52,16 +51,16 @@ bool PassStageReordering::run(
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencil, context_);
-    stencilInstantiation->getIIR()->replace(stencil, newStencil, stencilInstantiation->getIIR());
-    newStencil->update(iir::NodeUpdateType::levelAndTreeAbove);
-
+    auto newStencil = strategy->reorder(instantiation.get(), stencil, options);
     if(!newStencil)
       return false;
+
+    instantiation->getIIR()->replace(stencil, newStencil, instantiation->getIIR());
+    newStencil->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
-  if(context_.getOptions().ReportPassStageReordering)
-    stencilInstantiation->jsonDump(filenameWE + "_after.json");
+  if(options.WriteStencilInstantiation)
+    instantiation->jsonDump(filenameWE + "_after_stage_reordering.json");
 
   return true;
 }

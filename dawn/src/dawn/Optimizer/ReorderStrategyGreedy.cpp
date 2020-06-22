@@ -18,7 +18,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Iterator.h"
 
 namespace dawn {
@@ -26,7 +25,7 @@ namespace dawn {
 std::unique_ptr<iir::Stencil>
 ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
                                const std::unique_ptr<iir::Stencil>& stencil,
-                               OptimizerContext& context) {
+                               const Options& options) {
 
   auto& metadata = instantiation->getMetaData();
   std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
@@ -61,3 +60,4 @@ ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
 }
 
 } // namespace dawn
+

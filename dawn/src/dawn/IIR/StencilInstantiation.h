@@ -21,7 +21,6 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
-#include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <memory>
 #include <ostream>
@@ -30,8 +29,6 @@
 #include <unordered_map>
 
 namespace dawn {
-class OptimizerContext;
-
 namespace iir {
 
 enum class TemporaryScope { LocalVariable, StencilTemporary };

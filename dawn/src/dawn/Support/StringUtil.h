@@ -129,4 +129,16 @@ extern std::string decimalToOrdinal(int dec);
 
 /// @}
 
+/// @brief Checks if two strings are equal (case insensitive)
+/// @ingroup support
+bool equalsLower(const std::string& a, const std::string& b);
+
+/// @brief Checks if str begins with match (case insensitive)
+/// @ingroup support
+bool startWithLower(std::string str, std::string match);
+
+/// @brief Checks if str ends with match (case insensitive)
+/// @ingroup support
+bool endsWithLower(std::string str, std::string match);
+
 } // namespace dawn

@@ -17,7 +17,6 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Iterator.h"
 
@@ -99,13 +98,14 @@ ReturnType isMergable(const iir::MultiStage& thisMS, const iir::MultiStage& othe
   return dependencyGraphLoopOrderPair;
 }
 
-PassMultiStageMerger::PassMultiStageMerger(OptimizerContext& context)
-    : Pass(context, "PassMultiStageMerger") {
+PassMultiStageMerger::PassMultiStageMerger() : Pass("PassMultiStageMerger") {
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassMultiStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  const int maxHaloPoints = context_.getOptions().MaxHaloPoints;
+bool PassMultiStageMerger::run(
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const Options& options) {
+  const int maxHaloPoints = options.MaxHaloPoints;
   for(const auto& stencil : instantiation->getStencils()) {
     if(stencil->getChildren().size() < 2)
       continue;

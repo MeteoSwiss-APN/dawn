@@ -22,10 +22,11 @@ namespace dawn {
 /// @brief This Pass sets the loop order of multistages to parallel if possible
 class PassSetLoopOrder : public Pass {
 public:
-  PassSetLoopOrder(OptimizerContext& context);
+  PassSetLoopOrder(): Pass("PassSetLoopOrder") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

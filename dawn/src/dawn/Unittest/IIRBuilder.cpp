@@ -28,7 +28,7 @@
 
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Lowering.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
@@ -90,24 +90,21 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   }
 
   // create stencil instantiation context
-  auto optimizer = std::make_unique<dawn::OptimizerContext>(
-      dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
-  optimizer->restoreIIR("<restored>", std::move(si_));
-  auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
+  restoreIIR(si_);
 
-  if(new_si->getIIR()->getGridType() == ast::GridType::Unstructured) {
+  if(si_->getIIR()->getGridType() == ast::GridType::Unstructured) {
     auto [checkResultDimensions, errorLocDimension] =
-        UnstructuredDimensionChecker::checkDimensionsConsistency(*new_si->getIIR().get(),
-                                                                 new_si->getMetaData());
+        UnstructuredDimensionChecker::checkDimensionsConsistency(*si_->getIIR().get(),
+                                                                 si_->getMetaData());
     DAWN_ASSERT_MSG(checkResultDimensions, "Dimensions consistency check failed.");
     auto [checkResultWeights, errorLocWeights] =
-        WeightChecker::CheckWeights(*new_si->getIIR().get(), new_si->getMetaData());
+        WeightChecker::CheckWeights(*si_->getIIR().get(), si_->getMetaData());
     DAWN_ASSERT_MSG(checkResultWeights, "Found invalid weights");
   }
-  DAWN_ASSERT(GridTypeChecker::checkGridTypeConsistency(*new_si->getIIR().get()));
+  DAWN_ASSERT(GridTypeChecker::checkGridTypeConsistency(*si_->getIIR().get()));
 
   dawn::codegen::StencilInstantiationContext map;
-  return new_si;
+  return si_;
 }
 
 std::shared_ptr<iir::Expr>

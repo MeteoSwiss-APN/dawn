@@ -14,7 +14,6 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
@@ -28,30 +27,28 @@ using namespace dawn;
 namespace {
 
 class TestPassMultiStageMerger : public ::testing::Test {
-public:
-  explicit TestPassMultiStageMerger() {
-    context_ = std::make_unique<OptimizerContext>(options_, nullptr);
-    dawn::UIDGenerator::getInstance()->reset();
-  }
+  dawn::Options options_;
 
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
+  explicit TestPassMultiStageMerger() : options_() {
+    options_.MaxHaloPoints = 3;
+    UIDGenerator::getInstance()->reset();
+  }
 
   void runTest(const std::string& filename, const std::vector<unsigned>& expNumStages,
                const std::vector<iir::LoopOrderKind>& expLoopOrders) {
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage graph pass
-    PassSetStageGraph stageGraphPass(*context_);
+    PassSetStageGraph stageGraphPass;
     EXPECT_TRUE(stageGraphPass.run(instantiation));
 
     // Run dependency graph pass
-    PassSetDependencyGraph dependencyGraphPass(*context_);
+    PassSetDependencyGraph dependencyGraphPass;
     EXPECT_TRUE(dependencyGraphPass.run(instantiation));
 
     // Run multistage merge pass
-    PassMultiStageMerger multiStageMerger(*context_);
+    PassMultiStageMerger multiStageMerger;
     EXPECT_TRUE(multiStageMerger.run(instantiation));
 
     // Collect post-merging multi-stage counts

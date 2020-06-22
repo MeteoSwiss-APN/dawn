@@ -16,22 +16,31 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/FileSystem.h"
 
 namespace dawn {
 
-PassStageMerger::PassStageMerger(OptimizerContext& context) : Pass(context, "PassStageMerger") {
-  dependencies_.push_back("PassSetStageGraph");
-}
+bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                          const Options& options) {
+  // Do we need to run this Pass?
+  bool stencilNeedsMergePass = false;
+  for(const auto& stencilPtr : instantiation->getStencils())
+    stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
+        sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
-bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  const auto& options = context_.getOptions();
+  bool MergeStages = options.MergeStages;
+  bool MergeDoMethods = options.MergeDoMethods;
+
+  // ... Nope
+  if(!MergeDoMethods && !stencilNeedsMergePass)
+    return true;
+
   const std::string filenameWE =
       fs::path(instantiation->getMetaData().getFileName()).filename().stem();
-  if(options.ReportPassStageMerger)
-    instantiation->jsonDump(filenameWE + "_before.json");
+
+  if(options.WriteStencilInstantiation)
+    instantiation->jsonDump(filenameWE + "_before_stage_merger.json");
 
   for(const auto& stencil : instantiation->getStencils()) {
     const auto& stencilAxis = stencil->getAxis(false);
@@ -166,8 +175,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
     }
   }
 
-  if(options.ReportPassStageMerger)
-    instantiation->jsonDump(filenameWE + "_after.json");
+  if(options.WriteStencilInstantiation)
+    instantiation->jsonDump(filenameWE + "_after_stage_merger.json");
 
   return true;
 }

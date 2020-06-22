@@ -20,7 +20,6 @@
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/ContainerUtils.h"
 #include <deque>
 #include <memory>

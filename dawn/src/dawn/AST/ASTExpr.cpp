@@ -18,7 +18,6 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/StringRef.h"
 #include <memory>
 
 namespace dawn {
