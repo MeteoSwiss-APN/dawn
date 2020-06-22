@@ -29,11 +29,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
         sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
-  bool MergeStages = options.MergeStages;
-  bool MergeDoMethods = options.MergeDoMethods;
-
   // ... Nope
-  if(!MergeDoMethods && !stencilNeedsMergePass)
+  if(!options.MergeDoMethods && !stencilNeedsMergePass)
     return true;
 
   const std::string filenameWE =
