@@ -55,8 +55,6 @@ while [ "$1" != "" ]; do
             -Datlas_DIR=/usr/local/atlas/lib/cmake/atlas
             -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit
             -GNinja)
-        # No longer part of the image:
-        # -DGridTools_DIR=/usr/local/gridtools/lib/cmake
         ;;
     *)
         build_args+=($1)
