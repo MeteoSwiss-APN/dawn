@@ -35,7 +35,7 @@ namespace cxxnaive {
 /// @brief Run the cxx-naive code generation
 std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-stencilInstantiationMap,
+        stencilInstantiationMap,
     const Options& options = {});
 
 /// @brief GridTools C++ code generation for the gtclang DSL
