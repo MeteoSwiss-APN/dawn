@@ -28,6 +28,8 @@ add_library(DawnCodeGen
   CXXNaive/ASTStencilFunctionParamVisitor.h
   CXXNaive/CXXNaiveCodeGen.cpp
   CXXNaive/CXXNaiveCodeGen.h
+  CXXOpt/CXXOptCodeGen.cpp
+  CXXOpt/CXXOptCodeGen.h
   CXXNaive-ico/ASTStencilBody.cpp
   CXXNaive-ico/ASTStencilBody.h
   CXXNaive-ico/ASTStencilDesc.cpp
