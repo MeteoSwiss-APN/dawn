@@ -95,19 +95,32 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshClass.addMember("int*", chainToTableString(chain));
   }
 
-  auto gpuMeshClassCtor = gpuMeshClass.addConstructor();
-  gpuMeshClassCtor.addArg("const dawn::mesh_t<LibTag>& mesh");
-  gpuMeshClassCtor.addStatement("NumVertices = mesh.nodes().size()");
-  gpuMeshClassCtor.addStatement("NumCells = mesh.cells().size()");
-  gpuMeshClassCtor.addStatement("NumEdges = mesh.edges().size()");
-  for(auto chain : chains) {
-    gpuMeshClassCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(chain) +
-                                  ", sizeof(int) * " + chainToDenseSizeStringHostMesh(chain) +
-                                  "* " + chainToSparseSizeString(chain) + "))");
-    gpuMeshClassCtor.addStatement(
-        "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(chain) + ", " +
-        chainToDenseSizeStringHostMesh(chain) + ", " + chainToSparseSizeString(chain) + ", " +
-        chainToTableString(chain) + ")");
+  {
+    auto gpuMeshFromLibCtor = gpuMeshClass.addConstructor();
+    gpuMeshFromLibCtor.addArg("const dawn::mesh_t<LibTag>& mesh");
+    gpuMeshFromLibCtor.addStatement("NumVertices = mesh.nodes().size()");
+    gpuMeshFromLibCtor.addStatement("NumCells = mesh.cells().size()");
+    gpuMeshFromLibCtor.addStatement("NumEdges = mesh.edges().size()");
+    for(auto chain : chains) {
+      gpuMeshFromLibCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(chain) +
+                                      ", sizeof(int) * " + chainToDenseSizeStringHostMesh(chain) +
+                                      "* " + chainToSparseSizeString(chain) + "))");
+      gpuMeshFromLibCtor.addStatement(
+          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(chain) + ", " +
+          chainToDenseSizeStringHostMesh(chain) + ", " + chainToSparseSizeString(chain) + ", " +
+          chainToTableString(chain) + ")");
+    }
+  }
+  {
+    auto gpuMeshFromGlobalCtor = gpuMeshClass.addConstructor();
+    gpuMeshFromGlobalCtor.addArg("const dawn::GlobalGpuTriMesh *mesh");
+    gpuMeshFromGlobalCtor.addStatement("NumVertices = mesh->NumVertices");
+    gpuMeshFromGlobalCtor.addStatement("NumCells = mesh->NumCells");
+    gpuMeshFromGlobalCtor.addStatement("NumEdges = mesh->NumEdges");
+    for(auto chain : chains) {
+      gpuMeshFromGlobalCtor.addStatement(chainToTableString(chain) + " = mesh->NeighborTables.at(" +
+                                         chainToVectorString(chain) + ")");
+    }
   }
 }
 
@@ -278,6 +291,30 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
   }
 }
 
+void CudaIcoCodeGen::generateStencilClassRawPtrCtr(MemberFunction& ctor,
+                                                   const iir::Stencil& stencil,
+                                                   CodeGenProperties& codeGenProperties) const {
+
+  // arguments: mesh, kSize, fields
+  ctor.addArg("const dawn::GlobalGpuTriMesh *mesh");
+  ctor.addArg("int kSize");
+  for(auto field : support::orderMap(stencil.getFields())) {
+    ctor.addArg("::dawn::float_type *" + field.second.Name);
+  }
+
+  // initializers for base class, mesh, kSize
+  std::string stencilName =
+      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+  ctor.addInit("sbase(\"" + stencilName + "\")");
+  ctor.addInit("mesh_(mesh)");
+  ctor.addInit("kSize_(kSize)");
+
+  // copy pointer to each field storage
+  for(auto field : support::orderMap(stencil.getFields())) {
+    ctor.addStatement(field.second.Name + "_ = " + field.second.Name);
+  }
+}
+
 void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
                                          const iir::Stencil& stencil) const {
   // signature
@@ -352,10 +389,15 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     stencilClass.changeAccessibility("public");
 
-    // constructor
+    // constructor from library
     auto stencilClassConstructor = stencilClass.addConstructor();
     generateStencilClassCtr(stencilClassConstructor, stencil, codeGenProperties);
     stencilClassConstructor.commit();
+
+    // constructor from raw pointers
+    auto stencilClassRawPtrConstructor = stencilClass.addConstructor();
+    generateStencilClassRawPtrCtr(stencilClassRawPtrConstructor, stencil, codeGenProperties);
+    stencilClassRawPtrConstructor.commit();
 
     // run method
     auto runFun = stencilClass.addMemberFunction("void", "run");

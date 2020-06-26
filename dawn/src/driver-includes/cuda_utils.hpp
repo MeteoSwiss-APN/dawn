@@ -22,6 +22,7 @@
 #include "unstructured_interface.hpp"
 
 #include <assert.h>
+#include <unordered_map>
 #include <vector>
 
 #define DEVICE_MISSING_VALUE -1
@@ -37,6 +38,13 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 }
 
 namespace dawn {
+
+struct GlobalGpuTriMesh {
+  int NumEdges;
+  int NumCells;
+  int NumVertices;
+  std::unordered_map<std::vector<dawn::LocationType>, int*> NeighborTables;
+};
 
 void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize, int numEdges,
              int sparseSize) {

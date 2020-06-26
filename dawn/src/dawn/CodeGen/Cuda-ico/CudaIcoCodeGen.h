@@ -81,6 +81,9 @@ private:
   void generateStencilClassCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
                                CodeGenProperties& codeGenProperties) const;
 
+  void generateStencilClassRawPtrCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
+                                     CodeGenProperties& codeGenProperties) const;
+
   void generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil) const;
 
   std::string generateStencilInstantiation(
