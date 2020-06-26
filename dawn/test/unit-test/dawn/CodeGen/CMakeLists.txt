@@ -16,7 +16,7 @@ include(GoogleTest)
 file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-foreach(backend IN ITEMS Cuda Naive)
+foreach(backend IN ITEMS Cuda Naive Opt)
   set(executable ${PROJECT_NAME}UnittestCodeGen${backend})
   add_executable(${executable} ${backend}/Test${backend}CodeGen.cpp Stencils.cpp)
   target_add_dawn_standard_props(${executable})
