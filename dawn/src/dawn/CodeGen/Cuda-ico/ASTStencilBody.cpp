@@ -112,8 +112,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   std::string callee = expr->getCallee();
-  // TODO: temporary hack to remove the "math::" prefix
-  ss_ << callee.substr(6, callee.size()) << "(";
+  // TODO: temporary hack to remove namespace prefixes
+  std::size_t lastcolon = callee.find_last_of(":");
+  ss_ << callee.substr(lastcolon + 1) << "(";
 
   std::size_t numArgs = expr->getArguments().size();
   for(std::size_t i = 0; i < numArgs; ++i) {
@@ -121,6 +122,21 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
     ss_ << (i == numArgs - 1 ? "" : ", ");
   }
   ss_ << ")";
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+  ss_ << "if(";
+  stmt->getCondExpr()->accept(*this);
+  ss_ << ")\n";
+  ss_ << "{";
+  stmt->getThenStmt()->accept(*this);
+  ss_ << "}";
+  if(stmt->hasElse()) {
+    ss_ << std::string(indent_, ' ') << "else\n";
+    ss_ << "{";
+    stmt->getElseStmt()->accept(*this);
+    ss_ << "}";
+  }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
