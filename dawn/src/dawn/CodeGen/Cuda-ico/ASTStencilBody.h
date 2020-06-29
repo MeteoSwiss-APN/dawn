@@ -88,6 +88,7 @@ public:
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation

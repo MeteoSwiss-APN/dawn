@@ -17,6 +17,7 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Options.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
@@ -30,50 +31,32 @@ class StencilInstantiation;
 }
 
 namespace codegen {
-namespace cxxnaive {
+namespace cxxopt {
 
-/// @brief Run the cxx-naive code generation
+using namespace cxxnaive;
+
+/// @brief Run the cxx-opt code generation
 std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-        stencilInstantiationMap,
-    const Options& options = {});
+        stencilInstantiationMap, const Options& options = {});
 
 /// @brief GridTools C++ code generation for the gtclang DSL
-/// @ingroup cxxnaive
-class CXXNaiveCodeGen : public CodeGen {
+/// @ingroup cxxopt
+class CXXOptCodeGen : public CXXNaiveCodeGen {
 public:
   ///@brief constructor
-  CXXNaiveCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint);
-  virtual ~CXXNaiveCodeGen();
+  CXXOptCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint);
+  virtual ~CXXOptCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
-protected:
+private:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
-
-  void
-  generateStencilFunctions(Class& stencilWrapperClass,
-                           const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                           const CodeGenProperties& codeGenProperties) const;
 
   void generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
                               Class& stencilWrapperClass,
                               const CodeGenProperties& codeGenProperties) const;
-  void generateStencilWrapperMembers(
-      Class& stencilWrapperClass,
-      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-      CodeGenProperties& codeGenProperties) const;
-
-  void
-  generateStencilWrapperCtr(Class& stencilWrapperClass,
-                            const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties) const;
-
-  void
-  generateStencilWrapperRun(Class& stencilWrapperClass,
-                            const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                            const CodeGenProperties& codeGenProperties) const;
 };
-} // namespace cxxnaive
+} // namespace cxxopt
 } // namespace codegen
 } // namespace dawn
