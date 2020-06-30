@@ -66,8 +66,8 @@ template <typename T>
 ::dawn::float_type sparseVertexFieldType(NoLibTag);
 // ENDTODO
 
-void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize, int numEdges,
-             int sparseSize) {
+inline void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
+                    int numEdges, int sparseSize) {
   // In: edges, klevels, sparse
   // Out: klevels, sparse, edges
 
@@ -79,7 +79,8 @@ void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
       }
 }
 
-void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize, int numEdges) {
+inline void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
+                    int numEdges) {
   // In: edges, klevels
   // Out: klevels, edges
 
@@ -89,8 +90,8 @@ void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
     }
 }
 
-void reshape_back(const dawn::float_type* input, dawn::float_type* output, int kSize,
-                  int numEdges) {
+inline void reshape_back(const dawn::float_type* input, dawn::float_type* output, int kSize,
+                         int numEdges) {
   // In: klevels, edges
   // Out: edges, klevels
 
@@ -99,8 +100,8 @@ void reshape_back(const dawn::float_type* input, dawn::float_type* output, int k
       output[edgeIdx * kSize + kLevel] = input[kLevel * numEdges + edgeIdx];
     }
 }
-void reshape_back(const dawn::float_type* input, dawn::float_type* output, int kSize, int numEdges,
-                  int sparseSize) {
+inline void reshape_back(const dawn::float_type* input, dawn::float_type* output, int kSize,
+                         int numEdges, int sparseSize) {
   // In: klevels, sparse, edges
   // Out: edges, klevels, sparse
   for(int edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
