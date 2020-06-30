@@ -17,11 +17,13 @@
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Cuda-ico/IcoChainSizes.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/MultiStage.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
 
@@ -410,6 +412,74 @@ void CudaIcoCodeGen::generateStencilClasses(
   }
 }
 
+void CudaIcoCodeGen::generateAllAPIRunFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties) {
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  CollectChainStrings chainCollector;
+  std::set<std::vector<ast::LocationType>> chains;
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
+    doMethod->getAST().accept(chainCollector);
+    chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
+  }
+
+  for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
+    const auto& stencil = *stencils[stencilIdx];
+
+    const std::string stencilName =
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+    const std::string wrapperName = stencilInstantiation->getName();
+
+    MemberFunction apiRunFun("double", "run_" + wrapperName, ssSW);
+
+    apiRunFun.addArg("dawn::GlobalGpuTriMesh *mesh");
+    apiRunFun.addArg("int k_size");
+    for(auto field : support::orderMap(stencil.getFields())) {
+      apiRunFun.addArg("::dawn::float_type *" + field.second.Name);
+    }
+
+    std::stringstream chainSizesStr;
+    {
+      bool first = true;
+      for(auto chain : chains) {
+        if(!first) {
+          chainSizesStr << ", ";
+        }
+        if(!ICOChainSizes.count(chain)) {
+          throw SemanticError(std::string("Unsupported neighbor chain in stencil '") +
+                                  stencilInstantiation->getName() +
+                                  "': " + chainToVectorString(chain),
+                              stencilInstantiation->getMetaData().getFileName(),
+                              stencilInstantiation->getMetaData().getStencilLocation());
+        }
+        chainSizesStr << ICOChainSizes.at(chain);
+        first = false;
+      }
+    }
+
+    std::stringstream fieldsStr;
+    {
+      bool first = true;
+      for(auto field : support::orderMap(stencil.getFields())) {
+        if(!first) {
+          fieldsStr << ", ";
+        }
+
+        fieldsStr << field.second.Name;
+        first = false;
+      }
+    }
+
+    apiRunFun.addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
+                           ">::" + stencilName + " s(mesh, k_size, " + fieldsStr.str() + ")");
+    apiRunFun.addStatement("s.run()");
+    apiRunFun.addStatement("double time = s.get_time()");
+    apiRunFun.addStatement("s.reset()");
+    apiRunFun.addStatement("return time");
+  }
+}
+
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
@@ -582,6 +652,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   stencilWrapperClass.commit();
 
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties);
+
   cudaNamespace.commit();
   dawnNamespace.commit();
 
@@ -604,8 +676,8 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
 
   std::vector<std::string> ppDefines{
       "#include \"driver-includes/unstructured_interface.hpp\"",
-      "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
+      "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#define BLOCK_SIZE 16",

@@ -72,6 +72,11 @@ private:
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                          Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
+  void
+  generateAllAPIRunFunctions(std::stringstream& ssSW,
+                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                             CodeGenProperties& codeGenProperties);
+
   void generateGpuMesh(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                        Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 

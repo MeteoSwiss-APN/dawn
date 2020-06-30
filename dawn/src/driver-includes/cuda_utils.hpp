@@ -22,7 +22,7 @@
 #include "unstructured_interface.hpp"
 
 #include <assert.h>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #define DEVICE_MISSING_VALUE -1
@@ -43,8 +43,28 @@ struct GlobalGpuTriMesh {
   int NumEdges;
   int NumCells;
   int NumVertices;
-  std::unordered_map<std::vector<dawn::LocationType>, int*> NeighborTables;
+  std::map<std::vector<dawn::LocationType>, int*> NeighborTables;
 };
+
+// Tag for no library (raw pointers)
+// TODO this is a temporary HACK to keep the templated interface and have a constructor from raw
+// pointers (ICON). Needs refactoring.
+struct NoLibTag {};
+dawn::GlobalGpuTriMesh meshType(NoLibTag);
+int indexType(NoLibTag);
+template <typename T>
+::dawn::float_type cellFieldType(NoLibTag);
+template <typename T>
+::dawn::float_type edgeFieldType(NoLibTag);
+template <typename T>
+::dawn::float_type vertexFieldType(NoLibTag);
+template <typename T>
+::dawn::float_type sparseCellFieldType(NoLibTag);
+template <typename T>
+::dawn::float_type sparseEdgeFieldType(NoLibTag);
+template <typename T>
+::dawn::float_type sparseVertexFieldType(NoLibTag);
+// ENDTODO
 
 void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize, int numEdges,
              int sparseSize) {
