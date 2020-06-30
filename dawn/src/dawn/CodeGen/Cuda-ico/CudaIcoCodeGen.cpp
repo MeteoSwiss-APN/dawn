@@ -431,13 +431,14 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
     const std::string wrapperName = stencilInstantiation->getName();
 
-    MemberFunction apiRunFun("double", "run_" + wrapperName, ssSW);
+    MemberFunction apiRunFun("double", "run_" + wrapperName + "_impl", ssSW);
 
     apiRunFun.addArg("dawn::GlobalGpuTriMesh *mesh");
     apiRunFun.addArg("int k_size");
     for(auto field : support::orderMap(stencil.getFields())) {
       apiRunFun.addArg("::dawn::float_type *" + field.second.Name);
     }
+    const int argCount = 2 + stencil.getFields().size();
 
     std::stringstream chainSizesStr;
     {
@@ -477,6 +478,18 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     apiRunFun.addStatement("double time = s.get_time()");
     apiRunFun.addStatement("s.reset()");
     apiRunFun.addStatement("return time");
+
+    apiRunFun.commit();
+
+    // Export binding (if requested)
+    ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
+         << "\n";
+    Statement exportMacroCall(ssSW);
+    exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName << ", run_"
+                    << wrapperName << "_impl)";
+    exportMacroCall.commit();
+    ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
+         << "\n";
   }
 }
 
@@ -675,6 +688,9 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   }
 
   std::vector<std::string> ppDefines{
+      "#ifdef DAWN_ENABLE_BINDGEN",
+      "#include <cpp_bindgen/export.hpp>",
+      "#endif /* DAWN_ENABLE_BINDGEN */",
       "#include \"driver-includes/unstructured_interface.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
