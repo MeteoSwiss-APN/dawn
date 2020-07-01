@@ -59,17 +59,20 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
   const auto& metadata = stencilInstantiation->getMetaData();
 
   std::map<int, iir::Field> allFields;
+  std::unordered_set<int> tempIDs;
   for(const auto& fieldPair : nonTempFields) {
     allFields.emplace(fieldPair.first, fieldPair.second);
   }
   for(const auto& fieldPair : tempFields) {
     allFields.emplace(fieldPair.first, fieldPair.second);
+    tempIDs.insert(fieldPair.first);
   }
 
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
   for(const auto& fieldPair : allFields) {
-    const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
+    const int accessID = fieldPair.second.getAccessID();
+    const auto fieldName = metadata.getFieldNameFromAccessID(accessID);
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
@@ -100,13 +103,18 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
       if(!(usedDim++))
         continue;
       if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
-        strides.push_back(fieldName + "_ds.strides()[" + std::to_string(i) + "]");
+        if(tempIDs.find(accessID) == tempIDs.end()) {
+          strides.push_back(fieldName + "_ds.strides()[" + std::to_string(i) + "]");
+        } else {
+          strides.push_back("m_" + fieldName + ".strides()[" + std::to_string(i) + "]");
+        }
       } else {
         strides.push_back("const int stride_" + CodeGeneratorHelper::indexIteratorName(dims) + "_" +
                           std::to_string(i));
       }
     }
   }
+
   if(!tempFields.empty()) {
     const auto& firstTmpField = *(tempFields.begin());
     std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
