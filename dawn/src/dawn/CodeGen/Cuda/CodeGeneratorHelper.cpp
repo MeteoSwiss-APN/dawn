@@ -58,9 +58,17 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
 
   const auto& metadata = stencilInstantiation->getMetaData();
 
+  std::map<int, iir::Field> allFields;
+  for(const auto& fieldPair : nonTempFields) {
+    allFields.emplace(fieldPair.first, fieldPair.second);
+  }
+  for(const auto& fieldPair : tempFields) {
+    allFields.emplace(fieldPair.first, fieldPair.second);
+  }
+
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
-  for(const auto& fieldPair : nonTempFields) {
+  for(const auto& fieldPair : allFields) {
     const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
