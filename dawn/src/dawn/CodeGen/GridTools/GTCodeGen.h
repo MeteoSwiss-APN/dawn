@@ -66,7 +66,11 @@ public:
     std::unordered_map<int, std::vector<iir::Interval>> StageIntervals;
 
     // TODO we should compute the OffsetLimit, not use a hard-coded value!
-    static constexpr int OffsetLimit = 3;
+    // TODO when resolving the above TODO, take into account the result of
+    // https://github.com/GridTools/gridtools/issues/1483
+    // Roughly: if k-caches are involved the extent of this field must not
+    // be > (OffsetLimit - |lower and upper offset in the current interval|).
+    static constexpr int OffsetLimit = 4;
 
     // TODO we should avoid the ExtraOffsets, not use a hard-coded value!
     static constexpr int ExtraOffsets = 1;
