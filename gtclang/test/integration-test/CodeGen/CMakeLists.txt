@@ -123,7 +123,6 @@ function(compile_target_cuda)
   )
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
-  target_compile_features(${executable} PRIVATE cxx_std_14)
   target_link_libraries(${executable} GridTools::gridtools)
   target_link_libraries(${executable} gtest)
   # TODO The following line must not be there!
