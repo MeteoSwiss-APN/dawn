@@ -438,6 +438,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     for(auto field : support::orderMap(stencil.getFields())) {
       apiRunFun.addArg("::dawn::float_type *" + field.second.Name);
     }
+    // Need to count arguments for exporting bindings through GridTools bindgen
     const int argCount = 2 + stencil.getFields().size();
 
     std::stringstream chainSizesStr;
