@@ -150,11 +150,11 @@ if(${PROJECT_NAME}_TESTING)
   )
   cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_CUDA
     "Build integration tests with the GridTools CUDA backend"
-    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;NOT ENABLE_CUDA_IF_FOUND" OFF
+    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;ENABLE_CUDA_IF_FOUND" OFF
   )
   cmake_dependent_option(GTCLANG_BUILD_TESTING_PLAIN_CUDA
     "Build integration tests with the plain CUDA backend"
-    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;NOT ENABLE_CUDA_IF_FOUND" OFF
+    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;ENABLE_CUDA_IF_FOUND" OFF
   )
 
   add_subdirectory(test)
