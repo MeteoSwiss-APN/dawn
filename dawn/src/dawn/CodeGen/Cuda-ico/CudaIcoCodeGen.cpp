@@ -179,16 +179,16 @@ void CudaIcoCodeGen::generateRunFun(
       for(auto stageLoc : stageLocType) {
         switch(stageLoc) {
         case ast::LocationType::Cells:
-          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) +
-                              " = grid(mesh_.NumCells, " + k_size.str() + ")");
+          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
+                              k_size.str() + ", mesh_.NumCells)");
           break;
         case ast::LocationType::Edges:
-          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) +
-                              " = grid(mesh_.NumEdges, " + k_size.str() + ")");
+          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
+                              k_size.str() + ", mesh_.NumEdges)");
           break;
         case ast::LocationType::Vertices:
-          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) +
-                              " = grid(mesh_.NumVertices, " + k_size.str() + ")");
+          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
+                              k_size.str() + ", mesh_.NumVertices)");
           break;
         }
       }
@@ -507,12 +507,19 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         break;
       }
 
+      std::stringstream k_size;
+      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+        k_size << "kSize + " << interval.upperOffset();
+      } else {
+        k_size << interval.upperLevel() << " + " << interval.upperOffset();
+      }
+
       // k loop
       for(const auto& doMethodPtr : stage->getChildren()) {
         // Generate Do-Method
         const iir::DoMethod& doMethod = *doMethodPtr;
         cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
-          cudaKernel.addBlockStatement("if (kIter >= kSize)",
+          cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
                                        [&]() { cudaKernel.addStatement("return"); });
 
           for(const auto& stmt : doMethod.getAST().getStatements()) {
