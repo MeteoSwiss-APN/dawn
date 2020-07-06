@@ -36,7 +36,7 @@ public:
   PassStageMerger() : Pass("PassStageMerger") { dependencies_.push_back("PassSetStageGraph"); }
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
            const Options& options = {}) override;
 };
 
