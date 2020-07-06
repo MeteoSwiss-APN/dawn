@@ -7,6 +7,9 @@
 #include "dawn/Compiler/Driver.h"
 #include "dawn/CodeGen/Driver.h"
 
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
+
 #include <string>
 #include <list>
 #include <map>
@@ -18,6 +21,12 @@ namespace py = ::pybind11;
 
 PYBIND11_MODULE(_dawn4py, m) {
   m.doc() = "Dawn DSL toolchain"; // optional module docstring
+
+  // Register custom exceptions
+  py::register_exception<dawn::CompileError>(m, "CompileError");
+  py::register_exception<dawn::SemanticError>(m, "SemanticError");
+  py::register_exception<dawn::SyntacticError>(m, "SyntacticError");
+  py::register_exception<dawn::LogicError>(m, "LogicError");
 
   // Enumerations
   {{ SIRSerializerFormat }}
