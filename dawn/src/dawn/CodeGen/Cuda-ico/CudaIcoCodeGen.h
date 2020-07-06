@@ -72,6 +72,11 @@ private:
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                          Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
+  void
+  generateAllAPIRunFunctions(std::stringstream& ssSW,
+                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                             CodeGenProperties& codeGenProperties);
+
   void generateGpuMesh(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                        Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
@@ -80,6 +85,9 @@ private:
 
   void generateStencilClassCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
                                CodeGenProperties& codeGenProperties) const;
+
+  void generateStencilClassRawPtrCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
+                                     CodeGenProperties& codeGenProperties) const;
 
   void generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil) const;
 
