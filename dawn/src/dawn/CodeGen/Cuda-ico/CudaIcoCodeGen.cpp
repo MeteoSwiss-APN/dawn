@@ -17,11 +17,13 @@
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Cuda-ico/IcoChainSizes.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/MultiStage.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
 
@@ -95,19 +97,32 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshClass.addMember("int*", chainToTableString(chain));
   }
 
-  auto gpuMeshClassCtor = gpuMeshClass.addConstructor();
-  gpuMeshClassCtor.addArg("const dawn::mesh_t<LibTag>& mesh");
-  gpuMeshClassCtor.addStatement("NumVertices = mesh.nodes().size()");
-  gpuMeshClassCtor.addStatement("NumCells = mesh.cells().size()");
-  gpuMeshClassCtor.addStatement("NumEdges = mesh.edges().size()");
-  for(auto chain : chains) {
-    gpuMeshClassCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(chain) +
-                                  ", sizeof(int) * " + chainToDenseSizeStringHostMesh(chain) +
-                                  "* " + chainToSparseSizeString(chain) + "))");
-    gpuMeshClassCtor.addStatement(
-        "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(chain) + ", " +
-        chainToDenseSizeStringHostMesh(chain) + ", " + chainToSparseSizeString(chain) + ", " +
-        chainToTableString(chain) + ")");
+  {
+    auto gpuMeshFromLibCtor = gpuMeshClass.addConstructor();
+    gpuMeshFromLibCtor.addArg("const dawn::mesh_t<LibTag>& mesh");
+    gpuMeshFromLibCtor.addStatement("NumVertices = mesh.nodes().size()");
+    gpuMeshFromLibCtor.addStatement("NumCells = mesh.cells().size()");
+    gpuMeshFromLibCtor.addStatement("NumEdges = mesh.edges().size()");
+    for(auto chain : chains) {
+      gpuMeshFromLibCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(chain) +
+                                      ", sizeof(int) * " + chainToDenseSizeStringHostMesh(chain) +
+                                      "* " + chainToSparseSizeString(chain) + "))");
+      gpuMeshFromLibCtor.addStatement(
+          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(chain) + ", " +
+          chainToDenseSizeStringHostMesh(chain) + ", " + chainToSparseSizeString(chain) + ", " +
+          chainToTableString(chain) + ")");
+    }
+  }
+  {
+    auto gpuMeshFromGlobalCtor = gpuMeshClass.addConstructor();
+    gpuMeshFromGlobalCtor.addArg("const dawn::GlobalGpuTriMesh *mesh");
+    gpuMeshFromGlobalCtor.addStatement("NumVertices = mesh->NumVertices");
+    gpuMeshFromGlobalCtor.addStatement("NumCells = mesh->NumCells");
+    gpuMeshFromGlobalCtor.addStatement("NumEdges = mesh->NumEdges");
+    for(auto chain : chains) {
+      gpuMeshFromGlobalCtor.addStatement(chainToTableString(chain) + " = mesh->NeighborTables.at(" +
+                                         chainToVectorString(chain) + ")");
+    }
   }
 }
 
@@ -278,6 +293,30 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
   }
 }
 
+void CudaIcoCodeGen::generateStencilClassRawPtrCtr(MemberFunction& ctor,
+                                                   const iir::Stencil& stencil,
+                                                   CodeGenProperties& codeGenProperties) const {
+
+  // arguments: mesh, kSize, fields
+  ctor.addArg("const dawn::GlobalGpuTriMesh *mesh");
+  ctor.addArg("int kSize");
+  for(auto field : support::orderMap(stencil.getFields())) {
+    ctor.addArg("::dawn::float_type *" + field.second.Name);
+  }
+
+  // initializers for base class, mesh, kSize
+  std::string stencilName =
+      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+  ctor.addInit("sbase(\"" + stencilName + "\")");
+  ctor.addInit("mesh_(mesh)");
+  ctor.addInit("kSize_(kSize)");
+
+  // copy pointer to each field storage
+  for(auto field : support::orderMap(stencil.getFields())) {
+    ctor.addStatement(field.second.Name + "_ = " + field.second.Name);
+  }
+}
+
 void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
                                          const iir::Stencil& stencil) const {
   // signature
@@ -352,10 +391,15 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     stencilClass.changeAccessibility("public");
 
-    // constructor
+    // constructor from library
     auto stencilClassConstructor = stencilClass.addConstructor();
     generateStencilClassCtr(stencilClassConstructor, stencil, codeGenProperties);
     stencilClassConstructor.commit();
+
+    // constructor from raw pointers
+    auto stencilClassRawPtrConstructor = stencilClass.addConstructor();
+    generateStencilClassRawPtrCtr(stencilClassRawPtrConstructor, stencil, codeGenProperties);
+    stencilClassRawPtrConstructor.commit();
 
     // run method
     auto runFun = stencilClass.addMemberFunction("void", "run");
@@ -365,6 +409,88 @@ void CudaIcoCodeGen::generateStencilClasses(
     // copy back fun
     auto copyBackFun = stencilClass.addMemberFunction("void", "CopyResultToHost");
     generateCopyBackFun(copyBackFun, stencil);
+  }
+}
+
+void CudaIcoCodeGen::generateAllAPIRunFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties) {
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  CollectChainStrings chainCollector;
+  std::set<std::vector<ast::LocationType>> chains;
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
+    doMethod->getAST().accept(chainCollector);
+    chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
+  }
+
+  for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
+    const auto& stencil = *stencils[stencilIdx];
+
+    const std::string stencilName =
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+    const std::string wrapperName = stencilInstantiation->getName();
+
+    MemberFunction apiRunFun("double", "run_" + wrapperName + "_impl", ssSW);
+
+    apiRunFun.addArg("dawn::GlobalGpuTriMesh *mesh");
+    apiRunFun.addArg("int k_size");
+    for(auto field : support::orderMap(stencil.getFields())) {
+      apiRunFun.addArg("::dawn::float_type *" + field.second.Name);
+    }
+    // Need to count arguments for exporting bindings through GridTools bindgen
+    const int argCount = 2 + stencil.getFields().size();
+
+    std::stringstream chainSizesStr;
+    {
+      bool first = true;
+      for(auto chain : chains) {
+        if(!first) {
+          chainSizesStr << ", ";
+        }
+        if(!ICOChainSizes.count(chain)) {
+          throw SemanticError(std::string("Unsupported neighbor chain in stencil '") +
+                                  stencilInstantiation->getName() +
+                                  "': " + chainToVectorString(chain),
+                              stencilInstantiation->getMetaData().getFileName(),
+                              stencilInstantiation->getMetaData().getStencilLocation());
+        }
+        chainSizesStr << ICOChainSizes.at(chain);
+        first = false;
+      }
+    }
+
+    std::stringstream fieldsStr;
+    {
+      bool first = true;
+      for(auto field : support::orderMap(stencil.getFields())) {
+        if(!first) {
+          fieldsStr << ", ";
+        }
+
+        fieldsStr << field.second.Name;
+        first = false;
+      }
+    }
+
+    apiRunFun.addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
+                           ">::" + stencilName + " s(mesh, k_size, " + fieldsStr.str() + ")");
+    apiRunFun.addStatement("s.run()");
+    apiRunFun.addStatement("double time = s.get_time()");
+    apiRunFun.addStatement("s.reset()");
+    apiRunFun.addStatement("return time");
+
+    apiRunFun.commit();
+
+    // Export binding (if requested)
+    ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
+         << "\n";
+    Statement exportMacroCall(ssSW);
+    exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName << ", run_"
+                    << wrapperName << "_impl)";
+    exportMacroCall.commit();
+    ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
+         << "\n";
   }
 }
 
@@ -540,6 +666,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   stencilWrapperClass.commit();
 
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties);
+
   cudaNamespace.commit();
   dawnNamespace.commit();
 
@@ -561,9 +689,12 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   }
 
   std::vector<std::string> ppDefines{
+      "#ifdef DAWN_ENABLE_BINDGEN",
+      "#include <cpp_bindgen/export.hpp>",
+      "#endif /* DAWN_ENABLE_BINDGEN */",
       "#include \"driver-includes/unstructured_interface.hpp\"",
-      "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
+      "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#define BLOCK_SIZE 16",
