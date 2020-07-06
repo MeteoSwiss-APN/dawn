@@ -38,7 +38,6 @@ dawn::Logger::MessageFormatter makeGTClangMessageFormatter(const std::string& pr
     std::stringstream ss;
     ss << "[" << timeStr << "] ";
 
-    ss << prefix;
     ss << prefix << " [" << file << ":" << line << "] " << message << "\n";
 
     return ss.str();
@@ -63,7 +62,6 @@ dawn::Logger::DiagnosticFormatter makeGTClangDiagnosticFormatter(const std::stri
     std::stringstream ss;
     ss << "[" << timeStr << "] ";
 
-    ss << prefix;
     ss << prefix << " [" << file << ":" << line << "] " << source;
 
     if(loc.Line) {
