@@ -15,7 +15,6 @@ include(GoogleTest)
 
 set(executable ${PROJECT_NAME}IntegrationTestOptimizerFromSIR)
 add_executable(${executable}
-  TestFromSIR.h
   TestComputeMaximumExtent.cpp
   TestMultiStage.cpp
   TestStage.cpp

@@ -14,9 +14,6 @@
 
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Support/FileSystem.h"
-#include "dawn/Support/Unreachable.h"
-
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -26,15 +23,15 @@
 namespace dawn {
 
 bool PassStageReordering::run(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {
   const std::string filenameWE =
-      fs::path(instantiation->getMetaData().getFileName()).filename().stem();
+      fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
 
   if(options.WriteStencilInstantiation)
-    instantiation->jsonDump(filenameWE + "_before_stage_reordering.json");
+    stencilInstantiation->jsonDump(filenameWE + "_before_stage_reordering.json");
 
-  for(const auto& stencil : instantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
       continue;
 
@@ -51,16 +48,16 @@ bool PassStageReordering::run(
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(instantiation.get(), stencil, options);
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencil, options);
     if(!newStencil)
       return false;
 
-    instantiation->getIIR()->replace(stencil, newStencil, instantiation->getIIR());
+    stencilInstantiation->getIIR()->replace(stencil, newStencil, stencilInstantiation->getIIR());
     newStencil->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
   if(options.WriteStencilInstantiation)
-    instantiation->jsonDump(filenameWE + "_after_stage_reordering.json");
+    stencilInstantiation->jsonDump(filenameWE + "_after_stage_reordering.json");
 
   return true;
 }

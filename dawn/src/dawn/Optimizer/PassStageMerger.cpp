@@ -21,11 +21,11 @@
 
 namespace dawn {
 
-bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                           const Options& options) {
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
-  for(const auto& stencilPtr : instantiation->getStencils())
+  for(const auto& stencilPtr : stencilInstantiation->getStencils())
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
         sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
 
@@ -34,12 +34,12 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
     return true;
 
   const std::string filenameWE =
-      fs::path(instantiation->getMetaData().getFileName()).filename().stem();
+      fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
 
   if(options.WriteStencilInstantiation)
-    instantiation->jsonDump(filenameWE + "_before_stage_merger.json");
+    stencilInstantiation->jsonDump(filenameWE + "_before_stage_merger.json");
 
-  for(const auto& stencil : instantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
     const auto& stencilAxis = stencil->getAxis(false);
     const auto& stageDAG = *(stencil->getStageDependencyGraph());
     const auto& attributes = stencil->getStencilAttributes();
@@ -108,7 +108,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
                 auto& candidateDepGraph = candidateDoMethod.getDependencyGraph();
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
-                auto newDepGraph = iir::DependencyGraphAccesses(instantiation->getMetaData(),
+                auto newDepGraph = iir::DependencyGraphAccesses(stencilInstantiation->getMetaData(),
                                                                 *candidateDepGraph, *curDepGraph);
 
                 if(newDepGraph.isDAG() && !hasHorizontalReadBeforeWriteConflict(newDepGraph)) {
@@ -173,7 +173,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& inst
   }
 
   if(options.WriteStencilInstantiation)
-    instantiation->jsonDump(filenameWE + "_after_stage_merger.json");
+    stencilInstantiation->jsonDump(filenameWE + "_after_stage_merger.json");
 
   return true;
 }

@@ -237,4 +237,3 @@ bool CodeGeneratorHelper::solveKLoopInParallel(const std::unique_ptr<iir::MultiS
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-

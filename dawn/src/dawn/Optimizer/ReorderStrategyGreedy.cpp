@@ -23,11 +23,11 @@
 namespace dawn {
 
 std::unique_ptr<iir::Stencil>
-ReorderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
+ReorderStrategyGreedy::reorder(iir::StencilInstantiation* stencilInstantiation,
                                const std::unique_ptr<iir::Stencil>& stencil,
                                const Options& options) {
 
-  auto& metadata = instantiation->getMetaData();
+  auto& metadata = stencilInstantiation->getMetaData();
   std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
       metadata, stencil->getStencilAttributes(), stencil->getStencilID());
   auto const& stageDAG = *stencil->getStageDependencyGraph();
