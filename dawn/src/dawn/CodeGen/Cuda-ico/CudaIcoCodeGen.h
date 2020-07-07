@@ -83,6 +83,8 @@ private:
   void generateRunFun(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                       MemberFunction& runFun, CodeGenProperties& codeGenProperties);
 
+  void generateGridFun(MemberFunction& runFun);
+
   void generateStencilClassCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
                                CodeGenProperties& codeGenProperties) const;
 
