@@ -22,7 +22,9 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
@@ -33,6 +35,26 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+static bool intervalsConsistent(const dawn::iir::Stage& stage) {
+  // get the intervals for this stage
+  std::unordered_set<dawn::iir::Interval> intervals;
+  for(const auto& doMethodPtr : dawn::iterateIIROver<dawn::iir::DoMethod>(stage)) {
+    intervals.insert(doMethodPtr->getInterval());
+  }
+
+  bool consistentLo =
+      std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
+        return intervals.begin()->lowerBound() == interval.lowerBound();
+      });
+
+  bool consistentHi =
+      std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
+        return intervals.begin()->upperBound() == interval.upperBound();
+      });
+
+  return consistentHi && consistentLo;
+}
 
 namespace dawn {
 namespace codegen {
@@ -126,6 +148,12 @@ void CudaIcoCodeGen::generateGpuMesh(
   }
 }
 
+void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
+  gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
+  gridFun.addStatement(
+      "return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
+}
+
 void CudaIcoCodeGen::generateRunFun(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, MemberFunction& runFun,
     CodeGenProperties& codeGenProperties) {
@@ -135,23 +163,6 @@ void CudaIcoCodeGen::generateRunFun(
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
       stageLocType.insert(*stage->getLocationType());
-    }
-  }
-  runFun.addStatement("int dK = (kSize_ + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-  for(auto stageLoc : stageLocType) {
-    switch(stageLoc) {
-    case ast::LocationType::Cells:
-      runFun.addStatement("dim3 dGC((mesh_.NumCells + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + "
-                          "BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
-      break;
-    case ast::LocationType::Edges:
-      runFun.addStatement("dim3 dGE((mesh_.NumEdges + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + "
-                          "BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
-      break;
-    case ast::LocationType::Vertices:
-      runFun.addStatement("dim3 dGV((mesh_.NumVertices + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + "
-                          "BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
-      break;
     }
   }
   runFun.addStatement("dim3 dB(BLOCK_SIZE, BLOCK_SIZE, 1)");
@@ -164,6 +175,38 @@ void CudaIcoCodeGen::generateRunFun(
 
       // fields used in the stencil
       const auto fields = support::orderMap(stage->getFields());
+
+      // lets figure out how many k levels we need to consider
+      std::stringstream k_size;
+      DAWN_ASSERT_MSG(intervalsConsistent(*stage),
+                      "intervals in a stage must have same bounds for now!\n");
+      auto interval = stage->getChild(0)->getInterval();
+      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+        k_size << "kSize_ + " << interval.upperOffset() << " - "
+               << (interval.lowerOffset() + interval.lowerLevel());
+      } else {
+        k_size << interval.upperLevel() << " + " << interval.upperOffset() << " - "
+               << (interval.lowerOffset() + interval.lowerLevel());
+      }
+
+      // lets build correct block size
+      std::string numElements;
+      for(auto stageLoc : stageLocType) {
+        switch(stageLoc) {
+        case ast::LocationType::Cells:
+          numElements = "mesh_.NumCells";
+          break;
+        case ast::LocationType::Edges:
+          numElements = "mesh_.NumEdges";
+          break;
+        case ast::LocationType::Vertices:
+          numElements = "mesh_.NumVertices";
+          break;
+        }
+      }
+
+      runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
+                          k_size.str() + ", " + numElements + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -193,23 +236,9 @@ void CudaIcoCodeGen::generateRunFun(
         kernelCall << ">";
       }
 
-      switch(*stage->getLocationType()) {
-      case ast::LocationType::Cells:
-        kernelCall << "<<<"
-                   << "dGC,dB"
-                   << ">>>(";
-        break;
-      case ast::LocationType::Edges:
-        kernelCall << "<<<"
-                   << "dGE,dB"
-                   << ">>>(";
-        break;
-      case ast::LocationType::Vertices:
-        kernelCall << "<<<"
-                   << "dGV,dB"
-                   << ">>>(";
-        break;
-      }
+      kernelCall << "<<<"
+                 << "dG" + std::to_string(stage->getStageID()) + ",dB"
+                 << ">>>(";
 
       // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
       std::set<std::string> locArgs;
@@ -396,6 +425,15 @@ void CudaIcoCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClassConstructor, stencil, codeGenProperties);
     stencilClassConstructor.commit();
 
+    // grid helper fun
+    //    can not be placed in cuda utils sinze it needs LEVELS_PER_THREAD and BLOCK_SIZE, which are
+    //    supposed to become compiler flags
+    auto gridFun = stencilClass.addMemberFunction("dim3", "grid");
+    gridFun.addArg("int kSize");
+    gridFun.addArg("int elSize");
+    generateGridFun(gridFun);
+    gridFun.commit();
+
     // constructor from raw pointers
     auto stencilClassRawPtrConstructor = stencilClass.addConstructor();
     generateStencilClassRawPtrCtr(stencilClassRawPtrConstructor, stencil, codeGenProperties);
@@ -569,11 +607,17 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       // body of the kernel
       //--------------------------------------
 
+      DAWN_ASSERT_MSG(intervalsConsistent(*stage),
+                      "intervals in a stage must have same bounds for now!\n");
+      auto interval = stage->getChild(0)->getInterval();
+      int kStart = interval.lowerLevel() + interval.lowerOffset();
+
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
       cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
-      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD");
-      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD");
+      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " + std::to_string(kStart));
+      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
+                              std::to_string(kStart));
       switch(loc) {
       case ast::LocationType::Cells:
         cudaKernel.addBlockStatement("if (pidx >= NumCells)",
@@ -589,14 +633,21 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         break;
       }
 
-      // k loop
-      cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
-        cudaKernel.addBlockStatement("if (kIter >= kSize)",
-                                     [&]() { cudaKernel.addStatement("return"); });
+      std::stringstream k_size;
+      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+        k_size << "kSize + " << interval.upperOffset();
+      } else {
+        k_size << interval.upperLevel() << " + " << interval.upperOffset();
+      }
 
-        // Generate Do-Method
+      // k loop (we ensured that all k intervals for all do methods in a stage are equal for now)
+      cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
+        cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
+                                     [&]() { cudaKernel.addStatement("return"); });
         for(const auto& doMethodPtr : stage->getChildren()) {
+          // Generate Do-Method
           const iir::DoMethod& doMethod = *doMethodPtr;
+
           for(const auto& stmt : doMethod.getAST().getStatements()) {
             FindReduceOverNeighborExpr findReduceOverNeighborExpr;
             stmt->accept(findReduceOverNeighborExpr);
