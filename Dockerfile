@@ -1,5 +1,5 @@
 # IMAGE needs be be set to one of the docker/dawn-env.dockerfile images
-ARG IMAGE=gtclang/dawn-env-ubuntu19.10
+ARG IMAGE=gtclang/dawn-env-ubuntu20.04
 FROM $IMAGE
 ARG BUILD_TYPE=Release
 COPY . /usr/src/dawn
