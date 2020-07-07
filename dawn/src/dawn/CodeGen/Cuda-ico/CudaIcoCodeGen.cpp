@@ -190,23 +190,23 @@ void CudaIcoCodeGen::generateRunFun(
       }
 
       // lets build correct block size
-      // runFun.addStatement("int dK = (kSize_ + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
+      std::string numElements;
       for(auto stageLoc : stageLocType) {
         switch(stageLoc) {
         case ast::LocationType::Cells:
-          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                              k_size.str() + ", mesh_.NumCells)");
+          numElements = "mesh_.NumCells";
           break;
         case ast::LocationType::Edges:
-          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                              k_size.str() + ", mesh_.NumEdges)");
+          numElements = "mesh_.NumEdges";
           break;
         case ast::LocationType::Vertices:
-          runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                              k_size.str() + ", mesh_.NumVertices)");
+          numElements = "mesh_.NumVertices";
           break;
         }
       }
+
+      runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
+                          k_size.str() + ", " + numElements + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -640,13 +640,13 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         k_size << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
-      // k loop
-      for(const auto& doMethodPtr : stage->getChildren()) {
-        // Generate Do-Method
-        const iir::DoMethod& doMethod = *doMethodPtr;
-        cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
-          cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
-                                       [&]() { cudaKernel.addStatement("return"); });
+      // k loop (we ensured that all k intervals for all do methods in a stage are equal for now)
+      cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
+        cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
+                                     [&]() { cudaKernel.addStatement("return"); });
+        for(const auto& doMethodPtr : stage->getChildren()) {
+          // Generate Do-Method
+          const iir::DoMethod& doMethod = *doMethodPtr;
 
           for(const auto& stmt : doMethod.getAST().getStatements()) {
             FindReduceOverNeighborExpr findReduceOverNeighborExpr;
@@ -659,8 +659,8 @@ void CudaIcoCodeGen::generateAllCudaKernels(
             stmt->accept(stencilBodyCXXVisitor);
             cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
           }
-        });
-      }
+        }
+      });
     }
   }
 }
