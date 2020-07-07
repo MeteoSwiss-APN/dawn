@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_MULTISTAGECHECKER_H
-#define DAWN_OPTIMIZER_MULTISTAGECHECKER_H
+#pragma once
 
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -27,15 +26,10 @@ namespace dawn {
 //===------------------------------------------------------------------------------------------===//
 /// @brief Check whether multistages in stencil instantiation exceeds max halo points.
 class MultiStageChecker {
-  iir::StencilInstantiation* instantiation_;
-  int maxHaloPoints_;
-
 public:
-  MultiStageChecker(iir::StencilInstantiation* instantiation, const int maxHaloPoints = 3);
+  MultiStageChecker();
 
-  void run();
+  void run(iir::StencilInstantiation* instantiation, const int maxHaloPoints = 3);
 };
 
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_MULTISTAGECHECKER_H

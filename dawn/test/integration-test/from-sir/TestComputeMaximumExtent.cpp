@@ -14,7 +14,9 @@
 
 #include "TestFromSIR.h"
 
-namespace dawn {
+namespace {
+
+using namespace dawn;
 
 class TestComputeMaximumExtent : public TestFromSIR {};
 

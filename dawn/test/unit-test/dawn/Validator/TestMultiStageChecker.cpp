@@ -28,11 +28,11 @@ namespace {
 TEST(TestMultiStageChecker, LaplacianTwoStep) {
   // Load IIR from file
   auto instantiation = IIRSerializer::deserialize("input/LaplacianTwoStep.iir");
-  MultiStageChecker checker(instantiation.get(), 1);
+  MultiStageChecker checker;
 
   // Run multistage checker and succeed if exception is thrown
   try {
-    checker.run();
+    checker.run(instantiation.get(), 1);
     FAIL() << "Max halo error not thrown";
   } catch(CompileError& error) {
     SUCCEED();
