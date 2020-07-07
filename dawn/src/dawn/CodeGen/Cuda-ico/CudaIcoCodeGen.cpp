@@ -191,18 +191,16 @@ void CudaIcoCodeGen::generateRunFun(
 
       // lets build correct block size
       std::string numElements;
-      for(auto stageLoc : stageLocType) {
-        switch(stageLoc) {
-        case ast::LocationType::Cells:
-          numElements = "mesh_.NumCells";
-          break;
-        case ast::LocationType::Edges:
-          numElements = "mesh_.NumEdges";
-          break;
-        case ast::LocationType::Vertices:
-          numElements = "mesh_.NumVertices";
-          break;
-        }
+      switch(*stage->getLocationType()) {
+      case ast::LocationType::Cells:
+        numElements = "mesh_.NumCells";
+        break;
+      case ast::LocationType::Edges:
+        numElements = "mesh_.NumEdges";
+        break;
+      case ast::LocationType::Vertices:
+        numElements = "mesh_.NumVertices";
+        break;
       }
 
       runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
