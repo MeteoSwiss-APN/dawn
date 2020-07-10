@@ -25,7 +25,7 @@ git clone --depth 1 -b $CLANG_GRIDTOOLS_BRANCH $CLANG_GRIDTOOLS_REPOSITORY $(pwd
 sarus pull $image
 
 srun --job-name=dawn_PR \
-    --time=00:45:00 \
+    --time=01:00:00 \
     --nodes=1 \
     --ntasks-per-node=1 \
     --ntasks-per-core=2 \
