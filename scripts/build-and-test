@@ -66,14 +66,14 @@ while [ "$1" != "" ]; do
 done
 
 # Dawn
-time cmake -S $dawn_source_dir -B $dawn_build_dir \
+cmake -S $dawn_source_dir -B $dawn_build_dir \
     -DBUILD_TESTING=ON \
     -DCMAKE_INSTALL_PREFIX=$dawn_install_dir \
     ${build_args[@]}
 
-time $prefix cmake --build $dawn_build_dir --parallel $build_jobs --target install
+$prefix cmake --build $dawn_build_dir --parallel $build_jobs --target install
 
-time $prefix python -m pip install -e $dawn_source_dir/dawn
+$prefix python -m pip install -e $dawn_source_dir/dawn
 
 # Testing
 if [ "$run_tests" == "true" ]; then
@@ -85,13 +85,13 @@ if [ "$run_tests" == "true" ]; then
             cg_build_dir=$cg_source_dir/build
         fi
 
-        time cmake -S $cg_source_dir -B $cg_build_dir \
+        cmake -S $cg_source_dir -B $cg_build_dir \
             -DDawn_DIR=$dawn_install_dir/lib/cmake/Dawn \
             -DGridTools_DIR=$dawn_install_dir/lib/cmake \
             -DGTClang_DIR=$dawn_install_dir/lib/cmake/GTClang \
             ${build_args[@]}
 
-        time $prefix cmake --build $cg_build_dir --parallel $build_jobs
+        $prefix cmake --build $cg_build_dir --parallel $build_jobs
 
         (cd $cg_build_dir && $prefix ctest --output-on-failure --force-new-ctest-process --max-width 80)
     fi
