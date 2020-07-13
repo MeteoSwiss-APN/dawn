@@ -14,11 +14,11 @@
 
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Support/FileSystem.h"
-#include "dawn/Support/Unreachable.h"
-
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
+#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/FileSystem.h"
+#include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 
@@ -31,31 +31,29 @@ bool PassStageReordering::run(
   if(options.WriteStencilInstantiation)
     stencilInstantiation->jsonDump(filenameWE + "_before_stage_reordering.json");
 
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
       continue;
 
     std::unique_ptr<ReorderStrategy> strategy;
     switch(strategy_) {
     case ReorderStrategy::Kind::Greedy:
-      strategy = std::make_unique<ReoderStrategyGreedy>();
+      strategy = std::make_unique<ReorderStrategyGreedy>();
       break;
     case ReorderStrategy::Kind::Partitioning:
-      strategy = std::make_unique<ReoderStrategyPartitioning>();
+      strategy = std::make_unique<ReorderStrategyPartitioning>();
       break;
     default:
       dawn_unreachable("invalid reorder strategy");
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, options);
-
-    stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
-    // TODO why is stencilPtr still used? (it was replaced in the previous statement)
-    stencilPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-
-    if(!stencilPtr)
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencil, options);
+    if(!newStencil)
       return false;
+
+    stencilInstantiation->getIIR()->replace(stencil, newStencil, stencilInstantiation->getIIR());
+    newStencil->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
   if(options.WriteStencilInstantiation)

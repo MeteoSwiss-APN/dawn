@@ -30,7 +30,7 @@
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
 #include "dawn/Optimizer/PassManager.h"
-#include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -38,6 +38,7 @@
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
+#include "dawn/Optimizer/PassSetLoopOrder.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageLocationType.h"
@@ -74,13 +75,9 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
 
   PassManager passManager;
 
-  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
-
   // required passes to have proper, parallelized IR
   passManager.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
   passManager.pushBackPass<PassFieldVersioning>();
-  passManager.pushBackPass<PassMultiStageSplitter>(
-      options.MaxCutMSS ? MultistageSplitStrategy::MaxCut : MultistageSplitStrategy::Optimized);
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassLocalVarType>();
   passManager.pushBackPass<PassRemoveScalars>();
@@ -243,6 +240,25 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     case PassGroup::DataLocalityMetric:
       // Plain diagnostics, should not even be a pass but is independent
       passManager.pushBackPass<PassDataLocalityMetric>();
+      // validation check
+      passManager.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::SetLoopOrder:
+      // Plain diagnostics, should not even be a pass but is independent
+      passManager.pushBackPass<PassSetLoopOrder>();
+      // validation check
+      passManager.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::MultiStageMerger:
+      // set up the graphs for the analysis
+      passManager.pushBackPass<PassSetStageGraph>();
+      passManager.pushBackPass<PassSetDependencyGraph>();
+      // run the pass
+      passManager.pushBackPass<PassMultiStageMerger>();
+      // since this can change the scope of temporaries ...
+      passManager.pushBackPass<PassTemporaryType>();
+      passManager.pushBackPass<PassLocalVarType>();
+      passManager.pushBackPass<PassRemoveScalars>();
       // validation check
       passManager.pushBackPass<PassValidation>();
       break;

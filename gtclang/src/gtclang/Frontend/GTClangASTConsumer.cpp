@@ -174,6 +174,12 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(context_->getOptions().DataLocalityMetric)
     passGroup.push_back(dawn::PassGroup::DataLocalityMetric);
 
+  if(context_->getOptions().SetLoopOrder)
+    passGroup.push_back(dawn::PassGroup::SetLoopOrder);
+
+  if(context_->getOptions().MultiStageMerger)
+    passGroup.push_back(dawn::PassGroup::MultiStageMerger);
+
   // if nothing is passed, we fill the group with the default if no-optimization is not specified
   if(!context_->getOptions().DisableOptimization && passGroup.size() == 0)
     passGroup = dawn::defaultPassGroups();

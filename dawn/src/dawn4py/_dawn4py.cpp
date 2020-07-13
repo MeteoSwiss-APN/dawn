@@ -46,6 +46,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .value("SetStageName", dawn::PassGroup::SetStageName)
       .value("StageReordering", dawn::PassGroup::StageReordering)
       .value("StageMerger", dawn::PassGroup::StageMerger)
+      .value("MultiStageMerger", dawn::PassGroup::MultiStageMerger)
       .value("TemporaryMerger", dawn::PassGroup::TemporaryMerger)
       .value("Inlining", dawn::PassGroup::Inlining)
       .value("IntervalPartitioning", dawn::PassGroup::IntervalPartitioning)
@@ -54,6 +55,7 @@ PYBIND11_MODULE(_dawn4py, m) {
       .value("SetCaches", dawn::PassGroup::SetCaches)
       .value("SetBlockSize", dawn::PassGroup::SetBlockSize)
       .value("DataLocalityMetric", dawn::PassGroup::DataLocalityMetric)
+      .value("SetLoopOrder", dawn::PassGroup::SetLoopOrder)
       .export_values();
 
   py::enum_<dawn::codegen::Backend>(m, "CodeGenBackend")

@@ -14,35 +14,22 @@
 
 #pragma once
 
-#include <string>
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/Exception.h"
 
 namespace dawn {
 
-/// @brief Enumeration of all pass groups
-enum class PassGroup {
-  Parallel,
-  SSA,
-  PrintStencilGraph,
-  SetStageName,
-  StageReordering,
-  StageMerger,
-  MultiStageMerger,
-  TemporaryMerger,
-  Inlining,
-  IntervalPartitioning,
-  TmpToStencilFunction,
-  SetNonTempCaches,
-  SetCaches,
-  SetBlockSize,
-  DataLocalityMetric,
-  SetLoopOrder,
-};
+//===------------------------------------------------------------------------------------------===//
+//     MultiStageChecker
+//===------------------------------------------------------------------------------------------===//
+/// @brief Check whether multistages in stencil instantiation exceeds max halo points.
+class MultiStageChecker {
+public:
+  MultiStageChecker();
 
-struct Options {
-#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  TYPE NAME = DEFAULT_VALUE;
-#include "dawn/Optimizer/Options.inc"
-#undef OPT
+  void run(iir::StencilInstantiation* instantiation, const int maxHaloPoints = 3);
 };
 
 } // namespace dawn

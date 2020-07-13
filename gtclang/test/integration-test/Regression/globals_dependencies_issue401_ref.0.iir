@@ -6,9 +6,9 @@
    "29": "global"
   },
   "accessIDToType": {
+   "31": 6,
    "29": 0,
-   "30": 6,
-   "31": 6
+   "30": 6
   },
   "literalIDToName": {
    "-61": "0",
@@ -258,7 +258,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 75,
       "Caches": {}
      }
@@ -382,14 +382,14 @@
                   }
                  },
                  "readAccess": {
-                  "29": {
+                  "30": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "30": {
+                  "29": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -424,7 +424,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 76,
       "Caches": {}
      }
@@ -597,5 +597,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/Users/johannd/Code/dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
 }

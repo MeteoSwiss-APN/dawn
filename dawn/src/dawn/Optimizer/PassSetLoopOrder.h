@@ -15,30 +15,17 @@
 #pragma once
 
 #include "dawn/Optimizer/Pass.h"
-#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 
-/// @brief Perform basic integrity checks
-///
-/// @ingroup optimizer
-///
-/// This pass is read-only and is hence not in the debug-group
-class PassValidation : public Pass {
+/// @brief This Pass sets the loop order of multistages to parallel if possible
+class PassSetLoopOrder : public Pass {
 public:
-  PassValidation() : Pass("PassValidation") {}
+  PassSetLoopOrder(): Pass("PassSetLoopOrder") {}
 
-  /// @brief Pass run implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+  /// @brief Pass implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
            const Options& options = {}) override;
-
-  /// @brief IIR validation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-           const Options& options = {},
-           const std::string& description = "");
-
-  /// @brief SIR validation
-  bool run(const std::shared_ptr<dawn::SIR>& sir);
 };
 
 } // namespace dawn

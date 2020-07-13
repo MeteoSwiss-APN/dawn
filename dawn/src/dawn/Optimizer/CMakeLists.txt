@@ -36,8 +36,8 @@ add_library(DawnOptimizer
   PassLocalVarType.cpp
   PassManager.cpp
   PassManager.h
-  PassMultiStageSplitter.cpp
-  PassMultiStageSplitter.h
+  PassMultiStageMerger.cpp
+  PassMultiStageMerger.h
   PassOptions.inc
   PassPrintStencilGraph.cpp
   PassPrintStencilGraph.h
@@ -51,6 +51,8 @@ add_library(DawnOptimizer
   PassSetCaches.h
   PassSetDependencyGraph.cpp
   PassSetDependencyGraph.h
+  PassSetLoopOrder.cpp
+  PassSetLoopOrder.h
   PassSetNonTempCaches.cpp
   PassSetNonTempCaches.h
   PassSetStageGraph.cpp

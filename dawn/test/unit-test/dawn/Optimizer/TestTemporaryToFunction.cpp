@@ -17,7 +17,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Serialization/IIRSerializer.h"
 

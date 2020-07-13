@@ -14,31 +14,28 @@
 
 #pragma once
 
+#include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
-/// @brief Pass for splitting multistages due vertical data dependencies
+/// @brief Try to merge multistages to reduce the amount of synchronization required.
 ///
-/// @see hasVerticalReadBeforeWriteConflict
+/// This Pass depends on `PassSetStageGraph`.
+///
+/// @note This pass renders the stage graphs invalid. Run `PassSetStageGraph` to compute them again.
+///
 /// @ingroup optimizer
-class PassMultiStageSplitter : public Pass {
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
+class PassMultiStageMerger : public Pass {
 public:
-  /// @brief Multistage splitting strategies
-  enum class MultiStageSplittingStrategy {
-    MaxCut,   ///< Splitting the multistage into as many multistages as possible while maintaining
-              /// code legality
-    Optimized ///< Optimized splitting of Multistages, only when needed
-  };
-  PassMultiStageSplitter(MultiStageSplittingStrategy strategy)
-      : Pass("PassMultiStageSplitter"), strategy_(strategy) {}
+  PassMultiStageMerger();
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
            const Options& options = {}) override;
-
-private:
-  MultiStageSplittingStrategy strategy_;
 };
 
 } // namespace dawn

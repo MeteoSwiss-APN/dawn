@@ -17,7 +17,6 @@
 #include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
-#include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Serialization/IIRSerializer.h"
 
 #include <fstream>
@@ -27,11 +26,17 @@ using namespace dawn;
 
 namespace {
 
-class TestPassStageReordering : public ::testing::Test {
-protected:
-  explicit TestPassStageReordering() { UIDGenerator::getInstance()->reset(); }
+class TestPassMultiStageMerger : public ::testing::Test {
+  dawn::Options options_;
 
-  void runTest(const std::string& filename, const std::vector<unsigned>& stageOrders) {
+protected:
+  explicit TestPassMultiStageMerger() : options_() {
+    options_.MaxHaloPoints = 3;
+    UIDGenerator::getInstance()->reset();
+  }
+
+  void runTest(const std::string& filename, const std::vector<unsigned>& expNumStages,
+               const std::vector<iir::LoopOrderKind>& expLoopOrders) {
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage graph pass
@@ -46,61 +51,52 @@ protected:
     PassMultiStageMerger multiStageMerger;
     EXPECT_TRUE(multiStageMerger.run(instantiation));
 
-    // Collect pre-reordering stage IDs
-    std::vector<int> prevStageIDs;
-    for(const auto& stencil : instantiation->getStencils())
-      for(const auto& multiStage : stencil->getChildren())
-        for(const auto& stage : multiStage->getChildren())
-          prevStageIDs.push_back(stage->getStageID());
+    // Collect post-merging multi-stage counts
+    std::vector<int> postNumStages;
+    std::vector<iir::LoopOrderKind> postLoopOrders;
+    for(const auto& stencil : instantiation->getStencils()) {
+      for(const auto& multistage : stencil->getChildren()) {
+        postNumStages.push_back(multistage->getChildren().size());
+        postLoopOrders.push_back(multistage->getLoopOrder());
+      }
+    }
 
-    EXPECT_EQ(stageOrders.size(), prevStageIDs.size());
-
-    // Expect pass to succeed...
-    PassStageReordering stageReorderPass(dawn::ReorderStrategy::Kind::Greedy);
-    EXPECT_TRUE(stageReorderPass.run(instantiation));
-
-    // Collect post-reordering stage IDs
-    std::vector<int> postStageIDs;
-    for(const auto& stencil : instantiation->getStencils())
-      for(const auto& multiStage : stencil->getChildren())
-        for(const auto& stage : multiStage->getChildren())
-          postStageIDs.push_back(stage->getStageID());
-
-    ASSERT_EQ(prevStageIDs.size(), postStageIDs.size());
-    for(int i = 0; i < stageOrders.size(); i++) {
-      ASSERT_EQ(postStageIDs[i], prevStageIDs[stageOrders[i]]);
+    ASSERT_EQ(expNumStages.size(), postNumStages.size());
+    ASSERT_EQ(expLoopOrders.size(), postLoopOrders.size());
+    for(int i = 0; i < expNumStages.size(); i++) {
+      ASSERT_EQ(expNumStages[i], postNumStages[i]);
+      ASSERT_EQ(expLoopOrders[i], postLoopOrders[i]);
     }
   }
 };
 
-TEST_F(TestPassStageReordering, ReorderTest1) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest1) {
   /*
      vertical_region(k_end, k_start) { field_a1 = field_a0; }
    */
-  runTest("input/ReorderTest01.iir", {0});
+  runTest("input/ReorderTest01.iir", {1}, {iir::LoopOrderKind::Parallel});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest2) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest2) {
   /*
     vertical_region(k_end, k_start) { field_b1 = field_b0; }
     vertical_region(k_start, k_end) { field_a1 = field_a0; }
     vertical_region(k_end, k_start) { field_b2 = field_b1; }
     vertical_region(k_start, k_end) { field_a2 = field_a1; }
    */
-  runTest("input/ReorderTest02.iir", {1, 3, 0, 2});
+  runTest("input/ReorderTest02.iir", {4}, {iir::LoopOrderKind::Parallel});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest3) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest3) {
   /*
      vertical_region(k_end - 1, k_start + 1) {
        field_b1 = field_b0;
        field_b2 = field_b1(k - 1);
-     }
-   */
-  runTest("input/ReorderTest03.iir", {0, 1});
+     } */
+  runTest("input/ReorderTest03.iir", {2}, {iir::LoopOrderKind::Forward});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest4) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest4) {
   /*
      vertical_region(k_end - 1, k_start + 1) {
        field_b1 = field_b0;
@@ -109,18 +105,19 @@ TEST_F(TestPassStageReordering, ReorderTest4) {
        field_a1 = field_a0;
        field_a2 = field_a1(k + 1);  }
    */
-  runTest("input/ReorderTest04.iir", {2, 0, 1, 3});
+  runTest("input/ReorderTest04.iir", {3, 1},
+          {iir::LoopOrderKind::Forward, iir::LoopOrderKind::Parallel});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest5) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest5) {
   /*
    vertical_region(k_start, k_start) { field_a1 = field_a0(k + 1); }
    vertical_region(k_start + 2, k_end - 1) { field_a2 = field_a1(k + 1); }
    */
-  runTest("input/ReorderTest05.iir", {1, 0});
+  runTest("input/ReorderTest05.iir", {2}, {iir::LoopOrderKind::Parallel});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest6) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest6) {
   /*
    vertical_region(k_start + 1, k_start + 1) {
      field_a1 = field_a0(k + 1);
@@ -129,10 +126,11 @@ TEST_F(TestPassStageReordering, ReorderTest6) {
      field_a2 = field_a1(k + 1);
      field_b2 = field_b1(k - 1);  }
    */
-  runTest("input/ReorderTest06.iir", {0, 1});
+  runTest("input/ReorderTest06.iir", {1, 1},
+          {iir::LoopOrderKind::Parallel, iir::LoopOrderKind::Parallel});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest7) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest7) {
   /*
     vertical_region(k_start, k_end) {
       field_a1 = field_a0(i + 1);
@@ -144,11 +142,12 @@ TEST_F(TestPassStageReordering, ReorderTest7) {
       field_a7 = field_a6(i + 1);
     }
    */
-  runTest("input/ReorderTest07.iir", {0, 1, 2, 3, 4, 5, 6});
+  runTest("input/ReorderTest07.iir", {7}, {iir::LoopOrderKind::Parallel});
 }
 
-TEST_F(TestPassStageReordering, ReorderTest8) {
-  /*vertical_region(k_start, k_start) {
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest8) {
+  /*
+    vertical_region(k_start, k_start) {
       c = c / b;
       d = d / b;
     }
@@ -160,7 +159,24 @@ TEST_F(TestPassStageReordering, ReorderTest8) {
     vertical_region(k_end - 1, k_start) {
       d -= c * d[k + 1];
     } */
-  runTest("input/tridiagonal_solve.iir", {1, 0, 2, 4, 3, 5});
+  runTest("input/tridiagonal_solve.iir", {5, 1},
+          {iir::LoopOrderKind::Forward, iir::LoopOrderKind::Backward});
+}
+
+TEST_F(TestPassMultiStageMerger, MultiStageMergeTest9) {
+  /*
+    vertical_region(k_start, k_end) {
+      b = 1;
+    }
+    /// b == 1
+    vertical_region(k_start, k_end) {
+      b = 2;
+      a = b[k + 1];
+      // b == 2
+      // a == 1
+    } */
+  runTest("input/MultiStageTest01.iir", {1, 2},
+          {iir::LoopOrderKind::Forward, iir::LoopOrderKind::Forward});
 }
 
 } // anonymous namespace
