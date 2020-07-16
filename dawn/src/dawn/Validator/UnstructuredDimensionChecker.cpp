@@ -3,6 +3,7 @@
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Validator/WeightChecker.h"
 
@@ -18,7 +19,8 @@ UnstructuredDimensionChecker::checkDimensionsConsistency(
     const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(iir)) {
     UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
-        doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
+        doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap(),
+        metaData.getAccessIDToLocalVariableDataMap());
     for(const auto& stmt : doMethod->getAST().getStatements()) {
       stmt->accept(checker);
       if(!checker.isConsistent()) {
@@ -82,7 +84,8 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stage)) {
       for(const auto& stmt : doMethod->getAST().getStatements()) {
         UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
-            doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
+            doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap(),
+            metaData.getAccessIDToLocalVariableDataMap());
         stmt->accept(checker);
         if(!(checker.hasDimensions() &&
              stageLocationType ==
@@ -103,13 +106,44 @@ UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDime
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
     const std::unordered_map<int, std::string> idToNameMap,
+    const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
     UnstructuredDimensionCheckerConfig config)
-    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap), config_(config) {}
+    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap),
+      idToLocalVariableData_(idToLocalVariableData), config_(config) {}
 
 const sir::FieldDimensions&
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() const {
   DAWN_ASSERT(hasDimensions());
   return curDimensions_.value();
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+  auto newAccessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
+  const auto varDeclInfo = idToLocalVariableData_.at(newAccessID);
+  auto type = varDeclInfo.getType();
+
+  // Scalar, OnCells, OnEdges, OnVertices, OnIJ
+  switch(type) {
+  case iir::LocalVariableType::Scalar:
+  case iir::LocalVariableType::OnIJ:
+    return;
+    break;
+  case iir::LocalVariableType::OnCells:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Cells}, true);
+    break;
+  case iir::LocalVariableType::OnEdges:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Edges}, true);
+    break;
+  case iir::LocalVariableType::OnVertices:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Vertices}, true);
+    break;
+  default:
+    break;
+  }
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
@@ -173,10 +207,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
   }
 
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
-                                                                      idToNameMap_, config_);
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
-                                                                       idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   binOp->getLeft()->accept(left);
   binOp->getRight()->accept(right);
@@ -205,10 +239,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!dimensionsConsistent_) {
     return;
   }
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
-                                                                      idToNameMap_, config_);
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
-                                                                       idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   assignmentExpr->getLeft()->accept(left);
   assignmentExpr->getRight()->accept(right);
@@ -344,13 +378,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
   }
 
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(nameToDimensions_,
-                                                                      idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   config_.parentIsReduction_ = true;
   config_.currentChain_ = reductionExpr->getNbhChain();
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(nameToDimensions_,
-                                                                     idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
   config_.currentChain_ = std::nullopt;
   reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);
@@ -373,8 +407,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   // check weighs for consistency w.r.t dimensions
   if(reductionExpr->getWeights().has_value()) {
     // check weights one by one
-    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl weightChecker(nameToDimensions_,
-                                                                                 idToNameMap_);
+    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl weightChecker(
+        nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
     for(const auto& weight : *reductionExpr->getWeights()) {
       weight->accept(weightChecker);
     }

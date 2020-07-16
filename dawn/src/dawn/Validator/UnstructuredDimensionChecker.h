@@ -41,6 +41,7 @@ private:
     std::optional<sir::FieldDimensions> curDimensions_;
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
+    const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData_;
     bool dimensionsConsistent_ = true;
 
     UnstructuredDimensionCheckerConfig config_;
@@ -54,6 +55,7 @@ private:
     void visit(const std::shared_ptr<iir::AssignmentExpr>& stmt) override;
     void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override;
     void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
+    void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
 
     bool isConsistent() const { return dimensionsConsistent_; }
     bool hasDimensions() const { return curDimensions_.has_value(); };
@@ -70,6 +72,7 @@ private:
     UnstructuredDimensionCheckerImpl(
         const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
         const std::unordered_map<int, std::string> idToNameMap,
+        const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
         UnstructuredDimensionCheckerConfig = UnstructuredDimensionCheckerConfig());
   };
 
