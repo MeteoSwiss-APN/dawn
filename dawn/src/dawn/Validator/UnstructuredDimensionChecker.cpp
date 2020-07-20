@@ -77,6 +77,7 @@ UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
 UnstructuredDimensionChecker::ConsistencyResult
 UnstructuredDimensionChecker::checkStageLocTypeConsistency(
     const iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
+
   for(const auto& stage : iterateIIROver<iir::Stage>(iir)) {
     DAWN_ASSERT_MSG(stage->getLocationType().has_value(), "Location type of stage is unset.");
     auto stageLocationType = *stage->getLocationType();
@@ -122,40 +123,17 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!dimensionsConsistent_) {
     return;
   }
-  // data is not set when starting from SIR
-  if(!stmt->hasData()) {
+  auto accessID = stmt->getData<iir::VarDeclStmtData>().AccessID;
+  // access id is only set on SIR
+  if(!accessID.has_value()) {
     return;
   }
-  auto accessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
-  const auto varDeclInfo = idToLocalVariableData_.at(accessID);
+  const auto varDeclInfo = idToLocalVariableData_.at(*accessID);
+  // type is not set if PassLocalVarType didn't run
   if(!varDeclInfo.isTypeSet()) {
-    // type is not set if PassLocalVarType didn't run
     return;
   }
-
-  auto type = varDeclInfo.getType();
-
-  // Scalar, OnCells, OnEdges, OnVertices, OnIJ
-  switch(type) {
-  case iir::LocalVariableType::Scalar:
-  case iir::LocalVariableType::OnIJ:
-    return;
-    break;
-  case iir::LocalVariableType::OnCells:
-    curDimensions_ = sir::FieldDimensions(
-        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Cells}, true);
-    break;
-  case iir::LocalVariableType::OnEdges:
-    curDimensions_ = sir::FieldDimensions(
-        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Edges}, true);
-    break;
-  case iir::LocalVariableType::OnVertices:
-    curDimensions_ = sir::FieldDimensions(
-        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Vertices}, true);
-    break;
-  default:
-    break;
-  }
+  setCurDimensionFromLocType(varDeclInfo.getType());
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
@@ -188,29 +166,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 }
 
-void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::VarAccessExpr>& varAccessExpr) {
-  if(!dimensionsConsistent_) {
-    return;
-  }
-  // data is not set if coming from SIR
-  if(!varAccessExpr->hasData()) {
-    return;
-  }
-  auto accessID = *varAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
-  // access may be global
-  if(!idToLocalVariableData_.count(accessID)) {
-    return;
-  }
-  const auto varAccessInfo = idToLocalVariableData_.at(accessID);
-  if(!varAccessInfo.isTypeSet()) {
-    // type is not set if PassLocalVarType didn't run
-    return;
-  }
-
-  auto type = varAccessInfo.getType();
-
-  // Scalar, OnCells, OnEdges, OnVertices, OnIJ
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::setCurDimensionFromLocType(
+    iir::LocalVariableType&& type) {
   switch(type) {
   case iir::LocalVariableType::Scalar:
   case iir::LocalVariableType::OnIJ:
@@ -231,6 +188,29 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   default:
     break;
   }
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::VarAccessExpr>& varAccessExpr) {
+  if(!dimensionsConsistent_) {
+    return;
+  }
+  // data is not set if coming from SIR
+  if(!varAccessExpr->hasData()) {
+    return;
+  }
+  auto accessID = *varAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
+  // access may be global
+  if(!idToLocalVariableData_.count(accessID)) {
+    return;
+  }
+  const auto varAccessInfo = idToLocalVariableData_.at(accessID);
+  if(!varAccessInfo.isTypeSet()) {
+    // type is not set if PassLocalVarType didn't run
+    return;
+  }
+
+  setCurDimensionFromLocType(varAccessInfo.getType());
 }
 
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,

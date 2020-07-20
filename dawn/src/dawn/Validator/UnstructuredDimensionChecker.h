@@ -58,6 +58,7 @@ private:
     void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
     void visit(const std::shared_ptr<iir::VarAccessExpr>& stmt) override;
 
+    void setCurDimensionFromLocType(iir::LocalVariableType&& type);
     bool isConsistent() const { return dimensionsConsistent_; }
     bool hasDimensions() const { return curDimensions_.has_value(); };
     const sir::FieldDimensions& getDimensions() const;
