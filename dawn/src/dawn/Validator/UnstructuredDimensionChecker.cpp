@@ -119,8 +119,20 @@ UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() 
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::VarDeclStmt>& stmt) {
-  auto newAccessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
-  const auto varDeclInfo = idToLocalVariableData_.at(newAccessID);
+  if(!dimensionsConsistent_) {
+    return;
+  }
+  // data is not set when starting from SIR
+  if(!stmt->hasData()) {
+    return;
+  }
+  auto accessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
+  const auto varDeclInfo = idToLocalVariableData_.at(accessID);
+  if(!varDeclInfo.isTypeSet()) {
+    // type is not set if PassLocalVarType didn't run
+    return;
+  }
+
   auto type = varDeclInfo.getType();
 
   // Scalar, OnCells, OnEdges, OnVertices, OnIJ
@@ -173,6 +185,51 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
     dimensionsConsistent_ &=
         getUnstructuredDim(*curDimensions_).getDenseLocationType() == config_.currentChain_->back();
+  }
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::VarAccessExpr>& varAccessExpr) {
+  if(!dimensionsConsistent_) {
+    return;
+  }
+  // data is not set if coming from SIR
+  if(!varAccessExpr->hasData()) {
+    return;
+  }
+  auto accessID = *varAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
+  // access may be global
+  if(!idToLocalVariableData_.count(accessID)) {
+    return;
+  }
+  const auto varAccessInfo = idToLocalVariableData_.at(accessID);
+  if(!varAccessInfo.isTypeSet()) {
+    // type is not set if PassLocalVarType didn't run
+    return;
+  }
+
+  auto type = varAccessInfo.getType();
+
+  // Scalar, OnCells, OnEdges, OnVertices, OnIJ
+  switch(type) {
+  case iir::LocalVariableType::Scalar:
+  case iir::LocalVariableType::OnIJ:
+    return;
+    break;
+  case iir::LocalVariableType::OnCells:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Cells}, true);
+    break;
+  case iir::LocalVariableType::OnEdges:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Edges}, true);
+    break;
+  case iir::LocalVariableType::OnVertices:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Vertices}, true);
+    break;
+  default:
+    break;
   }
 }
 

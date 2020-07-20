@@ -56,6 +56,7 @@ private:
     void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override;
     void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
     void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
+    void visit(const std::shared_ptr<iir::VarAccessExpr>& stmt) override;
 
     bool isConsistent() const { return dimensionsConsistent_; }
     bool hasDimensions() const { return curDimensions_.has_value(); };

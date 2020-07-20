@@ -111,6 +111,8 @@ public:
     return dynamic_cast<DataType&>(*data_.get());
   }
 
+  bool hasData() const { return data_ != nullptr; }
+
   /// @brief Iterate children (if any)
   virtual StmtRangeType getChildren() { return StmtRangeType(); }
 
