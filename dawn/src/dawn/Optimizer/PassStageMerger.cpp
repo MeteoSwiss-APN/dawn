@@ -40,6 +40,9 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     stencilInstantiation->jsonDump(filenameWE + "_before_stage_merger.json");
 
   for(const auto& stencil : stencilInstantiation->getStencils()) {
+    if(stencil->isEmpty()) {
+      continue;
+    }
     const auto& stencilAxis = stencil->getAxis(false);
     const auto& stageDAG = *(stencil->getStageDependencyGraph());
     const auto& attributes = stencil->getStencilAttributes();

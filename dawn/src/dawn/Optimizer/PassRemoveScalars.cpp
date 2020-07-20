@@ -17,6 +17,7 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Logger.h"
@@ -250,6 +251,35 @@ bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& st
     // Recompute extents of fields
     doMethod->update(iir::NodeUpdateType::level);
   }
+
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
+    for(auto& multiStage : stencil->getChildren()) {
+      for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();
+          curStageIt++) {
+        iir::Stage& curStage = **curStageIt;
+        for(auto curDoMethodIt = curStage.childrenBegin();
+            curDoMethodIt != curStage.childrenEnd();) {
+          iir::DoMethod& curDoMethod = **curDoMethodIt;
+
+          if(curDoMethod.isEmptyOrNullStmt()) {
+            DAWN_LOG(WARNING) << stencilInstantiation->getName()
+                              << ": DoMethod: " << curDoMethod.getID()
+                              << " has empty body after removing a scalar, removing";
+
+            curDoMethodIt = curStage.childrenErase(curDoMethodIt);
+          } else {
+            curDoMethodIt++;
+          }
+        }
+
+        for(auto& doMethod : curStage.getChildren()) {
+          doMethod->update(iir::NodeUpdateType::level);
+        }
+        curStage.update(iir::NodeUpdateType::level);
+      }
+    }
+  }
+
   return true;
 }
 

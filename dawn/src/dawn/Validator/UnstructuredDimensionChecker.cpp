@@ -79,6 +79,9 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
     const iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
 
   for(const auto& stage : iterateIIROver<iir::Stage>(iir)) {
+    if(stage->childrenEmpty()) {
+      continue;
+    }
     DAWN_ASSERT_MSG(stage->getLocationType().has_value(), "Location type of stage is unset.");
     auto stageLocationType = *stage->getLocationType();
 
