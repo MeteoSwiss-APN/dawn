@@ -402,6 +402,11 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
   return *accessID;
 }
 ast::LocationType StencilMetaInformation::getDenseLocationTypeFromAccessID(int AccessID) const {
+  // if the access id is not present in the initialized dimensions map it may have been renamed by
+  // the PassFieldVersioning. Let's check
+  if(!fieldIDToInitializedDimensionsMap_.count(AccessID)) {
+    AccessID = fieldAccessMetadata_.variableVersions_.getOriginalVersionOfAccessID(AccessID);
+  }
   DAWN_ASSERT_MSG(
       sir::dimension_isa<sir::UnstructuredFieldDimension>(
           fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension()),
