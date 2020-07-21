@@ -113,7 +113,7 @@ UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDime
     UnstructuredDimensionCheckerConfig config)
     : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap),
       idToLocalVariableData_(idToLocalVariableData), config_(config) {
-  checkType_ = checkType::runOnSIR;
+  checkType_ = checkType::runOnIIR;
 }
 
 const sir::FieldDimensions&
