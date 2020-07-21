@@ -89,6 +89,12 @@ run(const std::shared_ptr<SIR>& stencilIR, const std::list<PassGroup>& groups,
   }
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassFixVersionedInputFields>();
+  if(stencilIR->GridType == ast::GridType::Unstructured) {
+    // fix versioned input fields may introduce new stages
+    // hence rerun set location type after new stages are
+    // generated
+    passManager.pushBackPass<PassSetStageLocationType>();
+  }
   passManager.pushBackPass<PassSetSyncStage>();
   // validation checks after parallelisation
   passManager.pushBackPass<PassValidation>();

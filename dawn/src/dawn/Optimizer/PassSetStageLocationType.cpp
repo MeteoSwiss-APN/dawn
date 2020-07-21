@@ -93,10 +93,14 @@ ast::LocationType deduceLocationType(const std::shared_ptr<iir::Stmt>& stmt,
 bool PassSetStageLocationType::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const Options& options) {
+
   for(const auto& stage : iterateIIROver<iir::Stage>(*stencilInstantiation->getIIR())) {
+    if(stage->childrenEmpty()) {
+      continue;
+    }
     iir::DoMethod& doMethod = stage->getSingleDoMethod();
     const auto& stmts = doMethod.getAST().getStatements();
-
+    DAWN_ASSERT_MSG(!stmts.empty(), "list of statements must not be empty");
     auto locType = deduceLocationType(stmts[0], stencilInstantiation->getMetaData());
     stage->setLocationType(locType);
   }

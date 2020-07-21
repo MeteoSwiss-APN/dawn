@@ -17,6 +17,7 @@
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Logger.h"
@@ -227,6 +228,42 @@ bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
   return false;
 }
 
+void cleanUp(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  for(const auto& multiStage : iterateIIROver<iir::MultiStage>(*stencilInstantiation->getIIR())) {
+    for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();
+        curStageIt++) {
+      iir::Stage& curStage = **curStageIt;
+      for(auto curDoMethodIt = curStage.childrenBegin(); curDoMethodIt != curStage.childrenEnd();) {
+        iir::DoMethod& curDoMethod = **curDoMethodIt;
+
+        if(curDoMethod.isEmptyOrNullStmt()) {
+          DAWN_LOG(WARNING) << stencilInstantiation->getName()
+                            << ": DoMethod: " << curDoMethod.getID()
+                            << " has empty body after removing a scalar, removing";
+
+          curDoMethodIt = curStage.childrenErase(curDoMethodIt);
+        } else {
+          curDoMethodIt++;
+        }
+      }
+
+      for(auto& doMethod : curStage.getChildren()) {
+        doMethod->update(iir::NodeUpdateType::level);
+      }
+      curStage.update(iir::NodeUpdateType::levelAndTreeAbove);
+    }
+
+    for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();) {
+      iir::Stage& curStage = **curStageIt;
+      if(curStage.childrenEmpty()) {
+        curStageIt = multiStage->childrenErase(curStageIt);
+      } else {
+        curStageIt++;
+      }
+    }
+  }
+}
+
 } // namespace
 
 bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -250,6 +287,10 @@ bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& st
     // Recompute extents of fields
     doMethod->update(iir::NodeUpdateType::level);
   }
+
+  // some do methods (and subsequently stages) may have become empty. remove them from the iir.
+  cleanUp(stencilInstantiation);
+
   return true;
 }
 
