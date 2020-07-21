@@ -30,9 +30,6 @@ bool PassStageSplitAllStatements::run(
     for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();
         ++stageIt) {
       iir::Stage& stage = (**stageIt);
-      if(stage.childrenEmpty()) {
-        continue;
-      }
       iir::DoMethod& doMethod = stage.getSingleDoMethod();
       if(doMethod.getAST().getStatements().size() == 0) {
         continue;

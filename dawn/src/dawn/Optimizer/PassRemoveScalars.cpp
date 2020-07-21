@@ -228,30 +228,7 @@ bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
   return false;
 }
 
-} // namespace
-
-bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                            const Options& options) {
-  // Check if we have unsupported statements. If we do, warn the user and skip the pass execution.
-  for(const auto& stmt : iterateIIROverStmt(*stencilInstantiation->getIIR())) {
-    if(isStatementUnsupported(stmt, stencilInstantiation->getMetaData())) {
-      DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), stmt->getSourceLocation())
-          << "Unsupported statement. Skipping removal of scalar variables...";
-      return true;
-    }
-  }
-  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilInstantiation->getIIR())) {
-    // Local variables are local to a DoMethod. Remove scalar local variables from the statements
-    // and metadata in this DoMethod.
-    auto removedScalars = removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
-    for(const auto& varName : removedScalars) {
-      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": DoMethod: " << doMethod->getID()
-                     << " removed variable: " << varName;
-    }
-    // Recompute extents of fields
-    doMethod->update(iir::NodeUpdateType::level);
-  }
-
+void cleanUp(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   for(const auto& stencil : stencilInstantiation->getStencils()) {
     for(auto& multiStage : stencil->getChildren()) {
       for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();
@@ -277,8 +254,45 @@ bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& st
         }
         curStage.update(iir::NodeUpdateType::level);
       }
+
+      for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();) {
+        iir::Stage& curStage = **curStageIt;
+        if(curStage.childrenEmpty()) {
+          curStageIt = multiStage->childrenErase(curStageIt);
+        } else {
+          curStageIt++;
+        }
+      }
     }
   }
+}
+
+} // namespace
+
+bool PassRemoveScalars::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const Options& options) {
+  // Check if we have unsupported statements. If we do, warn the user and skip the pass execution.
+  for(const auto& stmt : iterateIIROverStmt(*stencilInstantiation->getIIR())) {
+    if(isStatementUnsupported(stmt, stencilInstantiation->getMetaData())) {
+      DAWN_DIAG(INFO, stencilInstantiation->getMetaData().getFileName(), stmt->getSourceLocation())
+          << "Unsupported statement. Skipping removal of scalar variables...";
+      return true;
+    }
+  }
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stencilInstantiation->getIIR())) {
+    // Local variables are local to a DoMethod. Remove scalar local variables from the statements
+    // and metadata in this DoMethod.
+    auto removedScalars = removeScalarsFromDoMethod(*doMethod, stencilInstantiation->getMetaData());
+    for(const auto& varName : removedScalars) {
+      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": DoMethod: " << doMethod->getID()
+                     << " removed variable: " << varName;
+    }
+    // Recompute extents of fields
+    doMethod->update(iir::NodeUpdateType::level);
+  }
+
+  // some do methods (and subsequently stages) may have become empty. remove them from the iir.
+  cleanUp(stencilInstantiation);
 
   return true;
 }
