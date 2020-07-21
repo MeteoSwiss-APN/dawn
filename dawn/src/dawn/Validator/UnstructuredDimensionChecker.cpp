@@ -105,7 +105,9 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
     UnstructuredDimensionCheckerConfig config)
-    : nameToDimensions_(nameToDimensionsMap), config_(config) {}
+    : nameToDimensions_(nameToDimensionsMap), config_(config) {
+  checkType_ = checkType::runOnSIR;
+}
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
@@ -113,7 +115,9 @@ UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDime
     const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
     UnstructuredDimensionCheckerConfig config)
     : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap),
-      idToLocalVariableData_(idToLocalVariableData), config_(config) {}
+      idToLocalVariableData_(idToLocalVariableData), config_(config) {
+  checkType_ = checkType::runOnIIR;
+}
 
 const sir::FieldDimensions&
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() const {
@@ -126,11 +130,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!dimensionsConsistent_) {
     return;
   }
-  auto accessID = stmt->getData<iir::VarDeclStmtData>().AccessID;
-  // access id is only set on SIR
-  if(!accessID.has_value()) {
+  if(checkType_ == checkType::runOnSIR) {
     return;
   }
+  auto accessID = stmt->getData<iir::VarDeclStmtData>().AccessID;
   const auto varDeclInfo = idToLocalVariableData_.at(*accessID);
   // type is not set if PassLocalVarType didn't run
   if(!varDeclInfo.isTypeSet()) {
@@ -152,7 +155,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   auto fieldName = fieldAccessExpr->getName();
   // the name in the FieldAccessExpr may be stale if the there are nested stencils
   // in this case we need to look up the new AccessID in the data of the fieldAccessExpr
-  if(fieldAccessExpr->hasData()) {
+  if(checkType_ == checkType::runOnIIR) {
+    DAWN_ASSERT(fieldAccessExpr->hasData());
     auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
     if(newAccessID.has_value()) {
       DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
@@ -198,10 +202,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!dimensionsConsistent_) {
     return;
   }
-  // data is not set if coming from SIR
-  if(!varAccessExpr->hasData()) {
+  if(checkType_ == checkType::runOnSIR) {
     return;
   }
+  DAWN_ASSERT(varAccessExpr->hasData());
   auto accessID = *varAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
   // access may be global
   if(!idToLocalVariableData_.count(accessID)) {

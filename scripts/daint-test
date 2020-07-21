@@ -33,6 +33,7 @@ srun --job-name=dawn_PR \
     --partition=cscsci \
     --constraint=gpu \
     --account=c14 \
+    --exclusive \
     sarus run --mount=type=bind,source=$root_dir,destination=$dawn_dir \
     --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
     $image \

@@ -30,6 +30,7 @@ class UnstructuredDimensionChecker {
 private:
   class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwarding {
   public:
+    enum class checkType { runOnIIR, runOnSIR };
     struct UnstructuredDimensionCheckerConfig {
       bool parentIsChainForLoop_ = false;
       bool parentIsReduction_ = false;
@@ -45,6 +46,7 @@ private:
     bool dimensionsConsistent_ = true;
 
     UnstructuredDimensionCheckerConfig config_;
+    checkType checkType_ = checkType::runOnIIR;
 
     void checkBinaryOpUnstructured(const sir::FieldDimensions& left,
                                    const sir::FieldDimensions& right);
