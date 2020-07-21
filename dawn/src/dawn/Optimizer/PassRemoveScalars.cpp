@@ -229,39 +229,36 @@ bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
 }
 
 void cleanUp(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
-    for(auto& multiStage : stencil->getChildren()) {
-      for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();
-          curStageIt++) {
-        iir::Stage& curStage = **curStageIt;
-        for(auto curDoMethodIt = curStage.childrenBegin();
-            curDoMethodIt != curStage.childrenEnd();) {
-          iir::DoMethod& curDoMethod = **curDoMethodIt;
+  for(const auto& multiStage : iterateIIROver<iir::MultiStage>(*stencilInstantiation->getIIR())) {
+    for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();
+        curStageIt++) {
+      iir::Stage& curStage = **curStageIt;
+      for(auto curDoMethodIt = curStage.childrenBegin(); curDoMethodIt != curStage.childrenEnd();) {
+        iir::DoMethod& curDoMethod = **curDoMethodIt;
 
-          if(curDoMethod.isEmptyOrNullStmt()) {
-            DAWN_LOG(WARNING) << stencilInstantiation->getName()
-                              << ": DoMethod: " << curDoMethod.getID()
-                              << " has empty body after removing a scalar, removing";
+        if(curDoMethod.isEmptyOrNullStmt()) {
+          DAWN_LOG(WARNING) << stencilInstantiation->getName()
+                            << ": DoMethod: " << curDoMethod.getID()
+                            << " has empty body after removing a scalar, removing";
 
-            curDoMethodIt = curStage.childrenErase(curDoMethodIt);
-          } else {
-            curDoMethodIt++;
-          }
+          curDoMethodIt = curStage.childrenErase(curDoMethodIt);
+        } else {
+          curDoMethodIt++;
         }
-
-        for(auto& doMethod : curStage.getChildren()) {
-          doMethod->update(iir::NodeUpdateType::level);
-        }
-        curStage.update(iir::NodeUpdateType::level);
       }
 
-      for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();) {
-        iir::Stage& curStage = **curStageIt;
-        if(curStage.childrenEmpty()) {
-          curStageIt = multiStage->childrenErase(curStageIt);
-        } else {
-          curStageIt++;
-        }
+      for(auto& doMethod : curStage.getChildren()) {
+        doMethod->update(iir::NodeUpdateType::level);
+      }
+      curStage.update(iir::NodeUpdateType::levelAndTreeAbove);
+    }
+
+    for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();) {
+      iir::Stage& curStage = **curStageIt;
+      if(curStage.childrenEmpty()) {
+        curStageIt = multiStage->childrenErase(curStageIt);
+      } else {
+        curStageIt++;
       }
     }
   }

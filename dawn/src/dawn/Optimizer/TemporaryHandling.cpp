@@ -156,7 +156,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
       exprStmt,
       "first access of temp field to be demoted (i.e lifetime.Begin) is not an `ExprStmt`");
   iir::AssignmentExpr* assignmentExpr = dyn_cast<iir::AssignmentExpr>(exprStmt->getExpr().get());
-  DAWN_ASSERT_MSG(assignmentExpr, "first access of of temp field to be demoted field (i.e "
+  DAWN_ASSERT_MSG(assignmentExpr, "first access of temp field to be demoted (i.e "
                                   "lifetime.Begin) is not an `AssignmentExpr`");
 
   // Remove the field
