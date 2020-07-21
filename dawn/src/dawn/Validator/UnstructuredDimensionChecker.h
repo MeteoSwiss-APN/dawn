@@ -30,6 +30,7 @@ class UnstructuredDimensionChecker {
 private:
   class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwarding {
   public:
+    enum class checkType { runOnIIR, runOnSIR };
     struct UnstructuredDimensionCheckerConfig {
       bool parentIsChainForLoop_ = false;
       bool parentIsReduction_ = false;
@@ -41,9 +42,11 @@ private:
     std::optional<sir::FieldDimensions> curDimensions_;
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
+    const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData_;
     bool dimensionsConsistent_ = true;
 
     UnstructuredDimensionCheckerConfig config_;
+    checkType checkType_ = checkType::runOnIIR;
 
     void checkBinaryOpUnstructured(const sir::FieldDimensions& left,
                                    const sir::FieldDimensions& right);
@@ -54,7 +57,10 @@ private:
     void visit(const std::shared_ptr<iir::AssignmentExpr>& stmt) override;
     void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override;
     void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
+    void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
+    void visit(const std::shared_ptr<iir::VarAccessExpr>& stmt) override;
 
+    void setCurDimensionFromLocType(iir::LocalVariableType&& type);
     bool isConsistent() const { return dimensionsConsistent_; }
     bool hasDimensions() const { return curDimensions_.has_value(); };
     const sir::FieldDimensions& getDimensions() const;
@@ -70,6 +76,7 @@ private:
     UnstructuredDimensionCheckerImpl(
         const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
         const std::unordered_map<int, std::string> idToNameMap,
+        const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
         UnstructuredDimensionCheckerConfig = UnstructuredDimensionCheckerConfig());
   };
 
