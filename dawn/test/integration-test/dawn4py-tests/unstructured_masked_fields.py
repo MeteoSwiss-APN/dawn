@@ -103,12 +103,7 @@ def main(args: argparse.Namespace):
                                 "Edge"), SIR.LocationType.Value("Cell")], 0
                         ),
                     ),
-                    sir_utils.make_field(
-                        "vertical",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [], 1
-                        ),
-                    ),
+                    sir_utils.make_vertical_field("vertical"),
                 ],
             ),
         ],

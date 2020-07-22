@@ -65,10 +65,9 @@ public:
   UnstructuredVerifier() : use_default_precision_(true) {}
   UnstructuredVerifier(double precision) : use_default_precision_(false), precision_(precision) {}
 
-  template <typename Value, int RANK, atlas::array::Intent AccessMode>
-  bool compareArrayView(const atlas::array::ArrayView<Value, RANK, AccessMode>& lhs,
-                        const atlas::array::ArrayView<Value, RANK, AccessMode>& rhs,
-                        int max_erros = 10) {
+  template <typename Value, int RANK>
+  bool compareArrayView(const atlas::array::ArrayView<Value, RANK>& lhs,
+                        const atlas::array::ArrayView<Value, RANK>& rhs, int max_erros = 10) {
     // it's far from trivial to compare two _general_ array views, since they can have arbitrary
     // rank, with dimensions unknown at compile time since we currently only consider scalar fields
     // in 3 spatial dimensions I decided to force this to two

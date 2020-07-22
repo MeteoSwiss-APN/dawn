@@ -311,7 +311,8 @@ int main() {
                                                  Op::multiply)}))))))));
 
     std::ofstream of("generated/generated_diamondWeights.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -511,7 +512,8 @@ int main() {
 
     // Code generation deactivated for the reasons stated above
     std::ofstream of("generated/generated_NestedSparse.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -546,7 +548,8 @@ int main() {
                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
     std::ofstream of("generated/generated_SparseAssignment0.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -581,7 +584,8 @@ int main() {
                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
     std::ofstream of("generated/generated_SparseAssignment1.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -609,7 +613,8 @@ int main() {
                                {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
     std::ofstream of("generated/generated_SparseAssignment2.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -638,7 +643,8 @@ int main() {
                              LocType::Cells}))))));
 
     std::ofstream of("generated/generated_SparseAssignment3.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -665,7 +671,8 @@ int main() {
                                     {LocType::Cells, LocType::Edges}))))));
 
     std::ofstream of("generated/generated_SparseAssignment4.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   {
@@ -698,7 +705,43 @@ int main() {
                                    {LocType::Cells, LocType::Edges}))))));
 
     std::ofstream of("generated/generated_SparseAssignment5.hpp");
-    dawn::CompilerUtil::dumpNaiveIco(of, stencil_instantiation);
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+
+    auto horizontal_f = b.field("horizontal", {LocType::Edges}, false);
+    auto sparse_horizontal_f =
+        b.field("horizontal_sparse", {LocType::Edges, LocType::Cells}, false);
+    auto vertical_f = b.vertical_field("vertical");
+    auto full_f = b.field("full", LocType::Edges);
+    auto out1_f = b.field("out1", LocType::Edges);
+    auto out2_f = b.field("out2", LocType::Edges);
+
+    auto stencil_instantiation = b.build(
+        "horizontalVertical",
+        b.stencil(b.multistage(
+            dawn::iir::LoopOrderKind::Parallel,
+            b.stage(LocType::Edges,
+                    b.doMethod(
+                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(
+                            b.at(out1_f),
+                            b.binaryExpr(b.binaryExpr(b.at(full_f), b.at(horizontal_f), Op::plus),
+                                         b.at(vertical_f), Op::plus))),
+                        b.stmt(b.assignExpr(
+                            b.at(out2_f),
+                            b.reduceOverNeighborExpr(Op::plus, b.at(sparse_horizontal_f), b.lit(.0),
+                                                     {LocType::Edges, LocType::Cells}))))))));
+
+    std::ofstream of("generated/generated_horizontal_vertical.hpp");
+    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
   }
 
   return 0;

@@ -211,15 +211,14 @@ def make_field_dimensions_unstructured(
     :sparse_part:  optional sparse part encoded by a neighbor chain
     """
 
-    #assert len(locations) >= 1
+    assert len(locations) >= 1
     dims = FieldDimensions()
-    if len(locations) >= 1:
-        horizontal_dim = UnstructuredDimension()
-        horizontal_dim.dense_location_type = locations[0]
-        sparse_part = len(locations) > 1
-        if sparse_part:
-            horizontal_dim.sparse_part.extend(locations)
-        dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
+    horizontal_dim = UnstructuredDimension()
+    horizontal_dim.dense_location_type = locations[0]
+    sparse_part = len(locations) > 1
+    if sparse_part:
+        horizontal_dim.sparse_part.extend(locations)
+    dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
     dims.mask_k = mask_k
     return dims
 
@@ -236,6 +235,21 @@ def make_field(name: str, dimensions: FieldDimensions, is_temporary: bool = Fals
     field.name = name
     field.is_temporary = is_temporary
     field.field_dimensions.CopyFrom(dimensions)
+    return field
+
+
+def make_vertical_field(name: str, is_temporary: bool = False) -> Field:
+    """ Create a vertical Field, i.e. a field with no horizontal dimensions
+
+    :param name:         Name of the field
+    :param is_temporary: Is it a temporary field?
+    """
+    field = Field()
+    field.name = name
+    field.is_temporary = is_temporary
+    dims = FieldDimensions()
+    dims.mask_k = True
+    field.field_dimensions.CopyFrom(dims)
     return field
 
 

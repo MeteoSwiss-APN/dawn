@@ -73,10 +73,33 @@ namespace atlasInterface {
 struct atlasTag {};
 
 template <typename T>
+class VerticalField {
+public:
+  T const& operator()(int k) const { return atlas_field_(k); }
+  T& operator()(int k) { return atlas_field_(k); }
+  T* data() { return atlas_field_.data(); }
+  const T* data() const { return atlas_field_.data(); }
+  int numElements() const { return atlas_field_.shape(0); }
+
+  VerticalField(atlas::array::ArrayView<T, 1> const& atlas_field) : atlas_field_(atlas_field) {}
+
+private:
+  atlas::array::ArrayView<T, 1> atlas_field_;
+};
+
+template <typename T>
+VerticalField<T> verticalFieldType(atlasTag);
+
+template <typename T>
 class Field {
 public:
   T const& operator()(int f, int k) const { return atlas_field_(f, k); }
   T& operator()(int f, int k) { return atlas_field_(f, k); }
+
+  // horizontal field accesses
+  T const& operator()(int f) const { return atlas_field_(f, 0); }
+  T& operator()(int f) { return atlas_field_(f, 0); }
+
   T* data() { return atlas_field_.data(); }
   const T* data() const { return atlas_field_.data(); }
   int numElements() const { return atlas_field_.shape(0) * atlas_field_.shape(1); }
@@ -102,6 +125,12 @@ public:
   }
   T& operator()(int elem_idx, int sparse_dim_idx, int level) {
     return sparse_dimension_(elem_idx, level, sparse_dim_idx);
+  }
+  T const& operator()(int elem_idx, int sparse_dim_idx) const {
+    return sparse_dimension_(elem_idx, 0, sparse_dim_idx);
+  }
+  T& operator()(int elem_idx, int sparse_dim_idx) {
+    return sparse_dimension_(elem_idx, 0, sparse_dim_idx);
   }
   T* data() { return sparse_dimension_.data(); }
   const T* data() const { return sparse_dimension_.data(); }

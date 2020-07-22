@@ -335,6 +335,8 @@ public:
 
   Field field(std::string const& name, ast::LocationType denseLocation);
   Field field(std::string const& name, ast::NeighborChain sparseChain);
+  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK);
+  Field vertical_field(std::string const& name);
 };
 
 class CartesianIIRBuilder : public IIRBuilder {

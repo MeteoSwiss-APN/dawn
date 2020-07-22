@@ -115,6 +115,12 @@ std::tuple<atlas::Field, atlasInterface::Field<double>> makeAtlasField(const std
   return {field_F, atlas::array::make_view<double, 2>(field_F)};
 }
 
+std::tuple<atlas::Field, atlasInterface::VerticalField<double>>
+makeAtlasVerticalField(const std::string& name, size_t kSize) {
+  atlas::Field field_F{name, atlas::array::DataType::real64(), atlas::array::make_shape(kSize)};
+  return {field_F, atlas::array::make_view<double, 1>(field_F)};
+}
+
 std::tuple<atlas::Field, atlasInterface::SparseDimension<double>>
 makeAtlasSparseField(const std::string& name, size_t size, size_t sparseSize, int kSize) {
   atlas::Field field_F{name, atlas::array::DataType::real64(),
@@ -944,6 +950,54 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
   }
   // NOTE that the second reduction simply overwrites the result of the first one since there is
   // "+=" in the IIRBuilder currently
+}
+} // namespace
+
+namespace {
+#include <generated_horizontal_vertical.hpp>
+TEST(AtlasIntegrationTestCompareOutput, horizontalVertical) {
+  auto mesh = generateQuadMesh(10, 11);
+  const int nb_levels = 10;
+  const int cellsPerEdge = 2;
+
+  auto [horizontal_F, horizontal_v] = makeAtlasField("horizontal", mesh.edges().size(), 1);
+  auto [full_F, full_v] = makeAtlasField("full", mesh.edges().size(), nb_levels);
+  auto [out1_F, out1_v] = makeAtlasField("out1", mesh.edges().size(), nb_levels);
+  auto [out2_F, out2_v] = makeAtlasField("out2", mesh.edges().size(), nb_levels);
+  auto [vertical_F, vertical_v] = makeAtlasVerticalField("vertical", nb_levels);
+  auto [horizontal_sparse_F, horizontal_sparse_v] =
+      makeAtlasSparseField("horizontal_sparse", mesh.edges().size(), cellsPerEdge, 1);
+
+  initField(full_v, mesh.edges().size(), nb_levels, 1.);
+  initField(horizontal_v, mesh.edges().size(), 1, 1.);
+  initSparseField(horizontal_sparse_v, mesh.edges().size(), 1, cellsPerEdge, 1.);
+
+  for(int k = 0; k < nb_levels; k++) {
+    vertical_v(k) = k;
+  }
+
+  dawn_generated::cxxnaiveico::horizontalVertical<atlasInterface::atlasTag>(
+      mesh, nb_levels, horizontal_v, horizontal_sparse_v, vertical_v, full_v, out1_v, out2_v)
+      .run();
+
+  const auto& conn = mesh.edges().cell_connectivity();
+  auto is_boundary = [&](int edge_idx) {
+    return conn(edge_idx, 0) == conn.missing_value() || conn(edge_idx, 1) == conn.missing_value();
+  };
+  for(int k = 0; k < nb_levels; k++) {
+    for(int edge_iter = 0; edge_iter < mesh.edges().size(); edge_iter++) {
+      EXPECT_TRUE(fabs(out1_v(edge_iter, k) - (2 + k)) <
+                  1e-3 * std::numeric_limits<double>::epsilon());
+    }
+    for(int edge_iter = 0; edge_iter < mesh.edges().size(); edge_iter++) {
+      if(is_boundary(edge_iter)) {
+        EXPECT_TRUE(fabs(out2_v(edge_iter, k) - 1) < 1e-3 * std::numeric_limits<double>::epsilon());
+      } else {
+        EXPECT_TRUE(fabs(out2_v(edge_iter, k) - cellsPerEdge) <
+                    1e-3 * std::numeric_limits<double>::epsilon());
+      }
+    }
+  }
 }
 } // namespace
 } // namespace
