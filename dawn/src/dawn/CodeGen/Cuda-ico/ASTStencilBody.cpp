@@ -93,6 +93,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     return;
   }
 
+  bool isHorizontal = !metadata_.getFieldDimensions(iir::getAccessID(expr)).K();
+
   auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   std::string denseOffset =
@@ -102,9 +104,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      resArgName = denseOffset + " + nbhIdx";
+      resArgName = (isHorizontal) ? "nbhIdx" : denseOffset + " + nbhIdx";
     } else {
-      resArgName = denseOffset + " + pidx";
+      resArgName = (isHorizontal) ? "pidx" : denseOffset + " + pidx";
     }
     ss_ << getName(expr) << "[" << resArgName << "]";
   } else { // sparse field accesses
@@ -112,9 +114,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
                     "Sparse Field Access not allowed in this context");
 
     std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
-    std::string resArgName = denseOffset + " * " + sparseSize + "+ nbhIter * " +
-                             locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) +
-                             "+ pidx";
+    std::string resArgName =
+        (isHorizontal)
+            ? "nbhIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) +
+                  "+ pidx"
+            : denseOffset + " * " + sparseSize + "+ nbhIter * " +
+                  locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) + "+ pidx";
     ss_ << getName(expr) << "[" << resArgName << "]";
   }
 }

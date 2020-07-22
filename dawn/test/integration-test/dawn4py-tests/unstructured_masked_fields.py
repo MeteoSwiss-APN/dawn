@@ -49,6 +49,18 @@ def main(args: argparse.Namespace):
                         sir_utils.make_field_access_expr("horizontal"),
                         "+",
                         sir_utils.make_field_access_expr("vertical"))),
+                "="),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("out"),
+                sir_utils.make_reduction_over_neighbor_expr(
+                    op="+",
+                    init=sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Float),
+                    rhs=sir_utils.make_field_access_expr(
+                        "horizontal_sparse", [True, 0]),
+                    chain=[SIR.LocationType.Value(
+                        "Edge"), SIR.LocationType.Value("Cell")],
+                ),
                 "=",
             )
         ]
@@ -85,6 +97,13 @@ def main(args: argparse.Namespace):
                         ),
                     ),
                     sir_utils.make_field(
+                        "horizontal_sparse",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value(
+                                "Edge"), SIR.LocationType.Value("Cell")], 0
+                        ),
+                    ),
+                    sir_utils.make_field(
                         "vertical",
                         sir_utils.make_field_dimensions_unstructured(
                             [], 1
@@ -103,7 +122,7 @@ def main(args: argparse.Namespace):
         f.write(sir_utils.to_json(sir))
 
     # compile
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")
