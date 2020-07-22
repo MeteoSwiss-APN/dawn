@@ -230,6 +230,7 @@ public:
   // Construct a Cartesian horizontal field dimension with specified ij mask.
   HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
+
   // Construct a Unstructured horizontal field sparse dimension with specified neighbor chain
   // (sparse part). Dense part is the first element of the chain.
   HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain)
@@ -264,6 +265,7 @@ class FieldDimensions {
 public:
   FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
       : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
+  FieldDimensions(bool maskK) : maskK_(maskK) {}
   FieldDimensions(const FieldDimensions&) = default;
   FieldDimensions(FieldDimensions&&) = default;
 
@@ -276,12 +278,14 @@ public:
 
   bool K() const { return maskK_; }
   const HorizontalFieldDimension& getHorizontalFieldDimension() const {
-    return horizontalFieldDimension_;
+    DAWN_ASSERT_MSG(!isVertical(), "attempted to get horizontal dimension of a vertical field!");
+    return horizontalFieldDimension_.value();
   }
+  bool isVertical() const { return !horizontalFieldDimension_.has_value(); }
   std::string toString() const;
 
 private:
-  HorizontalFieldDimension horizontalFieldDimension_;
+  std::optional<HorizontalFieldDimension> horizontalFieldDimension_;
   bool maskK_;
 };
 

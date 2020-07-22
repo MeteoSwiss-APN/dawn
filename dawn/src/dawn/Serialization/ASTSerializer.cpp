@@ -766,7 +766,7 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
           protoFieldDimensions.mask_k());
     }
   } else {
-    dawn_unreachable("No horizontal dimension in serialized FieldDimensions message.");
+    return sir::FieldDimensions(protoFieldDimensions.mask_k());
   }
 }
 

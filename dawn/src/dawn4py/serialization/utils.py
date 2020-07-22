@@ -211,16 +211,15 @@ def make_field_dimensions_unstructured(
     :sparse_part:  optional sparse part encoded by a neighbor chain
     """
 
-    assert len(locations) >= 1
-
-    horizontal_dim = UnstructuredDimension()
-    horizontal_dim.dense_location_type = locations[0]
-    sparse_part = len(locations) > 1
-    if sparse_part:
-        horizontal_dim.sparse_part.extend(locations)
-
+    #assert len(locations) >= 1
     dims = FieldDimensions()
-    dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
+    if len(locations) >= 1:
+        horizontal_dim = UnstructuredDimension()
+        horizontal_dim.dense_location_type = locations[0]
+        sparse_part = len(locations) > 1
+        if sparse_part:
+            horizontal_dim.sparse_part.extend(locations)
+        dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
     dims.mask_k = mask_k
     return dims
 
