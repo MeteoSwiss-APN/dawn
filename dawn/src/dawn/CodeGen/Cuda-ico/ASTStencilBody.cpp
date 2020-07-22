@@ -84,12 +84,17 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
-      metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
 
   int vOffset = expr->getOffset().verticalOffset();
   std::string kiter = "(kIter + " + std::to_string(vOffset) + ")";
 
+  if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
+    ss_ << getName(expr) << "[" << kiter << "]";
+    return;
+  }
+
+  auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+      metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   std::string denseOffset =
       kiter + "*" + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
   if(unstrDims.isDense()) { // dense field accesses

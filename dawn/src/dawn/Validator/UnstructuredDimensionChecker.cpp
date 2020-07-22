@@ -162,11 +162,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   DAWN_ASSERT(nameToDimensions_.count(fieldName));
-  curDimensions_ = nameToDimensions_.at(fieldName);
 
-  if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
-    dimensionsConsistent_ &=
-        getUnstructuredDim(*curDimensions_).getDenseLocationType() == config_.currentChain_->back();
+  if(!nameToDimensions_.at(fieldName).isVertical()) {
+    curDimensions_ = nameToDimensions_.at(fieldName);
+    if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
+      dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
+                               config_.currentChain_->back();
+    }
   }
 }
 

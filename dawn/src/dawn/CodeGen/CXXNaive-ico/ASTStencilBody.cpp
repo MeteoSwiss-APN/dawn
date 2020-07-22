@@ -255,6 +255,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
+    if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
+      ss_ << "m_" << getName(expr) << "("
+          << "k+" << expr->getOffset().verticalOffset() << ")";
+      return;
+    }
+
     if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
            metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())
            .isDense()) {

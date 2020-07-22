@@ -192,6 +192,11 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     }
   };
   for(auto APIfieldID : APIFields) {
+    if(metadata.getFieldDimensions(APIfieldID).isVertical()) {
+      StencilWrapperConstructor.addArg("dawn::vertical_field_t<LibTag, double>& " +
+                                       metadata.getNameFromAccessID(APIfieldID));
+      continue;
+    }
     if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
            metadata.getFieldDimensions(APIfieldID).getHorizontalFieldDimension())
            .isDense()) {
@@ -320,6 +325,10 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
+      if(info.field.getFieldDimensions().isVertical()) {
+        return std::string("dawn::vertical_field_t<LibTag, double>");
+      }
+
       const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           info.field.getFieldDimensions().getHorizontalFieldDimension());
       if(unstructuredDims.isDense()) {

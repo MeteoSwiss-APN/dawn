@@ -241,6 +241,9 @@ void CudaIcoCodeGen::generateRunFun(
       // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
       std::set<std::string> locArgs;
       for(auto field : fields) {
+        if(field.second.getFieldDimensions().isVertical()) {
+          continue;
+        }
         auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
         locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType()));
@@ -287,6 +290,10 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
   ctor.addArg("const dawn::mesh_t<LibTag>& mesh");
   ctor.addArg("int kSize");
   for(auto field : support::orderMap(stencil.getFields())) {
+    if(field.second.field.getFieldDimensions().isVertical()) {
+      ctor.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " + field.second.Name);
+      continue;
+    }
     auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
         field.second.field.getFieldDimensions().getHorizontalFieldDimension());
     if(dims.isDense()) {
@@ -305,6 +312,12 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
 
   // call initField on each field
   for(auto field : support::orderMap(stencil.getFields())) {
+    if(field.second.field.getFieldDimensions().isVertical()) {
+      ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
+                        "_, kSize)");
+      continue;
+    }
+
     auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
         field.second.field.getFieldDimensions().getHorizontalFieldDimension());
     if(dims.isDense()) {
@@ -350,6 +363,13 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
   for(auto field : support::orderMap(stencil.getFields())) {
     if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
        field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+
+      if(field.second.field.getFieldDimensions().isVertical()) {
+        copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " +
+                           field.second.Name);
+        continue;
+      }
+
       auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           field.second.field.getFieldDimensions().getHorizontalFieldDimension());
       if(dims.isDense()) {
@@ -366,8 +386,6 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
   for(auto field : support::orderMap(stencil.getFields())) {
     if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
        field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
-      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          field.second.field.getFieldDimensions().getHorizontalFieldDimension());
 
       copyBackFun.addBlockStatement("", [&]() {
         copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
@@ -376,15 +394,20 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
             "gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " + field.second.Name + "_, " +
             field.second.Name +
             ".numElements()*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
-        if(dims.isDense()) {
-          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
-                                   ".data(), kSize_, mesh_." +
-                                   locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
-        } else {
-          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
-                                   ".data(), kSize_, mesh_." +
-                                   locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ", " +
-                                   chainToSparseSizeString(dims.getNeighborChain()) + ")");
+
+        if(!field.second.field.getFieldDimensions().isVertical()) {
+          auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+              field.second.field.getFieldDimensions().getHorizontalFieldDimension());
+          if(dims.isDense()) {
+            copyBackFun.addStatement(
+                "dawn::reshape_back(host_buf, " + field.second.Name + ".data(), kSize_, mesh_." +
+                locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
+          } else {
+            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
+                                     ".data(), kSize_, mesh_." +
+                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
+                                     ", " + chainToSparseSizeString(dims.getNeighborChain()) + ")");
+          }
         }
         copyBackFun.addStatement("delete[] host_buf");
       });
@@ -575,6 +598,9 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
       std::set<std::string> locArgs;
       for(auto field : fields) {
+        if(field.second.getFieldDimensions().isVertical()) {
+          continue;
+        }
         auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
         locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType()));

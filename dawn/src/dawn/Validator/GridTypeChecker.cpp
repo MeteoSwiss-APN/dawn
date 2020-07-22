@@ -47,9 +47,11 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
       }
 
       // Check FieldDimensions
-      const auto& hDimension = field.second.getFieldDimensions().getHorizontalFieldDimension();
-      if(hDimension.getType() != iir.getGridType()) {
-        return false;
+      if(!field.second.getFieldDimensions().isVertical()) {
+        const auto& hDimension = field.second.getFieldDimensions().getHorizontalFieldDimension();
+        if(hDimension.getType() != iir.getGridType()) {
+          return false;
+        }
       }
     }
   }
