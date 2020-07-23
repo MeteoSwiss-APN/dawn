@@ -318,17 +318,20 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
       continue;
     }
 
+    bool isHorizontal = !field.second.field.getFieldDimensions().K();
+    std::string kSizeStr = (isHorizontal) ? "1" : "kSize";
+
     auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
         field.second.field.getFieldDimensions().getHorizontalFieldDimension());
     if(dims.isDense()) {
       ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
                         "_, " + chainToDenseSizeStringHostMesh({dims.getDenseLocationType()}) +
-                        ", kSize)");
+                        ", " + kSizeStr + ")");
     } else {
       ctor.addStatement("dawn::initSparseField(" + field.second.Name + ", " + "&" +
                         field.second.Name + "_, " +
                         chainToDenseSizeStringHostMesh(dims.getNeighborChain()) + ", " +
-                        chainToSparseSizeString(dims.getNeighborChain()) + ", kSize)");
+                        chainToSparseSizeString(dims.getNeighborChain()) + ", " + kSizeStr + ")");
     }
   }
 }
@@ -398,13 +401,17 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
         if(!field.second.field.getFieldDimensions().isVertical()) {
           auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
               field.second.field.getFieldDimensions().getHorizontalFieldDimension());
+
+          bool isHorizontal = !field.second.field.getFieldDimensions().K();
+          std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
+
           if(dims.isDense()) {
             copyBackFun.addStatement(
-                "dawn::reshape_back(host_buf, " + field.second.Name + ".data(), kSize_, mesh_." +
-                locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
+                "dawn::reshape_back(host_buf, " + field.second.Name + ".data(), " + kSizeStr +
+                ", mesh_." + locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
           } else {
             copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
-                                     ".data(), kSize_, mesh_." +
+                                     ".data(), " + kSizeStr + ", mesh_." +
                                      locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
                                      ", " + chainToSparseSizeString(dims.getNeighborChain()) + ")");
           }
