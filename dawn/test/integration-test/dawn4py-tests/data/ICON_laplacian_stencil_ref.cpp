@@ -52,7 +52,7 @@ private:
       for(auto const& loc : getVertices(LibTag{}, m_mesh)) {
 {
 int sparse_dimension_idx0 = 0;
-m_rot_vec(deref(LibTag{}, loc),k+0) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<dawn::LocationType>{dawn::LocationType::Vertices, dawn::LocationType::Edges}, [&](auto& lhs, auto red_loc1) { lhs += (m_vec(deref(LibTag{}, red_loc1),k+0) * m_geofac_rot(deref(LibTag{}, loc),sparse_dimension_idx0, k+0));
+m_rot_vec(deref(LibTag{}, loc),k+0) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<dawn::LocationType>{dawn::LocationType::Vertices, dawn::LocationType::Edges}, [&](auto& lhs, auto red_loc1) { lhs += (m_vec(deref(LibTag{}, red_loc1),k+0) * m_geofac_rot(deref(LibTag{}, loc),sparse_dimension_idx0,k+0));
 sparse_dimension_idx0++;
 return lhs;
 });
@@ -60,7 +60,7 @@ return lhs;
       }      for(auto const& loc : getCells(LibTag{}, m_mesh)) {
 {
 int sparse_dimension_idx0 = 0;
-m_div_vec(deref(LibTag{}, loc),k+0) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<dawn::LocationType>{dawn::LocationType::Cells, dawn::LocationType::Edges}, [&](auto& lhs, auto red_loc1) { lhs += (m_vec(deref(LibTag{}, red_loc1),k+0) * m_geofac_div(deref(LibTag{}, loc),sparse_dimension_idx0, k+0));
+m_div_vec(deref(LibTag{}, loc),k+0) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<dawn::LocationType>{dawn::LocationType::Cells, dawn::LocationType::Edges}, [&](auto& lhs, auto red_loc1) { lhs += (m_vec(deref(LibTag{}, red_loc1),k+0) * m_geofac_div(deref(LibTag{}, loc),sparse_dimension_idx0,k+0));
 sparse_dimension_idx0++;
 return lhs;
 });
