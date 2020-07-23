@@ -174,7 +174,12 @@ public:
     for(const auto& readAccess :
         ifStmt->getCondStmt()->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses()) {
       const int accessID = readAccess.first;
+
       if(metadata_.isAccessType(iir::FieldAccessType::Field, accessID)) {
+        // vertical fields do not have a type
+        if(metadata_.getFieldDimensions(accessID).isVertical()) {
+          return;
+        }
         if(conditionalType_.has_value()) {
           if(*conditionalType_ != inferLocalVarTypeFromField(accessID)) {
             throw std::runtime_error(dawn::format(
