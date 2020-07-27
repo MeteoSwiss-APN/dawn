@@ -64,6 +64,8 @@ template <typename T>
 ::dawn::float_type sparseEdgeFieldType(NoLibTag);
 template <typename T>
 ::dawn::float_type sparseVertexFieldType(NoLibTag);
+template <typename T>
+::dawn::float_type verticalFieldType(NoLibTag);
 // ENDTODO
 
 inline void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
