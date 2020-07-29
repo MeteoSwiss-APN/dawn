@@ -106,7 +106,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
            .hasOffset()) {
       resArgName = (isHorizontal ? "" : denseOffset + " + ") + "nbhIdx";
     } else {
-      resArgName = (isHorizontal) ? "pidx" : denseOffset + " + pidx";
+      resArgName = (isHorizontal ? "" : denseOffset + " + ") + "pidx";
     }
     ss_ << getName(expr) << "[" << resArgName << "]";
   } else { // sparse field accesses
