@@ -115,11 +115,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
     std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
     std::string resArgName =
-        (isHorizontal)
-            ? "nbhIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) +
-                  "+ pidx"
-            : denseOffset + " * " + sparseSize + "+ nbhIter * " +
-                  locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) + "+ pidx";
+        (isHorizontal
+            ? "" :  denseOffset + " * " + sparseSize + " + " ) +
+            "nbhIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) + "+ pidx";
     ss_ << getName(expr) << "[" << resArgName << "]";
   }
 }
