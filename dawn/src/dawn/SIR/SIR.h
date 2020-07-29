@@ -261,11 +261,37 @@ public:
   friend bool dimension_isa(HorizontalFieldDimension const& dimension);
 };
 
+template <typename T>
+T dimension_cast(HorizontalFieldDimension const& dimension) {
+  using PlainT = std::remove_reference_t<T>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid field dimension implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+  return *dynamic_cast<std::add_pointer_t<T>>(dimension.impl_.get());
+}
+
+template <typename T>
+bool dimension_isa(HorizontalFieldDimension const& dimension) {
+  using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;
+  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
+                "Can only be casted to a valid field dimension implementation");
+  return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
+}
+
 class FieldDimensions {
 public:
   FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
-      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
-  FieldDimensions(bool maskK) : maskK_(maskK) {}
+      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {
+    if(dimension_isa<CartesianFieldDimension>(*horizontalFieldDimension_)) {
+      auto cartDims = dimension_cast<const CartesianFieldDimension&>(*horizontalFieldDimension_);
+      DAWN_ASSERT_MSG(cartDims.I() || cartDims.J(),
+                      "a field cant' have all dimensions masked out!");
+    }
+  }
+  FieldDimensions(bool maskK) : maskK_(maskK) {
+    DAWN_ASSERT_MSG(
+        maskK_, "a field can't have null horizontal dimensions as well as masked out k dimension!");
+  }
   FieldDimensions(const FieldDimensions&) = default;
   FieldDimensions(FieldDimensions&&) = default;
 
@@ -288,23 +314,6 @@ private:
   std::optional<HorizontalFieldDimension> horizontalFieldDimension_;
   bool maskK_;
 };
-
-template <typename T>
-T dimension_cast(HorizontalFieldDimension const& dimension) {
-  using PlainT = std::remove_reference_t<T>;
-  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
-                "Can only be casted to a valid field dimension implementation");
-  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
-  return *dynamic_cast<std::add_pointer_t<T>>(dimension.impl_.get());
-}
-
-template <typename T>
-bool dimension_isa(HorizontalFieldDimension const& dimension) {
-  using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;
-  static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
-                "Can only be casted to a valid field dimension implementation");
-  return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
-}
 
 /// @brief Representation of a field
 /// @ingroup sir

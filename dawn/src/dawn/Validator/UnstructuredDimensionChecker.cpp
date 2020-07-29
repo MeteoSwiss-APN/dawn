@@ -88,7 +88,7 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
             doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap(),
             metaData.getAccessIDToLocalVariableDataMap());
         stmt->accept(checker);
-        if(!(checker.hasDimensions() &&
+        if(!(checker.hasHorizontalDimensions() &&
              stageLocationType ==
                  getUnstructuredDim(checker.getDimensions()).getDenseLocationType())) {
           return {false, stmt->getSourceLocation()};
@@ -163,8 +163,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   DAWN_ASSERT(nameToDimensions_.count(fieldName));
 
+  curDimensions_ = nameToDimensions_.at(fieldName);
   if(!nameToDimensions_.at(fieldName).isVertical()) {
-    curDimensions_ = nameToDimensions_.at(fieldName);
     if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
                                config_.currentChain_->back();
@@ -266,13 +266,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
-  if(left.hasDimensions() && right.hasDimensions()) {
+  if(left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
 
     checkBinaryOpUnstructured(left.getDimensions(), right.getDimensions());
 
-  } else if(left.hasDimensions() && !right.hasDimensions()) {
+  } else if(left.hasHorizontalDimensions() && !right.hasHorizontalDimensions()) {
     curDimensions_ = left.getDimensions();
-  } else if(!left.hasDimensions() && right.hasDimensions()) {
+  } else if(!left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
     curDimensions_ = right.getDimensions();
   }
 }
@@ -297,14 +297,14 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   // assigning to sparse dimensions is only allowed in a foor loop context
-  if(!config_.parentIsChainForLoop_ && left.hasDimensions() &&
+  if(!config_.parentIsChainForLoop_ && left.hasHorizontalDimensions() &&
      getUnstructuredDim(left.getDimensions()).isSparse()) {
     dimensionsConsistent_ = false;
     return;
   }
 
   // assigning from sparse dimensions is only allowed in either reductions or for loops
-  if(right.hasDimensions() && getUnstructuredDim(right.getDimensions()).isSparse() &&
+  if(right.hasHorizontalDimensions() && getUnstructuredDim(right.getDimensions()).isSparse() &&
      !(config_.parentIsReduction_ || config_.parentIsChainForLoop_)) {
     dimensionsConsistent_ = false;
     return;
@@ -312,7 +312,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
-  if(left.hasDimensions() && right.hasDimensions()) {
+  if(left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
 
     const auto& unstructuredDimLeft = getUnstructuredDim(left.getDimensions());
     const auto& unstructuredDimRight = getUnstructuredDim(right.getDimensions());
@@ -393,10 +393,17 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     // Dimensions to propagate are always those of the lhs (if the lhs has dimensions)
     curDimensions_ = left.getDimensions();
 
-  } else if(left.hasDimensions() && !right.hasDimensions()) {
+  } else if(left.hasHorizontalDimensions() && !right.hasHorizontalDimensions()) {
     curDimensions_ = left.getDimensions();
-  } else if(!left.hasDimensions() && right.hasDimensions()) {
+  } else if(left.hasDimensions() && !left.hasHorizontalDimensions() &&
+            right.hasHorizontalDimensions()) {
+    dimensionsConsistent_ = false;
+    return;
+  } else if(!left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
+    // this may be ok, remember that PassLocalVar has not necessarily be run when this checker is
+    // run
     curDimensions_ = right.getDimensions();
+    return;
   }
 }
 
@@ -438,7 +445,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   // initial value needs to be consistent with operations on right hand side
-  if(init.hasDimensions() && ops.hasDimensions()) {
+  if(init.hasHorizontalDimensions() && ops.hasHorizontalDimensions()) {
     // As init and rhs get combined through a binary operation, let's reuse the same code
     checkBinaryOpUnstructured(init.getDimensions(), ops.getDimensions());
   }
@@ -465,7 +472,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     // otherwise, all weights need to be of the same type, namely the lhs type of the reduction
     //  this assumes that all field accesses are dense in the weights. this restriction will
     //  eventually be lifted, but is for now ensured in the weights checker
-    if(weightChecker.hasDimensions()) {
+    if(weightChecker.hasHorizontalDimensions()) {
       if(getUnstructuredDim(weightChecker.getDimensions()).getDenseLocationType() !=
          reductionExpr->getLhsLocation()) {
         dimensionsConsistent_ = false;
@@ -476,7 +483,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // if the rhs subtree has dimensions, we must check that such dimensions are consistent with the
   // declared rhs and lhs location types
-  if(ops.hasDimensions()) {
+  if(ops.hasHorizontalDimensions()) {
     const auto& rhsUnstructuredDim = getUnstructuredDim(ops.getDimensions());
     if(rhsUnstructuredDim.isSparse()) {
       dimensionsConsistent_ =
@@ -495,7 +502,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   // the reduce over neighbors concept imposes a type on the left hand side
   curDimensions_ = sir::FieldDimensions(
       sir::HorizontalFieldDimension(ast::unstructured, reductionExpr->getLhsLocation()),
-      ops.hasDimensions() ? ops.getDimensions().K() : false);
+      ops.hasHorizontalDimensions() ? ops.getDimensions().K() : false);
 }
 
 } // namespace dawn
