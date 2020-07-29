@@ -104,7 +104,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      resArgName = (isHorizontal) ? "nbhIdx" : denseOffset + " + nbhIdx";
+      resArgName = (isHorizontal ? "" : denseOffset + " + ") + "nbhIdx";
     } else {
       resArgName = (isHorizontal) ? "pidx" : denseOffset + " + pidx";
     }
