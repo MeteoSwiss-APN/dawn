@@ -334,8 +334,7 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
   Field field(std::string const& name, ast::LocationType denseLocation);
-  Field field(std::string const& name, ast::NeighborChain sparseChain);
-  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK);
+  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
   Field vertical_field(std::string const& name);
 };
 

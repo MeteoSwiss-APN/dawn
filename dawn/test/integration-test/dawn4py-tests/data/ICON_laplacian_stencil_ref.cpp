@@ -13,20 +13,20 @@ private:
   struct stencil_68 {
     dawn::mesh_t<LibTag> const& m_mesh;
     int m_k_size;
-    dawn::edge_field_t<LibTag, double>& m_vec;
-    dawn::cell_field_t<LibTag, double>& m_div_vec;
-    dawn::vertex_field_t<LibTag, double>& m_rot_vec;
-    dawn::edge_field_t<LibTag, double>& m_nabla2t1_vec;
-    dawn::edge_field_t<LibTag, double>& m_nabla2t2_vec;
-    dawn::edge_field_t<LibTag, double>& m_nabla2_vec;
-    dawn::edge_field_t<LibTag, double>& m_primal_edge_length;
-    dawn::edge_field_t<LibTag, double>& m_dual_edge_length;
-    dawn::edge_field_t<LibTag, double>& m_tangent_orientation;
-    dawn::sparse_vertex_field_t<LibTag, double>& m_geofac_rot;
-    dawn::sparse_cell_field_t<LibTag, double>& m_geofac_div;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_vec;
+    dawn::cell_field_t<LibTag, ::dawn::float_type>& m_div_vec;
+    dawn::vertex_field_t<LibTag, ::dawn::float_type>& m_rot_vec;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_nabla2t1_vec;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_nabla2t2_vec;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_nabla2_vec;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_primal_edge_length;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_dual_edge_length;
+    dawn::edge_field_t<LibTag, ::dawn::float_type>& m_tangent_orientation;
+    dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>& m_geofac_rot;
+    dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>& m_geofac_div;
   public:
 
-    stencil_68(dawn::mesh_t<LibTag> const &mesh, int k_size, dawn::edge_field_t<LibTag, double>&vec, dawn::cell_field_t<LibTag, double>&div_vec, dawn::vertex_field_t<LibTag, double>&rot_vec, dawn::edge_field_t<LibTag, double>&nabla2t1_vec, dawn::edge_field_t<LibTag, double>&nabla2t2_vec, dawn::edge_field_t<LibTag, double>&nabla2_vec, dawn::edge_field_t<LibTag, double>&primal_edge_length, dawn::edge_field_t<LibTag, double>&dual_edge_length, dawn::edge_field_t<LibTag, double>&tangent_orientation, dawn::sparse_vertex_field_t<LibTag, double>&geofac_rot, dawn::sparse_cell_field_t<LibTag, double>&geofac_div) : m_mesh(mesh), m_k_size(k_size), m_vec(vec), m_div_vec(div_vec), m_rot_vec(rot_vec), m_nabla2t1_vec(nabla2t1_vec), m_nabla2t2_vec(nabla2t2_vec), m_nabla2_vec(nabla2_vec), m_primal_edge_length(primal_edge_length), m_dual_edge_length(dual_edge_length), m_tangent_orientation(tangent_orientation), m_geofac_rot(geofac_rot), m_geofac_div(geofac_div){}
+    stencil_68(dawn::mesh_t<LibTag> const &mesh, int k_size, dawn::edge_field_t<LibTag, ::dawn::float_type>&vec, dawn::cell_field_t<LibTag, ::dawn::float_type>&div_vec, dawn::vertex_field_t<LibTag, ::dawn::float_type>&rot_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>&nabla2t1_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>&nabla2t2_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>&nabla2_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>&primal_edge_length, dawn::edge_field_t<LibTag, ::dawn::float_type>&dual_edge_length, dawn::edge_field_t<LibTag, ::dawn::float_type>&tangent_orientation, dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>&geofac_rot, dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>&geofac_div) : m_mesh(mesh), m_k_size(k_size), m_vec(vec), m_div_vec(div_vec), m_rot_vec(rot_vec), m_nabla2t1_vec(nabla2t1_vec), m_nabla2t2_vec(nabla2t2_vec), m_nabla2_vec(nabla2_vec), m_primal_edge_length(primal_edge_length), m_dual_edge_length(dual_edge_length), m_tangent_orientation(tangent_orientation), m_geofac_rot(geofac_rot), m_geofac_div(geofac_div){}
 
     ~stencil_68() {
     }
@@ -100,7 +100,7 @@ public:
 
   // Members
 
-  ICON_laplacian_stencil(const dawn::mesh_t<LibTag> &mesh, int k_size, dawn::edge_field_t<LibTag, double>& vec, dawn::cell_field_t<LibTag, double>& div_vec, dawn::vertex_field_t<LibTag, double>& rot_vec, dawn::edge_field_t<LibTag, double>& nabla2t1_vec, dawn::edge_field_t<LibTag, double>& nabla2t2_vec, dawn::edge_field_t<LibTag, double>& nabla2_vec, dawn::edge_field_t<LibTag, double>& primal_edge_length, dawn::edge_field_t<LibTag, double>& dual_edge_length, dawn::edge_field_t<LibTag, double>& tangent_orientation, dawn::sparse_vertex_field_t<LibTag, double>& geofac_rot, dawn::sparse_cell_field_t<LibTag, double>& geofac_div) : m_stencil_68(mesh, k_size,vec,div_vec,rot_vec,nabla2t1_vec,nabla2t2_vec,nabla2_vec,primal_edge_length,dual_edge_length,tangent_orientation,geofac_rot,geofac_div){}
+  ICON_laplacian_stencil(const dawn::mesh_t<LibTag> &mesh, int k_size, dawn::edge_field_t<LibTag, ::dawn::float_type>& vec, dawn::cell_field_t<LibTag, ::dawn::float_type>& div_vec, dawn::vertex_field_t<LibTag, ::dawn::float_type>& rot_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>& nabla2t1_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>& nabla2t2_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>& nabla2_vec, dawn::edge_field_t<LibTag, ::dawn::float_type>& primal_edge_length, dawn::edge_field_t<LibTag, ::dawn::float_type>& dual_edge_length, dawn::edge_field_t<LibTag, ::dawn::float_type>& tangent_orientation, dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>& geofac_rot, dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>& geofac_div) : m_stencil_68(mesh, k_size,vec,div_vec,rot_vec,nabla2t1_vec,nabla2t2_vec,nabla2_vec,primal_edge_length,dual_edge_length,tangent_orientation,geofac_rot,geofac_div){}
 
   void run() {
     m_stencil_68.run();

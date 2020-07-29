@@ -282,7 +282,7 @@ class FieldDimensions {
 public:
   FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
       : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {
-    if(dimension_isa<CartesianFieldDimension>(*horizontalFieldDimension_)) {
+    if(!maskK && dimension_isa<CartesianFieldDimension>(*horizontalFieldDimension_)) {
       auto cartDims = dimension_cast<const CartesianFieldDimension&>(*horizontalFieldDimension_);
       DAWN_ASSERT_MSG(cartDims.I() || cartDims.J(),
                       "a field cant' have all dimensions masked out!");

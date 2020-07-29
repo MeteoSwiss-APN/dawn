@@ -223,6 +223,14 @@ def make_field_dimensions_unstructured(
     return dims
 
 
+def make_field_dimensions_vertical() -> FieldDimensions:
+    """ Create Field dimension in the vertical only
+    """
+    dims = FieldDimensions()
+    dims.mask_k = True
+    return dims
+
+
 def make_field(name: str, dimensions: FieldDimensions, is_temporary: bool = False) -> Field:
     """ Create a Field
 
@@ -244,13 +252,7 @@ def make_vertical_field(name: str, is_temporary: bool = False) -> Field:
     :param name:         Name of the field
     :param is_temporary: Is it a temporary field?
     """
-    field = Field()
-    field.name = name
-    field.is_temporary = is_temporary
-    dims = FieldDimensions()
-    dims.mask_k = True
-    field.field_dimensions.CopyFrom(dims)
-    return field
+    return make_field(name, make_field_dimensions_vertical(), is_temporary)
 
 
 def make_ast(root: List[StmtType]) -> AST:
