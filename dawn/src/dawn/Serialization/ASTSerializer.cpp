@@ -257,35 +257,38 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
                         const sir::FieldDimensions& fieldDimensions) {
-  if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
-         fieldDimensions.getHorizontalFieldDimension())) {
-    auto const& cartesianDimension =
-        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
-            fieldDimensions.getHorizontalFieldDimension());
-
-    dawn::proto::statements::CartesianDimension* protoCartesianDimension =
-        protoFieldDimensions->mutable_cartesian_horizontal_dimension();
-
-    protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
-    protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
-
-  } else {
-    auto const& unstructuredDimension =
-        dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
-            fieldDimensions.getHorizontalFieldDimension());
-
-    dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
-        protoFieldDimensions->mutable_unstructured_horizontal_dimension();
-
-    if(unstructuredDimension.isSparse()) {
-      for(auto locType : unstructuredDimension.getNeighborChain()) {
-        protoUnstructuredDimension->add_sparse_part(getProtoLocationTypeFromLocationType(locType));
-      }
-    }
-    protoUnstructuredDimension->set_dense_location_type(
-        getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
-  }
   protoFieldDimensions->set_mask_k(fieldDimensions.K());
+  if(!fieldDimensions.isVertical()) {
+    if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
+           fieldDimensions.getHorizontalFieldDimension())) {
+      auto const& cartesianDimension =
+          dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+              fieldDimensions.getHorizontalFieldDimension());
+
+      dawn::proto::statements::CartesianDimension* protoCartesianDimension =
+          protoFieldDimensions->mutable_cartesian_horizontal_dimension();
+
+      protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
+      protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
+
+    } else {
+      auto const& unstructuredDimension =
+          dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
+              fieldDimensions.getHorizontalFieldDimension());
+
+      dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
+          protoFieldDimensions->mutable_unstructured_horizontal_dimension();
+
+      if(unstructuredDimension.isSparse()) {
+        for(auto locType : unstructuredDimension.getNeighborChain()) {
+          protoUnstructuredDimension->add_sparse_part(
+              getProtoLocationTypeFromLocationType(locType));
+        }
+      }
+      protoUnstructuredDimension->set_dense_location_type(
+          getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
+    }
+  }
 }
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field) {
