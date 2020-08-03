@@ -14,7 +14,6 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassStageMerger.h"
@@ -28,14 +27,11 @@ using namespace dawn;
 namespace {
 
 class TestPassStageMerger : public ::testing::Test {
-protected:
-  OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
+  dawn::Options options_;
 
-  explicit TestPassStageMerger() {
+protected:
+  explicit TestPassStageMerger() : options_() {
     options_.MergeStages = options_.MergeDoMethods = true;
-    context_ = std::make_unique<OptimizerContext>(options_,
-                                                  std::make_shared<SIR>(ast::GridType::Cartesian));
     UIDGenerator::getInstance()->reset();
   }
 
@@ -46,16 +42,16 @@ protected:
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Run stage graph pass
-    PassSetStageGraph stageGraphPass(*context_);
-    EXPECT_TRUE(stageGraphPass.run(instantiation));
+    PassSetStageGraph stageGraphPass;
+    EXPECT_TRUE(stageGraphPass.run(instantiation, options_));
 
     // Run dependency graph pass
-    PassSetDependencyGraph dependencyGraphPass(*context_);
-    EXPECT_TRUE(dependencyGraphPass.run(instantiation));
+    PassSetDependencyGraph dependencyGraphPass;
+    EXPECT_TRUE(dependencyGraphPass.run(instantiation, options_));
 
     // Expect pass to succeed...
-    PassStageMerger stageMergerPass(*context_);
-    EXPECT_TRUE(stageMergerPass.run(instantiation));
+    PassStageMerger stageMergerPass;
+    EXPECT_TRUE(stageMergerPass.run(instantiation, options_));
 
     unsigned stencilIdx = 0;
     unsigned msIdx = 0;

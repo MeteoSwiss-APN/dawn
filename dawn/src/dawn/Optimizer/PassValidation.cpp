@@ -16,19 +16,20 @@
 #include "dawn/Support/Exception.h"
 #include "dawn/Validator/GridTypeChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/MultiStageChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 
-PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassValidation") {}
-
-bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  return run(instantiation, "");
+bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const Options& options) {
+  return run(instantiation, options, "");
 }
 
 // TODO: explain what description is
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const Options& options,
                          const std::string& description) {
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
@@ -63,9 +64,14 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*iir),
                   ("Grid type consistency check failed " + description).c_str());
 
-  IntegrityChecker checker(instantiation.get());
   try {
-    checker.run();
+    IntegrityChecker integrityChecker(instantiation.get());
+    integrityChecker.run();
+
+    if(iir->getGridType() != ast::GridType::Unstructured) {
+      MultiStageChecker multiStageChecker;
+      multiStageChecker.run(instantiation.get(), options.MaxHaloPoints);
+    }
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
   }

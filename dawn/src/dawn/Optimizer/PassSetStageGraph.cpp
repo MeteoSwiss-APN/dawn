@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
@@ -56,11 +55,8 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   return false;
 }
 
-PassSetStageGraph::PassSetStageGraph(OptimizerContext& context)
-    : Pass(context, "PassSetStageGraph") {}
-
-bool PassSetStageGraph::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassSetStageGraph::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const Options& options) {
   int stencilIdx = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -82,7 +78,7 @@ bool PassSetStageGraph::run(
       }
     }
 
-    if(context_.getOptions().DumpStageGraph)
+    if(options.DumpStageGraph)
       stageDAG.toDot("stage_" + stencilInstantiation->getName() + "_s" +
                      std::to_string(stencilIdx) + ".dot");
 

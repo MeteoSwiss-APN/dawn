@@ -87,7 +87,7 @@ struct GetAccessesOfTypeHelper<FieldAccessType::APIField> {
 
 } // namespace impl
 
-/// @brief Specific instantiation of a stencil
+/// @brief Metadata associated with a stencil instantiation (stored next to IIR)
 /// @ingroup optimizer
 class StencilMetaInformation : public NonCopyable {
   friend IIRSerializer;

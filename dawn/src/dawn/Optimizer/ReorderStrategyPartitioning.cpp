@@ -15,15 +15,14 @@
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
 
 std::unique_ptr<iir::Stencil>
-ReoderStrategyPartitioning::reorder(iir::StencilInstantiation* instantiation,
+ReorderStrategyPartitioning::reorder(iir::StencilInstantiation* instantiation,
                                     const std::unique_ptr<iir::Stencil>& stencilPtr,
-                                    OptimizerContext& context) {
-  DAWN_ASSERT("ReoderStrategyPartitioning is not yet implemented");
+                                    const Options& options) {
+  DAWN_ASSERT("ReorderStrategyPartitioning is not yet implemented");
   return nullptr;
 }
 

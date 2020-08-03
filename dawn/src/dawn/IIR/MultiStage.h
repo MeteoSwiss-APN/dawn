@@ -27,7 +27,6 @@
 #include <vector>
 
 namespace dawn {
-class OptimizerContext;
 namespace iir {
 
 class Stencil;

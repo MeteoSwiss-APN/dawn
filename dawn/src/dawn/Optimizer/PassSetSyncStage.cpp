@@ -17,7 +17,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <optional>
@@ -71,9 +70,8 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
   return false;
 }
 
-PassSetSyncStage::PassSetSyncStage(OptimizerContext& context) : Pass(context, "PassSetSyncStage") {}
-
-bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                           const Options& options) {
   // Update derived info
   instantiation->computeDerivedInfo();
 

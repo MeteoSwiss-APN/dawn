@@ -15,6 +15,7 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CXXOpt/CXXOptCodeGen.h"
 #include "dawn/CodeGen/Cuda-ico/CudaIcoCodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
@@ -30,6 +31,8 @@ codegen::Backend parseBackendString(const std::string& backendStr) {
     return codegen::Backend::GridTools;
   } else if(backendStr == "naive" || backendStr == "cxxnaive" || backendStr == "c++-naive") {
     return codegen::Backend::CXXNaive;
+  } else if(backendStr == "opt" || backendStr == "cxxopt" || backendStr == "c++-opt") {
+    return codegen::Backend::CXXOpt;
   } else if(backendStr == "ico" || backendStr == "naive-ico" || backendStr == "c++-naive-ico") {
     return codegen::Backend::CXXNaiveIco;
   } else if(backendStr == "cuda" || backendStr == "CUDA") {
@@ -57,7 +60,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& con
   case Backend::CUDAIco:
     return cudaico::run(context, options);
   case Backend::CXXOpt:
-    throw std::invalid_argument("Backend not supported");
+    return cxxopt::run(context, options);
   }
   // This line should not be needed but the compiler seems to complain if it is not present.
   return nullptr;

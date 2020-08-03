@@ -70,6 +70,8 @@ dawn::PassGroup parsePassGroup(const std::string& passGroup) {
     return dawn::PassGroup::SetBlockSize;
   else if(passGroup == "DataLocalityMetric" || passGroup == "data-locality-metric")
     return dawn::PassGroup::DataLocalityMetric;
+  else if(passGroup == "MultiStageMerger" || passGroup == "multistage-merger")
+    return dawn::PassGroup::MultiStageMerger;
   else
     throw std::runtime_error(std::string("Unknown pass group: ") + passGroup);
 }
@@ -182,6 +184,10 @@ int main(int argc, char* argv[]) {
   if(result.count("help")) {
     std::cout << options.help() << std::endl;
     return 0;
+  }
+
+  if(result.count("verbose")) {
+    dawn::log::setVerbosity(dawn::log::Level::All);
   }
 
   // Determine the list of pass groups to run

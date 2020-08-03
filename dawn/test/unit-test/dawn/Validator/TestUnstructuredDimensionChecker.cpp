@@ -487,4 +487,25 @@ TEST(UnstructuredDimensionCheckerTest, StageLocType_3) {
                                                                            stencil->getMetaData());
   EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
 }
+TEST(UnstructuredDimensionCheckerTest, VarAccessType) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+
+  auto varB = b.localvar("varX", dawn::BuiltinTypeID::Double, {b.lit(1.0)},
+                         iir::LocalVariableType::OnEdges);
+
+  auto stencil = b.build(
+      "pass",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Edges,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.declareVar(varB), b.stmt(b.assignExpr(b.at(varB), b.lit(2.0))))))));
+  auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
+
 } // namespace

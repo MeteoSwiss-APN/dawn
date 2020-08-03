@@ -18,6 +18,10 @@
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/CodeGen/GridTools/CodeGenUtils.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/LoopOrder.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -27,12 +31,51 @@
 #include "dawn/Support/StringUtil.h"
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 
 namespace dawn {
 namespace codegen {
 namespace gt {
+static bool
+checkStencilInstantiation(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
+    if(ms->getLoopOrder() == iir::LoopOrderKind::Parallel) {
+      continue;
+    } else {
+      // check for each stage all previous stages for fields that occur in both
+      for(auto curStageIt = ms->childrenRBegin(); curStageIt != ms->childrenREnd(); ++curStageIt) {
+        auto& stage = *curStageIt;
+        // find all the in / inout fields that have an off-center read:
+        std::set<int> ids;
+        for(auto field : stage->getFields()) {
+          if(field.second.getIntend() != iir::Field::IntendKind::Output) {
+            auto& extents = field.second.getReadExtents();
+            if(extents.has_value()) {
+              if(!extents->isVerticalPointwise()) {
+                ids.emplace(field.first);
+              }
+            }
+          }
+        }
+        for(auto dependentStageIt = std::next(curStageIt); dependentStageIt != ms->childrenREnd();
+            ++dependentStageIt) {
+          auto& dependentStage = *dependentStageIt;
+          // ensure that none of the previous stages wrote to that field
+          for(auto field : dependentStage->getFields()) {
+            if(field.second.getIntend() != iir::Field::IntendKind::Input) {
+              if(ids.find(field.first) != ids.end()) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
 
 std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
@@ -485,10 +528,8 @@ void GTCodeGen::generateStencilClasses(
           return !f.second.IsTemporary;
         });
     if(stencil.isEmpty()) {
-      throw SemanticError(std::string("Empty stencil '") + stencilInstantiation->getName() +
-                              "', this would result in invalid gridtools code",
-                          stencilInstantiation->getMetaData().getFileName(),
-                          stencilInstantiation->getMetaData().getStencilLocation());
+      DAWN_LOG(WARNING) << (std::string("Empty stencil '") + stencilInstantiation->getName() +
+                            "', this would result in invalid gridtools code");
     }
 
     // Check for horizontal iteration spaces
@@ -578,8 +619,8 @@ void GTCodeGen::generateStencilClasses(
 
         if(fields.empty() && !stencilFun->hasReturn()) {
           throw SemanticError(std::string("No storages referenced in stencil '") +
-                                  stencilInstantiation->getName() +
-                                  "', this would result in invalid gridtools code",
+                              stencilInstantiation->getName() +
+                              "', this would result in invalid gridtools code",
                               stencilInstantiation->getMetaData().getFileName(),
                               stencilInstantiation->getMetaData().getStencilLocation());
         }
@@ -747,8 +788,8 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
         if(fields.empty()) {
           throw SemanticError(std::string("No storages referenced in stencil '") +
-                                  stencilInstantiation->getName() +
-                                  "', this would result in invalid gridtools code",
+                              stencilInstantiation->getName() +
+                              "', this would result in invalid gridtools code",
                               stencilInstantiation->getMetaData().getFileName(),
                               stencilInstantiation->getMetaData().getStencilLocation());
         }
@@ -969,6 +1010,11 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   // Generate StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_) {
+    if(!checkStencilInstantiation(nameStencilCtxPair.second)) {
+      DAWN_LOG(WARNING) << ("stencil instantiation is not compliant with the GT backend\n "
+                            "There is no guarantee that "
+                            "the k loop will be executed before the stage loop");
+    }
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
 
     if(code.empty())

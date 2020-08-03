@@ -196,7 +196,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 23,
       "Caches": {}
      }
@@ -229,5 +229,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "CopyTest.cpp"
+ "filename": "dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }

@@ -21,7 +21,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logger.h"
 #include <set>
@@ -115,11 +114,9 @@ public:
   void reset() { stencilCallsToReplace_.clear(); }
 };
 
-PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
-    : Pass(context, "PassSetBoundaryCondition") {}
-
 bool PassSetBoundaryCondition::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
     DAWN_LOG(INFO) << stencilInstantiation->getName() << " : No boundary conditions applied";

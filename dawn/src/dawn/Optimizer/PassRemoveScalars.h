@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "Pass.h"
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
@@ -30,10 +30,11 @@ namespace dawn {
 /// This pass is necessary to generate legal IIR
 class PassRemoveScalars : public Pass {
 public:
-  PassRemoveScalars(OptimizerContext& context) : Pass(context, "PassRemoveScalars") {}
+  PassRemoveScalars() : Pass("PassRemoveScalars") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn

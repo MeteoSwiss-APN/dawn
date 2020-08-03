@@ -22,23 +22,6 @@ namespace dawn {
 namespace codegen {
 namespace cudaico {
 
-namespace {
-class FindReduceOverNeighborExpr : public dawn::ast::ASTVisitorForwarding {
-  std::optional<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>> foundReduction_ =
-      std::nullopt;
-
-public:
-  void visit(const std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>& stmt) override {
-    foundReduction_ = stmt;
-    return;
-  }
-  bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
-  std::shared_ptr<dawn::iir::ReductionOverNeighborExpr> reduceOverNeighborExpr() const {
-    return *foundReduction_;
-  }
-};
-} // namespace
-
 void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   indent_ += DAWN_PRINT_INDENT;
   auto indent = std::string(indent_, ' ');
@@ -48,15 +31,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   }
   indent_ -= DAWN_PRINT_INDENT;
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
-  if(scopeDepth_ == 0)
-    ss_ << std::string(indent_, ' ');
 
-  ss_ << "return ";
-
-  stmt->getExpr()->accept(*this);
-  ss_ << ";\n";
-}
 void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
@@ -93,29 +68,30 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr)
 void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
   DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+  DAWN_ASSERT_MSG(0, "Return not allowed in this context");
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+  DAWN_ASSERT_MSG(0, "Var Access not allowed in this context");
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
-  FindReduceOverNeighborExpr reductionFinder;
-  expr->getRight()->accept(reductionFinder);
-  if(reductionFinder.hasReduceOverNeighborExpr()) {
-    expr->getRight()->accept(*this);
-    expr->getLeft()->accept(*this);
-
-    ss_ << expr->getOp()
-        << "lhs_" + std::to_string(reductionFinder.reduceOverNeighborExpr()->getID()) << ";}\n";
-  } else {
-    expr->getLeft()->accept(*this);
-    ss_ << " " << expr->getOp() << " ";
-    expr->getRight()->accept(*this);
-  }
+  expr->getLeft()->accept(*this);
+  ss_ << " " << expr->getOp() << " ";
+  expr->getRight()->accept(*this);
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
+
+  int vOffset = expr->getOffset().verticalOffset();
+  std::string kiter = "(kIter + " + std::to_string(vOffset) + ")";
+
   std::string denseOffset =
-      "kIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
+      kiter + "*" + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
   if(unstrDims.isDense()) { // dense field accesses
     std::string resArgName;
     if((parentIsReduction_ || parentIsForLoop_) &&
@@ -140,8 +116,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   std::string callee = expr->getCallee();
-  // TODO: temporary hack to remove the "math::" prefix
-  ss_ << callee.substr(6, callee.size()) << "(";
+  // TODO: temporary hack to remove namespace prefixes
+  std::size_t lastcolon = callee.find_last_of(":");
+  ss_ << callee.substr(lastcolon + 1) << "(";
 
   std::size_t numArgs = expr->getArguments().size();
   for(std::size_t i = 0; i < numArgs; ++i) {
@@ -151,10 +128,35 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   ss_ << ")";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  std::string lhs_name = "lhs_" + std::to_string(expr->getID());
-  std::string weights_name = "weights_" + std::to_string(expr->getID());
+void ASTStencilBody::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+  ss_ << "if(";
+  stmt->getCondExpr()->accept(*this);
+  ss_ << ")\n";
   ss_ << "{";
+  stmt->getThenStmt()->accept(*this);
+  ss_ << "}";
+  if(stmt->hasElse()) {
+    ss_ << std::string(indent_, ' ') << "else\n";
+    ss_ << "{";
+    stmt->getElseStmt()->accept(*this);
+    ss_ << "}";
+  }
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  DAWN_ASSERT_MSG(!parentIsReduction_,
+                  "Nested Reductions not yet supported for CUDA code generation");
+
+  std::string lhs_name = "lhs_" + std::to_string(expr->getID());
+
+  if(!firstPass_) {
+    ss_ << " " << lhs_name << " ";
+    return;
+  }
+
+  parentIsReduction_ = true;
+
+  std::string weights_name = "weights_" + std::to_string(expr->getID());
   ss_ << "::dawn::float_type " << lhs_name << " = ";
   expr->getInit()->accept(*this);
   ss_ << ";\n";
@@ -174,7 +176,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
       << "; nbhIter++)";
 
-  parentIsReduction_ = true;
   ss_ << "{\n";
   ss_ << "int nbhIdx = " << chainToTableString(expr->getNbhChain()) << "["
       << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"

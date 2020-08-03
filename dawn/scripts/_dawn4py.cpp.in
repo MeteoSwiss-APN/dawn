@@ -7,6 +7,9 @@
 #include "dawn/Compiler/Driver.h"
 #include "dawn/CodeGen/Driver.h"
 
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
+
 #include <string>
 #include <list>
 #include <map>
@@ -19,6 +22,12 @@ namespace py = ::pybind11;
 PYBIND11_MODULE(_dawn4py, m) {
   m.doc() = "Dawn DSL toolchain"; // optional module docstring
 
+  // Register custom exceptions
+  py::register_exception<dawn::CompileError>(m, "CompileError");
+  py::register_exception<dawn::SemanticError>(m, "SemanticError");
+  py::register_exception<dawn::SyntacticError>(m, "SyntacticError");
+  py::register_exception<dawn::LogicError>(m, "LogicError");
+
   // Enumerations
   {{ SIRSerializerFormat }}
   {{ IIRSerializerFormat }}
@@ -26,12 +35,18 @@ PYBIND11_MODULE(_dawn4py, m) {
   {{ PassGroup }}
   {{ CodeGenBackend }}
 
+  {{ LogLevel }}
+
   // Options structs
   {{ OptimizerOptions }}
   {{ CodeGenOptions }}
 
   m.def("default_pass_groups", &dawn::defaultPassGroups,
         "Return a list of default optimizer pass groups");
+
+  m.def("set_verbosity", &dawn::log::setVerbosity,
+        "Set the dawn logging level [default: LogLevel::Warnings]",
+        py::arg("level") = dawn::log::Level::Warnings);
 
   m.def("run_optimizer_sir", [](const std::string& sir,
       dawn::SIRSerializer::Format format,

@@ -28,6 +28,8 @@ add_library(DawnCodeGen
   CXXNaive/ASTStencilFunctionParamVisitor.h
   CXXNaive/CXXNaiveCodeGen.cpp
   CXXNaive/CXXNaiveCodeGen.h
+  CXXOpt/CXXOptCodeGen.cpp
+  CXXOpt/CXXOptCodeGen.h
   CXXNaive-ico/ASTStencilBody.cpp
   CXXNaive-ico/ASTStencilBody.h
   CXXNaive-ico/ASTStencilDesc.cpp
@@ -75,4 +77,4 @@ add_library(DawnCodeGen
 )
 
 target_add_dawn_standard_props(DawnCodeGen)
-target_link_libraries(DawnCodeGen PUBLIC DawnSupport DawnIIR)
+target_link_libraries(DawnCodeGen PUBLIC DawnSerialization DawnSupport DawnIIR)

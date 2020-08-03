@@ -257,7 +257,7 @@
         "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 35,
       "Caches": {}
      }
@@ -290,5 +290,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "StencilFnCallTest.cpp"
+ "filename": "dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }

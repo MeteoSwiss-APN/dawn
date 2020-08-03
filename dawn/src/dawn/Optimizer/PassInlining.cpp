@@ -20,7 +20,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
 
@@ -480,10 +479,8 @@ tryInlineStencilFunction(PassInlining::InlineStrategy strategy,
 
 } // anonymous namespace
 
-PassInlining::PassInlining(OptimizerContext& context, InlineStrategy strategy)
-    : Pass(context, "PassInlining", true), strategy_(strategy) {}
-
-bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                       const Options& options) {
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
