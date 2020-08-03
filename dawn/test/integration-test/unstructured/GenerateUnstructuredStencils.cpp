@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/LocalVariable.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
 #include <cstring>
@@ -63,6 +64,7 @@ int main() {
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyCell.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -83,6 +85,7 @@ int main() {
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyEdge.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -108,6 +111,7 @@ int main() {
                                                 b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
     std::ofstream of("generated/generated_accumulateEdgeToCell.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -132,6 +136,7 @@ int main() {
                                                              Op::plus))))))));
 
     std::ofstream of("generated/generated_verticalSum.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -196,6 +201,7 @@ int main() {
                                                 Op::minus))))))));
 
     std::ofstream of("generated/generated_verticalSolver.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -234,6 +240,7 @@ int main() {
                                          Op::plus))))))));
 
     std::ofstream of("generated/generated_diffusion.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -268,6 +275,7 @@ int main() {
                                                  std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
     std::ofstream of("generated/generated_gradient.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -294,6 +302,7 @@ int main() {
                                    {LocType::Edges, LocType::Cells, LocType::Vertices}))))))));
 
     std::ofstream of("generated/generated_diamond.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -330,6 +339,7 @@ int main() {
                                                  Op::multiply)}))))))));
 
     std::ofstream of("generated/generated_diamondWeights.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -356,6 +366,7 @@ int main() {
                                         LocType::Edges, LocType::Cells}))))))));
 
     std::ofstream of("generated/generated_intp.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -387,6 +398,7 @@ int main() {
                                        std::vector<float>({1., 1., 1., 1})))))))));
 
     std::ofstream of("generated/generated_sparseDimension.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -427,6 +439,7 @@ int main() {
                             std::vector<float>({1., 1., 1., 1})))))))));
 
     std::ofstream of("generated/generated_sparseDimensionTwice.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -457,6 +470,7 @@ int main() {
                                    b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
     std::ofstream of("generated/generated_NestedSimple.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -489,6 +503,7 @@ int main() {
                                               b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
     std::ofstream of("generated/generated_NestedWithField.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -531,6 +546,7 @@ int main() {
 
     // Code generation deactivated for the reasons stated above
     std::ofstream of("generated/generated_NestedSparse.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -567,6 +583,7 @@ int main() {
                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
     std::ofstream of("generated/generated_SparseAssignment0.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -603,6 +620,7 @@ int main() {
                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
     std::ofstream of("generated/generated_SparseAssignment1.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -632,6 +650,7 @@ int main() {
                                {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
     std::ofstream of("generated/generated_SparseAssignment2.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -662,6 +681,7 @@ int main() {
                              LocType::Cells}))))));
 
     std::ofstream of("generated/generated_SparseAssignment3.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -690,6 +710,7 @@ int main() {
                                     {LocType::Cells, LocType::Edges}))))));
 
     std::ofstream of("generated/generated_SparseAssignment4.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -724,6 +745,7 @@ int main() {
                                    {LocType::Cells, LocType::Edges}))))));
 
     std::ofstream of("generated/generated_SparseAssignment5.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -759,6 +781,7 @@ int main() {
                                                      {LocType::Edges, LocType::Cells}))))))));
 
     std::ofstream of("generated/generated_horizontal_vertical.hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
