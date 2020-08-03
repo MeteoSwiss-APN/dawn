@@ -190,7 +190,7 @@ void CXXOptCodeGen::generateStencilClasses(
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
-    stencilClass.addMember("const " + c_dgt() + "domain", "m_dom");
+    stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("const globals&", "m_globals");
@@ -204,7 +204,7 @@ void CXXOptCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = stencilClass.addConstructor();
 
-    stencilClassCtr.addArg("const " + c_dgt() + "domain& dom_");
+    stencilClassCtr.addArg("const " + c_dgt + "domain& dom_");
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("const globals& globals_");
     }
@@ -284,14 +284,14 @@ void CXXOptCodeGen::generateStencilClasses(
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
         std::string type = stencilProperties->paramNameToType_.at(fieldName);
-        stencilRunMethod.addStatement(c_gt() + "data_view<" + type + "> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(" + fieldName + "_)");
+        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " +
+                                      c_gt + "make_host_view(" + fieldName + "_)");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
       for(const auto& fieldPair : tempFields) {
         const auto fieldName = fieldPair.second.Name;
-        stencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(m_" + fieldName + ")");
+        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " +
+                                      c_gt + "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
 
