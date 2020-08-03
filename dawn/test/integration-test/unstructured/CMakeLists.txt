@@ -42,6 +42,7 @@ list(TRANSFORM reference_stencil_codes PREPEND reference/)
 add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp)
 
 target_link_libraries(AtlasIntegrationTestCodeGenerate Dawn DawnUnittest)
+target_compile_options(AtlasIntegrationTestCodeGenerate PRIVATE "-g")
 
 add_custom_command(
   OUTPUT ${generated_stencil_codes}
