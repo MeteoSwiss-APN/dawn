@@ -212,16 +212,22 @@ def make_field_dimensions_unstructured(
     """
 
     assert len(locations) >= 1
-
+    dims = FieldDimensions()
     horizontal_dim = UnstructuredDimension()
     horizontal_dim.dense_location_type = locations[0]
     sparse_part = len(locations) > 1
     if sparse_part:
         horizontal_dim.sparse_part.extend(locations)
-
-    dims = FieldDimensions()
     dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
     dims.mask_k = mask_k
+    return dims
+
+
+def make_field_dimensions_vertical() -> FieldDimensions:
+    """ Create Field dimension in the vertical only
+    """
+    dims = FieldDimensions()
+    dims.mask_k = True
     return dims
 
 
@@ -238,6 +244,15 @@ def make_field(name: str, dimensions: FieldDimensions, is_temporary: bool = Fals
     field.is_temporary = is_temporary
     field.field_dimensions.CopyFrom(dimensions)
     return field
+
+
+def make_vertical_field(name: str, is_temporary: bool = False) -> Field:
+    """ Create a vertical Field, i.e. a field with no horizontal dimensions
+
+    :param name:         Name of the field
+    :param is_temporary: Is it a temporary field?
+    """
+    return make_field(name, make_field_dimensions_vertical(), is_temporary)
 
 
 def make_ast(root: List[StmtType]) -> AST:

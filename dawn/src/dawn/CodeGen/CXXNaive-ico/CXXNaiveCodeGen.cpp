@@ -192,17 +192,24 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     }
   };
   for(auto APIfieldID : APIFields) {
+    if(metadata.getFieldDimensions(APIfieldID).isVertical()) {
+      StencilWrapperConstructor.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " +
+                                       metadata.getNameFromAccessID(APIfieldID));
+      continue;
+    }
     if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
            metadata.getFieldDimensions(APIfieldID).getHorizontalFieldDimension())
            .isDense()) {
       std::string typeString =
           getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
-      StencilWrapperConstructor.addArg("dawn::" + typeString + "field_t<LibTag, double>& " +
+      StencilWrapperConstructor.addArg("dawn::" + typeString +
+                                       "field_t<LibTag, ::dawn::float_type>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
     } else {
       std::string typeString =
           getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
-      StencilWrapperConstructor.addArg("dawn::sparse_" + typeString + "field_t<LibTag, double>& " +
+      StencilWrapperConstructor.addArg("dawn::sparse_" + typeString +
+                                       "field_t<LibTag, ::dawn::float_type>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
     }
   }
@@ -320,16 +327,20 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                                          StencilContext::SC_Stencil);
 
     auto fieldInfoToDeclString = [](iir::Stencil::FieldInfo info) {
+      if(info.field.getFieldDimensions().isVertical()) {
+        return std::string("dawn::vertical_field_t<LibTag, ::dawn::float_type>");
+      }
+
       const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           info.field.getFieldDimensions().getHorizontalFieldDimension());
       if(unstructuredDims.isDense()) {
         switch(unstructuredDims.getDenseLocationType()) {
         case ast::LocationType::Cells:
-          return std::string("dawn::cell_field_t<LibTag, double>");
+          return std::string("dawn::cell_field_t<LibTag, ::dawn::float_type>");
         case ast::LocationType::Vertices:
-          return std::string("dawn::vertex_field_t<LibTag, double>");
+          return std::string("dawn::vertex_field_t<LibTag, ::dawn::float_type>");
         case ast::LocationType::Edges:
-          return std::string("dawn::edge_field_t<LibTag, double>");
+          return std::string("dawn::edge_field_t<LibTag, ::dawn::float_type>");
         default:
           dawn_unreachable("invalid location");
           return std::string("");
@@ -337,11 +348,11 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       } else {
         switch(unstructuredDims.getDenseLocationType()) {
         case ast::LocationType::Cells:
-          return std::string("dawn::sparse_cell_field_t<LibTag, double>");
+          return std::string("dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>");
         case ast::LocationType::Vertices:
-          return std::string("dawn::sparse_vertex_field_t<LibTag, double>");
+          return std::string("dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>");
         case ast::LocationType::Edges:
-          return std::string("dawn::sparse_edge_field_t<LibTag, double>");
+          return std::string("dawn::sparse_edge_field_t<LibTag, ::dawn::float_type>");
         default:
           dawn_unreachable("invalid location");
           return std::string("");

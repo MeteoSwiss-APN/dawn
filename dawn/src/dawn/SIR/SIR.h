@@ -230,6 +230,7 @@ public:
   // Construct a Cartesian horizontal field dimension with specified ij mask.
   HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
+
   // Construct a Unstructured horizontal field sparse dimension with specified neighbor chain
   // (sparse part). Dense part is the first element of the chain.
   HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain)
@@ -260,31 +261,6 @@ public:
   friend bool dimension_isa(HorizontalFieldDimension const& dimension);
 };
 
-class FieldDimensions {
-public:
-  FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
-      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
-  FieldDimensions(const FieldDimensions&) = default;
-  FieldDimensions(FieldDimensions&&) = default;
-
-  FieldDimensions& operator=(const FieldDimensions&) = default;
-  FieldDimensions& operator=(FieldDimensions&&) = default;
-
-  bool operator==(const FieldDimensions& other) const {
-    return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
-  }
-
-  bool K() const { return maskK_; }
-  const HorizontalFieldDimension& getHorizontalFieldDimension() const {
-    return horizontalFieldDimension_;
-  }
-  std::string toString() const;
-
-private:
-  HorizontalFieldDimension horizontalFieldDimension_;
-  bool maskK_;
-};
-
 template <typename T>
 T dimension_cast(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_reference_t<T>;
@@ -301,6 +277,43 @@ bool dimension_isa(HorizontalFieldDimension const& dimension) {
                 "Can only be casted to a valid field dimension implementation");
   return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
 }
+
+class FieldDimensions {
+public:
+  FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
+      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {
+    if(!maskK && dimension_isa<CartesianFieldDimension>(*horizontalFieldDimension_)) {
+      auto cartDims = dimension_cast<const CartesianFieldDimension&>(*horizontalFieldDimension_);
+      DAWN_ASSERT_MSG(cartDims.I() || cartDims.J(),
+                      "a field cant' have all dimensions masked out!");
+    }
+  }
+  FieldDimensions(bool maskK) : maskK_(maskK) {
+    DAWN_ASSERT_MSG(
+        maskK_, "a field can't have null horizontal dimensions as well as masked out k dimension!");
+  }
+  FieldDimensions(const FieldDimensions&) = default;
+  FieldDimensions(FieldDimensions&&) = default;
+
+  FieldDimensions& operator=(const FieldDimensions&) = default;
+  FieldDimensions& operator=(FieldDimensions&&) = default;
+
+  bool operator==(const FieldDimensions& other) const {
+    return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
+  }
+
+  bool K() const { return maskK_; }
+  const HorizontalFieldDimension& getHorizontalFieldDimension() const {
+    DAWN_ASSERT_MSG(!isVertical(), "attempted to get horizontal dimension of a vertical field!");
+    return horizontalFieldDimension_.value();
+  }
+  bool isVertical() const { return !horizontalFieldDimension_.has_value(); }
+  std::string toString() const;
+
+private:
+  std::optional<HorizontalFieldDimension> horizontalFieldDimension_;
+  bool maskK_;
+};
 
 /// @brief Representation of a field
 /// @ingroup sir

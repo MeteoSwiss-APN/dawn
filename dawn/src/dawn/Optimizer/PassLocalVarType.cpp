@@ -16,6 +16,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/LocalVariable.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 
@@ -111,6 +112,11 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
   // Construct a LocalVariableType from a field accessed within an assignment to / declaration of a
   // local variable.
   iir::LocalVariableType inferLocalVarTypeFromField(int fieldAccessID) {
+    // vertical fields do not have a type
+    if(metadata_.getFieldDimensions(fieldAccessID).isVertical()) {
+      return iir::LocalVariableType::Scalar;
+    }
+
     if(sir::dimension_isa<sir::CartesianFieldDimension>(
            metadata_.getFieldDimensions(fieldAccessID).getHorizontalFieldDimension())) {
       // Cartesian case
@@ -174,6 +180,12 @@ public:
     for(const auto& readAccess :
         ifStmt->getCondStmt()->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses()) {
       const int accessID = readAccess.first;
+
+      if(metadata_.isAccessType(iir::FieldAccessType::Field, accessID) &&
+         metadata_.getFieldDimensions(accessID).isVertical()) {
+        continue;
+      }
+
       if(metadata_.isAccessType(iir::FieldAccessType::Field, accessID)) {
         if(conditionalType_.has_value()) {
           if(*conditionalType_ != inferLocalVarTypeFromField(accessID)) {
@@ -182,7 +194,7 @@ public:
                 ifStmt->getSourceLocation().Line));
           }
         }
-        // Record the accessed field's location type
+        // Record the accessed field's location type (if it's different from scalar)
         conditionalType_ = inferLocalVarTypeFromField(accessID);
       } else if(metadata_.isAccessType(iir::FieldAccessType::LocalVariable, accessID)) {
         variablesAccessedInConditionals_.insert(accessID);

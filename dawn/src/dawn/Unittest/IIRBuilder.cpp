@@ -282,11 +282,18 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::NeighborChain sparseChain) {
+                                                ast::NeighborChain sparseChain, bool maskK) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, true));
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, maskK));
+  return {id, name};
+}
+
+IIRBuilder::Field UnstructuredIIRBuilder::vertical_field(std::string const& name) {
+  DAWN_ASSERT(si_);
+  int id =
+      si_->getMetaData().addField(iir::FieldAccessType::APIField, name, sir::FieldDimensions(true));
   return {id, name};
 }
 

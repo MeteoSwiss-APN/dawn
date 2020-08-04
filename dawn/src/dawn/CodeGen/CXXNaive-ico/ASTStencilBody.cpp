@@ -255,6 +255,14 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
+    if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
+      ss_ << "m_" << getName(expr) << "("
+          << "k+" << expr->getOffset().verticalOffset() << ")";
+      return;
+    }
+
+    bool isHorizontal = !metadata_.getFieldDimensions(iir::getAccessID(expr)).K();
+
     if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
            metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())
            .isDense()) {
@@ -266,15 +274,23 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
                 ? ASTStencilBody::LoopNeighborIndexVarName()
                 : ASTStencilBody::StageIndexVarName();
       }
-      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << resArgName << "),"
-          << "k+" << expr->getOffset().verticalOffset() << ")";
+      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << resArgName << ")";
+      if(isHorizontal) {
+        ss_ << ")";
+      } else {
+        ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+      }
     } else {
       std::string sparseIdx = parentIsReduction_
                                   ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
                                   : ASTStencilBody::LoopLinearIndexVarName();
       ss_ << "m_" << getName(expr) << "("
-          << "deref(LibTag{}, " << sparseArgName_ << ")," << sparseIdx << ", "
-          << "k+" << expr->getOffset().verticalOffset() << ")";
+          << "deref(LibTag{}, " << sparseArgName_ << ")," << sparseIdx;
+      if(isHorizontal) {
+        ss_ << ")";
+      } else {
+        ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+      }
     }
   }
 }

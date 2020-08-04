@@ -84,12 +84,19 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
-      metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
 
   int vOffset = expr->getOffset().verticalOffset();
   std::string kiter = "(kIter + " + std::to_string(vOffset) + ")";
 
+  if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
+    ss_ << getName(expr) << "[" << kiter << "]";
+    return;
+  }
+
+  bool isHorizontal = !metadata_.getFieldDimensions(iir::getAccessID(expr)).K();
+
+  auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+      metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   std::string denseOffset =
       kiter + "*" + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
   if(unstrDims.isDense()) { // dense field accesses
@@ -97,9 +104,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      resArgName = denseOffset + " + nbhIdx";
+      resArgName = (isHorizontal ? "" : denseOffset + " + ") + "nbhIdx";
     } else {
-      resArgName = denseOffset + " + pidx";
+      resArgName = (isHorizontal ? "" : denseOffset + " + ") + "pidx";
     }
     ss_ << getName(expr) << "[" << resArgName << "]";
   } else { // sparse field accesses
@@ -107,9 +114,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
                     "Sparse Field Access not allowed in this context");
 
     std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
-    std::string resArgName = denseOffset + " * " + sparseSize + "+ nbhIter * " +
-                             locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) +
-                             "+ pidx";
+    std::string resArgName =
+        (isHorizontal
+            ? "" :  denseOffset + " * " + sparseSize + " + " ) +
+            "nbhIter * " + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) + "+ pidx";
     ss_ << getName(expr) << "[" << resArgName << "]";
   }
 }

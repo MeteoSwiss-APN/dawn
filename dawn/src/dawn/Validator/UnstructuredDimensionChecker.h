@@ -63,6 +63,9 @@ private:
     void setCurDimensionFromLocType(iir::LocalVariableType&& type);
     bool isConsistent() const { return dimensionsConsistent_; }
     bool hasDimensions() const { return curDimensions_.has_value(); };
+    bool hasHorizontalDimensions() const {
+      return hasDimensions() && !curDimensions_->isVertical();
+    };
     const sir::FieldDimensions& getDimensions() const;
 
     // This constructor is used when the check is performed on the SIR. In this case, each

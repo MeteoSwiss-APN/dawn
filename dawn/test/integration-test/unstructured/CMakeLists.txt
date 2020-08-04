@@ -28,6 +28,7 @@ set(generated_stencil_codes generated_copyCell.hpp
   generated_intp.hpp
   generated_diamond.hpp
   generated_diamondWeights.hpp
+  generated_horizontal_vertical.hpp
 )
 
 set(reference_stencil_codes reference_diffusion.hpp
