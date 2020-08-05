@@ -178,7 +178,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt + "domain& dom");
   StencilWrapperConstructor.addArg("int rank = 1");
   StencilWrapperConstructor.addArg("int xcols = 1");
   StencilWrapperConstructor.addArg("int ycols = 1");
@@ -251,10 +251,10 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addComment("Members");
 
-    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt + "meta_data_t", "m_meta_data");
 
     for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
-      stencilWrapperClass.addMember(c_dgt() + "storage_t",
+      stencilWrapperClass.addMember(c_dgt + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }
@@ -305,7 +305,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
-    stencilClass.addMember("const " + c_dgt() + "domain", "m_dom");
+    stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("const globals&", "m_globals");
@@ -319,7 +319,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = stencilClass.addConstructor();
 
-    stencilClassCtr.addArg("const " + c_dgt() + "domain& dom_");
+    stencilClassCtr.addArg("const " + c_dgt + "domain& dom_");
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("const globals& globals_");
     }
@@ -399,14 +399,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
         std::string type = stencilProperties->paramNameToType_.at(fieldName);
-        stencilRunMethod.addStatement(c_gt() + "data_view<" + type + "> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(" + fieldName + "_)");
+        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " +
+                                      c_gt + "make_host_view(" + fieldName + "_)");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
       for(const auto& fieldPair : tempFields) {
         const auto fieldName = fieldPair.second.Name;
-        stencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(m_" + fieldName + ")");
+        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " +
+                                      c_gt + "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
 
@@ -563,7 +563,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         // that contains the storage and the offset, in order to resolve offset passed to the
         // storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
+        stencilFunMethod.addArg("param_wrapper<" + c_gt + "data_view<" + argType + ">> pw_" +
                                 argName);
       }
 
@@ -581,7 +581,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
-        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
+        stencilFunMethod << c_gt << "data_view<StorageType" + std::to_string(m) + "> "
                          << paramName << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
