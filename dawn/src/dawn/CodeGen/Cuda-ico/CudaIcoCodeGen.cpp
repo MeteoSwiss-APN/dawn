@@ -311,54 +311,18 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
   ctor.addInit("mesh_(mesh)");
   ctor.addInit("kSize_(kSize)");
 
-  // call initField on each field
-  for(auto field : support::orderMap(stencil.getFields())) {
-    if(field.second.field.getFieldDimensions().isVertical()) {
-      ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
-                        "_, kSize)");
-      continue;
-    }
-
-    bool isHorizontal = !field.second.field.getFieldDimensions().K();
-    std::string kSizeStr = (isHorizontal) ? "1" : "kSize";
-
-    auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-        field.second.field.getFieldDimensions().getHorizontalFieldDimension());
-    if(dims.isDense()) {
-      ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
-                        "_, " + chainToDenseSizeStringHostMesh({dims.getDenseLocationType()}) +
-                        ", " + kSizeStr + ")");
-    } else {
-      ctor.addStatement("dawn::initSparseField(" + field.second.Name + ", " + "&" +
-                        field.second.Name + "_, " +
-                        chainToDenseSizeStringHostMesh(dims.getNeighborChain()) + ", " +
-                        chainToSparseSizeString(dims.getNeighborChain()) + ", " + kSizeStr + ")");
+  std::stringstream fieldsStr;
+  {
+    bool first = true;
+    for(auto field : support::orderMap(stencil.getFields())) {
+      if(!first) {
+        fieldsStr << ", ";
+      }
+      fieldsStr << field.second.Name + ".data()";
+      first = false;
     }
   }
-}
-
-void CudaIcoCodeGen::generateStencilClassRawPtrCtr(MemberFunction& ctor,
-                                                   const iir::Stencil& stencil,
-                                                   CodeGenProperties& codeGenProperties) const {
-
-  // arguments: mesh, kSize, fields
-  ctor.addArg("const dawn::GlobalGpuTriMesh *mesh");
-  ctor.addArg("int kSize");
-  for(auto field : support::orderMap(stencil.getFields())) {
-    ctor.addArg("::dawn::float_type *" + field.second.Name);
-  }
-
-  // initializers for base class, mesh, kSize
-  std::string stencilName =
-      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
-  ctor.addInit("sbase(\"" + stencilName + "\")");
-  ctor.addInit("mesh_(mesh)");
-  ctor.addInit("kSize_(kSize)");
-
-  // copy pointer to each field storage
-  for(auto field : support::orderMap(stencil.getFields())) {
-    ctor.addStatement(field.second.Name + "_ = " + field.second.Name);
-  }
+  ctor.addStatement("copy_memory(" + fieldsStr.str() + ")");
 }
 
 void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
@@ -548,11 +512,6 @@ void CudaIcoCodeGen::generateStencilClasses(
     gridFun.addArg("int elSize");
     generateGridFun(gridFun);
     gridFun.commit();
-
-    // constructor from raw pointers
-    auto stencilClassRawPtrConstructor = stencilClass.addConstructor();
-    generateStencilClassRawPtrCtr(stencilClassRawPtrConstructor, stencil, codeGenProperties);
-    stencilClassRawPtrConstructor.commit();
 
     // minmal ctor
     auto stencilClassMinimalConstructor = stencilClass.addConstructor();
