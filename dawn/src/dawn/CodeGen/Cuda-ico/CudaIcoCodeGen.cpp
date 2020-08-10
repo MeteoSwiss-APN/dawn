@@ -421,16 +421,26 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
     }
   }
 
-  auto getNumElements = [&](const iir::Stencil::FieldInfo& field) {
+  auto getNumElements = [&](const iir::Stencil::FieldInfo& field) -> std::string {
     if(rawPtrs) {
-      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          field.field.getFieldDimensions().getHorizontalFieldDimension());
-      if(dims.isDense()) {
-        return "mesh_." + locToDenseSizeStringGpuMesh(dims.getDenseLocationType());
-      } else {
-        return "mesh._" + locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + "*" +
-               chainToSparseSizeString(dims.getNeighborChain());
+      if(field.field.getFieldDimensions().isVertical()) {
+        return "kSize_";
       }
+
+      auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          field.field.getFieldDimensions().getHorizontalFieldDimension());
+
+      std::string sizestr = "mesh_.";
+      if(hdims.isDense()) {
+        sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType());
+      } else {
+        sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + "*" +
+                   chainToSparseSizeString(hdims.getNeighborChain());
+      }
+      if(field.field.getFieldDimensions().K()) {
+        sizestr += " * kSize_";
+      }
+      return sizestr;
     } else {
       return field.Name + ".numElements()";
     }
