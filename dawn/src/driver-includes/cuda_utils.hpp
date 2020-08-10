@@ -69,48 +69,48 @@ template <typename T>
 // ENDTODO
 
 inline void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
-                    int numEdges, int sparseSize) {
+                    int numElements, int sparseSize) {
   // In: edges, klevels, sparse
   // Out: klevels, sparse, edges
 
-  for(int edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+  for(int elIdx = 0; elIdx < numElements; elIdx++)
     for(int kLevel = 0; kLevel < kSize; kLevel++)
       for(int sparseIdx = 0; sparseIdx < sparseSize; sparseIdx++) {
-        output[kLevel * numEdges * sparseSize + sparseIdx * numEdges + edgeIdx] =
-            input[edgeIdx * kSize * sparseSize + kLevel * sparseSize + sparseIdx];
+        output[kLevel * numElements * sparseSize + sparseIdx * numElements + elIdx] =
+            input[elIdx * kSize * sparseSize + kLevel * sparseSize + sparseIdx];
       }
 }
 
 inline void reshape(const dawn::float_type* input, dawn::float_type* output, int kSize,
-                    int numEdges) {
+                    int numElements) {
   // In: edges, klevels
   // Out: klevels, edges
 
-  for(int edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+  for(int elIdx = 0; elIdx < numElements; elIdx++)
     for(int kLevel = 0; kLevel < kSize; kLevel++) {
-      output[kLevel * numEdges + edgeIdx] = input[edgeIdx * kSize + kLevel];
+      output[kLevel * numElements + elIdx] = input[elIdx * kSize + kLevel];
     }
 }
 
 inline void reshape_back(const dawn::float_type* input, dawn::float_type* output, int kSize,
-                         int numEdges) {
+                         int numElements) {
   // In: klevels, edges
   // Out: edges, klevels
 
-  for(int edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+  for(int elIdx = 0; elIdx < numElements; elIdx++)
     for(int kLevel = 0; kLevel < kSize; kLevel++) {
-      output[edgeIdx * kSize + kLevel] = input[kLevel * numEdges + edgeIdx];
+      output[elIdx * kSize + kLevel] = input[kLevel * numElements + elIdx];
     }
 }
 inline void reshape_back(const dawn::float_type* input, dawn::float_type* output, int kSize,
-                         int numEdges, int sparseSize) {
+                         int numElements, int sparseSize) {
   // In: klevels, sparse, edges
   // Out: edges, klevels, sparse
-  for(int edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+  for(int elIdx = 0; elIdx < numElements; elIdx++)
     for(int kLevel = 0; kLevel < kSize; kLevel++)
       for(int sparseIdx = 0; sparseIdx < sparseSize; sparseIdx++) {
-        output[edgeIdx * kSize * sparseSize + kLevel * sparseSize + sparseIdx] =
-            input[kLevel * numEdges * sparseSize + sparseIdx * numEdges + edgeIdx];
+        output[elIdx * kSize * sparseSize + kLevel * sparseSize + sparseIdx] =
+            input[kLevel * numElements * sparseSize + sparseIdx * numElements + elIdx];
       }
 }
 
@@ -136,6 +136,32 @@ void initSparseField(const SparseFieldT& field, dawn::float_type** cudaStorage, 
   reshape(field.data(), reshaped, kSize, denseSize, sparseSize);
   gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * field.numElements()));
   gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * field.numElements(),
+                       cudaMemcpyHostToDevice));
+  delete[] reshaped;
+}
+
+inline void initField(::dawn::float_type* field, dawn::float_type** cudaStorage, int kSize) {
+  gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * kSize));
+  gpuErrchk(
+      cudaMemcpy(*cudaStorage, field, sizeof(dawn::float_type) * kSize, cudaMemcpyHostToDevice));
+}
+inline void initField(::dawn::float_type* field, dawn::float_type** cudaStorage, int denseSize,
+                      int kSize) {
+  const int numElements = denseSize * kSize;
+  dawn::float_type* reshaped = new dawn::float_type[numElements];
+  reshape(field, reshaped, kSize, denseSize);
+  gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * numElements));
+  gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * numElements,
+                       cudaMemcpyHostToDevice));
+  delete[] reshaped;
+}
+inline void initSparseField(::dawn::float_type*& field, dawn::float_type** cudaStorage,
+                            int denseSize, int sparseSize, int kSize) {
+  const int numElements = denseSize * sparseSize * kSize;
+  dawn::float_type* reshaped = new dawn::float_type[numElements];
+  reshape(field, reshaped, kSize, denseSize, sparseSize);
+  gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * numElements));
+  gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * numElements,
                        cudaMemcpyHostToDevice));
   delete[] reshaped;
 }
