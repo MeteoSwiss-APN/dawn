@@ -25,6 +25,7 @@
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
@@ -310,42 +311,27 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
   ctor.addInit("mesh_(mesh)");
   ctor.addInit("kSize_(kSize)");
 
-  // call initField on each field
-  for(auto field : support::orderMap(stencil.getFields())) {
-    if(field.second.field.getFieldDimensions().isVertical()) {
-      ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
-                        "_, kSize)");
-      continue;
-    }
-
-    bool isHorizontal = !field.second.field.getFieldDimensions().K();
-    std::string kSizeStr = (isHorizontal) ? "1" : "kSize";
-
-    auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-        field.second.field.getFieldDimensions().getHorizontalFieldDimension());
-    if(dims.isDense()) {
-      ctor.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
-                        "_, " + chainToDenseSizeStringHostMesh({dims.getDenseLocationType()}) +
-                        ", " + kSizeStr + ")");
-    } else {
-      ctor.addStatement("dawn::initSparseField(" + field.second.Name + ", " + "&" +
-                        field.second.Name + "_, " +
-                        chainToDenseSizeStringHostMesh(dims.getNeighborChain()) + ", " +
-                        chainToSparseSizeString(dims.getNeighborChain()) + ", " + kSizeStr + ")");
+  std::stringstream fieldsStr;
+  {
+    bool first = true;
+    for(auto field : support::orderMap(stencil.getFields())) {
+      if(!first) {
+        fieldsStr << ", ";
+      }
+      fieldsStr << field.second.Name + ".data()";
+      first = false;
     }
   }
+  ctor.addStatement("copy_memory(" + fieldsStr.str() + ")");
 }
 
-void CudaIcoCodeGen::generateStencilClassRawPtrCtr(MemberFunction& ctor,
-                                                   const iir::Stencil& stencil,
-                                                   CodeGenProperties& codeGenProperties) const {
+void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
+                                                    const iir::Stencil& stencil,
+                                                    CodeGenProperties& codeGenProperties) const {
 
   // arguments: mesh, kSize, fields
   ctor.addArg("const dawn::GlobalGpuTriMesh *mesh");
   ctor.addArg("int kSize");
-  for(auto field : support::orderMap(stencil.getFields())) {
-    ctor.addArg("::dawn::float_type *" + field.second.Name);
-  }
 
   // initializers for base class, mesh, kSize
   std::string stencilName =
@@ -353,37 +339,112 @@ void CudaIcoCodeGen::generateStencilClassRawPtrCtr(MemberFunction& ctor,
   ctor.addInit("sbase(\"" + stencilName + "\")");
   ctor.addInit("mesh_(mesh)");
   ctor.addInit("kSize_(kSize)");
+}
 
-  // copy pointer to each field storage
+void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
+                                           const iir::Stencil& stencil) const {
+
   for(auto field : support::orderMap(stencil.getFields())) {
-    ctor.addStatement(field.second.Name + "_ = " + field.second.Name);
+    copyFun.addArg("::dawn::float_type* " + field.second.Name);
+  }
+
+  // call initField on each field
+  for(auto field : support::orderMap(stencil.getFields())) {
+    if(field.second.field.getFieldDimensions().isVertical()) {
+      copyFun.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
+                           "_, kSize_)");
+      continue;
+    }
+
+    bool isHorizontal = !field.second.field.getFieldDimensions().K();
+    std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
+
+    auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        field.second.field.getFieldDimensions().getHorizontalFieldDimension());
+    if(dims.isDense()) {
+      copyFun.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
+                           "_, " + "mesh_." +
+                           locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ", " +
+                           kSizeStr + ")");
+    } else {
+      copyFun.addStatement(
+          "dawn::initSparseField(" + field.second.Name + ", " + "&" + field.second.Name + "_, " +
+          "mesh_." + locToDenseSizeStringGpuMesh(dims.getNeighborChain()[0]) + ", " +
+          chainToSparseSizeString(dims.getNeighborChain()) + ", " + kSizeStr + ")");
+    }
   }
 }
 
-void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
-                                         const iir::Stencil& stencil) const {
+void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
+                                        const iir::Stencil& stencil) const {
+
+  for(auto field : support::orderMap(stencil.getFields())) {
+    copyFun.addArg("::dawn::float_type* " + field.second.Name);
+  }
+
+  // copy pointer to each field storage
+  for(auto field : support::orderMap(stencil.getFields())) {
+    copyFun.addStatement(field.second.Name + "_ = " + field.second.Name);
+  }
+}
+
+void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil,
+                                         bool rawPtrs) const {
   // signature
   for(auto field : support::orderMap(stencil.getFields())) {
     if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
        field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
 
       if(field.second.field.getFieldDimensions().isVertical()) {
-        copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " +
-                           field.second.Name);
+        if(rawPtrs) {
+          copyBackFun.addArg("::dawn::float_type* " + field.second.Name);
+        } else {
+          copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " +
+                             field.second.Name);
+        }
         continue;
       }
 
       auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           field.second.field.getFieldDimensions().getHorizontalFieldDimension());
-      if(dims.isDense()) {
-        copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " +
-                           field.second.Name);
+      if(rawPtrs) {
+        copyBackFun.addArg("::dawn::float_type* " + field.second.Name);
       } else {
-        copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " +
-                           field.second.Name);
+        if(dims.isDense()) {
+          copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " +
+                             field.second.Name);
+        } else {
+          copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " +
+                             field.second.Name);
+        }
       }
     }
   }
+
+  auto getNumElements = [&](const iir::Stencil::FieldInfo& field) -> std::string {
+    if(rawPtrs) {
+      if(field.field.getFieldDimensions().isVertical()) {
+        return "kSize_";
+      }
+
+      auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          field.field.getFieldDimensions().getHorizontalFieldDimension());
+
+      std::string sizestr = "mesh_.";
+      if(hdims.isDense()) {
+        sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType());
+      } else {
+        sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + "*" +
+                   chainToSparseSizeString(hdims.getNeighborChain());
+      }
+      if(field.field.getFieldDimensions().K()) {
+        sizestr += " * kSize_";
+      }
+      return sizestr;
+    } else {
+      return field.Name + ".numElements()";
+    }
+  };
 
   // function body
   for(auto field : support::orderMap(stencil.getFields())) {
@@ -392,11 +453,10 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
 
       copyBackFun.addBlockStatement("", [&]() {
         copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
-                                 field.second.Name + ".numElements()]");
-        copyBackFun.addStatement(
-            "gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " + field.second.Name + "_, " +
-            field.second.Name +
-            ".numElements()*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
+                                 getNumElements(field.second) + "]");
+        copyBackFun.addStatement("gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " +
+                                 field.second.Name + "_, " + getNumElements(field.second) +
+                                 "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
 
         if(!field.second.field.getFieldDimensions().isVertical()) {
           auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
@@ -406,12 +466,13 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun,
           std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
           if(dims.isDense()) {
-            copyBackFun.addStatement(
-                "dawn::reshape_back(host_buf, " + field.second.Name + ".data(), " + kSizeStr +
-                ", mesh_." + locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
+            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
+                                     ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
+                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
+                                     ")");
           } else {
             copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
-                                     ".data(), " + kSizeStr + ", mesh_." +
+                                     ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
                                      locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
                                      ", " + chainToSparseSizeString(dims.getNeighborChain()) + ")");
           }
@@ -462,10 +523,10 @@ void CudaIcoCodeGen::generateStencilClasses(
     generateGridFun(gridFun);
     gridFun.commit();
 
-    // constructor from raw pointers
-    auto stencilClassRawPtrConstructor = stencilClass.addConstructor();
-    generateStencilClassRawPtrCtr(stencilClassRawPtrConstructor, stencil, codeGenProperties);
-    stencilClassRawPtrConstructor.commit();
+    // minmal ctor
+    auto stencilClassMinimalConstructor = stencilClass.addConstructor();
+    generateStencilClassCtrMinimal(stencilClassMinimalConstructor, stencil, codeGenProperties);
+    stencilClassMinimalConstructor.commit();
 
     // run method
     auto runFun = stencilClass.addMemberFunction("void", "run");
@@ -473,14 +534,29 @@ void CudaIcoCodeGen::generateStencilClasses(
     runFun.commit();
 
     // copy back fun
-    auto copyBackFun = stencilClass.addMemberFunction("void", "CopyResultToHost");
-    generateCopyBackFun(copyBackFun, stencil);
+    auto copyBackFunInterface = stencilClass.addMemberFunction("void", "CopyResultToHost");
+    generateCopyBackFun(copyBackFunInterface, stencil, true);
+    copyBackFunInterface.commit();
+
+    auto copyBackFunRawPtr = stencilClass.addMemberFunction("void", "CopyResultToHost");
+    generateCopyBackFun(copyBackFunRawPtr, stencil, false);
+    copyBackFunRawPtr.commit();
+
+    // copy to funs
+    auto copyMemoryFun = stencilClass.addMemberFunction("void", "copy_memory");
+    generateCopyMemoryFun(copyMemoryFun, stencil);
+    copyMemoryFun.commit();
+
+    // copy to funs
+    auto copyPtrFun = stencilClass.addMemberFunction("void", "copy_pointers");
+    generateCopyPtrFun(copyPtrFun, stencil);
+    copyPtrFun.commit();
   }
 }
 
 void CudaIcoCodeGen::generateAllAPIRunFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    CodeGenProperties& codeGenProperties) {
+    CodeGenProperties& codeGenProperties, bool fromHost) {
   const auto& stencils = stencilInstantiation->getStencils();
 
   CollectChainStrings chainCollector;
@@ -497,12 +573,18 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
     const std::string wrapperName = stencilInstantiation->getName();
 
-    MemberFunction apiRunFun("double", "run_" + wrapperName + "_impl", ssSW);
+    std::unique_ptr<MemberFunction> apiRunFun;
+    if(fromHost) {
+      apiRunFun = std::make_unique<MemberFunction>("double",
+                                                   "run_" + wrapperName + "_impl_from_host", ssSW);
+    } else {
+      apiRunFun = std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_impl", ssSW);
+    }
 
-    apiRunFun.addArg("dawn::GlobalGpuTriMesh *mesh");
-    apiRunFun.addArg("int k_size");
+    apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+    apiRunFun->addArg("int k_size");
     for(auto field : support::orderMap(stencil.getFields())) {
-      apiRunFun.addArg("::dawn::float_type *" + field.second.Name);
+      apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
     }
     // Need to count arguments for exporting bindings through GridTools bindgen
     const int argCount = 2 + stencil.getFields().size();
@@ -539,21 +621,43 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       }
     }
 
-    apiRunFun.addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
-                           ">::" + stencilName + " s(mesh, k_size, " + fieldsStr.str() + ")");
-    apiRunFun.addStatement("s.run()");
-    apiRunFun.addStatement("double time = s.get_time()");
-    apiRunFun.addStatement("s.reset()");
-    apiRunFun.addStatement("return time");
+    apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
+                            ">::" + stencilName + " s(mesh, k_size)");
+    if(fromHost) {
+      apiRunFun->addStatement("s.copy_memory(" + fieldsStr.str() + ")");
+    } else {
+      apiRunFun->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+    }
+    apiRunFun->addStatement("s.run()");
+    apiRunFun->addStatement("double time = s.get_time()");
+    apiRunFun->addStatement("s.reset()");
 
-    apiRunFun.commit();
+    if(fromHost) {
+      std::stringstream ioFieldStr;
+      bool first = true;
+      for(auto field : support::orderMap(stencil.getFields())) {
+        if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
+           field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+          if(!first) {
+            ioFieldStr << ", ";
+          }
+          ioFieldStr << field.second.Name;
+          first = false;
+        }
+      }
+      apiRunFun->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ")");
+    }
+
+    apiRunFun->addStatement("return time");
+    apiRunFun->commit();
 
     // Export binding (if requested)
     ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
          << "\n";
     Statement exportMacroCall(ssSW);
-    exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName << ", run_"
-                    << wrapperName << "_impl)";
+    exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                    << ((fromHost) ? "_from_host" : "") << ", run_" << wrapperName << "_impl"
+                    << ((fromHost) ? "_from_host" : "") << ")";
     exportMacroCall.commit();
     ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
          << "\n";
@@ -748,7 +852,9 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   stencilWrapperClass.commit();
 
-  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties);
+  bool fromHost = true;
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
 
   cudaNamespace.commit();
   dawnNamespace.commit();
