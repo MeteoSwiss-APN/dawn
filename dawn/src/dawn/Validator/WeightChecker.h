@@ -56,7 +56,6 @@ private:
 
   public:
     void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) override;
-    void visit(const std::shared_ptr<dawn::ast::FunCallExpr>& expr) override;
     void visit(const std::shared_ptr<dawn::ast::StencilFunCallExpr>& expr) override;
     void visit(const std::shared_ptr<dawn::ast::ReductionOverNeighborExpr>& expr) override;
 
