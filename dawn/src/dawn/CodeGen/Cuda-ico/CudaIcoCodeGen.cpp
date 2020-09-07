@@ -322,7 +322,7 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
       first = false;
     }
   }
-  ctor.addStatement("copy_memory(" + fieldsStr.str() + ")");
+  ctor.addStatement("copy_memory(" + fieldsStr.str() + ", true)");
 }
 
 void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
@@ -347,6 +347,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
   for(auto field : support::orderMap(stencil.getFields())) {
     copyFun.addArg("::dawn::float_type* " + field.second.Name);
   }
+  copyFun.addArg("bool do_reshape");
 
   // call initField on each field
   for(auto field : support::orderMap(stencil.getFields())) {
@@ -365,12 +366,12 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
       copyFun.addStatement("dawn::initField(" + field.second.Name + ", " + "&" + field.second.Name +
                            "_, " + "mesh_." +
                            locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ", " +
-                           kSizeStr + ")");
+                           kSizeStr + ", do_reshape)");
     } else {
       copyFun.addStatement(
           "dawn::initSparseField(" + field.second.Name + ", " + "&" + field.second.Name + "_, " +
           "mesh_." + locToDenseSizeStringGpuMesh(dims.getNeighborChain()[0]) + ", " +
-          chainToSparseSizeString(dims.getNeighborChain()) + ", " + kSizeStr + ")");
+          chainToSparseSizeString(dims.getNeighborChain()) + ", " + kSizeStr + ", do_reshape)");
     }
   }
 }
@@ -421,6 +422,8 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
     }
   }
 
+  copyBackFun.addArg("bool do_reshape");
+
   auto getNumElements = [&](const iir::Stencil::FieldInfo& field) -> std::string {
     if(rawPtrs) {
       if(field.field.getFieldDimensions().isVertical()) {
@@ -465,17 +468,20 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
           bool isHorizontal = !field.second.field.getFieldDimensions().K();
           std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-          if(dims.isDense()) {
-            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
-                                     ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
-                                     ")");
-          } else {
-            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
-                                     ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
-                                     ", " + chainToSparseSizeString(dims.getNeighborChain()) + ")");
-          }
+          copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
+            if(dims.isDense()) {
+              copyBackFun.addStatement(
+                  "dawn::reshape_back(host_buf, " + field.second.Name +
+                  ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
+                  locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
+            } else {
+              copyBackFun.addStatement(
+                  "dawn::reshape_back(host_buf, " + field.second.Name +
+                  ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
+                  locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ", " +
+                  chainToSparseSizeString(dims.getNeighborChain()) + ")");
+            }
+          });
         }
         copyBackFun.addStatement("delete[] host_buf");
       });
@@ -573,22 +579,9 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
     const std::string wrapperName = stencilInstantiation->getName();
 
-    std::unique_ptr<MemberFunction> apiRunFun;
-    if(fromHost) {
-      apiRunFun = std::make_unique<MemberFunction>("double",
-                                                   "run_" + wrapperName + "_impl_from_host", ssSW);
-    } else {
-      apiRunFun = std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_impl", ssSW);
-    }
+    // generate compound strings first
 
-    apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-    apiRunFun->addArg("int k_size");
-    for(auto field : support::orderMap(stencil.getFields())) {
-      apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
-    }
-    // Need to count arguments for exporting bindings through GridTools bindgen
-    const int argCount = 2 + stencil.getFields().size();
-
+    // chain sizes for templating the kernel call
     std::stringstream chainSizesStr;
     {
       bool first = true;
@@ -608,6 +601,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       }
     }
 
+    // all fields
     std::stringstream fieldsStr;
     {
       bool first = true;
@@ -615,50 +609,97 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         if(!first) {
           fieldsStr << ", ";
         }
-
         fieldsStr << field.second.Name;
         first = false;
       }
     }
 
-    apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
-                            ">::" + stencilName + " s(mesh, k_size)");
-    if(fromHost) {
-      apiRunFun->addStatement("s.copy_memory(" + fieldsStr.str() + ")");
-    } else {
-      apiRunFun->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
-    }
-    apiRunFun->addStatement("s.run()");
-    apiRunFun->addStatement("double time = s.get_time()");
-    apiRunFun->addStatement("s.reset()");
-
-    if(fromHost) {
-      std::stringstream ioFieldStr;
-      bool first = true;
-      for(auto field : support::orderMap(stencil.getFields())) {
-        if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-           field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
-          if(!first) {
-            ioFieldStr << ", ";
-          }
-          ioFieldStr << field.second.Name;
-          first = false;
+    // all input output fields
+    std::stringstream ioFieldStr;
+    bool first = true;
+    for(auto field : support::orderMap(stencil.getFields())) {
+      if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
+         field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+        if(!first) {
+          ioFieldStr << ", ";
         }
+        ioFieldStr << field.second.Name;
+        first = false;
       }
-      apiRunFun->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ")");
     }
 
-    apiRunFun->addStatement("return time");
-    apiRunFun->commit();
+    // two functions if from host (from c / from fort), one function if simply passing the pointers
+    std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
+    std::vector<std::stringstream> apiRunFunStreams(2);
+    if(fromHost) {
+      apiRunFuns.push_back(std::make_unique<MemberFunction>(
+          "double", "run_" + wrapperName + "_impl_from_c_host", apiRunFunStreams[0]));
+      apiRunFuns.push_back(std::make_unique<MemberFunction>(
+          "double", "run_" + wrapperName + "_impl_from_fort_host", apiRunFunStreams[1]));
+    } else {
+      apiRunFuns.push_back(std::make_unique<MemberFunction>(
+          "double", "run_" + wrapperName + "_impl", apiRunFunStreams[0]));
+    }
+
+    for(auto& apiRunFun : apiRunFuns) {
+      apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+      apiRunFun->addArg("int k_size");
+      for(auto field : support::orderMap(stencil.getFields())) {
+        apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
+      }
+    }
+
+    for(auto& apiRunFun : apiRunFuns) {
+      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
+                              ">::" + stencilName + " s(mesh, k_size)");
+    }
+    if(fromHost) {
+      // depending if we are calling from c or from fortran, we need to transpose the data or not
+      apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
+      apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+    } else {
+      apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+    }
+    for(auto& apiRunFun : apiRunFuns) {
+      apiRunFun->addStatement("s.run()");
+      apiRunFun->addStatement("double time = s.get_time()");
+      apiRunFun->addStatement("s.reset()");
+    }
+    if(fromHost) {
+      apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
+      apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+    }
+    for(auto& apiRunFun : apiRunFuns) {
+      apiRunFun->addStatement("return time");
+      apiRunFun->commit();
+    }
+
+    for(const auto& stream : apiRunFunStreams) {
+      ssSW << stream.str();
+    }
+
+    // Need to count arguments for exporting bindings through GridTools bindgen
+    const int argCount = 2 + stencil.getFields().size();
 
     // Export binding (if requested)
     ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
          << "\n";
-    Statement exportMacroCall(ssSW);
-    exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                    << ((fromHost) ? "_from_host" : "") << ", run_" << wrapperName << "_impl"
-                    << ((fromHost) ? "_from_host" : "") << ")";
-    exportMacroCall.commit();
+    if(fromHost) {
+      Statement exportCMacroCall(ssSW);
+      Statement exportFMacroCall(ssSW);
+      exportCMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                       << "_from_c_host, run_" << wrapperName << "_impl_from_c_host)";
+      exportCMacroCall.commit();
+      exportFMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                       << "_from_fort_host, run_" << wrapperName << "_impl_from_fort_host)";
+      exportFMacroCall.commit();
+    } else {
+      Statement exportMacroCall(ssSW);
+      exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                      << ", run_" << wrapperName << "_impl"
+                      << ")";
+      exportMacroCall.commit();
+    }
     ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
          << "\n";
   }
