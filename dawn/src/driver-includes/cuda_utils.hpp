@@ -123,26 +123,32 @@ void initField(const FieldT& field, dawn::float_type** cudaStorage, int kSize) {
 template <class FieldT>
 void initField(const FieldT& field, dawn::float_type** cudaStorage, int denseSize, int kSize,
                bool doReshape) {
-  dawn::float_type* reshaped = new dawn::float_type[field.numElements()];
-  if(doReshape) {
-    reshape(field.data(), reshaped, kSize, denseSize);
-  }
   gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * field.numElements()));
-  gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * field.numElements(),
-                       cudaMemcpyHostToDevice));
-  delete[] reshaped;
+  if(doReshape) {
+    dawn::float_type* reshaped = new dawn::float_type[field.numElements()];
+    reshape(field.data(), reshaped, kSize, denseSize);
+    gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * field.numElements(),
+                         cudaMemcpyHostToDevice));
+    delete[] reshaped;
+  } else {
+    gpuErrchk(cudaMemcpy(*cudaStorage, field.data(), sizeof(dawn::float_type) * field.numElements(),
+                         cudaMemcpyHostToDevice));
+  }
 }
 template <class SparseFieldT>
 void initSparseField(const SparseFieldT& field, dawn::float_type** cudaStorage, int denseSize,
                      int sparseSize, int kSize, bool doReshape) {
-  dawn::float_type* reshaped = new dawn::float_type[field.numElements()];
-  if(doReshape) {
-    reshape(field.data(), reshaped, kSize, denseSize, sparseSize);
-  }
   gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * field.numElements()));
-  gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * field.numElements(),
-                       cudaMemcpyHostToDevice));
-  delete[] reshaped;
+  if(doReshape) {
+    dawn::float_type* reshaped = new dawn::float_type[field.numElements()];
+    reshape(field.data(), reshaped, kSize, denseSize, sparseSize);
+    gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * field.numElements(),
+                         cudaMemcpyHostToDevice));
+    delete[] reshaped;
+  } else {
+    gpuErrchk(cudaMemcpy(*cudaStorage, field.data(), sizeof(dawn::float_type) * field.numElements(),
+                         cudaMemcpyHostToDevice));
+  }
 }
 
 inline void initField(::dawn::float_type* field, dawn::float_type** cudaStorage, int kSize) {
@@ -153,26 +159,32 @@ inline void initField(::dawn::float_type* field, dawn::float_type** cudaStorage,
 inline void initField(::dawn::float_type* field, dawn::float_type** cudaStorage, int denseSize,
                       int kSize, bool doReshape) {
   const int numElements = denseSize * kSize;
-  dawn::float_type* reshaped = new dawn::float_type[numElements];
-  if(doReshape) {
-    reshape(field, reshaped, kSize, denseSize);
-  }
   gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * numElements));
-  gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * numElements,
-                       cudaMemcpyHostToDevice));
-  delete[] reshaped;
+  if(doReshape) {
+    dawn::float_type* reshaped = new dawn::float_type[numElements];
+    reshape(field, reshaped, kSize, denseSize);
+    gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * numElements,
+                         cudaMemcpyHostToDevice));
+    delete[] reshaped;
+  } else {
+    gpuErrchk(cudaMemcpy(*cudaStorage, field, sizeof(dawn::float_type) * numElements,
+                         cudaMemcpyHostToDevice));
+  }
 }
 inline void initSparseField(::dawn::float_type*& field, dawn::float_type** cudaStorage,
                             int denseSize, int sparseSize, int kSize, bool doReshape) {
   const int numElements = denseSize * sparseSize * kSize;
-  dawn::float_type* reshaped = new dawn::float_type[numElements];
-  if(doReshape) {
-    reshape(field, reshaped, kSize, denseSize, sparseSize);
-  }
   gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * numElements));
-  gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * numElements,
-                       cudaMemcpyHostToDevice));
-  delete[] reshaped;
+  if(doReshape) {
+    dawn::float_type* reshaped = new dawn::float_type[numElements];
+    reshape(field, reshaped, kSize, denseSize, sparseSize);
+    gpuErrchk(cudaMemcpy(*cudaStorage, reshaped, sizeof(dawn::float_type) * numElements,
+                         cudaMemcpyHostToDevice));
+    delete[] reshaped;
+  } else {
+    gpuErrchk(cudaMemcpy(*cudaStorage, field, sizeof(dawn::float_type) * numElements,
+                         cudaMemcpyHostToDevice));
+  }
 }
 
 template <typename LibTag>
