@@ -454,7 +454,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
     if(field.second.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
        field.second.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
 
-      copyBackFun.addBlockStatement("", [&]() {
+      copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
         copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
                                  getNumElements(field.second) + "]");
         copyBackFun.addStatement("gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " +
@@ -468,22 +468,25 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
           bool isHorizontal = !field.second.field.getFieldDimensions().K();
           std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-          copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
-            if(dims.isDense()) {
-              copyBackFun.addStatement(
-                  "dawn::reshape_back(host_buf, " + field.second.Name +
-                  ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
-                  locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ")");
-            } else {
-              copyBackFun.addStatement(
-                  "dawn::reshape_back(host_buf, " + field.second.Name +
-                  ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
-                  locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) + ", " +
-                  chainToSparseSizeString(dims.getNeighborChain()) + ")");
-            }
-          });
+          if(dims.isDense()) {
+            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
+                                     ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
+                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
+                                     ")");
+          } else {
+            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.second.Name +
+                                     ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
+                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
+                                     ", " + chainToSparseSizeString(dims.getNeighborChain()) + ")");
+          }
         }
         copyBackFun.addStatement("delete[] host_buf");
+      });
+      copyBackFun.addBlockStatement("else", [&]() {
+        copyBackFun.addStatement("gpuErrchk(cudaMemcpy(" + field.second.Name +
+                                 ((!rawPtrs) ? ".data()" : "") + ", " + field.second.Name + "_," +
+                                 getNumElements(field.second) +
+                                 "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
       });
     }
   }
