@@ -13,7 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/Offsets.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Logger.h"
+#include <optional>
 
 namespace dawn {
 namespace ast {
@@ -125,22 +128,71 @@ GridType HorizontalOffset::getGridType() const {
   }
 }
 
+// Vertical Offset
+
+bool VerticalOffset::operator==(VerticalOffset const& other) const {
+  return verticalOffset_ == other.verticalOffset_ &&
+         verticalIndirection_ == other.verticalIndirection_;
+}
+
+VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
+  verticalOffset_ += other.verticalOffset_;
+  if(other.verticalIndirection_ || verticalIndirection_) {
+    DAWN_LOG(WARNING) << "operator += not well defined for vertical offsets with indirection";
+  }
+  return *this;
+}
+
+VerticalOffset::VerticalOffset(int offset, const std::string& fieldName)
+    : verticalOffset_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
+
+VerticalOffset::VerticalOffset(const VerticalOffset& other) { *this = other; }
+
+std::optional<std::string> VerticalOffset::getIndirection() const {
+  if(verticalIndirection_) {
+    return verticalIndirection_->getName();
+  } else {
+    return std::nullopt;
+  }
+}
+
+VerticalOffset& VerticalOffset::operator=(VerticalOffset const& other) {
+  verticalOffset_ = other.verticalOffset_;
+  if(other.verticalIndirection_) {
+    verticalIndirection_ = std::make_shared<FieldAccessExpr>(*other.verticalIndirection_);
+  } else {
+    verticalIndirection_ = nullptr;
+  }
+  return *this;
+}
+
 // Offsets
 
 Offsets::Offsets(HorizontalOffset const& hOffset, int vOffset)
-    : horizontalOffset_(hOffset), verticalOffset_(vOffset) {}
+    : horizontalOffset_(hOffset), verticalOffset_(VerticalOffset(vOffset)) {}
 
 Offsets::Offsets(cartesian_, int i, int j, int k)
-    : horizontalOffset_(cartesian, i, j), verticalOffset_(k) {}
+    : horizontalOffset_(cartesian, i, j), verticalOffset_(VerticalOffset(k)) {}
 Offsets::Offsets(cartesian_, std::array<int, 3> const& structuredOffsets)
     : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2]) {}
+Offsets::Offsets(cartesian_, int i, int j, int k, const std::string& fieldName)
+    : horizontalOffset_(cartesian, i, j), verticalOffset_(VerticalOffset(k, fieldName)) {}
+Offsets::Offsets(cartesian_, std::array<int, 3> const& structuredOffsets,
+                 const std::string& fieldName)
+    : Offsets(cartesian, structuredOffsets[0], structuredOffsets[1], structuredOffsets[2],
+              fieldName) {}
 Offsets::Offsets(cartesian_) : horizontalOffset_(cartesian) {}
 
 Offsets::Offsets(unstructured_, bool hasOffset, int k)
     : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k) {}
+Offsets::Offsets(unstructured_, bool hasOffset, int k, const std::string& fieldName)
+    : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k, fieldName) {}
 Offsets::Offsets(unstructured_) : horizontalOffset_(unstructured) {}
 
-int Offsets::verticalOffset() const { return verticalOffset_; }
+int Offsets::verticalOffset() const { return verticalOffset_.getOffset(); }
+std::optional<std::string> Offsets::verticalIndirection() const {
+  return verticalOffset_.getIndirection();
+}
 HorizontalOffset const& Offsets::horizontalOffset() const { return horizontalOffset_; }
 
 bool Offsets::operator==(Offsets const& other) const {

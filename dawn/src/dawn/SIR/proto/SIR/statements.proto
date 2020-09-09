@@ -636,6 +636,7 @@ message FieldAccessExpr {
   // mapping of the directions (and offsets) to the actual arguments of the
   // stencil function.
   int32 vertical_offset = 2;
+  string vertical_indirection = 12;
   oneof horizontal_offset {
     CartesianOffset cartesian_offset = 3;
     UnstructuredOffset unstructured_offset = 4;

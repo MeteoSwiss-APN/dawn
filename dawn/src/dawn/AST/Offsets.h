@@ -20,12 +20,14 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace dawn {
 namespace ast {
 
 class Offsets;
+class FieldAccessExpr;
 
 static constexpr cartesian_ cartesian;
 static constexpr unstructured_ unstructured;
@@ -162,6 +164,25 @@ auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
   }
 }
 
+class VerticalOffset {
+
+  int verticalOffset_ = 0;
+  // shared ptr required for visitors
+  std::shared_ptr<ast::FieldAccessExpr> verticalIndirection_ = nullptr;
+
+public:
+  VerticalOffset() = default;
+  VerticalOffset(int offset) : verticalOffset_(offset){};
+  VerticalOffset(int offset, const std::string& fieldName);
+  VerticalOffset(const std::string& fieldName) : VerticalOffset(0, fieldName){};
+  VerticalOffset(const VerticalOffset&);
+  int getOffset() const { return verticalOffset_; }
+  std::optional<std::string> getIndirection() const;
+  bool operator==(VerticalOffset const& other) const;
+  VerticalOffset operator+=(VerticalOffset const& other);
+  VerticalOffset& operator=(VerticalOffset const& other);
+};
+
 class Offsets {
 public:
   Offsets() = default;
@@ -169,12 +190,16 @@ public:
 
   Offsets(cartesian_, int i, int j, int k);
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets);
+  Offsets(cartesian_, int i, int j, int k, const std::string& fieldName);
+  Offsets(cartesian_, std::array<int, 3> const& structuredOffsets, const std::string& fieldName);
   explicit Offsets(cartesian_);
 
   Offsets(unstructured_, bool hasOffset, int k);
+  Offsets(unstructured_, bool hasOffset, int k, const std::string& fieldName);
   explicit Offsets(unstructured_);
 
   int verticalOffset() const;
+  std::optional<std::string> verticalIndirection() const;
   HorizontalOffset const& horizontalOffset() const;
 
   bool operator==(Offsets const& other) const;
@@ -185,7 +210,7 @@ public:
 
 private:
   HorizontalOffset horizontalOffset_;
-  int verticalOffset_ = 0;
+  VerticalOffset verticalOffset_;
 };
 Offsets operator+(Offsets o1, Offsets const& o2);
 

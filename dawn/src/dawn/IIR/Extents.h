@@ -18,6 +18,7 @@
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
+#include "dawn/Support/Assert.h"
 
 #include <array>
 #include <iosfwd>
@@ -27,10 +28,13 @@ namespace dawn {
 namespace iir {
 
 class Extents;
+struct UndefinedExtent {};
 
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
 class Extent {
+private:
+  bool undefinedExtent_ = false;
 
 public:
   /// @name Constructors and Assignment
@@ -38,15 +42,23 @@ public:
   Extent(int minus, int plus);
   explicit Extent(int offset);
   Extent();
+  Extent(UndefinedExtent) : undefinedExtent_(true) {}
   /// @}
 
-  int minus() const { return minus_; }
-  int plus() const { return plus_; }
+  int minus() const {
+    DAWN_ASSERT_MSG(!undefinedExtent_, "undefined extent!");
+    return minus_;
+  }
+  int plus() const {
+    DAWN_ASSERT_MSG(!undefinedExtent_, "undefined extent!");
+    return plus_;
+  }
 
   /// @name Operators
   /// @{
-  void merge(const Extent& other);
+  void merge(const Extent& other); // propagate undefined'ness
   void merge(int other);
+  bool isUndefined() const { return undefinedExtent_; }
 
   void limit(Extent const& other);
 

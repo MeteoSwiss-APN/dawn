@@ -42,10 +42,17 @@ Extent& Extent::operator+=(const Extent& other) {
   return *this;
 }
 bool Extent::operator==(const Extent& other) const {
+  DAWN_ASSERT_MSG(!isUndefined(), "operator== called on undefined Extent");
   return minus_ == other.minus_ && plus_ == other.plus_;
 }
-bool Extent::operator!=(const Extent& other) const { return !(*this == other); }
-bool Extent::isPointwise() const { return plus_ == 0 && minus_ == 0; }
+bool Extent::operator!=(const Extent& other) const {
+  DAWN_ASSERT_MSG(!isUndefined(), "operator!= called on undefined Extent");
+  return !(*this == other);
+}
+bool Extent::isPointwise() const {
+  DAWN_ASSERT_MSG(!isUndefined(), "isPointwise() called on undefined Extent");
+  return plus_ == 0 && minus_ == 0;
+}
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 Extent merge(Extent lhs, Extent const& rhs) {
@@ -234,8 +241,13 @@ Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
-Extents::Extents(ast::Offsets const& offset)
-    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
+Extents::Extents(ast::Offsets const& offset) : horizontalExtent_(offset.horizontalOffset()) {
+  if(offset.verticalIndirection().has_value()) {
+    verticalExtent_ = Extent(UndefinedExtent{});
+  } else {
+    verticalExtent_ = Extent(offset.verticalOffset());
+  }
+}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)

@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if (NOT DEFINED HAS_UNSTRUCTURED_DEPS)
+if (NOT HAS_UNSTRUCTURED_DEPS)
 
   set(HAS_UNSTRUCTURED_DEPS OFF CACHE BOOL "True if Dawn has detected necessary dependencies for supporting unstructured grids.")
   mark_as_advanced(HAS_UNSTRUCTURED_DEPS)

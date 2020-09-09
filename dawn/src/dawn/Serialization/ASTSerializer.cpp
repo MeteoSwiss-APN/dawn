@@ -657,6 +657,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
       },
       [&] { protoExpr->mutable_zero_offset(); });
   protoExpr->set_vertical_offset(offset.verticalOffset());
+  auto indirection = offset.verticalIndirection();
+  if(indirection != std::nullopt) {
+    protoExpr->set_vertical_indirection(indirection.value());
+  }
 
   for(int argOffset : expr->getArgumentOffset())
     protoExpr->add_argument_offset(argOffset);
