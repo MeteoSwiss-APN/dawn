@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/IIR/ASTExpr.h"
 
 namespace dawn {
 IntegrityChecker::IntegrityChecker(iir::StencilInstantiation* instantiation)
@@ -88,6 +89,18 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
     throw SemanticError("Attempt to assign constant expression " + value, metadata_.getFileName(),
                         expr->getSourceLocation().Line);
   }
+  ast::ASTVisitorForwarding::visit(expr);
+}
+
+void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+  int accessID = iir::getAccessID(expr);
+  DAWN_ASSERT_MSG(metadata_.getFieldNameFromAccessID(accessID) == expr->getName(),
+                  (std::string("Field name (") + std::string(expr->getName()) +
+                   std::string(") doesn't match name registered in metadata(") +
+                   std::string(metadata_.getFieldNameFromAccessID(accessID)) + std::string(")."))
+                      .c_str());
+
+  ast::ASTVisitorForwarding::visit(expr);
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
