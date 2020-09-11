@@ -158,6 +158,25 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
+    for(const auto& multiStagePtr : stencil.getChildren()) {
+      iir::MultiStage& MS = *(multiStagePtr);
+      for(const auto& stage : MS.getChildren()) {
+        for(const auto& fieldPair : stage->getFields()) {
+          const iir::Field& field = fieldPair.second;
+          const int accessID = field.getAccessID();
+          const iir::Field& msField = MS.getField(accessID);
+          if(msField.getExtents().verticalExtent().isUndefined()) {
+            DAWN_LOG(INFO) << "found undefined vertical extent (vertical indirection), bail out of "
+                              "PassSetCaches";
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  for(const auto& stencilPtr : instantiation->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
     int msIdx = 0;

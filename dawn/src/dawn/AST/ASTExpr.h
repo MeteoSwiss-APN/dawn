@@ -541,6 +541,8 @@ public:
     return (argumentMap_[0] != -1 || argumentMap_[1] != -1 || argumentMap_[2] != -1);
   }
 
+  ExprRangeType getChildren() override;
+
   /// @brief Set the `offset` and reset the argument and argument-offset maps
   ///
   /// This function is used during the inlining when we now all the offsets.

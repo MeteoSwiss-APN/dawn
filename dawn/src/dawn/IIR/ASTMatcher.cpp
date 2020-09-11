@@ -154,7 +154,11 @@ void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) { ch
 
 void ASTMatcher::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) { check(expr); }
+void ASTMatcher::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+  check(expr);
+  for(auto& s : expr->getChildren())
+    s->accept(*this);
+}
 
 void ASTMatcher::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { check(expr); }
 

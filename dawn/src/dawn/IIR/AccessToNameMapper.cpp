@@ -64,6 +64,8 @@ void AccessToNameMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) 
 
 void AccessToNameMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   insertAccessInfo(expr);
+  for(auto& s : expr->getChildren())
+    s->accept(*this);
 }
 
 } // namespace iir

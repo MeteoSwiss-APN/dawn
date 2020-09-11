@@ -178,6 +178,7 @@ public:
   VerticalOffset(const VerticalOffset&);
   int getOffset() const { return verticalOffset_; }
   std::optional<std::string> getIndirection() const;
+  std::optional<std::shared_ptr<FieldAccessExpr>> getIndirectionAsField() const;
   bool operator==(VerticalOffset const& other) const;
   VerticalOffset operator+=(VerticalOffset const& other);
   VerticalOffset& operator=(VerticalOffset const& other);
@@ -187,6 +188,7 @@ class Offsets {
 public:
   Offsets() = default;
   Offsets(HorizontalOffset const& hOffset, int vOffset);
+  Offsets(HorizontalOffset const& hOffset, int vOffset, const std::string& vIndirection);
 
   Offsets(cartesian_, int i, int j, int k);
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets);
@@ -200,6 +202,7 @@ public:
 
   int verticalOffset() const;
   std::optional<std::string> verticalIndirection() const;
+  std::optional<std::shared_ptr<FieldAccessExpr>> verticalIndirectionAsField() const;
   HorizontalOffset const& horizontalOffset() const;
 
   bool operator==(Offsets const& other) const;

@@ -110,16 +110,19 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
   return true;
 }
 
-void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) {
+void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!typesConsistent_) {
     return;
   }
 
-  const auto& hOffset = stmt->getOffset().horizontalOffset();
+  const auto& hOffset = expr->getOffset().horizontalOffset();
   if(!hOffset.hasType()) {
     return;
   }
   typesConsistent_ &= hOffset.getGridType() == prescribedType_;
+
+  for(auto& s : expr->getChildren())
+    s->accept(*this);
 }
 
 } // namespace dawn

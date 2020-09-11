@@ -449,6 +449,9 @@ public:
       // This is always a read access (writes are resolved in the the assignment)
       mergeReadOffset(expr);
     }
+
+    for(auto& s : expr->getChildren())
+      s->accept(*this);
   }
 };
 

@@ -42,8 +42,8 @@ Extent& Extent::operator+=(const Extent& other) {
   return *this;
 }
 bool Extent::operator==(const Extent& other) const {
-  DAWN_ASSERT_MSG(!isUndefined(), "operator== called on undefined Extent");
-  return minus_ == other.minus_ && plus_ == other.plus_;
+  return minus_ == other.minus_ && plus_ == other.plus_ &&
+         undefinedExtent_ == other.undefinedExtent_;
 }
 bool Extent::operator!=(const Extent& other) const {
   DAWN_ASSERT_MSG(!isUndefined(), "operator!= called on undefined Extent");

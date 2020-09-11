@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
-##                          _
-##                         | |
-##                       __| | __ ___      ___ ___
-##                      / _` |/ _` \ \ /\ / / '_  |
-##                     | (_| | (_| |\ V  V /| | | |
-##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+# _
+# | |
+# __| | __ ___      ___ ___
+# / _` |/ _` \ \ /\ / / '_  |
+# | (_| | (_| |\ V  V /| | | |
+# \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT).
-##  See LICENSE.txt for details.
+# This file is distributed under the MIT License (MIT).
+# See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
@@ -379,7 +379,8 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
     """
     stmt = BlockStmt()
     if isinstance(statements, Iterable):
-        stmt.statements.extend([make_stmt(s) for s in statements if not isinstance(s, Field)])
+        stmt.statements.extend([make_stmt(s)
+                                for s in statements if not isinstance(s, Field)])
     else:
         stmt.statements.extend([make_stmt(statements)])
     return stmt
@@ -477,7 +478,8 @@ def make_vertical_region_decl_stmt(
     :param vertical_region:   Vertical region.
     """
     stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order, IRange, JRange))
+    stmt.vertical_region.CopyFrom(make_vertical_region(
+        ast, interval, loop_order, IRange, JRange))
     return stmt
 
 
@@ -682,7 +684,7 @@ def make_stencil_fun_arg_expr(
 
 
 def make_unstructured_field_access_expr(
-    name: str, horizontal_offset: UnstructuredOffset = None, vertical_offset: int = 0,
+    name: str, horizontal_offset: UnstructuredOffset = None, vertical_offset: int = 0, vertical_indirection: str = None
 ) -> FieldAccessExpr:
     expr = FieldAccessExpr()
     expr.name = name
@@ -691,6 +693,8 @@ def make_unstructured_field_access_expr(
     else:
         expr.unstructured_offset.CopyFrom(horizontal_offset)
     expr.vertical_offset = vertical_offset
+    if vertical_indirection is not None:
+        expr.vertical_indirection = vertical_indirection
     return expr
 
 
@@ -1046,7 +1050,7 @@ class SIRPrinter:
         print(self.wrapper.fill("{"), file=self.file)
         self._indent += self.indent_size
         self.wrapper.initial_indent = " " * self._indent
-        #TODO fix print
+        # TODO fix print
         print("for(" + stmt.loop_descriptor.loop_descriptor_chain.chain + ")")
         self.visit_block_stmt(stmt.statements.block_stmt)
 
@@ -1116,7 +1120,8 @@ class SIRPrinter:
         block = stencil.ast.root.block_stmt
         for stmt in block.statements:
             if stmt.WhichOneof("stmt") == "vertical_region_decl_stmt":
-                self.visit_vertical_region(stmt.vertical_region_decl_stmt.vertical_region)
+                self.visit_vertical_region(
+                    stmt.vertical_region_decl_stmt.vertical_region)
 
         self._indent -= self.indent_size
         self.wrapper.initial_indent = " " * self._indent
@@ -1195,7 +1200,8 @@ class SIRPrinter:
         print(self.wrapper.fill(str_), file=self.file)
 
     def visit_sir(self, sir):
-        print(self.wrapper.fill("grid_type['{}']".format(str(sir.gridType))), file=self.file)
+        print(self.wrapper.fill("grid_type['{}']".format(
+            str(sir.gridType))), file=self.file)
         for stencil in sir.stencils:
             self.visit_stencil(stencil)
 

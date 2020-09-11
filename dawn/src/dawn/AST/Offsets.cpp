@@ -16,6 +16,7 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logger.h"
+#include <memory>
 #include <optional>
 
 namespace dawn {
@@ -144,13 +145,23 @@ VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
 }
 
 VerticalOffset::VerticalOffset(int offset, const std::string& fieldName)
-    : verticalOffset_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
+    : verticalOffset_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {
+  printf("here!\n");
+}
 
 VerticalOffset::VerticalOffset(const VerticalOffset& other) { *this = other; }
 
 std::optional<std::string> VerticalOffset::getIndirection() const {
   if(verticalIndirection_) {
     return verticalIndirection_->getName();
+  } else {
+    return std::nullopt;
+  }
+}
+
+std::optional<std::shared_ptr<FieldAccessExpr>> VerticalOffset::getIndirectionAsField() const {
+  if(verticalIndirection_) {
+    return verticalIndirection_;
   } else {
     return std::nullopt;
   }
@@ -170,6 +181,8 @@ VerticalOffset& VerticalOffset::operator=(VerticalOffset const& other) {
 
 Offsets::Offsets(HorizontalOffset const& hOffset, int vOffset)
     : horizontalOffset_(hOffset), verticalOffset_(VerticalOffset(vOffset)) {}
+Offsets::Offsets(HorizontalOffset const& hOffset, int vOffset, const std::string& vIndirection)
+    : horizontalOffset_(hOffset), verticalOffset_(VerticalOffset(vOffset, vIndirection)) {}
 
 Offsets::Offsets(cartesian_, int i, int j, int k)
     : horizontalOffset_(cartesian, i, j), verticalOffset_(VerticalOffset(k)) {}
@@ -192,6 +205,9 @@ Offsets::Offsets(unstructured_) : horizontalOffset_(unstructured) {}
 int Offsets::verticalOffset() const { return verticalOffset_.getOffset(); }
 std::optional<std::string> Offsets::verticalIndirection() const {
   return verticalOffset_.getIndirection();
+}
+std::optional<std::shared_ptr<FieldAccessExpr>> Offsets::verticalIndirectionAsField() const {
+  return verticalOffset_.getIndirectionAsField();
 }
 HorizontalOffset const& Offsets::horizontalOffset() const { return horizontalOffset_; }
 
