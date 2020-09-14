@@ -176,9 +176,9 @@ public:
   VerticalOffset(int offset, const std::string& fieldName);
   VerticalOffset(const std::string& fieldName) : VerticalOffset(0, fieldName){};
   VerticalOffset(const VerticalOffset&);
-  int getOffset() const { return verticalOffset_; }
-  std::optional<std::string> getIndirection() const;
-  std::optional<std::shared_ptr<FieldAccessExpr>> getIndirectionAsField() const;
+  int getShift() const { return verticalOffset_; }
+  std::optional<std::string> getIndirectionFieldName() const;
+  std::optional<std::shared_ptr<FieldAccessExpr>> getIndirectionField() const;
   bool operator==(VerticalOffset const& other) const;
   VerticalOffset operator+=(VerticalOffset const& other);
   VerticalOffset& operator=(VerticalOffset const& other);

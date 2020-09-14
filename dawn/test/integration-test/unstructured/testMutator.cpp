@@ -4,6 +4,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/Stage.h"
@@ -31,6 +32,7 @@ public:
 };
 
 void injectRedirectedReads(std::shared_ptr<dawn::iir::StencilInstantiation> stencilInstantiation) {
+  // for each field being read introduce another field to carry out the indirection
   for(auto& stencil : stencilInstantiation->getStencils()) {
     std::map<std::string, int> mutatedFields;
     for(auto& field : stencil->getOrderedFields()) {
@@ -41,11 +43,21 @@ void injectRedirectedReads(std::shared_ptr<dawn::iir::StencilInstantiation> sten
         mutatedFields.insert({field.second.Name, accessID});
       }
     }
+
+    // make each read access an indirected read access using the prepared fields
     accessMutator mutator(mutatedFields);
     stencil->accept(mutator);
+
+    // this means the accesses of the statements changed. recompute them.
     std::vector<std::shared_ptr<dawn::iir::Stmt>> stmtsVec =
         dawn::iterateIIROverStmt(*stencilInstantiation->getIIR());
     dawn::ArrayRef<std::shared_ptr<dawn::iir::Stmt>> stmts(stmtsVec.data(), stmtsVec.size());
     dawn::computeAccesses(stencilInstantiation->getMetaData(), stmts);
+
+    // this info needs to be propagated updwards
+    for(const auto& doMethodPtr :
+        dawn::iterateIIROver<dawn::iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
+      doMethodPtr->update(dawn::iir::NodeUpdateType::levelAndTreeAbove);
+    }
   }
 }

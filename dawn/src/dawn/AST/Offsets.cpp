@@ -149,7 +149,7 @@ VerticalOffset::VerticalOffset(int offset, const std::string& fieldName)
 
 VerticalOffset::VerticalOffset(const VerticalOffset& other) { *this = other; }
 
-std::optional<std::string> VerticalOffset::getIndirection() const {
+std::optional<std::string> VerticalOffset::getIndirectionFieldName() const {
   if(verticalIndirection_) {
     return verticalIndirection_->getName();
   } else {
@@ -157,7 +157,7 @@ std::optional<std::string> VerticalOffset::getIndirection() const {
   }
 }
 
-std::optional<std::shared_ptr<FieldAccessExpr>> VerticalOffset::getIndirectionAsField() const {
+std::optional<std::shared_ptr<FieldAccessExpr>> VerticalOffset::getIndirectionField() const {
   if(verticalIndirection_) {
     return verticalIndirection_;
   } else {
@@ -200,15 +200,15 @@ Offsets::Offsets(unstructured_, bool hasOffset, int k, const std::string& fieldN
     : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k, fieldName) {}
 Offsets::Offsets(unstructured_) : horizontalOffset_(unstructured) {}
 
-int Offsets::verticalOffset() const { return verticalOffset_.getOffset(); }
+int Offsets::verticalOffset() const { return verticalOffset_.getShift(); }
 std::optional<std::string> Offsets::verticalIndirection() const {
-  return verticalOffset_.getIndirection();
+  return verticalOffset_.getIndirectionFieldName();
 }
 std::optional<std::shared_ptr<FieldAccessExpr>> Offsets::verticalIndirectionAsField() const {
-  return verticalOffset_.getIndirectionAsField();
+  return verticalOffset_.getIndirectionField();
 }
 void Offsets::setVerticalIndirection(const std::string& fieldName) {
-  verticalOffset_ = VerticalOffset(verticalOffset_.getOffset(), fieldName);
+  verticalOffset_ = VerticalOffset(verticalOffset_.getShift(), fieldName);
 }
 
 HorizontalOffset const& Offsets::horizontalOffset() const { return horizontalOffset_; }

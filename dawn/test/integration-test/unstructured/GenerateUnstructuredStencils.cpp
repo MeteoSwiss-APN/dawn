@@ -54,7 +54,6 @@ int main() {
     injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_copyCell.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    dawn::restoreIIR(stencilInstantiation);
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
@@ -73,7 +72,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
-
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_copyEdge.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -99,7 +98,7 @@ int main() {
                                b.at(out_f), b.reduceOverNeighborExpr(
                                                 Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                 b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
-
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_accumulateEdgeToCell.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -125,6 +124,7 @@ int main() {
                                                              b.at(in_f, HOffsetType::noOffset, -1),
                                                              Op::plus))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_verticalSum.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -190,6 +190,7 @@ int main() {
                                                              Op::multiply),
                                                 Op::minus))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_verticalSolver.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -229,6 +230,7 @@ int main() {
                                          b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
                                          Op::plus))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_diffusion.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -264,6 +266,7 @@ int main() {
                                                  b.lit(0.), {LocType::Cells, LocType::Edges},
                                                  std::vector<float>({0.5, 0., 0., 0.5})))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_gradient.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -290,7 +293,7 @@ int main() {
                                b.reduceOverNeighborExpr(
                                    Op::plus, b.at(node_f, HOffsetType::withOffset, 0), b.lit(0.),
                                    {LocType::Edges, LocType::Cells, LocType::Vertices}))))))));
-
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_diamond.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -307,7 +310,7 @@ int main() {
     auto inv_vert_length_f = b.field("inv_vert_length", LocType::Edges);
     auto in_f = b.field("in", LocType::Vertices);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "diamondWeights",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -327,10 +330,10 @@ int main() {
                                                  Op::multiply),
                                     b.binaryExpr(b.at(inv_vert_length_f), b.at(inv_vert_length_f),
                                                  Op::multiply)}))))))));
-
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_diamondWeights.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -355,6 +358,7 @@ int main() {
                                        {LocType::Cells, LocType::Edges, LocType::Cells,
                                         LocType::Edges, LocType::Cells}))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_intp.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -387,6 +391,7 @@ int main() {
                                        b.lit(0.), {LocType::Cells, LocType::Edges},
                                        std::vector<float>({1., 1., 1., 1})))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_sparseDimension.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -428,6 +433,7 @@ int main() {
                             b.lit(0.), {LocType::Cells, LocType::Edges},
                             std::vector<float>({1., 1., 1., 1})))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_sparseDimensionTwice.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -459,6 +465,7 @@ int main() {
                                                             {LocType::Edges, LocType::Vertices}),
                                    b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_NestedSimple.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -492,6 +499,7 @@ int main() {
                                                            Op::plus),
                                               b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_NestedWithField.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
@@ -513,7 +521,7 @@ int main() {
     // a nested reduction v->e->c, the edge field is also consumed "along the way"
     // two additional sparse dimension fields with {c,e} and {e,v} are also introduced and consumed
     // in the outer and inner reduction, respectively
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "nestedWithSparse",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -534,10 +542,10 @@ int main() {
                                 Op::plus),
                             b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
-    // Code generation deactivated for the reasons stated above
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_NestedSparse.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -553,7 +561,7 @@ int main() {
     auto nx_f = b.field("nx", LocType::Vertices);
     auto ny_f = b.field("ny", LocType::Vertices);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "sparseAssignment0",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -572,9 +580,10 @@ int main() {
                                 Op::plus))),
                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_SparseAssignment0.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -590,7 +599,7 @@ int main() {
     auto nx_f = b.field("nx", {LocType::Edges, LocType::Cells, LocType::Vertices});
     auto ny_f = b.field("ny", {LocType::Edges, LocType::Cells, LocType::Vertices});
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "sparseAssignment1",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -609,9 +618,10 @@ int main() {
                                 Op::plus))),
                         {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_SparseAssignment1.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -625,7 +635,7 @@ int main() {
     auto e_f = b.field("e", LocType::Edges);
     auto v_f = b.field("v", LocType::Vertices);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "sparseAssignment2",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -639,9 +649,10 @@ int main() {
                                                 b.at(v_f, HOffsetType::withOffset, 0), Op::plus))),
                                {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_SparseAssignment2.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -656,7 +667,7 @@ int main() {
     auto A_f = b.field("A", LocType::Cells);
     auto B_f = b.field("B", LocType::Cells);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "sparseAssignment3",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -670,9 +681,10 @@ int main() {
                             {LocType::Cells, LocType::Edges, LocType::Cells, LocType::Edges,
                              LocType::Cells}))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_SparseAssignment3.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -685,7 +697,7 @@ int main() {
 
     auto v_f = b.field("v", LocType::Vertices);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "sparseAssignment4",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -699,9 +711,10 @@ int main() {
                                                             {LocType::Edges, LocType::Vertices}))),
                                     {LocType::Cells, LocType::Edges}))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_SparseAssignment4.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -715,7 +728,7 @@ int main() {
     auto v_f = b.field("v", LocType::Vertices);
     auto c_f = b.field("c", LocType::Cells);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "sparseAssignment5",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -734,9 +747,10 @@ int main() {
                                            b.lit(0.), {LocType::Edges, LocType::Vertices}))),
                                    {LocType::Cells, LocType::Edges}))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_SparseAssignment5.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
@@ -754,7 +768,7 @@ int main() {
     auto out1_f = b.field("out1", LocType::Edges);
     auto out2_f = b.field("out2", LocType::Edges);
 
-    auto stencil_instantiation = b.build(
+    auto stencilInstantiation = b.build(
         "horizontalVertical",
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
@@ -770,9 +784,10 @@ int main() {
                             b.reduceOverNeighborExpr(Op::plus, b.at(sparse_horizontal_f), b.lit(.0),
                                                      {LocType::Edges, LocType::Cells}))))))));
 
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_horizontal_vertical.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencil_instantiation, dawn::codegen::Backend::CXXNaiveIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
