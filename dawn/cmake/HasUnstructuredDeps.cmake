@@ -11,11 +11,7 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
-
-if (NOT HAS_UNSTRUCTURED_DEPS)
-
-  set(HAS_UNSTRUCTURED_DEPS OFF CACHE BOOL "True if Dawn has detected necessary dependencies for supporting unstructured grids.")
-  mark_as_advanced(HAS_UNSTRUCTURED_DEPS)
+if (NOT DEFINED HAS_UNSTRUCTURED_DEPS)
 
   if(DAWN_REQUIRE_UNSTRUCTURED_TESTING)
     find_package(eckit REQUIRED)
@@ -33,9 +29,12 @@ if (NOT HAS_UNSTRUCTURED_DEPS)
 
   if(atlas_FOUND AND eckit_FOUND)
     message(STATUS "Found atlas and eckit. Setting HAS_UNSTRUCTURED_DEPS=ON.")
-    set(HAS_UNSTRUCTURED_DEPS ON)
+    set(HAS_UNSTRUCTURED_DEPS ON CACHE BOOL "True if Dawn has detected necessary dependencies for supporting unstructured grids.")
   else()
     set(STATUS "Cound not find dependencies for unstructured support.")
+    set(HAS_UNSTRUCTURED_DEPS OFF CACHE BOOL "True if Dawn has detected necessary dependencies for supporting unstructured grids.")
   endif()
+  
+  mark_as_advanced(HAS_UNSTRUCTURED_DEPS)
 
 endif()

@@ -17,7 +17,6 @@ add_subdirectory(dawn)
 add_subdirectory(dawn4py-tests)
 add_subdirectory(driver-includes)
 
-include(HasUnstructuredDeps)
 if(HAS_UNSTRUCTURED_DEPS)
     add_subdirectory(interface)
 endif()
