@@ -28,15 +28,23 @@ Extent::Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(m
 Extent::Extent(int offset) : Extent(offset, offset) {}
 Extent::Extent() : Extent(0, 0) {}
 void Extent::merge(const Extent& other) {
+  DAWN_ASSERT_MSG((isUndefined() && other.isUndefined()) ||
+                      (!isUndefined() && !other.isUndefined()),
+                  "trying to merge undefined with defiend extent!");
+  if(!isUndefined() && !other.isUndefined()) {
+    return;
+  }
   minus_ = std::min(minus_, other.minus_);
   plus_ = std::max(plus_, other.plus_);
 }
 void Extent::merge(int other) { merge(Extent{other, other}); }
 void Extent::limit(Extent const& other) {
+  DAWN_ASSERT_MSG(!isUndefined() || !other.isUndefined(), "limit called on undefined Extent");
   minus_ = std::max(minus_, other.minus_);
   plus_ = std::min(plus_, other.plus_);
 }
 Extent& Extent::operator+=(const Extent& other) {
+  DAWN_ASSERT_MSG(!isUndefined() || !other.isUndefined(), "operator+= called on undefined Extent");
   minus_ += other.minus_;
   plus_ += other.plus_;
   return *this;

@@ -256,8 +256,14 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     }
   } else {
     if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
-      ss_ << "m_" << getName(expr) << "("
-          << "k+" << expr->getOffset().verticalOffset() << ")";
+      if(expr->getOffset().verticalIndirection().has_value()) {
+        ss_ << "m_" << getName(expr) << "("
+            << "m_" << expr->getOffset().verticalIndirection().value() + "["
+            << "k]+" << expr->getOffset().verticalOffset() << ")";
+      } else {
+        ss_ << "m_" << getName(expr) << "("
+            << "k+" << expr->getOffset().verticalOffset() << ")";
+      }
       return;
     }
 
@@ -278,7 +284,14 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       if(isHorizontal) {
         ss_ << ")";
       } else {
-        ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+        if(expr->getOffset().verticalIndirection().has_value()) {
+          ss_ << ","
+              << "m_" << expr->getOffset().verticalIndirection().value() << "[k]+"
+              << expr->getOffset().verticalOffset() << ")";
+
+        } else {
+          ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+        }
       }
     } else {
       std::string sparseIdx = parentIsReduction_
@@ -289,7 +302,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       if(isHorizontal) {
         ss_ << ")";
       } else {
-        ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+        if(expr->getOffset().verticalIndirection().has_value()) {
+          ss_ << ","
+              << "m_" << expr->getOffset().verticalIndirection().value() << "[k]+"
+              << expr->getOffset().verticalOffset() << ")";
+        } else {
+          ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+        }
       }
     }
   }

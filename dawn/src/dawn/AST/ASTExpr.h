@@ -566,6 +566,7 @@ public:
   void setName(std::string name) { name_ = name; }
 
   const Offsets& getOffset() const { return offset_; }
+  Offsets& getOffset() { return offset_; }
 
   const Array3i& getArgumentMap() const { return argumentMap_; }
   Array3i& getArgumentMap() { return argumentMap_; }

@@ -498,7 +498,11 @@ std::string extentToString(iir::Extents const& extents, ast::GridType const& gri
       result += "false";
   }
   auto const& vExtents = extents.verticalExtent();
-  result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
+  if(!vExtents.isUndefined()) {
+    result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
+  } else {
+    result += ", UNDEFINED , UNDEFINED";
+  }
   return result;
 }
 } // namespace

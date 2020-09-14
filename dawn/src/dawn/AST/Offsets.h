@@ -203,6 +203,9 @@ public:
   int verticalOffset() const;
   std::optional<std::string> verticalIndirection() const;
   std::optional<std::shared_ptr<FieldAccessExpr>> verticalIndirectionAsField() const;
+
+  void setVerticalIndirection(const std::string& fieldName);
+
   HorizontalOffset const& horizontalOffset() const;
 
   bool operator==(Offsets const& other) const;

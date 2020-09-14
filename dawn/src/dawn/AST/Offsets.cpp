@@ -145,9 +145,7 @@ VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
 }
 
 VerticalOffset::VerticalOffset(int offset, const std::string& fieldName)
-    : verticalOffset_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {
-  printf("here!\n");
-}
+    : verticalOffset_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
 
 VerticalOffset::VerticalOffset(const VerticalOffset& other) { *this = other; }
 
@@ -209,6 +207,10 @@ std::optional<std::string> Offsets::verticalIndirection() const {
 std::optional<std::shared_ptr<FieldAccessExpr>> Offsets::verticalIndirectionAsField() const {
   return verticalOffset_.getIndirectionAsField();
 }
+void Offsets::setVerticalIndirection(const std::string& fieldName) {
+  verticalOffset_ = VerticalOffset(verticalOffset_.getOffset(), fieldName);
+}
+
 HorizontalOffset const& Offsets::horizontalOffset() const { return horizontalOffset_; }
 
 bool Offsets::operator==(Offsets const& other) const {

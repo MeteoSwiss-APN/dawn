@@ -20,8 +20,11 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/LocalVariable.h"
+#include "dawn/Optimizer/Lowering.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Unittest/IIRBuilder.h"
+
+#include "testMutator.h"
 
 #include <cstring>
 #include <execinfo.h>
@@ -48,9 +51,10 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
-
+    injectRedirectedReads(stencilInstantiation);
     std::ofstream of("generated/generated_copyCell.hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    dawn::restoreIIR(stencilInstantiation);
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
