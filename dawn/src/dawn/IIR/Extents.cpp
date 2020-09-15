@@ -28,12 +28,18 @@ Extent::Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(m
 Extent::Extent(int offset) : Extent(offset, offset) {}
 Extent::Extent() : Extent(0, 0) {}
 void Extent::merge(const Extent& other) {
-  DAWN_ASSERT_MSG((isUndefined() && other.isUndefined()) ||
-                      (!isUndefined() && !other.isUndefined()),
-                  "trying to merge undefined with defiend extent!");
-  if(!isUndefined() && !other.isUndefined()) {
+  // DAWN_ASSERT_MSG((isUndefined() && other.isUndefined()) ||
+  //                     (!isUndefined() && !other.isUndefined()),
+  //                 "trying to merge undefined with defiend extent!");
+  // if(!isUndefined() && !other.isUndefined()) {
+  //   return;
+  // }
+
+  if(other.isUndefined()) {
+    this->undefinedExtent_ = true;
     return;
   }
+
   minus_ = std::min(minus_, other.minus_);
   plus_ = std::max(plus_, other.plus_);
 }
@@ -310,6 +316,11 @@ void Extents::limit(Extents const& other) {
 }
 
 bool Extents::isPointwise() const {
+  // not sure again, but if the vertical extent is indirected than its at least not _guaranteed_ to
+  // be pointwise
+  if(verticalExtent_.isUndefined()) {
+    return false;
+  }
   return horizontalExtent_.isPointwise() && verticalExtent_.isPointwise();
 }
 

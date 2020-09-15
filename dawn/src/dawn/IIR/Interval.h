@@ -25,6 +25,8 @@
 namespace dawn {
 namespace iir {
 
+struct UndefinedInterval {};
+
 /// @brief Representation of a vertical interval, given by a lower and upper bound where a bound
 /// is represented by a level and an offset (`bound = level + offset`)
 ///
@@ -46,6 +48,7 @@ public:
 
 private:
   IntervalLevel lower_, upper_;
+  bool undefined_ = false;
 
 public:
   enum class Bound { upper = 0, lower };
@@ -62,21 +65,36 @@ public:
   Interval() = delete;
   Interval(const Interval&) = default;
   Interval(Interval&&) = default;
+  Interval(UndefinedInterval) : undefined_(true) {}
   Interval& operator=(const Interval&) = default;
   Interval& operator=(Interval&&) = default;
   /// @}
 
-  int lowerLevel() const { return lower_.levelMark_; }
-  int upperLevel() const { return upper_.levelMark_; }
-  int lowerOffset() const { return lower_.offset_; }
-  int upperOffset() const { return upper_.offset_; }
+  int lowerLevel() const {
+    DAWN_ASSERT_MSG(!undefined_, "lower level of undefined interval requested!\n");
+    return lower_.levelMark_;
+  }
+  int upperLevel() const {
+    DAWN_ASSERT_MSG(!undefined_, "upper level of undefined interval requested!\n");
+    return upper_.levelMark_;
+  }
+  int lowerOffset() const {
+    DAWN_ASSERT_MSG(!undefined_, "lower offset of undefined interval requested!\n");
+    return lower_.offset_;
+  }
+  int upperOffset() const {
+    DAWN_ASSERT_MSG(!undefined_, "upper offset of undefined interval requested!\n");
+    return upper_.offset_;
+  }
+
+  bool isUndefined() const { return undefined_; }
 
   void invert();
 
   /// @brief the Interval allows to construct mathematically invalid intervals where the lower bound
   /// is higher than the upper bound. This method allows to check if the interval is mathematically
   /// well defined
-  inline bool valid() { return (lowerBound() <= upperBound()); }
+  inline bool valid() { return (undefined_ || (lowerBound() <= upperBound())); }
 
   IntervalLevel upperIntervalLevel() const { return upper_; }
   IntervalLevel lowerIntervalLevel() const { return lower_; }

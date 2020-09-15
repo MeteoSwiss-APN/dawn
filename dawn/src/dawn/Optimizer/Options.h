@@ -21,6 +21,8 @@ namespace dawn {
 /// @brief Enumeration of all pass groups
 enum class PassGroup {
   Parallel,
+  ParallelDebugCartesian,
+  ParallelDebugUnstructured,
   SSA,
   PrintStencilGraph,
   SetStageName,
