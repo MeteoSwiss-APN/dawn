@@ -37,21 +37,50 @@ def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
         SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    # create the out = in[i+1] statement
-    body_ast = sir_utils.make_ast(
+    # create out = in[i+1] statement
+    body_ast_1 = sir_utils.make_ast(
         [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("vert_nbh"),
+                sir_utils.make_binary_operator(
+                    sir_utils.make_field_access_expr("vert_nbh"),
+                    "+",
+                    sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Float)
+                ),
+                "="
+            ),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_unstructured_field_access_expr(
                     "in", vertical_offset=1, vertical_indirection="vert_nbh"),
+                # sir_utils.make_unstructured_field_access_expr(
+                #     "in", vertical_offset=1),
 
                 "=")
 
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
+    # create in = in[i+1] statement
+    body_ast_2 = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("in_self_access"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "in_self_access", vertical_offset=1, vertical_indirection="vert_nbh"),
+
+                "=")
+
+        ]
+    )
+
+    vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
+        body_ast_1, interval, SIR.VerticalRegion.Forward
+    )
+
+    vertical_region_stmt_2 = sir_utils.make_vertical_region_decl_stmt(
+        body_ast_2, interval, SIR.VerticalRegion.Forward
     )
 
     sir = sir_utils.make_sir(
@@ -60,10 +89,17 @@ def main(args: argparse.Namespace):
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt]),
+                sir_utils.make_ast(
+                    [vertical_region_stmt_1]),
                 [
                     sir_utils.make_field(
                         "in",
+                        sir_utils.make_field_dimensions_unstructured(
+                            [SIR.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "in_self_access",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell")], 1
                         ),
@@ -90,7 +126,8 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
+    # code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

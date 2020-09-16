@@ -64,7 +64,10 @@ bool Extent::operator!=(const Extent& other) const {
   return !(*this == other);
 }
 bool Extent::isPointwise() const {
-  DAWN_ASSERT_MSG(!isUndefined(), "isPointwise() called on undefined Extent");
+  // DAWN_ASSERT_MSG(!isUndefined(), "isPointwise() called on undefined Extent");
+  if(isUndefined()) {
+    return false;
+  }
   return plus_ == 0 && minus_ == 0;
 }
 

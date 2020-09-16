@@ -68,7 +68,7 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
   // not know whether this is a solver access or not, so we err on the, hopefully, safe side and
   // claim we have a solver access.
   if(extent.verticalExtent().isUndefined()) {
-    return false;
+    return true;
   }
   return !extent.isHorizontalPointwise() ||
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
