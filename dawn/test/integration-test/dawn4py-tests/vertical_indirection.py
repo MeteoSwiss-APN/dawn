@@ -27,6 +27,7 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import to_json as sir_to_json
 
 OUTPUT_NAME = "vertical_indirection_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -37,38 +38,79 @@ def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
         SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    # create out = in[i+1] statement
+    # out[c,k] = in[c,vert_nbh[k]]
     body_ast_1 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("vert_nbh"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("vert_nbh"),
-                    "+",
-                    sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Float)
-                ),
-                "="
-            ),
-            sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in", vertical_offset=1, vertical_indirection="vert_nbh"),
-                # sir_utils.make_unstructured_field_access_expr(
-                #     "in", vertical_offset=1),
+                    "in", vertical_offset=0, vertical_indirection="vert_nbh"),
 
                 "=")
 
         ]
     )
 
-    # create in = in[i+1] statement
+    # out[c,k] = in[c,vert_nbh[k]+1]
     body_ast_2 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("in_self_access"),
+                sir_utils.make_field_access_expr("out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in_self_access", vertical_offset=1, vertical_indirection="vert_nbh"),
+                    "in", vertical_offset=1, vertical_indirection="vert_nbh"),
+
+                "=")
+
+        ]
+    )
+
+    # in_out[c,k] = in_out[c,vert_nbh[k]+1]
+    body_ast_3 = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("in_out"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "in_out", vertical_offset=1, vertical_indirection="vert_nbh"),
+
+                "=")
+
+        ]
+    )
+
+    # vert_nbh[c,k] = vert_nbh[c,k+1]
+    # out[c,k] = in[c,vert_nbh[k]]
+    body_ast_4 = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("vert_nbh"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "vert_nbh", vertical_offset=1),
+
+                "="),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("out"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "in", vertical_offset=0, vertical_indirection="vert_nbh"),
+
+                "=")
+
+        ]
+    )
+
+    # vert_nbh[c,k] = vert_nbh[c,k+1]
+    # in_out[c,k] = in_out[c,vert_nbh[k]]
+    body_ast_5 = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("vert_nbh"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "vert_nbh", vertical_offset=1),
+
+                "="),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("in_out"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "in_out", vertical_offset=1, vertical_indirection="vert_nbh"),
 
                 "=")
 
@@ -83,6 +125,18 @@ def main(args: argparse.Namespace):
         body_ast_2, interval, SIR.VerticalRegion.Forward
     )
 
+    vertical_region_stmt_3 = sir_utils.make_vertical_region_decl_stmt(
+        body_ast_3, interval, SIR.VerticalRegion.Forward
+    )
+
+    vertical_region_stmt_4 = sir_utils.make_vertical_region_decl_stmt(
+        body_ast_4, interval, SIR.VerticalRegion.Forward
+    )
+
+    vertical_region_stmt_5 = sir_utils.make_vertical_region_decl_stmt(
+        body_ast_5, interval, SIR.VerticalRegion.Forward
+    )
+
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
         SIR.GridType.Value("Unstructured"),
@@ -90,7 +144,11 @@ def main(args: argparse.Namespace):
             sir_utils.make_stencil(
                 OUTPUT_NAME,
                 sir_utils.make_ast(
-                    [vertical_region_stmt_1]),
+                    [vertical_region_stmt_1,
+                     vertical_region_stmt_2,
+                     vertical_region_stmt_3,
+                     vertical_region_stmt_4,
+                     vertical_region_stmt_5]),
                 [
                     sir_utils.make_field(
                         "in",
@@ -99,7 +157,7 @@ def main(args: argparse.Namespace):
                         ),
                     ),
                     sir_utils.make_field(
-                        "in_self_access",
+                        "in_out",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell")], 1
                         ),
@@ -126,8 +184,10 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    # code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
+
+    # with open("out.json", "w+") as f:
+    #     f.write(sir_to_json(sir))
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

@@ -171,8 +171,10 @@ dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& exte
 
   auto const& vExtent = extents.verticalExtent();
   auto protoVExtent = protoExtents.mutable_vertical_extent();
-  protoVExtent->set_minus(vExtent.minus());
-  protoVExtent->set_plus(vExtent.plus());
+  if(!extents.verticalExtent().isUndefined()) {
+    protoVExtent->set_minus(vExtent.minus());
+    protoVExtent->set_plus(vExtent.plus());
+  }
 
   return protoExtents;
 }

@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IndirectionChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/MultiStageChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
@@ -29,8 +30,7 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
 
 // TODO: explain what description is
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                         const Options& options,
-                         const std::string& description) {
+                         const Options& options, const std::string& description) {
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
 
@@ -60,6 +60,13 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
                      std::to_string(weightValidErrorLocation.Line) + " " + description)
                         .c_str());
   }
+
+  auto [indirectionsValid, indirectionsValidErrorLocation] =
+      IndirectionChecker::checkIndirections(*iir);
+  DAWN_ASSERT_MSG(indirectionsValid,
+                  ("Found invalid indirection at line " +
+                   std::to_string(indirectionsValidErrorLocation.Line) + " " + description)
+                      .c_str());
 
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*iir),
                   ("Grid type consistency check failed " + description).c_str());
@@ -97,6 +104,12 @@ bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
         checkResultWeights,
         ("Found invalid weights at line " + std::to_string(errorLocationWeights.Line)).c_str());
   }
+
+  auto [indirectionsValid, indirectionsValidErrorLocation] =
+      IndirectionChecker::checkIndirections(*sir);
+  DAWN_ASSERT_MSG(indirectionsValid, ("Found invalid indirection at line " +
+                                      std::to_string(indirectionsValidErrorLocation.Line))
+                                         .c_str());
 
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*sir),
                   "Grid types in SIR are not consistent");

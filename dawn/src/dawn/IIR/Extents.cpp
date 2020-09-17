@@ -311,6 +311,8 @@ bool Extents::isHorizontalPointwise() const { return horizontalExtent_.isPointwi
 bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise(); }
 
 bool Extents::hasVerticalCenter() const {
+  DAWN_ASSERT_MSG(!verticalExtent_.isUndefined(),
+                  "has vertical center called on undefined interval");
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
 void Extents::limit(Extents const& other) {
