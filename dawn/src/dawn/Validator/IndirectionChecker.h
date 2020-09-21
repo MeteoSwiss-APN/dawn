@@ -27,9 +27,11 @@ class IndirectionChecker {
   class IndirectionCheckerImpl : public ast::ASTVisitorForwarding {
   private:
     bool indirectionsValid_ = true;
+    bool lhs_ = false;
 
   public:
     void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr);
+    void visit(const std::shared_ptr<iir::AssignmentExpr>& expr);
     bool indirectionsAreValid() const { return indirectionsValid_; }
   };
 

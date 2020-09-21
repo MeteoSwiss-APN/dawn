@@ -2,12 +2,26 @@
 
 namespace dawn {
 void IndirectionChecker::IndirectionCheckerImpl::visit(
+    const std::shared_ptr<iir::AssignmentExpr>& expr) {
+  lhs_ = true;
+  expr->getLeft()->accept(*this);
+  lhs_ = false;
+  expr->getRight()->accept(*this);
+}
+
+void IndirectionChecker::IndirectionCheckerImpl::visit(
     const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!indirectionsValid_) {
     return;
   }
 
   auto indirection = expr->getOffset().verticalIndirectionAsField();
+  if(lhs_ && indirection.has_value()) {
+    // indirections on lhs (i.e. vertically indirected wriste) are prohibited
+    indirectionsValid_ = false;
+    return;
+  }
+
   if(indirection.has_value()) {
     // inner offset must be null offset
     indirectionsValid_ = indirection.value()->getOffset().verticalOffset() == 0 &&
