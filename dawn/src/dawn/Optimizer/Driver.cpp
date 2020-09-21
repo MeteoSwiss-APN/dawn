@@ -267,37 +267,6 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       // validation check
       passManager.pushBackPass<PassValidation>();
       break;
-    case PassGroup::ParallelDebugUnstructured: // Remove again later?
-      passManager.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
-      passManager.pushBackPass<PassFieldVersioning>();
-      passManager.pushBackPass<PassTemporaryType>();
-      passManager.pushBackPass<PassLocalVarType>();
-      passManager.pushBackPass<PassRemoveScalars>();
-      passManager.pushBackPass<PassStageSplitAllStatements>();
-      passManager.pushBackPass<PassSetStageLocationType>();
-      passManager.pushBackPass<PassTemporaryType>();
-      passManager.pushBackPass<PassFixVersionedInputFields>();
-      // fix versioned input fields may introduce new stages
-      // hence rerun set location type after new stages are
-      // generated
-      passManager.pushBackPass<PassSetStageLocationType>();
-      passManager.pushBackPass<PassSetSyncStage>();
-      // validation checks after parallelisation
-      passManager.pushBackPass<PassValidation>();
-      break;
-    case PassGroup::ParallelDebugCartesian: // Remove again later?
-      passManager.pushBackPass<PassInlining>(PassInlining::InlineStrategy::InlineProcedures);
-      passManager.pushBackPass<PassFieldVersioning>();
-      passManager.pushBackPass<PassTemporaryType>();
-      passManager.pushBackPass<PassLocalVarType>();
-      passManager.pushBackPass<PassRemoveScalars>();
-      passManager.pushBackPass<PassStageSplitter>();
-      passManager.pushBackPass<PassTemporaryType>();
-      passManager.pushBackPass<PassFixVersionedInputFields>();
-      passManager.pushBackPass<PassSetSyncStage>();
-      // validation checks after parallelisation
-      passManager.pushBackPass<PassValidation>();
-      break;
     case PassGroup::Parallel:
       DAWN_ASSERT_MSG(false, "The parallel group is only valid for lowering to IIR.");
     }
