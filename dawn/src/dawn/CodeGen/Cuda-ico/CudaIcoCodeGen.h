@@ -75,7 +75,8 @@ private:
   void
   generateAllAPIRunFunctions(std::stringstream& ssSW,
                              const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                             CodeGenProperties& codeGenProperties, bool fromHost);
+                             CodeGenProperties& codeGenProperties, bool fromHost,
+                             bool onlyDecl = false) const;
 
   void generateGpuMesh(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                        Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
@@ -103,6 +104,11 @@ private:
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+
+  void
+  generateCHeaderSI(std::stringstream& ssSW,
+                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  std::string generateCHeader() const;
 
   CudaIcoCodeGenOptions codeGenOptions_;
 };

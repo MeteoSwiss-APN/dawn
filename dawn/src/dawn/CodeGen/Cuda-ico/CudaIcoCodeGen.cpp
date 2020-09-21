@@ -31,6 +31,7 @@
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
 #include <numeric>
 #include <sstream>
@@ -567,7 +568,7 @@ void CudaIcoCodeGen::generateStencilClasses(
 
 void CudaIcoCodeGen::generateAllAPIRunFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    CodeGenProperties& codeGenProperties, bool fromHost) {
+    CodeGenProperties& codeGenProperties, bool fromHost, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
 
   CollectChainStrings chainCollector;
@@ -635,7 +636,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
 
     // two functions if from host (from c / from fort), one function if simply passing the pointers
     std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
-    std::vector<std::stringstream> apiRunFunStreams(2);
+    std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
     if(fromHost) {
       apiRunFuns.push_back(std::make_unique<MemberFunction>(
           "double", "run_" + wrapperName + "_impl_from_c_host", apiRunFunStreams[0]));
@@ -652,61 +653,70 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       for(auto field : support::orderMap(stencil.getFields())) {
         apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
       }
+      apiRunFun->finishArgs();
     }
 
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
-                              ">::" + stencilName + " s(mesh, k_size)");
-    }
-    if(fromHost) {
-      // depending if we are calling from c or from fortran, we need to transpose the data or not
-      apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
-      apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+    // Write body only when run for implementation generation
+    if(!onlyDecl) {
+
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
+                                ">::" + stencilName + " s(mesh, k_size)");
+      }
+      if(fromHost) {
+        // depending if we are calling from c or from fortran, we need to transpose the data or not
+        apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
+        apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+      } else {
+        apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+      }
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addStatement("s.run()");
+        apiRunFun->addStatement("double time = s.get_time()");
+        apiRunFun->addStatement("s.reset()");
+      }
+      if(fromHost) {
+        apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
+        apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+      }
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addStatement("return time");
+        apiRunFun->commit();
+      }
+
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str();
+      }
+
+      // Need to count arguments for exporting bindings through GridTools bindgen
+      const int argCount = 2 + stencil.getFields().size();
+
+      // Export binding (if requested)
+      ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
+           << "\n";
+      if(fromHost) {
+        Statement exportCMacroCall(ssSW);
+        Statement exportFMacroCall(ssSW);
+        exportCMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                         << "_from_c_host, run_" << wrapperName << "_impl_from_c_host)";
+        exportCMacroCall.commit();
+        exportFMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                         << "_from_fort_host, run_" << wrapperName << "_impl_from_fort_host)";
+        exportFMacroCall.commit();
+      } else {
+        Statement exportMacroCall(ssSW);
+        exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
+                        << ", run_" << wrapperName << "_impl"
+                        << ")";
+        exportMacroCall.commit();
+      }
+      ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
+           << "\n";
     } else {
-      apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str() << ";\n";
+      }
     }
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement("s.run()");
-      apiRunFun->addStatement("double time = s.get_time()");
-      apiRunFun->addStatement("s.reset()");
-    }
-    if(fromHost) {
-      apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
-      apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
-    }
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement("return time");
-      apiRunFun->commit();
-    }
-
-    for(const auto& stream : apiRunFunStreams) {
-      ssSW << stream.str();
-    }
-
-    // Need to count arguments for exporting bindings through GridTools bindgen
-    const int argCount = 2 + stencil.getFields().size();
-
-    // Export binding (if requested)
-    ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
-         << "\n";
-    if(fromHost) {
-      Statement exportCMacroCall(ssSW);
-      Statement exportFMacroCall(ssSW);
-      exportCMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                       << "_from_c_host, run_" << wrapperName << "_impl_from_c_host)";
-      exportCMacroCall.commit();
-      exportFMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                       << "_from_fort_host, run_" << wrapperName << "_impl_from_fort_host)";
-      exportFMacroCall.commit();
-    } else {
-      Statement exportMacroCall(ssSW);
-      exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                      << ", run_" << wrapperName << "_impl"
-                      << ")";
-      exportMacroCall.commit();
-    }
-    ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
-         << "\n";
   }
 }
 
@@ -908,18 +918,58 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
   return ssSW.str();
 }
 
+void CudaIcoCodeGen::generateCHeaderSI(
+    std::stringstream& ssSW,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  using namespace codegen;
+
+  CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
+
+  bool fromHost = true;
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost,
+                             /*onlyDecl=*/true);
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost,
+                             /*onlyDecl=*/true);
+}
+
+std::string CudaIcoCodeGen::generateCHeader() const {
+  std::stringstream ssSW;
+  ssSW << "#pragma once\n";
+
+  Namespace dawnNamespace("dawn_generated", ssSW);
+  Namespace cudaNamespace("cuda_ico", ssSW);
+
+  for(const auto& nameStencilCtxPair : context_) {
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
+    generateCHeaderSI(ssSW, stencilInstantiation);
+  }
+
+  cudaNamespace.commit();
+  dawnNamespace.commit();
+
+  return ssSW.str();
+}
+
 std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
 
   DAWN_LOG(INFO) << "Starting code generation for ...";
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
+
   for(const auto& nameStencilCtxPair : context_) {
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
     std::string code = generateStencilInstantiation(stencilInstantiation);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
+  }
+
+  if(codeGenOptions_.OutputCHeader) {
+    std::ofstream headerFile;
+    headerFile.open(*codeGenOptions_.OutputCHeader);
+    headerFile << generateCHeader();
+    headerFile.close();
   }
 
   std::vector<std::string> ppDefines{
