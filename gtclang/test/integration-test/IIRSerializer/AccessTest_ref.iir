@@ -1,12 +1,12 @@
 {
  "metadata": {
   "accessIDToName": {
-   "20": "b",
-   "19": "a"
+   "19": "a",
+   "20": "b"
   },
   "accessIDToType": {
-   "19": 6,
-   "20": 6
+   "20": 6,
+   "19": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -24,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "19": {
+   "20": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "20": {
+   "19": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -89,6 +89,7 @@
                   "field_access_expr": {
                    "name": "b",
                    "vertical_offset": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -126,6 +127,7 @@
                             "field_access_expr": {
                              "name": "a",
                              "vertical_offset": 0,
+                             "vertical_indirection": "",
                              "cartesian_offset": {
                               "i_offset": 1,
                               "j_offset": 0
@@ -156,6 +158,7 @@
                             "field_access_expr": {
                              "name": "a",
                              "vertical_offset": 0,
+                             "vertical_indirection": "",
                              "cartesian_offset": {
                               "i_offset": -1,
                               "j_offset": 0
@@ -193,6 +196,7 @@
                           "field_access_expr": {
                            "name": "a",
                            "vertical_offset": 0,
+                           "vertical_indirection": "",
                            "cartesian_offset": {
                             "i_offset": 0,
                             "j_offset": 1
@@ -230,6 +234,7 @@
                         "field_access_expr": {
                          "name": "a",
                          "vertical_offset": 0,
+                         "vertical_indirection": "",
                          "cartesian_offset": {
                           "i_offset": 0,
                           "j_offset": -1
@@ -267,6 +272,7 @@
                       "field_access_expr": {
                        "name": "a",
                        "vertical_offset": -1,
+                       "vertical_indirection": "",
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -301,6 +307,7 @@
                     "field_access_expr": {
                      "name": "a",
                      "vertical_offset": 1,
+                     "vertical_indirection": "",
                      "cartesian_offset": {
                       "i_offset": 0,
                       "j_offset": 1
@@ -351,7 +358,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -360,16 +368,19 @@
                    "cartesian_extent": {
                     "i_extent": {
                      "minus": -1,
-                     "plus": 1
+                     "plus": 1,
+                     "undefined": false
                     },
                     "j_extent": {
                      "minus": -1,
-                     "plus": 1
+                     "plus": 1,
+                     "undefined": false
                     }
                    },
                    "vertical_extent": {
                     "minus": -1,
-                    "plus": 1
+                    "plus": 1,
+                    "undefined": false
                    }
                   }
                  }
@@ -433,5 +444,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
+ "filename": "AccessTest.cpp"
 }

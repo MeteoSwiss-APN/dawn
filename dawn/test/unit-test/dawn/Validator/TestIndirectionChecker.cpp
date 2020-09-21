@@ -89,7 +89,7 @@ TEST(IndirectionCheckerTest, Case_Fail2) {
   auto out = b.field("out", LocType::Cells);
   auto kidx = b.field("kidx", LocType::Cells);
 
-  // vertically indirected write, which is prohibited!
+  // vertically indirected _write_, which is prohibited!
   auto stencil = b.build(
       "fail", b.stencil(b.multistage(
                   LoopOrderKind::Parallel,

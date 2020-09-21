@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/CopyTest.cpp",
+ "filename": "CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -31,6 +31,7 @@
                    "field_access_expr": {
                     "name": "field_a",
                     "vertical_offset": 0,
+                    "vertical_indirection": "",
                     "zero_offset": {},
                     "argument_map": [
                      -1,
@@ -56,6 +57,7 @@
                    "field_access_expr": {
                     "name": "field_b",
                     "vertical_offset": 0,
+                    "vertical_indirection": "",
                     "zero_offset": {},
                     "argument_map": [
                      -1,

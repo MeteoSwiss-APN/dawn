@@ -13,8 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -427,7 +429,9 @@ TEST_F(IIRSerializerTest, IIRTests) {
   stmt->setID(22);
   iir::Accesses stmtAccesses;
   iir::Extents extents(ast::Offsets{ast::cartesian});
+  iir::Extents undefinedExtents(iir::HorizontalExtent{ast::cartesian}, iir::UndefinedExtent{});
   stmtAccesses.addReadExtent(42, extents);
+  stmtAccesses.addReadExtent(43, undefinedExtents);
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
 
   IIRDoMethod->getAST().push_back(std::move(stmt));

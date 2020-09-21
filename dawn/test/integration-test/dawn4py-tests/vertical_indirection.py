@@ -214,8 +214,8 @@ def main(args: argparse.Namespace):
     code = dawn4py.compile(sir, groups=pass_groups,
                            backend=dawn4py.CodeGenBackend.CUDAIco)
 
-    with open("out.json", "w+") as f:
-        f.write(sir_to_json(sir))
+    # with open("out.json", "w+") as f:
+    #     f.write(sir_to_json(sir))
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

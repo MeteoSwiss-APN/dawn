@@ -28,8 +28,11 @@ Extent::Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(m
 Extent::Extent(int offset) : Extent(offset, offset) {}
 Extent::Extent() : Extent(0, 0) {}
 void Extent::merge(const Extent& other) {
+  if(isUndefined()) {
+    return;
+  }
   if(other.isUndefined()) {
-    this->undefinedExtent_ = true;
+    undefinedExtent_ = true;
     return;
   }
 
@@ -38,19 +41,36 @@ void Extent::merge(const Extent& other) {
 }
 void Extent::merge(int other) { merge(Extent{other, other}); }
 void Extent::limit(Extent const& other) {
-  DAWN_ASSERT_MSG(!isUndefined() || !other.isUndefined(), "limit called on undefined Extent");
+  DAWN_ASSERT_MSG(!isUndefined() && !other.isUndefined(), "limit called on undefined Extent");
   minus_ = std::max(minus_, other.minus_);
   plus_ = std::min(plus_, other.plus_);
 }
 Extent& Extent::operator+=(const Extent& other) {
-  DAWN_ASSERT_MSG(!isUndefined() || !other.isUndefined(), "operator+= called on undefined Extent");
+  // DAWN_ASSERT_MSG(!isUndefined() && !other.isUndefined(), "operator+= called on undefined
+  // Extent");
+  if(isUndefined()) {
+    return *this;
+  }
+  if(other.isUndefined()) {
+    undefinedExtent_ = true;
+    return *this;
+  }
+
   minus_ += other.minus_;
   plus_ += other.plus_;
   return *this;
 }
 bool Extent::operator==(const Extent& other) const {
-  return minus_ == other.minus_ && plus_ == other.plus_ &&
-         undefinedExtent_ == other.undefinedExtent_;
+  // minus / plus may be uninitialized in the undefined case
+  if(undefinedExtent_ && other.undefinedExtent_) {
+    return true;
+  }
+  // look at boundaries if both extents are defined
+  if(!undefinedExtent_ && !other.undefinedExtent_) {
+    return minus_ == other.minus_ && plus_ == other.plus_;
+  }
+  // not equal otherwise
+  return false;
 }
 bool Extent::operator!=(const Extent& other) const { return !(*this == other); }
 bool Extent::isPointwise() const {

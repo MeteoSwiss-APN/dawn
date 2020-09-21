@@ -88,6 +88,8 @@ std::shared_ptr<Expr> BinaryOperator::clone() const {
 
 bool BinaryOperator::equals(const Expr* other, bool compareData) const {
   const BinaryOperator* otherPtr = dyn_cast<BinaryOperator>(other);
+  bool left = operands_[Left]->equals(otherPtr->operands_[Left].get(), compareData);
+  bool right = operands_[Right]->equals(otherPtr->operands_[Right].get(), compareData);
   return otherPtr && Expr::equals(other, compareData) &&
          operands_[Left]->equals(otherPtr->operands_[Left].get(), compareData) &&
          operands_[Right]->equals(otherPtr->operands_[Right].get(), compareData) &&
@@ -414,6 +416,8 @@ std::shared_ptr<Expr> FieldAccessExpr::clone() const {
 
 bool FieldAccessExpr::equals(const Expr* other, bool compareData) const {
   const FieldAccessExpr* otherPtr = dyn_cast<FieldAccessExpr>(other);
+  bool offEq = offset_ == otherPtr->offset_;
+  bool dataEq = (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
   return otherPtr && Expr::equals(other, compareData) && name_ == otherPtr->name_ &&
          offset_ == otherPtr->offset_ && argumentMap_ == otherPtr->argumentMap_ &&
          argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_ &&

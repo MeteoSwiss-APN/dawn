@@ -156,19 +156,22 @@ public:
   /// `[other.lowerBound(), other.upperBound()]`. Note that we have the invariant
   /// `LowerBound <= UpperBound`
   bool overlaps(const Interval& other) const {
-    DAWN_ASSERT_MSG(!undefined_, "overlaps() of undefined interval requested!\n");
+    DAWN_ASSERT_MSG(!undefined_ && !other.undefined_,
+                    "overlaps() of undefined interval requested!\n");
     return lowerBound() <= other.upperBound() && other.lowerBound() <= upperBound();
   }
 
   /// @brief Check if `this` fully contains `other`
   bool contains(const Interval& other) const {
-    DAWN_ASSERT_MSG(!undefined_, "contains() of undefined interval requested!\n");
+    DAWN_ASSERT_MSG(!undefined_ && !other.undefined_,
+                    "contains() of undefined interval requested!\n");
     return other.lowerBound() >= lowerBound() && other.upperBound() <= upperBound();
   }
 
   /// @brief Check if `this` is adjacent to `other`
   bool adjacent(const Interval& other) const {
-    DAWN_ASSERT_MSG(!undefined_, "adjacent() of undefined interval requested!\n");
+    DAWN_ASSERT_MSG(!undefined_ && !other.undefined_,
+                    "adjacent() of undefined interval requested!\n");
     if(overlaps(other))
       return false;
 
@@ -195,6 +198,7 @@ public:
 
   /// @brief Convert to SIR Interval
   inline sir::Interval asSIRInterval() const {
+    DAWN_ASSERT_MSG(!undefined_, "undefined interval not representable in SIR");
     return sir::Interval(lowerLevel(), upperLevel(), lowerOffset(), upperOffset());
   }
 

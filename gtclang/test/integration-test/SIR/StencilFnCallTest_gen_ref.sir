@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
+ "filename": "StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -31,6 +31,7 @@
                    "field_access_expr": {
                     "name": "b",
                     "vertical_offset": 0,
+                    "vertical_indirection": "",
                     "zero_offset": {},
                     "argument_map": [
                      -1,
@@ -60,6 +61,7 @@
                       "field_access_expr": {
                        "name": "a",
                        "vertical_offset": 0,
+                       "vertical_indirection": "",
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -191,6 +193,7 @@
            "field_access_expr": {
             "name": "a",
             "vertical_offset": 0,
+            "vertical_indirection": "",
             "zero_offset": {},
             "argument_map": [
              -1,

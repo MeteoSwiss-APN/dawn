@@ -224,6 +224,8 @@ message StencilCall {
 message Extent {
   int32 minus = 1;
   int32 plus = 2;
+  bool undefined = 3; // an extent can be undefined (to express an extent
+                      // including a runtime vertical indirection)
 }
 message CartesianExtent {
   Extent i_extent = 1;
@@ -637,6 +639,7 @@ message FieldAccessExpr {
   // stencil function.
   int32 vertical_offset = 2;
   string vertical_indirection = 12;
+  AccessExprData vertical_indirection_data = 13;
   oneof horizontal_offset {
     CartesianOffset cartesian_offset = 3;
     UnstructuredOffset unstructured_offset = 4;

@@ -135,6 +135,8 @@ std::vector<Interval> Interval::computeLevelUnion(const std::vector<Interval>& i
 
 std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
                                                     const std::vector<Interval>& intervals) {
+
+  DAWN_ASSERT_MSG(!axis.undefined_, "axis is undefined!");
   DAWN_ASSERT_MSG(!std::any_of(intervals.begin(), intervals.end(),
                                [](const Interval& in) { return in.isUndefined(); }),
                   "trying to compute gap intervals of (partially) undefined interval(s)");
@@ -365,7 +367,7 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 }
 
 Interval Interval::intersect(const Interval& other) const {
-  DAWN_ASSERT_MSG(!undefined_, "trying to intersect undefined interval!");
+  DAWN_ASSERT_MSG(!undefined_ && !other.undefined_, "trying to intersect undefined interval!");
   DAWN_ASSERT(lowerBound() <= upperBound());
   DAWN_ASSERT(other.lowerBound() <= other.upperBound());
 
@@ -407,7 +409,8 @@ IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
 }
 
 IntervalDiff distance(Interval f, Interval s, LoopOrderKind order) {
-  DAWN_ASSERT_MSG(!f.isUndefined() && !s.isUndefined(), "trying to invert undefined interval!");
+  DAWN_ASSERT_MSG(!f.isUndefined() && !s.isUndefined(),
+                  "trying to take distance of undefined interval!");
   if(order == LoopOrderKind::Backward) {
     return distance(f.upperIntervalLevel(), s.upperIntervalLevel());
   }

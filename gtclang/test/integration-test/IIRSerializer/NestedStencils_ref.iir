@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "17": "field_b",
-   "16": "field_a"
+   "16": "field_a",
+   "17": "field_b"
   },
   "accessIDToType": {
    "16": 6,
@@ -89,6 +89,7 @@
                   "field_access_expr": {
                    "name": "field_a",
                    "vertical_offset": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -116,6 +117,7 @@
                   "field_access_expr": {
                    "name": "field_b",
                    "vertical_offset": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -156,7 +158,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -165,7 +168,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
@@ -229,5 +233,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/IIRSerializer/NestedStencils.cpp"
+ "filename": "NestedStencils.cpp"
 }

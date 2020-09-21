@@ -18,6 +18,7 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
@@ -174,6 +175,9 @@ dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& exte
   if(!extents.verticalExtent().isUndefined()) {
     protoVExtent->set_minus(vExtent.minus());
     protoVExtent->set_plus(vExtent.plus());
+    protoVExtent->set_undefined(false);
+  } else {
+    protoVExtent->set_undefined(true);
   }
 
   return protoExtents;
@@ -192,8 +196,13 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
   using ProtoExtents = dawn::proto::statements::Extents;
-  iir::Extent vExtent{protoExtents->vertical_extent().minus(),
-                      protoExtents->vertical_extent().plus()};
+  iir::Extent vExtent;
+  if(protoExtents->vertical_extent().undefined()) {
+    vExtent = iir::Extent(iir::UndefinedExtent{});
+  } else {
+    vExtent = iir::Extent(protoExtents->vertical_extent().minus(),
+                          protoExtents->vertical_extent().plus());
+  }
 
   switch(protoExtents->horizontal_extent_case()) {
   case ProtoExtents::kCartesianExtent: {
@@ -662,6 +671,11 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   auto indirection = offset.verticalIndirection();
   if(indirection != std::nullopt) {
     protoExpr->set_vertical_indirection(indirection.value());
+    if(dataType_ == StmtData::IIR_DATA_TYPE) {
+      setAccessExprData(
+          protoExpr->mutable_vertical_indirection_data(),
+          offset.verticalIndirectionAsField().value()->getData<iir::IIRAccessExprData>());
+    }
   }
 
   for(int argOffset : expr->getArgumentOffset())
@@ -959,6 +973,10 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       if(!exprProto.vertical_indirection().empty()) {
         offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset(),
                               exprProto.vertical_indirection()};
+        if(dataType == StmtData::IIR_DATA_TYPE && offset.verticalIndirectionAsField().has_value())
+          fillAccessExprDataFromProto(
+              offset.verticalIndirectionAsField().value()->getData<iir::IIRAccessExprData>(),
+              exprProto.vertical_indirection_data());
       } else {
         offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
       }

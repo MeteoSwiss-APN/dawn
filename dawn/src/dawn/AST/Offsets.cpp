@@ -132,8 +132,14 @@ GridType HorizontalOffset::getGridType() const {
 // Vertical Offset
 
 bool VerticalOffset::operator==(VerticalOffset const& other) const {
-  return verticalOffset_ == other.verticalOffset_ &&
-         verticalIndirection_ == other.verticalIndirection_;
+  bool offsetEqual = verticalOffset_ == other.verticalOffset_;
+  if(!verticalIndirection_ && !other.verticalIndirection_) {
+    return offsetEqual;
+  } else if(verticalIndirection_ && other.verticalIndirection_) {
+    return offsetEqual && (*verticalIndirection_ == *other.verticalIndirection_);
+  } else {
+    return false;
+  }
 }
 
 VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
