@@ -96,8 +96,14 @@ public:
   /// well defined
   inline bool valid() { return (undefined_ || (lowerBound() <= upperBound())); }
 
-  IntervalLevel upperIntervalLevel() const { return upper_; }
-  IntervalLevel lowerIntervalLevel() const { return lower_; }
+  IntervalLevel upperIntervalLevel() const {
+    DAWN_ASSERT_MSG(!undefined_, "upperIntervalLevel() of undefined interval requested!\n");
+    return upper_;
+  }
+  IntervalLevel lowerIntervalLevel() const {
+    DAWN_ASSERT_MSG(!undefined_, "lowerIntervalLevel() of undefined interval requested!\n");
+    return lower_;
+  }
 
   /// @brief computes the intersection of two intervals
   Interval intersect(const Interval& other) const;
@@ -109,27 +115,37 @@ public:
   Interval crop(Bound bound, std::array<int, 2> window) const;
 
   int offset(const Bound bound) const {
+    DAWN_ASSERT_MSG(!undefined_, "offset() of undefined interval requested!\n");
     return (bound == Bound::lower) ? lowerOffset() : upperOffset();
   }
   int level(const Bound bound) const {
+    DAWN_ASSERT_MSG(!undefined_, "level() of undefined interval requested!\n");
     return (bound == Bound::lower) ? lowerLevel() : upperLevel();
   }
 
   /// @brief Get the bound of the Interval (i.e `level + offset`)
   inline int bound(const Bound bound) const {
+    DAWN_ASSERT_MSG(!undefined_, "bound() of undefined interval requested!\n");
     return (bound == Bound::lower) ? lowerBound() : upperBound();
   }
 
   /// @brief Get the lower bound of the Interval (i.e `lowerLevel + lowerOffset`)
-  inline int lowerBound() const { return lower_.bound(); }
+  inline int lowerBound() const {
+    DAWN_ASSERT_MSG(!undefined_, "lowerBound() of undefined interval requested!\n");
+    return lower_.bound();
+  }
 
   /// @brief Get the upper bound of the Interval (i.e `upperLevel + upperOffset`)
-  inline int upperBound() const { return upper_.bound(); }
+  inline int upperBound() const {
+    DAWN_ASSERT_MSG(!undefined_, "upperBound() of undefined interval requested!\n");
+    return upper_.bound();
+  }
 
   /// @name Comparison operator
   /// @{
   bool operator==(const Interval& other) const {
-    return lowerBound() == other.lowerBound() && upperBound() == other.upperBound();
+    return lowerBound() == other.lowerBound() && upperBound() == other.upperBound() &&
+           isUndefined() == other.isUndefined();
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
   /// @}
@@ -140,16 +156,19 @@ public:
   /// `[other.lowerBound(), other.upperBound()]`. Note that we have the invariant
   /// `LowerBound <= UpperBound`
   bool overlaps(const Interval& other) const {
+    DAWN_ASSERT_MSG(!undefined_, "overlaps() of undefined interval requested!\n");
     return lowerBound() <= other.upperBound() && other.lowerBound() <= upperBound();
   }
 
   /// @brief Check if `this` fully contains `other`
   bool contains(const Interval& other) const {
+    DAWN_ASSERT_MSG(!undefined_, "contains() of undefined interval requested!\n");
     return other.lowerBound() >= lowerBound() && other.upperBound() <= upperBound();
   }
 
   /// @brief Check if `this` is adjacent to `other`
   bool adjacent(const Interval& other) const {
+    DAWN_ASSERT_MSG(!undefined_, "adjacent() of undefined interval requested!\n");
     if(overlaps(other))
       return false;
 
@@ -181,22 +200,31 @@ public:
 
   /// @brief returns true if the level bound of the interval is the end of the axis
   inline bool levelIsEnd(Bound bound) const {
+    DAWN_ASSERT_MSG(!undefined_, "levelIsEnd() of undefined interval requested!\n");
     return (bound == Bound::lower) ? lowerLevelIsEnd() : upperLevelIsEnd();
   }
 
   inline size_t overEnd() const {
+    DAWN_ASSERT_MSG(!undefined_, "overEnd() of undefined interval requested!\n");
     return (upperLevelIsEnd() && (upper_.offset_ > 0)) ? upper_.offset_ : 0;
   }
 
   inline size_t belowBegin() const {
+    DAWN_ASSERT_MSG(!undefined_, "belowBegin() of undefined interval requested!\n");
     return (!lowerLevelIsEnd() && (lowerBound() < 0)) ? (size_t)-lower_.offset_ : 0;
   }
 
   /// @brief returns true if the lower bound of the interval is the end of the axis
-  bool lowerLevelIsEnd() const { return lower_.isEnd(); }
+  bool lowerLevelIsEnd() const {
+    DAWN_ASSERT_MSG(!undefined_, "lowerLevelIsEnd() of undefined interval requested!\n");
+    return lower_.isEnd();
+  }
 
   /// @brief returns true if the upper bound of the interval is the end of the axis
-  bool upperLevelIsEnd() const { return upper_.isEnd(); }
+  bool upperLevelIsEnd() const {
+    DAWN_ASSERT_MSG(!undefined_, "upperLevelIsEnd() of undefined interval requested!\n");
+    return upper_.isEnd();
+  }
 
   /// @brief Convert interval to string
   explicit operator std::string() const;

@@ -250,7 +250,6 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       passManager.pushBackPass<PassValidation>();
       break;
     case PassGroup::SetLoopOrder:
-      // Plain diagnostics, should not even be a pass but is independent
       passManager.pushBackPass<PassSetLoopOrder>();
       // validation check
       passManager.pushBackPass<PassValidation>();

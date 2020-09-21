@@ -20,6 +20,7 @@ add_executable(${executable}
   TestIntegrityChecker.cpp
   TestMultiStageChecker.cpp
   TestWeightChecker.cpp
+  TestIndirectionChecker.cpp
 )
 target_link_libraries(${executable} DawnValidator DawnUnittest gtest gtest_main)
 target_add_dawn_standard_props(${executable})

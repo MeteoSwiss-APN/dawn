@@ -61,16 +61,10 @@ static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadat
 }
 
 /// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
-/// counter loop access in the vertical)
+/// counter loop access in the vertical, or vertically indirected)
 static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& extent,
                                                         iir::LoopOrderKind loopOrder) {
-  // not sure if this has the right implications: if the vertical extent is undefined we simply do
-  // not know whether this is a solver access or not, so we err on the, hopefully, safe side and
-  // claim we have a solver access.
-  if(extent.verticalExtent().isUndefined()) {
-    return true;
-  }
-  return !extent.isHorizontalPointwise() ||
+  return extent.verticalExtent().isUndefined() || !extent.isHorizontalPointwise() ||
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
 }
 

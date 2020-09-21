@@ -117,6 +117,21 @@ def main(args: argparse.Namespace):
         ]
     )
 
+    # in_out[c,k] = in_out[c,vert_nbh[k]-1]
+    # technically a solver, but vert_nbh makes it a stencil
+    #       => access expected to be treated like a stencil
+    body_ast_6 = sir_utils.make_ast(
+        [
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_field_access_expr("in"),
+                sir_utils.make_unstructured_field_access_expr(
+                    "in", vertical_offset=-1, vertical_indirection="vert_nbh"),
+
+                "="),
+
+        ]
+    )
+
     vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
         body_ast_1, interval, SIR.VerticalRegion.Forward
     )
@@ -137,6 +152,10 @@ def main(args: argparse.Namespace):
         body_ast_5, interval, SIR.VerticalRegion.Forward
     )
 
+    vertical_region_stmt_6 = sir_utils.make_vertical_region_decl_stmt(
+        body_ast_6, interval, SIR.VerticalRegion.Forward
+    )
+
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
         SIR.GridType.Value("Unstructured"),
@@ -148,7 +167,8 @@ def main(args: argparse.Namespace):
                      vertical_region_stmt_2,
                      vertical_region_stmt_3,
                      vertical_region_stmt_4,
-                     vertical_region_stmt_5]),
+                     vertical_region_stmt_5,
+                     vertical_region_stmt_6]),
                 [
                     sir_utils.make_field(
                         "in",
@@ -183,11 +203,19 @@ def main(args: argparse.Namespace):
     if args.verbose:
         sir_utils.pprint(sir)
 
-    # compile
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
+    # extend default passes by non standard passes that could potentially be affected
+    # by indirected vertical reads
+    pass_groups = dawn4py.default_pass_groups()
+    pass_groups.insert(1, dawn4py.PassGroup.MultiStageMerger)
+    pass_groups.insert(1, dawn4py.PassGroup.SetLoopOrder)
+    pass_groups.insert(1, dawn4py.PassGroup.SetNonTempCaches)
 
-    # with open("out.json", "w+") as f:
-    #     f.write(sir_to_json(sir))
+    # compile
+    code = dawn4py.compile(sir, groups=pass_groups,
+                           backend=dawn4py.CodeGenBackend.CUDAIco)
+
+    with open("out.json", "w+") as f:
+        f.write(sir_to_json(sir))
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

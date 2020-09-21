@@ -28,13 +28,6 @@ Extent::Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(m
 Extent::Extent(int offset) : Extent(offset, offset) {}
 Extent::Extent() : Extent(0, 0) {}
 void Extent::merge(const Extent& other) {
-  // DAWN_ASSERT_MSG((isUndefined() && other.isUndefined()) ||
-  //                     (!isUndefined() && !other.isUndefined()),
-  //                 "trying to merge undefined with defiend extent!");
-  // if(!isUndefined() && !other.isUndefined()) {
-  //   return;
-  // }
-
   if(other.isUndefined()) {
     this->undefinedExtent_ = true;
     return;
@@ -59,19 +52,18 @@ bool Extent::operator==(const Extent& other) const {
   return minus_ == other.minus_ && plus_ == other.plus_ &&
          undefinedExtent_ == other.undefinedExtent_;
 }
-bool Extent::operator!=(const Extent& other) const {
-  DAWN_ASSERT_MSG(!isUndefined(), "operator!= called on undefined Extent");
-  return !(*this == other);
-}
+bool Extent::operator!=(const Extent& other) const { return !(*this == other); }
 bool Extent::isPointwise() const {
-  // DAWN_ASSERT_MSG(!isUndefined(), "isPointwise() called on undefined Extent");
   if(isUndefined()) {
     return false;
   }
   return plus_ == 0 && minus_ == 0;
 }
 
-Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
+Extent operator+(Extent lhs, Extent const& rhs) {
+  DAWN_ASSERT_MSG(!lhs.isUndefined() && !rhs.isUndefined(), "operator+ called on undefined Extent");
+  return lhs += rhs;
+}
 Extent merge(Extent lhs, Extent const& rhs) {
   lhs.merge(rhs);
   return lhs;
@@ -332,6 +324,9 @@ bool Extents::isPointwise() const {
 Extents::VerticalLoopOrderAccess
 Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   VerticalLoopOrderAccess access{false, false};
+
+  if(verticalExtent().isUndefined())
+    return VerticalLoopOrderAccess{true, true};
 
   if(isVerticalPointwise())
     return access;
