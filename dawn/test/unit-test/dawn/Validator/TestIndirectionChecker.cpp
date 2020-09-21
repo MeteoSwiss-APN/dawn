@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/Offsets.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/IndirectionChecker.h"
 
@@ -22,7 +23,7 @@
 using namespace dawn;
 
 namespace {
-TEST(IndirectionCheckerTest, Case_1) {
+TEST(IndirectionCheckerTest, Case_Pass) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -31,16 +32,52 @@ TEST(IndirectionCheckerTest, Case_1) {
   auto out = b.field("out", LocType::Cells);
   auto kidx = b.field("kidx", LocType::Cells);
 
-  b.build("pass", b.stencil(b.multistage(
-                      LoopOrderKind::Parallel,
-                      b.stage(b.doMethod(
-                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                          b.stmt(b.assignExpr(b.at(in), b.at(out, AccessType::r,
-                                                             ast::Offsets{ast::unstructured, true,
-                                                                          1, "kidx"}))))))));
+  auto stencil = b.build(
+      "pass", b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.stmt(b.assignExpr(
+                          b.at(out), b.at(in, AccessType::r,
+                                          ast::Offsets{ast::unstructured, false, 1, "kidx"}))))))));
 
-  auto result = IndirectionChecker::checkIndirections(*stencil->getIIR(), stencil->getMetaData());
-  EXPECT_EQ(result, IndirectionChecker::indirectionResult(true, dawn::SourceLocation()));
+  auto result = IndirectionChecker::checkIndirections(*stencil->getIIR());
+  EXPECT_EQ(result, IndirectionChecker::IndirectionResult(true, dawn::SourceLocation()));
+}
+
+TEST(IndirectionCheckerTest, Case_Fail) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells);
+  auto out = b.field("out", LocType::Cells);
+  auto kidx = b.field("kidx", LocType::Cells);
+
+  auto stencil = b.build(
+      "fail", b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.stmt(b.assignExpr(
+                          b.at(out), b.at(in, AccessType::r,
+                                          ast::Offsets{ast::unstructured, false, 1, "kidx"}))))))));
+
+  // inject an indirected read into the offset of the indirected read
+  //  out[c,k] = in[kidx[kidx[c,k]]]
+  // which is prohibited
+  for(auto stmt : dawn::iterateIIROverStmt(*stencil->getIIR())) {
+    if(auto exprStmt = dyn_pointer_cast<ExprStmt>(stmt)) {
+      if(auto assignExpr = dyn_pointer_cast<AssignmentExpr>(exprStmt->getExpr())) {
+        auto rhs = dyn_pointer_cast<FieldAccessExpr>(assignExpr->getRight());
+        rhs->getOffset().verticalIndirectionAsField().value()->getOffset().setVerticalIndirection(
+            "kidx");
+      }
+    }
+  }
+
+  auto result = IndirectionChecker::checkIndirections(*stencil->getIIR());
+  EXPECT_EQ(result, IndirectionChecker::IndirectionResult(false, dawn::SourceLocation()));
 }
 
 } // namespace
