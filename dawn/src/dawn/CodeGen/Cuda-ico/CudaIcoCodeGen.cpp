@@ -64,17 +64,19 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
-  CudaIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize, options.nsms,
-                    options.MaxBlocksPerSM, domain_size);
+  CudaIcoCodeGen CG(
+      stencilInstantiationMap, options.MaxHaloSize,
+      options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
+      options.OutputFortranInterface == "" ? std::nullopt
+                                           : std::make_optional(options.OutputFortranInterface));
 
   return CG.generateCode();
 }
 
-CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
-                               int maxBlocksPerSM, const Array3i& domainSize,
-                               const bool runWithSync)
-    : CodeGen(ctx, maxHaloPoints) {}
+CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
+                               std::optional<std::string> outputCHeader,
+                               std::optional<std::string> outputFortranInterface)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
