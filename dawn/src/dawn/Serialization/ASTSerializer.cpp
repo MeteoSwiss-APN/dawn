@@ -667,7 +667,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
         protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
       },
       [&] { protoExpr->mutable_zero_offset(); });
-  protoExpr->set_vertical_offset(offset.verticalShift());
+  protoExpr->set_vertical_shift(offset.verticalShift());
   if(offset.hasVerticalIndirection()) {
     protoExpr->set_vertical_indirection(offset.getVerticalIndirectionFieldName());
     if(dataType_ == StmtData::IIR_DATA_TYPE) {
@@ -959,33 +959,33 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       auto const& hOffset = exprProto.cartesian_offset();
       if(!exprProto.vertical_indirection().empty()) {
         offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
-                              exprProto.vertical_offset(), exprProto.vertical_indirection()};
+                              exprProto.vertical_shift(), exprProto.vertical_indirection()};
       } else {
         offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
-                              exprProto.vertical_offset()};
+                              exprProto.vertical_shift()};
       }
       break;
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
       if(!exprProto.vertical_indirection().empty()) {
-        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset(),
+        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_shift(),
                               exprProto.vertical_indirection()};
         if(dataType == StmtData::IIR_DATA_TYPE && offset.hasVerticalIndirection())
           fillAccessExprDataFromProto(
               offset.getVerticalIndirectionField()->getData<iir::IIRAccessExprData>(),
               exprProto.vertical_indirection_data());
       } else {
-        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_shift()};
       }
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:
       if(!exprProto.vertical_indirection().empty()) {
-        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset(),
+        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift(),
                               exprProto.vertical_indirection()};
       } else {
-        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
+        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift()};
       }
       break;
     default:

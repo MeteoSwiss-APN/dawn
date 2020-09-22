@@ -637,7 +637,7 @@ message FieldAccessExpr {
   // perform a lazy evaluation to compute the real offset once we know the
   // mapping of the directions (and offsets) to the actual arguments of the
   // stencil function.
-  int32 vertical_offset = 2;
+  int32 vertical_shift = 2;
   string vertical_indirection = 12;
   AccessExprData vertical_indirection_data = 13;
   oneof horizontal_offset {

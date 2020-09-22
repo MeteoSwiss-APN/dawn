@@ -164,8 +164,8 @@ VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
   return *this;
 }
 
-VerticalOffset::VerticalOffset(int offset, const std::string& fieldName)
-    : verticalShift_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
+VerticalOffset::VerticalOffset(int shift, const std::string& fieldName)
+    : verticalShift_(shift), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
 
 VerticalOffset::VerticalOffset(const VerticalOffset& other) { *this = other; }
 
