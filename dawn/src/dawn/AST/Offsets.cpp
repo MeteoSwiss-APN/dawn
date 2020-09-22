@@ -14,6 +14,7 @@
 
 #include "dawn/AST/Offsets.h"
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logger.h"
 #include <memory>
@@ -146,9 +147,21 @@ std::string VerticalOffset::getIndirectionFieldName() const {
   DAWN_ASSERT(hasIndirection());
   return std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_)->getName();
 }
-std::shared_ptr<FieldAccessExpr> VerticalOffset::getIndirectionField() const {
+std::shared_ptr<const FieldAccessExpr> VerticalOffset::getIndirectionField() const {
   DAWN_ASSERT(hasIndirection());
-  return std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_);
+  return std::dynamic_pointer_cast<const FieldAccessExpr>(verticalIndirection_);
+}
+void VerticalOffset::setIndirectionAccessID(int accessID) {
+  DAWN_ASSERT(hasIndirection());
+  auto field = std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_);
+  auto data = field->getData<iir::IIRAccessExprData>();
+  data.AccessID = std::make_optional(accessID);
+}
+std::optional<int> VerticalOffset::getIndirectionAccessID() const {
+  DAWN_ASSERT(hasIndirection());
+  auto field = std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_);
+  auto data = field->getData<iir::IIRAccessExprData>();
+  return data.AccessID;
 }
 std::shared_ptr<Expr>& VerticalOffset::getIndirectionFieldAsExpr() {
   DAWN_ASSERT(hasIndirection());
@@ -209,11 +222,18 @@ std::string Offsets::getVerticalIndirectionFieldName() const {
   return verticalOffset_.getIndirectionFieldName();
 }
 
-std::shared_ptr<FieldAccessExpr> Offsets::getVerticalIndirectionField() const {
+std::shared_ptr<const FieldAccessExpr> Offsets::getVerticalIndirectionField() const {
   DAWN_ASSERT(hasVerticalIndirection());
   return verticalOffset_.getIndirectionField();
 }
-
+void Offsets::setVerticalIndirectionAccessID(int accessID) {
+  DAWN_ASSERT(hasVerticalIndirection());
+  verticalOffset_.setIndirectionAccessID(accessID);
+}
+std::optional<int> Offsets::getVerticalIndirectionAccessID() const {
+  DAWN_ASSERT(hasVerticalIndirection());
+  return verticalOffset_.getIndirectionAccessID();
+}
 std::shared_ptr<Expr>& Offsets::getVerticalIndirectionFieldAsExpr() {
   DAWN_ASSERT(hasVerticalIndirection());
   return verticalOffset_.getIndirectionFieldAsExpr();

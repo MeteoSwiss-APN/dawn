@@ -180,9 +180,11 @@ public:
   int getShift() const { return verticalShift_; }
   bool hasIndirection() const { return bool(verticalIndirection_); }
   std::string getIndirectionFieldName() const;
-  std::shared_ptr<FieldAccessExpr> getIndirectionField() const;
+  std::shared_ptr<const FieldAccessExpr> getIndirectionField() const;
   // unfortunately we need this to be compatible with the visitor infrastructure
   std::shared_ptr<Expr>& getIndirectionFieldAsExpr();
+  void setIndirectionAccessID(int accessID);
+  std::optional<int> getIndirectionAccessID() const;
   bool operator==(VerticalOffset const& other) const;
   VerticalOffset operator+=(VerticalOffset const& other);
   VerticalOffset& operator=(VerticalOffset const& other);
@@ -207,10 +209,11 @@ public:
   int verticalShift() const { return verticalOffset_.getShift(); }
   bool hasVerticalIndirection() const { return verticalOffset_.hasIndirection(); }
   std::string getVerticalIndirectionFieldName() const;
-  std::shared_ptr<FieldAccessExpr> getVerticalIndirectionField() const;
+  std::shared_ptr<const FieldAccessExpr> getVerticalIndirectionField() const;
+  void setVerticalIndirectionAccessID(int accessID);
+  std::optional<int> getVerticalIndirectionAccessID() const;
   // unfortunately we need this to be compatible with the visitor infrastructure
   std::shared_ptr<Expr>& getVerticalIndirectionFieldAsExpr();
-
   void setVerticalIndirection(const std::string& fieldName);
 
   HorizontalOffset const& horizontalOffset() const;
