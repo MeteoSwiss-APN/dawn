@@ -169,11 +169,9 @@ std::shared_ptr<Expr>& VerticalOffset::getIndirectionFieldAsExpr() {
 }
 
 VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
+  DAWN_ASSERT_MSG(!verticalIndirection_ && !other.verticalIndirection_,
+                  "operator += not well defined for vertical offsets with indirection");
   verticalShift_ += other.verticalShift_;
-  if(other.verticalIndirection_ || verticalIndirection_) {
-    DAWN_LOG(WARNING) << "operator += not well defined for vertical offsets with indirection";
-    DAWN_ASSERT(false);
-  }
   return *this;
 }
 
@@ -260,11 +258,13 @@ bool Offsets::isZero() const { return verticalOffset_ == 0 && horizontalOffset_.
 
 std::string to_string(unstructured_, Offsets const& offset) {
   auto const& hoffset = offset_cast<UnstructuredOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalShift();
+  auto const& vshift = offset.verticalShift();
 
   using namespace std::string_literals;
   return (hoffset.hasOffset() ? "<has_horizontal_offset>"s : "<no_horizontal_offset>"s) + "," +
-         std::to_string(voffset);
+         (offset.hasVerticalIndirection()
+              ? offset.getVerticalIndirectionFieldName() + "[" + std::to_string(vshift) + "]"
+              : std::to_string(vshift));
 }
 
 std::string to_string(cartesian_, Offsets const& offsets, std::string const& sep) {
@@ -279,7 +279,10 @@ std::string to_string(Offsets const& offset) {
       [&](UnstructuredOffset const&) { return to_string(unstructured, offset); },
       [&]() {
         using namespace std::string_literals;
-        return "<no_horizontal_offset>,"s + std::to_string(offset.verticalShift());
+        return "<no_horizontal_offset>,"s + (offset.hasVerticalIndirection()
+                                                 ? offset.getVerticalIndirectionFieldName() + "[" +
+                                                       std::to_string(offset.verticalShift()) + "]"
+                                                 : std::to_string(offset.verticalShift()));
       });
 }
 

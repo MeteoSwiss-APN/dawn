@@ -54,9 +54,13 @@ std::string Interval::toStringGen() const {
       ss << (offset > 0 ? "plus_" : "minus_") << std::abs(offset);
   };
 
-  printLevel(lowerLevel(), lowerOffset());
-  ss << "_";
-  printLevel(upperLevel(), upperOffset());
+  if(!isUndefined()) {
+    printLevel(lowerLevel(), lowerOffset());
+    ss << "_";
+    printLevel(upperLevel(), upperOffset());
+  } else {
+    ss << "undefined_undefined";
+  }
 
   return ss.str();
 }
@@ -76,11 +80,15 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
       os << (offset > 0 ? "+" : "") << offset;
   };
 
-  os << "{ ";
-  printLevel(interval.lowerLevel(), interval.lowerOffset());
-  os << " : ";
-  printLevel(interval.upperLevel(), interval.upperOffset());
-  os << " }";
+  if(!interval.isUndefined()) {
+    os << "{ ";
+    printLevel(interval.lowerLevel(), interval.lowerOffset());
+    os << " : ";
+    printLevel(interval.upperLevel(), interval.upperOffset());
+    os << " }";
+  } else {
+    os << "undefined";
+  }
 
   return os;
 }

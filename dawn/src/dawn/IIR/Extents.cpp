@@ -431,7 +431,11 @@ std::string to_string(const Extents& extent) {
                return hExtents.hasExtent() ? "<has_horizontal_extent>"s : "<no_horizontal_extent>"s;
              },
              [&]() { return "<no_horizontal_extent>"s; }) +
-         ",(" + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus()) + ")]";
+         ",(" +
+         (vExtents.isUndefined()
+              ? "UNDEFINED,UNDEFINED"
+              : std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus())) +
+         ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {
