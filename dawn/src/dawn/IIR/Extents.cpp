@@ -14,7 +14,6 @@
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/AST/GridType.h"
-#include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
