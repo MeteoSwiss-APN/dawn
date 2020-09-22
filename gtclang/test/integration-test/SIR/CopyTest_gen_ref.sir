@@ -30,7 +30,7 @@
                   "left": {
                    "field_access_expr": {
                     "name": "field_a",
-                    "vertical_offset": 0,
+                    "vertical_shift": 0,
                     "vertical_indirection": "",
                     "zero_offset": {},
                     "argument_map": [
@@ -56,7 +56,7 @@
                   "right": {
                    "field_access_expr": {
                     "name": "field_b",
-                    "vertical_offset": 0,
+                    "vertical_shift": 0,
                     "vertical_indirection": "",
                     "zero_offset": {},
                     "argument_map": [

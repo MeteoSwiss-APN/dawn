@@ -684,7 +684,7 @@ def make_stencil_fun_arg_expr(
 
 
 def make_unstructured_field_access_expr(
-    name: str, horizontal_offset: UnstructuredOffset = None, vertical_offset: int = 0, vertical_indirection: str = None
+    name: str, horizontal_offset: UnstructuredOffset = None, vertical_shift: int = 0, vertical_indirection: str = None
 ) -> FieldAccessExpr:
     expr = FieldAccessExpr()
     expr.name = name
@@ -692,7 +692,7 @@ def make_unstructured_field_access_expr(
         expr.unstructured_offset.CopyFrom(make_unstructured_offset(False))
     else:
         expr.unstructured_offset.CopyFrom(horizontal_offset)
-    expr.vertical_offset = vertical_offset
+    expr.vertical_shift = vertical_shift
     if vertical_indirection is not None:
         expr.vertical_indirection = vertical_indirection
     return expr
@@ -726,7 +726,7 @@ def make_field_access_expr(
         expr.cartesian_offset.i_offset = offset[0]
         expr.cartesian_offset.j_offset = offset[1]
 
-        expr.vertical_offset = offset[2]
+        expr.vertical_shift = offset[2]
 
     elif len(offset) == 2:
         assert isinstance(offset[0], bool)
@@ -736,7 +736,7 @@ def make_field_access_expr(
         assert negate_offset == False
 
         expr.unstructured_offset.has_offset = offset[0]
-        expr.vertical_offset = offset[1]
+        expr.vertical_shift = offset[1]
 
     else:
         assert False
@@ -952,7 +952,7 @@ class SIRPrinter:
             str_ += "<no_horizontal_offset>"
         else:
             raise ValueError("Unknown offset")
-        str_ += "," + str(expr.vertical_offset)
+        str_ += "," + str(expr.vertical_shift)
         str_ += "]"
         return str_
 

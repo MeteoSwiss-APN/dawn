@@ -98,7 +98,7 @@
                 {
                  "field_access_expr": {
                   "name": "a",
-                  "vertical_offset": 0,
+                  "vertical_shift": 0,
                   "vertical_indirection": "",
                   "zero_offset": {},
                   "argument_map": [
@@ -164,7 +164,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [

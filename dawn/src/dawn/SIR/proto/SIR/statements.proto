@@ -638,7 +638,9 @@ message FieldAccessExpr {
   // mapping of the directions (and offsets) to the actual arguments of the
   // stencil function.
   int32 vertical_shift = 2;
+  // vertical indirection (at runtime). This has to be a valid field name
   string vertical_indirection = 12;
+  // field access expression data for the indirection
   AccessExprData vertical_indirection_data = 13;
   oneof horizontal_offset {
     CartesianOffset cartesian_offset = 3;

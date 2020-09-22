@@ -44,7 +44,7 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in", vertical_offset=0, vertical_indirection="vert_nbh"),
+                    "in", vertical_shift=0, vertical_indirection="vert_nbh"),
 
                 "=")
 
@@ -57,7 +57,7 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in", vertical_offset=1, vertical_indirection="vert_nbh"),
+                    "in", vertical_shift=1, vertical_indirection="vert_nbh"),
 
                 "=")
 
@@ -70,7 +70,7 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("in_out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in_out", vertical_offset=1, vertical_indirection="vert_nbh"),
+                    "in_out", vertical_shift=1, vertical_indirection="vert_nbh"),
 
                 "=")
 
@@ -84,13 +84,13 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("vert_nbh"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "vert_nbh", vertical_offset=1),
+                    "vert_nbh", vertical_shift=1),
 
                 "="),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in", vertical_offset=0, vertical_indirection="vert_nbh"),
+                    "in", vertical_shift=0, vertical_indirection="vert_nbh"),
 
                 "=")
 
@@ -104,13 +104,13 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("vert_nbh"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "vert_nbh", vertical_offset=1),
+                    "vert_nbh", vertical_shift=1),
 
                 "="),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("in_out"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in_out", vertical_offset=1, vertical_indirection="vert_nbh"),
+                    "in_out", vertical_shift=1, vertical_indirection="vert_nbh"),
 
                 "=")
 
@@ -125,7 +125,7 @@ def main(args: argparse.Namespace):
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("in"),
                 sir_utils.make_unstructured_field_access_expr(
-                    "in", vertical_offset=-1, vertical_indirection="vert_nbh"),
+                    "in", vertical_shift=-1, vertical_indirection="vert_nbh"),
 
                 "="),
 

@@ -110,7 +110,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out_edge",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -137,7 +137,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "in_edge",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -230,7 +230,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out_cell",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -257,7 +257,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "in_cell",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,

@@ -88,7 +88,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
@@ -126,7 +126,7 @@
                            "left": {
                             "field_access_expr": {
                              "name": "a",
-                             "vertical_offset": 0,
+                             "vertical_shift": 0,
                              "vertical_indirection": "",
                              "cartesian_offset": {
                               "i_offset": 1,
@@ -157,7 +157,7 @@
                            "right": {
                             "field_access_expr": {
                              "name": "a",
-                             "vertical_offset": 0,
+                             "vertical_shift": 0,
                              "vertical_indirection": "",
                              "cartesian_offset": {
                               "i_offset": -1,
@@ -195,7 +195,7 @@
                          "right": {
                           "field_access_expr": {
                            "name": "a",
-                           "vertical_offset": 0,
+                           "vertical_shift": 0,
                            "vertical_indirection": "",
                            "cartesian_offset": {
                             "i_offset": 0,
@@ -233,7 +233,7 @@
                        "right": {
                         "field_access_expr": {
                          "name": "a",
-                         "vertical_offset": 0,
+                         "vertical_shift": 0,
                          "vertical_indirection": "",
                          "cartesian_offset": {
                           "i_offset": 0,
@@ -271,7 +271,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "a",
-                       "vertical_offset": -1,
+                       "vertical_shift": -1,
                        "vertical_indirection": "",
                        "zero_offset": {},
                        "argument_map": [
@@ -306,7 +306,7 @@
                    "right": {
                     "field_access_expr": {
                      "name": "a",
-                     "vertical_offset": 1,
+                     "vertical_shift": 1,
                      "vertical_indirection": "",
                      "cartesian_offset": {
                       "i_offset": 0,
