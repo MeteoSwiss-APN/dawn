@@ -70,8 +70,7 @@ TEST(IndirectionCheckerTest, Case_Fail) {
     if(auto exprStmt = dyn_pointer_cast<ExprStmt>(stmt)) {
       if(auto assignExpr = dyn_pointer_cast<AssignmentExpr>(exprStmt->getExpr())) {
         auto rhs = dyn_pointer_cast<FieldAccessExpr>(assignExpr->getRight());
-        rhs->getOffset().verticalIndirectionAsField().value()->getOffset().setVerticalIndirection(
-            "kidx");
+        rhs->getOffset().getVerticalIndirectionField()->getOffset().setVerticalIndirection("kidx");
       }
     }
   }

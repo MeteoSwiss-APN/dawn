@@ -132,7 +132,7 @@ GridType HorizontalOffset::getGridType() const {
 // Vertical Offset
 
 bool VerticalOffset::operator==(VerticalOffset const& other) const {
-  bool offsetEqual = verticalOffset_ == other.verticalOffset_;
+  bool offsetEqual = verticalShift_ == other.verticalShift_;
   if(!verticalIndirection_ && !other.verticalIndirection_) {
     return offsetEqual;
   } else if(verticalIndirection_ && other.verticalIndirection_) {
@@ -142,39 +142,37 @@ bool VerticalOffset::operator==(VerticalOffset const& other) const {
   }
 }
 
+std::string VerticalOffset::getIndirectionFieldName() const {
+  DAWN_ASSERT(hasIndirection());
+  return std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_)->getName();
+}
+std::shared_ptr<FieldAccessExpr> VerticalOffset::getIndirectionField() const {
+  DAWN_ASSERT(hasIndirection());
+  return std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_);
+}
+std::shared_ptr<Expr>& VerticalOffset::getIndirectionFieldAsExpr() {
+  DAWN_ASSERT(hasIndirection());
+  return verticalIndirection_;
+}
+
 VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
-  verticalOffset_ += other.verticalOffset_;
+  verticalShift_ += other.verticalShift_;
   if(other.verticalIndirection_ || verticalIndirection_) {
     DAWN_LOG(WARNING) << "operator += not well defined for vertical offsets with indirection";
+    DAWN_ASSERT(false);
   }
   return *this;
 }
 
 VerticalOffset::VerticalOffset(int offset, const std::string& fieldName)
-    : verticalOffset_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
+    : verticalShift_(offset), verticalIndirection_(std::make_shared<FieldAccessExpr>(fieldName)) {}
 
 VerticalOffset::VerticalOffset(const VerticalOffset& other) { *this = other; }
 
-std::optional<std::string> VerticalOffset::getIndirectionFieldName() const {
-  if(verticalIndirection_) {
-    return verticalIndirection_->getName();
-  } else {
-    return std::nullopt;
-  }
-}
-
-std::optional<std::shared_ptr<FieldAccessExpr>> VerticalOffset::getIndirectionField() const {
-  if(verticalIndirection_) {
-    return verticalIndirection_;
-  } else {
-    return std::nullopt;
-  }
-}
-
 VerticalOffset& VerticalOffset::operator=(VerticalOffset const& other) {
-  verticalOffset_ = other.verticalOffset_;
+  verticalShift_ = other.verticalShift_;
   if(other.verticalIndirection_) {
-    verticalIndirection_ = std::make_shared<FieldAccessExpr>(*other.verticalIndirection_);
+    verticalIndirection_ = std::make_shared<FieldAccessExpr>(*other.getIndirectionField());
   } else {
     verticalIndirection_ = nullptr;
   }
@@ -206,13 +204,21 @@ Offsets::Offsets(unstructured_, bool hasOffset, int k, const std::string& fieldN
     : horizontalOffset_(unstructured, hasOffset), verticalOffset_(k, fieldName) {}
 Offsets::Offsets(unstructured_) : horizontalOffset_(unstructured) {}
 
-int Offsets::verticalOffset() const { return verticalOffset_.getShift(); }
-std::optional<std::string> Offsets::verticalIndirection() const {
+std::string Offsets::getVerticalIndirectionFieldName() const {
+  DAWN_ASSERT(hasVerticalIndirection());
   return verticalOffset_.getIndirectionFieldName();
 }
-std::optional<std::shared_ptr<FieldAccessExpr>> Offsets::verticalIndirectionAsField() const {
+
+std::shared_ptr<FieldAccessExpr> Offsets::getVerticalIndirectionField() const {
+  DAWN_ASSERT(hasVerticalIndirection());
   return verticalOffset_.getIndirectionField();
 }
+
+std::shared_ptr<Expr>& Offsets::getVerticalIndirectionFieldAsExpr() {
+  DAWN_ASSERT(hasVerticalIndirection());
+  return verticalOffset_.getIndirectionFieldAsExpr();
+}
+
 void Offsets::setVerticalIndirection(const std::string& fieldName) {
   verticalOffset_ = VerticalOffset(verticalOffset_.getShift(), fieldName);
 }
@@ -234,7 +240,7 @@ bool Offsets::isZero() const { return verticalOffset_ == 0 && horizontalOffset_.
 
 std::string to_string(unstructured_, Offsets const& offset) {
   auto const& hoffset = offset_cast<UnstructuredOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
+  auto const& voffset = offset.verticalShift();
 
   using namespace std::string_literals;
   return (hoffset.hasOffset() ? "<has_horizontal_offset>"s : "<no_horizontal_offset>"s) + "," +
@@ -253,7 +259,7 @@ std::string to_string(Offsets const& offset) {
       [&](UnstructuredOffset const&) { return to_string(unstructured, offset); },
       [&]() {
         using namespace std::string_literals;
-        return "<no_horizontal_offset>,"s + std::to_string(offset.verticalOffset());
+        return "<no_horizontal_offset>,"s + std::to_string(offset.verticalShift());
       });
 }
 

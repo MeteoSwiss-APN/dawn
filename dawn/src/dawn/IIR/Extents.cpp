@@ -45,8 +45,6 @@ void Extent::limit(Extent const& other) {
   plus_ = std::min(plus_, other.plus_);
 }
 Extent& Extent::operator+=(const Extent& other) {
-  // DAWN_ASSERT_MSG(!isUndefined() && !other.isUndefined(), "operator+= called on undefined
-  // Extent");
   if(isUndefined()) {
     return *this;
   }
@@ -270,10 +268,10 @@ Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
 Extents::Extents(ast::Offsets const& offset) : horizontalExtent_(offset.horizontalOffset()) {
-  if(offset.verticalIndirection().has_value()) {
+  if(offset.hasVerticalIndirection()) {
     verticalExtent_ = Extent(UndefinedExtent{});
   } else {
-    verticalExtent_ = Extent(offset.verticalOffset());
+    verticalExtent_ = Extent(offset.verticalShift());
   }
 }
 
@@ -297,7 +295,7 @@ void Extents::resetVerticalExtent() { verticalExtent_ = Extent(0, 0); }
 
 void Extents::merge(const ast::Offsets& offset) {
   horizontalExtent_.merge(offset.horizontalOffset());
-  verticalExtent_.merge(offset.verticalOffset());
+  verticalExtent_.merge(offset.verticalShift());
 }
 
 Extents& Extents::operator+=(const Extents& other) {
@@ -332,7 +330,7 @@ void Extents::limit(Extents const& other) {
 }
 
 bool Extents::isPointwise() const {
-  // not sure again, but if the vertical extent is indirected than its at least not _guaranteed_ to
+  // if the vertical extent is indirected than its at least not _guaranteed_ to
   // be pointwise
   if(verticalExtent_.isUndefined()) {
     return false;

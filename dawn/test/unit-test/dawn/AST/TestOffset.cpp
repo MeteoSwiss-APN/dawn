@@ -186,9 +186,9 @@ TEST(OffsetsTest, isZero) {
 }
 
 TEST(OffsetsTest, verticalOffset) {
-  EXPECT_EQ(Offsets().verticalOffset(), 0);
-  EXPECT_EQ(Offsets(cartesian, 1, 2, 3).verticalOffset(), 3);
-  EXPECT_EQ(Offsets(unstructured, true, 3).verticalOffset(), 3);
+  EXPECT_EQ(Offsets().verticalShift(), 0);
+  EXPECT_EQ(Offsets(cartesian, 1, 2, 3).verticalShift(), 3);
+  EXPECT_EQ(Offsets(unstructured, true, 3).verticalShift(), 3);
 }
 
 TEST(OffsetsTest, to_string) {

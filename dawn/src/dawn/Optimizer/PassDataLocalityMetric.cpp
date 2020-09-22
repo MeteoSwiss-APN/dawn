@@ -158,7 +158,7 @@ public:
 
   void processReadAccess(const std::shared_ptr<iir::FieldAccessExpr>& fieldExpr) {
     int AccessID = iir::getAccessID(fieldExpr);
-    int kOffset = fieldExpr->getOffset().verticalOffset();
+    int kOffset = fieldExpr->getOffset().verticalShift();
 
     auto it = fields_.find(AccessID);
     DAWN_ASSERT(it != fields_.end());

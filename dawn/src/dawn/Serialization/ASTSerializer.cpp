@@ -667,14 +667,12 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
         protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
       },
       [&] { protoExpr->mutable_zero_offset(); });
-  protoExpr->set_vertical_offset(offset.verticalOffset());
-  auto indirection = offset.verticalIndirection();
-  if(indirection != std::nullopt) {
-    protoExpr->set_vertical_indirection(indirection.value());
+  protoExpr->set_vertical_offset(offset.verticalShift());
+  if(offset.hasVerticalIndirection()) {
+    protoExpr->set_vertical_indirection(offset.getVerticalIndirectionFieldName());
     if(dataType_ == StmtData::IIR_DATA_TYPE) {
-      setAccessExprData(
-          protoExpr->mutable_vertical_indirection_data(),
-          offset.verticalIndirectionAsField().value()->getData<iir::IIRAccessExprData>());
+      setAccessExprData(protoExpr->mutable_vertical_indirection_data(),
+                        offset.getVerticalIndirectionField()->getData<iir::IIRAccessExprData>());
     }
   }
 
@@ -973,9 +971,9 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       if(!exprProto.vertical_indirection().empty()) {
         offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset(),
                               exprProto.vertical_indirection()};
-        if(dataType == StmtData::IIR_DATA_TYPE && offset.verticalIndirectionAsField().has_value())
+        if(dataType == StmtData::IIR_DATA_TYPE && offset.hasVerticalIndirection())
           fillAccessExprDataFromProto(
-              offset.verticalIndirectionAsField().value()->getData<iir::IIRAccessExprData>(),
+              offset.getVerticalIndirectionField()->getData<iir::IIRAccessExprData>(),
               exprProto.vertical_indirection_data());
       } else {
         offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};

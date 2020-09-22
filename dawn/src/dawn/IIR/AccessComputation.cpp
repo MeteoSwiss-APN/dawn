@@ -450,8 +450,9 @@ public:
       mergeReadOffset(expr);
     }
 
-    for(auto& s : expr->getChildren())
+    for(auto& s : expr->getChildren()) {
       s->accept(*this);
+    }
   }
 };
 

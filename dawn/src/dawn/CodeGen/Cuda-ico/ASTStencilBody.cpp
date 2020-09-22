@@ -85,13 +85,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
-  int vOffset = expr->getOffset().verticalOffset();
+  int vOffset = expr->getOffset().verticalShift();
   std::string kiter = "(kIter + " + std::to_string(vOffset) + ")";
 
   if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
     ss_ << getName(expr) << "["
-        << (expr->getOffset().verticalIndirection().has_value()
-                ? expr->getOffset().verticalIndirection().value() + "[" + kiter + "]"
+        << (expr->getOffset().hasVerticalIndirection()
+                ? expr->getOffset().getVerticalIndirectionFieldName() + "[" + kiter + "]"
                 : kiter)
         << "]";
     return;
@@ -113,8 +113,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       resArgName = (isHorizontal ? "" : denseOffset + " + ") + "pidx";
     }
     ss_ << getName(expr) << "["
-        << (expr->getOffset().verticalIndirection().has_value()
-                ? expr->getOffset().verticalIndirection().value() + "[" + resArgName + "]"
+        << (expr->getOffset().hasVerticalIndirection()
+                ? expr->getOffset().getVerticalIndirectionFieldName() + "[" + resArgName + "]"
                 : resArgName)
         << "]";
   } else { // sparse field accesses
@@ -126,8 +126,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
         (isHorizontal ? "" : denseOffset + " * " + sparseSize + " + ") + "nbhIter * " +
         locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) + "+ pidx";
     ss_ << getName(expr) << "["
-        << (expr->getOffset().verticalIndirection().has_value()
-                ? expr->getOffset().verticalIndirection().value() + "[" + resArgName + "]"
+        << (expr->getOffset().hasVerticalIndirection()
+                ? expr->getOffset().getVerticalIndirectionFieldName() + "[" + resArgName + "]"
                 : resArgName)
         << "]";
   }

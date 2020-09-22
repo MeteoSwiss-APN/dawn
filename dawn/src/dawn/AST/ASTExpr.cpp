@@ -401,9 +401,8 @@ void FieldAccessExpr::setPureOffset(const Offsets& offset) {
 }
 
 ArrayRef<std::shared_ptr<Expr>> FieldAccessExpr::getChildren() {
-  if(offset_.verticalIndirection().has_value()) {
-    return ExprRangeType(
-        std::static_pointer_cast<Expr>(offset_.verticalIndirectionAsField().value()));
+  if(offset_.hasVerticalIndirection()) {
+    return ExprRangeType(offset_.getVerticalIndirectionFieldAsExpr());
   }
   return ExprRangeType();
 }

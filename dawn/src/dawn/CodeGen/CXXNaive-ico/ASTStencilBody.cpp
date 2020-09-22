@@ -256,13 +256,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     }
   } else {
     if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
-      if(expr->getOffset().verticalIndirection().has_value()) {
+      if(expr->getOffset().hasVerticalIndirection()) {
         ss_ << "m_" << getName(expr) << "("
-            << "m_" << expr->getOffset().verticalIndirection().value() + "["
-            << "k]+" << expr->getOffset().verticalOffset() << ")";
+            << "m_" << expr->getOffset().getVerticalIndirectionFieldName() + "["
+            << "k]+" << expr->getOffset().verticalShift() << ")";
       } else {
         ss_ << "m_" << getName(expr) << "("
-            << "k+" << expr->getOffset().verticalOffset() << ")";
+            << "k+" << expr->getOffset().verticalShift() << ")";
       }
       return;
     }
@@ -284,13 +284,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       if(isHorizontal) {
         ss_ << ")";
       } else {
-        if(expr->getOffset().verticalIndirection().has_value()) {
+        if(expr->getOffset().hasVerticalIndirection()) {
           ss_ << ","
-              << "m_" << expr->getOffset().verticalIndirection().value() << "[k]+"
-              << expr->getOffset().verticalOffset() << ")";
+              << "m_" << expr->getOffset().getVerticalIndirectionFieldName() << "[k]+"
+              << expr->getOffset().verticalShift() << ")";
 
         } else {
-          ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+          ss_ << ",k+" << expr->getOffset().verticalShift() << ")";
         }
       }
     } else {
@@ -302,12 +302,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       if(isHorizontal) {
         ss_ << ")";
       } else {
-        if(expr->getOffset().verticalIndirection().has_value()) {
+        if(expr->getOffset().hasVerticalIndirection()) {
           ss_ << ","
-              << "m_" << expr->getOffset().verticalIndirection().value() << "[k]+"
-              << expr->getOffset().verticalOffset() << ")";
+              << "m_" << expr->getOffset().getVerticalIndirectionFieldName() << "[k]+"
+              << expr->getOffset().verticalShift() << ")";
         } else {
-          ss_ << ",k+" << expr->getOffset().verticalOffset() << ")";
+          ss_ << ",k+" << expr->getOffset().verticalShift() << ")";
         }
       }
     }

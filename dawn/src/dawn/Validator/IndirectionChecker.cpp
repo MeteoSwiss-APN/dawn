@@ -15,17 +15,17 @@ void IndirectionChecker::IndirectionCheckerImpl::visit(
     return;
   }
 
-  auto indirection = expr->getOffset().verticalIndirectionAsField();
-  if(lhs_ && indirection.has_value()) {
+  if(lhs_ && expr->getOffset().hasVerticalIndirection()) {
     // indirections on lhs (i.e. vertically indirected wriste) are prohibited
     indirectionsValid_ = false;
     return;
   }
 
-  if(indirection.has_value()) {
+  if(expr->getOffset().hasVerticalIndirection()) {
     // inner offset must be null offset
-    indirectionsValid_ = indirection.value()->getOffset().verticalOffset() == 0 &&
-                         !indirection.value()->getOffset().verticalIndirectionAsField().has_value();
+    indirectionsValid_ =
+        expr->getOffset().getVerticalIndirectionField()->getOffset().verticalShift() == 0 &&
+        !expr->getOffset().getVerticalIndirectionField()->getOffset().hasVerticalIndirection();
   }
 }
 

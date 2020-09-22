@@ -192,7 +192,7 @@ std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const ast::Offsets& 
                                                             bool useTmpIndex,
                                                             const Array3i iteratorDims) {
   auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
+  auto const& voffset = offset.verticalShift();
 
   Array3i offsets = {hoffset.offsetI(), hoffset.offsetJ(), voffset};
 

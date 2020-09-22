@@ -28,6 +28,7 @@ namespace ast {
 
 class Offsets;
 class FieldAccessExpr;
+class Expr;
 
 static constexpr cartesian_ cartesian;
 static constexpr unstructured_ unstructured;
@@ -166,19 +167,22 @@ auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
 
 class VerticalOffset {
 
-  int verticalOffset_ = 0;
+  int verticalShift_ = 0;
   // shared ptr required for visitors
-  std::shared_ptr<ast::FieldAccessExpr> verticalIndirection_ = nullptr;
+  std::shared_ptr<Expr> verticalIndirection_ = nullptr;
 
 public:
   VerticalOffset() = default;
-  VerticalOffset(int offset) : verticalOffset_(offset){};
-  VerticalOffset(int offset, const std::string& fieldName);
+  VerticalOffset(int shift) : verticalShift_(shift){};
+  VerticalOffset(int shift, const std::string& fieldName);
   VerticalOffset(const std::string& fieldName) : VerticalOffset(0, fieldName){};
   VerticalOffset(const VerticalOffset&);
-  int getShift() const { return verticalOffset_; }
-  std::optional<std::string> getIndirectionFieldName() const;
-  std::optional<std::shared_ptr<FieldAccessExpr>> getIndirectionField() const;
+  int getShift() const { return verticalShift_; }
+  bool hasIndirection() const { return bool(verticalIndirection_); }
+  std::string getIndirectionFieldName() const;
+  std::shared_ptr<FieldAccessExpr> getIndirectionField() const;
+  // unfortunately we need this to be compatible with the visitor infrastructure
+  std::shared_ptr<Expr>& getIndirectionFieldAsExpr();
   bool operator==(VerticalOffset const& other) const;
   VerticalOffset operator+=(VerticalOffset const& other);
   VerticalOffset& operator=(VerticalOffset const& other);
@@ -200,9 +204,12 @@ public:
   Offsets(unstructured_, bool hasOffset, int k, const std::string& fieldName);
   explicit Offsets(unstructured_);
 
-  int verticalOffset() const;
-  std::optional<std::string> verticalIndirection() const;
-  std::optional<std::shared_ptr<FieldAccessExpr>> verticalIndirectionAsField() const;
+  int verticalShift() const { return verticalOffset_.getShift(); }
+  bool hasVerticalIndirection() const { return verticalOffset_.hasIndirection(); }
+  std::string getVerticalIndirectionFieldName() const;
+  std::shared_ptr<FieldAccessExpr> getVerticalIndirectionField() const;
+  // unfortunately we need this to be compatible with the visitor infrastructure
+  std::shared_ptr<Expr>& getVerticalIndirectionFieldAsExpr();
 
   void setVerticalIndirection(const std::string& fieldName);
 
@@ -228,7 +235,7 @@ template <typename F>
 std::string to_string(cartesian_, Offsets const& offset, std::string const& sep,
                       F const& offset_to_string) {
   auto const& hoffset = offset_cast<CartesianOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
+  auto const& voffset = offset.verticalShift();
   std::string s;
   std::string csep = "";
   if(std::string ret = offset_to_string("i", hoffset.offsetI()); ret != "") {
