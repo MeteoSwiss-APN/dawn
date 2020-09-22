@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/Cuda-ico/IcoChainSizes.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/CodeGen/F90Util.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
@@ -27,6 +28,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/Support/Exception.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
 
@@ -950,6 +952,71 @@ std::string CudaIcoCodeGen::generateCHeader() const {
   return ssSW.str();
 }
 
+inline void
+generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
+                       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  // The following assert is needed because we have only one (user-defined) name for a stencil
+  // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
+  // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) ) however
+  // the interface would not be very useful if the name is generated.
+  DAWN_ASSERT_MSG(stencils.size() == 1,
+                  "Unable to generate interface. More than one stencil in stencil instantiation.");
+
+  const auto& stencil = *stencils[0];
+
+  std::vector<FortranInterfaceAPI> apis = {
+      FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
+                          FortranInterfaceAPI::InterfaceType::DOUBLE),
+      FortranInterfaceAPI("run_" + stencilInstantiation->getName() + "_from_fort_host",
+                          FortranInterfaceAPI::InterfaceType::DOUBLE)};
+  for(auto&& api : apis) {
+    api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
+    api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+    for(auto field : support::orderMap(stencil.getFields())) {
+      int n = 3;
+      const auto& dims = field.second.field.getFieldDimensions();
+      if(dims.isVertical()) {
+        n = 1;
+      } else {
+        if(!dims.K()) {
+          --n;
+        }
+        const auto& hdim = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+            dims.getHorizontalFieldDimension());
+        if(hdim.isDense()) {
+          --n;
+        }
+      }
+      api.addArg(
+          field.second.Name,
+          FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+                                                        time whether we have fields in SP/DP */
+          ,
+          n);
+    }
+
+    fimGen.addAPI(std::move(api));
+  }
+}
+
+std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
+  std::stringstream ss;
+  IndentedStringStream iss(ss);
+
+  FortranInterfaceModuleGen fimGen(iss, moduleName);
+
+  for(const auto& nameStencilCtxPair : context_) {
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
+    generateF90InterfaceSI(fimGen, stencilInstantiation);
+  }
+
+  fimGen.commit();
+
+  return iss.str();
+}
+
 std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
 
   DAWN_LOG(INFO) << "Starting code generation for ...";
@@ -966,10 +1033,20 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   }
 
   if(codeGenOptions_.OutputCHeader) {
+    fs::path filePath = *codeGenOptions_.OutputCHeader;
     std::ofstream headerFile;
-    headerFile.open(*codeGenOptions_.OutputCHeader);
+    headerFile.open(filePath);
     headerFile << generateCHeader();
     headerFile.close();
+  }
+
+  if(codeGenOptions_.OutputFortranInterface) {
+    fs::path filePath = *codeGenOptions_.OutputFortranInterface;
+    std::string moduleName = filePath.filename().replace_extension("").string();
+    std::ofstream interfaceFile;
+    interfaceFile.open(filePath);
+    interfaceFile << generateF90Interface(moduleName);
+    interfaceFile.close();
   }
 
   std::vector<std::string> ppDefines{

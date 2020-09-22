@@ -110,6 +110,8 @@ private:
                     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
   std::string generateCHeader() const;
 
+  std::string generateF90Interface(std::string moduleName) const;
+
   CudaIcoCodeGenOptions codeGenOptions_;
 };
 
