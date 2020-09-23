@@ -7,7 +7,7 @@ root_dir=$script_path/..
 dawn_dir=/usr/src/dawn
 
 image=gtclang/dawn-env-cuda10.1-ubuntu18.04
-build_jobs=24
+build_jobs=1
 
 module load daint-gpu
 module load sarus
