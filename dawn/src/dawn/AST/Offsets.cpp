@@ -154,8 +154,7 @@ std::shared_ptr<const FieldAccessExpr> VerticalOffset::getIndirectionField() con
 void VerticalOffset::setIndirectionAccessID(int accessID) {
   DAWN_ASSERT(hasIndirection());
   auto field = std::dynamic_pointer_cast<FieldAccessExpr>(verticalIndirection_);
-  auto data = field->getData<iir::IIRAccessExprData>();
-  data.AccessID = std::make_optional(accessID);
+  field->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(accessID);
 }
 std::optional<int> VerticalOffset::getIndirectionAccessID() const {
   DAWN_ASSERT(hasIndirection());

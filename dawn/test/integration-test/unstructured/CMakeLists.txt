@@ -14,21 +14,29 @@
 include(GoogleTest)
 
 # Need to specify here the names of the stencil codes that are going to be generated.
-set(generated_stencil_codes generated_copyCell.hpp
+set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
+  generated_copyCell.hpp
   generated_copyEdge.hpp
-  generated_accumulateEdgeToCell.hpp
-  generated_verticalSum.hpp
-  generated_diffusion.hpp
-  generated_gradient.hpp
-  generated_verticalSolver.hpp
-  generated_NestedSimple.hpp
-  generated_NestedWithField.hpp
-  generated_sparseDimension.hpp
-  generated_sparseDimensionTwice.hpp
-  generated_intp.hpp
   generated_diamond.hpp
   generated_diamondWeights.hpp
-  generated_horizontal_vertical.hpp
+  generated_diffusion.hpp
+  generated_gradient.hpp
+  generated_horizontalVertical.hpp
+  generated_intp.hpp
+  generated_nestedSimple.hpp
+  generated_nestedWithField.hpp
+  generated_nestedWithSparse.hpp
+  generated_sparseAssignment0.hpp
+  generated_sparseAssignment1.hpp
+  generated_sparseAssignment2.hpp
+  generated_sparseAssignment3.hpp
+  generated_sparseAssignment4.hpp
+  generated_sparseAssignment5.hpp
+  generated_sparseDimension.hpp
+  generated_sparseDimensionTwice.hpp
+  generated_tridiagonalSolve.hpp
+  generated_verticalIndirecion.hpp
+  generated_verticalSum.hpp
 )
 
 set(reference_stencil_codes reference_diffusion.hpp
@@ -39,7 +47,7 @@ list(TRANSFORM generated_stencil_codes PREPEND generated/)
 list(TRANSFORM reference_stencil_codes PREPEND reference/)
 
 # Compile the executable that will programatically construct an IIR and code-generate it to file
-add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp)
+add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp testMutator.cpp)
 
 target_link_libraries(AtlasIntegrationTestCodeGenerate Dawn DawnUnittest)
 

@@ -319,7 +319,7 @@ TEST(ToylibIntegrationTestCompareOutput, Intp) {
   }
 }
 
-#include <generated_verticalSolver.hpp>
+#include <generated_tridiagonalSolve.hpp>
 TEST(ToylibIntegrationTestCompareOutput, verticalSolver) {
   const int numCell = 5;
   auto mesh = toylib::Grid(numCell, numCell);
@@ -355,7 +355,7 @@ TEST(ToylibIntegrationTestCompareOutput, verticalSolver) {
   }
 }
 
-#include <generated_NestedSimple.hpp>
+#include <generated_nestedSimple.hpp>
 TEST(ToylibIntegrationTestCompareOutput, nestedSimple) {
   auto mesh = toylib::Grid(10, 10);
   const int nb_levels = 1;
@@ -377,7 +377,7 @@ TEST(ToylibIntegrationTestCompareOutput, nestedSimple) {
   }
 }
 
-#include <generated_NestedWithField.hpp>
+#include <generated_nestedWithField.hpp>
 TEST(ToylibIntegrationTestCompareOutput, nestedWithField) {
   auto mesh = toylib::Grid(10, 10);
   const int nb_levels = 1;
@@ -425,7 +425,7 @@ TEST(ToylibIntegrationTestCompareOutput, sparseDimensions) {
   }
 }
 
-#include <generated_NestedSparse.hpp>
+#include <generated_nestedWithSparse.hpp>
 TEST(ToylibIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
   auto mesh = toylib::Grid(10, 10);
   const int edgesPerCell = 3;
@@ -459,7 +459,7 @@ TEST(ToylibIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
   }
 }
 
-#include <generated_SparseAssignment0.hpp>
+#include <generated_sparseAssignment0.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment0) {
   auto mesh = toylib::Grid(10, 10);
   const int diamondSize = 4;
@@ -492,7 +492,7 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment0) {
   }
 }
 
-#include <generated_SparseAssignment1.hpp>
+#include <generated_sparseAssignment1.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment1) {
   auto mesh = toylib::Grid(10, 10);
   const int diamondSize = 4;
@@ -525,7 +525,7 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment1) {
   }
 }
 
-#include <generated_SparseAssignment2.hpp>
+#include <generated_sparseAssignment2.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment2) {
   auto mesh = toylib::Grid(10, 10);
   const int diamondSize = 4;
@@ -556,7 +556,7 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment2) {
   }
 }
 
-#include <generated_SparseAssignment3.hpp>
+#include <generated_sparseAssignment3.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
   auto mesh = toylib::Grid(10, 10);
   const int intpSize = 9;
@@ -593,7 +593,7 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
   }
 }
 
-#include <generated_SparseAssignment4.hpp>
+#include <generated_sparseAssignment4.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment4) {
   auto mesh = toylib::Grid(10, 10);
   const int edgesPerCell = 3;
@@ -618,7 +618,7 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment4) {
   }
 }
 
-#include <generated_SparseAssignment5.hpp>
+#include <generated_sparseAssignment5.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment5) {
   auto mesh = toylib::Grid(10, 10);
   const int edgesPerCell = 3;
@@ -673,5 +673,32 @@ TEST(ToylibIntegrationTestCompareOutput, sparseDimensionsTwice) {
     EXPECT_TRUE(fabs(cells(f, 0) - 600) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
+
+#include <generated_verticalIndirecion.hpp>
+TEST(ToylibIntegrationTestCompareOutput, verticalIndirection) {
+  auto mesh = toylib::Grid(10, 10);
+  const int nb_levels = 10;
+
+  toylib::FaceData<double> in(mesh, nb_levels);
+  toylib::FaceData<double> out(mesh, nb_levels);
+  toylib::FaceData<double> kidx(mesh, nb_levels);
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& f : mesh.faces()) {
+      in(f, level) = level;
+      kidx(f, level) = level + 1;
+    }
+  }
+
+  dawn_generated::cxxnaiveico::verticalIndirecion<toylibInterface::toylibTag>(mesh, nb_levels, in,
+                                                                              out, kidx)
+      .run();
+
+  for(size_t level = 0; level < nb_levels - 1; level++) {
+    for(const auto& f : mesh.faces()) {
+      EXPECT_TRUE(kidx(f, level) == level + 1);
+    }
+  }
+} // namespace
 
 } // namespace

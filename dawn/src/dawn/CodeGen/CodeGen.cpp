@@ -501,7 +501,7 @@ std::string extentToString(iir::Extents const& extents, ast::GridType const& gri
   if(!vExtents.isUndefined()) {
     result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
   } else {
-    result += ", UNDEFINED , UNDEFINED";
+    result += ", std::numeric_limits<int>::min() , std::numeric_limits<int>::max()";
   }
   return result;
 }
