@@ -14,6 +14,7 @@
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 
 namespace dawn {
 namespace iir {
@@ -156,8 +157,7 @@ void ASTMatcher::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) { check(
 
 void ASTMatcher::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   check(expr);
-  for(auto& s : expr->getChildren())
-    s->accept(*this);
+  ASTVisitorForwarding::visit(expr);
 }
 
 void ASTMatcher::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { check(expr); }

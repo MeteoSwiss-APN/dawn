@@ -98,7 +98,7 @@ def main(args: argparse.Namespace):
     )
 
     # vert_nbh[c,k] = vert_nbh[c,k+1]
-    # in_out[c,k] = in_out[c,vert_nbh[k]]
+    # in_out[c,k] = in_out[c,vert_nbh[k]+1]
     body_ast_5 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(

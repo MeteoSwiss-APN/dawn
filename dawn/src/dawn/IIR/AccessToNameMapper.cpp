@@ -15,6 +15,7 @@
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 
@@ -64,8 +65,7 @@ void AccessToNameMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) 
 
 void AccessToNameMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   insertAccessInfo(expr);
-  for(auto& s : expr->getChildren())
-    s->accept(*this);
+  ASTVisitorForwarding::visit(expr);
 }
 
 } // namespace iir

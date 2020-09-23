@@ -144,8 +144,16 @@ public:
   /// @name Comparison operator
   /// @{
   bool operator==(const Interval& other) const {
-    return lowerBound() == other.lowerBound() && upperBound() == other.upperBound() &&
-           isUndefined() == other.isUndefined();
+    // bounds may be uninitialized in the undefined case
+    if(isUndefined() && other.isUndefined()) {
+      return true;
+    }
+    // look at boundaries if both extents are defined
+    if(!isUndefined() && !other.isUndefined()) {
+      return lowerBound() == other.lowerBound() && upperBound() == other.upperBound();
+    }
+    // not equal otherwise
+    return false;
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
   /// @}

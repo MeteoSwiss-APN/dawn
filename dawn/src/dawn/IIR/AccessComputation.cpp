@@ -380,8 +380,17 @@ public:
       auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
       if(readAndWrite)
         mergeReadOffset(field);
-
       mergeWriteOffset(field);
+
+      // this is not legal, but we need to register this write access to generate meaningful error
+      // messages later on
+      if(field->getOffset().hasVerticalIndirection()) {
+        auto innerField = std::static_pointer_cast<iir::FieldAccessExpr>(
+            field->getOffset().getVerticalIndirectionFieldAsExpr());
+        if(readAndWrite)
+          mergeReadOffset(innerField);
+        mergeWriteOffset(innerField);
+      }
     } else if(isa<iir::VarAccessExpr>(expr->getLeft().get())) {
       auto var = std::static_pointer_cast<iir::VarAccessExpr>(expr->getLeft());
       if(readAndWrite)

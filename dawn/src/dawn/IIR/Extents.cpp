@@ -77,10 +77,7 @@ bool Extent::isPointwise() const {
   return plus_ == 0 && minus_ == 0;
 }
 
-Extent operator+(Extent lhs, Extent const& rhs) {
-  DAWN_ASSERT_MSG(!lhs.isUndefined() && !rhs.isUndefined(), "operator+ called on undefined Extent");
-  return lhs += rhs;
-}
+Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 Extent merge(Extent lhs, Extent const& rhs) {
   lhs.merge(rhs);
   return lhs;

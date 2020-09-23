@@ -1,4 +1,5 @@
 #include "GridTypeChecker.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/Extents.h"
@@ -114,15 +115,13 @@ void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::FieldAcc
   if(!typesConsistent_) {
     return;
   }
-
   const auto& hOffset = expr->getOffset().horizontalOffset();
   if(!hOffset.hasType()) {
     return;
   }
   typesConsistent_ &= hOffset.getGridType() == prescribedType_;
 
-  for(auto& s : expr->getChildren())
-    s->accept(*this);
+  ast::ASTVisitorForwarding::visit(expr);
 }
 
 } // namespace dawn

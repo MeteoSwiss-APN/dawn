@@ -969,6 +969,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       if(!exprProto.vertical_indirection().empty()) {
         offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
                               exprProto.vertical_shift(), exprProto.vertical_indirection()};
+        if(dataType == StmtData::IIR_DATA_TYPE)
+          fillAccessExprDataFromProto(offset, exprProto.vertical_indirection_data());
       } else {
         offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
                               exprProto.vertical_shift()};
@@ -991,6 +993,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       if(!exprProto.vertical_indirection().empty()) {
         offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift(),
                               exprProto.vertical_indirection()};
+        if(dataType == StmtData::IIR_DATA_TYPE && offset.hasVerticalIndirection())
+          fillAccessExprDataFromProto(offset, exprProto.vertical_indirection_data());
       } else {
         offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift()};
       }

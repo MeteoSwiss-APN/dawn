@@ -151,7 +151,7 @@ bool PassFixVersionedInputFields::run(
 
         iir::MultiInterval multiInterval;
         if(extents.verticalExtent().isUndefined()) {
-          multiInterval.insert(iir::Interval(0, sir::Interval::End, 0, 0));
+          multiInterval.insert(iir::Interval(sir::Interval::Start, sir::Interval::End, 0, 0));
         } else {
           multiInterval = ms->computeReadAccessInterval(id);
         }

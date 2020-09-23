@@ -170,6 +170,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
                                config_.currentChain_->back();
     }
   }
+
+  if(fieldAccessExpr->getOffset().hasVerticalIndirection()) {
+    auto indirectionName = fieldAccessExpr->getOffset().getVerticalIndirectionFieldName();
+    DAWN_ASSERT(nameToDimensions_.count(indirectionName));
+    dimensionsConsistent_ &=
+        nameToDimensions_.at(fieldName) == nameToDimensions_.at(indirectionName);
+  }
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::setCurDimensionFromLocType(
