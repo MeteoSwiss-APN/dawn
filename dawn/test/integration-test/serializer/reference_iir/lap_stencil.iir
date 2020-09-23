@@ -100,7 +100,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "tmp",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -131,7 +131,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "in",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": 0,
                         "j_offset": -2
@@ -161,7 +161,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "in",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": 0,
                         "j_offset": 2
@@ -200,7 +200,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "in",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": -2,
                         "j_offset": 0
@@ -230,7 +230,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "in",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": 2,
                         "j_offset": 0
@@ -349,7 +349,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -380,7 +380,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "tmp",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": 0,
                         "j_offset": -1
@@ -410,7 +410,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "tmp",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": 0,
                         "j_offset": 1
@@ -449,7 +449,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "tmp",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": -1,
                         "j_offset": 0
@@ -479,7 +479,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "tmp",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "cartesian_offset": {
                         "i_offset": 1,
                         "j_offset": 0

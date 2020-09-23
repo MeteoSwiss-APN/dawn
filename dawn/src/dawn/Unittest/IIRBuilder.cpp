@@ -184,7 +184,10 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, offset);
   expr->setID(si_->nextUID());
-
+  if(offset.hasVerticalIndirection()) {
+    expr->getOffset().setVerticalIndirectionAccessID(
+        si_->getMetaData().getNameToAccessIDMap().at(offset.getVerticalIndirectionFieldName()));
+  }
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
 }

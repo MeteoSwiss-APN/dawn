@@ -143,8 +143,14 @@ void Stage::DerivedInfo::clear() {
 
 void Stage::clearDerivedInfo() { derivedInfo_.clear(); }
 bool Stage::overlaps(const Stage& other) const {
+  auto left = getEnclosingExtendedInterval();
+  auto right = other.getEnclosingExtendedInterval();
+  // if either interval is undefined we have to assume that they overlap
+  if(left.isUndefined() || right.isUndefined()) {
+    return true;
+  }
   // This is a more conservative test.. if it fails we are certain nothing overlaps
-  if(!getEnclosingExtendedInterval().overlaps(other.getEnclosingExtendedInterval()))
+  if(!left.overlaps(right))
     return false;
 
   for(const auto& otherDoMethodPtr : other.getChildren())

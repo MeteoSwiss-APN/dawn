@@ -465,17 +465,32 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     switch(exprProto.horizontal_offset_case()) {
     case ProtoFieldAccessExpr::kCartesianOffset: {
       auto const& hOffset = exprProto.cartesian_offset();
-      offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
-                            exprProto.vertical_offset()};
+      if(!exprProto.vertical_indirection().empty()) {
+        offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
+                              exprProto.vertical_shift(), exprProto.vertical_indirection()};
+      } else {
+        offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
+                              exprProto.vertical_shift()};
+      }
       break;
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
-      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      if(!exprProto.vertical_indirection().empty()) {
+        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_shift(),
+                              exprProto.vertical_indirection()};
+      } else {
+        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_shift()};
+      }
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:
-      offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
+      if(!exprProto.vertical_indirection().empty()) {
+        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift(),
+                              exprProto.vertical_indirection()};
+      } else {
+        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift()};
+      }
       break;
     default:
       throw std::invalid_argument("Unknown offset");

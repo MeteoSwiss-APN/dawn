@@ -54,9 +54,13 @@ std::string Interval::toStringGen() const {
       ss << (offset > 0 ? "plus_" : "minus_") << std::abs(offset);
   };
 
-  printLevel(lowerLevel(), lowerOffset());
-  ss << "_";
-  printLevel(upperLevel(), upperOffset());
+  if(!isUndefined()) {
+    printLevel(lowerLevel(), lowerOffset());
+    ss << "_";
+    printLevel(upperLevel(), upperOffset());
+  } else {
+    ss << "undefined_undefined";
+  }
 
   return ss.str();
 }
@@ -76,21 +80,29 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
       os << (offset > 0 ? "+" : "") << offset;
   };
 
-  os << "{ ";
-  printLevel(interval.lowerLevel(), interval.lowerOffset());
-  os << " : ";
-  printLevel(interval.upperLevel(), interval.upperOffset());
-  os << " }";
+  if(!interval.isUndefined()) {
+    os << "{ ";
+    printLevel(interval.lowerLevel(), interval.lowerOffset());
+    os << " : ";
+    printLevel(interval.upperLevel(), interval.upperOffset());
+    os << " }";
+  } else {
+    os << "undefined";
+  }
 
   return os;
 }
 
 Interval Interval::extendInterval(const Extent& verticalExtent) const {
+  if(isUndefined() || verticalExtent.isUndefined()) {
+    return Interval(UndefinedInterval{});
+  }
   return Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_ + verticalExtent.minus(),
                   upper_.offset_ + verticalExtent.plus());
 }
 
 Interval Interval::crop(Bound bound, std::array<int, 2> window) const {
+  DAWN_ASSERT_MSG(!isUndefined(), "trying to crop undefined interval!");
   return Interval{level(bound), level(bound), offset(bound) + window[0], offset(bound) + window[1]};
 }
 
@@ -103,6 +115,9 @@ std::string Interval::makeCodeGenName(const Interval& interval) {
 }
 
 std::vector<Interval> Interval::computeLevelUnion(const std::vector<Interval>& intervals) {
+  DAWN_ASSERT_MSG(!std::any_of(intervals.begin(), intervals.end(),
+                               [](const Interval& in) { return in.isUndefined(); }),
+                  "trying to compute the level union of (partially) undefined interval(s)");
   std::set<int> levels;
   for(const Interval& interval : intervals) {
     levels.insert(interval.lowerLevel());
@@ -128,6 +143,11 @@ std::vector<Interval> Interval::computeLevelUnion(const std::vector<Interval>& i
 
 std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
                                                     const std::vector<Interval>& intervals) {
+
+  DAWN_ASSERT_MSG(!axis.undefined_, "axis is undefined!");
+  DAWN_ASSERT_MSG(!std::any_of(intervals.begin(), intervals.end(),
+                               [](const Interval& in) { return in.isUndefined(); }),
+                  "trying to compute gap intervals of (partially) undefined interval(s)");
   std::vector<Interval> newIntervals;
 
   // Insert the intervals in sorted order
@@ -183,6 +203,14 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
 }
 
 void Interval::merge(const Interval& other) {
+  if(isUndefined()) {
+    return;
+  }
+
+  if(other.isUndefined()) {
+    undefined_ = true;
+    return;
+  }
   int lb = lowerBound(), ub = upperBound();
   lower_.levelMark_ = std::min(lowerLevel(), other.lowerLevel());
   upper_.levelMark_ = std::max(upperLevel(), other.upperLevel());
@@ -194,7 +222,9 @@ void Interval::merge(const Interval& other) {
 
 // TODO move this to IntervalAlgorithms and generate a MultiInterval
 std::vector<Interval> Interval::computePartition(std::vector<Interval> const& intervals) {
-
+  DAWN_ASSERT_MSG(!std::any_of(intervals.begin(), intervals.end(),
+                               [](const Interval& in) { return in.isUndefined(); }),
+                  "trying to compute the partition of (partially) undefined interval(s)");
   std::vector<Interval> newIntervals(intervals);
 
   // sort the intervals based on the lower bound
@@ -345,6 +375,7 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 }
 
 Interval Interval::intersect(const Interval& other) const {
+  DAWN_ASSERT_MSG(!undefined_ && !other.undefined_, "trying to intersect undefined interval!");
   DAWN_ASSERT(lowerBound() <= upperBound());
   DAWN_ASSERT(other.lowerBound() <= other.upperBound());
 
@@ -359,6 +390,7 @@ Interval Interval::intersect(const Interval& other) const {
 }
 
 void Interval::invert() {
+  DAWN_ASSERT_MSG(!undefined_, "trying to invert undefined interval!");
   IntervalLevel tmp = lower_;
   lower_ = upper_;
   upper_ = tmp;
@@ -385,6 +417,8 @@ IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
 }
 
 IntervalDiff distance(Interval f, Interval s, LoopOrderKind order) {
+  DAWN_ASSERT_MSG(!f.isUndefined() && !s.isUndefined(),
+                  "trying to take distance of undefined interval!");
   if(order == LoopOrderKind::Backward) {
     return distance(f.upperIntervalLevel(), s.upperIntervalLevel());
   }

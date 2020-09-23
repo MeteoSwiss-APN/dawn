@@ -20,12 +20,15 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace dawn {
 namespace ast {
 
 class Offsets;
+class FieldAccessExpr;
+class Expr;
 
 static constexpr cartesian_ cartesian;
 static constexpr unstructured_ unstructured;
@@ -162,19 +165,57 @@ auto offset_dispatch(HorizontalOffset const& hOffset, CartFn const& cartFn,
   }
 }
 
+class VerticalOffset {
+
+  int verticalShift_ = 0;
+  // shared ptr required for visitors
+  std::shared_ptr<Expr> verticalIndirection_ = nullptr;
+
+public:
+  VerticalOffset() = default;
+  VerticalOffset(int shift) : verticalShift_(shift){};
+  VerticalOffset(int shift, const std::string& fieldName);
+  VerticalOffset(const std::string& fieldName) : VerticalOffset(0, fieldName){};
+  VerticalOffset(const VerticalOffset&);
+  int getShift() const { return verticalShift_; }
+  bool hasIndirection() const { return bool(verticalIndirection_); }
+  std::string getIndirectionFieldName() const;
+  std::shared_ptr<const FieldAccessExpr> getIndirectionField() const;
+  // unfortunately we need this to be compatible with the visitor infrastructure
+  std::shared_ptr<Expr>& getIndirectionFieldAsExpr();
+  void setIndirectionAccessID(int accessID);
+  std::optional<int> getIndirectionAccessID() const;
+  bool operator==(VerticalOffset const& other) const;
+  VerticalOffset operator+=(VerticalOffset const& other);
+  VerticalOffset& operator=(VerticalOffset const& other);
+};
+
 class Offsets {
 public:
   Offsets() = default;
   Offsets(HorizontalOffset const& hOffset, int vOffset);
+  Offsets(HorizontalOffset const& hOffset, int vOffset, const std::string& vIndirection);
 
   Offsets(cartesian_, int i, int j, int k);
   Offsets(cartesian_, std::array<int, 3> const& structuredOffsets);
+  Offsets(cartesian_, int i, int j, int k, const std::string& fieldName);
+  Offsets(cartesian_, std::array<int, 3> const& structuredOffsets, const std::string& fieldName);
   explicit Offsets(cartesian_);
 
   Offsets(unstructured_, bool hasOffset, int k);
+  Offsets(unstructured_, bool hasOffset, int k, const std::string& fieldName);
   explicit Offsets(unstructured_);
 
-  int verticalOffset() const;
+  int verticalShift() const { return verticalOffset_.getShift(); }
+  bool hasVerticalIndirection() const { return verticalOffset_.hasIndirection(); }
+  std::string getVerticalIndirectionFieldName() const;
+  std::shared_ptr<const FieldAccessExpr> getVerticalIndirectionField() const;
+  void setVerticalIndirectionAccessID(int accessID);
+  std::optional<int> getVerticalIndirectionAccessID() const;
+  // unfortunately we need this to be compatible with the visitor infrastructure
+  std::shared_ptr<Expr>& getVerticalIndirectionFieldAsExpr();
+  void setVerticalIndirection(const std::string& fieldName);
+
   HorizontalOffset const& horizontalOffset() const;
 
   bool operator==(Offsets const& other) const;
@@ -185,7 +226,7 @@ public:
 
 private:
   HorizontalOffset horizontalOffset_;
-  int verticalOffset_ = 0;
+  VerticalOffset verticalOffset_;
 };
 Offsets operator+(Offsets o1, Offsets const& o2);
 
@@ -197,7 +238,7 @@ template <typename F>
 std::string to_string(cartesian_, Offsets const& offset, std::string const& sep,
                       F const& offset_to_string) {
   auto const& hoffset = offset_cast<CartesianOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
+  auto const& voffset = offset.verticalShift();
   std::string s;
   std::string csep = "";
   if(std::string ret = offset_to_string("i", hoffset.offsetI()); ret != "") {

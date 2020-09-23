@@ -1,14 +1,14 @@
 {
  "metadata": {
   "accessIDToName": {
+   "29": "global",
    "30": "in_field",
-   "31": "out_field",
-   "29": "global"
+   "31": "out_field"
   },
   "accessIDToType": {
-   "31": 6,
    "29": 0,
-   "30": 6
+   "30": 6,
+   "31": 6
   },
   "literalIDToName": {
    "-61": "0",
@@ -119,7 +119,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out_field",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -163,7 +164,8 @@
                    "right": {
                     "field_access_expr": {
                      "name": "in_field",
-                     "vertical_offset": 0,
+                     "vertical_shift": 0,
+                     "vertical_indirection": "",
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -211,7 +213,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -220,14 +223,16 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   },
                   "30": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
@@ -285,7 +290,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out_field",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -329,7 +335,8 @@
                    "right": {
                     "field_access_expr": {
                      "name": "in_field",
-                     "vertical_offset": 0,
+                     "vertical_shift": 0,
+                     "vertical_indirection": "",
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -377,23 +384,26 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
                  "readAccess": {
-                  "30": {
-                   "zero_extent": {},
-                   "vertical_extent": {
-                    "minus": 0,
-                    "plus": 0
-                   }
-                  },
                   "29": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
+                   }
+                  },
+                  "30": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
@@ -597,5 +607,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/Regression/globals_dependencies_issue401.cpp"
+ "filename": "globals_dependencies_issue401.cpp"
 }

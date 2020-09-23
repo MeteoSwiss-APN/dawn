@@ -19,8 +19,11 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Interval.h"
+#include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logger.h"
 
 #include <memory>
@@ -142,7 +145,16 @@ bool PassFixVersionedInputFields::run(
         // fills all read intervals from the original field during the execution
         // of the multistage. Currently, we create one for each interval, but
         // these could later be merged into a single multistage.
-        const auto multiInterval = ms->computeReadAccessInterval(id);
+
+        // If the extent is undefined (vertical indirection), we can simply not make any assumptions
+        // about the read interval. In this case, we simply copy the whole domain
+
+        iir::MultiInterval multiInterval;
+        if(extents.verticalExtent().isUndefined()) {
+          multiInterval.insert(iir::Interval(sir::Interval::Start, sir::Interval::End, 0, 0));
+        } else {
+          multiInterval = ms->computeReadAccessInterval(id);
+        }
         for(const auto& interval : multiInterval.getIntervals()) {
           auto insertedMultistage =
               createAssignmentMultiStage(id, stencilInstantiation, interval, extents);

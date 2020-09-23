@@ -525,5 +525,25 @@ TEST(UnstructuredDimensionCheckerTest, VerticalFields) {
                                          b.stmt(b.assignExpr(b.at(f_vert), b.at(f_e)))))))),
       ".*Dimensions consistency check failed.*");
 }
+TEST(UnstructuredDimensionCheckerTest, VerticalIndirection) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells);
+  auto out = b.field("out", LocType::Cells);
+  auto kidx = b.field("kidx", LocType::Edges);
+
+  EXPECT_DEATH(
+      auto stencil = b.build(
+          "fail", b.stencil(b.multistage(
+                      LoopOrderKind::Parallel,
+                      b.stage(b.doMethod(
+                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.stmt(b.assignExpr(b.at(out), b.at(in, AccessType::r,
+                                                              ast::Offsets{ast::unstructured, false,
+                                                                           1, "kidx"})))))))),
+      ".*Dimensions consistency check failed.*");
+}
 
 } // namespace

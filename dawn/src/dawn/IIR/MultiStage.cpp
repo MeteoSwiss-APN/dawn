@@ -95,7 +95,8 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 DependencyGraphAccesses MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
   DependencyGraphAccesses dependencyGraph(metadata_);
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
-    if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
+    if(interval.isUndefined() || stagePtr->getEnclosingExtendedInterval().isUndefined() ||
+       interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                     [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                       dependencyGraph.merge(*DoMethodPtr->getDependencyGraph());
