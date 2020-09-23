@@ -13,6 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 include(GoogleTest)
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+
 # Need to specify here the names of the stencil codes that are going to be generated.
 set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_copyCell.hpp
@@ -82,6 +84,7 @@ add_dependencies(${test_name} AtlasIntegrationTestCopyReferences)
 target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
 target_include_directories(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 target_add_dawn_standard_props(${test_name})
 target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest gtest_main)
 
@@ -109,6 +112,12 @@ target_include_directories(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_add_dawn_standard_props(${test_name})
 target_link_libraries(${test_name} ${PROJECT_NAME} toylib eckit atlas gtest gtest_main) #need atlas here unfortunately because of the verifier
 
+target_include_directories(${test_name} PRIVATE "/home/matthias/workspace/atlas/build/install/include")
+target_include_directories(${test_name} PRIVATE "/home/matthias/workspace/eckit/build/install/include")
+
+target_link_directories(${test_name} PRIVATE "/home/matthias/workspace/atlas/build/install/lib")
+target_link_directories(${test_name} PRIVATE "/home/matthias/workspace/eckit/build/install/lib")
+
 set_target_properties(${test_name} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/unittest
 )
@@ -116,3 +125,5 @@ set_target_properties(${test_name} PROPERTIES
 gtest_discover_tests(${test_name} TEST_PREFIX "Dawn::Integration::Unstructured::"
   DISCOVERY_TIMEOUT 30
 )
+
+endif()
