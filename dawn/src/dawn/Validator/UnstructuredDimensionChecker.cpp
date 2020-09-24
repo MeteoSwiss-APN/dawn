@@ -169,6 +169,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
                                config_.currentChain_->back();
     }
+    if(hasOffset && !getUnstructuredDim(*curDimensions_).isDense()) {
+      dimensionsConsistent_ &=
+          getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
+    }
   }
 
   if(fieldAccessExpr->getOffset().hasVerticalIndirection()) {
