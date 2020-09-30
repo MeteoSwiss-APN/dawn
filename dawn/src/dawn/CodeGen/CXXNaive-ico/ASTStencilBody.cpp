@@ -27,11 +27,11 @@ static std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationT
   auto getLocationTypeString = [](dawn::ast::LocationType type) {
     switch(type) {
     case dawn::ast::LocationType::Cells:
-      return "dawn::LocationType::Cells";
+      return "::dawn::LocationType::Cells";
     case dawn::ast::LocationType::Edges:
-      return "dawn::LocationType::Edges";
+      return "::dawn::LocationType::Edges";
     case dawn::ast::LocationType::Vertices:
-      return "dawn::LocationType::Vertices";
+      return "::dawn::LocationType::Vertices";
     default:
       dawn_unreachable("unknown location type");
       return "";
@@ -39,7 +39,7 @@ static std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationT
   };
 
   std::stringstream ss;
-  ss << "std::vector<dawn::LocationType>{";
+  ss << "std::vector<::dawn::LocationType>{";
   bool first = true;
   for(const auto& loc : chain) {
     if(!first) {

@@ -512,8 +512,8 @@ void CodeGen::generateFieldExtentsInfo(
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     ast::GridType const& gridType) const {
   std::string extents_type = gridType == ast::GridType::Cartesian
-                                 ? "dawn::driver::cartesian_extent"
-                                 : "dawn::driver::unstructured_extent";
+                                 ? "::dawn::driver::cartesian_extent"
+                                 : "::dawn::driver::unstructured_extent";
 
   for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
     stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +

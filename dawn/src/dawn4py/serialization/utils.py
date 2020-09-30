@@ -303,6 +303,25 @@ def make_interval(
     return interval
 
 
+def make_magic_num_interval(
+    lower_level, upper_level, lower_offset: int = 0, upper_offset: int = 0
+) -> Interval:
+    """ Create an Interval
+
+    Representation of a vertical interval, given by a lower and upper bound where a bound
+    is represented by a level and an offset (`bound = level + offset`)
+
+    """
+    interval = Interval()
+
+    interval.lower_level = lower_level
+    interval.upper_level = upper_level
+
+    interval.lower_offset = lower_offset
+    interval.upper_offset = upper_offset
+    return interval
+
+
 def make_vertical_region(
     ast: AST,
     interval: Interval,
