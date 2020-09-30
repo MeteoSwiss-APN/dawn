@@ -34,7 +34,8 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = sir_utils.make_interval(
+        SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
     body_ast = sir_utils.make_ast(
@@ -43,9 +44,11 @@ def main(args: argparse.Namespace):
                 sir_utils.make_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
-                    sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                    sir_utils.make_literal_access_expr(
+                        "1.0", SIR.BuiltinType.Float),
                     sir_utils.make_field_access_expr("in"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
+                    chain=[SIR.LocationType.Value(
+                        "Edge"), SIR.LocationType.Value("Cell")],
                 ),
                 "=",
             )
