@@ -580,9 +580,9 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
     for(const auto& f : mesh.faces()) {
       size_t curIntpSize =
           toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh,
-                                        {dawn::LocationType::Cells, dawn::LocationType::Edges,
-                                         dawn::LocationType::Cells, dawn::LocationType::Edges,
-                                         dawn::LocationType::Cells},
+                                        {::dawn::LocationType::Cells, ::dawn::LocationType::Edges,
+                                         ::dawn::LocationType::Cells, ::dawn::LocationType::Edges,
+                                         ::dawn::LocationType::Cells},
                                         &f)
               .size();
       for(size_t sparse = 0; sparse < curIntpSize; sparse++) {
