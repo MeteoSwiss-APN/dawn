@@ -71,8 +71,8 @@ private:
   public:
 
     stencil_21(const gridtools::dawn::domain& dom_, const globals& globals_, int rank, int xcols, int ycols) : m_dom(dom_), m_globals(globals_){}
-    static constexpr dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
-    static constexpr dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
+    static constexpr ::dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
+    static constexpr ::dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
 
     void run(storage_ijk_t& in_, storage_ijk_t& out_) {
       int iMin = m_dom.iminus();
