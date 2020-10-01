@@ -24,6 +24,7 @@
 #include "atlas/meshgenerator.h"
 #include "atlas/option/Options.h"
 #include "atlas/output/Gmsh.h"
+#include "driver-includes/unstructured_interface.hpp"
 #include "interface/atlas_interface.hpp"
 
 #include <atlas/util/CoordinateEnums.h>
@@ -1027,6 +1028,52 @@ TEST(AtlasIntegrationTestCompareOutput, verticalIndirection) {
     for(int cell_iter = 0; cell_iter < mesh.cells().size(); cell_iter++) {
       EXPECT_TRUE(out_v(cell_iter, k) == k + 1);
     }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_iterationSpaceUnstructured.hpp>
+TEST(AtlasIntegrationTestCompareOutput, iterationSpaceUnstructured) {
+  auto mesh = generateQuadMesh(10, 11);
+  const int nb_levels = 1;
+  const int level = 0;
+
+  printf("number of cells in mesh %d\n", mesh.cells().size());
+
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+  auto [in1_F, in1_v] = makeAtlasField("in_1", mesh.cells().size(), nb_levels);
+  auto [in2_F, in2_v] = makeAtlasField("in_2", mesh.cells().size(), nb_levels);
+
+  const int interiorIdx = 20;
+  const int haloIdx = 80;
+
+  const int interiorVal = 2;
+  const int haloVal = 1;
+
+  for(int cell_iter = interiorIdx; cell_iter < haloIdx; cell_iter++) {
+    in2_v(cell_iter, level) = interiorVal;
+  }
+  for(int cell_iter = haloIdx; cell_iter < mesh.cells().size(); cell_iter++) {
+    in1_v(cell_iter, level) = haloVal;
+  }
+
+  dawn_generated::cxxnaiveico::iterationSpaceUnstructured<atlasInterface::atlasTag> stencil(
+      mesh, nb_levels, out_v, in1_v, in2_v);
+
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Interior,
+                             0, interiorIdx);
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Halo, 0,
+                             haloIdx);
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::End, 0,
+                             mesh.cells().size());
+  stencil.run();
+
+  for(int cell_iter = interiorIdx; cell_iter < haloIdx; cell_iter++) {
+    EXPECT_TRUE(out_v(cell_iter, level) == interiorVal);
+  }
+  for(int cell_iter = haloIdx; cell_iter < mesh.cells().size(); cell_iter++) {
+    EXPECT_TRUE(out_v(cell_iter, level) == haloVal);
   }
 }
 } // namespace
