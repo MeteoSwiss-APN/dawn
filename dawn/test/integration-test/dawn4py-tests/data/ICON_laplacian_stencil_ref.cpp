@@ -25,7 +25,7 @@ private:
     ::dawn::edge_field_t<LibTag, ::dawn::float_type>& m_tangent_orientation;
     ::dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>& m_geofac_rot;
     ::dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>& m_geofac_div;
-    dawn::unstructured_domain   m_unstructured_domain ;
+    ::dawn::unstructured_domain   m_unstructured_domain ;
   public:
 
     stencil_68(::dawn::mesh_t<LibTag> const &mesh, int k_size, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&vec, ::dawn::cell_field_t<LibTag, ::dawn::float_type>&div_vec, ::dawn::vertex_field_t<LibTag, ::dawn::float_type>&rot_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&nabla2t1_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&nabla2t2_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&nabla2_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&primal_edge_length, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&dual_edge_length, ::dawn::edge_field_t<LibTag, ::dawn::float_type>&tangent_orientation, ::dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>&geofac_rot, ::dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>&geofac_div) : m_mesh(mesh), m_k_size(k_size), m_vec(vec), m_div_vec(div_vec), m_rot_vec(rot_vec), m_nabla2t1_vec(nabla2t1_vec), m_nabla2t2_vec(nabla2t2_vec), m_nabla2_vec(nabla2_vec), m_primal_edge_length(primal_edge_length), m_dual_edge_length(dual_edge_length), m_tangent_orientation(tangent_orientation), m_geofac_rot(geofac_rot), m_geofac_div(geofac_div){}
@@ -102,7 +102,7 @@ public:
 
   // Members
 
-  void set_splitter_index(::dawn::LocationType loc, dawn::UnstructuredIterationSpace space, int offset, int index) {
+  void set_splitter_index(::dawn::LocationType loc, ::dawn::UnstructuredIterationSpace space, int offset, int index) {
     m_stencil_68.m_unstructured_domain.set_splitter_index({loc, space, offset}, index);
   }
 

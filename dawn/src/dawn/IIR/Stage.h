@@ -74,6 +74,8 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
   DerivedInfo derivedInfo_;
 
+  bool isUnstructuredIIR() const;
+
 public:
   static constexpr const char* name = "Stage";
 
@@ -238,6 +240,7 @@ public:
   /// @{
   void setIterationSpace(const IterationSpace& value);
   const IterationSpace& getIterationSpace() const;
+  const std::optional<Interval> getUnstructuredIterationSpace() const;
   bool hasIterationSpace() const;
   /// @}
 

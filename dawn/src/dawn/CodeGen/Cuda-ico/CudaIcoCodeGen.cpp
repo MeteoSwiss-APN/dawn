@@ -265,7 +265,7 @@ void CudaIcoCodeGen::generateRunFun(
         }
       };
 
-      auto domain = stage->getIterationSpace()[0];
+      auto domain = stage->getUnstructuredIterationSpace();
       std::string numElString = "hsize" + std::to_string(stage->getStageID());
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
       runFun.addStatement("int " + numElString + " = " +
@@ -854,7 +854,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       cudaKernel.addArg("int kSize");
 
       // for horizontal iteration spaces we also need the offset
-      if(stage->getIterationSpace()[0].has_value()) {
+      if(stage->getUnstructuredIterationSpace().has_value()) {
         cudaKernel.addArg("int hOffset");
       }
 
@@ -902,7 +902,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         break;
       }
 
-      if(stage->getIterationSpace()[0].has_value()) {
+      if(stage->getUnstructuredIterationSpace().has_value()) {
         cudaKernel.addStatement("pidx += hOffset");
       }
 

@@ -14,6 +14,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "driver-includes/unstructured_domain.hpp"
+#include "driver-includes/unstructured_interface.hpp"
+
 #include "AtlasCartesianWrapper.h"
 #include "UnstructuredVerifier.h"
 
@@ -24,7 +27,6 @@
 #include "atlas/meshgenerator.h"
 #include "atlas/option/Options.h"
 #include "atlas/output/Gmsh.h"
-#include "driver-includes/unstructured_interface.hpp"
 #include "interface/atlas_interface.hpp"
 
 #include <atlas/util/CoordinateEnums.h>
@@ -34,9 +36,7 @@
 #include <sstream>
 #include <tuple>
 
-#include <generated_copyCell.hpp>
 namespace {
-
 atlas::Mesh generateQuadMesh(size_t nx, size_t ny) {
   std::stringstream configStr;
   configStr << "L" << nx << "x" << ny;

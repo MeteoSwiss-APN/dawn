@@ -21,6 +21,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "driver-includes/unstructured_domain.hpp"
+#include "driver-includes/unstructured_interface.hpp"
+
 #include "UnstructuredVerifier.h"
 #include "dawn/Support/Logger.h"
 #include "interface/toylib_interface.hpp"
