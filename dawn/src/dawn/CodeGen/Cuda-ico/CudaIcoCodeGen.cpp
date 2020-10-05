@@ -937,6 +937,8 @@ void CudaIcoCodeGen::generateCHeaderSI(
 std::string CudaIcoCodeGen::generateCHeader() const {
   std::stringstream ssSW;
   ssSW << "#pragma once\n";
+  ssSW << "#include \"driver-includes/defs.hpp\"\n";
+  ssSW << "#include \"driver-includes/cuda_utils.hpp\"\n";
 
   Namespace dawnNamespace("dawn_generated", ssSW);
   Namespace cudaNamespace("cuda_ico", ssSW);
