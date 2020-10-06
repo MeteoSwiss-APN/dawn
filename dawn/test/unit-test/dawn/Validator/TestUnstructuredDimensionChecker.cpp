@@ -111,6 +111,34 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase4) {
                                  b.stmt(b.assignExpr(b.at(dense_field), b.at(sparse_field)))))))),
       ".*Dimensions consistency check failed.*");
 }
+TEST(UnstructuredDimensionCheckerTest, AssignmentCase5) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto dense_field_v = b.field("dense_v_field", LocType::Vertices);
+  auto dense_field_e = b.field("dense_e_field", LocType::Edges);
+  auto sparse_field = b.field("sparse_field", {LocType::Edges, LocType::Cells});
+
+  auto stencil = b.build(
+      "passing",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.loopStmtChain(
+                  b.stmt(b.assignExpr(
+                      b.at(sparse_field),
+                      b.binaryExpr(b.reduceOverNeighborExpr(Op::plus, b.at(dense_field_e),
+                                                            b.lit(0.),
+                                                            {LocType::Cells, LocType::Edges}),
+                                   b.at(sparse_field, HOffsetType::withOffset, 0), Op::plus))),
+                  {LocType::Edges, LocType::Cells}))))));
+
+  auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
+                                                                         stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
 TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;

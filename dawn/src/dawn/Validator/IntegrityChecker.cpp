@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 
 namespace dawn {
@@ -100,6 +101,16 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
                    std::string(metadata_.getFieldNameFromAccessID(accessID)) + std::string(")."))
                       .c_str());
 
+  if(expr->getOffset().horizontalOffset().hasType() &&
+     expr->getOffset().horizontalOffset().getGridType() == ast::GridType::Unstructured) {
+    auto unstrOffset =
+        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset());
+    if(unstrOffset.hasOffset() && !parentHasIterationContext_) {
+      throw SemanticError("Attempting to offset read from/write to unstructured field outside of a "
+                          "reduction expression or loop statement!");
+    }
+  }
+
   ast::ASTVisitorForwarding::visit(expr);
 }
 
@@ -109,8 +120,18 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  bool parentHadIterationContext = parentHasIterationContext_;
+  parentHasIterationContext_ = true;
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
+  parentHasIterationContext_ = parentHadIterationContext;
+}
+
+void IntegrityChecker::visit(const std::shared_ptr<iir::LoopStmt>& expr) {
+  parentHasIterationContext_ = true;
+  for(auto& stmt : expr->getChildren())
+    stmt->accept(*this);
+  parentHasIterationContext_ = false;
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {

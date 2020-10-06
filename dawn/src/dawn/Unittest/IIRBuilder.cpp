@@ -30,6 +30,7 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
 
@@ -93,6 +94,8 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   restoreIIR(si_);
 
   if(si_->getIIR()->getGridType() == ast::GridType::Unstructured) {
+    IntegrityChecker integrityChecker(si_.get());
+    integrityChecker.run();
     auto [checkResultDimensions, errorLocDimension] =
         UnstructuredDimensionChecker::checkDimensionsConsistency(*si_->getIIR().get(),
                                                                  si_->getMetaData());

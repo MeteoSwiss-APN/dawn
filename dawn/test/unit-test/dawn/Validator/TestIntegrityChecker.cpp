@@ -16,6 +16,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Exception.h"
+#include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/IntegrityChecker.h"
 
 #include <fstream>
@@ -33,6 +34,29 @@ TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
   // Run integrity check and succeed if exception is thrown
   try {
     checker.run();
+    FAIL() << "Semantic error not thrown";
+  } catch(SemanticError& error) {
+    SUCCEED();
+  }
+}
+
+TEST(TestIntegrityChecker, OffsetReadsInCorrectContext) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells);
+  auto out = b.field("out", LocType::Cells);
+
+  try {
+    auto stencil = b.build(
+        "OffsetReadsInCorrectContext",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(
+                                   b.at(out), b.at(in, AccessType::r,
+                                                   ast::Offsets{ast::unstructured, true, 0}))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();

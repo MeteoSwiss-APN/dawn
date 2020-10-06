@@ -6,6 +6,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Validator/WeightChecker.h"
+#include <optional>
 
 namespace dawn {
 
@@ -168,6 +169,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
                                config_.currentChain_->back();
+    }
+    if(hasOffset && !getUnstructuredDim(*curDimensions_).isDense()) {
+      dimensionsConsistent_ &=
+          getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
     }
   }
 
@@ -439,11 +444,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   config_.parentIsReduction_ = true;
+  reductionExpr->getInit()->accept(init);
   config_.currentChain_ = reductionExpr->getNbhChain();
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
-  config_.currentChain_ = std::nullopt;
-  reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);
 
   if(!ops.isConsistent()) {
