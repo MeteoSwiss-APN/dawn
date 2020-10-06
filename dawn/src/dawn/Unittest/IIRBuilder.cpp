@@ -14,7 +14,6 @@
 //
 // TODO there are death tests which rely on the following code to die, needs refactoring
 #include "dawn/AST/LocationType.h"
-#include "dawn/Validator/IntegrityChecker.h"
 #ifdef NDEBUG
 #undef NDEBUG
 #define HAD_NDEBUG
@@ -31,6 +30,7 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
 
