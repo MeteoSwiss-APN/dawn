@@ -239,6 +239,7 @@ public:
   /// @brief Get the horizontal iteration space
   /// @{
   void setIterationSpace(const IterationSpace& value);
+  void setUnstructuredIterationSpace(const Interval& value);
   const IterationSpace& getIterationSpace() const;
   const std::optional<Interval> getUnstructuredIterationSpace() const;
   bool hasIterationSpace() const;

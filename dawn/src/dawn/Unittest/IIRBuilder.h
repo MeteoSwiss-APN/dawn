@@ -266,9 +266,7 @@ public:
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     ret->setLocationType(type);
-    iir::Stage::IterationSpace iterationSpace;
-    iterationSpace[0] = interval;
-    ret->setIterationSpace(iterationSpace);
+    ret->setUnstructuredIterationSpace(interval);
     [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
@@ -302,7 +300,7 @@ public:
     return ret;
   }
 
-  // default builder for the stage that assumes stages are over cells
+  // default builder for the stage
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);

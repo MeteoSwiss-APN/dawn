@@ -78,7 +78,7 @@ std::unique_ptr<Stage> Stage::clone() const {
 
 bool Stage::isUnstructuredIIR() const {
   DAWN_ASSERT_MSG(
-      parent_,
+      parentIsSet() && (*parent_)->parentIsSet(),
       "can only decide if we are in an unstructured computation if the stage has parent set!");
   return getParent()->getParent()->getParent()->getGridType() == ast::GridType::Unstructured;
 }
@@ -374,11 +374,17 @@ void Stage::setLocationType(ast::LocationType type) { type_ = type; }
 std::optional<ast::LocationType> Stage::getLocationType() const { return type_; }
 
 void Stage::setIterationSpace(const IterationSpace& value) {
-  if(parent_ && isUnstructuredIIR()) {
-    DAWN_ASSERT_MSG(!value[1].has_value(),
-                    "unstructured iteration space only accepts first value!");
+  if(parentIsSet()) {
+    DAWN_ASSERT_MSG(!isUnstructuredIIR(), "only call this method on structured IIR!");
   }
   iterationSpace_ = value;
+}
+
+void Stage::setUnstructuredIterationSpace(const Interval& value) {
+  if(parentIsSet()) {
+    DAWN_ASSERT_MSG(isUnstructuredIIR(), "only call this method on unstructured IIR!");
+  }
+  iterationSpace_[0] = value;
 }
 
 const Stage::IterationSpace& Stage::getIterationSpace() const { return iterationSpace_; }
