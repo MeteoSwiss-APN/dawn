@@ -14,6 +14,7 @@
 //
 // TODO there are death tests which rely on the following code to die, needs refactoring
 #include "dawn/AST/LocationType.h"
+#include "dawn/Validator/IntegrityChecker.h"
 #ifdef NDEBUG
 #undef NDEBUG
 #define HAD_NDEBUG
@@ -93,6 +94,8 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   restoreIIR(si_);
 
   if(si_->getIIR()->getGridType() == ast::GridType::Unstructured) {
+    IntegrityChecker integrityChecker(si_.get());
+    integrityChecker.run();
     auto [checkResultDimensions, errorLocDimension] =
         UnstructuredDimensionChecker::checkDimensionsConsistency(*si_->getIIR().get(),
                                                                  si_->getMetaData());
