@@ -120,10 +120,11 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  bool parentHadIterationContext = parentHasIterationContext_;
   parentHasIterationContext_ = true;
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
-  parentHasIterationContext_ = false;
+  parentHasIterationContext_ = parentHadIterationContext;
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::LoopStmt>& expr) {
