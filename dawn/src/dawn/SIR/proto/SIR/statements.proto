@@ -109,7 +109,7 @@ message StencilFunctionArg {
   }
 }
 
-// @brief Representation of a vertical interval, given by a lower and upper
+// @brief Representation of a interval, given by a lower and upper
 // bound where a bound is represented by a level and an offset (`bound = level +
 // offset`)
 //

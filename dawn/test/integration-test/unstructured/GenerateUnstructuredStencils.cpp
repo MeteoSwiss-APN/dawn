@@ -852,5 +852,32 @@ int main() {
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto out = b.field("out", LocType::Cells);
+    auto in_1 = b.field("in_1", LocType::Cells);
+    auto in_2 = b.field("in_2", LocType::Cells);
+
+    std::string stencilName = "iterationSpaceUnstructured";
+
+    auto stencilInstantiation = b.build(
+        stencilName, b.stencil(b.multistage(
+                         LoopOrderKind::Parallel,
+                         b.stage(LocType::Cells, Interval(3, 4, 0, 0),
+                                 b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0,
+                                            0, b.stmt(b.assignExpr(b.at(out), b.at(in_1))))),
+                         b.stage(LocType::Cells, Interval(2, 3, 0, 0),
+                                 b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0,
+                                            0, b.stmt(b.assignExpr(b.at(out), b.at(in_2))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
   return 0;
 }

@@ -19,6 +19,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include "unstructured_domain.hpp"
 #include "unstructured_interface.hpp"
 
 #include <assert.h>
@@ -40,10 +41,15 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 namespace dawn {
 
 struct GlobalGpuTriMesh {
+  dawn::unstructured_domain Domain;
   int NumEdges;
   int NumCells;
   int NumVertices;
   std::map<std::vector<dawn::LocationType>, int*> NeighborTables;
+  void set_splitter_index(dawn::LocationType loc, dawn::UnstructuredIterationSpace space,
+                          int offset, int index) {
+    Domain.set_splitter_index({loc, space, offset}, index);
+  }
 };
 
 // Tag for no library (raw pointers)

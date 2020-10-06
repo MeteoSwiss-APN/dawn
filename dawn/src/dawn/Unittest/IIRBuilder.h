@@ -259,6 +259,19 @@ public:
     return ret;
   }
 
+  // specialized builder for the stage that accepts a location type and a global index
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(ast::LocationType type, Interval interval,
+                                    DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    ret->setLocationType(type);
+    ret->setUnstructuredIterationSpace(interval);
+    [[maybe_unused]] int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
+    return ret;
+  }
+
   // specialized builder for the stage that accepts a global index
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(int direction, Interval interval, DoMethods&&... do_methods) {
@@ -287,7 +300,7 @@ public:
     return ret;
   }
 
-  // default builder for the stage that assumes stages are over cells
+  // default builder for the stage
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);

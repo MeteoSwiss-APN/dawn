@@ -109,6 +109,7 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClass.addMember("int", "NumVertices");
   gpuMeshClass.addMember("int", "NumEdges");
   gpuMeshClass.addMember("int", "NumCells");
+  gpuMeshClass.addMember("dawn::unstructured_domain", "Domain");
 
   CollectChainStrings chainCollector;
   std::set<std::vector<ast::LocationType>> chains;
@@ -142,6 +143,7 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromGlobalCtor.addStatement("NumVertices = mesh->NumVertices");
     gpuMeshFromGlobalCtor.addStatement("NumCells = mesh->NumCells");
     gpuMeshFromGlobalCtor.addStatement("NumEdges = mesh->NumEdges");
+    gpuMeshFromGlobalCtor.addStatement("Domain = mesh->Domain");
     for(auto chain : chains) {
       gpuMeshFromGlobalCtor.addStatement(chainToTableString(chain) + " = mesh->NeighborTables.at(" +
                                          chainToVectorString(chain) + ")");
@@ -192,20 +194,88 @@ void CudaIcoCodeGen::generateRunFun(
 
       // lets build correct block size
       std::string numElements;
-      switch(*stage->getLocationType()) {
-      case ast::LocationType::Cells:
-        numElements = "mesh_.NumCells";
-        break;
-      case ast::LocationType::Edges:
-        numElements = "mesh_.NumEdges";
-        break;
-      case ast::LocationType::Vertices:
-        numElements = "mesh_.NumVertices";
-        break;
-      }
 
+      auto spaceMagicNumToEnum = [](int magicNum) -> std::string {
+        switch(magicNum) {
+        case 0:
+          return "dawn::UnstructuredIterationSpace::LateralBoundary";
+        case 1:
+          return "dawn::UnstructuredIterationSpace::Nudging";
+        case 2:
+          return "dawn::UnstructuredIterationSpace::Interior";
+        case 3:
+          return "dawn::UnstructuredIterationSpace::Halo";
+        case 4:
+          return "dawn::UnstructuredIterationSpace::End";
+        default:
+          assert(false);
+        }
+      };
+
+      auto numElementsString = [&](ast::LocationType loc,
+                                   std::optional<iir::Interval> iterSpace) -> std::string {
+        switch(loc) {
+        case ast::LocationType::Cells:
+          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Cells," +
+                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
+                                              std::to_string(iterSpace->upperOffset()) + "})" +
+                                              "- mesh_.Domain({::dawn::LocationType::Cells," +
+                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
+                                              std::to_string(iterSpace->lowerOffset()) + "})"
+                                        : "mesh_.NumCells");
+          break;
+        case ast::LocationType::Edges:
+          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Edges," +
+                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
+                                              std::to_string(iterSpace->upperOffset()) + "})" +
+                                              "- mesh_.Domain({::dawn::LocationType::Edges," +
+                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
+                                              std::to_string(iterSpace->lowerOffset()) + "})"
+                                        : "mesh_.NumEdges");
+        case ast::LocationType::Vertices:
+          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Vertices," +
+                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
+                                              std::to_string(iterSpace->upperOffset()) + "})" +
+                                              "- mesh_.Domain({::dawn::LocationType::Vertices," +
+                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
+                                              std::to_string(iterSpace->lowerOffset()) + "})"
+                                        : "mesh_.NumVertices");
+        default:
+          assert(false);
+        }
+      };
+
+      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
+        switch(loc) {
+        case ast::LocationType::Cells:
+          return "mesh_.Domain({::dawn::LocationType::Cells," +
+                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+                 std::to_string(iterSpace.lowerOffset()) + "})";
+          break;
+        case ast::LocationType::Edges:
+          return "mesh_.Domain({::dawn::LocationType::Edges," +
+                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+                 std::to_string(iterSpace.lowerOffset()) + "})";
+        case ast::LocationType::Vertices:
+          return "mesh_.Domain({::dawn::LocationType::Vertices," +
+                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+                 std::to_string(iterSpace.lowerOffset()) + "})";
+        default:
+          assert(false);
+        }
+      };
+
+      auto domain = stage->getUnstructuredIterationSpace();
+      std::string numElString = "hsize" + std::to_string(stage->getStageID());
+      std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
+      runFun.addStatement("int " + numElString + " = " +
+                          numElementsString(*stage->getLocationType(), domain));
+      if(domain.has_value()) {
+        runFun.addStatement("int " + hOffsetString + " = " +
+                            hOffsetSizeString(*stage->getLocationType(), *domain));
+      }
       runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                          k_size.str() + ", " + numElements + ")");
+                          k_size.str() + ", " + numElString + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -239,7 +309,9 @@ void CudaIcoCodeGen::generateRunFun(
                  << "dG" + std::to_string(stage->getStageID()) + ",dB"
                  << ">>>(";
 
-      // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
+      kernelCall << numElString << ", ";
+
+      // which loc size args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed additionally?
       std::set<std::string> locArgs;
       for(auto field : fields) {
         if(field.second.getFieldDimensions().isVertical()) {
@@ -247,16 +319,23 @@ void CudaIcoCodeGen::generateRunFun(
         }
         auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
+        // dont add sizes twice
+        if(dims.getDenseLocationType() == *stage->getLocationType()) {
+          continue;
+        }
         locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType()));
       }
-      auto loc = *stage->getLocationType();
-      locArgs.insert(locToDenseSizeStringGpuMesh(loc));
       for(auto arg : locArgs) {
         kernelCall << "mesh_." + arg + ", ";
       }
 
       // we always need the k size
       kernelCall << "kSize_, ";
+
+      // in case of horizontal iteration space we need the offset
+      if(domain.has_value()) {
+        kernelCall << hOffsetString << ", ";
+      }
 
       for(auto chain : chains) {
         kernelCall << "mesh_." + chainToTableString(chain) + ", ";
@@ -750,7 +829,11 @@ void CudaIcoCodeGen::generateAllCudaKernels(
           retString,
           cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage), ssSW);
 
-      // which loc args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed?
+      auto loc = *stage->getLocationType();
+      cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc));
+
+      // which additional loc size args ( int NumCells, int NumEdges, int NumVertices) need to be
+      // passed?
       std::set<std::string> locArgs;
       for(auto field : fields) {
         if(field.second.getFieldDimensions().isVertical()) {
@@ -758,16 +841,22 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         }
         auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
+        if(dims.getDenseLocationType() == loc) {
+          continue;
+        }
         locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType()));
       }
-      auto loc = *stage->getLocationType();
-      locArgs.insert(locToDenseSizeStringGpuMesh(loc));
       for(auto arg : locArgs) {
         cudaKernel.addArg("int " + arg);
       }
 
       // we always need the k size
       cudaKernel.addArg("int kSize");
+
+      // for horizontal iteration spaces we also need the offset
+      if(stage->getUnstructuredIterationSpace().has_value()) {
+        cudaKernel.addArg("int hOffset");
+      }
 
       for(auto chain : chains) {
         cudaKernel.addArg("const int *" + chainToTableString(chain));
@@ -797,6 +886,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " + std::to_string(kStart));
       cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
                               std::to_string(kStart));
+
       switch(loc) {
       case ast::LocationType::Cells:
         cudaKernel.addBlockStatement("if (pidx >= NumCells)",
@@ -810,6 +900,10 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addBlockStatement("if (pidx >= NumVertices)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
+      }
+
+      if(stage->getUnstructuredIterationSpace().has_value()) {
+        cudaKernel.addStatement("pidx += hOffset");
       }
 
       std::stringstream k_size;
@@ -925,6 +1019,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include <cpp_bindgen/export.hpp>",
       "#endif /* DAWN_ENABLE_BINDGEN */",
       "#include \"driver-includes/unstructured_interface.hpp\"",
+      "#include \"driver-includes/unstructured_domain.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/math.hpp\"",
