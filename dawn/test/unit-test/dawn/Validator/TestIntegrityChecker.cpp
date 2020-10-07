@@ -63,4 +63,27 @@ TEST(TestIntegrityChecker, OffsetReadsInCorrectContext) {
   }
 }
 
+TEST(TestIntegrityChecker, OffsetReadsIn2DField) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells, false);
+  auto out = b.field("out", LocType::Cells, false);
+
+  try {
+    auto stencil = b.build(
+        "OffsetReadsIn2DField",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(
+                                   b.at(out), b.at(in, AccessType::r,
+                                                   ast::Offsets{ast::unstructured, true, 1}))))))));
+    FAIL() << "Semantic error not thrown";
+  } catch(SemanticError& error) {
+    SUCCEED();
+  }
+}
+
 } // anonymous namespace
