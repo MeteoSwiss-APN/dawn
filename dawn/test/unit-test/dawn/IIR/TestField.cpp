@@ -12,7 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/LocationType.h"
 #include "dawn/IIR/Field.h"
+#include "dawn/SIR/SIR.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -74,6 +76,41 @@ TEST(TestField, Equal) {
   EXPECT_TRUE((f1 == f2));
   EXPECT_TRUE((f1 != f3));
   EXPECT_TRUE((f1 != f4));
+}
+
+TEST(TestField, CartesianDimensions) {
+  auto c001 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {false, false}), true);
+  auto c010 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {false, true}), false);
+  auto c100 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, false}), false);
+  auto c110 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), false);
+  auto c101 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, false}), true);
+  auto c011 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {false, true}), true);
+  auto c111 =
+      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  EXPECT_EQ(c001.numDimensions(), 1);
+  EXPECT_EQ(c010.numDimensions(), 1);
+  EXPECT_EQ(c100.numDimensions(), 1);
+  EXPECT_EQ(c110.numDimensions(), 2);
+  EXPECT_EQ(c101.numDimensions(), 2);
+  EXPECT_EQ(c011.numDimensions(), 2);
+  EXPECT_EQ(c111.numDimensions(), 3);
+}
+
+TEST(TestField, UnstructuredDimension) {
+  auto f1d = sir::FieldDimensions(true);
+  auto f2d = sir::FieldDimensions(
+      sir::HorizontalFieldDimension(ast::unstructured, ast::LocationType::Cells), false);
+  auto f3d = sir::FieldDimensions(
+      sir::HorizontalFieldDimension(ast::unstructured, ast::LocationType::Cells), true);
+  EXPECT_EQ(f1d.numDimensions(), 1);
+  EXPECT_EQ(f2d.numDimensions(), 2);
+  EXPECT_EQ(f3d.numDimensions(), 3);
 }
 
 TEST(TestField, Merge) {

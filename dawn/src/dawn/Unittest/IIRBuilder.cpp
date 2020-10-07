@@ -278,12 +278,12 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
   return at(field, AccessType::r, ast::Offsets{ast::cartesian, offset});
 }
 
-IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::LocationType location) {
+IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name, ast::LocationType location,
+                                                bool maskK) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, true));
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, maskK));
   return {id, name};
 }
 

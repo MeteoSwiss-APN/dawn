@@ -310,6 +310,9 @@ public:
   bool isVertical() const { return !horizontalFieldDimension_.has_value(); }
   std::string toString() const;
 
+  // returns number of dimensions (1-3)
+  int numDimensions() const;
+
 private:
   std::optional<HorizontalFieldDimension> horizontalFieldDimension_;
   bool maskK_;
