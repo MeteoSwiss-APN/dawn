@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DoMethod.h"
@@ -44,7 +45,20 @@ createAssignmentStatement(int assignmentID, int assigneeID,
   assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
   assignee->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assigneeID);
 
-  return assignmentStmt;
+  // If the field is sparse, we need to wrap it in a for loop statement
+  auto hDimensions = metadata.getFieldDimensions(assignmentID).getHorizontalFieldDimension();
+  if(hDimensions.getType() == ast::GridType::Unstructured &&
+     sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).isSparse()) {
+    auto blockAssignmentStatement =
+        iir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{assignmentStmt});
+    auto chain =
+        sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).getNeighborChain();
+    auto wrappedAssignmentStatement =
+        iir::makeLoopStmt(std::move(chain), std::move(blockAssignmentStatement));
+    return wrappedAssignmentStatement;
+  } else {
+    return assignmentStmt;
+  }
 }
 
 /// @brief Creates the do-method
