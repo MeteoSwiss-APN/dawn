@@ -100,27 +100,34 @@ protected:
 
   void streamInterface(IndentedStringStream& ss) const {
     bool isFunction = returnType_ != "";
-    ss << (isFunction ? returnType_ + " function" : std::string("subroutine")) << " " << name_
-       << "(";
-    std::string argList;
-    std::for_each(args_.begin(), args_.end(),
-                  [&ss, &argList](auto& arg) { argList += std::get<0>(arg) + ","; });
-    if(!argList.empty())
-      argList.pop_back(); // remove last comma
-    ss << argList << ") bind(c, name=\"" << name_ << "\")" << endline;
+    ss << (isFunction ? returnType_ + " function" : std::string("subroutine")) << " &" << endline;
+    ss << name_ << "( &";
+    {
+      std::string sep;
+      for(const auto& arg : args_) {
+        ss << sep << endline << std::get<0>(arg);
+        sep = ", &";
+      }
+    }
+    ss << " &" << endline;
+    ss << ") bind(c)" << endline;
 
     ss.increaseIndent();
-    ss << "use iso_c_binding" << endline;
+    ss << "use, intrinsic :: iso_c_binding" << endline;
     std::for_each(args_.begin(), args_.end(), [&ss](auto& arg) {
       ss << std::get<1>(arg) << ", ";
       if(std::get<2>(arg) == 0) {
         ss << "value";
       } else {
-        std::string dims;
-        for(int count = 0; count < std::get<2>(arg); count++)
-          dims += ":,";
-        dims.pop_back(); // remove last comma
-        ss << "dimension(" << dims << ")";
+        ss << "dimension(";
+        {
+          std::string sep;
+          for(int c = 0; c < std::get<2>(arg); ++c) {
+            ss << sep << ":";
+            sep = ",";
+          }
+        }
+        ss << ")";
       }
       ss << ", target :: " << std::get<0>(arg) << endline;
     });
@@ -145,7 +152,7 @@ public:
 
   void commit() {
     ss_ << "module " << moduleName_ << endline;
-    ss_ << "use iso_c_binding" << endline;
+    ss_ << "use, intrinsic :: iso_c_binding" << endline;
     ss_ << "implicit none" << endline;
     ss_.increaseIndent();
     ss_ << "interface" << endline;
