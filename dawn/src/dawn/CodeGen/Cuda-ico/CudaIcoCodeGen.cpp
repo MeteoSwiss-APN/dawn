@@ -641,12 +641,12 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
     if(fromHost) {
       apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_impl_from_c_host", apiRunFunStreams[0]));
+          "double", "run_" + wrapperName + "_from_c_host", apiRunFunStreams[0]));
       apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_impl_from_fort_host", apiRunFunStreams[1]));
+          "double", "run_" + wrapperName + "_from_fort_host", apiRunFunStreams[1]));
     } else {
-      apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_impl", apiRunFunStreams[0]));
+      apiRunFuns.push_back(
+          std::make_unique<MemberFunction>("double", "run_" + wrapperName, apiRunFunStreams[0]));
     }
 
     for(auto& apiRunFun : apiRunFuns) {
@@ -690,30 +690,6 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         ssSW << stream.str();
       }
 
-      // Need to count arguments for exporting bindings through GridTools bindgen
-      const int argCount = 2 + stencil.getFields().size();
-
-      // Export binding (if requested)
-      ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
-           << "\n";
-      if(fromHost) {
-        Statement exportCMacroCall(ssSW);
-        Statement exportFMacroCall(ssSW);
-        exportCMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                         << "_from_c_host, run_" << wrapperName << "_impl_from_c_host)";
-        exportCMacroCall.commit();
-        exportFMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                         << "_from_fort_host, run_" << wrapperName << "_impl_from_fort_host)";
-        exportFMacroCall.commit();
-      } else {
-        Statement exportMacroCall(ssSW);
-        exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                        << ", run_" << wrapperName << "_impl"
-                        << ")";
-        exportMacroCall.commit();
-      }
-      ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
-           << "\n";
     } else {
       for(const auto& stream : apiRunFunStreams) {
         ssSW << stream.str() << ";\n";
@@ -1052,9 +1028,6 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   }
 
   std::vector<std::string> ppDefines{
-      "#ifdef DAWN_ENABLE_BINDGEN",
-      "#include <cpp_bindgen/export.hpp>",
-      "#endif /* DAWN_ENABLE_BINDGEN */",
       "#include \"driver-includes/unstructured_interface.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
