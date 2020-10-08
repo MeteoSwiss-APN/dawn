@@ -886,12 +886,12 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   stencilWrapperClass.commit();
 
+  cudaNamespace.commit();
+  dawnNamespace.commit();
+
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
-
-  cudaNamespace.commit();
-  dawnNamespace.commit();
 
   return ssSW.str();
 }
@@ -916,16 +916,10 @@ std::string CudaIcoCodeGen::generateCHeader() const {
   ssSW << "#include \"driver-includes/defs.hpp\"\n";
   ssSW << "#include \"driver-includes/cuda_utils.hpp\"\n";
 
-  Namespace dawnNamespace("dawn_generated", ssSW);
-  Namespace cudaNamespace("cuda_ico", ssSW);
-
   for(const auto& nameStencilCtxPair : context_) {
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
     generateCHeaderSI(ssSW, stencilInstantiation);
   }
-
-  cudaNamespace.commit();
-  dawnNamespace.commit();
 
   return ssSW.str();
 }
