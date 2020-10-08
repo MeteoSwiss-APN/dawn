@@ -151,17 +151,6 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
                        .hasOffset();
 
   auto fieldName = fieldAccessExpr->getName();
-  // the name in the FieldAccessExpr may be stale if the there are nested stencils
-  // in this case we need to look up the new AccessID in the data of the fieldAccessExpr
-  if(checkType_ == checkType::runOnIIR) {
-    DAWN_ASSERT(fieldAccessExpr->hasData());
-    auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
-    if(newAccessID.has_value()) {
-      DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
-      fieldName = idToNameMap_.at(newAccessID.value());
-    }
-  }
-
   DAWN_ASSERT(nameToDimensions_.count(fieldName));
 
   curDimensions_ = nameToDimensions_.at(fieldName);
