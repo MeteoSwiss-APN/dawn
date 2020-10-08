@@ -662,8 +662,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     if(!onlyDecl) {
 
       for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
-                                ">::" + stencilName + " s(mesh, k_size)");
+        apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName + "<dawn::NoLibTag, " +
+                                chainSizesStr.str() + ">::" + stencilName + " s(mesh, k_size)");
       }
       if(fromHost) {
         // depending if we are calling from c or from fortran, we need to transpose the data or not
@@ -888,10 +888,11 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   cudaNamespace.commit();
   dawnNamespace.commit();
-
+  ssSW << "extern \"C\" {\n";
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
+  ssSW << "}\n";
 
   return ssSW.str();
 }
@@ -903,11 +904,13 @@ void CudaIcoCodeGen::generateCHeaderSI(
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
+  ssSW << "extern \"C\" {\n";
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost,
                              /*onlyDecl=*/true);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost,
                              /*onlyDecl=*/true);
+  ssSW << "}\n";
 }
 
 std::string CudaIcoCodeGen::generateCHeader() const {
