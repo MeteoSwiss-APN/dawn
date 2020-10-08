@@ -671,14 +671,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         if(!first) {
           chainSizesStr << ", ";
         }
-        if(!ICOChainSizes.count(chain)) {
-          throw SemanticError(std::string("Unsupported neighbor chain in stencil '") +
-                                  stencilInstantiation->getName() +
-                                  "': " + chainToVectorString(chain),
-                              stencilInstantiation->getMetaData().getFileName(),
-                              stencilInstantiation->getMetaData().getStencilLocation());
-        }
-        chainSizesStr << ICOChainSizes.at(chain);
+        chainSizesStr << ICOChainSizesComputed(chain);
         first = false;
       }
     }
