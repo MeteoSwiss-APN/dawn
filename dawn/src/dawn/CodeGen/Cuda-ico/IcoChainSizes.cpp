@@ -195,7 +195,7 @@ static std::array<grid_location_t, 3> get_cell_to_edge(const grid_location_t& ce
   }
 }
 
-int ICOChainSizesComputed(const std::vector<ast::LocationType>& chain) {
+int ICOChainSize(const std::vector<ast::LocationType>& chain) {
 
   assert(1 < chain.size());
 

@@ -86,7 +86,7 @@ TEST(CudaIco, ChainSizes) {
   };
 
   for(const auto& [chain, expected] : tests) {
-    const auto actual = dawn::ICOChainSizesComputed(chain);
+    const auto actual = dawn::ICOChainSize(chain);
     EXPECT_EQ(expected, actual);
   }
 }

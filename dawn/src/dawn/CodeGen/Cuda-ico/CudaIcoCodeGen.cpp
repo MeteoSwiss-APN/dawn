@@ -663,19 +663,6 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
 
     // generate compound strings first
 
-    // chain sizes for templating the kernel call
-    std::stringstream chainSizesStr;
-    {
-      bool first = true;
-      for(auto chain : chains) {
-        if(!first) {
-          chainSizesStr << ", ";
-        }
-        chainSizesStr << ICOChainSizesComputed(chain);
-        first = false;
-      }
-    }
-
     // all fields
     std::stringstream fieldsStr;
     {
@@ -725,8 +712,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
-                              ">::" + stencilName + " s(mesh, k_size)");
+      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag>::" + stencilName +
+                              " s(mesh, k_size)");
     }
     if(fromHost) {
       // depending if we are calling from c or from fortran, we need to transpose the data or not
@@ -958,8 +945,11 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     ss << "int " + chainToSparseSizeString(chain) << " ";
     first = false;
   }
-  std::string templates = chains.empty() ? "typename LibTag" : "typename LibTag, " + ss.str();
-  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, templates);
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
+  for(auto chain : chains) {
+    stencilWrapperClass.addMember("static const int", chainToSparseSizeString(chain) + " = " +
+                                                          std::to_string(ICOChainSize(chain)));
+  }
 
   stencilWrapperClass.changeAccessibility("public");
 
