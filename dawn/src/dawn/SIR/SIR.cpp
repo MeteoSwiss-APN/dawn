@@ -635,23 +635,6 @@ std::string FieldDimensions::toString() const {
   }
 }
 
-int FieldDimensions::numDimensions() const {
-  if(!horizontalFieldDimension_) {
-    return 1;
-  }
-  if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& cartesianDimensions =
-        sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
-    return int(cartesianDimensions.I()) + int(cartesianDimensions.J()) + int(K());
-  } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& unstructuredDimension =
-        sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension());
-    return 2 + int(K());
-  } else {
-    dawn_unreachable("Invalid horizontal field dimension");
-  }
-}
-
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {

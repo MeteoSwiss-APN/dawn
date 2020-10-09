@@ -63,43 +63,4 @@ TEST(TestIntegrityChecker, OffsetReadsInCorrectContext) {
   }
 }
 
-TEST(TestIntegrityChecker, AssignmentFieldDimUnstr) {
-  using namespace dawn::iir;
-  using LocType = dawn::ast::LocationType;
-
-  UnstructuredIIRBuilder b;
-  auto f_e = b.field("edges", LocType::Edges);
-  auto f_vert = b.vertical_field("vert");
-
-  try {
-    auto stencil = b.build(
-        "incorrectFieldDimAssign",
-        b.stencil(b.multistage(
-            LoopOrderKind::Parallel,
-            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                               b.stmt(b.assignExpr(b.at(f_vert), b.at(f_e))))))));
-    FAIL() << "Semantic error not thrown";
-  } catch(SemanticError& error) {
-    SUCCEED();
-  }
-}
-TEST(TestIntegrityChecker, AssignmentFieldDimCart) {
-  using namespace dawn::iir;
-
-  CartesianIIRBuilder b;
-  auto out = b.field("out_field", FieldType::ij);
-  auto in = b.field("in_field", FieldType::ijk);
-  try {
-    auto stencil =
-        b.build("incorrectFieldDimAssign",
-                b.stencil(b.multistage(
-                    dawn::iir::LoopOrderKind::Forward,
-                    b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start,
-                                       b.stmt(b.assignExpr(b.at(out), b.at(in))))))));
-    FAIL() << "Semantic error not thrown";
-  } catch(SemanticError& error) {
-    SUCCEED();
-  }
-}
-
 } // anonymous namespace

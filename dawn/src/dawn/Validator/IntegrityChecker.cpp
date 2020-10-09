@@ -15,10 +15,6 @@
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 
-static int dimensionsCompatible(int leftDim, int rightDim) {
-  return leftDim == 3 || rightDim == -1 || leftDim == -1 || leftDim == rightDim;
-}
-
 namespace dawn {
 IntegrityChecker::IntegrityChecker(iir::StencilInstantiation* instantiation)
     : instantiation_(instantiation), metadata_(instantiation->getMetaData()) {}
@@ -94,19 +90,7 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
     throw SemanticError("Attempt to assign constant expression " + value, metadata_.getFileName(),
                         expr->getSourceLocation().Line);
   }
-
-  int oldDim = curDimensions_;
-  expr->getLeft()->accept(*this);
-  int leftDim = curDimensions_;
-  expr->getRight()->accept(*this);
-  int rightDim = curDimensions_;
-
-  if(!dimensionsCompatible(leftDim, rightDim)) {
-    throw SemanticError("trying to assign " + std::to_string(leftDim) + "d field to " +
-                        std::to_string(rightDim) + "d field!");
-  }
-
-  curDimensions_ = oldDim;
+  ast::ASTVisitorForwarding::visit(expr);
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
@@ -127,7 +111,6 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
     }
   }
 
-  curDimensions_ = metadata_.getFieldDimensions(accessID).numDimensions();
   ast::ASTVisitorForwarding::visit(expr);
 }
 

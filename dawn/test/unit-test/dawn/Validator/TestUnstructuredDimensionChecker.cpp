@@ -13,12 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/LocationType.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Support/Exception.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <gtest/gtest.h>
-#include <memory>
 
 using namespace dawn;
 
@@ -537,6 +534,24 @@ TEST(UnstructuredDimensionCheckerTest, VarAccessType) {
   auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
                                                                            stencil->getMetaData());
   EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
+TEST(UnstructuredDimensionCheckerTest, VerticalFields) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+
+  auto f_e = b.field("edges", LocType::Edges);
+  auto f_vert = b.vertical_field("vert");
+
+  EXPECT_DEATH(
+      auto stencil = b.build(
+          "fail", b.stencil(b.multistage(
+                      LoopOrderKind::Parallel,
+                      b.stage(LocType::Edges,
+                              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                         b.stmt(b.assignExpr(b.at(f_vert), b.at(f_e)))))))),
+      ".*Dimensions consistency check failed.*");
 }
 TEST(UnstructuredDimensionCheckerTest, VerticalIndirection) {
   using namespace dawn::iir;
