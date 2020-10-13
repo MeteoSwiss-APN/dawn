@@ -230,7 +230,7 @@ TEST_F(TestPassFieldVersioning, VersionSparseField) {
                                                            {LocType::Edges, LocType::Cells,
                                                             LocType::Vertices, LocType::Edges}))),
               b.loopStmtChain(
-                  b.stmt(b.assignExpr(b.at(sparse), b.at(dense, HOffsetType::noOffset, 0),
+                  b.stmt(b.assignExpr(b.at(sparse), b.at(dense, HOffsetType::withOffset, 0),
                                       Op::assign)),
                   {LocType::Edges, LocType::Cells, LocType::Vertices, LocType::Edges}))))));
 
