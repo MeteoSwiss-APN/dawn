@@ -66,18 +66,16 @@ TEST(TestIntegrityChecker, Assignment2d3d) {
   using LocType = dawn::ast::LocationType;
 
   UnstructuredIIRBuilder b;
-  auto in = b.field("in", LocType::Cells);
-  auto out = b.field("out", LocType::Cells, false);
+  auto f_e = b.field("edges", LocType::Edges);
+  auto f_vert = b.vertical_field("vert");
 
   try {
     auto stencil = b.build(
         "Assignment2d3d",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                               b.stmt(b.assignExpr(b.at(out), b.at(in, AccessType::r,
-                                                                   ast::Offsets{ast::unstructured,
-                                                                                false, 0}))))))));
+            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(f_vert), b.at(f_e))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();

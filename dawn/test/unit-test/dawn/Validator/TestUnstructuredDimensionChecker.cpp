@@ -13,9 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/LocationType.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <gtest/gtest.h>
+#include <memory>
 
 using namespace dawn;
 
