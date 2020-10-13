@@ -79,7 +79,7 @@ TEST(TestIntegrityChecker, OffsetReadsIn2DField) {
             b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                b.stmt(b.assignExpr(
                                    b.at(out), b.at(in, AccessType::r,
-                                                   ast::Offsets{ast::unstructured, true, 1}))))))));
+                                                   ast::Offsets{ast::unstructured, false, 1}))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();
