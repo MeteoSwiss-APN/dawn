@@ -39,7 +39,6 @@ TEST(TestIntegrityChecker, GlobalsOptimizedAway) {
     SUCCEED();
   }
 }
-
 TEST(TestIntegrityChecker, OffsetReadsInCorrectContext) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
@@ -62,8 +61,7 @@ TEST(TestIntegrityChecker, OffsetReadsInCorrectContext) {
     SUCCEED();
   }
 }
-
-TEST(TestIntegrityChecker, AssignmentFieldDim) {
+TEST(TestIntegrityChecker, Assignment2d3d) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -73,13 +71,34 @@ TEST(TestIntegrityChecker, AssignmentFieldDim) {
 
   try {
     auto stencil = b.build(
-        "IncorrectFieldAssignment",
+        "Assignment2d3d",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                b.stmt(b.assignExpr(b.at(out), b.at(in, AccessType::r,
                                                                    ast::Offsets{ast::unstructured,
                                                                                 false, 0}))))))));
+    FAIL() << "Semantic error not thrown";
+  } catch(SemanticError& error) {
+    SUCCEED();
+  }
+}
+TEST(TestIntegrityChecker, Assignment1d3d) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+
+  auto f_e = b.field("edges", LocType::Edges);
+  auto f_vert = b.vertical_field("vert");
+
+  try {
+    auto stencil = b.build(
+        "Assignment1d3d",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(f_vert), b.at(f_e))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();

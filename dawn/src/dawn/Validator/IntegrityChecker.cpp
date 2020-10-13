@@ -101,7 +101,9 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   expr->getRight()->accept(*this);
   int rightDim = curDimensions_;
 
-  if(!dimensionsCompatible(leftDim, rightDim)) {
+  // we leave the unstrucutred world alone for now
+  if(instantiation_->getIIR()->getGridType() == ast::GridType::Unstructured &&
+     !dimensionsCompatible(leftDim, rightDim)) {
     throw SemanticError("trying to assign " + std::to_string(leftDim) + "d field to " +
                         std::to_string(rightDim) + "d field!");
   }
