@@ -125,6 +125,7 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+
   int accessID = iir::getAccessID(expr);
   DAWN_ASSERT_MSG(metadata_.getFieldNameFromAccessID(accessID) == expr->getName(),
                   (std::string("Field name (") + std::string(expr->getName()) +
@@ -142,8 +143,15 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
     }
   }
 
-  curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
+  auto dim = metadata_.getFieldDimensions(metadata_.getNameToAccessIDMap().at(expr->getName()));
+  if(!dim.K() &&
+     (expr->getOffset().hasVerticalIndirection() || expr->getOffset().verticalShift() != 0)) {
+    throw SemanticError("Attempting to read with vertical offset from horizontal field!");
+  }
+
   ast::ASTVisitorForwarding::visit(expr);
+
+  curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
