@@ -15,6 +15,10 @@
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 
+static int dimensionsCompatible(int leftDim, int rightDim) {
+  return leftDim == 3 || rightDim == -1 || leftDim == -1 || leftDim == rightDim;
+}
+
 namespace dawn {
 IntegrityChecker::IntegrityChecker(iir::StencilInstantiation* instantiation)
     : instantiation_(instantiation), metadata_(instantiation->getMetaData()) {}
@@ -90,10 +94,38 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
     throw SemanticError("Attempt to assign constant expression " + value, metadata_.getFileName(),
                         expr->getSourceLocation().Line);
   }
-  ast::ASTVisitorForwarding::visit(expr);
+
+  int oldDim = curDimensions_;
+  expr->getLeft()->accept(*this);
+  int leftDim = curDimensions_;
+  expr->getRight()->accept(*this);
+  int rightDim = curDimensions_;
+
+  auto dimToStr = [](int d) -> std::string {
+    switch(d) {
+    case 1:
+      return "vertical";
+    case 2:
+      return "horizontal";
+    case 3:
+      return "full";
+    default:
+      return "";
+    }
+  };
+
+  // we leave the unstrucutred world alone for now
+  if(instantiation_->getIIR()->getGridType() == ast::GridType::Unstructured &&
+     !dimensionsCompatible(leftDim, rightDim)) {
+    throw SemanticError("trying to assign " + dimToStr(leftDim) + "d field to " +
+                        dimToStr(rightDim) + "d field!");
+  }
+
+  curDimensions_ = oldDim;
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+
   int accessID = iir::getAccessID(expr);
   DAWN_ASSERT_MSG(metadata_.getFieldNameFromAccessID(accessID) == expr->getName(),
                   (std::string("Field name (") + std::string(expr->getName()) +
@@ -118,6 +150,8 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
   }
 
   ast::ASTVisitorForwarding::visit(expr);
+
+  curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {

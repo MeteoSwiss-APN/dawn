@@ -30,6 +30,8 @@ class IntegrityChecker : public ast::ASTVisitorForwarding {
   iir::StencilMetaInformation& metadata_;
   // are we in a loop or reduction expression?
   bool parentHasIterationContext_ = false;
+  // current field dimensions on stack
+  int curDimensions_ = -1;
 
 public:
   IntegrityChecker(iir::StencilInstantiation* instantiation);
