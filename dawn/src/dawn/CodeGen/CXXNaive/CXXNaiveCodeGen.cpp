@@ -308,7 +308,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
-      stencilClass.addMember("const globals&", "m_globals");
+      stencilClass.addMember("globals", "m_globals");
     }
 
     stencilClass.addComment("Input/Output storages");
@@ -399,14 +399,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
         std::string type = stencilProperties->paramNameToType_.at(fieldName);
-        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " +
-                                      c_gt + "make_host_view(" + fieldName + "_)");
+        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " + c_gt +
+                                      "make_host_view(" + fieldName + "_)");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
       for(const auto& fieldPair : tempFields) {
         const auto fieldName = fieldPair.second.Name;
-        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt + "make_host_view(m_" + fieldName + ")");
+        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " + c_gt +
+                                      "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
 
@@ -581,8 +581,8 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
-        stencilFunMethod << c_gt << "data_view<StorageType" + std::to_string(m) + "> "
-                         << paramName << " = pw_" << paramName << ".dview_;";
+        stencilFunMethod << c_gt << "data_view<StorageType" + std::to_string(m) + "> " << paramName
+                         << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);

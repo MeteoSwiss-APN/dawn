@@ -879,5 +879,31 @@ int main() {
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto in_f = b.field("in_field", LocType::Cells);
+    auto out_f = b.field("out_field", LocType::Cells);
+    auto global = b.globalvar("dt", 2);
+    std::string stencilName = "globalVar";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(b.at(out_f), b.binaryExpr(b.at(global), b.at(in_f),
+                                                                         Op::multiply))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
   return 0;
 }

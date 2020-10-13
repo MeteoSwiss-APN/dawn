@@ -1078,4 +1078,33 @@ TEST(AtlasIntegrationTestCompareOutput, iterationSpaceUnstructured) {
 }
 } // namespace
 
+namespace {
+#include <generated_globalVar.hpp>
+TEST(AtlasIntegrationTestCompareOutput, globalVar) {
+  auto mesh = generateQuadMesh(10, 10);
+  size_t nb_levels = 10;
+
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::globalVar<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v, out_v);
+  double dt = stencil.get_dt();
+  ASSERT_EQ(dt, 2.0);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(out_v(cell_idx, k), 2.0);
+    }
+  }
+}
+} // namespace
+
 } // namespace

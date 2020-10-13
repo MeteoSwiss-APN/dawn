@@ -116,23 +116,35 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
     stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
   }
 
-  for(const auto& globalProp : globalsMap) {
-    const auto& globalValue = globalProp.second;
-    if(globalValue.isConstexpr()) {
-      continue;
-    }
-    auto getter = stencilWrapperClass.addMemberFunction(
-        sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
-    getter.finishArgs();
-    getter.addStatement("return m_globals." + globalProp.first);
-    getter.commit();
+  const auto& stencils = stencilInstantiation.getStencils();
+  // const auto& globalsMap = stencilInstantiation.getIIR()->getGlobalVariableMap();
 
-    auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
-    setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
-                  globalProp.first);
-    setter.finishArgs();
-    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
-    setter.commit();
+  // Stencil members:
+  // generate the code for each of the stencils
+  for(const auto& stencil : stencils) {
+
+    for(const auto& globalProp : globalsMap) {
+      const auto& globalValue = globalProp.second;
+      if(globalValue.isConstexpr()) {
+        continue;
+      }
+      auto getter = stencilWrapperClass.addMemberFunction(
+          sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
+      getter.finishArgs();
+      getter.addStatement("return m_globals." + globalProp.first);
+      getter.commit();
+
+      auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
+      setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
+                    globalProp.first);
+      setter.finishArgs();
+      setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
+      std::string stencilName =
+          codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID());
+      setter.addStatement("m_" + stencilName + ".m_globals." + globalProp.first + "=" +
+                          globalProp.first);
+      setter.commit();
+    }
   }
 }
 
