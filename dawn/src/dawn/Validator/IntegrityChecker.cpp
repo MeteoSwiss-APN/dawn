@@ -111,6 +111,12 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
     }
   }
 
+  auto dim = metadata_.getFieldDimensions(metadata_.getNameToAccessIDMap().at(expr->getName()));
+  if(!dim.K() &&
+     (expr->getOffset().hasVerticalIndirection() || expr->getOffset().verticalShift() != 0)) {
+    throw SemanticError("Attempting to read with vertical offset from horizontal field!");
+  }
+
   ast::ASTVisitorForwarding::visit(expr);
 }
 
