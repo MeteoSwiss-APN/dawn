@@ -64,7 +64,7 @@ private:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
     const gridtools::dawn::domain m_dom;
-    const globals& m_globals;
+    globals m_globals;
 
     // Input/Output storages
     tmp_meta_data_t m_tmp_meta_data;
@@ -381,6 +381,7 @@ public:
 
   void set_dt(double dt) {
     m_globals.dt=dt;
+    m_stencil_443.m_globals.dt=dt;
   }
 
   void run(storage_ijk_t dp_ref, storage_ijk_t zs, storage_ijk_t area, storage_ijk_t ut, storage_ijk_t vt, storage_ijk_t gz, storage_ijk_t gz_x, storage_ijk_t gz_y, storage_ijk_t ws3) {
