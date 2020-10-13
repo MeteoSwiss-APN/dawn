@@ -101,11 +101,24 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   expr->getRight()->accept(*this);
   int rightDim = curDimensions_;
 
+  auto dimToStr = [](int d) -> std::string {
+    switch(d) {
+    case 1:
+      return "vertical";
+    case 2:
+      return "horizontal";
+    case 3:
+      return "full";
+    default:
+      return "";
+    }
+  };
+
   // we leave the unstrucutred world alone for now
   if(instantiation_->getIIR()->getGridType() == ast::GridType::Unstructured &&
      !dimensionsCompatible(leftDim, rightDim)) {
-    throw SemanticError("trying to assign " + std::to_string(leftDim) + "d field to " +
-                        std::to_string(rightDim) + "d field!");
+    throw SemanticError("trying to assign " + dimToStr(leftDim) + "d field to " +
+                        dimToStr(rightDim) + "d field!");
   }
 
   curDimensions_ = oldDim;
@@ -129,7 +142,7 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
     }
   }
 
-  curDimensions_ = metadata_.getFieldDimensions(accessID).numDimensions();
+  curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
   ast::ASTVisitorForwarding::visit(expr);
 }
 

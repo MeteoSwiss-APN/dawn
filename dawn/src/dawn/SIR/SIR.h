@@ -311,7 +311,7 @@ public:
   std::string toString() const;
 
   // returns number of dimensions (1-3)
-  int numDimensions() const;
+  int numSpatialDimensions() const;
 
 private:
   std::optional<HorizontalFieldDimension> horizontalFieldDimension_;

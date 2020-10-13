@@ -635,7 +635,7 @@ std::string FieldDimensions::toString() const {
   }
 }
 
-int FieldDimensions::numDimensions() const {
+int FieldDimensions::numSpatialDimensions() const {
   if(!horizontalFieldDimension_) {
     return 1;
   }
@@ -644,8 +644,6 @@ int FieldDimensions::numDimensions() const {
         sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
     return int(cartesianDimensions.I()) + int(cartesianDimensions.J()) + int(K());
   } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& unstructuredDimension =
-        sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension());
     return 2 + int(K());
   } else {
     dawn_unreachable("Invalid horizontal field dimension");
