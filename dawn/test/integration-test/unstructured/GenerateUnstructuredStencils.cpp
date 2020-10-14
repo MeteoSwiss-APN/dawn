@@ -886,7 +886,7 @@ int main() {
     UnstructuredIIRBuilder b;
     auto in_f = b.field("in_field", LocType::Cells);
     auto out_f = b.field("out_field", LocType::Cells);
-    auto global = b.globalvar("dt", 2);
+    auto global = b.globalvar("dt", 0.5);
     std::string stencilName = "globalVar";
 
     auto stencilInstantiation = b.build(

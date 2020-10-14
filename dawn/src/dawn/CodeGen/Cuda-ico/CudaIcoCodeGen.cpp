@@ -1091,7 +1091,6 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "using namespace gridtools::dawn;",
   };
 
-  // globals not yet supported
   std::string globals = generateGlobals(context_, "dawn_generated", "cuda_ico");
 
   DAWN_LOG(INFO) << "Done generating code";

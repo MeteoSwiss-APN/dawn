@@ -383,7 +383,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     }
     stencilClass.addMember("::dawn::unstructured_domain ", " m_unstructured_domain ");
     if(!globalsMap.empty()) {
-      stencilClass.addMember("globals ", " m_globals");
+      stencilClass.addMember("const globals &", " m_globals");
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
@@ -400,7 +400,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     // stencilClassCtr.addInit("m_dom(dom_)");
     if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("globals globals_");
+      stencilClassCtr.addArg("const globals &globals_");
     }
 
     stencilClassCtr.addInit("m_mesh(mesh)");

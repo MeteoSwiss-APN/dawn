@@ -308,7 +308,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
-      stencilClass.addMember("globals", "m_globals");
+      stencilClass.addMember("const globals&", "m_globals");
     }
 
     stencilClass.addComment("Input/Output storages");
@@ -321,7 +321,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     stencilClassCtr.addArg("const " + c_dgt + "domain& dom_");
     if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("const globals& globals_");
+      stencilClassCtr.addArg("globals& globals_");
     }
     stencilClassCtr.addArg("int rank");
     stencilClassCtr.addArg("int xcols");
@@ -569,7 +569,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       // add global parameter
       if(stencilFun->hasGlobalVariables()) {
-        stencilFunMethod.addArg("const globals& m_globals");
+        stencilFunMethod.addArg("globals m_globals");
       }
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                            StencilContext::SC_StencilFunction);
