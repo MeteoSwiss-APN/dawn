@@ -305,7 +305,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
         if(expr->getOffset().hasVerticalIndirection()) {
           ss_ << ","
               << "m_" << expr->getOffset().getVerticalIndirectionFieldName() << "(deref(LibTag{}, "
-              << sparseArgName_ << "), k)+" << expr->getOffset().verticalShift() << ")";
+              << sparseArgName_ << "), " << sparseIdx << ", k)+"
+              << expr->getOffset().verticalShift() << ")";
         } else {
           ss_ << ",k+" << expr->getOffset().verticalShift() << ")";
         }
