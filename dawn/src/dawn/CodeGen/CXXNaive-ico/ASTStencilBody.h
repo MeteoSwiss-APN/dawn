@@ -93,6 +93,9 @@ protected:
     return res;
   }
 
+  std::string makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                              std::string kiterStr);
+
 public:
   using Base = ASTCodeGenCXX;
   using Base::visit;
