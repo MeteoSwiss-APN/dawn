@@ -74,7 +74,20 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
-  DAWN_ASSERT_MSG(0, "Var Access not allowed in this context");
+  std::string name = getName(expr);
+  int AccessID = iir::getAccessID(expr);
+
+  if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
+    ss_ << "globals." << name;
+  } else {
+    ss_ << name;
+
+    if(expr->isArrayAccess()) {
+      ss_ << "[";
+      expr->getIndex()->accept(*this);
+      ss_ << "]";
+    }
+  }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {

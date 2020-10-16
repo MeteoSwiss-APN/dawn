@@ -131,7 +131,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
+  generateGlobalsAPI(StencilWrapperClass, globalsMap, codeGenProperties);
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
@@ -230,9 +230,6 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     std::string initCtr = "m_" + stencilName;
 
     initCtr += "(mesh, k_size";
-    if(!globalsMap.empty()) {
-      initCtr += ",m_globals";
-    }
     for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
@@ -241,6 +238,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
                                               fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
+    }
+    if(!globalsMap.empty()) {
+      initCtr += ",m_globals";
     }
     initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
@@ -312,7 +312,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  // const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Stencil members:
   // generate the code for each of the stencils
@@ -382,6 +382,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                              "m_" + fieldIt.second.Name);
     }
     stencilClass.addMember("::dawn::unstructured_domain ", " m_unstructured_domain ");
+    if(!globalsMap.empty()) {
+      stencilClass.addMember("const globals &", " m_globals");
+    }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
 
@@ -396,14 +399,18 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     }
 
     // stencilClassCtr.addInit("m_dom(dom_)");
-    // if(!globalsMap.empty()) {
-    //   stencilClassCtr.addArg("m_globals(globals_)");
-    // }
+    if(!globalsMap.empty()) {
+      stencilClassCtr.addArg("const globals &globals_");
+    }
 
     stencilClassCtr.addInit("m_mesh(mesh)");
     stencilClassCtr.addInit("m_k_size(k_size)");
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addInit("m_" + fieldIt.second.Name + "(" + fieldIt.second.Name + ")");
+    }
+
+    if(!globalsMap.empty()) {
+      stencilClassCtr.addInit("m_globals(globals_)");
     }
 
     // addTmpStorageInit(stencilClassCtr, *stencil, tempFields);
@@ -635,7 +642,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
 
       // add global parameter
       if(stencilFun->hasGlobalVariables()) {
-        stencilFunMethod.addArg("const globals& m_globals");
+        stencilFunMethod.addArg("globals m_globals");
       }
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                            StencilContext::SC_StencilFunction);
@@ -680,7 +687,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_, "::dawn_generated", "cxxnaiveico");
+  std::string globals = generateGlobals(context_, "dawn_generated", "cxxnaiveico");
 
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define DAWN_GENERATED 1");
