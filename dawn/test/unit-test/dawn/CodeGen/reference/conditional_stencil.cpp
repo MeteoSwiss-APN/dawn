@@ -65,12 +65,12 @@ private:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
     const gridtools::dawn::domain m_dom;
-    globals m_globals;
+    const globals& m_globals;
 
     // Input/Output storages
   public:
 
-    stencil_21(const gridtools::dawn::domain& dom_, const globals& globals_, int rank, int xcols, int ycols) : m_dom(dom_), m_globals(globals_){}
+    stencil_21(const gridtools::dawn::domain& dom_, globals& globals_, int rank, int xcols, int ycols) : m_dom(dom_), m_globals(globals_){}
     static constexpr ::dawn::driver::cartesian_extent in_extent = {-1,1, -1,1, 0,0};
     static constexpr ::dawn::driver::cartesian_extent out_extent = {0,0, 0,0, 0,0};
 
@@ -132,7 +132,6 @@ public:
 
   void set_var1(int var1) {
     m_globals.var1=var1;
-    m_stencil_21.m_globals.var1=var1;
   }
 
   bool get_var2() {
@@ -141,7 +140,6 @@ public:
 
   void set_var2(bool var2) {
     m_globals.var2=var2;
-    m_stencil_21.m_globals.var2=var2;
   }
 
   void run(storage_ijk_t in, storage_ijk_t out) {

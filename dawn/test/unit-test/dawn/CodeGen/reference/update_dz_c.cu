@@ -690,7 +690,6 @@ public:
 
   void set_dt(double dt) {
     m_globals.dt=dt;
-    m_stencil_443.m_globals.dt=dt;
   }
 
   template<typename S>

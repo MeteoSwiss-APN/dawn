@@ -64,7 +64,7 @@ private:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< ::dawn::float_type, tmp_meta_data_t>;
     const gridtools::dawn::domain m_dom;
-    globals m_globals;
+    const globals& m_globals;
 
     // Input/Output storages
     tmp_meta_data_t m_tmp_meta_data;
@@ -74,7 +74,7 @@ private:
     tmp_storage_t m_fy;
   public:
 
-    stencil_443(const gridtools::dawn::domain& dom_, const globals& globals_, int rank, int xcols, int ycols) : m_dom(dom_), m_globals(globals_), m_tmp_meta_data(dom_.isize() + 1, dom_.jsize() + 1, dom_.ksize() + 2*0), m_xfx(m_tmp_meta_data), m_yfx(m_tmp_meta_data), m_fx(m_tmp_meta_data), m_fy(m_tmp_meta_data){}
+    stencil_443(const gridtools::dawn::domain& dom_, globals& globals_, int rank, int xcols, int ycols) : m_dom(dom_), m_globals(globals_), m_tmp_meta_data(dom_.isize() + 1, dom_.jsize() + 1, dom_.ksize() + 2*0), m_xfx(m_tmp_meta_data), m_yfx(m_tmp_meta_data), m_fx(m_tmp_meta_data), m_fy(m_tmp_meta_data){}
     static constexpr ::dawn::driver::cartesian_extent dp_ref_extent = {0,1, 0,1, -2,1};
     static constexpr ::dawn::driver::cartesian_extent zs_extent = {0,0, 0,0, 0,0};
     static constexpr ::dawn::driver::cartesian_extent area_extent = {0,0, 0,0, 0,0};
@@ -381,7 +381,6 @@ public:
 
   void set_dt(double dt) {
     m_globals.dt=dt;
-    m_stencil_443.m_globals.dt=dt;
   }
 
   void run(storage_ijk_t dp_ref, storage_ijk_t zs, storage_ijk_t area, storage_ijk_t ut, storage_ijk_t vt, storage_ijk_t gz, storage_ijk_t gz_x, storage_ijk_t gz_y, storage_ijk_t ws3) {
