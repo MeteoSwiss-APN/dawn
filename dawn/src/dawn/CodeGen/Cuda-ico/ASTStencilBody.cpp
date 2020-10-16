@@ -16,6 +16,8 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTFwd.h"
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -84,57 +86,75 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   expr->getRight()->accept(*this);
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-
-  int vOffset = expr->getOffset().verticalShift();
-  std::string kiterDirect = "(kIter + " + std::to_string(vOffset) + ")";
-
-  if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
-    ss_ << getName(expr) << "["
-        << (expr->getOffset().hasVerticalIndirection()
-                ? "(int)" + expr->getOffset().getVerticalIndirectionFieldName() + "[kiter]" +
-                      std::to_string(vOffset)
-                : kiterDirect)
-        << "]";
-    return;
+std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                                            std::string kiterStr) {
+  bool isVertical = metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical();
+  if(isVertical) {
+    return kiterStr;
   }
 
   bool isHorizontal = !metadata_.getFieldDimensions(iir::getAccessID(expr)).K();
-
-  auto makeAccessStr = [&](const std::shared_ptr<iir::FieldAccessExpr>& expr,
-                           std::string resArgName, int vOffset, bool isHorizontal,
-                           std::string kiterDirect) -> std::string {
-    return getName(expr) + "[" +
-           (expr->getOffset().hasVerticalIndirection()
-                ? "(int)(" + expr->getOffset().getVerticalIndirectionFieldName() + "[kIter *" +
-                      resArgName + "] + " + std::to_string(vOffset) + ")"
-                : isHorizontal ? "" : kiterDirect) +
-           (!isHorizontal ? " * " : "") + resArgName + "]";
-  };
-
+  bool isFullField = !isHorizontal && !isVertical;
   auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
-  std::string denseOffset = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
-  if(unstrDims.isDense()) { // dense field accesses
-    std::string resArgName;
+  bool isDense = unstrDims.isDense();
+  bool isSparse = unstrDims.isSparse();
+
+  if(isFullField && isDense) {
+    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      resArgName = (isHorizontal ? "" : denseOffset + " + ") + "nbhIdx";
+      return kiterStr + "*" + denseSize + "+ nbhIdx";
     } else {
-      resArgName = (isHorizontal ? "" : denseOffset + " + ") + "pidx";
+      return kiterStr + "*" + denseSize + "+ pidx";
     }
-    ss_ << makeAccessStr(expr, resArgName, vOffset, isHorizontal, kiterDirect);
+  }
 
-  } else { // sparse field accesses
+  if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-
+    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
-    std::string resArgName =
-        (isHorizontal ? "" : denseOffset + " * " + sparseSize + " + ") + "nbhIter * " +
-        locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType()) + "+ pidx";
-    ss_ << makeAccessStr(expr, resArgName, vOffset, isHorizontal, kiterDirect);
+    return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
+           " + pidx";
+  }
+
+  if(isHorizontal && isDense) {
+    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
+    if((parentIsReduction_ || parentIsForLoop_) &&
+       ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
+           .hasOffset()) {
+      return "nbhIdx";
+    } else {
+      return "pidx";
+    }
+  }
+
+  if(isHorizontal && isSparse) {
+    DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
+                    "Sparse Field Access not allowed in this context");
+    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
+    return "nbhIter * " + denseSize + " + pidx";
+  }
+
+  DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
+  return "BAD_FIELD_CONFIG";
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+  if(!expr->getOffset().hasVerticalIndirection()) {
+    ss_ << expr->getName() + "[" +
+               makeIndexString(expr, "(kIter + " +
+                                         std::to_string(expr->getOffset().verticalShift()) + ")") +
+               "]";
+  } else {
+    auto vertOffset = makeIndexString(std::static_pointer_cast<iir::FieldAccessExpr>(
+                        expr->getOffset().getVerticalIndirectionFieldAsExpr()), "kIter");                    
+    ss_ << expr->getName() + "[" +
+               makeIndexString(expr, "(int)(" + expr->getOffset().getVerticalIndirectionFieldName() + "[" + vertOffset + 
+               "] " + " + " + std::to_string(expr->getOffset().verticalShift()) + ")") + "]"; 
   }
 }
 
