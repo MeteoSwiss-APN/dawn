@@ -39,6 +39,7 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_tridiagonalSolve.hpp
   generated_verticalIndirecion.hpp
   generated_verticalSum.hpp
+  generated_globalVar.hpp
 )
 
 set(reference_stencil_codes reference_diffusion.hpp

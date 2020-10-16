@@ -161,6 +161,8 @@ void CudaIcoCodeGen::generateRunFun(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, MemberFunction& runFun,
     CodeGenProperties& codeGenProperties) {
 
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+
   // find block sizes to generate
   std::set<ast::LocationType> stageLocType;
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
@@ -308,7 +310,9 @@ void CudaIcoCodeGen::generateRunFun(
       kernelCall << "<<<"
                  << "dG" + std::to_string(stage->getStageID()) + ",dB"
                  << ">>>(";
-
+      if(!globalsMap.empty()) {
+        kernelCall << "m_globals, ";
+      }
       kernelCall << numElString << ", ";
 
       // which loc size args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed additionally?
@@ -364,9 +368,13 @@ void CudaIcoCodeGen::generateRunFun(
 }
 
 void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::Stencil& stencil,
+                                             const sir::GlobalVariableMap& globalsMap,
                                              CodeGenProperties& codeGenProperties) const {
 
   // arguments: mesh, kSize, fields
+  if(!globalsMap.empty()) {
+    ctor.addArg("globals globals");
+  }
   ctor.addArg("const dawn::mesh_t<LibTag>& mesh");
   ctor.addArg("int kSize");
   for(auto field : support::orderMap(stencil.getFields())) {
@@ -389,6 +397,9 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
   ctor.addInit("sbase(\"" + stencilName + "\")");
   ctor.addInit("mesh_(mesh)");
   ctor.addInit("kSize_(kSize)");
+  if(!globalsMap.empty()) {
+    ctor.addInit("m_globals(globals)");
+  }
 
   std::stringstream fieldsStr;
   {
@@ -406,8 +417,12 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
 
 void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
                                                     const iir::Stencil& stencil,
+                                                    const sir::GlobalVariableMap& globalsMap,
                                                     CodeGenProperties& codeGenProperties) const {
 
+  if(!globalsMap.empty()) {
+    ctor.addArg("globals globals");
+  }
   // arguments: mesh, kSize, fields
   ctor.addArg("const dawn::GlobalGpuTriMesh *mesh");
   ctor.addArg("int kSize");
@@ -417,6 +432,9 @@ void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
       codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
   ctor.addInit("sbase(\"" + stencilName + "\")");
   ctor.addInit("mesh_(mesh)");
+  if(!globalsMap.empty()) {
+    ctor.addInit("m_globals(globals)");
+  }
   ctor.addInit("kSize_(kSize)");
 }
 
@@ -576,6 +594,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
 
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Stencil members:
   // generate the code for each of the stencils
@@ -587,6 +606,8 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName, "", "sbase");
 
+    generateGlobalsAPI(stencilClass, globalsMap, codeGenProperties);
+
     // generate members (fields + kSize + gpuMesh)
     stencilClass.changeAccessibility("private");
     for(auto field : support::orderMap(stencil.getFields())) {
@@ -597,9 +618,13 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     stencilClass.changeAccessibility("public");
 
+    if(!globalsMap.empty()) {
+      stencilClass.addMember("globals", "m_globals");
+    }
+
     // constructor from library
     auto stencilClassConstructor = stencilClass.addConstructor();
-    generateStencilClassCtr(stencilClassConstructor, stencil, codeGenProperties);
+    generateStencilClassCtr(stencilClassConstructor, stencil, globalsMap, codeGenProperties);
     stencilClassConstructor.commit();
 
     // grid helper fun
@@ -613,7 +638,8 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     // minmal ctor
     auto stencilClassMinimalConstructor = stencilClass.addConstructor();
-    generateStencilClassCtrMinimal(stencilClassMinimalConstructor, stencil, codeGenProperties);
+    generateStencilClassCtrMinimal(stencilClassMinimalConstructor, stencil, globalsMap,
+                                   codeGenProperties);
     stencilClassMinimalConstructor.commit();
 
     // run method
@@ -646,6 +672,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties, bool fromHost) {
   const auto& stencils = stencilInstantiation->getStencils();
+
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   CollectChainStrings chainCollector;
   std::set<std::vector<ast::LocationType>> chains;
@@ -732,8 +760,10 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag, " + chainSizesStr.str() +
-                              ">::" + stencilName + " s(mesh, k_size)");
+      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag " +
+                              (chainSizesStr.str().empty() ? "" : ", " + chainSizesStr.str()) +
+                              ">::" + stencilName + " s(" +
+                              (globalsMap.empty() ? "" : "globals(), ") + "mesh, k_size)");
     }
     if(fromHost) {
       // depending if we are calling from c or from fortran, we need to transpose the data or not
@@ -792,6 +822,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData());
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -829,6 +860,9 @@ void CudaIcoCodeGen::generateAllCudaKernels(
           retString,
           cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage), ssSW);
 
+      if(!globalsMap.empty()) {
+        cudaKernel.addArg("globals globals");
+      }
       auto loc = *stage->getLocationType();
       cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc));
 
@@ -1029,8 +1063,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "using namespace gridtools::dawn;",
   };
 
-  // globals not yet supported
-  std::string globals = "";
+  std::string globals = generateGlobals(context_, "dawn_generated", "cuda_ico");
 
   DAWN_LOG(INFO) << "Done generating code";
 

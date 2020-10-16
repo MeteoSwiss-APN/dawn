@@ -239,7 +239,7 @@ int main() {
                             b.reduceOverNeighborExpr(
                                 Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                 b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
-                                             b.at(in_f, HOffsetType::withOffset, 0), Op::multiply),
+                                             b.at(in_f, HOffsetType::noOffset, 0), Op::multiply),
                                 {LocType::Cells, LocType::Edges, LocType::Cells}))),
                         b.stmt(b.assignExpr(
                             b.at(out_f),
@@ -872,6 +872,32 @@ int main() {
                          b.stage(LocType::Cells, Interval(2, 3, 0, 0),
                                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0,
                                             0, b.stmt(b.assignExpr(b.at(out), b.at(in_2))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto in_f = b.field("in_field", LocType::Cells);
+    auto out_f = b.field("out_field", LocType::Cells);
+    auto global = b.globalvar("dt", 0.5);
+    std::string stencilName = "globalVar";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(b.at(out_f), b.binaryExpr(b.at(global), b.at(in_f),
+                                                                         Op::multiply))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");

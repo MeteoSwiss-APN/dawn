@@ -107,8 +107,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
   return ss.str();
 }
 
-void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                                 Class& stencilWrapperClass,
+void CodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
@@ -131,7 +130,7 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
     setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
                   globalProp.first);
     setter.finishArgs();
-    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
+    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);      
     setter.commit();
   }
 }
