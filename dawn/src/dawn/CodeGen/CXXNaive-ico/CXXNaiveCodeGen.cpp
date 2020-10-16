@@ -131,7 +131,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
+  generateGlobalsAPI(StencilWrapperClass, globalsMap, codeGenProperties);
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 

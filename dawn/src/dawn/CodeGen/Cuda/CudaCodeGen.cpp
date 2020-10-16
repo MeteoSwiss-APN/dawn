@@ -125,7 +125,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
   generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
+    generateGlobalsAPI(stencilWrapperClass, globalsMap, codeGenProperties);
   }
 
   generateStencilWrapperSyncMethod(stencilWrapperClass);

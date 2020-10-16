@@ -123,7 +123,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
+  generateGlobalsAPI(stencilWrapperClass, globalsMap, codeGenProperties);
 
   generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 

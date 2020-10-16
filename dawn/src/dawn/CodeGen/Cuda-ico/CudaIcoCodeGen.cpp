@@ -972,34 +972,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
   }
 }
 
-void CudaIcoCodeGen::generateGlobalsAPI(Structure& stencilClass,
-                                        const sir::GlobalVariableMap& globalsMap,
-                                        const CodeGenProperties& codeGenProperties) const {
-
-  if(!globalsMap.empty()) {
-    stencilClass.addComment("Access-wrapper for globally defined variables");
-  }
-
-  for(const auto& globalProp : globalsMap) {
-    const auto& globalValue = globalProp.second;
-    if(globalValue.isConstexpr()) {
-      continue;
-    }
-    auto getter = stencilClass.addMemberFunction(sir::Value::typeToString(globalValue.getType()),
-                                                 "get_" + globalProp.first);
-    getter.finishArgs();
-    getter.addStatement("return m_globals." + globalProp.first);
-    getter.commit();
-
-    auto setter = stencilClass.addMemberFunction("void", "set_" + globalProp.first);
-    setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
-                  globalProp.first);
-    setter.finishArgs();
-    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
-    setter.commit();
-  }
-}
-
 std::string CudaIcoCodeGen::generateStencilInstantiation(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 

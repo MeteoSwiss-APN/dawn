@@ -239,7 +239,7 @@ int main() {
                             b.reduceOverNeighborExpr(
                                 Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                 b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
-                                             b.at(in_f, HOffsetType::withOffset, 0), Op::multiply),
+                                             b.at(in_f, HOffsetType::noOffset, 0), Op::multiply),
                                 {LocType::Cells, LocType::Edges, LocType::Cells}))),
                         b.stmt(b.assignExpr(
                             b.at(out_f),

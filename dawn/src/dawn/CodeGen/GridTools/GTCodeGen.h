@@ -93,8 +93,7 @@ private:
 
   bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
-  void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                          Class& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
+  void generateGlobalsAPI(Structure& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
                           const CodeGenProperties& codeGenProperties) const override;
 
   void generateStencilWrapperMembers(

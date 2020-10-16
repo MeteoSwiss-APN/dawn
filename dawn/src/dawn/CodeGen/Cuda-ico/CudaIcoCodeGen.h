@@ -91,10 +91,7 @@ private:
 
   void generateStencilClassCtrMinimal(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
                                       const sir::GlobalVariableMap& globalsMap,
-                                      CodeGenProperties& codeGenProperties) const;
-
-  void generateGlobalsAPI(Structure& stencilClass, const sir::GlobalVariableMap& globalsMap,
-                          const CodeGenProperties& codeGenProperties) const;
+                                      CodeGenProperties& codeGenProperties) const;  
 
   void generateStencilClassRawPtrCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
                                      CodeGenProperties& codeGenProperties) const;

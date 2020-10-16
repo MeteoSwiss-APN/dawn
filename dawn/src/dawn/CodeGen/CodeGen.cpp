@@ -107,8 +107,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
   return ss.str();
 }
 
-void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                                 Class& stencilWrapperClass,
+void CodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
@@ -116,31 +115,23 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
     stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
   }
 
-  const auto& stencils = stencilInstantiation.getStencils();
-  // const auto& globalsMap = stencilInstantiation.getIIR()->getGlobalVariableMap();
-
-  // Stencil members:
-  // generate the code for each of the stencils
-  for(const auto& stencil : stencils) {
-
-    for(const auto& globalProp : globalsMap) {
-      const auto& globalValue = globalProp.second;
-      if(globalValue.isConstexpr()) {
-        continue;
-      }
-      auto getter = stencilWrapperClass.addMemberFunction(
-          sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
-      getter.finishArgs();
-      getter.addStatement("return m_globals." + globalProp.first);
-      getter.commit();
-
-      auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
-      setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
-                    globalProp.first);
-      setter.finishArgs();
-      setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);      
-      setter.commit();
+  for(const auto& globalProp : globalsMap) {
+    const auto& globalValue = globalProp.second;
+    if(globalValue.isConstexpr()) {
+      continue;
     }
+    auto getter = stencilWrapperClass.addMemberFunction(
+        sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
+    getter.finishArgs();
+    getter.addStatement("return m_globals." + globalProp.first);
+    getter.commit();
+
+    auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
+    setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
+                  globalProp.first);
+    setter.finishArgs();
+    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);      
+    setter.commit();
   }
 }
 
