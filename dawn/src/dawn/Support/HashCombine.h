@@ -45,11 +45,10 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
   hash_combine(seed, rest...);
 }
 /// @}
+} // namespace dawn
 
 //  from: https://gist.github.com/angeleno/e838a35f0849ecab56e8be7e46645177
 //  https://stackoverflow.com/a/6894436/916549
-
-} // namespace dawn
 
 template <class... TupleArgs>
 struct std::hash<std::tuple<TupleArgs...>> {

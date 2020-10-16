@@ -14,6 +14,7 @@
 
 #include "IcoChainSizes.h"
 
+#include "dawn/AST/LocationType.h"
 #include "dawn/Support/HashCombine.h"
 
 #include <assert.h>
@@ -23,7 +24,6 @@ namespace dawn {
 
 using connection_t = std::tuple<ast::LocationType, ast::LocationType>;
 
-using chain_t = std::vector<ast::LocationType>;
 using grid_location_t = std::tuple<int, int, int>;
 
 /******************************************************************************
@@ -152,7 +152,7 @@ static std::array<grid_location_t, 2> get_edge_to_vertex(const grid_location_t& 
   if(e == 0) {
     return {{{x, y, 0}, {x + 1, y, 0}}};
   } else if(e == 1) {
-    return {{{x, y, 0}, {x + 1, y + 1, 0}}};
+    return  {{{x+1, y, 0}, {x, y + 1, 0}}};
   } else if(e == 2) {
     return {{{x, y, 0}, {x, y + 1, 0}}};
   } else {
@@ -195,14 +195,14 @@ static std::array<grid_location_t, 3> get_cell_to_edge(const grid_location_t& ce
   }
 }
 
-int ICOChainSize(const std::vector<ast::LocationType>& chain) {
+int ICOChainSize(const ast::NeighborChain& chain) {
 
   assert(1 < chain.size());
 
   auto previous_location_type = chain[0];
   std::unordered_set<grid_location_t> previous_locations{{0, 0, 0}};
 
-  for(chain_t::size_type i = 1; i < chain.size(); ++i) {
+  for(ast::NeighborChain::size_type i = 1; i < chain.size(); ++i) {
 
     const auto current_location_type = chain[i];
     std::unordered_set<grid_location_t> current_locations;

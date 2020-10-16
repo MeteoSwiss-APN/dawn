@@ -59,7 +59,7 @@ add_library(DawnCodeGen
   Cuda-ico/IcoChainSizes.h
   Cuda-ico/IcoChainSizes.cpp
   Cuda-ico/LocToStringUtils.h
-  Cuda-ico/LocToStringUtils.cpp  
+  Cuda-ico/LocToStringUtils.cpp
   Driver.cpp
   Driver.h
   GridTools/ASTStencilBody.cpp

@@ -14,6 +14,7 @@
 
 #include "UnstructuredStencils.h"
 #include "dawn/CodeGen/Cuda-ico/IcoChainSizes.h"
+#include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Options.h"
 #include "dawn/Serialization/IIRSerializer.h"
 
@@ -27,7 +28,7 @@ constexpr auto backend = dawn::codegen::Backend::CUDAIco;
 // tests checking the output. To be reconsidered once this is stable.
 
 TEST(CudaIco, ChainSizes) {
-  std::map<std::vector<dawn::ast::LocationType>, int> tests{
+  std::map<dawn::ast::NeighborChain, int> tests{
       {{dawn::ast::LocationType::Cells, dawn::ast::LocationType::Edges}, 3},
       {{dawn::ast::LocationType::Cells, dawn::ast::LocationType::Vertices}, 3},
       {{dawn::ast::LocationType::Edges, dawn::ast::LocationType::Cells}, 2},
@@ -87,7 +88,9 @@ TEST(CudaIco, ChainSizes) {
 
   for(const auto& [chain, expected] : tests) {
     const auto actual = dawn::ICOChainSize(chain);
-    EXPECT_EQ(expected, actual);
+    EXPECT_EQ(expected, actual) << "Incorrect neighbor size: "  << actual
+      << " (expected " << expected
+      << ") for neighborchain: " << dawn::codegen::cudaico::chainToVectorString(chain);
   }
 }
 

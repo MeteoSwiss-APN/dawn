@@ -16,10 +16,9 @@
 
 #include "dawn/AST/LocationType.h"
 #include <map>
-#include <vector>
 
 namespace dawn {
 
-int ICOChainSize(const std::vector<ast::LocationType>& chain);
+int ICOChainSize(const ast::NeighborChain& chain);
 
 } // namespace dawn
