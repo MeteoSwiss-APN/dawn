@@ -56,6 +56,8 @@ add_library(DawnCodeGen
   Cuda-ico/ASTStencilBody.cpp
   Cuda-ico/CudaIcoCodeGen.h
   Cuda-ico/CudaIcoCodeGen.cpp
+  Cuda-ico/IcoChainSizes.h
+  Cuda-ico/IcoChainSizes.cpp
   Cuda-ico/LocToStringUtils.h
   Cuda-ico/LocToStringUtils.cpp
   Driver.cpp
