@@ -1023,11 +1023,11 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
     interfaceFile << generateF90Interface(moduleName);
     interfaceFile.close();
   }
-
   std::vector<std::string> ppDefines{
       "#include \"driver-includes/unstructured_interface.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
+      "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#define BLOCK_SIZE 16",

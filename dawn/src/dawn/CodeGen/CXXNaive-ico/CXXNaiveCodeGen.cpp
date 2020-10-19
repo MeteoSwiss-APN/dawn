@@ -628,7 +628,10 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   ppDefines.push_back("#define DAWN_GENERATED 1");
   ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVEICO");
+  ppDefines.push_back(
+      "#define GRIDTOOLS_DAWN_NO_INCLUDE"); // Required to not include gridtools from math.hpp
   ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
+  ppDefines.push_back("#include <driver-includes/math.hpp>");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);
