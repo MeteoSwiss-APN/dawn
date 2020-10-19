@@ -1,7 +1,6 @@
 #define DAWN_GENERATED 1
 #undef DAWN_BACKEND_T
 #define DAWN_BACKEND_T CXXNAIVEICO
-#include <cmath>
 #include <driver-includes/unstructured_interface.hpp>
 
 

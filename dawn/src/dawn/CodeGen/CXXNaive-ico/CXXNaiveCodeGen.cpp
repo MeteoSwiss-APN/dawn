@@ -628,9 +628,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   ppDefines.push_back("#define DAWN_GENERATED 1");
   ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVEICO");
-  ppDefines.push_back("#include <cmath>");
   ppDefines.push_back("#include <driver-includes/unstructured_interface.hpp>");
-
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);

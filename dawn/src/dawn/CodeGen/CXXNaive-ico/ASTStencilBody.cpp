@@ -144,20 +144,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
-  std::string callee = expr->getCallee();
-  // TODO: temporary hack to remove namespace prefixes
-  std::size_t lastcolon = callee.find_last_of(":");
-  ss_ << "std::" << callee.substr(lastcolon + 1) << "(";
-
-  std::size_t numArgs = expr->getArguments().size();
-  for(std::size_t i = 0; i < numArgs; ++i) {
-    expr->getArguments()[i]->accept(*this);
-    ss_ << (i == numArgs - 1 ? "" : ", ");
-  }
-  ss_ << ")";
-}
-
 void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
