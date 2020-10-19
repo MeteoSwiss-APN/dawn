@@ -13,7 +13,7 @@ The easiest approach to try out gtclang is through a Docker container. Simply cl
 ```bash
 $ git clone https://github.com/MeteoSwiss-APN/dawn.git
 $ cd dawn && docker build -t gtclang . # Get a coffee...
-$ docker run -t gtclang /usr/local/bin/gtclang /usr/src/dawn/dawn/examples/tutorial/laplacian_stencil.cpp
+$ docker run gtclang /usr/local/dawn/bin/gtclang /usr/src/dawn/dawn/examples/tutorial/laplacian_stencil.cpp
 ```
 
 This executes the first step of the tutorial. All the tutorial steps are details in the [README.md](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/examples/tutorial/README.md).

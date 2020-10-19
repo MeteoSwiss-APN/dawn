@@ -27,11 +27,11 @@ static std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationT
   auto getLocationTypeString = [](dawn::ast::LocationType type) {
     switch(type) {
     case dawn::ast::LocationType::Cells:
-      return "dawn::LocationType::Cells";
+      return "::dawn::LocationType::Cells";
     case dawn::ast::LocationType::Edges:
-      return "dawn::LocationType::Edges";
+      return "::dawn::LocationType::Edges";
     case dawn::ast::LocationType::Vertices:
-      return "dawn::LocationType::Vertices";
+      return "::dawn::LocationType::Vertices";
     default:
       dawn_unreachable("unknown location type");
       return "";
@@ -39,7 +39,7 @@ static std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationT
   };
 
   std::stringstream ss;
-  ss << "std::vector<dawn::LocationType>{";
+  ss << "std::vector<::dawn::LocationType>{";
   bool first = true;
   for(const auto& loc : chain) {
     if(!first) {
@@ -187,6 +187,66 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
+std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                            std::string kiterStr) {
+  bool isVertical = metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical();
+  if(isVertical) {
+    return kiterStr;
+  }
+
+  bool isHorizontal = !metadata_.getFieldDimensions(iir::getAccessID(expr)).K();
+  bool isFullField = !isHorizontal && !isVertical;
+  auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+      metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
+  bool isDense = unstrDims.isDense();
+  bool isSparse = unstrDims.isSparse();          
+
+  if(isFullField && isDense) {
+    std::string resArgName = denseArgName_;
+    if(!parentIsReduction_ && parentIsForLoop_) {
+      resArgName =
+          ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
+                  .hasOffset()
+              ? ASTStencilBody::LoopNeighborIndexVarName()
+              : ASTStencilBody::StageIndexVarName();
+    }    
+    return "deref(LibTag{}, " + resArgName + "), " +  kiterStr;
+  }
+
+  if(isFullField && isSparse) {
+    DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
+                    "Sparse Field Access not allowed in this context");
+    std::string sparseIdx = parentIsReduction_
+                                  ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
+                                  : ASTStencilBody::LoopLinearIndexVarName();
+    return "deref(LibTag{}, " + sparseArgName_ +  ")," + sparseIdx  + ", " + kiterStr;
+  }
+
+  if(isHorizontal && isDense) {
+    std::string resArgName = denseArgName_;
+    if(!parentIsReduction_ && parentIsForLoop_) {
+      resArgName =
+          ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
+                  .hasOffset()
+              ? ASTStencilBody::LoopNeighborIndexVarName()
+              : ASTStencilBody::StageIndexVarName();
+    }    
+    return "deref(LibTag{}, " + resArgName + ")";  
+  }
+
+  if(isHorizontal && isSparse) {
+    DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
+                    "Sparse Field Access not allowed in this context");
+    std::string sparseIdx = parentIsReduction_
+                                  ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
+                                  : ASTStencilBody::LoopLinearIndexVarName();
+    return "deref(LibTag{}, " + sparseArgName_ +  ")," + sparseIdx;
+  }
+
+  DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
+  return "BAD_FIELD_CONFIG";
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
@@ -255,27 +315,17 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
-    if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
-           metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension())
-           .isDense()) {
-      std::string resArgName = denseArgName_;
-      if(!parentIsReduction_ && parentIsForLoop_) {
-        resArgName =
-            ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
-                    .hasOffset()
-                ? ASTStencilBody::LoopNeighborIndexVarName()
-                : ASTStencilBody::StageIndexVarName();
-      }
-      ss_ << "m_" << getName(expr) << "(deref(LibTag{}, " << resArgName << "),"
-          << "k+" << expr->getOffset().verticalOffset() << ")";
+    if(!expr->getOffset().hasVerticalIndirection()) {
+      ss_ << "m_" << expr->getName() + "(" +
+                makeIndexString(expr, "(k + " +
+                                          std::to_string(expr->getOffset().verticalShift()) + ")") + ")";
     } else {
-      std::string sparseIdx = parentIsReduction_
-                                  ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
-                                  : ASTStencilBody::LoopLinearIndexVarName();
-      ss_ << "m_" << getName(expr) << "("
-          << "deref(LibTag{}, " << sparseArgName_ << ")," << sparseIdx << ", "
-          << "k+" << expr->getOffset().verticalOffset() << ")";
-    }
+      auto vertOffset = makeIndexString(std::static_pointer_cast<iir::FieldAccessExpr>(
+                          expr->getOffset().getVerticalIndirectionFieldAsExpr()), "k");         
+      ss_ << "m_" << expr->getName() + "(" +
+                makeIndexString(expr, "(m_" + expr->getOffset().getVerticalIndirectionFieldName() + "(" + vertOffset + ")" +
+                + " + " + std::to_string(expr->getOffset().verticalShift())+ ")")  + ")"; 
+    }   
   }
 }
 

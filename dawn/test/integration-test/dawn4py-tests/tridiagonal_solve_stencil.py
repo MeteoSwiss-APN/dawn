@@ -164,7 +164,9 @@ def main(args: argparse.Namespace):
         sir_utils.pprint(sir)
 
     # compile
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDA)
+    pass_groups = dawn4py.default_pass_groups()
+    pass_groups.insert(1, dawn4py.PassGroup.MultiStageMerger)
+    code = dawn4py.compile(sir, groups=pass_groups, backend=dawn4py.CodeGenBackend.CUDA)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

@@ -23,7 +23,7 @@ target_include_directories(dsl_defs INTERFACE
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_compile_features(dsl_defs INTERFACE cxx_std_11)
+target_compile_features(dsl_defs INTERFACE cxx_std_14)
 
 add_library(${PROJECT_NAME}::dsl_defs ALIAS dsl_defs)
 install(

@@ -34,7 +34,6 @@
 //                  command-line target will be generated which allows to negate the option i.e
 //                  -fXXX and -fno-XXX.
 
-OPT(bool, Verbose, false, "verbose", "", "Enable verbose output by using step-by-step logging", "", false, false)
 OPT(bool, DumpSIR, false, "dump-sir", "", "Dump the parsed SIR to stdout", "", false, false)
 OPT(bool, DumpAST, false, "dump-ast", "", "Dump the clang AST of the preprocessed input to stdout", "", false, false)
 OPT(bool, WriteSIR, false, "write-sir", "", "Write the parsed SIR to stdout", "", false, false)

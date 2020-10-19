@@ -13,21 +13,33 @@
 ##===------------------------------------------------------------------------------------------===##
 include(GoogleTest)
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+
 # Need to specify here the names of the stencil codes that are going to be generated.
-set(generated_stencil_codes generated_copyCell.hpp
+set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
+  generated_copyCell.hpp
   generated_copyEdge.hpp
-  generated_accumulateEdgeToCell.hpp
-  generated_verticalSum.hpp
-  generated_diffusion.hpp
-  generated_gradient.hpp
-  generated_verticalSolver.hpp
-  generated_NestedSimple.hpp
-  generated_NestedWithField.hpp
-  generated_sparseDimension.hpp
-  generated_sparseDimensionTwice.hpp
-  generated_intp.hpp
   generated_diamond.hpp
   generated_diamondWeights.hpp
+  generated_diffusion.hpp
+  generated_gradient.hpp
+  generated_horizontalVertical.hpp
+  generated_intp.hpp
+  generated_nestedSimple.hpp
+  generated_nestedWithField.hpp
+  generated_nestedWithSparse.hpp
+  generated_sparseAssignment0.hpp
+  generated_sparseAssignment1.hpp
+  generated_sparseAssignment2.hpp
+  generated_sparseAssignment3.hpp
+  generated_sparseAssignment4.hpp
+  generated_sparseAssignment5.hpp
+  generated_sparseDimension.hpp
+  generated_sparseDimensionTwice.hpp
+  generated_tridiagonalSolve.hpp
+  generated_verticalIndirecion.hpp
+  generated_verticalSum.hpp
+  generated_globalVar.hpp
 )
 
 set(reference_stencil_codes reference_diffusion.hpp
@@ -38,7 +50,7 @@ list(TRANSFORM generated_stencil_codes PREPEND generated/)
 list(TRANSFORM reference_stencil_codes PREPEND reference/)
 
 # Compile the executable that will programatically construct an IIR and code-generate it to file
-add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp)
+add_executable(AtlasIntegrationTestCodeGenerate GenerateUnstructuredStencils.cpp testMutator.cpp)
 
 target_link_libraries(AtlasIntegrationTestCodeGenerate Dawn DawnUnittest)
 
@@ -73,6 +85,7 @@ add_dependencies(${test_name} AtlasIntegrationTestCopyReferences)
 target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/reference)
 target_include_directories(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 target_add_dawn_standard_props(${test_name})
 target_link_libraries(${test_name} ${PROJECT_NAME} eckit atlas gtest gtest_main)
 
@@ -107,3 +120,5 @@ set_target_properties(${test_name} PROPERTIES
 gtest_discover_tests(${test_name} TEST_PREFIX "Dawn::Integration::Unstructured::"
   DISCOVERY_TIMEOUT 30
 )
+
+endif()

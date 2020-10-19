@@ -16,7 +16,6 @@
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
 #include <optional>
@@ -153,10 +152,28 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 
 } // anonymous namespace
 
-PassSetCaches::PassSetCaches(OptimizerContext& context) : Pass(context, "PassSetCaches") {}
-
-bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                        const Options& options) {
   const auto& metadata = instantiation->getMetaData();
+
+  for(const auto& stencilPtr : instantiation->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
+    for(const auto& multiStagePtr : stencil.getChildren()) {
+      iir::MultiStage& MS = *(multiStagePtr);
+      for(const auto& stage : MS.getChildren()) {
+        for(const auto& fieldPair : stage->getFields()) {
+          const iir::Field& field = fieldPair.second;
+          const int accessID = field.getAccessID();
+          const iir::Field& msField = MS.getField(accessID);
+          if(msField.getExtents().verticalExtent().isUndefined()) {
+            DAWN_LOG(INFO) << "found undefined vertical extent (vertical indirection), bail out of "
+                              "PassSetCaches";
+            return true;
+          }
+        }
+      }
+    }
+  }
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
@@ -215,8 +232,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
     }
 
     // Set K-Caches
-    if(!context_.getOptions().DisableKCaches ||
-       stencil.getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
+    if(!options.DisableKCaches || stencil.getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
 
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {

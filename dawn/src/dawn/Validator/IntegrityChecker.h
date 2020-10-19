@@ -28,6 +28,10 @@ namespace dawn {
 class IntegrityChecker : public ast::ASTVisitorForwarding {
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
+  // are we in a loop or reduction expression?
+  bool parentHasIterationContext_ = false;
+  // current field dimensions on stack
+  int curDimensions_ = -1;
 
 public:
   IntegrityChecker(iir::StencilInstantiation* instantiation);
@@ -40,8 +44,10 @@ public:
   void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
   void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::LoopStmt>& expr) override;
   void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
   void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
   void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;

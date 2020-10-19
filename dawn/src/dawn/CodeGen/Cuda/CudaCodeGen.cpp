@@ -125,7 +125,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
   generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
+    generateGlobalsAPI(stencilWrapperClass, globalsMap, codeGenProperties);
   }
 
   generateStencilWrapperSyncMethod(stencilWrapperClass);
@@ -216,7 +216,7 @@ void CudaCodeGen::generateStencilClasses(
     }
 
     for(const auto& fieldPair : tempFields) {
-      paramNameToType.emplace(fieldPair.second.Name, c_dgt() + "storage_t");
+      paramNameToType.emplace(fieldPair.second.Name, c_dgt + "storage_t");
     }
 
     iterationSpaceSet_ = hasGlobalIndices(stencil);
@@ -257,7 +257,7 @@ void CudaCodeGen::generateStencilClassMembers(
     stencilClass.addMember("globals&", "m_globals");
   }
 
-  stencilClass.addMember("const " + c_dgt() + "domain", "m_dom");
+  stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
 
   if(!tempFields.empty()) {
     stencilClass.addComment("temporary storage declarations");
@@ -273,7 +273,7 @@ void CudaCodeGen::generateStencilClassCtr(
 
   auto stencilClassCtr = stencilClass.addConstructor();
 
-  stencilClassCtr.addArg("const " + c_dgt() + "domain& dom_");
+  stencilClassCtr.addArg("const " + c_dgt + "domain& dom_");
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
@@ -326,7 +326,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
 
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
-  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt + "domain& dom");
   StencilWrapperConstructor.addArg("int rank = 1");
   StencilWrapperConstructor.addArg("int xcols = 1");
   StencilWrapperConstructor.addArg("int ycols = 1");
@@ -397,11 +397,11 @@ void CudaCodeGen::generateStencilWrapperMembers(
 
   // Define allocated memebers if necessary
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt + "meta_data_t", "m_meta_data");
 
     for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
       stencilWrapperClass.addMember(
-          c_dgt() + "storage_t",
+          c_dgt + "storage_t",
           "m_" + stencilInstantiation->getMetaData().getFieldNameFromAccessID(AccessID));
   }
 
@@ -486,50 +486,45 @@ void CudaCodeGen::generateStencilRunMethod(
   stencilRunMethod.addStatement("start()");
 
   for(const auto& multiStagePtr : stencil.getChildren()) {
-    stencilRunMethod.addStatement("{");
-
     const iir::MultiStage& multiStage = *multiStagePtr;
     bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(multiStagePtr);
 
     const auto fields = multiStage.getOrderedFields();
+    if(fields.empty())
+      continue;
+
+    stencilRunMethod.addStatement("{");
 
     auto msNonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
       return !metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID());
     });
 
-    auto tempStencilFieldsNonLocalCached =
-        makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-          const int accessID = p.first;
-          if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
-            return false;
-          for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
-            if(!ms->isCached(accessID))
-              continue;
-            if(ms->getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
-              return false;
-          }
-
-          return true;
-        });
+    auto tempMSFieldsNonLocalCached = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
+      const int accessID = p.first;
+      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
+        return false;
+      if(!multiStage.isCached(accessID))
+        return true;
+      if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
+        return false;
+      return true;
+    });
 
     // create all the data views
     for(const auto& fieldPair : msNonTempFields) {
       // TODO have the same FieldInfo in ms level so that we dont need to query
-      // stencilInstantiation
-      // all the time for name and IsTmpField
+      // stencilInstantiation all the time for name and IsTmpField
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-      stencilRunMethod.addStatement(c_gt() + "data_view<" + paramNameToType.at(fieldName) + "> " +
-                                    fieldName + "= " + c_gt() + "make_device_view(" + fieldName +
+      stencilRunMethod.addStatement(c_gt + "data_view<" + paramNameToType.at(fieldName) + "> " +
+                                    fieldName + "= " + c_gt + "make_device_view(" + fieldName +
                                     "_ds)");
     }
-    for(const auto& fieldPair : tempStencilFieldsNonLocalCached) {
+
+    for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-
-      stencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                    c_gt() + "make_device_view( m_" + fieldName + ")");
+      stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " +
+                                    c_gt + "make_device_view( m_" + fieldName + ")");
     }
-
-    DAWN_ASSERT(msNonTempFields.size() > 0);
 
     iir::Extents maxExtents{ast::cartesian};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
@@ -593,50 +588,51 @@ void CudaCodeGen::generateStencilRunMethod(
       kernelCall = kernelCall + "m_globals,";
     }
 
-    auto tempMSFieldsNonLocalCached = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
-      const int accessID = p.first;
-      if(!metadata.isAccessType(iir::FieldAccessType::StencilTemporary, p.second.getAccessID()))
-        return false;
-      if(!multiStage.isCached(accessID))
-        return true;
-      if(multiStage.getCache(accessID).getIOPolicy() == iir::Cache::IOPolicy::local)
-        return false;
-      return true;
-    });
-
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
     int idx = 0;
     for(const auto& fieldPair : msNonTempFields) {
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-      args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + fieldName +
+      if(idx > 0)
+        args += ",";
+      args += "(" + fieldName + ".data()+" + fieldName +
              "_ds.get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
              ".begin<1>(),0 ))";
       ++idx;
     }
-    DAWN_ASSERT(msNonTempFields.size() > 0);
+
+    if(!args.empty() && !tempMSFieldsNonLocalCached.empty())
+      args += ",";
+
+    idx = 0;
     for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
+      if(idx > 0)
+        args += ",";
       if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), metadata)) {
         const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-
-        args = args + ", (" + fieldName + ".data()+ m_" + fieldName +
+        args += "(" + fieldName + ".data()+ m_" + fieldName +
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
-        args = args + "," + metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
+        args += metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       }
+      ++idx;
     }
 
     std::vector<std::string> strides = CodeGeneratorHelper::generateStrideArguments(
         msNonTempFields, tempMSFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
         CodeGeneratorHelper::FunctionArgType::FT_Caller);
 
-    DAWN_ASSERT(!strides.empty());
+    kernelCall += "nx,ny,nz";
+    if(!strides.empty())
+      kernelCall += "," + RangeToString(",", "", "")(strides);
+    if(!args.empty())
+      kernelCall += "," + args;
+    kernelCall +=  ")";
 
-    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
     stencilRunMethod.addStatement(kernelCall);
     stencilRunMethod.addStatement("}");
   }

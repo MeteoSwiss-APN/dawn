@@ -35,6 +35,21 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
+class FindReduceOverNeighborExpr : public dawn::ast::ASTVisitorForwarding {
+  std::vector<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>> foundReductions_;
+
+public:
+  void visit(const std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>& expr) override {
+    foundReductions_.push_back(expr);
+    return;
+  }
+  bool hasReduceOverNeighborExpr() const { return !foundReductions_.empty(); }
+  const std::vector<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>>&
+  reduceOverNeighborExprs() const {
+    return foundReductions_;
+  }
+};
+
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
 /// @ingroup cxxnaiveico
 class ASTStencilBody : public ASTCodeGenCXX {
@@ -48,8 +63,12 @@ protected:
   bool parentIsReduction_ = false;
   bool parentIsForLoop_ = false;
 
+  bool firstPass_ = true;
+
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
+
+  std::string makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr, std::string kiter);
 
 public:
   using Base = ASTCodeGenCXX;
@@ -60,6 +79,9 @@ public:
 
   virtual ~ASTStencilBody();
 
+  void setFirstPass() { firstPass_ = true; };
+  void setSecondPass() { firstPass_ = false; };
+
   /// @name Statement implementation
   /// @{
   void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
@@ -68,6 +90,7 @@ public:
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation

@@ -17,7 +17,6 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include <memory>
 
 std::shared_ptr<dawn::iir::StencilInstantiation>

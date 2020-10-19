@@ -14,55 +14,50 @@
 
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/ReorderStrategyGreedy.h"
+#include "dawn/Optimizer/ReorderStrategyPartitioning.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Unreachable.h"
 
-#include "dawn/Optimizer/ReorderStrategyGreedy.h"
-#include "dawn/Optimizer/ReorderStrategyPartitioning.h"
-
 namespace dawn {
 
-PassStageReordering::PassStageReordering(OptimizerContext& context, ReorderStrategy::Kind strategy)
-    : Pass(context, "PassStageReordering"), strategy_(strategy) {
-  dependencies_.push_back("PassSetStageGraph");
-}
-
 bool PassStageReordering::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   const std::string filenameWE =
       fs::path(stencilInstantiation->getMetaData().getFileName()).filename().stem();
-  if(context_.getOptions().ReportPassStageReodering)
-    stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_before_stage_reordering.json");
+
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::Kind::None)
       continue;
 
     std::unique_ptr<ReorderStrategy> strategy;
     switch(strategy_) {
     case ReorderStrategy::Kind::Greedy:
-      strategy = std::make_unique<ReoderStrategyGreedy>();
+      strategy = std::make_unique<ReorderStrategyGreedy>();
       break;
     case ReorderStrategy::Kind::Partitioning:
-      strategy = std::make_unique<ReoderStrategyPartitioning>();
+      strategy = std::make_unique<ReorderStrategyPartitioning>();
       break;
     default:
       dawn_unreachable("invalid reorder strategy");
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, context_);
-
-    stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
-    // TODO why is stencilPtr still used? (it was replaced in the previous statement)
-    stencilPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-
-    if(!stencilPtr)
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencil, options);
+    if(!newStencil)
       return false;
+
+    stencilInstantiation->getIIR()->replace(stencil, newStencil, stencilInstantiation->getIIR());
+    newStencil->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
-  if(context_.getOptions().ReportPassStageReodering)
-    stencilInstantiation->jsonDump(filenameWE + "_after.json");
+
+  if(options.WriteStencilInstantiation)
+    stencilInstantiation->jsonDump(filenameWE + "_after_stage_reordering.json");
 
   return true;
 }

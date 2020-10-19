@@ -7,7 +7,7 @@ root_dir=$script_path/..
 dawn_dir=/usr/src/dawn
 
 image=gtclang/dawn-env-cuda10.1-ubuntu18.04
-build_jobs=24
+build_jobs=12
 
 module load daint-gpu
 module load sarus
@@ -25,7 +25,7 @@ git clone --depth 1 -b $CLANG_GRIDTOOLS_BRANCH $CLANG_GRIDTOOLS_REPOSITORY $(pwd
 sarus pull $image
 
 srun --job-name=dawn_PR \
-    --time=00:45:00 \
+    --time=01:00:00 \
     --nodes=1 \
     --ntasks-per-node=1 \
     --ntasks-per-core=2 \
@@ -33,6 +33,7 @@ srun --job-name=dawn_PR \
     --partition=cscsci \
     --constraint=gpu \
     --account=c14 \
+    --exclusive \
     sarus run --mount=type=bind,source=$root_dir,destination=$dawn_dir \
     --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
     $image \

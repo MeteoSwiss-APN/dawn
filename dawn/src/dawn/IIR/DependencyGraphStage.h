@@ -17,8 +17,6 @@
 #include "dawn/IIR/DependencyGraph.h"
 
 namespace dawn {
-class OptimizerContext;
-
 namespace iir {
 
 class Stage;

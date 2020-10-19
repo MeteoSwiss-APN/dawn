@@ -15,21 +15,21 @@
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Interval.h"
+#include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logger.h"
 
 #include <memory>
 
 namespace dawn {
-
-PassFixVersionedInputFields::PassFixVersionedInputFields(OptimizerContext& context)
-    : Pass(context, "PassFixVersionedInputFields", true) {}
 
 /// @brief Creates the assignment statement
 static std::shared_ptr<ast::Stmt>
@@ -45,7 +45,20 @@ createAssignmentStatement(int assignmentID, int assigneeID,
   assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
   assignee->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assigneeID);
 
-  return assignmentStmt;
+  // If the field is sparse, we need to wrap it in a for loop statement
+  auto hDimensions = metadata.getFieldDimensions(assignmentID).getHorizontalFieldDimension();
+  if(hDimensions.getType() == ast::GridType::Unstructured &&
+     sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).isSparse()) {
+    auto blockAssignmentStatement =
+        iir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{assignmentStmt});
+    auto chain =
+        sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).getNeighborChain();
+    auto wrappedAssignmentStatement =
+        iir::makeLoopStmt(std::move(chain), std::move(blockAssignmentStatement));
+    return wrappedAssignmentStatement;
+  } else {
+    return assignmentStmt;
+  }
 }
 
 /// @brief Creates the do-method
@@ -124,7 +137,8 @@ struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
 };
 
 bool PassFixVersionedInputFields::run(
-    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation) {
+    std::shared_ptr<iir::StencilInstantiation> const& stencilInstantiation,
+    const Options& options) {
   for(const auto& stencil : stencilInstantiation->getStencils()) {
     // Inserting multistages below, so can't use IterateIIROver here
     for(auto msiter = stencil->childrenBegin(); msiter != stencil->childrenEnd(); ++msiter) {
@@ -145,7 +159,16 @@ bool PassFixVersionedInputFields::run(
         // fills all read intervals from the original field during the execution
         // of the multistage. Currently, we create one for each interval, but
         // these could later be merged into a single multistage.
-        const auto multiInterval = ms->computeReadAccessInterval(id);
+
+        // If the extent is undefined (vertical indirection), we can simply not make any assumptions
+        // about the read interval. In this case, we simply copy the whole domain
+
+        iir::MultiInterval multiInterval;
+        if(extents.verticalExtent().isUndefined()) {
+          multiInterval.insert(iir::Interval(sir::Interval::Start, sir::Interval::End, 0, 0));
+        } else {
+          multiInterval = ms->computeReadAccessInterval(id);
+        }
         for(const auto& interval : multiInterval.getIntervals()) {
           auto insertedMultistage =
               createAssignmentMultiStage(id, stencilInstantiation, interval, extents);

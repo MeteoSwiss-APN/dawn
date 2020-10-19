@@ -3,8 +3,10 @@
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Validator/WeightChecker.h"
+#include <optional>
 
 namespace dawn {
 
@@ -18,7 +20,8 @@ UnstructuredDimensionChecker::checkDimensionsConsistency(
     const dawn::iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(iir)) {
     UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
-        doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
+        doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap(),
+        metaData.getAccessIDToLocalVariableDataMap());
     for(const auto& stmt : doMethod->getAST().getStatements()) {
       stmt->accept(checker);
       if(!checker.isConsistent()) {
@@ -75,6 +78,7 @@ UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
 UnstructuredDimensionChecker::ConsistencyResult
 UnstructuredDimensionChecker::checkStageLocTypeConsistency(
     const iir::IIR& iir, const iir::StencilMetaInformation& metaData) {
+
   for(const auto& stage : iterateIIROver<iir::Stage>(iir)) {
     DAWN_ASSERT_MSG(stage->getLocationType().has_value(), "Location type of stage is unset.");
     auto stageLocationType = *stage->getLocationType();
@@ -82,9 +86,10 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*stage)) {
       for(const auto& stmt : doMethod->getAST().getStatements()) {
         UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl checker(
-            doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap());
+            doMethod->getFieldDimensionsByName(), metaData.getAccessIDToNameMap(),
+            metaData.getAccessIDToLocalVariableDataMap());
         stmt->accept(checker);
-        if(!(checker.hasDimensions() &&
+        if(!(checker.hasHorizontalDimensions() &&
              stageLocationType ==
                  getUnstructuredDim(checker.getDimensions()).getDenseLocationType())) {
           return {false, stmt->getSourceLocation()};
@@ -98,18 +103,41 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
     UnstructuredDimensionCheckerConfig config)
-    : nameToDimensions_(nameToDimensionsMap), config_(config) {}
+    : nameToDimensions_(nameToDimensionsMap), config_(config) {
+  checkType_ = checkType::runOnSIR;
+}
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
     const std::unordered_map<int, std::string> idToNameMap,
+    const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
     UnstructuredDimensionCheckerConfig config)
-    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap), config_(config) {}
+    : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap),
+      idToLocalVariableData_(idToLocalVariableData), config_(config) {
+  checkType_ = checkType::runOnIIR;
+}
 
 const sir::FieldDimensions&
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() const {
   DAWN_ASSERT(hasDimensions());
   return curDimensions_.value();
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+  if(!dimensionsConsistent_) {
+    return;
+  }
+  if(checkType_ == checkType::runOnSIR) {
+    return;
+  }
+  auto accessID = stmt->getData<iir::VarDeclStmtData>().AccessID;
+  const auto varDeclInfo = idToLocalVariableData_.at(*accessID);
+  // type is not set if PassLocalVarType didn't run
+  if(!varDeclInfo.isTypeSet()) {
+    return;
+  }
+  setCurDimensionFromLocType(varDeclInfo.getType());
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
@@ -123,23 +151,73 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
                        .hasOffset();
 
   auto fieldName = fieldAccessExpr->getName();
-  // the name in the FieldAccessExpr may be stale if the there are nested stencils
-  // in this case we need to look up the new AccessID in the data of the fieldAccessExpr
-  if(fieldAccessExpr->hasData()) {
-    auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
-    if(newAccessID.has_value()) {
-      DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
-      fieldName = idToNameMap_.at(newAccessID.value());
+  DAWN_ASSERT(nameToDimensions_.count(fieldName));
+
+  curDimensions_ = nameToDimensions_.at(fieldName);
+  if(!nameToDimensions_.at(fieldName).isVertical()) {
+    if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
+      dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
+                               config_.currentChain_->back();
+    }
+    if(hasOffset && !getUnstructuredDim(*curDimensions_).isDense()) {
+      dimensionsConsistent_ &=
+          getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
     }
   }
 
-  DAWN_ASSERT(nameToDimensions_.count(fieldName));
-  curDimensions_ = nameToDimensions_.at(fieldName);
-
-  if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
+  if(fieldAccessExpr->getOffset().hasVerticalIndirection()) {
+    auto indirectionName = fieldAccessExpr->getOffset().getVerticalIndirectionFieldName();
+    DAWN_ASSERT(nameToDimensions_.count(indirectionName));
     dimensionsConsistent_ &=
-        getUnstructuredDim(*curDimensions_).getDenseLocationType() == config_.currentChain_->back();
+        nameToDimensions_.at(fieldName) == nameToDimensions_.at(indirectionName);
   }
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::setCurDimensionFromLocType(
+    iir::LocalVariableType&& type) {
+  switch(type) {
+  case iir::LocalVariableType::Scalar:
+  case iir::LocalVariableType::OnIJ:
+    return;
+    break;
+  case iir::LocalVariableType::OnCells:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Cells}, true);
+    break;
+  case iir::LocalVariableType::OnEdges:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Edges}, true);
+    break;
+  case iir::LocalVariableType::OnVertices:
+    curDimensions_ = sir::FieldDimensions(
+        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Vertices}, true);
+    break;
+  default:
+    break;
+  }
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::VarAccessExpr>& varAccessExpr) {
+  if(!dimensionsConsistent_) {
+    return;
+  }
+  if(checkType_ == checkType::runOnSIR) {
+    return;
+  }
+  DAWN_ASSERT(varAccessExpr->hasData());
+  auto accessID = *varAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
+  // access may be global
+  if(!idToLocalVariableData_.count(accessID)) {
+    return;
+  }
+  const auto varAccessInfo = idToLocalVariableData_.at(accessID);
+  if(!varAccessInfo.isTypeSet()) {
+    // type is not set if PassLocalVarType didn't run
+    return;
+  }
+
+  setCurDimensionFromLocType(varAccessInfo.getType());
 }
 
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
@@ -173,10 +251,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
   }
 
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
-                                                                      idToNameMap_, config_);
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
-                                                                       idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   binOp->getLeft()->accept(left);
   binOp->getRight()->accept(right);
@@ -189,13 +267,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
-  if(left.hasDimensions() && right.hasDimensions()) {
+  if(left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
 
     checkBinaryOpUnstructured(left.getDimensions(), right.getDimensions());
 
-  } else if(left.hasDimensions() && !right.hasDimensions()) {
+  } else if(left.hasHorizontalDimensions() && !right.hasHorizontalDimensions()) {
     curDimensions_ = left.getDimensions();
-  } else if(!left.hasDimensions() && right.hasDimensions()) {
+  } else if(!left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
     curDimensions_ = right.getDimensions();
   }
 }
@@ -205,10 +283,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!dimensionsConsistent_) {
     return;
   }
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(nameToDimensions_,
-                                                                      idToNameMap_, config_);
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(nameToDimensions_,
-                                                                       idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl left(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl right(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   assignmentExpr->getLeft()->accept(left);
   assignmentExpr->getRight()->accept(right);
@@ -220,14 +298,14 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   // assigning to sparse dimensions is only allowed in a foor loop context
-  if(!config_.parentIsChainForLoop_ && left.hasDimensions() &&
+  if(!config_.parentIsChainForLoop_ && left.hasHorizontalDimensions() &&
      getUnstructuredDim(left.getDimensions()).isSparse()) {
     dimensionsConsistent_ = false;
     return;
   }
 
   // assigning from sparse dimensions is only allowed in either reductions or for loops
-  if(right.hasDimensions() && getUnstructuredDim(right.getDimensions()).isSparse() &&
+  if(right.hasHorizontalDimensions() && getUnstructuredDim(right.getDimensions()).isSparse() &&
      !(config_.parentIsReduction_ || config_.parentIsChainForLoop_)) {
     dimensionsConsistent_ = false;
     return;
@@ -235,7 +313,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
-  if(left.hasDimensions() && right.hasDimensions()) {
+  if(left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
 
     const auto& unstructuredDimLeft = getUnstructuredDim(left.getDimensions());
     const auto& unstructuredDimRight = getUnstructuredDim(right.getDimensions());
@@ -316,10 +394,17 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     // Dimensions to propagate are always those of the lhs (if the lhs has dimensions)
     curDimensions_ = left.getDimensions();
 
-  } else if(left.hasDimensions() && !right.hasDimensions()) {
+  } else if(left.hasHorizontalDimensions() && !right.hasHorizontalDimensions()) {
     curDimensions_ = left.getDimensions();
-  } else if(!left.hasDimensions() && right.hasDimensions()) {
+  } else if(left.hasDimensions() && !left.hasHorizontalDimensions() &&
+            right.hasHorizontalDimensions()) {
+    dimensionsConsistent_ = false;
+    return;
+  } else if(!left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
+    // this may be ok, remember that PassLocalVar has not necessarily be run when this checker is
+    // run
     curDimensions_ = right.getDimensions();
+    return;
   }
 }
 
@@ -344,15 +429,14 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
   }
 
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(nameToDimensions_,
-                                                                      idToNameMap_, config_);
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   config_.parentIsReduction_ = true;
-  config_.currentChain_ = reductionExpr->getNbhChain();
-  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(nameToDimensions_,
-                                                                     idToNameMap_, config_);
-  config_.currentChain_ = std::nullopt;
   reductionExpr->getInit()->accept(init);
+  config_.currentChain_ = reductionExpr->getNbhChain();
+  UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(
+      nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
   reductionExpr->getRhs()->accept(ops);
 
   if(!ops.isConsistent()) {
@@ -361,7 +445,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   // initial value needs to be consistent with operations on right hand side
-  if(init.hasDimensions() && ops.hasDimensions()) {
+  if(init.hasHorizontalDimensions() && ops.hasHorizontalDimensions()) {
     // As init and rhs get combined through a binary operation, let's reuse the same code
     checkBinaryOpUnstructured(init.getDimensions(), ops.getDimensions());
   }
@@ -373,8 +457,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   // check weighs for consistency w.r.t dimensions
   if(reductionExpr->getWeights().has_value()) {
     // check weights one by one
-    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl weightChecker(nameToDimensions_,
-                                                                                 idToNameMap_);
+    UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl weightChecker(
+        nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
     for(const auto& weight : *reductionExpr->getWeights()) {
       weight->accept(weightChecker);
     }
@@ -388,7 +472,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     // otherwise, all weights need to be of the same type, namely the lhs type of the reduction
     //  this assumes that all field accesses are dense in the weights. this restriction will
     //  eventually be lifted, but is for now ensured in the weights checker
-    if(weightChecker.hasDimensions()) {
+    if(weightChecker.hasHorizontalDimensions()) {
       if(getUnstructuredDim(weightChecker.getDimensions()).getDenseLocationType() !=
          reductionExpr->getLhsLocation()) {
         dimensionsConsistent_ = false;
@@ -399,7 +483,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // if the rhs subtree has dimensions, we must check that such dimensions are consistent with the
   // declared rhs and lhs location types
-  if(ops.hasDimensions()) {
+  if(ops.hasHorizontalDimensions()) {
     const auto& rhsUnstructuredDim = getUnstructuredDim(ops.getDimensions());
     if(rhsUnstructuredDim.isSparse()) {
       dimensionsConsistent_ =
@@ -418,7 +502,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   // the reduce over neighbors concept imposes a type on the left hand side
   curDimensions_ = sir::FieldDimensions(
       sir::HorizontalFieldDimension(ast::unstructured, reductionExpr->getLhsLocation()),
-      ops.hasDimensions() ? ops.getDimensions().K() : false);
+      ops.hasHorizontalDimensions() ? ops.getDimensions().K() : false);
 }
 
 } // namespace dawn

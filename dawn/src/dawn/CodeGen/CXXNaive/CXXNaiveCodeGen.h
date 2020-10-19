@@ -47,7 +47,7 @@ public:
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
-private:
+protected:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
 

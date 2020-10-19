@@ -154,7 +154,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "__tmp_local_variable_59",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -237,7 +237,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "__tmp_local_variable_59",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -264,7 +264,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "__tmp_local_variable_59",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -330,7 +330,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_b_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -357,7 +357,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_a_1",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -423,7 +423,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_c_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -452,7 +452,7 @@
                    "left": {
                     "field_access_expr": {
                      "name": "field_b_0",
-                     "vertical_offset": -1,
+                     "vertical_shift": -1,
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -481,7 +481,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "__tmp_local_variable_59",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -508,7 +508,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "__tmp_local_variable_59",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -639,7 +639,7 @@
                   "left": {
                    "field_access_expr": {
                     "name": "field_c_0",
-                    "vertical_offset": 1,
+                    "vertical_shift": 1,
                     "zero_offset": {},
                     "argument_map": [
                      -1,
@@ -668,7 +668,7 @@
                     "left": {
                      "field_access_expr": {
                       "name": "__tmp_local_variable_59",
-                      "vertical_offset": 0,
+                      "vertical_shift": 0,
                       "zero_offset": {},
                       "argument_map": [
                        -1,
@@ -695,7 +695,7 @@
                     "right": {
                      "field_access_expr": {
                       "name": "__tmp_local_variable_59",
-                      "vertical_offset": 0,
+                      "vertical_shift": 0,
                       "zero_offset": {},
                       "argument_map": [
                        -1,
@@ -779,7 +779,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -860,7 +860,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_c",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -889,7 +889,7 @@
                    "left": {
                     "field_access_expr": {
                      "name": "field_b",
-                     "vertical_offset": -1,
+                     "vertical_shift": -1,
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -918,7 +918,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "__tmp_local_variable_59",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -945,7 +945,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "__tmp_local_variable_59",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -1065,7 +1065,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_a",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -1094,7 +1094,7 @@
                    "left": {
                     "field_access_expr": {
                      "name": "field_c",
-                     "vertical_offset": 1,
+                     "vertical_shift": 1,
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -1123,7 +1123,7 @@
                      "left": {
                       "field_access_expr": {
                        "name": "__tmp_local_variable_59",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -1150,7 +1150,7 @@
                      "right": {
                       "field_access_expr": {
                        "name": "__tmp_local_variable_59",
-                       "vertical_offset": 0,
+                       "vertical_shift": 0,
                        "zero_offset": {},
                        "argument_map": [
                         -1,

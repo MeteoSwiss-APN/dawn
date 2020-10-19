@@ -1,4 +1,5 @@
 #include "GridTypeChecker.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/Extents.h"
@@ -47,9 +48,11 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::iir::IIR& iir) {
       }
 
       // Check FieldDimensions
-      const auto& hDimension = field.second.getFieldDimensions().getHorizontalFieldDimension();
-      if(hDimension.getType() != iir.getGridType()) {
-        return false;
+      if(!field.second.getFieldDimensions().isVertical()) {
+        const auto& hDimension = field.second.getFieldDimensions().getHorizontalFieldDimension();
+        if(hDimension.getType() != iir.getGridType()) {
+          return false;
+        }
       }
     }
   }
@@ -108,16 +111,17 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
   return true;
 }
 
-void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) {
+void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!typesConsistent_) {
     return;
   }
-
-  const auto& hOffset = stmt->getOffset().horizontalOffset();
+  const auto& hOffset = expr->getOffset().horizontalOffset();
   if(!hOffset.hasType()) {
     return;
   }
   typesConsistent_ &= hOffset.getGridType() == prescribedType_;
+
+  ast::ASTVisitorForwarding::visit(expr);
 }
 
 } // namespace dawn

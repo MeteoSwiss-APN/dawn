@@ -12,32 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/Driver.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Support/FileSystem.h"
-#include <fstream>
-#include <gtest/gtest.h>
-#include <optional>
-#include <streambuf>
-#include <string>
+#include "TestFromSIR.h"
 
-using namespace dawn;
+namespace dawn {
 
-namespace {
+class TestComputeEnclosingAccessInterval : public TestFromSIR {};
 
-std::shared_ptr<iir::StencilInstantiation> loadTest(const std::string& sirFilename) {
-  auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);
-  auto stencilInstantiationMap = run(sir, {PassGroup::StageReordering, PassGroup::StageMerger});
-
-  DAWN_ASSERT_MSG(stencilInstantiationMap.count("compute_extent_test_stencil"),
-                  "compute_extent_test_stencil not found in sir");
-
-  return stencilInstantiationMap["compute_extent_test_stencil"];
-}
-
-TEST(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
+TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_01) {
   auto stencilInstantiation = loadTest("input/test_field_access_interval_01.sir");
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
@@ -90,7 +71,7 @@ TEST(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   EXPECT_EQ(*intervalLap2, (iir::Interval{0, sir::Interval::End, 11, 0}));
 }
 
-TEST(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
+TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("input/test_field_access_interval_02.sir");
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
@@ -99,11 +80,9 @@ TEST(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
-
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 
   auto const& mss = *stencil->childrenBegin();
-
   auto stage1_ptr = mss->childrenBegin();
   std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
@@ -125,4 +104,4 @@ TEST(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   }
 }
 
-} // anonymous namespace
+} // dawn namespace

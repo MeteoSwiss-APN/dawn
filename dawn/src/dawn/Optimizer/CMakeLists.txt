@@ -17,8 +17,8 @@ add_library(DawnOptimizer
   CreateVersionAndRename.h
   Driver.cpp
   Driver.h
-  OptimizerContext.cpp
-  OptimizerContext.h
+  Lowering.h
+  Lowering.cpp
   Options.h
   Options.inc
   Pass.h
@@ -36,8 +36,8 @@ add_library(DawnOptimizer
   PassLocalVarType.cpp
   PassManager.cpp
   PassManager.h
-  PassMultiStageSplitter.cpp
-  PassMultiStageSplitter.h
+  PassMultiStageMerger.cpp
+  PassMultiStageMerger.h
   PassOptions.inc
   PassPrintStencilGraph.cpp
   PassPrintStencilGraph.h
@@ -51,6 +51,8 @@ add_library(DawnOptimizer
   PassSetCaches.h
   PassSetDependencyGraph.cpp
   PassSetDependencyGraph.h
+  PassSetLoopOrder.cpp
+  PassSetLoopOrder.h
   PassSetNonTempCaches.cpp
   PassSetNonTempCaches.h
   PassSetStageGraph.cpp
@@ -101,4 +103,6 @@ add_library(DawnOptimizer
 )
 
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)
+target_link_libraries(DawnOptimizer
+  PUBLIC DawnSupport DawnIIR DawnValidator DawnSerialization
+)

@@ -18,6 +18,7 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
@@ -75,13 +76,16 @@ makeVarDeclStmtData(ast::StmtData::DataType dataType,
     return data;
   }
 }
-
+void fillAccessExprDataFromProto(ast::Offsets& offset,
+                                 const dawn::proto::statements::AccessExprData& dataProto) {
+  if(dataProto.has_accessid())
+    offset.setVerticalIndirectionAccessID(dataProto.accessid().value());
+}
 void fillAccessExprDataFromProto(iir::IIRAccessExprData& data,
                                  const dawn::proto::statements::AccessExprData& dataProto) {
   if(dataProto.has_accessid())
     data.AccessID = std::make_optional(dataProto.accessid().value());
 }
-
 void setAccessExprData(dawn::proto::statements::AccessExprData* dataProto,
                        const iir::IIRAccessExprData& data) {
   if(data.AccessID) {
@@ -89,7 +93,13 @@ void setAccessExprData(dawn::proto::statements::AccessExprData* dataProto,
     accessID->set_value(*data.AccessID);
   }
 }
-
+void setAccessExprData(dawn::proto::statements::AccessExprData* dataProto,
+                       std::optional<int> dataAccessID) {
+  if(dataAccessID.has_value()) {
+    auto accessID = dataProto->mutable_accessid();
+    accessID->set_value(dataAccessID.value());
+  }
+}
 void setStmtData(proto::statements::StmtData* protoStmtData, iir::Stmt& stmt) {
   if(stmt.getDataType() == ast::StmtData::IIR_DATA_TYPE) {
     if(stmt.getData<iir::IIRStmtData>().CallerAccesses.has_value()) {
@@ -171,8 +181,13 @@ dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& exte
 
   auto const& vExtent = extents.verticalExtent();
   auto protoVExtent = protoExtents.mutable_vertical_extent();
-  protoVExtent->set_minus(vExtent.minus());
-  protoVExtent->set_plus(vExtent.plus());
+  if(!extents.verticalExtent().isUndefined()) {
+    protoVExtent->set_minus(vExtent.minus());
+    protoVExtent->set_plus(vExtent.plus());
+    protoVExtent->set_undefined(false);
+  } else {
+    protoVExtent->set_undefined(true);
+  }
 
   return protoExtents;
 }
@@ -190,8 +205,13 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents) {
   using ProtoExtents = dawn::proto::statements::Extents;
-  iir::Extent vExtent{protoExtents->vertical_extent().minus(),
-                      protoExtents->vertical_extent().plus()};
+  iir::Extent vExtent;
+  if(protoExtents->vertical_extent().undefined()) {
+    vExtent = iir::Extent(iir::UndefinedExtent{});
+  } else {
+    vExtent = iir::Extent(protoExtents->vertical_extent().minus(),
+                          protoExtents->vertical_extent().plus());
+  }
 
   switch(protoExtents->horizontal_extent_case()) {
   case ProtoExtents::kCartesianExtent: {
@@ -257,35 +277,38 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
                         const sir::FieldDimensions& fieldDimensions) {
-  if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
-         fieldDimensions.getHorizontalFieldDimension())) {
-    auto const& cartesianDimension =
-        dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
-            fieldDimensions.getHorizontalFieldDimension());
-
-    dawn::proto::statements::CartesianDimension* protoCartesianDimension =
-        protoFieldDimensions->mutable_cartesian_horizontal_dimension();
-
-    protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
-    protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
-
-  } else {
-    auto const& unstructuredDimension =
-        dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
-            fieldDimensions.getHorizontalFieldDimension());
-
-    dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
-        protoFieldDimensions->mutable_unstructured_horizontal_dimension();
-
-    if(unstructuredDimension.isSparse()) {
-      for(auto locType : unstructuredDimension.getNeighborChain()) {
-        protoUnstructuredDimension->add_sparse_part(getProtoLocationTypeFromLocationType(locType));
-      }
-    }
-    protoUnstructuredDimension->set_dense_location_type(
-        getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
-  }
   protoFieldDimensions->set_mask_k(fieldDimensions.K());
+  if(!fieldDimensions.isVertical()) {
+    if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
+           fieldDimensions.getHorizontalFieldDimension())) {
+      auto const& cartesianDimension =
+          dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+              fieldDimensions.getHorizontalFieldDimension());
+
+      dawn::proto::statements::CartesianDimension* protoCartesianDimension =
+          protoFieldDimensions->mutable_cartesian_horizontal_dimension();
+
+      protoCartesianDimension->set_mask_cart_i(cartesianDimension.I());
+      protoCartesianDimension->set_mask_cart_j(cartesianDimension.J());
+
+    } else {
+      auto const& unstructuredDimension =
+          dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
+              fieldDimensions.getHorizontalFieldDimension());
+
+      dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
+          protoFieldDimensions->mutable_unstructured_horizontal_dimension();
+
+      if(unstructuredDimension.isSparse()) {
+        for(auto locType : unstructuredDimension.getNeighborChain()) {
+          protoUnstructuredDimension->add_sparse_part(
+              getProtoLocationTypeFromLocationType(locType));
+        }
+      }
+      protoUnstructuredDimension->set_dense_location_type(
+          getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
+    }
+  }
 }
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field) {
@@ -653,7 +676,14 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
         protoExpr->mutable_unstructured_offset()->set_has_offset(hOffset.hasOffset());
       },
       [&] { protoExpr->mutable_zero_offset(); });
-  protoExpr->set_vertical_offset(offset.verticalOffset());
+  protoExpr->set_vertical_shift(offset.verticalShift());
+  if(offset.hasVerticalIndirection()) {
+    protoExpr->set_vertical_indirection(offset.getVerticalIndirectionFieldName());
+    if(dataType_ == StmtData::IIR_DATA_TYPE) {
+      setAccessExprData(protoExpr->mutable_vertical_indirection_data(),
+                        offset.getVerticalIndirectionAccessID());
+    }
+  }
 
   for(int argOffset : expr->getArgumentOffset())
     protoExpr->add_argument_offset(argOffset);
@@ -766,7 +796,7 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
           protoFieldDimensions.mask_k());
     }
   } else {
-    dawn_unreachable("No horizontal dimension in serialized FieldDimensions message.");
+    return sir::FieldDimensions(protoFieldDimensions.mask_k());
   }
 }
 
@@ -936,17 +966,38 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     switch(exprProto.horizontal_offset_case()) {
     case ProtoFieldAccessExpr::kCartesianOffset: {
       auto const& hOffset = exprProto.cartesian_offset();
-      offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
-                            exprProto.vertical_offset()};
+      if(!exprProto.vertical_indirection().empty()) {
+        offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
+                              exprProto.vertical_shift(), exprProto.vertical_indirection()};
+        if(dataType == StmtData::IIR_DATA_TYPE)
+          fillAccessExprDataFromProto(offset, exprProto.vertical_indirection_data());
+      } else {
+        offset = ast::Offsets{ast::cartesian, hOffset.i_offset(), hOffset.j_offset(),
+                              exprProto.vertical_shift()};
+      }
       break;
     }
     case ProtoFieldAccessExpr::kUnstructuredOffset: {
       auto const& hOffset = exprProto.unstructured_offset();
-      offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_offset()};
+      if(!exprProto.vertical_indirection().empty()) {
+        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_shift(),
+                              exprProto.vertical_indirection()};
+        if(dataType == StmtData::IIR_DATA_TYPE && offset.hasVerticalIndirection())
+          fillAccessExprDataFromProto(offset, exprProto.vertical_indirection_data());
+      } else {
+        offset = ast::Offsets{ast::unstructured, hOffset.has_offset(), exprProto.vertical_shift()};
+      }
       break;
     }
     case ProtoFieldAccessExpr::kZeroOffset:
-      offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_offset()};
+      if(!exprProto.vertical_indirection().empty()) {
+        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift(),
+                              exprProto.vertical_indirection()};
+        if(dataType == StmtData::IIR_DATA_TYPE && offset.hasVerticalIndirection())
+          fillAccessExprDataFromProto(offset, exprProto.vertical_indirection_data());
+      } else {
+        offset = ast::Offsets{ast::HorizontalOffset{}, exprProto.vertical_shift()};
+      }
       break;
     default:
       dawn_unreachable("unknown offset");

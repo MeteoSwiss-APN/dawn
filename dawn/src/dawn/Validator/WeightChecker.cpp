@@ -46,16 +46,6 @@ void WeightChecker::WeightCheckerImpl::visit(
                         .isDense();
   }
 }
-void WeightChecker::WeightCheckerImpl::visit(const std::shared_ptr<dawn::ast::FunCallExpr>& expr) {
-  if(parentIsWeight_) {
-    weightsValid_ = false;
-    return;
-  } else {
-    for(const auto& s : expr->getChildren()) {
-      s->accept(*this);
-    }
-  }
-}
 void WeightChecker::WeightCheckerImpl::visit(
     const std::shared_ptr<dawn::ast::StencilFunCallExpr>& expr) {
   if(parentIsWeight_) {

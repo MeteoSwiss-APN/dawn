@@ -13,11 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/Extents.h"
+#include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/STLExtras.h"
@@ -150,26 +152,12 @@ bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiatio
   return true;
 }
 
-class createEmptyOptimizerContext : public ::testing::Test {
+class IIRSerializerTest : public ::testing::Test {
 protected:
-  virtual void SetUp() override {
-    std::shared_ptr<SIR> sir = std::make_shared<SIR>(ast::GridType::Cartesian);
-    dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = std::make_unique<OptimizerContext>(options, sir);
+  virtual void SetUp() {
+    referenceInstantiation = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
   }
-  virtual void TearDown() override {}
-  std::unique_ptr<OptimizerContext> context_;
-};
-
-class IIRSerializerTest : public createEmptyOptimizerContext {
-protected:
-  virtual void SetUp() override {
-    createEmptyOptimizerContext::SetUp();
-    referenceInstantiation = std::make_shared<iir::StencilInstantiation>(
-        context_->getSIR()->GridType, context_->getSIR()->GlobalVariableMap,
-        context_->getSIR()->StencilFunctions);
-  }
-  virtual void TearDown() override { referenceInstantiation.reset(); }
+  virtual void TearDown() { referenceInstantiation.reset(); }
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
     return IIRSerializer::deserializeFromString(
@@ -436,32 +424,57 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
-  auto expr = std::make_shared<iir::VarAccessExpr>("name");
-  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
-  auto stmt = iir::makeExprStmt(expr);
-  stmt->setID(22);
-  iir::Accesses stmtAccesses;
-  iir::Extents extents(ast::Offsets{ast::cartesian});
-  stmtAccesses.addReadExtent(42, extents);
-  stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
 
-  IIRDoMethod->getAST().push_back(std::move(stmt));
-  std::string varName = "foo";
-  auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
-                                          std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
-  iir::Accesses varDeclStmtAccesses;
-  varDeclStmtAccesses.addWriteExtent(33, extents);
-  varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
-      std::make_optional(std::move(varDeclStmtAccesses));
-  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(33);
+  {
+    auto expr = std::make_shared<iir::VarAccessExpr>("name");
+    expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
+    auto stmt = iir::makeExprStmt(expr);
+    stmt->setID(22);
+    iir::Accesses stmtAccesses;
+    iir::Extents extents(ast::Offsets{ast::cartesian});
+    iir::Extents undefinedExtents(iir::HorizontalExtent{ast::cartesian}, iir::UndefinedExtent{});
+    stmtAccesses.addReadExtent(42, extents);
+    stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
+    IIRDoMethod->getAST().push_back(std::move(stmt));
 
-  IIRDoMethod->getAST().push_back(std::move(varDeclStmt));
+    std::string varName = "foo";
+    auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
+                                            std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
+    iir::Accesses varDeclStmtAccesses;
+    varDeclStmtAccesses.addWriteExtent(33, extents);
+    varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
+        std::make_optional(std::move(varDeclStmtAccesses));
+    varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(33);
+
+    IIRDoMethod->getAST().push_back(std::move(varDeclStmt));
+  }
+
+  {
+    const int id = 43;
+    const std::string fieldname = "in";
+    auto expr = std::make_shared<iir::FieldAccessExpr>(fieldname);
+    expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(id);
+    auto stmt = iir::makeExprStmt(expr);
+    stmt->setID(23);
+    iir::Accesses stmtAccesses;
+    iir::Extents undefinedExtents(iir::HorizontalExtent{ast::cartesian}, iir::UndefinedExtent{});
+    stmtAccesses.addReadExtent(43, undefinedExtents);
+    stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
+    IIRDoMethod->getAST().push_back(std::move(stmt));
+
+    referenceInstantiation->getMetaData().addField(
+        iir::FieldAccessType::Field, fieldname,
+        sir::FieldDimensions(
+            sir::HorizontalFieldDimension(ast::cartesian, std::array<bool, 2>{true, true}), true),
+        id);
+  }
 
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   auto deserializedExprStmt =
       std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
-  deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
+  deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(
+      50, iir::Extents(ast::Offsets{ast::cartesian}));
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(

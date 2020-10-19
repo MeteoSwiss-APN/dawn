@@ -43,7 +43,6 @@ int main(int argc, char* argv[]) {
     ("i,input", "Input DSL file.", cxxopts::value<std::string>())
     ("f,format", "Output SIR format [json | byte].", cxxopts::value<std::string>()->default_value("json"))
     ("o,out", "Output SIR filename. If unset, writes SIR to stdout.", cxxopts::value<std::string>())
-    ("v,verbose", "Set verbosity level to info. If set, use -o or --out to redirect SIR.")
     ("h,help", "Display usage.");
 
   options.add_options("Frontend")
@@ -64,7 +63,6 @@ int main(int argc, char* argv[]) {
   gtclang::ParseOptions parseOptions;
 
   // Set options from cxxopts
-  parseOptions.Verbose = result["verbose"].as<bool>();
   parseOptions.DumpAST = result["dump-ast"].as<bool>();
   parseOptions.DumpPP = result["dump-pp"].as<bool>();
 

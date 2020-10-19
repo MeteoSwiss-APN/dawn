@@ -52,10 +52,11 @@ while [ "$1" != "" ]; do
         # Add docker environment flags
         build_args+=(-DCMAKE_PREFIX_PATH=/usr/lib/llvm-9
             -DProtobuf_DIR=/usr/local/protobuf/lib/cmake/protobuf
-            -DGridTools_DIR=/usr/local/gridtools/lib/cmake
             -Datlas_DIR=/usr/local/atlas/lib/cmake/atlas
             -Deckit_DIR=/usr/local/eckit/lib/cmake/eckit
             -GNinja)
+        # No longer part of the image:
+        # -DGridTools_DIR=/usr/local/gridtools/lib/cmake
         ;;
     *)
         build_args+=($1)
@@ -86,6 +87,7 @@ if [ "$run_tests" == "true" ]; then
 
         cmake -S $cg_source_dir -B $cg_build_dir \
             -DDawn_DIR=$dawn_install_dir/lib/cmake/Dawn \
+            -DGridTools_DIR=$dawn_install_dir/lib/cmake \
             -DGTClang_DIR=$dawn_install_dir/lib/cmake/GTClang \
             ${build_args[@]}
 

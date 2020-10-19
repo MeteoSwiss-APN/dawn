@@ -33,6 +33,9 @@ void sparseEdgeFieldType(...);
 template <typename T>
 void sparseVertexFieldType(...);
 
+template <typename T>
+void verticalFieldType(...);
+
 void meshType(...);
 
 void indexType(...);
@@ -50,6 +53,9 @@ template <typename Tag, typename T>
 using sparse_edge_field_t = decltype(sparseEdgeFieldType<T>(Tag{}));
 template <typename Tag, typename T>
 using sparse_vertex_field_t = decltype(sparseVertexFieldType<T>(Tag{}));
+
+template <typename Tag, typename T>
+using vertical_field_t = decltype(verticalFieldType<T>(Tag{}));
 
 template <typename Tag>
 using nbh_table_index_t = decltype(indexType(Tag{}));

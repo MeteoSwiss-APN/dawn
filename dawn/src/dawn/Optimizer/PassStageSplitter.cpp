@@ -16,7 +16,6 @@
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
@@ -28,11 +27,8 @@
 
 namespace dawn {
 
-PassStageSplitter::PassStageSplitter(OptimizerContext& context)
-    : Pass(context, "PassStageSplitter", true) {}
-
-bool PassStageSplitter::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassStageSplitter::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const Options& options) {
   int numSplit = 0;
 
   // Iterate over all stages in all multistages of all stencils
@@ -80,7 +76,7 @@ bool PassStageSplitter::run(
               }
             }
 
-            if(context_.getOptions().DumpSplitGraphs)
+            if(options.DumpSplitGraphs)
               oldGraph.toDot(
                   format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
@@ -102,7 +98,7 @@ bool PassStageSplitter::run(
           oldGraph = newGraph;
         }
 
-        if(context_.getOptions().DumpSplitGraphs)
+        if(options.DumpSplitGraphs)
           newGraph.toDot(
               format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 

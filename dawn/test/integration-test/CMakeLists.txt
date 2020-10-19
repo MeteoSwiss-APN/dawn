@@ -15,7 +15,6 @@
 add_subdirectory(from-sir)
 add_subdirectory(serializer)
 
-include(HasUnstructuredDeps)
 if (HAS_UNSTRUCTURED_DEPS)
   add_subdirectory(unstructured)
 endif()

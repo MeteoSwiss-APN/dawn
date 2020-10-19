@@ -635,6 +635,21 @@ std::string FieldDimensions::toString() const {
   }
 }
 
+int FieldDimensions::numSpatialDimensions() const {
+  if(!horizontalFieldDimension_) {
+    return 1;
+  }
+  if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
+    const auto& cartesianDimensions =
+        sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
+    return int(cartesianDimensions.I()) + int(cartesianDimensions.J()) + int(K());
+  } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
+    return 2 + int(K());
+  } else {
+    dawn_unreachable("Invalid horizontal field dimension");
+  }
+}
+
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
@@ -730,11 +745,11 @@ std::string sir::Value::toString() const {
   case Kind::Integer:
     return std::to_string(std::get<int>(*value_));
   case Kind::Double:
-    out << std::setprecision(std::numeric_limits<double>::digits10 + 1)
+    out << std::setprecision(std::numeric_limits<double>::max_digits10)
         << std::get<double>(*value_);
     return out.str();
   case Kind::Float:
-    out << std::setprecision(std::numeric_limits<float>::digits10 + 1) << std::get<float>(*value_);
+    out << std::setprecision(std::numeric_limits<float>::max_digits10) << std::get<float>(*value_);
     return out.str();
   case Kind::String:
     return std::get<std::string>(*value_);

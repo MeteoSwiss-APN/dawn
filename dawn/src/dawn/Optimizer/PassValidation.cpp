@@ -15,21 +15,22 @@
 #include "dawn/Optimizer/PassValidation.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IndirectionChecker.h"
 #include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/MultiStageChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 
-PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassValidation") {}
-
-bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  return run(instantiation, "");
+bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const Options& options) {
+  return run(instantiation, options, "");
 }
 
 // TODO: explain what description is
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                         const std::string& description) {
+                         const Options& options, const std::string& description) {
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
 
@@ -60,12 +61,24 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
                         .c_str());
   }
 
+  auto [indirectionsValid, indirectionsValidErrorLocation] =
+      IndirectionChecker::checkIndirections(*iir);
+  DAWN_ASSERT_MSG(indirectionsValid,
+                  ("Found invalid indirection at line " +
+                   std::to_string(indirectionsValidErrorLocation.Line) + " " + description)
+                      .c_str());
+
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*iir),
                   ("Grid type consistency check failed " + description).c_str());
 
-  IntegrityChecker checker(instantiation.get());
   try {
-    checker.run();
+    IntegrityChecker integrityChecker(instantiation.get());
+    integrityChecker.run();
+
+    if(iir->getGridType() != ast::GridType::Unstructured) {
+      MultiStageChecker multiStageChecker;
+      multiStageChecker.run(instantiation.get(), options.MaxHaloPoints);
+    }
   } catch(CompileError& error) {
     DAWN_ASSERT_MSG(false, error.getMessage().c_str());
   }
@@ -91,6 +104,12 @@ bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
         checkResultWeights,
         ("Found invalid weights at line " + std::to_string(errorLocationWeights.Line)).c_str());
   }
+
+  auto [indirectionsValid, indirectionsValidErrorLocation] =
+      IndirectionChecker::checkIndirections(*sir);
+  DAWN_ASSERT_MSG(indirectionsValid, ("Found invalid indirection at line " +
+                                      std::to_string(indirectionsValidErrorLocation.Line))
+                                         .c_str());
 
   DAWN_ASSERT_MSG(GridTypeChecker::checkGridTypeConsistency(*sir),
                   "Grid types in SIR are not consistent");

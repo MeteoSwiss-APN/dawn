@@ -15,6 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Driver/Driver.h"
+#include "dawn/Support/Logger.h"
 #include "gtclang/Driver/CompilerInstance.h"
 #include "gtclang/Driver/OptionsParser.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
@@ -117,7 +118,6 @@ std::shared_ptr<dawn::SIR> run(const std::string& fileName, const ParseOptions& 
   context->getOptions().ConfigFile = options.ConfigFile;
   context->getOptions().DumpAST = options.DumpAST;
   context->getOptions().ReportPassPreprocessor = options.ReportPassPreprocessor;
-  context->getOptions().Verbose = options.Verbose;
 
   llvm::SmallVector<const char*, 4> clangArgs;
   clangArgs.push_back("gtc-parse");

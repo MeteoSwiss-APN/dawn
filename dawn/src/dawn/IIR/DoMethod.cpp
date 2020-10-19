@@ -55,8 +55,12 @@ public:
       expr->accept(*this);
   }
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    auto data = expr->getData<iir::IIRAccessExprData>();
-    int accessID = *data.AccessID;
+    int accessID = iir::getAccessID(expr);
+    std::string realName = metadata_.getNameFromAccessID(accessID);
+    expr->setName(realName);
+  }
+  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    int accessID = iir::getAccessID(expr);
     std::string realName = metadata_.getNameFromAccessID(accessID);
     expr->setName(realName);
   }

@@ -24,7 +24,8 @@
 namespace dawn {
 
 bool PassStageSplitAllStatements::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   for(const auto& multiStage : iterateIIROver<iir::MultiStage>(*stencilInstantiation->getIIR())) {
     for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();
         ++stageIt) {

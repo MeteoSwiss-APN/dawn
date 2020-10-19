@@ -11,10 +11,7 @@
 # Build directories
 build*/
 install*/
-
-# Meta project information
-bundle/yoda/*
-bundle/CMakeFiles/*
+spack*
 
 # Shared library in source dir
 *.so

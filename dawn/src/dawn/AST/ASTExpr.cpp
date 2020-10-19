@@ -400,6 +400,13 @@ void FieldAccessExpr::setPureOffset(const Offsets& offset) {
   argumentOffset_ = Array3i{{0, 0, 0}};
 }
 
+ArrayRef<std::shared_ptr<Expr>> FieldAccessExpr::getChildren() {
+  if(offset_.hasVerticalIndirection()) {
+    return ExprRangeType(offset_.getVerticalIndirectionFieldAsExpr());
+  }
+  return ExprRangeType();
+}
+
 std::shared_ptr<Expr> FieldAccessExpr::clone() const {
   return std::make_shared<FieldAccessExpr>(*this);
 }

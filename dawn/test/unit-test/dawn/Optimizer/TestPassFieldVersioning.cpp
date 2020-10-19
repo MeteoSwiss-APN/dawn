@@ -11,11 +11,17 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
+#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassFixVersionedInputFields.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Unittest/IIRBuilder.h"
+#include "dawn/Unittest/UnittestUtils.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -25,18 +31,12 @@ using namespace dawn;
 namespace {
 
 class TestPassFieldVersioning : public ::testing::Test {
-public:
-  TestPassFieldVersioning() { context_ = std::make_unique<OptimizerContext>(options_, nullptr); }
-
 protected:
-  dawn::OptimizerContext::OptimizerContextOptions options_;
-  std::unique_ptr<OptimizerContext> context_;
-
   void raceConditionTest(const std::string& filename) {
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to fail...
-    dawn::PassFieldVersioning pass(*context_);
+    dawn::PassFieldVersioning pass;
     EXPECT_ANY_THROW(pass.run(instantiation));
   }
 
@@ -44,7 +44,7 @@ protected:
     auto instantiation = IIRSerializer::deserialize(filename);
 
     // Expect pass to succeed...
-    dawn::PassFieldVersioning pass(*context_);
+    dawn::PassFieldVersioning pass;
     pass.run(instantiation);
     return instantiation;
   }
@@ -206,4 +206,71 @@ TEST_F(TestPassFieldVersioning, VersioningTest7) {
   int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
   ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
 }
+
+TEST_F(TestPassFieldVersioning, VersionSparseField) {
+  // when a sparse field is fixed due to double buffering it needs to be filled. for sparse fields,
+  // this fill requires a loop statement to be generated
+
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto dense = b.field("dense", LocType::Edges);
+  auto sparse =
+      b.field("sparse", {LocType::Edges, LocType::Cells, LocType::Vertices, LocType::Edges});
+
+  auto stencil = b.build(
+      "OffsetReadsInCorrectContext",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(dense),
+                                  b.reduceOverNeighborExpr(Op::plus, b.at(sparse), b.lit(0.),
+                                                           {LocType::Edges, LocType::Cells,
+                                                            LocType::Vertices, LocType::Edges}))),
+              b.loopStmtChain(
+                  b.stmt(b.assignExpr(b.at(sparse), b.at(dense, HOffsetType::withOffset, 0),
+                                      Op::assign)),
+                  {LocType::Edges, LocType::Cells, LocType::Vertices, LocType::Edges}))))));
+
+  PassFieldVersioning passFieldVersioning;
+  PassFixVersionedInputFields passFixVersionedInputFields;
+  passFieldVersioning.run(stencil);
+  passFixVersionedInputFields.run(stencil);
+
+  // check that sparse was versioned
+  int idSparse = stencil->getMetaData().getAccessIDFromName("sparse");
+  EXPECT_TRUE(stencil->getMetaData().isMultiVersionedField(idSparse));
+
+  // check that a multistage to fill sparse was generated, i.e there are 2 Multistages now
+  EXPECT_EQ(stencil->getStencils().begin()->get()->getChildren().size(), 2);
+
+  // first statement now needs to be a for loop
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
+  EXPECT_EQ(firstStatement->getKind(), ast::Stmt::Kind::LoopStmt);
+
+  // lets look at the assign expression therein...
+  auto assignExpr = std::dynamic_pointer_cast<iir::AssignmentExpr>(
+      std::dynamic_pointer_cast<iir::ExprStmt>(
+          std::dynamic_pointer_cast<iir::LoopStmt>(firstStatement)
+              ->getBlockStmt()
+              ->getStatements()
+              .front())
+          ->getExpr());
+
+  auto fieldAccessLeft = std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignExpr->getLeft());
+  auto fieldAccessRight = std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignExpr->getRight());
+
+  // ... and ensure that we indeed fill the versioned sparse field here
+  EXPECT_EQ(fieldAccessRight->getName(), "sparse");
+  EXPECT_EQ(stencil->getMetaData().getOriginalVersionOfAccessID(iir::getAccessID(fieldAccessLeft)),
+            idSparse);
+
+  // finally, lets make sure that everything is ok w.r.t to the dimensions
+  auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
+                                                                         stencil->getMetaData());
+  ASSERT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
+
 } // anonymous namespace

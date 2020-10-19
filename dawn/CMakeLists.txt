@@ -60,6 +60,7 @@ endif()
 # Path for external CMake files
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(HasUnstructuredDeps)
 include(CTest)
 include(GNUInstallDirs)
 include(EnableCCache)

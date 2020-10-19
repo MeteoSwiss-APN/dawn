@@ -19,6 +19,17 @@
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 
+// TODO there are death tests which rely on the following code to die, needs refactoring
+#ifdef NDEBUG
+#undef NDEBUG
+#define HAD_NDEBUG
+#endif
+#include "dawn/Support/Assert.h"
+#ifdef HAD_NDEBUG
+#define NDEBUG
+#undef HAD_NDEBUG
+#endif
+
 #include <array>
 #include <iosfwd>
 #include <optional>
@@ -27,10 +38,13 @@ namespace dawn {
 namespace iir {
 
 class Extents;
+struct UndefinedExtent {};
 
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
 class Extent {
+private:
+  bool undefinedExtent_ = false;
 
 public:
   /// @name Constructors and Assignment
@@ -38,15 +52,23 @@ public:
   Extent(int minus, int plus);
   explicit Extent(int offset);
   Extent();
+  Extent(UndefinedExtent) : undefinedExtent_(true) {}
   /// @}
 
-  int minus() const { return minus_; }
-  int plus() const { return plus_; }
+  int minus() const {
+    DAWN_ASSERT_MSG(!undefinedExtent_, "undefined extent!");
+    return minus_;
+  }
+  int plus() const {
+    DAWN_ASSERT_MSG(!undefinedExtent_, "undefined extent!");
+    return plus_;
+  }
 
   /// @name Operators
   /// @{
-  void merge(const Extent& other);
+  void merge(const Extent& other); // propagate undefined'ness
   void merge(int other);
+  bool isUndefined() const { return undefinedExtent_; }
 
   void limit(Extent const& other);
 

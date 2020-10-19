@@ -26,6 +26,7 @@ enum class PassGroup {
   SetStageName,
   StageReordering,
   StageMerger,
+  MultiStageMerger,
   TemporaryMerger,
   Inlining,
   IntervalPartitioning,
@@ -33,7 +34,8 @@ enum class PassGroup {
   SetNonTempCaches,
   SetCaches,
   SetBlockSize,
-  DataLocalityMetric
+  DataLocalityMetric,
+  SetLoopOrder,
 };
 
 struct Options {
