@@ -279,7 +279,7 @@ public:
       auto hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
 
       std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(),
-                                        offset.verticalOffset()};
+                                        offset.verticalShift()};
       ss_ << expr->getName() << "[";
 
       const auto& argMap = expr->getArgumentMap();

@@ -382,5 +382,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
         AccessID, function ? function->evalOffsetOfFieldAccessExpr(expr) : expr->getOffset());
     candiateScope->ArgumentIndex += 1;
   }
+
+  for(auto& s : expr->getChildren())
+    s->accept(*this);
 }
 } // namespace dawn

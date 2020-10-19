@@ -126,7 +126,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
             ")*" + std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   }
   auto offset = expr->getOffset();
-  DAWN_ASSERT(offset.verticalOffset() == 0);
+  DAWN_ASSERT(offset.verticalShift() == 0);
   auto const& hoffset = ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   std::string offsetStr;
@@ -151,13 +151,13 @@ void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& ex
       ast::offset_cast<ast::CartesianOffset const&>(offset.horizontalOffset());
 
   DAWN_ASSERT(hoffset.offsetI() == 0 && hoffset.offsetJ() == 0);
-  DAWN_ASSERT((offset.verticalOffset() <= vertExtent.plus()) &&
-              (offset.verticalOffset() >= vertExtent.minus()));
+  DAWN_ASSERT((offset.verticalShift() <= vertExtent.plus()) &&
+              (offset.verticalShift() >= vertExtent.minus()));
 
   int index = kcacheCenterOffset;
 
-  if(offset.verticalOffset() != 0)
-    index += offset.verticalOffset();
+  if(offset.verticalShift() != 0)
+    index += offset.verticalShift();
   ss_ << accessName << "[" + std::to_string(index) + "]";
 }
 

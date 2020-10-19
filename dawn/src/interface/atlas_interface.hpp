@@ -165,6 +165,21 @@ inline auto getEdges(atlasTag, atlas::Mesh const& m) {
 inline auto getVertices(atlasTag, atlas::Mesh const& m) {
   return utility::irange(0, m.nodes().size());
 }
+inline auto getCells(atlasTag, atlas::Mesh const& m, int lo, int hi) {
+  assert(hi <= m.cells().size());
+  assert(lo >= 0);
+  return utility::irange(lo, hi);
+}
+inline auto getEdges(atlasTag, atlas::Mesh const& m, int lo, int hi) {
+  assert(hi <= m.edges().size());
+  assert(lo >= 0);
+  return utility::irange(lo, hi);
+}
+inline auto getVertices(atlasTag, atlas::Mesh const& m, int lo, int hi) {
+  assert(hi <= m.nodes().size());
+  assert(lo >= 0);
+  return utility::irange(lo, hi);
+}
 
 inline std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;

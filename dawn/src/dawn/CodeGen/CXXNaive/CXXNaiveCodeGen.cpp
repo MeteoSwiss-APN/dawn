@@ -123,7 +123,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
+  generateGlobalsAPI(stencilWrapperClass, globalsMap, codeGenProperties);
 
   generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
@@ -321,7 +321,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     stencilClassCtr.addArg("const " + c_dgt + "domain& dom_");
     if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("const globals& globals_");
+      stencilClassCtr.addArg("globals& globals_");
     }
     stencilClassCtr.addArg("int rank");
     stencilClassCtr.addArg("int xcols");
@@ -399,14 +399,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
         std::string type = stencilProperties->paramNameToType_.at(fieldName);
-        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " +
-                                      c_gt + "make_host_view(" + fieldName + "_)");
+        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " + c_gt +
+                                      "make_host_view(" + fieldName + "_)");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
       for(const auto& fieldPair : tempFields) {
         const auto fieldName = fieldPair.second.Name;
-        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt + "make_host_view(m_" + fieldName + ")");
+        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " + c_gt +
+                                      "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
 
@@ -569,7 +569,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       // add global parameter
       if(stencilFun->hasGlobalVariables()) {
-        stencilFunMethod.addArg("const globals& m_globals");
+        stencilFunMethod.addArg("globals m_globals");
       }
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                            StencilContext::SC_StencilFunction);
@@ -581,8 +581,8 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
-        stencilFunMethod << c_gt << "data_view<StorageType" + std::to_string(m) + "> "
-                         << paramName << " = pw_" << paramName << ".dview_;";
+        stencilFunMethod << c_gt << "data_view<StorageType" + std::to_string(m) + "> " << paramName
+                         << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);

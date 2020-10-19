@@ -107,8 +107,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
   return ss.str();
 }
 
-void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                                 Class& stencilWrapperClass,
+void CodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
@@ -131,7 +130,7 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
     setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
                   globalProp.first);
     setter.finishArgs();
-    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
+    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);      
     setter.commit();
   }
 }
@@ -498,7 +497,11 @@ std::string extentToString(iir::Extents const& extents, ast::GridType const& gri
       result += "false";
   }
   auto const& vExtents = extents.verticalExtent();
-  result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
+  if(!vExtents.isUndefined()) {
+    result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
+  } else {
+    result += ", std::numeric_limits<int>::min() , std::numeric_limits<int>::max()";
+  }
   return result;
 }
 } // namespace
@@ -508,8 +511,8 @@ void CodeGen::generateFieldExtentsInfo(
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     ast::GridType const& gridType) const {
   std::string extents_type = gridType == ast::GridType::Cartesian
-                                 ? "dawn::driver::cartesian_extent"
-                                 : "dawn::driver::unstructured_extent";
+                                 ? "::dawn::driver::cartesian_extent"
+                                 : "::dawn::driver::unstructured_extent";
 
   for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
     stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +

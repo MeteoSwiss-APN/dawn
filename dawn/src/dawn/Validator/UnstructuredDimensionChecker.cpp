@@ -6,6 +6,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Validator/WeightChecker.h"
+#include <optional>
 
 namespace dawn {
 
@@ -150,17 +151,6 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
                        .hasOffset();
 
   auto fieldName = fieldAccessExpr->getName();
-  // the name in the FieldAccessExpr may be stale if the there are nested stencils
-  // in this case we need to look up the new AccessID in the data of the fieldAccessExpr
-  if(checkType_ == checkType::runOnIIR) {
-    DAWN_ASSERT(fieldAccessExpr->hasData());
-    auto newAccessID = fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID;
-    if(newAccessID.has_value()) {
-      DAWN_ASSERT(idToNameMap_.count(newAccessID.value()));
-      fieldName = idToNameMap_.at(newAccessID.value());
-    }
-  }
-
   DAWN_ASSERT(nameToDimensions_.count(fieldName));
 
   curDimensions_ = nameToDimensions_.at(fieldName);
@@ -169,6 +159,17 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
                                config_.currentChain_->back();
     }
+    if(hasOffset && !getUnstructuredDim(*curDimensions_).isDense()) {
+      dimensionsConsistent_ &=
+          getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
+    }
+  }
+
+  if(fieldAccessExpr->getOffset().hasVerticalIndirection()) {
+    auto indirectionName = fieldAccessExpr->getOffset().getVerticalIndirectionFieldName();
+    DAWN_ASSERT(nameToDimensions_.count(indirectionName));
+    dimensionsConsistent_ &=
+        nameToDimensions_.at(fieldName) == nameToDimensions_.at(indirectionName);
   }
 }
 
@@ -432,11 +433,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   config_.parentIsReduction_ = true;
+  reductionExpr->getInit()->accept(init);
   config_.currentChain_ = reductionExpr->getNbhChain();
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
-  config_.currentChain_ = std::nullopt;
-  reductionExpr->getInit()->accept(init);
   reductionExpr->getRhs()->accept(ops);
 
   if(!ops.isConsistent()) {

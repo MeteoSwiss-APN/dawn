@@ -226,8 +226,7 @@ void GTCodeGen::generatePlaceholderDefinitions(
   }
 }
 
-void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                                   Class& stencilWrapperClass,
+void GTCodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
                                    const sir::GlobalVariableMap& globalsMap,
                                    const CodeGenProperties& codeGenProperties) const {
 
@@ -287,7 +286,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
+    generateGlobalsAPI(stencilWrapperClass, globalsMap, codeGenProperties);
   }
 
   generateStencilWrapperPublicMemberFunctions(stencilWrapperClass, codeGenProperties);

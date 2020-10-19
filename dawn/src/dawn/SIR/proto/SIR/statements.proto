@@ -109,7 +109,7 @@ message StencilFunctionArg {
   }
 }
 
-// @brief Representation of a vertical interval, given by a lower and upper
+// @brief Representation of a interval, given by a lower and upper
 // bound where a bound is represented by a level and an offset (`bound = level +
 // offset`)
 //
@@ -224,6 +224,8 @@ message StencilCall {
 message Extent {
   int32 minus = 1;
   int32 plus = 2;
+  bool undefined = 3; // an extent can be undefined (to express an extent
+                      // including a runtime vertical indirection)
 }
 message CartesianExtent {
   Extent i_extent = 1;
@@ -635,7 +637,11 @@ message FieldAccessExpr {
   // perform a lazy evaluation to compute the real offset once we know the
   // mapping of the directions (and offsets) to the actual arguments of the
   // stencil function.
-  int32 vertical_offset = 2;
+  int32 vertical_shift = 2;
+  // vertical indirection (at runtime). This has to be a valid field name
+  string vertical_indirection = 12;
+  // field access expression data for the indirection
+  AccessExprData vertical_indirection_data = 13;
   oneof horizontal_offset {
     CartesianOffset cartesian_offset = 3;
     UnstructuredOffset unstructured_offset = 4;

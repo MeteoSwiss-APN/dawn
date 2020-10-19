@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
-   "36": "__local_fn_36",
    "16": "a",
-   "17": "b"
+   "17": "b",
+   "36": "__local_fn_36"
   },
   "accessIDToType": {
    "16": 6,
@@ -98,7 +98,8 @@
                 {
                  "field_access_expr": {
                   "name": "a",
-                  "vertical_offset": 0,
+                  "vertical_shift": 0,
+                  "vertical_indirection": "",
                   "zero_offset": {},
                   "argument_map": [
                    -1,
@@ -133,7 +134,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -142,7 +144,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
@@ -161,7 +164,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -217,7 +221,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -226,7 +231,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
@@ -290,5 +296,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "StencilFnCallTest.cpp"
 }

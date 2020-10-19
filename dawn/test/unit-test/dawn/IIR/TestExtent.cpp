@@ -207,6 +207,26 @@ TEST(ExtentsTest, Stringify) {
   EXPECT_EQ(to_string(Extents(ast::unstructured, true, Extent(0, 0))),
             "[<has_horizontal_extent>,(0,0)]");
 }
+TEST(ExtentsTest, PropagateUndefined) {
+  auto undefinedExtent = Extent{UndefinedExtent{}};
+  EXPECT_FALSE(undefinedExtent.isPointwise());
+  EXPECT_DEATH(undefinedExtent.minus(), ".*undefined extent.*");
+  EXPECT_DEATH(undefinedExtent.plus(), ".*undefined extent.*");
+
+  auto lhs1 = Extent{0, 0};
+  lhs1.merge(undefinedExtent);
+  EXPECT_TRUE(lhs1.isUndefined());
+  auto lhs2 = Extent{0, 0};
+  EXPECT_DEATH(lhs2.limit(undefinedExtent), ".*limit called on undefined Extent.*");
+
+  auto lhs3 = Extent{2, 4};
+  lhs3.merge(undefinedExtent);
+  EXPECT_EQ(lhs1, lhs3); // undefined extents are equal, no matter the minus / plus entries
+
+  auto lhs4 = Extent{2, 4};
+  lhs4 += undefinedExtent;
+  EXPECT_TRUE(lhs4.isUndefined());
+}
 
 TEST(ExtentsTest, verticalLoopOrder) {
   Extents extents(dawn::ast::cartesian, 0, 0, 0, 0, -1, 2);

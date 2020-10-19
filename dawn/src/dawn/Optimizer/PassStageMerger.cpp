@@ -44,6 +44,11 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
       continue;
     }
     const auto& stencilAxis = stencil->getAxis(false);
+    if(stencilAxis.isUndefined()) {
+      // this could possibly be improved in the future, there is no need to disable merging for the
+      // whole _stencil_ if some stages have undefined extents, but only for these stages
+      continue;
+    }
     const auto& stageDAG = *(stencil->getStageDependencyGraph());
     const auto& attributes = stencil->getStencilAttributes();
 

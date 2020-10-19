@@ -92,8 +92,7 @@ public:
   CodeGenProperties
   computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const;
 
-  virtual void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                                  Class& stencilWrapperClass,
+  virtual void generateGlobalsAPI(Structure& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
   virtual std::string generateGlobals(const StencilInstantiationContext& context,

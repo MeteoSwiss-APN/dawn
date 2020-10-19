@@ -68,6 +68,8 @@ protected:
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
+  std::string makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr, std::string kiter);
+
 public:
   using Base = ASTCodeGenCXX;
   using Base::visit;

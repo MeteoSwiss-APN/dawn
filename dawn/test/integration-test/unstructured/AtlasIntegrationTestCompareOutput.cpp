@@ -14,6 +14,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "driver-includes/unstructured_domain.hpp"
+#include "driver-includes/unstructured_interface.hpp"
+
 #include "AtlasCartesianWrapper.h"
 #include "UnstructuredVerifier.h"
 
@@ -33,9 +36,7 @@
 #include <sstream>
 #include <tuple>
 
-#include <generated_copyCell.hpp>
 namespace {
-
 atlas::Mesh generateQuadMesh(size_t nx, size_t ny) {
   std::stringstream configStr;
   configStr << "L" << nx << "x" << ny;
@@ -532,7 +533,7 @@ TEST(AtlasIntegrationTestCompareOutput, Gradient) {
 } // namespace
 
 namespace {
-#include <generated_verticalSolver.hpp>
+#include <generated_tridiagonalSolve.hpp>
 TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
   const int numCell = 5;
 
@@ -577,9 +578,10 @@ TEST(AtlasIntegrationTestCompareOutput, verticalSolver) {
     }
   }
 }
+} // namespace
 
 namespace {
-#include <generated_NestedSimple.hpp>
+#include <generated_nestedSimple.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
   const int numCell = 10;
   auto mesh = generateQuadMesh(numCell, numCell + 1);
@@ -605,7 +607,7 @@ TEST(AtlasIntegrationTestCompareOutput, nestedSimple) {
 } // namespace
 
 namespace {
-#include <generated_NestedWithField.hpp>
+#include <generated_nestedWithField.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedWithField) {
   const int numCell = 10;
   auto mesh = generateQuadMesh(numCell, numCell + 1);
@@ -661,7 +663,7 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensions) {
 } // namespace
 
 namespace {
-#include <generated_NestedSparse.hpp>
+#include <generated_nestedWithSparse.hpp>
 TEST(AtlasIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
   auto mesh = generateEquilatMesh(10, 10);
   const int edgesPerCell = 3;
@@ -698,8 +700,8 @@ TEST(AtlasIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
 }
 } // namespace
 
-namespace name {
-#include <generated_SparseAssignment0.hpp>
+namespace {
+#include <generated_sparseAssignment0.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment0) {
   auto mesh = generateEquilatMesh(10, 10);
   const int diamondSize = 4;
@@ -736,10 +738,10 @@ TEST(AtlasIntegrationTestCompareOutput, SparseAssignment0) {
     }
   }
 }
-} // namespace name
+} // namespace
 
-namespace name {
-#include <generated_SparseAssignment1.hpp>
+namespace {
+#include <generated_sparseAssignment1.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment1) {
   auto mesh = generateEquilatMesh(10, 10);
   const int diamondSize = 4;
@@ -776,10 +778,10 @@ TEST(AtlasIntegrationTestCompareOutput, SparseAssignment1) {
     }
   }
 }
-} // namespace name
+} // namespace
 
 namespace {
-#include <generated_SparseAssignment2.hpp>
+#include <generated_sparseAssignment2.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment2) {
   auto mesh = generateEquilatMesh(10, 10);
   const int diamondSize = 4;
@@ -815,7 +817,7 @@ TEST(AtlasIntegrationTestCompareOutput, SparseAssignment2) {
 } // namespace
 
 namespace {
-#include <generated_SparseAssignment3.hpp>
+#include <generated_sparseAssignment3.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment3) {
   auto mesh = generateEquilatMesh(10, 10);
   const int intpSize = 9;
@@ -854,7 +856,7 @@ TEST(AtlasIntegrationTestCompareOutput, SparseAssignment3) {
 } // namespace
 
 namespace {
-#include <generated_SparseAssignment4.hpp>
+#include <generated_sparseAssignment4.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment4) {
   auto mesh = generateEquilatMesh(10, 10);
   const int edgesPerCell = 3;
@@ -882,7 +884,7 @@ TEST(AtlasIntegrationTestCompareOutput, SparseAssignment4) {
 } // namespace
 
 namespace {
-#include <generated_SparseAssignment5.hpp>
+#include <generated_sparseAssignment5.hpp>
 TEST(AtlasIntegrationTestCompareOutput, SparseAssignment5) {
   auto mesh = generateEquilatMesh(10, 10);
   const int edgesPerCell = 3;
@@ -954,7 +956,7 @@ TEST(AtlasIntegrationTestCompareOutput, sparseDimensionsTwice) {
 } // namespace
 
 namespace {
-#include <generated_horizontal_vertical.hpp>
+#include <generated_horizontalVertical.hpp>
 TEST(AtlasIntegrationTestCompareOutput, horizontalVertical) {
   auto mesh = generateQuadMesh(10, 11);
   const int nb_levels = 10;
@@ -1000,5 +1002,109 @@ TEST(AtlasIntegrationTestCompareOutput, horizontalVertical) {
   }
 }
 } // namespace
+
+namespace {
+#include <generated_verticalIndirecion.hpp>
+TEST(AtlasIntegrationTestCompareOutput, verticalIndirection) {
+  auto mesh = generateQuadMesh(10, 11);
+  const int nb_levels = 10;
+
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+  auto [kidx_F, kidx_v] = makeAtlasField("kidx", mesh.cells().size(), nb_levels);
+
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_iter = 0; cell_iter < mesh.cells().size(); cell_iter++) {
+      in_v(cell_iter, k) = k;
+      kidx_v(cell_iter, k) = k + 1;
+    }
+  }
+
+  dawn_generated::cxxnaiveico::verticalIndirecion<atlasInterface::atlasTag>(mesh, nb_levels, in_v,
+                                                                            out_v, kidx_v)
+      .run();
+
+  for(int k = 0; k < nb_levels - 1; k++) {
+    for(int cell_iter = 0; cell_iter < mesh.cells().size(); cell_iter++) {
+      EXPECT_TRUE(out_v(cell_iter, k) == k + 1);
+    }
+  }
+}
 } // namespace
+
+namespace {
+#include <generated_iterationSpaceUnstructured.hpp>
+TEST(AtlasIntegrationTestCompareOutput, iterationSpaceUnstructured) {
+  auto mesh = generateQuadMesh(10, 11);
+  const int nb_levels = 1;
+  const int level = 0;
+
+  printf("number of cells in mesh %d\n", mesh.cells().size());
+
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+  auto [in1_F, in1_v] = makeAtlasField("in_1", mesh.cells().size(), nb_levels);
+  auto [in2_F, in2_v] = makeAtlasField("in_2", mesh.cells().size(), nb_levels);
+
+  const int interiorIdx = 20;
+  const int haloIdx = 80;
+
+  const int interiorVal = 2;
+  const int haloVal = 1;
+
+  for(int cell_iter = interiorIdx; cell_iter < haloIdx; cell_iter++) {
+    in2_v(cell_iter, level) = interiorVal;
+  }
+  for(int cell_iter = haloIdx; cell_iter < mesh.cells().size(); cell_iter++) {
+    in1_v(cell_iter, level) = haloVal;
+  }
+
+  dawn_generated::cxxnaiveico::iterationSpaceUnstructured<atlasInterface::atlasTag> stencil(
+      mesh, nb_levels, out_v, in1_v, in2_v);
+
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Interior,
+                             0, interiorIdx);
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Halo, 0,
+                             haloIdx);
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::End, 0,
+                             mesh.cells().size());
+  stencil.run();
+
+  for(int cell_iter = interiorIdx; cell_iter < haloIdx; cell_iter++) {
+    EXPECT_TRUE(out_v(cell_iter, level) == interiorVal);
+  }
+  for(int cell_iter = haloIdx; cell_iter < mesh.cells().size(); cell_iter++) {
+    EXPECT_TRUE(out_v(cell_iter, level) == haloVal);
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_globalVar.hpp>
+TEST(AtlasIntegrationTestCompareOutput, globalVar) {
+  auto mesh = generateQuadMesh(10, 10);
+  size_t nb_levels = 10;
+  const double dt = 2.0;
+
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::globalVar<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v, out_v);
+  stencil.set_dt(dt);  
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(out_v(cell_idx, k), dt);
+    }
+  }
+}
+} // namespace
+
 } // namespace

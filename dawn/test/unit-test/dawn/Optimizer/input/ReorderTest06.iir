@@ -132,7 +132,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_a1",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -159,7 +159,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_a0",
-                   "vertical_offset": 1,
+                   "vertical_shift": 1,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -225,7 +225,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_b1",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -252,7 +252,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_a0",
-                   "vertical_offset": -1,
+                   "vertical_shift": -1,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -351,7 +351,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_a2",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -378,7 +378,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_a1",
-                   "vertical_offset": 1,
+                   "vertical_shift": 1,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -444,7 +444,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_b2",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -471,7 +471,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_b1",
-                   "vertical_offset": -1,
+                   "vertical_shift": -1,
                    "zero_offset": {},
                    "argument_map": [
                     -1,

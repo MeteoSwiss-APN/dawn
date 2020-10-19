@@ -28,7 +28,7 @@ protected:
   std::shared_ptr<iir::StencilInstantiation>
   loadTest(const std::string& sirFilename,
            const std::string& stencilName = "compute_extent_test_stencil") {
-    auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);        
+    auto sir = SIRSerializer::deserialize(sirFilename, SIRSerializer::Format::Json);
 
     // Optimize IIR
     std::list<PassGroup> groups = {PassGroup::SetStageName,    PassGroup::MultiStageMerger,
@@ -36,7 +36,7 @@ protected:
                                    PassGroup::SetCaches,       PassGroup::SetBlockSize};
     Options options;
     options.MergeStages = true;
-    auto stencilInstantiationMap = dawn::run(sir, groups, options);    
+    auto stencilInstantiationMap = dawn::run(sir, groups, options);
 
     DAWN_ASSERT_MSG(stencilInstantiationMap.count(stencilName),
                     "compute_extent_test_stencil not found in sir");

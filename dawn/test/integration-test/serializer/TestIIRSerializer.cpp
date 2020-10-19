@@ -24,6 +24,7 @@
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestUtils.h"
 #include <gtest/gtest.h>
+#include <iostream>
 #include <memory>
 #include <optional>
 
@@ -458,6 +459,32 @@ TEST_F(IIRSerializerTest, IterationSpace) {
   std::string serializedIIR = IIRSerializer::serializeToString(instantiation);
   auto deserialized = IIRSerializer::deserializeFromString(serializedIIR);
   std::string deserializedIIR = IIRSerializer::serializeToString(deserialized);
+
+  IIR_EXPECT_EQ(instantiation, deserialized);
+}
+
+TEST_F(IIRSerializerTest, VerticalIndirection) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells);
+  auto out = b.field("out", LocType::Cells);
+  auto kidx = b.field("kidx", LocType::Cells);
+
+  auto instantiation =
+      b.build("indirection",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(b.doMethod(
+                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.stmt(b.assignExpr(
+                          b.at(out), b.at(in, AccessType::r,
+                                          ast::Offsets{ast::unstructured, false, 1, "kidx"}))))))));
+
+  std::string serializedIIR = IIRSerializer::serializeToString(instantiation);
+  auto deserialized = IIRSerializer::deserializeFromString(serializedIIR);
+  std::string deserializedIIR = IIRSerializer::serializeToString(deserialized);  
 
   IIR_EXPECT_EQ(instantiation, deserialized);
 }

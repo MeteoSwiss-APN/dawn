@@ -30,6 +30,7 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
 #include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include "dawn/Validator/WeightChecker.h"
 
@@ -93,6 +94,8 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   restoreIIR(si_);
 
   if(si_->getIIR()->getGridType() == ast::GridType::Unstructured) {
+    IntegrityChecker integrityChecker(si_.get());
+    integrityChecker.run();
     auto [checkResultDimensions, errorLocDimension] =
         UnstructuredDimensionChecker::checkDimensionsConsistency(*si_->getIIR().get(),
                                                                  si_->getMetaData());
@@ -184,7 +187,10 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, offset);
   expr->setID(si_->nextUID());
-
+  if(offset.hasVerticalIndirection()) {
+    expr->getOffset().setVerticalIndirectionAccessID(
+        si_->getMetaData().getNameToAccessIDMap().at(offset.getVerticalIndirectionFieldName()));
+  }
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
 }
@@ -272,12 +278,12 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
   return at(field, AccessType::r, ast::Offsets{ast::cartesian, offset});
 }
 
-IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::LocationType location) {
+IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name, ast::LocationType location,
+                                                bool maskK) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, true));
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, maskK));
   return {id, name};
 }
 

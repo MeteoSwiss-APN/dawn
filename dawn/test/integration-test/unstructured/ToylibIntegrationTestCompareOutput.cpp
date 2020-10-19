@@ -21,6 +21,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "driver-includes/unstructured_domain.hpp"
+#include "driver-includes/unstructured_interface.hpp"
+
 #include "UnstructuredVerifier.h"
 #include "dawn/Support/Logger.h"
 #include "interface/toylib_interface.hpp"
@@ -53,7 +56,6 @@ std::tuple<double, double> cellMidpoint(const toylib::Face& f) {
   double y = f.vertices()[0]->y() + f.vertices()[1]->y() + f.vertices()[2]->y();
   return {x / 3., y / 3.};
 }
-} // namespace
 
 namespace {
 #include <generated_copyCell.hpp>
@@ -73,7 +75,9 @@ TEST(ToylibIntegrationTestCompareOutput, CopyCell) {
   for(const auto& f : mesh.faces())
     ASSERT_EQ(out(f, 0), 1.0);
 }
+} // namespace
 
+namespace {
 #include <generated_copyEdge.hpp>
 TEST(ToylibIntegrationTestCompareOutput, CopyEdge) {
   toylib::Grid mesh(32, 32);
@@ -91,7 +95,9 @@ TEST(ToylibIntegrationTestCompareOutput, CopyEdge) {
   for(const auto& e : mesh.edges())
     ASSERT_EQ(out(e, 0), 1.0);
 }
+} // namespace
 
+namespace {
 #include <generated_verticalSum.hpp>
 TEST(ToylibIntegrationTestCompareOutput, VerticalCopy) {
   toylib::Grid mesh(32, 32);
@@ -113,7 +119,9 @@ TEST(ToylibIntegrationTestCompareOutput, VerticalCopy) {
     }
   }
 }
+} // namespace
 
+namespace {
 #include <generated_accumulateEdgeToCell.hpp>
 TEST(ToylibIntegrationTestCompareOutput, Accumulate) {
   toylib::Grid mesh(32, 32);
@@ -131,7 +139,9 @@ TEST(ToylibIntegrationTestCompareOutput, Accumulate) {
   for(const auto& f : mesh.faces())
     ASSERT_EQ(out(f, 0), 3.0);
 }
+} // namespace
 
+namespace {
 #include <generated_diffusion.hpp>
 #include <reference_diffusion.hpp>
 TEST(ToylibIntegrationTestCompareOutput, Diffusion) {
@@ -172,7 +182,9 @@ TEST(ToylibIntegrationTestCompareOutput, Diffusion) {
         << "while comparing output (on cells)";
   }
 }
+} // namespace
 
+namespace {
 #include <generated_gradient.hpp>
 #include <reference_gradient.hpp>
 TEST(ToylibIntegrationTestCompareOutput, Gradient) {
@@ -217,7 +229,9 @@ TEST(ToylibIntegrationTestCompareOutput, Gradient) {
         << "while comparing output (on cells)";
   }
 }
+} // namespace
 
+namespace {
 #include <generated_diamond.hpp>
 #include <reference_diamond.hpp>
 TEST(ToylibIntegrationTestCompareOutput, Diamond) {
@@ -246,7 +260,9 @@ TEST(ToylibIntegrationTestCompareOutput, Diamond) {
         << "while comparing output (on cells)";
   }
 }
+} // namespace
 
+namespace {
 #include <generated_diamondWeights.hpp>
 #include <reference_diamondWeights.hpp>
 TEST(ToylibIntegrationTestCompareOutput, DiamondWeights) {
@@ -286,7 +302,9 @@ TEST(ToylibIntegrationTestCompareOutput, DiamondWeights) {
         << "while comparing output (on cells)";
   }
 }
+} // namespace
 
+namespace {
 #include <generated_intp.hpp>
 #include <reference_intp.hpp>
 TEST(ToylibIntegrationTestCompareOutput, Intp) {
@@ -318,8 +336,10 @@ TEST(ToylibIntegrationTestCompareOutput, Intp) {
         << "while comparing output (on cells)";
   }
 }
+} // namespace
 
-#include <generated_verticalSolver.hpp>
+namespace {
+#include <generated_tridiagonalSolve.hpp>
 TEST(ToylibIntegrationTestCompareOutput, verticalSolver) {
   const int numCell = 5;
   auto mesh = toylib::Grid(numCell, numCell);
@@ -354,8 +374,10 @@ TEST(ToylibIntegrationTestCompareOutput, verticalSolver) {
     }
   }
 }
+} // namespace
 
-#include <generated_NestedSimple.hpp>
+namespace {
+#include <generated_nestedSimple.hpp>
 TEST(ToylibIntegrationTestCompareOutput, nestedSimple) {
   auto mesh = toylib::Grid(10, 10);
   const int nb_levels = 1;
@@ -376,8 +398,10 @@ TEST(ToylibIntegrationTestCompareOutput, nestedSimple) {
     EXPECT_TRUE(fabs(cells(f, 0) - 6.) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
+} // namespace
 
-#include <generated_NestedWithField.hpp>
+namespace {
+#include <generated_nestedWithField.hpp>
 TEST(ToylibIntegrationTestCompareOutput, nestedWithField) {
   auto mesh = toylib::Grid(10, 10);
   const int nb_levels = 1;
@@ -400,7 +424,9 @@ TEST(ToylibIntegrationTestCompareOutput, nestedWithField) {
     EXPECT_TRUE(fabs(cells(f, 0) - 606) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
+} // namespace
 
+namespace {
 #include <generated_sparseDimension.hpp>
 TEST(ToylibIntegrationTestCompareOutput, sparseDimensions) {
   auto mesh = toylib::Grid(10, 10);
@@ -424,8 +450,10 @@ TEST(ToylibIntegrationTestCompareOutput, sparseDimensions) {
     EXPECT_TRUE(fabs(cells(f, 0) - 600) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
+} // namespace
 
-#include <generated_NestedSparse.hpp>
+namespace {
+#include <generated_nestedWithSparse.hpp>
 TEST(ToylibIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
   auto mesh = toylib::Grid(10, 10);
   const int edgesPerCell = 3;
@@ -458,8 +486,10 @@ TEST(ToylibIntegrationTestCompareOutput, nestedReduceSparseDimensions) {
     EXPECT_TRUE(fabs(cells(f, 0) - 4200) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
+} // namespace
 
-#include <generated_SparseAssignment0.hpp>
+namespace {
+#include <generated_sparseAssignment0.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment0) {
   auto mesh = toylib::Grid(10, 10);
   const int diamondSize = 4;
@@ -491,8 +521,10 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment0) {
     }
   }
 }
+} // namespace
 
-#include <generated_SparseAssignment1.hpp>
+namespace {
+#include <generated_sparseAssignment1.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment1) {
   auto mesh = toylib::Grid(10, 10);
   const int diamondSize = 4;
@@ -524,8 +556,10 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment1) {
     }
   }
 }
+} // namespace
 
-#include <generated_SparseAssignment2.hpp>
+namespace {
+#include <generated_sparseAssignment2.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment2) {
   auto mesh = toylib::Grid(10, 10);
   const int diamondSize = 4;
@@ -555,8 +589,10 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment2) {
     }
   }
 }
+} // namespace
 
-#include <generated_SparseAssignment3.hpp>
+namespace {
+#include <generated_sparseAssignment3.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
   auto mesh = toylib::Grid(10, 10);
   const int intpSize = 9;
@@ -580,9 +616,9 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
     for(const auto& f : mesh.faces()) {
       size_t curIntpSize =
           toylibInterface::getNeighbors(toylibInterface::toylibTag{}, mesh,
-                                        {dawn::LocationType::Cells, dawn::LocationType::Edges,
-                                         dawn::LocationType::Cells, dawn::LocationType::Edges,
-                                         dawn::LocationType::Cells},
+                                        {::dawn::LocationType::Cells, ::dawn::LocationType::Edges,
+                                         ::dawn::LocationType::Cells, ::dawn::LocationType::Edges,
+                                         ::dawn::LocationType::Cells},
                                         &f)
               .size();
       for(size_t sparse = 0; sparse < curIntpSize; sparse++) {
@@ -592,8 +628,10 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment3) {
     }
   }
 }
+} // namespace
 
-#include <generated_SparseAssignment4.hpp>
+namespace {
+#include <generated_sparseAssignment4.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment4) {
   auto mesh = toylib::Grid(10, 10);
   const int edgesPerCell = 3;
@@ -617,8 +655,10 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment4) {
     }
   }
 }
+} // namespace
 
-#include <generated_SparseAssignment5.hpp>
+namespace {
+#include <generated_sparseAssignment5.hpp>
 TEST(ToylibIntegrationTestCompareOutput, SparseAssignment5) {
   auto mesh = toylib::Grid(10, 10);
   const int edgesPerCell = 3;
@@ -649,7 +689,9 @@ TEST(ToylibIntegrationTestCompareOutput, SparseAssignment5) {
     }
   }
 }
+} // namespace
 
+namespace {
 #include <generated_sparseDimensionTwice.hpp>
 TEST(ToylibIntegrationTestCompareOutput, sparseDimensionsTwice) {
   auto mesh = toylib::Grid(10, 10);
@@ -673,5 +715,34 @@ TEST(ToylibIntegrationTestCompareOutput, sparseDimensionsTwice) {
     EXPECT_TRUE(fabs(cells(f, 0) - 600) < 1e3 * std::numeric_limits<double>::epsilon());
   }
 }
-
 } // namespace
+
+namespace {
+#include <generated_verticalIndirecion.hpp>
+TEST(ToylibIntegrationTestCompareOutput, verticalIndirection) {
+  auto mesh = toylib::Grid(10, 10);
+  const int nb_levels = 10;
+
+  toylib::FaceData<double> in(mesh, nb_levels);
+  toylib::FaceData<double> out(mesh, nb_levels);
+  toylib::FaceData<double> kidx(mesh, nb_levels);
+
+  for(size_t level = 0; level < nb_levels; level++) {
+    for(const auto& f : mesh.faces()) {
+      in(f, level) = level;
+      kidx(f, level) = level + 1;
+    }
+  }
+
+  dawn_generated::cxxnaiveico::verticalIndirecion<toylibInterface::toylibTag>(mesh, nb_levels, in,
+                                                                              out, kidx)
+      .run();
+
+  for(size_t level = 0; level < nb_levels - 1; level++) {
+    for(const auto& f : mesh.faces()) {
+      EXPECT_TRUE(kidx(f, level) == level + 1);
+    }
+  }
+}
+} // namespace
+}

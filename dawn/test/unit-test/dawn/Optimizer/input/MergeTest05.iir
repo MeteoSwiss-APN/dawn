@@ -224,7 +224,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "tmp_1",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -251,7 +251,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_1_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -343,7 +343,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_1",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -370,7 +370,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "tmp_1",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "cartesian_offset": {
                     "i_offset": 1,
                     "j_offset": 0
@@ -448,7 +448,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "tmp_2",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -475,7 +475,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_2_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -567,7 +567,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_2",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -594,7 +594,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "tmp_2",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "cartesian_offset": {
                     "i_offset": 1,
                     "j_offset": 0
@@ -672,7 +672,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "tmp_3",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -699,7 +699,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_3_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -791,7 +791,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_3",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -818,7 +818,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "tmp_3",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "cartesian_offset": {
                     "i_offset": 1,
                     "j_offset": 0
@@ -896,7 +896,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "tmp_4",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -923,7 +923,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_4_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -1015,7 +1015,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_4",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -1042,7 +1042,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "tmp_4",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "cartesian_offset": {
                     "i_offset": 1,
                     "j_offset": 0
@@ -1120,7 +1120,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "tmp_5",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -1147,7 +1147,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "field_5_0",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -1239,7 +1239,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_5",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -1266,7 +1266,7 @@
                  "right": {
                   "field_access_expr": {
                    "name": "tmp_5",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "cartesian_offset": {
                     "i_offset": 1,
                     "j_offset": 0
