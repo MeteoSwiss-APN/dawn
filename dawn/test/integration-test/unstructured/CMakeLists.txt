@@ -13,7 +13,7 @@
 ##===------------------------------------------------------------------------------------------===##
 include(GoogleTest)
 
-if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # Need to specify here the names of the stencil codes that are going to be generated.
 set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
