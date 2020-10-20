@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "dawn/Support/Assert.h"
 #include <algorithm>
 #include <functional>
 #include <optional>
@@ -61,7 +62,10 @@ public:
     if(indentLevel_ > 0)
       indentLevel_--;
   }
-  void setIndentLevel(int il) { indentLevel_ = il; }
+  void setIndentLevel(int il) {
+    DAWN_ASSERT(il >= 0);
+    indentLevel_ = il;
+  }
 
   std::stringstream& ss() { return ss_.get(); }
 

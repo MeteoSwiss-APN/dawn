@@ -1036,7 +1036,7 @@ std::string CudaIcoCodeGen::generateCHeader() const {
   return ssSW.str();
 }
 
-inline void
+static void
 generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                        const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& stencils = stencilInstantiation->getStencils();
@@ -1059,20 +1059,11 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
     api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
     for(auto field : support::orderMap(stencil.getFields())) {
-      int n = 3;
-      const auto& dims = field.second.field.getFieldDimensions();
-      if(dims.isVertical()) {
-        n = 1;
-      } else {
-        if(!dims.K()) {
-          --n;
-        }
-        const auto& hdim = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-            dims.getHorizontalFieldDimension());
-        if(hdim.isDense()) {
-          --n;
-        }
-      }
+      const int spatialDims = field.second.field.getFieldDimensions().numSpatialDimensions;
+      const int n = spatialDims > 1
+                        ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
+                        : spatialDims;
+
       api.addArg(
           field.second.Name,
           FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
@@ -1120,8 +1111,12 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
     fs::path filePath = *codeGenOptions_.OutputCHeader;
     std::ofstream headerFile;
     headerFile.open(filePath);
-    headerFile << generateCHeader();
-    headerFile.close();
+    if(headerFile) {
+      headerFile << generateCHeader();
+      headerFile.close();
+    } else {
+      throw std::runtime_error("Error writing to " + filePath.string() + ": " + strerror(errno));
+    }
   }
 
   if(codeGenOptions_.OutputFortranInterface) {
@@ -1129,8 +1124,12 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
     std::string moduleName = filePath.filename().replace_extension("").string();
     std::ofstream interfaceFile;
     interfaceFile.open(filePath);
-    interfaceFile << generateF90Interface(moduleName);
-    interfaceFile.close();
+    if(interfaceFile) {
+      interfaceFile << generateF90Interface(moduleName);
+      interfaceFile.close();
+    } else {
+      throw std::runtime_error("Error writing to " + filePath.string() + ": " + strerror(errno));
+    }
   }
   std::vector<std::string> ppDefines{
       "#include \"driver-includes/unstructured_interface.hpp\"",
