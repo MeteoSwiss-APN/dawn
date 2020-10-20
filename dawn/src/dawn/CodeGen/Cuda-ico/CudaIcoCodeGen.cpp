@@ -678,8 +678,6 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     CodeGenProperties& codeGenProperties, bool fromHost, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
 
-  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-
   CollectChainStrings chainCollector;
   std::set<std::vector<ast::LocationType>> chains;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
@@ -1059,7 +1057,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
     api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
     for(auto field : support::orderMap(stencil.getFields())) {
-      const int spatialDims = field.second.field.getFieldDimensions().numSpatialDimensions;
+      const int spatialDims = field.second.field.getFieldDimensions().numSpatialDimensions();
       const int n = spatialDims > 1
                         ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
                         : spatialDims;
