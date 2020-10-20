@@ -37,8 +37,7 @@ srun --job-name=dawn_PR \
     sarus run --mount=type=bind,source=$root_dir,destination=$dawn_dir \
     --mount=type=bind,source=$(pwd)/clang-gridtools,destination=/usr/src/clang-gridtools \
     $image \
-    bash -c "mkdir $dawn_dir/gtest_output && \
-    export GTEST_OUTPUT=\"xml:$dawn_dir/gtest_output/\" &&
+    bash -c "export GTEST_OUTPUT=\"xml:$dawn_dir/gtest_output/\" &&
     /usr/src/dawn/scripts/build-and-test \
     --dawn-build-dir /usr/src/dawn-build \
     --dawn-install-dir /usr/local/dawn \
