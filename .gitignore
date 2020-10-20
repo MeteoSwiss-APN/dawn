@@ -27,3 +27,7 @@ _local_/*
 
 # Ignore pip files
 pip-wheel-metadata/
+
+# Ignore spack logs
+spack-build-env.txt
+spack-build-out.txt
