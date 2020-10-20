@@ -749,7 +749,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     if(!onlyDecl) {
 
       for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag>::" + stencilName + " s(mesh, k_size)");
+        apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName +
+                                "<dawn::NoLibTag>::" + stencilName + " s(mesh, k_size)");
       }
       if(fromHost) {
         // depending if we are calling from c or from fortran, we need to transpose the data or not
