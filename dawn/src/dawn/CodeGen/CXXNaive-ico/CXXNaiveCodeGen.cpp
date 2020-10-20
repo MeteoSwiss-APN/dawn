@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
@@ -247,11 +248,13 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   }
 
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    std::vector<std::string> tempFields;
     for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-      tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
+      auto originalAccessID = metadata.getOriginalVersionOfAccessID(accessID);
+
+      StencilWrapperConstructor.addStatement("m_" + metadata.getNameFromAccessID(accessID) +
+                                             " = allocateFieldLike(LibTag{}, " +
+                                             metadata.getNameFromAccessID(originalAccessID) + ")");
     }
-    addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
 
   StencilWrapperConstructor.commit();
@@ -286,11 +289,24 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   //
   // Define allocated memebers if necessary
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    stencilWrapperClass.addMember(c_dgt + "meta_data_t", "m_meta_data");
 
-    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
-      stencilWrapperClass.addMember(c_dgt + "storage_t",
-                                    "m_" + metadata.getFieldNameFromAccessID(AccessID));
+    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          metadata.getFieldDimensions(AccessID).getHorizontalFieldDimension());
+      std::string fieldType = dims.isSparse() ? "::dawn::sparse_" : "::dawn::";
+      switch(dims.getDenseLocationType()) {
+      case ast::LocationType::Cells:
+        fieldType += "cell_field_t<LibTag, ::dawn::float_type>";
+        break;
+      case ast::LocationType::Edges:
+        fieldType += "edge_field_t<LibTag, ::dawn::float_type>";
+        break;
+      case ast::LocationType::Vertices:
+        fieldType += "vertex_field_t<LibTag, ::dawn::float_type>";
+        break;
+      }
+      stencilWrapperClass.addMember(fieldType, "m_" + metadata.getFieldNameFromAccessID(AccessID));
+    }
   }
 
   auto splitterIdxFun = stencilWrapperClass.addMemberFunction("void", "set_splitter_index");
