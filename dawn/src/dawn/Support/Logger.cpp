@@ -142,7 +142,7 @@ std::string createDiagnosticStackTrace(const std::string& prefix,
 namespace log {
 
 Logger info(makeMessageFormatter("INFO"), makeDiagnosticFormatter("INFO"), std::cout, false);
-Logger warn(makeMessageFormatter("WARNING"), makeDiagnosticFormatter("WARNING"), std::cout, true);
+Logger warn(makeMessageFormatter("WARNING"), makeDiagnosticFormatter("WARNING"), std::cerr, true);
 Logger error(makeMessageFormatter("ERROR"), makeDiagnosticFormatter("ERROR"), std::cerr, true);
 
 void setVerbosity(Level level) {
