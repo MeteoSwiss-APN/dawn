@@ -392,7 +392,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
                           kSizeStr + ")");
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
-                          locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0]) + ", " +
+                          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
                           chainToSparseSizeString(hdims.getNeighborChain()) + ", " + kSizeStr +
                           ")");
       }
