@@ -456,12 +456,13 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
 
 void CudaIcoCodeGen::generateStencilClassDtr(MemberFunction& stencilClassDtor,
                                              const iir::Stencil& stencil) {
-  if(stencil.getMetadata().hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    for(auto accessID :
-        stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-      auto fname = stencil.getMetadata().getFieldNameFromAccessID(accessID);
-      stencilClassDtor.addStatement("gpuErrchk(cudaFree(" + fname + "_))");
-    }
+  DAWN_ASSERT_MSG(
+      stencil.getMetadata().hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>(),
+      "only generate dtor for stencils with temporaries!");
+  for(auto accessID :
+      stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+    auto fname = stencil.getMetadata().getFieldNameFromAccessID(accessID);
+    stencilClassDtor.addStatement("gpuErrchk(cudaFree(" + fname + "_))");
   }
 }
 
@@ -689,9 +690,11 @@ void CudaIcoCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClassConstructor, stencil, globalsMap, codeGenProperties);
     stencilClassConstructor.commit();
 
-    auto stencilClassDestructor = stencilClass.addDestructor(false /*isVirtual*/);
-    generateStencilClassDtr(stencilClassDestructor, stencil);
-    stencilClassDestructor.commit();
+    if(stencil.getMetadata().hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+      auto stencilClassDestructor = stencilClass.addDestructor(false /*isVirtual*/);
+      generateStencilClassDtr(stencilClassDestructor, stencil);
+      stencilClassDestructor.commit();
+    }
 
     // grid helper fun
     //    can not be placed in cuda utils sinze it needs LEVELS_PER_THREAD and BLOCK_SIZE, which

@@ -251,9 +251,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
       auto originalAccessID = metadata.getOriginalVersionOfAccessID(accessID);
 
-      StencilWrapperConstructor.addStatement("m_" + metadata.getNameFromAccessID(accessID) +
-                                             " = allocateFieldLike(LibTag{}, " +
-                                             metadata.getNameFromAccessID(originalAccessID) + ")");
+      StencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) +
+                                        "(allocateFieldLike(LibTag{}, " +
+                                        metadata.getNameFromAccessID(originalAccessID) + "))");
     }
   }
 

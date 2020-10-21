@@ -81,8 +81,6 @@ public:
   const T* data() const { return atlas_field_.data(); }
   int numElements() const { return atlas_field_.shape(0); }
 
-  VerticalField()
-      : atlas_field_(atlas::array::make_view<T, 1>(*atlas::array::Array::create<T>(0))){};
   VerticalField(atlas::array::ArrayView<T, 1> const& atlas_field) : atlas_field_(atlas_field) {}
 
 private:
@@ -117,7 +115,6 @@ public:
     return std::make_tuple(atlas_field_.shape(0), atlas_field_.shape(1));
   }
 
-  Field() : atlas_field_(atlas::array::make_view<T, 2>(*atlas::array::Array::create<T>(0, 0))){};
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
 private:
@@ -166,9 +163,6 @@ public:
                            sparse_dimension_.shape(2));
   }
 
-  SparseDimension()
-      : sparse_dimension_(
-            atlas::array::make_view<T, 3>(*atlas::array::Array::create<T>(0, 0, 0))){};
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
       : sparse_dimension_(sparse_dimension) {}
 
