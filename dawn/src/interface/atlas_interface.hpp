@@ -126,8 +126,8 @@ private:
 
 template <typename T>
 Field<T> allocateFieldLike(atlasTag, const Field<T>& other) {
-  // leaky!
   auto shape = other.getShape();
+  // leaky!
   auto field = new atlas::Field("copy", atlas::array::DataType::real64(),
                                 atlas::array::make_shape(std::get<0>(shape), std::get<1>(shape)));
   return Field<T>(atlas::array::make_view<T, 2>(*field));
@@ -178,8 +178,8 @@ private:
 
 template <typename T>
 SparseDimension<T> allocateFieldLike(atlasTag, const SparseDimension<T>& other) {
-  // leaky!
   auto shape = other.getShape();
+  // leaky!
   auto field = new atlas::Field("copy", atlas::array::DataType::real64(), std::get<0>(shape),
                                 std::get<1>(shape), std::get<2>(shape));
   return SparseDimension<T>(atlas::array::make_view<double, 3>(*field));
