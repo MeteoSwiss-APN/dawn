@@ -28,7 +28,7 @@ namespace dawn {
 class verifier {
 public:
   verifier(const domain& dom,
-           double precision = std::is_same<::dawn::float_type, double>::value ? 1e-10 : 1e-5)
+           double precision = std::is_same<::dawn::float_type, double>::value ? 1e-10 : 1e-2)
       : m_domain(dom), m_precision(precision) {}
 
   template <class FunctorType, class... StorageTypes>
