@@ -722,62 +722,70 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     // two functions if from host (from c / from fort), one function if simply passing the pointers
-    std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
     std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
-    if(fromHost) {
-      apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_from_c_host", apiRunFunStreams[0]));
-      apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_from_fort_host", apiRunFunStreams[1]));
-    } else {
-      apiRunFuns.push_back(
-          std::make_unique<MemberFunction>("double", "run_" + wrapperName, apiRunFunStreams[0]));
-    }
-
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-      apiRunFun->addArg("int k_size");
-      for(auto field : support::orderMap(stencil.getFields())) {
-        apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
-      }
-      apiRunFun->finishArgs();
-    }
-
-    // Write body only when run for implementation generation
-    if(!onlyDecl) {
-
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName +
-                                "<dawn::NoLibTag>::" + stencilName + " s(mesh, k_size)");
-      }
+    { // stringstreams need to outlive the correspondind MemberFunctions
+      std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
       if(fromHost) {
-        // depending if we are calling from c or from fortran, we need to transpose the data or not
-        apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
-        apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+        apiRunFuns.push_back(
+            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_c_host",
+                                             apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
+        apiRunFuns.push_back(
+            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_fort_host",
+                                             apiRunFunStreams[1], /*indent level*/ 0, onlyDecl));
       } else {
-        apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
-      }
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement("s.run()");
-        apiRunFun->addStatement("double time = s.get_time()");
-        apiRunFun->addStatement("s.reset()");
-      }
-      if(fromHost) {
-        apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
-        apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
-      }
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement("return time");
-        apiRunFun->commit();
+        apiRunFuns.push_back(std::make_unique<MemberFunction>(
+            "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
       }
 
-      for(const auto& stream : apiRunFunStreams) {
-        ssSW << stream.str();
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+        apiRunFun->addArg("int k_size");
+        for(auto field : support::orderMap(stencil.getFields())) {
+          apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
+        }
+        apiRunFun->finishArgs();
       }
 
-    } else {
-      for(const auto& stream : apiRunFunStreams) {
-        ssSW << stream.str() << ";\n";
+      // Write body only when run for implementation generation
+      if(!onlyDecl) {
+
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName +
+                                  "<dawn::NoLibTag>::" + stencilName + " s(mesh, k_size)");
+        }
+        if(fromHost) {
+          // depending if we are calling from c or from fortran, we need to transpose the data or
+          // not
+          apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
+          apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+        } else {
+          apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+        }
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->addStatement("s.run()");
+          apiRunFun->addStatement("double time = s.get_time()");
+          apiRunFun->addStatement("s.reset()");
+        }
+        if(fromHost) {
+          apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
+          apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+        }
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->addStatement("return time");
+          apiRunFun->commit();
+        }
+
+        for(const auto& stream : apiRunFunStreams) {
+          ssSW << stream.str();
+        }
+
+      } else {
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->commit();
+        }
+        for(const auto& stream : apiRunFunStreams) {
+          ssSW << stream.str() << ";\n";
+        }
       }
     }
   }

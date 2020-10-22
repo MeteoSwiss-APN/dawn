@@ -281,8 +281,8 @@ struct MemberFunction : public NewLine {
 
   /// @brief Declare function with return type (possibly empty) and the name of the function
   MemberFunction(const std::string& returnType, const std::string& name, std::stringstream& s,
-                 int il = 0)
-      : NewLine(s, il), IndentLevel(il) {
+                 int il = 0, bool onlyDecl = false)
+      : NewLine(s, il), IndentLevel(il), CanHaveBody(!onlyDecl) {
     if(!returnType.empty()) {
       ss() << returnType << " ";
     }
