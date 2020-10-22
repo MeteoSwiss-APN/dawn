@@ -215,7 +215,7 @@ void CudaIcoCodeGen::generateRunFun(
         case 4:
           return "dawn::UnstructuredIterationSpace::End";
         default:
-          assert(false);
+          throw std::runtime_error("Invalid magic number");
         }
       };
 
@@ -248,7 +248,7 @@ void CudaIcoCodeGen::generateRunFun(
                                               std::to_string(iterSpace->lowerOffset()) + "})"
                                         : "mesh_.NumVertices");
         default:
-          assert(false);
+          throw std::runtime_error("Invalid location type");
         }
       };
 
@@ -268,7 +268,7 @@ void CudaIcoCodeGen::generateRunFun(
                  spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
         default:
-          assert(false);
+          throw std::runtime_error("Invalid location type");
         }
       };
 

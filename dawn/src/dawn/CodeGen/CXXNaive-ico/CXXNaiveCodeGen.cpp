@@ -483,7 +483,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         case 4:
           return "::dawn::UnstructuredIterationSpace::End";
         default:
-          assert(false);
+          throw std::runtime_error("Invalid magic number");
         }
       };
 
