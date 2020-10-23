@@ -25,6 +25,7 @@
 #include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/UIDGenerator.h"
 #include "dawn/Support/Unreachable.h"
+#include <algorithm>
 #include <memory>
 #include <set>
 #include <string>
@@ -42,21 +43,43 @@ namespace impl {
 template <FieldAccessType T>
 struct GetAccessesOfTypeHelper;
 
+template <FieldAccessType... Args>
+struct VariadicGetAccessesOfTypeHelper;
+
+template <FieldAccessType T, FieldAccessType... Args>
+struct VariadicGetAccessesOfTypeHelper<T, Args...> {
+  auto operator()(FieldAccessMetadata meta) {
+    std::set<int> ret;
+    auto lhs = GetAccessesOfTypeHelper<T>{}(meta);
+    auto rhs = VariadicGetAccessesOfTypeHelper<Args...>{}(meta);
+    std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::inserter(ret, ret.begin()));
+    return ret;
+  }
+};
+template <>
+struct VariadicGetAccessesOfTypeHelper<> {
+  auto operator()(FieldAccessMetadata meta) { return std::set<int>(); }
+};
+
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::Literal> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
-    return fieldAccessMetadata.LiteralAccessIDToNameMap_;
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    std::set<int> keys;
+    for(auto kv : fieldAccessMetadata.LiteralAccessIDToNameMap_) {
+      keys.insert(kv.first);
+    }
+    return keys;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::GlobalVariable> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.GlobalVariableAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::Field> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.FieldAccessIDSet_;
   }
 };
@@ -68,20 +91,24 @@ struct GetAccessesOfTypeHelper<FieldAccessType::LocalVariable> {
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::StencilTemporary> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.TemporaryFieldAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::InterStencilTemporary> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.AllocatedFieldAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::APIField> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
-    return fieldAccessMetadata.apiFieldIDs_;
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    std::set<int> keys;
+    for(auto apiFields : fieldAccessMetadata.apiFieldIDs_) {
+      keys.insert(apiFields);
+    }
+    return keys;
   }
 };
 
@@ -138,9 +165,9 @@ public:
     return !getAccessesOfType<TFieldAccessType>().empty();
   }
 
-  template <FieldAccessType TFieldAccessType>
-  auto const& getAccessesOfType() const {
-    return impl::GetAccessesOfTypeHelper<TFieldAccessType>{}(fieldAccessMetadata_);
+  template <FieldAccessType... TFieldAccessType>
+  auto getAccessesOfType() const {
+    return impl::VariadicGetAccessesOfTypeHelper<TFieldAccessType...>{}(fieldAccessMetadata_);
   }
 
   void moveRegisteredFieldTo(FieldAccessType type, int accessID);
