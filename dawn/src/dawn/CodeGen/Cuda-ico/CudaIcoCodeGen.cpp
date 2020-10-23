@@ -387,12 +387,12 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
           dims.getHorizontalFieldDimension());
       if(hdims.isDense()) {
         ctor.addStatement("::dawn::allocField(&" +
-                          stencil.getMetadata().getNameFromAccessID(accessID) + "_, mesh_." +
+                          fname + "_, mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
                           kSizeStr + ")");
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
-                          locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0]) + ", " +
+                          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
                           chainToSparseSizeString(hdims.getNeighborChain()) + ", " + kSizeStr +
                           ")");
       }
