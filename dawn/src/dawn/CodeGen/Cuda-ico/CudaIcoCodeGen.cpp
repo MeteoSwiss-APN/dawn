@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/Cuda-ico/IcoChainSizes.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/CodeGen/F90Util.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
@@ -27,10 +28,12 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/Support/Exception.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
 #include <numeric>
 #include <sstream>
@@ -64,17 +67,19 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
-  CudaIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize, options.nsms,
-                    options.MaxBlocksPerSM, domain_size);
+  CudaIcoCodeGen CG(
+      stencilInstantiationMap, options.MaxHaloSize,
+      options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
+      options.OutputFortranInterface == "" ? std::nullopt
+                                           : std::make_optional(options.OutputFortranInterface));
 
   return CG.generateCode();
 }
 
-CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
-                               int maxBlocksPerSM, const Array3i& domainSize,
-                               const bool runWithSync)
-    : CodeGen(ctx, maxHaloPoints) {}
+CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
+                               std::optional<std::string> outputCHeader,
+                               std::optional<std::string> outputFortranInterface)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -210,7 +215,7 @@ void CudaIcoCodeGen::generateRunFun(
         case 4:
           return "dawn::UnstructuredIterationSpace::End";
         default:
-          assert(false);
+          throw std::runtime_error("Invalid magic number");
         }
       };
 
@@ -243,7 +248,7 @@ void CudaIcoCodeGen::generateRunFun(
                                               std::to_string(iterSpace->lowerOffset()) + "})"
                                         : "mesh_.NumVertices");
         default:
-          assert(false);
+          throw std::runtime_error("Invalid location type");
         }
       };
 
@@ -263,7 +268,7 @@ void CudaIcoCodeGen::generateRunFun(
                  spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
         default:
-          assert(false);
+          throw std::runtime_error("Invalid location type");
         }
       };
 
@@ -670,10 +675,8 @@ void CudaIcoCodeGen::generateStencilClasses(
 
 void CudaIcoCodeGen::generateAllAPIRunFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    CodeGenProperties& codeGenProperties, bool fromHost) {
+    CodeGenProperties& codeGenProperties, bool fromHost, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
-
-  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   CollectChainStrings chainCollector;
   std::set<std::vector<ast::LocationType>> chains;
@@ -719,79 +722,72 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     // two functions if from host (from c / from fort), one function if simply passing the pointers
-    std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
-    std::vector<std::stringstream> apiRunFunStreams(2);
-    if(fromHost) {
-      apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_impl_from_c_host", apiRunFunStreams[0]));
-      apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_impl_from_fort_host", apiRunFunStreams[1]));
-    } else {
-      apiRunFuns.push_back(std::make_unique<MemberFunction>(
-          "double", "run_" + wrapperName + "_impl", apiRunFunStreams[0]));
-    }
+    std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
+    { // stringstreams need to outlive the correspondind MemberFunctions
+      std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
+      if(fromHost) {
+        apiRunFuns.push_back(
+            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_c_host",
+                                             apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
+        apiRunFuns.push_back(
+            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_fort_host",
+                                             apiRunFunStreams[1], /*indent level*/ 0, onlyDecl));
+      } else {
+        apiRunFuns.push_back(std::make_unique<MemberFunction>(
+            "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
+      }
 
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-      apiRunFun->addArg("int k_size");
-      for(auto field : support::orderMap(stencil.getFields())) {
-        apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+        apiRunFun->addArg("int k_size");
+        for(auto field : support::orderMap(stencil.getFields())) {
+          apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
+        }
+        apiRunFun->finishArgs();
+      }
+
+      // Write body only when run for implementation generation
+      if(!onlyDecl) {
+
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName +
+                                  "<dawn::NoLibTag>::" + stencilName + " s(mesh, k_size)");
+        }
+        if(fromHost) {
+          // depending if we are calling from c or from fortran, we need to transpose the data or
+          // not
+          apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
+          apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+        } else {
+          apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+        }
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->addStatement("s.run()");
+          apiRunFun->addStatement("double time = s.get_time()");
+          apiRunFun->addStatement("s.reset()");
+        }
+        if(fromHost) {
+          apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
+          apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+        }
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->addStatement("return time");
+          apiRunFun->commit();
+        }
+
+        for(const auto& stream : apiRunFunStreams) {
+          ssSW << stream.str();
+        }
+
+      } else {
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->commit();
+        }
+        for(const auto& stream : apiRunFunStreams) {
+          ssSW << stream.str() << ";\n";
+        }
       }
     }
-
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag>::" + stencilName +
-                              " s(mesh, k_size)");
-    }
-    if(fromHost) {
-      // depending if we are calling from c or from fortran, we need to transpose the data or not
-      apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
-      apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
-    } else {
-      apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
-    }
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement("s.run()");
-      apiRunFun->addStatement("double time = s.get_time()");
-      apiRunFun->addStatement("s.reset()");
-    }
-    if(fromHost) {
-      apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
-      apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
-    }
-    for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addStatement("return time");
-      apiRunFun->commit();
-    }
-
-    for(const auto& stream : apiRunFunStreams) {
-      ssSW << stream.str();
-    }
-
-    // Need to count arguments for exporting bindings through GridTools bindgen
-    const int argCount = 2 + stencil.getFields().size();
-
-    // Export binding (if requested)
-    ssSW << "#ifdef DAWN_ENABLE_BINDGEN"
-         << "\n";
-    if(fromHost) {
-      Statement exportCMacroCall(ssSW);
-      Statement exportFMacroCall(ssSW);
-      exportCMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                       << "_from_c_host, run_" << wrapperName << "_impl_from_c_host)";
-      exportCMacroCall.commit();
-      exportFMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                       << "_from_fort_host, run_" << wrapperName << "_impl_from_fort_host)";
-      exportFMacroCall.commit();
-    } else {
-      Statement exportMacroCall(ssSW);
-      exportMacroCall << "BINDGEN_EXPORT_BINDING(" << argCount << ", run_" << wrapperName
-                      << ", run_" << wrapperName << "_impl"
-                      << ")";
-      exportMacroCall.commit();
-    }
-    ssSW << "#endif /*DAWN_ENABLE_BINDGEN*/"
-         << "\n";
   }
 }
 
@@ -1005,14 +1001,101 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   stencilWrapperClass.commit();
 
+  cudaNamespace.commit();
+  dawnNamespace.commit();
+  ssSW << "extern \"C\" {\n";
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
-
-  cudaNamespace.commit();
-  dawnNamespace.commit();
+  ssSW << "}\n";
 
   return ssSW.str();
+}
+
+void CudaIcoCodeGen::generateCHeaderSI(
+    std::stringstream& ssSW,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  using namespace codegen;
+
+  CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
+
+  ssSW << "extern \"C\" {\n";
+  bool fromHost = true;
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost,
+                             /*onlyDecl=*/true);
+  generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost,
+                             /*onlyDecl=*/true);
+  ssSW << "}\n";
+}
+
+std::string CudaIcoCodeGen::generateCHeader() const {
+  std::stringstream ssSW;
+  ssSW << "#pragma once\n";
+  ssSW << "#include \"driver-includes/defs.hpp\"\n";
+  ssSW << "#include \"driver-includes/cuda_utils.hpp\"\n";
+
+  for(const auto& nameStencilCtxPair : context_) {
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
+    generateCHeaderSI(ssSW, stencilInstantiation);
+  }
+
+  return ssSW.str();
+}
+
+static void
+generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
+                       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  // The following assert is needed because we have only one (user-defined) name for a stencil
+  // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
+  // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) ) however
+  // the interface would not be very useful if the name is generated.
+  DAWN_ASSERT_MSG(stencils.size() == 1,
+                  "Unable to generate interface. More than one stencil in stencil instantiation.");
+
+  const auto& stencil = *stencils[0];
+
+  std::vector<FortranInterfaceAPI> apis = {
+      FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
+                          FortranInterfaceAPI::InterfaceType::DOUBLE),
+      FortranInterfaceAPI("run_" + stencilInstantiation->getName() + "_from_fort_host",
+                          FortranInterfaceAPI::InterfaceType::DOUBLE)};
+  for(auto&& api : apis) {
+    api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
+    api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+    for(auto field : support::orderMap(stencil.getFields())) {
+      const int spatialDims = field.second.field.getFieldDimensions().numSpatialDimensions();
+      const int n = spatialDims > 1
+                        ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
+                        : spatialDims;
+
+      api.addArg(
+          field.second.Name,
+          FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+                                                        time whether we have fields in SP/DP */
+          ,
+          n);
+    }
+
+    fimGen.addAPI(std::move(api));
+  }
+}
+
+std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
+  std::stringstream ss;
+  IndentedStringStream iss(ss);
+
+  FortranInterfaceModuleGen fimGen(iss, moduleName);
+
+  for(const auto& nameStencilCtxPair : context_) {
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
+    generateF90InterfaceSI(fimGen, stencilInstantiation);
+  }
+
+  fimGen.commit();
+
+  return iss.str();
 }
 
 std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
@@ -1021,6 +1104,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
+
   for(const auto& nameStencilCtxPair : context_) {
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
     std::string code = generateStencilInstantiation(stencilInstantiation);
@@ -1029,14 +1113,36 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
+  if(codeGenOptions_.OutputCHeader) {
+    fs::path filePath = *codeGenOptions_.OutputCHeader;
+    std::ofstream headerFile;
+    headerFile.open(filePath);
+    if(headerFile) {
+      headerFile << generateCHeader();
+      headerFile.close();
+    } else {
+      throw std::runtime_error("Error writing to " + filePath.string() + ": " + strerror(errno));
+    }
+  }
+
+  if(codeGenOptions_.OutputFortranInterface) {
+    fs::path filePath = *codeGenOptions_.OutputFortranInterface;
+    std::string moduleName = filePath.filename().replace_extension("").string();
+    std::ofstream interfaceFile;
+    interfaceFile.open(filePath);
+    if(interfaceFile) {
+      interfaceFile << generateF90Interface(moduleName);
+      interfaceFile.close();
+    } else {
+      throw std::runtime_error("Error writing to " + filePath.string() + ": " + strerror(errno));
+    }
+  }
   std::vector<std::string> ppDefines{
-      "#ifdef DAWN_ENABLE_BINDGEN",
-      "#include <cpp_bindgen/export.hpp>",
-      "#endif /* DAWN_ENABLE_BINDGEN */",
       "#include \"driver-includes/unstructured_interface.hpp\"",
       "#include \"driver-includes/unstructured_domain.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
+      "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#define BLOCK_SIZE 16",

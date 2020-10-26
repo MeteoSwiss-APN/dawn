@@ -17,6 +17,6 @@ add_subdirectory(dawn)
 add_subdirectory(dawn4py-tests)
 add_subdirectory(driver-includes)
 
-if(HAS_UNSTRUCTURED_DEPS)
+if(atlas_FOUND AND eckit_FOUND)
     add_subdirectory(interface)
 endif()

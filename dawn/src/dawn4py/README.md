@@ -35,7 +35,7 @@ cd ./dawn/dawn && python setup.py develop
 
 ## Development
 
-Do not edit the `_dawn4py.cpp` file directly. Instead, run `dawn/scripts/refactor/make_pybind11_sources.py`.
+Do not edit the `_dawn4py.cpp` file directly. Instead, run `dawn/dawn/scripts/make_pybind11_sources.py`.
 
 ## Examples
 
