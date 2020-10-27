@@ -127,13 +127,9 @@ GT_FUNCTION T sqrt(const T x) {
  *
  * @see http://en.cppreference.com/w/cpp/algorithm/min
  */
-template <typename T>
-GT_FUNCTION T min(const T x, const T y) {
-#if DAWN_STORAGE_TYPE == DAWN_STORAGE_CUDA
+template <typename T, typename U>
+GT_FUNCTION auto min(const T x, const U y) -> decltype(x+y) {
   return x < y ? x : y;
-#else
-  return std::min(x, y);
-#endif
 }
 
 /**
@@ -141,13 +137,9 @@ GT_FUNCTION T min(const T x, const T y) {
  *
  * @see http://en.cppreference.com/w/cpp/algorithm/max
  */
-template <typename T>
-GT_FUNCTION T max(const T x, const T y) {
-#if DAWN_STORAGE_TYPE == DAWN_STORAGE_CUDA
+template <typename T, typename U>
+GT_FUNCTION auto max(const T x, const U y) -> decltype(x+y) {
   return x > y ? x : y;
-#else
-  return std::max(x, y);
-#endif
 }
 
 /**
