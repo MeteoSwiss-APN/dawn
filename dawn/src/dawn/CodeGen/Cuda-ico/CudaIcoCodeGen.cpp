@@ -819,8 +819,9 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
-        for(auto field : support::orderMap(stencil.getFields())) {
-          apiRunFun->addArg("::dawn::float_type *" + field.second.Name);
+        for(auto accessID : stencil.getMetadata().getAPIFields()) {
+          apiRunFun->addArg("::dawn::float_type *" +
+                            stencil.getMetadata().getNameFromAccessID(accessID));
         }
         apiRunFun->finishArgs();
       }
