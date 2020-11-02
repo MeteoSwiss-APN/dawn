@@ -160,9 +160,9 @@ public:
   sir::FieldDimensions getFieldDimensions(int fieldID) const;
   void setFieldDimensions(int fieldID, sir::FieldDimensions&& fieldDimensions);
 
-  template <FieldAccessType TFieldAccessType>
+  template <FieldAccessType... TFieldAccessType>
   bool hasAccessesOfType() const {
-    return !getAccessesOfType<TFieldAccessType>().empty();
+    return !getAccessesOfType<TFieldAccessType...>().empty();
   }
 
   template <FieldAccessType... TFieldAccessType>
@@ -406,6 +406,8 @@ public:
   void resetLocalVarTypes();
 
   dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
+
+  const std::vector<int> getAPIFields() const { return fieldAccessMetadata_.apiFieldIDs_; }
 
 private:
   //================================================================================================

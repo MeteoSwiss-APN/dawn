@@ -26,6 +26,7 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 #include "driver-includes/unstructured_interface.hpp"
@@ -368,9 +369,12 @@ void CudaIcoCodeGen::generateRunFun(
 }
 
 static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
-  if(stencil.getMetadata().hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    for(auto accessID :
-        stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+  if(stencil.getMetadata()
+         .hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                            iir::FieldAccessType::StencilTemporary>()) {
+    for(auto accessID : stencil.getMetadata()
+                            .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                               iir::FieldAccessType::StencilTemporary>()) {
 
       auto fname = stencil.getMetadata().getFieldNameFromAccessID(accessID);
       auto dims = stencil.getMetadata().getFieldDimensions(accessID);
@@ -386,8 +390,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
       auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           dims.getHorizontalFieldDimension());
       if(hdims.isDense()) {
-        ctor.addStatement("::dawn::allocField(&" +
-                          fname + "_, mesh_." +
+        ctor.addStatement("::dawn::allocField(&" + fname + "_, mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
                           kSizeStr + ")");
       } else {
@@ -409,7 +412,7 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
     ctor.addArg("globals globals");
   }
 
-  const auto& APIFields = stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::APIField>();
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
 
   ctor.addArg("const dawn::mesh_t<LibTag>& mesh");
   ctor.addArg("int kSize");
@@ -456,11 +459,13 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
 
 void CudaIcoCodeGen::generateStencilClassDtr(MemberFunction& stencilClassDtor,
                                              const iir::Stencil& stencil) {
-  DAWN_ASSERT_MSG(
-      stencil.getMetadata().hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>(),
-      "only generate dtor for stencils with temporaries!");
-  for(auto accessID :
-      stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+  bool requriesDtor = stencil.getMetadata()
+                          .hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                             iir::FieldAccessType::StencilTemporary>();
+  DAWN_ASSERT_MSG(requriesDtor, "only generate dtor for stencils with temporaries!");
+  for(auto accessID : stencil.getMetadata()
+                          .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                             iir::FieldAccessType::StencilTemporary>()) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(accessID);
     stencilClassDtor.addStatement("gpuErrchk(cudaFree(" + fname + "_))");
   }
@@ -494,7 +499,7 @@ void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
 void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
                                            const iir::Stencil& stencil) const {
 
-  const auto& APIFields = stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::APIField>();
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
 
   for(auto fieldID : APIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
@@ -532,7 +537,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
 void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
                                         const iir::Stencil& stencil) const {
 
-  const auto& APIFields = stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::APIField>();
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
 
   for(auto fieldID : APIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
@@ -548,7 +553,7 @@ void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
 
 void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil,
                                          bool rawPtrs) const {
-  const auto& APIFields = stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::APIField>();
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
   const auto& stenFields = stencil.getOrderedFields();
 
   // signature
@@ -690,7 +695,9 @@ void CudaIcoCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClassConstructor, stencil, globalsMap, codeGenProperties);
     stencilClassConstructor.commit();
 
-    if(stencil.getMetadata().hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+    if(stencil.getMetadata()
+           .hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                              iir::FieldAccessType::StencilTemporary>()) {
       auto stencilClassDestructor = stencilClass.addDestructor(false /*isVirtual*/);
       generateStencilClassDtr(stencilClassDestructor, stencil);
       stencilClassDestructor.commit();
@@ -757,8 +764,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     const std::string wrapperName = stencilInstantiation->getName();
 
     // generate compound strings first
-    const auto& APIFields =
-        stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::APIField>();
+    const auto& APIFields = stencil.getMetadata().getAPIFields();
     const auto& fields = stencil.getOrderedFields();
 
     // all fields
@@ -843,8 +849,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     // Need to count arguments for exporting bindings through GridTools bindgen
-    const int argCount =
-        2 + stencil.getMetadata().getAccessesOfType<iir::FieldAccessType::APIField>().size();
+    const int argCount = 2 + stencil.getMetadata().getAPIFields().size();
 
     // Export binding (if requested)
     ssSW << "#ifdef DAWN_ENABLE_BINDGEN"

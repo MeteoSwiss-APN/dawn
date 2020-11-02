@@ -175,7 +175,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::APIField>();
+  const auto& APIFields = metadata.getAPIFields();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const ::dawn::mesh_t<LibTag> &mesh");
@@ -236,7 +236,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       if(fieldInfo.IsTemporary)
         continue;
       initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
-                                              fieldInfo.field.getAccessID())
+                                              fieldInfo.field.getAccessID()) ||
+                                metadata.isAccessType(iir::FieldAccessType::StencilTemporary,
+                                                      fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
     }
@@ -247,13 +249,21 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-      auto originalAccessID = metadata.getOriginalVersionOfAccessID(accessID);
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                iir::FieldAccessType::StencilTemporary>()) {
+    for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                                   iir::FieldAccessType::StencilTemporary>()) {
 
-      StencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) +
-                                        "(allocateFieldLike(LibTag{}, " +
-                                        metadata.getNameFromAccessID(originalAccessID) + "))");
+      if(metadata.isMultiVersionedField(accessID)) {
+        int originalAccessID = metadata.getOriginalVersionOfAccessID(accessID);
+        StencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) +
+                                          "(allocateFieldLike(LibTag{}, " +
+                                          metadata.getNameFromAccessID(originalAccessID) + "))");
+      } else {
+        StencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) +
+                                          "(allocateFieldLike(LibTag{}, " +
+                                          metadata.getNameFromAccessID(accessID) + "))");
+      }
     }
   }
 
@@ -288,22 +298,30 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
   // Members
   //
   // Define allocated memebers if necessary
-  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                iir::FieldAccessType::StencilTemporary>()) {
 
-    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
-      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          metadata.getFieldDimensions(AccessID).getHorizontalFieldDimension());
-      std::string fieldType = dims.isSparse() ? "::dawn::sparse_" : "::dawn::";
-      switch(dims.getDenseLocationType()) {
-      case ast::LocationType::Cells:
-        fieldType += "cell_field_t<LibTag, ::dawn::float_type>";
-        break;
-      case ast::LocationType::Edges:
-        fieldType += "edge_field_t<LibTag, ::dawn::float_type>";
-        break;
-      case ast::LocationType::Vertices:
-        fieldType += "vertex_field_t<LibTag, ::dawn::float_type>";
-        break;
+    for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                                  iir::FieldAccessType::StencilTemporary>()) {
+      auto dims = metadata.getFieldDimensions(AccessID);
+      std::string fieldType;
+      if(dims.isVertical()) {
+        fieldType = "vertical_field_t<LibTag, ::dawn::float_type>";
+      } else {
+        auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+            dims.getHorizontalFieldDimension());
+        fieldType = hdims.isSparse() ? "::dawn::sparse_" : "::dawn::";
+        switch(hdims.getDenseLocationType()) {
+        case ast::LocationType::Cells:
+          fieldType += "cell_field_t<LibTag, ::dawn::float_type>";
+          break;
+        case ast::LocationType::Edges:
+          fieldType += "edge_field_t<LibTag, ::dawn::float_type>";
+          break;
+        case ast::LocationType::Vertices:
+          fieldType += "vertex_field_t<LibTag, ::dawn::float_type>";
+          break;
+        }
       }
       stencilWrapperClass.addMember(fieldType, "m_" + metadata.getFieldNameFromAccessID(AccessID));
     }
