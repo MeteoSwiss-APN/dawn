@@ -44,16 +44,16 @@ class CudaIcoCodeGen : public CodeGen {
 
 public:
   ///@brief constructor
-  CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
-                 int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync = true);
+  CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
+                 std::optional<std::string> outputCHeader,
+                 std::optional<std::string> outputFortranInterface);
   virtual ~CudaIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
-  struct CudaCodeGenOptions {
-    int nsms;
-    int maxBlocksPerSM;
-    Array3i domainSize;
-    bool runWithSync;
+  struct CudaIcoCodeGenOptions {
+    // TODO: consider adding options for hard-coded values (e.g. BLOCK_SIZE)
+    std::optional<std::string> OutputCHeader;
+    std::optional<std::string> OutputFortranInterface;
   };
 
 private:
@@ -75,7 +75,8 @@ private:
   void
   generateAllAPIRunFunctions(std::stringstream& ssSW,
                              const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                             CodeGenProperties& codeGenProperties, bool fromHost);
+                             CodeGenProperties& codeGenProperties, bool fromHost,
+                             bool onlyDecl = false) const;
 
   void generateGpuMesh(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                        Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
@@ -107,6 +108,15 @@ private:
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+
+  void
+  generateCHeaderSI(std::stringstream& ssSW,
+                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  std::string generateCHeader() const;
+
+  std::string generateF90Interface(std::string moduleName) const;
+
+  CudaIcoCodeGenOptions codeGenOptions_;
 };
 
 } // namespace cudaico

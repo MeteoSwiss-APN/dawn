@@ -15,7 +15,7 @@
 add_subdirectory(from-sir)
 add_subdirectory(serializer)
 
-if (HAS_UNSTRUCTURED_DEPS)
+if (atlas_FOUND AND eckit_FOUND)
   add_subdirectory(unstructured)
 endif()
 

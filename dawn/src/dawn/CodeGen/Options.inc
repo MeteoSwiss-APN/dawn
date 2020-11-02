@@ -45,5 +45,7 @@ OPT(int, nsms, 0, "nsms", "", "Number of (CUDA) SMs", "<nsms>", true, false)
 OPT(int, DomainSizeI, 0, "domain-size-i", "", "i domain size for compiler optimization", "", true, false)
 OPT(int, DomainSizeJ, 0, "domain-size-j", "", "j domain size for compiler optimization", "", true, false)
 OPT(int, DomainSizeK, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
+OPT(std::string, OutputCHeader, "", "output-c-header", "", "Write C header to <File>", "<File>", true, false)
+OPT(std::string, OutputFortranInterface, "", "output-f90-interface", "", "Write Fortran90 interface to <File>", "<File>", true, false)
 
 // clang-format on
