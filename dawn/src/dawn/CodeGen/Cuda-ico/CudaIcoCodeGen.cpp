@@ -825,31 +825,6 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         apiRunFun->finishArgs();
       }
 
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement(wrapperName + "<dawn::NoLibTag>::" + stencilName +
-                                " s(mesh, k_size)");
-      }
-      if(fromHost) {
-        // depending if we are calling from c or from fortran, we need to transpose the data or
-        // not
-        apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
-        apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
-      } else {
-        apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
-      }
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement("s.run()");
-        apiRunFun->addStatement("double time = s.get_time()");
-        apiRunFun->addStatement("s.reset()");
-      }
-      if(fromHost) {
-        apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
-        apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
-      }
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addStatement("return time");
-        apiRunFun->commit();
-      }
       // Write body only when run for implementation generation
       if(!onlyDecl) {
 
