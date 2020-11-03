@@ -233,8 +233,6 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     initCtr += "(mesh, k_size";
     for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
-      if(fieldInfo.IsTemporary)
-        continue;
       initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::InterStencilTemporary,
                                               fieldInfo.field.getAccessID()) ||
                                 metadata.isAccessType(iir::FieldAccessType::StencilTemporary,
@@ -361,15 +359,6 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     // fields used in the stencil
     const auto stencilFields = support::orderMap(stencil->getFields());
 
-    auto nonTempFields =
-        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-          return !p.second.IsTemporary;
-        });
-    auto tempFields =
-        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-          return p.second.IsTemporary;
-        });
-
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
@@ -411,7 +400,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClass.addMember("::dawn::mesh_t<LibTag> const&", "m_mesh");
     stencilClass.addMember("int", "m_k_size");
-    for(auto fieldIt : nonTempFields) {
+    for(auto fieldIt : stencilFields) {
       stencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
     }
@@ -428,7 +417,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClassCtr.addArg("::dawn::mesh_t<LibTag> const &mesh");
     stencilClassCtr.addArg("int k_size");
-    for(auto fieldIt : nonTempFields) {
+    for(auto fieldIt : stencilFields) {
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
 
@@ -439,7 +428,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClassCtr.addInit("m_mesh(mesh)");
     stencilClassCtr.addInit("m_k_size(k_size)");
-    for(auto fieldIt : nonTempFields) {
+    for(auto fieldIt : stencilFields) {
       stencilClassCtr.addInit("m_" + fieldIt.second.Name + "(" + fieldIt.second.Name + ")");
     }
 
@@ -459,13 +448,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
-    // for(auto fieldIt : nonTempFields) {
-    //   syncStoragesMethod.addStatement("m_" + fieldIt.second.Name + ".sync()");
-    // }
-
     syncStoragesMethod.commit();
 
     // accumulated extents of API fields
+    auto nonTempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return !p.second.IsTemporary;
+        });
     generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Unstructured);
 
     //

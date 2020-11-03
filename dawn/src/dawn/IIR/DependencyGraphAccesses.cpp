@@ -71,12 +71,17 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
   if(data.isHorizontalPointwise() && data.isVerticalPointwise())
     return " [style = dashed]";
   else {
-    const auto& hExtents = extent_cast<CartesianExtent const&>(data.horizontalExtent());
     const auto& vExtents = data.verticalExtent();
-    return " [label = \"<" + std::to_string(hExtents.iMinus()) + ", " +
-           std::to_string(hExtents.iPlus()) + ", " + std::to_string(hExtents.jMinus()) + ", " +
-           std::to_string(hExtents.jPlus()) + ", " + std::to_string(vExtents.minus()) + ", " +
-           std::to_string(vExtents.plus()) + ">\"]";
+    if(data.horizontalExtent().getType() == ast::GridType::Cartesian) {
+      const auto& hExtents = extent_cast<CartesianExtent const&>(data.horizontalExtent());
+      return " [label = \"<" + std::to_string(hExtents.iMinus()) + ", " +
+             std::to_string(hExtents.iPlus()) + ", " + std::to_string(hExtents.jMinus()) + ", " +
+             std::to_string(hExtents.jPlus()) + ", " + std::to_string(vExtents.minus()) + ", " +
+             std::to_string(vExtents.plus()) + ">\"]";
+    } else {
+      const auto& hExtents = extent_cast<UnstructuredExtent const&>(data.horizontalExtent());
+      return " [label = \"<HasExtent=" + std::to_string(hExtents.hasExtent()) + ">\"]";
+    }
   }
 }
 

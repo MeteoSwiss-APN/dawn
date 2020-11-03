@@ -27,6 +27,9 @@
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
 
+#include "dawn/AST/ASTStringifier.h"
+
+#include <memory>
 #include <set>
 #include <sstream>
 
@@ -72,10 +75,17 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 static void reportRaceCondition(const iir::Stmt& statement,
                                 iir::StencilInstantiation& instantiation) {
   std::stringstream ss;
+  // iir::Stmt* stmtCopy = (iir::Stmt*)&statement;
+  // static const std::shared_ptr<iir::Stmt> stmtCopyPtr(stmtCopy);
   if(isa<iir::IfStmt>(&statement)) {
     ss << "Unresolvable race-condition in body of if-statement\n";
+    // ss << "Unresolvable race-condition in body of if-statement "
+    //    << ast::ASTStringifier::toString(stmtCopyPtr) << "\n";
   } else {
     ss << "Unresolvable race-condition in statement\n";
+    // ss << "Unresolvable race-condition in statement " <<
+    // ast::ASTStringifier::toString(stmtCopyPtr)
+    //    << "\n";
   }
 
   // Print stack trace of stencil calls
@@ -85,6 +95,8 @@ static void reportRaceCondition(const iir::Stmt& statement,
     for(const auto& frame : stackTrace)
       stack.emplace(std::make_tuple(frame->Callee, frame->Loc));
   }
+
+  auto err = ss.str();
 
   throw SemanticError(ss.str() + createDiagnosticStackTrace(
                                      "detected during instantiation of stencil call: ", stack),
@@ -250,20 +262,8 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   getAccessIDFromAssignment(instantiation->getMetaData(), assignment, LHSAccessIDs, RHSAccessIDs);
 
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
-  int LHSAccessID = *LHSAccessIDs.begin();
-
-  // If the LHSAccessID is not part of the SCC, we cannot resolve the race-condition
-  for(std::set<int>& scc : *stencilSCCs) {
-    if(!scc.count(LHSAccessID)) {
-      if(dump)
-        graph.toDot("rc_" + instantiation->getName() + ".dot");
-      reportRaceCondition(statement, *instantiation);
-      // The function call above throws, so do not need a return here any longer. Will refactor
-      // further later. return RCKind::Unresolvable;
-    }
-  }
-
   DAWN_ASSERT_MSG(stencilSCCs->size() == 1, "only one strongly connected component can be handled");
+
   std::set<int>& stencilSCC = (*stencilSCCs)[0];
 
   std::set<int> renameCandiates;
