@@ -115,12 +115,12 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
                   rhs.getAccessesOfType<iir::FieldAccessType::Literal>()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::Field>() ==
                   rhs.getAccessesOfType<iir::FieldAccessType::Field>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::APIField>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::APIField>()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>() ==
                   rhs.getAccessesOfType<iir::FieldAccessType::StencilTemporary>()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>() ==
                   rhs.getAccessesOfType<iir::FieldAccessType::GlobalVariable>()));
+
+  IIR_EARLY_EXIT((lhs.getAPIFields() == rhs.getAPIFields()));
 
   // we compare the content of the maps since the shared-ptr's are not the same
   IIR_EARLY_EXIT((lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size()));

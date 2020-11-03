@@ -88,6 +88,13 @@ private:
 };
 
 template <typename T>
+VerticalField<T> allocateFieldLike(atlasTag, const VerticalField<T>& other) {
+  // leaky!
+  auto field = new atlas::Field("copy", atlas::array::DataType::real64(), other.numElements());
+  return VerticalField<T>(atlas::array::make_view<double, 1>(*field));
+}
+
+template <typename T>
 VerticalField<T> verticalFieldType(atlasTag);
 
 template <typename T>
@@ -102,13 +109,26 @@ public:
 
   T* data() { return atlas_field_.data(); }
   const T* data() const { return atlas_field_.data(); }
+
   int numElements() const { return atlas_field_.shape(0) * atlas_field_.shape(1); }
+  std::tuple<size_t, size_t> getShape() const {
+    return std::make_tuple(atlas_field_.shape(0), atlas_field_.shape(1));
+  }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
 private:
   atlas::array::ArrayView<T, 2> atlas_field_;
 };
+
+template <typename T>
+Field<T> allocateFieldLike(atlasTag, const Field<T>& other) {
+  auto shape = other.getShape();
+  // leaky!
+  auto field = new atlas::Field("copy", atlas::array::DataType::real64(),
+                                atlas::array::make_shape(std::get<0>(shape), std::get<1>(shape)));
+  return Field<T>(atlas::array::make_view<T, 2>(*field));
+}
 
 template <typename T>
 Field<T> cellFieldType(atlasTag);
@@ -134,8 +154,13 @@ public:
   }
   T* data() { return sparse_dimension_.data(); }
   const T* data() const { return sparse_dimension_.data(); }
+
   int numElements() const {
     return sparse_dimension_.shape(0) * sparse_dimension_.shape(1) * sparse_dimension_.shape(2);
+  }
+  std::tuple<size_t, size_t, size_t> getShape() const {
+    return std::make_tuple(sparse_dimension_.shape(0), sparse_dimension_.shape(1),
+                           sparse_dimension_.shape(2));
   }
 
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
@@ -144,6 +169,15 @@ public:
 private:
   atlas::array::ArrayView<T, 3> sparse_dimension_;
 };
+
+template <typename T>
+SparseDimension<T> allocateFieldLike(atlasTag, const SparseDimension<T>& other) {
+  auto shape = other.getShape();
+  // leaky!
+  auto field = new atlas::Field("copy", atlas::array::DataType::real64(), std::get<0>(shape),
+                                std::get<1>(shape), std::get<2>(shape));
+  return SparseDimension<T>(atlas::array::make_view<double, 3>(*field));
+}
 
 template <typename T>
 SparseDimension<T> sparseCellFieldType(atlasTag);

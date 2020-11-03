@@ -130,7 +130,7 @@ void CodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
     setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
                   globalProp.first);
     setter.finishArgs();
-    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);      
+    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
     setter.commit();
   }
 }
@@ -256,7 +256,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   // TODO not supported for unstructured
   if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
     int i = 0;
-    for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+    for(const auto& fieldID : metadata.getAPIFields()) {
       codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),
                                     getStorageType(metadata.getFieldDimensions(fieldID)));
       ++i;

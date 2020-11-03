@@ -22,6 +22,9 @@
 #include "dawn/IIR/LocalVariable.h"
 #include "dawn/Optimizer/Driver.h"
 #include "dawn/Optimizer/Lowering.h"
+#include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassFixVersionedInputFields.h"
+#include "dawn/Optimizer/PassSetStageLocationType.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -227,25 +230,25 @@ int main() {
         stencilName,
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
-            b.stage(LocType::Cells,
-                    b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
-                        b.stmt(b.assignExpr(b.at(cnt),
-                                            b.reduceOverNeighborExpr(
-                                                Op::plus, b.lit(1), b.lit(0),
-                                                {LocType::Cells, LocType::Edges, LocType::Cells}))),
-                        b.stmt(b.assignExpr(
-                            b.at(out_f),
-                            b.reduceOverNeighborExpr(
-                                Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
-                                b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
-                                             b.at(in_f, HOffsetType::noOffset, 0), Op::multiply),
-                                {LocType::Cells, LocType::Edges, LocType::Cells}))),
-                        b.stmt(b.assignExpr(
-                            b.at(out_f),
-                            b.binaryExpr(b.at(in_f),
-                                         b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
-                                         Op::plus))))))));
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
+                           b.stmt(b.assignExpr(
+                               b.at(cnt), b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
+                                                                   {LocType::Cells, LocType::Edges,
+                                                                    LocType::Cells}))),
+                           b.stmt(b.assignExpr(
+                               b.at(out_f),
+                               b.reduceOverNeighborExpr(
+                                   Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
+                                   b.binaryExpr(b.unaryExpr(b.at(cnt), Op::minus),
+                                                b.at(in_f, HOffsetType::noOffset, 0), Op::multiply),
+                                   {LocType::Cells, LocType::Edges, LocType::Cells}))),
+                           b.stmt(b.assignExpr(
+                               b.at(out_f),
+                               b.binaryExpr(b.at(in_f),
+                                            b.binaryExpr(b.lit(0.1), b.at(out_f), Op::multiply),
+                                            Op::plus))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
@@ -898,6 +901,45 @@ int main() {
                 b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                            b.stmt(b.assignExpr(b.at(out_f), b.binaryExpr(b.at(global), b.at(in_f),
                                                                          Op::multiply))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto dense = b.field("dense", LocType::Edges);
+    auto sparse =
+        b.field("sparse", {LocType::Edges, LocType::Cells, LocType::Vertices, LocType::Edges});
+    std::string stencilName = "tempField";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Edges,
+                    b.doMethod(
+                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(b.at(dense), b.reduceOverNeighborExpr(
+                                                             Op::plus, b.at(sparse), b.lit(0.),
+                                                             {LocType::Edges, LocType::Cells,
+                                                              LocType::Vertices, LocType::Edges}))),
+                        b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse),
+                                                            b.at(dense, HOffsetType::withOffset, 0),
+                                                            Op::assign)),
+                                        {LocType::Edges, LocType::Cells, LocType::Vertices,
+                                         LocType::Edges}))))));
+
+    dawn::PassFieldVersioning passFieldVersioning;
+    dawn::PassFixVersionedInputFields passFixVersionedInputFields;
+    dawn::PassSetStageLocationType passSetStageLocationType;
+    passFieldVersioning.run(stencilInstantiation);
+    passFixVersionedInputFields.run(stencilInstantiation);
+    passSetStageLocationType.run(stencilInstantiation);
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");

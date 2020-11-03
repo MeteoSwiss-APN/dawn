@@ -145,7 +145,7 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   // Generate the run method by generate code for the stencil description AST
   MemberFunction runMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+  for(const auto& fieldID : metadata.getAPIFields()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     runMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, name) + " " + name);
   }

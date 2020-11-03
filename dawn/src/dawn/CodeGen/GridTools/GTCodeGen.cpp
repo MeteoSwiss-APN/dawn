@@ -368,7 +368,7 @@ void GTCodeGen::generateStencilWrapperRun(
 
   std::vector<std::string> apiFieldNames;
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+  for(const auto& fieldID : metadata.getAPIFields()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     apiFieldNames.push_back(name);
   }
@@ -618,8 +618,8 @@ void GTCodeGen::generateStencilClasses(
 
         if(fields.empty() && !stencilFun->hasReturn()) {
           throw SemanticError(std::string("No storages referenced in stencil '") +
-                              stencilInstantiation->getName() +
-                              "', this would result in invalid gridtools code",
+                                  stencilInstantiation->getName() +
+                                  "', this would result in invalid gridtools code",
                               stencilInstantiation->getMetaData().getFileName(),
                               stencilInstantiation->getMetaData().getStencilLocation());
         }
@@ -647,16 +647,19 @@ void GTCodeGen::generateStencilClasses(
               iir::extent_cast<dawn::iir::CartesianExtent const&>(extents.horizontalExtent());
           auto const& vExtents = extents.verticalExtent();
 
-          extent.addTemplate(std::to_string(hExtents.iMinus()) + ", " + std::to_string(hExtents.iPlus()));
-          extent.addTemplate(std::to_string(hExtents.jMinus()) + ", " + std::to_string(hExtents.jPlus()));
-          extent.addTemplate(std::to_string(vExtents.minus()) + ", " + std::to_string(vExtents.plus()));
+          extent.addTemplate(std::to_string(hExtents.iMinus()) + ", " +
+                             std::to_string(hExtents.iPlus()));
+          extent.addTemplate(std::to_string(hExtents.jMinus()) + ", " +
+                             std::to_string(hExtents.jPlus()));
+          extent.addTemplate(std::to_string(vExtents.minus()) + ", " +
+                             std::to_string(vExtents.plus()));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt + "accessor")
               .addTemplate(accessorID)
               .addTemplate(c_gt_intent + ((fields[m].getIntend() == iir::Field::IntendKind::Input)
-                                                ? "in"
-                                                : "inout"))
+                                              ? "in"
+                                              : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -787,8 +790,8 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
         if(fields.empty()) {
           throw SemanticError(std::string("No storages referenced in stencil '") +
-                              stencilInstantiation->getName() +
-                              "', this would result in invalid gridtools code",
+                                  stencilInstantiation->getName() +
+                                  "', this would result in invalid gridtools code",
                               stencilInstantiation->getMetaData().getFileName(),
                               stencilInstantiation->getMetaData().getStencilLocation());
         }
@@ -809,9 +812,12 @@ void GTCodeGen::generateStencilClasses(
               iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
           auto const& fieldVExtents = extents.verticalExtent();
 
-          extent.addTemplate(std::to_string(fieldHExtents.iMinus()) + ", " + std::to_string(fieldHExtents.iPlus()));
-          extent.addTemplate(std::to_string(fieldHExtents.jMinus()) + ", " + std::to_string(fieldHExtents.jPlus()));
-          extent.addTemplate(std::to_string(fieldVExtents.minus()) + ", " + std::to_string(fieldVExtents.plus()));
+          extent.addTemplate(std::to_string(fieldHExtents.iMinus()) + ", " +
+                             std::to_string(fieldHExtents.iPlus()));
+          extent.addTemplate(std::to_string(fieldHExtents.jMinus()) + ", " +
+                             std::to_string(fieldHExtents.jPlus()));
+          extent.addTemplate(std::to_string(fieldVExtents.minus()) + ", " +
+                             std::to_string(fieldVExtents.plus()));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt + "accessor")
@@ -980,9 +986,8 @@ void GTCodeGen::generateStencilClasses(
         (!domainMapPlaceholders.empty() ? RangeToString(", ", "", ",")(domainMapPlaceholders) : "");
 
     // This is a memory leak.. but nothing we can do ;)
-    StencilConstructor.addStatement("m_stencil = " + c_gt +
-                                    "make_computation<backend_t>(grid_, " + plchdrStr +
-                                    RangeToString(", ", "", ")")(makeComputation));
+    StencilConstructor.addStatement("m_stencil = " + c_gt + "make_computation<backend_t>(grid_, " +
+                                    plchdrStr + RangeToString(", ", "", ")")(makeComputation));
     StencilConstructor.commit();
 
     stencilClass.addComment("Members");

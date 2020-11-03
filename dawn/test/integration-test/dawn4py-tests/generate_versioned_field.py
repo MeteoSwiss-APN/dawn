@@ -26,7 +26,7 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 
-OUTPUT_NAME = "versioned_field_stencil"
+OUTPUT_NAME = "generate_versioned_field"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 

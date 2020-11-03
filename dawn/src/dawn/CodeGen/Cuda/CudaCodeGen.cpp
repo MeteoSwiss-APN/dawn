@@ -419,7 +419,7 @@ void CudaCodeGen::generateStencilWrapperRun(
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
   std::vector<std::string> apiFieldNames;
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+  for(const auto& fieldID : metadata.getAPIFields()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     apiFieldNames.push_back(name);
   }
@@ -522,8 +522,8 @@ void CudaCodeGen::generateStencilRunMethod(
 
     for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-      stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                    c_gt + "make_device_view( m_" + fieldName + ")");
+      stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " + c_gt +
+                                    "make_device_view( m_" + fieldName + ")");
     }
 
     iir::Extents maxExtents{ast::cartesian};
@@ -595,9 +595,8 @@ void CudaCodeGen::generateStencilRunMethod(
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       if(idx > 0)
         args += ",";
-      args += "(" + fieldName + ".data()+" + fieldName +
-             "_ds.get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
-             ".begin<1>(),0 ))";
+      args += "(" + fieldName + ".data()+" + fieldName + "_ds.get_storage_info_ptr()->index(" +
+              fieldName + ".begin<0>(), " + fieldName + ".begin<1>(),0 ))";
       ++idx;
     }
 
@@ -613,9 +612,9 @@ void CudaCodeGen::generateStencilRunMethod(
         args += ",";
       if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), metadata)) {
         const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
-        args += "(" + fieldName + ".data()+ m_" + fieldName +
-               ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
-               ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
+        args += "(" + fieldName + ".data()+ m_" + fieldName + ".get_storage_info_ptr()->index(" +
+                fieldName + ".begin<0>(), " + fieldName + ".begin<1>()," + fieldName +
+                ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
         args += metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       }
@@ -631,7 +630,7 @@ void CudaCodeGen::generateStencilRunMethod(
       kernelCall += "," + RangeToString(",", "", "")(strides);
     if(!args.empty())
       kernelCall += "," + args;
-    kernelCall +=  ")";
+    kernelCall += ")";
 
     stencilRunMethod.addStatement(kernelCall);
     stencilRunMethod.addStatement("}");

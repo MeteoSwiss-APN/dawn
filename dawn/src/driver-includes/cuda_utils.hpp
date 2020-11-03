@@ -120,6 +120,18 @@ inline void reshape_back(const dawn::float_type* input, dawn::float_type* output
       }
 }
 
+inline void allocField(dawn::float_type** cudaStorage, int kSize) {
+  gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * kSize));
+}
+inline void allocField(dawn::float_type** cudaStorage, int denseSize, int kSize) {
+  gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * denseSize * kSize));
+}
+
+inline void allocField(dawn::float_type** cudaStorage, int denseSize, int sparseSize, int kSize) {
+  gpuErrchk(
+      cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * denseSize * sparseSize * kSize));
+}
+
 template <class FieldT>
 void initField(const FieldT& field, dawn::float_type** cudaStorage, int kSize) {
   gpuErrchk(cudaMalloc((void**)cudaStorage, sizeof(dawn::float_type) * field.numElements()));
