@@ -48,7 +48,7 @@ struct VariadicGetAccessesOfTypeHelper;
 
 template <FieldAccessType T, FieldAccessType... Args>
 struct VariadicGetAccessesOfTypeHelper<T, Args...> {
-  auto operator()(FieldAccessMetadata meta) {
+  std::set<int> operator()(FieldAccessMetadata meta) {
     std::set<int> ret;
     auto lhs = GetAccessesOfTypeHelper<T>{}(meta);
     auto rhs = VariadicGetAccessesOfTypeHelper<Args...>{}(meta);
@@ -58,7 +58,7 @@ struct VariadicGetAccessesOfTypeHelper<T, Args...> {
 };
 template <>
 struct VariadicGetAccessesOfTypeHelper<> {
-  auto operator()(FieldAccessMetadata meta) { return std::set<int>(); }
+  std::set<int> operator()(FieldAccessMetadata meta) { return std::set<int>(); }
 };
 
 template <>
@@ -73,13 +73,13 @@ struct GetAccessesOfTypeHelper<FieldAccessType::Literal> {
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::GlobalVariable> {
-  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.GlobalVariableAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::Field> {
-  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.FieldAccessIDSet_;
   }
 };
@@ -91,19 +91,19 @@ struct GetAccessesOfTypeHelper<FieldAccessType::LocalVariable> {
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::StencilTemporary> {
-  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.TemporaryFieldAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::InterStencilTemporary> {
-  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.AllocatedFieldAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::APIField> {
-  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     std::set<int> keys;
     for(auto apiFields : fieldAccessMetadata.apiFieldIDs_) {
       keys.insert(apiFields);
@@ -166,7 +166,7 @@ public:
   }
 
   template <FieldAccessType... TFieldAccessType>
-  auto getAccessesOfType() const {
+  std::set<int> getAccessesOfType() const {
     return impl::VariadicGetAccessesOfTypeHelper<TFieldAccessType...>{}(fieldAccessMetadata_);
   }
 
