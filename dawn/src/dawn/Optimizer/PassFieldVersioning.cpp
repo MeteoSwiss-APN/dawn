@@ -212,7 +212,8 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   std::set<int> LHSAccessIDs, RHSAccessIDs;
 
-  if(assignment = std::dynamic_pointer_cast<iir::AssignmentExpr>(stmt->getExpr())) {
+  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(statement.get())) {
+    assignment = std::dynamic_pointer_cast<iir::AssignmentExpr>(stmt->getExpr());
     // Get AccessIDs of the LHS and RHS
     getAccessIDFromAssignment(instantiation->getMetaData(), assignment, LHSAccessIDs, RHSAccessIDs);
 
