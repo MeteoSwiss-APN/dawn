@@ -265,7 +265,7 @@ TEST(IsDAGAlgorithmTest, Test1) {
 
   graph.insertEdge(0, 1);
 
-  EXPECT_TRUE(graph.isDAG());
+  EXPECT_TRUE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 TEST(IsDAGAlgorithmTest, Test2) {
@@ -274,7 +274,7 @@ TEST(IsDAGAlgorithmTest, Test2) {
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 0);
 
-  EXPECT_FALSE(graph.isDAG());
+  EXPECT_FALSE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 TEST(IsDAGAlgorithmTest, Test3) {
@@ -284,7 +284,7 @@ TEST(IsDAGAlgorithmTest, Test3) {
   graph.insertEdge(1, 0);
   graph.insertEdge(2, 1);
 
-  EXPECT_FALSE(graph.isDAG());
+  EXPECT_FALSE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 TEST(IsDAGAlgorithmTest, Test4) {
@@ -296,7 +296,7 @@ TEST(IsDAGAlgorithmTest, Test4) {
   graph.insertEdge(2, 1);
   graph.insertEdge(2, 3);
 
-  EXPECT_TRUE(graph.isDAG());
+  EXPECT_TRUE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 TEST(IsDAGAlgorithmTest, Test5) {
@@ -309,7 +309,7 @@ TEST(IsDAGAlgorithmTest, Test5) {
 
   graph.insertEdge(4, 5);
 
-  EXPECT_TRUE(graph.isDAG());
+  EXPECT_TRUE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 TEST(IsDAGAlgorithmTest, Test6) {
@@ -323,7 +323,7 @@ TEST(IsDAGAlgorithmTest, Test6) {
   graph.insertEdge(4, 5);
   graph.insertEdge(5, 4);
 
-  EXPECT_FALSE(graph.isDAG());
+  EXPECT_FALSE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 TEST(IsDAGAlgorithmTest, Test7) {
@@ -332,7 +332,7 @@ TEST(IsDAGAlgorithmTest, Test7) {
   // Self-dependencies are fine!
   graph.insertEdge(0, 0);
 
-  EXPECT_TRUE(graph.isDAG());
+  EXPECT_TRUE(graph.containsInputOnlyAndOutputOnlyVertices());
 }
 
 //===------------------------------------------------------------------------------------------===//
