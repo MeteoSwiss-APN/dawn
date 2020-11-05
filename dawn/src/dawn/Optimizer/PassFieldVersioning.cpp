@@ -48,8 +48,8 @@ struct AccessIDGetter : public iir::ASTVisitorForwarding {
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
 static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadata,
-                                      iir::AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
-                                      std::set<int>& RHSAccessIDs) {
+                                      const std::shared_ptr<iir::AssignmentExpr>& assignment,
+                                      std::set<int>& LHSAccessIDs, std::set<int>& RHSAccessIDs) {
   auto computeAccessIDs = [&](const std::shared_ptr<iir::Expr>& expr, std::set<int>& AccessIDs) {
     AccessIDGetter getter{metadata};
     expr->accept(getter);
@@ -58,6 +58,22 @@ static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadat
 
   computeAccessIDs(assignment->getLeft(), LHSAccessIDs);
   computeAccessIDs(assignment->getRight(), RHSAccessIDs);
+}
+
+/// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
+static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadata,
+                                      const std::shared_ptr<iir::VarDeclStmt>& varDecl,
+                                      std::set<int>& LHSAccessIDs, std::set<int>& RHSAccessIDs) {
+  auto computeAccessIDs = [&](const std::shared_ptr<iir::Expr>& expr, std::set<int>& AccessIDs) {
+    AccessIDGetter getter{metadata};
+    expr->accept(getter);
+    AccessIDs = std::move(getter.AccessIDs);
+  };
+
+  LHSAccessIDs.insert(iir::getAccessID(varDecl));
+  for(const auto& expr : varDecl->getInitList()) {
+    computeAccessIDs(expr, RHSAccessIDs);
+  }
 }
 
 /// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
@@ -69,10 +85,10 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 }
 
 /// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const iir::Stmt& statement,
+static void reportRaceCondition(const std::shared_ptr<iir::Stmt>& statement,
                                 iir::StencilInstantiation& instantiation) {
   std::stringstream ss;
-  if(isa<iir::IfStmt>(&statement)) {
+  if(isa<iir::IfStmt>(statement.get())) {
     ss << "Unresolvable race-condition in body of if-statement\n";
   } else {
     ss << "Unresolvable race-condition in statement\n";
@@ -80,15 +96,15 @@ static void reportRaceCondition(const iir::Stmt& statement,
 
   // Print stack trace of stencil calls
   dawn::DiagnosticStack stack;
-  if(statement.getData<iir::IIRStmtData>().StackTrace) {
-    const auto& stackTrace = *statement.getData<iir::IIRStmtData>().StackTrace;
+  if(statement->getData<iir::IIRStmtData>().StackTrace) {
+    const auto& stackTrace = *statement->getData<iir::IIRStmtData>().StackTrace;
     for(const auto& frame : stackTrace)
       stack.emplace(std::make_tuple(frame->Callee, frame->Loc));
   }
 
   throw SemanticError(ss.str() + createDiagnosticStackTrace(
                                      "detected during instantiation of stencil call: ", stack),
-                      instantiation.getMetaData().getFileName(), statement.getSourceLocation());
+                      instantiation.getMetaData().getFileName(), statement->getSourceLocation());
 }
 
 } // namespace
@@ -163,81 +179,49 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  iir::Stmt& statement = *doMethod.getAST().getStatements()[index];
+  const std::shared_ptr<iir::Stmt>& statement = doMethod.getAST().getStatements()[index];
 
   int numRenames = 0;
-
-  // Vector of strongly connected components with atleast one stencil access
-  auto stencilSCCs = std::make_unique<std::vector<std::set<int>>>();
 
   // Find all strongly connected components in the graph ...
   auto SCCs = std::make_unique<std::vector<std::set<int>>>();
   graph.findStronglyConnectedComponents(*SCCs);
 
-  // ... and add those which have at least one stencil access
-  for(std::set<int>& scc : *SCCs) {
-    bool isStencilSCC = false;
+  // Check if we have self dependencies e.g `u = u(i+1)` (Our SCC algorithm does not capture SCCs
+  // of size one i.e single nodes)
+  for(const auto& AccessIDVertexPair : graph.getVertices()) {
+    const Vertex& vertex = AccessIDVertexPair.second;
 
-    for(int fromAccessID : scc) {
-      std::size_t fromVertexID = graph.getVertexIDFromValue(fromAccessID);
-
-      for(const Edge& edge : graph.getAdjacencyList()[fromVertexID]) {
-        if(scc.count(graph.getIDFromVertexID(edge.ToVertexID)) &&
-           isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
-          isStencilSCC = true;
-          stencilSCCs->emplace_back(std::move(scc));
-          break;
-        }
-      }
-
-      if(isStencilSCC)
+    for(const Edge& edge : graph.getAdjacencyList()[vertex.VertexID]) {
+      if(edge.FromVertexID == edge.ToVertexID &&
+         isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
+        SCCs->emplace_back(std::set<int>{vertex.Value});
         break;
-    }
-  }
-
-  if(stencilSCCs->empty()) {
-    // Check if we have self dependencies e.g `u = u(i+1)` (Our SCC algorithm does not capture SCCs
-    // of size one i.e single nodes)
-    for(const auto& AccessIDVertexPair : graph.getVertices()) {
-      const Vertex& vertex = AccessIDVertexPair.second;
-
-      for(const Edge& edge : graph.getAdjacencyList()[vertex.VertexID]) {
-        if(edge.FromVertexID == edge.ToVertexID &&
-           isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
-          stencilSCCs->emplace_back(std::set<int>{vertex.Value});
-          break;
-        }
       }
     }
   }
 
-  // If we only have non-stencil SCCs and there are no input and output fields (i.e we don't have a
-  // DAG) we have to break (by renaming) one of the SCCs to get a DAG. For example:
-  //
-  //  field_a = field_b;
-  //  field_b = field_a;
-  //
-  // needs to be renamed to
-  //
-  //  field_a = field_b_0;
-  //  field_b = field_a;
-  //
-  // ... and then field_b_0 must be initialized from field_b.
-  if(stencilSCCs->empty() && !SCCs->empty() && !graph.isDAG()) {
-    stencilSCCs->emplace_back(std::move(SCCs->front()));
-  }
-
-  if(stencilSCCs->empty())
+  if(SCCs->empty())
     return RCKind::Nothing;
 
   // Check whether our statement is an `ExprStmt` and contains an `AssignmentExpr`. If not,
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`, nothing
   // we can do (yet ;))
-  iir::AssignmentExpr* assignment = nullptr;
-  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(&statement))
-    assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
+  std::shared_ptr<iir::AssignmentExpr> assignment;
+  std::shared_ptr<iir::VarDeclStmt> varDecl;
 
-  if(!assignment) {
+  std::set<int> LHSAccessIDs, RHSAccessIDs;
+
+  if(assignment = std::dynamic_pointer_cast<iir::AssignmentExpr>(stmt->getExpr())) {
+    // Get AccessIDs of the LHS and RHS
+    getAccessIDFromAssignment(instantiation->getMetaData(), assignment, LHSAccessIDs, RHSAccessIDs);
+
+  } else if(varDecl = std::dynamic_pointer_cast<iir::VarDeclStmt>(statement)) {
+    // Get AccessIDs of the LHS and RHS
+    getAccessIDFromAssignment(instantiation->getMetaData(), varDecl, LHSAccessIDs, RHSAccessIDs);
+  }
+
+  if(!assignment && !varDecl) {
     if(dump)
       graph.toDot("rc_" + instantiation->getName() + ".dot");
     reportRaceCondition(statement, *instantiation);
@@ -245,52 +229,57 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     // further later. return RCKind::Unresolvable;
   }
 
-  // Get AccessIDs of the LHS and RHS
-  std::set<int> LHSAccessIDs, RHSAccessIDs;
-  getAccessIDFromAssignment(instantiation->getMetaData(), assignment, LHSAccessIDs, RHSAccessIDs);
-
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
   int LHSAccessID = *LHSAccessIDs.begin();
 
+  DAWN_ASSERT_MSG(SCCs->size() == 1, "only one strongly connected component can be handled");
+  std::set<int>& SCC = (*SCCs)[0];
+
   // If the LHSAccessID is not part of the SCC, we cannot resolve the race-condition
-  for(std::set<int>& scc : *stencilSCCs) {
-    if(!scc.count(LHSAccessID)) {
-      if(dump)
-        graph.toDot("rc_" + instantiation->getName() + ".dot");
-      reportRaceCondition(statement, *instantiation);
-      // The function call above throws, so do not need a return here any longer. Will refactor
-      // further later. return RCKind::Unresolvable;
-    }
+  if(!SCC.count(LHSAccessID)) {
+    if(dump)
+      graph.toDot("rc_" + instantiation->getName() + ".dot");
+    reportRaceCondition(statement, *instantiation);
+    // The function call above throws, so do not need a return here any longer. Will refactor
+    // further later. return RCKind::Unresolvable;
   }
 
-  DAWN_ASSERT_MSG(stencilSCCs->size() == 1, "only one strongly connected component can be handled");
-  std::set<int>& stencilSCC = (*stencilSCCs)[0];
-
   std::set<int> renameCandiates;
-  for(int AccessID : stencilSCC) {
+  for(int AccessID : SCC) {
     if(RHSAccessIDs.count(AccessID))
       renameCandiates.insert(AccessID);
   }
 
   std::stringstream ss;
   ss << instantiation->getName() << ": rename:";
+  std::vector<std::shared_ptr<iir::Expr>> replExprs;
+  if(assignment) {
+    replExprs.push_back(assignment->getRight());
+  } else if(varDecl) {
+    for(auto& expr : varDecl->getInitList()) {
+      replExprs.push_back(expr);
+    }
+  }
+
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
-                                             index, assignment->getRight(), RenameDirection::Above);
+    for(auto& expr : replExprs) {
+      int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
+                                               index, expr, RenameDirection::Above);
 
-    ss << (numRenames != 0 ? ", " : " ")
-       << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
-       << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
+      ss << (numRenames != 0 ? ", " : " ")
+         << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
+         << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
 
-    numRenames++;
+      numRenames++;
+    }
   }
 
   if(numRenames > 0)
-    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
+    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement->getSourceLocation())
         << ss.str();
   else
-    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
+    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement->getSourceLocation())
         << instantiation->getName() << ": No renames performed";
 
   numRenames_ += numRenames;
