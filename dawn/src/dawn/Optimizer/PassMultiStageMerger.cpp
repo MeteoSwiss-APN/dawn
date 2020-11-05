@@ -67,7 +67,7 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
     return ReturnType(multiStageDependencyGraph, multiStageLoopOrder);
 
   // Check if the resulting graph is no longer a DAG (i.e., cycles exist)
-  if(!multiStageDependencyGraph.isDAG())
+  if(!multiStageDependencyGraph.containsInputOnlyAndOutputOnlyVertices())
     return ReturnType(std::nullopt, multiStageLoopOrder);
 
   // Check all possible loop orders if there aren't any vertical conflicts

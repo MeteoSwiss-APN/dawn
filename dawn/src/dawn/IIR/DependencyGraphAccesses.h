@@ -123,9 +123,9 @@ public:
 
   /// @brief Check if the graph is a DAG
   ///
-  /// If the graph consists of non-connected subgraphs, it will check that each subgraph is a DAG.
-  /// In our context, a DAG is defined as having a non-empty set of input as well as output nodes.
-  bool isDAG() const;
+  /// If the graph consists of non-connected subgraphs, it will check that each subgraph contains a 
+  /// a non-empty set of nodes with indegree = 0 and a non-empty set of nodes with outdegree = 0.
+  bool containsInputOnlyAndOutputOnlyVertices() const;
 
   /// @brief Get the VertexIDs of the pure `output` vertices
   ///

@@ -226,7 +226,7 @@ void getOutputVertexIDsImpl(
   }
 }
 
-bool DependencyGraphAccesses::isDAG() const {
+bool DependencyGraphAccesses::containsInputOnlyAndOutputOnlyVertices() const {
   auto partitions = partitionInSubGraphs();
   std::vector<std::size_t> vertices;
 
