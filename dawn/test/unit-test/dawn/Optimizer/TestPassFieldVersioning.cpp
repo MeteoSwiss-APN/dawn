@@ -87,7 +87,9 @@ TEST_F(TestPassFieldVersioning, RaceCondition3) {
   }
   Note: Inlined
   */
-  raceConditionTest("input/TestPassFieldVersioning_03.iir");
+  auto instantiation = versioningTest("input/TestPassFieldVersioning_03.iir");
+  int idA = instantiation->getMetaData().getAccessIDFromName("field_a");
+  ASSERT_TRUE(instantiation->getMetaData().isMultiVersionedField(idA));
 }
 
 TEST_F(TestPassFieldVersioning, VersioningTest1) {

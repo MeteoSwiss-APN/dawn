@@ -128,7 +128,7 @@ void insertGraphStmt(iir::DependencyGraphAccesses& graph, const std::shared_ptr<
       graph.insertNode(writeAccess.first);
 
       for(const auto& readAccess : callerAccesses->getReadAccesses())
-        if(readAccess.second.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder)
+        if(!readAccess.second.getVerticalLoopOrderAccesses(loopOrder).LoopOrder)
           graph.insertEdge(writeAccess.first, readAccess.first, readAccess.second);
     }
   }
@@ -224,7 +224,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       }
     }
   }
-
+ 
   if(SCCs->empty())
     return RCKind::Nothing;
 
