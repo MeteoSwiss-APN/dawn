@@ -84,6 +84,12 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
 }
 
+/// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
+/// counter loop access in the vertical, or vertically indirected)
+static bool isHorizontalStencil(const iir::Extents& extent) {
+  return !extent.isHorizontalPointwise();
+}
+
 /// @brief Report a race condition in the given `statement`
 static void reportRaceCondition(const std::shared_ptr<iir::Stmt>& statement,
                                 iir::StencilInstantiation& instantiation) {
@@ -108,6 +114,25 @@ static void reportRaceCondition(const std::shared_ptr<iir::Stmt>& statement,
 }
 
 } // namespace
+
+void insertGraphStmt(iir::DependencyGraphAccesses& graph, const std::shared_ptr<iir::Stmt>& stmt,
+                     iir::LoopOrderKind loopOrder) {
+
+  if(!stmt->getChildren().empty()) {
+    for(const auto& s : stmt->getChildren())
+      insertGraphStmt(graph, s, loopOrder);
+  } else {
+    const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
+
+    for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
+      graph.insertNode(writeAccess.first);
+
+      for(const auto& readAccess : callerAccesses->getReadAccesses())
+        if(readAccess.second.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder)
+          graph.insertEdge(writeAccess.first, readAccess.first, readAccess.second);
+    }
+  }
+}
 
 bool PassFieldVersioning::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -139,7 +164,7 @@ bool PassFieldVersioning::run(
           oldGraph = newGraph;
 
           const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
-          newGraph.insertStatement(stmt);
+          insertGraphStmt(newGraph, stmt, loopOrder);
 
           // Try to resolve race-conditions by using double buffering if necessary
           auto rc = fixRaceCondition(stencilInstantiation, newGraph, stencil, doMethod, loopOrder,
@@ -152,7 +177,7 @@ bool PassFieldVersioning::run(
             // We fixed a race condition (this means some fields have changed and our current graph
             // is invalid)
             newGraph = oldGraph;
-            newGraph.insertStatement(stmt);
+            insertGraphStmt(newGraph, stmt, loopOrder);
           }
           doMethod.update(iir::NodeUpdateType::level);
         }
@@ -193,8 +218,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     const Vertex& vertex = AccessIDVertexPair.second;
 
     for(const Edge& edge : graph.getAdjacencyList()[vertex.VertexID]) {
-      if(edge.FromVertexID == edge.ToVertexID &&
-         isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
+      if(edge.FromVertexID == edge.ToVertexID && isHorizontalStencil(edge.Data)) {
         SCCs->emplace_back(std::set<int>{vertex.Value});
         break;
       }
