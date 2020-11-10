@@ -127,6 +127,11 @@ public:
   /// In our context, a DAG is defined as having a non-empty set of input as well as output nodes.
   bool isDAG() const;
 
+  /// @brief true if graph has nodes with indegree=0
+  bool hasZeroIndegreeNodes() const;
+  /// @brief true if graph has nodes with outdegree=0
+  bool hasZeroOutdegreeNodes() const;
+
   /// @brief Get the VertexIDs of the pure `output` vertices
   ///
   /// Output vertices are vertices which do not have incoming edges from other vertices.
