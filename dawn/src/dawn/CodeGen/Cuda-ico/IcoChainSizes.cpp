@@ -17,6 +17,7 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/Support/HashCombine.h"
 
+#include <stdexcept>
 #include <assert.h>
 #include <unordered_set>
 
