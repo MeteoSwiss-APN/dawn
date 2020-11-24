@@ -19,6 +19,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
+#include "driver-includes/unstructured_interface.hpp"
 #include <stack>
 #include <unordered_map>
 
@@ -61,6 +62,7 @@ protected:
 
   bool parentIsReduction_ = false;
   bool parentIsForLoop_ = false;
+  std::vector<ast::LocationType> currentChain_;
 
   size_t reductionDepth_ = 0;
 

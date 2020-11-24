@@ -123,7 +123,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
       << ": getNeighbors(LibTag{}, m_mesh," << nbhChainToVectorString(maybeChainPtr->getChain())
       << ", " << ASTStencilBody::StageIndexVarName() << "))";
   parentIsForLoop_ = true;
+  currentChain_ = maybeChainPtr->getChain();
   stmt->getBlockStmt()->accept(*this);
+  currentChain_.clear();
   parentIsForLoop_ = false;
   ss_ << "}";
 }
@@ -188,7 +190,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 }
 
 std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
-                            std::string kiterStr) {
+                                            std::string kiterStr) {
   bool isVertical = metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical();
   if(isVertical) {
     return kiterStr;
@@ -199,48 +201,62 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   bool isDense = unstrDims.isDense();
-  bool isSparse = unstrDims.isSparse();          
+  bool isSparse = unstrDims.isSparse();
 
   if(isFullField && isDense) {
     std::string resArgName = denseArgName_;
+    if((parentIsForLoop_ || parentIsReduction_) && reductionDepth_ == 1) {
+      if(unstrDims.getDenseLocationType() == currentChain_.front() &&
+         !ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
+              .hasOffset()) {
+        resArgName = "loc";
+      }
+    }
     if(!parentIsReduction_ && parentIsForLoop_) {
       resArgName =
           ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
                   .hasOffset()
               ? ASTStencilBody::LoopNeighborIndexVarName()
               : ASTStencilBody::StageIndexVarName();
-    }    
-    return "deref(LibTag{}, " + resArgName + "), " +  kiterStr;
+    }
+    return "deref(LibTag{}, " + resArgName + "), " + kiterStr;
   }
 
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string sparseIdx = parentIsReduction_
-                                  ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
-                                  : ASTStencilBody::LoopLinearIndexVarName();
-    return "deref(LibTag{}, " + sparseArgName_ +  ")," + sparseIdx  + ", " + kiterStr;
+                                ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
+                                : ASTStencilBody::LoopLinearIndexVarName();
+    return "deref(LibTag{}, " + sparseArgName_ + ")," + sparseIdx + ", " + kiterStr;
   }
 
   if(isHorizontal && isDense) {
     std::string resArgName = denseArgName_;
+    if((parentIsForLoop_ || parentIsReduction_) && reductionDepth_ == 1) {
+      if(unstrDims.getDenseLocationType() == currentChain_.front() &&
+         !ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
+              .hasOffset()) {
+        resArgName = "loc";
+      }
+    }
     if(!parentIsReduction_ && parentIsForLoop_) {
       resArgName =
           ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
                   .hasOffset()
               ? ASTStencilBody::LoopNeighborIndexVarName()
               : ASTStencilBody::StageIndexVarName();
-    }    
-    return "deref(LibTag{}, " + resArgName + ")";  
+    }
+    return "deref(LibTag{}, " + resArgName + ")";
   }
 
   if(isHorizontal && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string sparseIdx = parentIsReduction_
-                                  ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
-                                  : ASTStencilBody::LoopLinearIndexVarName();
-    return "deref(LibTag{}, " + sparseArgName_ +  ")," + sparseIdx;
+                                ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
+                                : ASTStencilBody::LoopLinearIndexVarName();
+    return "deref(LibTag{}, " + sparseArgName_ + ")," + sparseIdx;
   }
 
   DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
@@ -316,16 +332,23 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     }
   } else {
     if(!expr->getOffset().hasVerticalIndirection()) {
-      ss_ << "m_" << expr->getName() + "(" +
-                makeIndexString(expr, "(k + " +
-                                          std::to_string(expr->getOffset().verticalShift()) + ")") + ")";
+      ss_ << "m_"
+          << expr->getName() + "(" +
+                 makeIndexString(expr, "(k + " + std::to_string(expr->getOffset().verticalShift()) +
+                                           ")") +
+                 ")";
     } else {
       auto vertOffset = makeIndexString(std::static_pointer_cast<iir::FieldAccessExpr>(
-                          expr->getOffset().getVerticalIndirectionFieldAsExpr()), "k");         
-      ss_ << "m_" << expr->getName() + "(" +
-                makeIndexString(expr, "(m_" + expr->getOffset().getVerticalIndirectionFieldName() + "(" + vertOffset + ")" +
-                + " + " + std::to_string(expr->getOffset().verticalShift())+ ")")  + ")"; 
-    }   
+                                            expr->getOffset().getVerticalIndirectionFieldAsExpr()),
+                                        "k");
+      ss_ << "m_"
+          << expr->getName() + "(" +
+                 makeIndexString(expr, "(m_" + expr->getOffset().getVerticalIndirectionFieldName() +
+                                           "(" + vertOffset + ")" + +" + " +
+                                           std::to_string(expr->getOffset().verticalShift()) +
+                                           ")") +
+                 ")";
+    }
   }
 }
 
@@ -365,18 +388,24 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
 
   auto argName = denseArgName_;
   // arg names for dense and sparse location
+  // if(parentIsReduction_) {
   denseArgName_ =
       ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1); //<- always top of stack
+  // }
   sparseArgName_ =
       (parentIsReduction_)
           ? ASTStencilBody::ReductionIndexVarName(reductionDepth_)
           : ASTStencilBody::StageIndexVarName(); //<- distincion: upper most level or not
   // indicate if parent of subexpr is reduction
   parentIsReduction_ = true;
+  currentChain_ = expr->getNbhChain();
   reductionDepth_++;
   expr->getRhs()->accept(*this);
   reductionDepth_--;
-  parentIsReduction_ = false;
+  if(reductionDepth_ == 0) {
+    parentIsReduction_ = false;
+    currentChain_.clear();
+  }
   // "pop" argName
   denseArgName_ = argName;
   ss_ << ";\n";
