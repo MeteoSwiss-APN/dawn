@@ -105,4 +105,26 @@ TEST(IndirectionCheckerTest, Case_Fail2) {
   EXPECT_EQ(result, IndirectionChecker::IndirectionResult(false, dawn::SourceLocation()));
 }
 
+TEST(IndirectionCheckerTest, Case_Fail3) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells);
+  auto out = b.field("out", LocType::Cells);
+
+  // vertically indirected _write_, which is prohibited!
+  auto stencil = b.build(
+      "fail",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.stmt(b.assignExpr(b.at(out, AccessType::rw,
+                                                      ast::Offsets{ast::unstructured, false, 1}),
+                                                 b.at(in))))))));
+
+  auto result = IndirectionChecker::checkIndirections(*stencil->getIIR());
+  EXPECT_EQ(result, IndirectionChecker::IndirectionResult(false, dawn::SourceLocation()));
+}
+
 } // namespace
