@@ -87,7 +87,7 @@ bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
     if(!checkResultDimensions)
       throw SemanticError("Dimensions in SIR are not consistent at line " +
                           std::to_string(errorLocationDimensions.Line));
-    ;
+    
     auto [checkResultWeights, errorLocationWeights] =
         UnstructuredDimensionChecker::checkDimensionsConsistency(*sir);
     if(!checkResultWeights)
