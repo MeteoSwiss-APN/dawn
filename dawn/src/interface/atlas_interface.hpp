@@ -91,7 +91,14 @@ template <typename T>
 VerticalField<T> allocateFieldLike(atlasTag, const VerticalField<T>& other) {
   // leaky!
   auto field = new atlas::Field("copy", atlas::array::DataType::real64(), other.numElements());
-  return VerticalField<T>(atlas::array::make_view<double, 1>(*field));
+  return VerticalField<T>(atlas::array::make_view<T, 1>(*field));
+}
+
+inline VerticalField<::dawn::float_type> allocateField(atlasTag, size_t k_size) {
+  // leaky!
+  auto field = new atlas::Field("allocated", atlas::array::DataType::real64(),
+                                atlas::array::make_shape(k_size));
+  return VerticalField<::dawn::float_type>(atlas::array::make_view<::dawn::float_type, 1>(*field));
 }
 
 template <typename T>
@@ -128,6 +135,12 @@ Field<T> allocateFieldLike(atlasTag, const Field<T>& other) {
   auto field = new atlas::Field("copy", atlas::array::DataType::real64(),
                                 atlas::array::make_shape(std::get<0>(shape), std::get<1>(shape)));
   return Field<T>(atlas::array::make_view<T, 2>(*field));
+}
+
+inline Field<::dawn::float_type> allocateField(atlasTag, size_t num_el, size_t k_size) {
+  auto field = new atlas::Field("allocate", atlas::array::DataType::real64(),
+                                atlas::array::make_shape(num_el, k_size));
+  return Field<::dawn::float_type>(atlas::array::make_view<::dawn::float_type, 2>(*field));
 }
 
 template <typename T>
@@ -179,6 +192,15 @@ SparseDimension<T> allocateFieldLike(atlasTag, const SparseDimension<T>& other) 
   return SparseDimension<T>(atlas::array::make_view<double, 3>(*field));
 }
 
+inline SparseDimension<::dawn::float_type> allocateField(atlasTag, size_t num_el, size_t k_size,
+                                                         size_t sparse_size) {
+  // leaky!
+  auto field = new atlas::Field("allocate", atlas::array::DataType::real64(),
+                                atlas::array::make_shape(num_el, k_size, sparse_size));
+  return SparseDimension<::dawn::float_type>(
+      atlas::array::make_view<::dawn::float_type, 3>(*field));
+}
+
 template <typename T>
 SparseDimension<T> sparseCellFieldType(atlasTag);
 template <typename T>
@@ -214,6 +236,10 @@ inline auto getVertices(atlasTag, atlas::Mesh const& m, int lo, int hi) {
   assert(lo >= 0);
   return utility::irange(lo, hi);
 }
+
+inline auto numVertices(atlasTag, atlas::Mesh const& m) { return m.nodes().size(); }
+inline auto numCells(atlasTag, atlas::Mesh const& m) { return m.cells().size(); }
+inline auto numEdges(atlasTag, atlas::Mesh const& m) { return m.edges().size(); }
 
 inline std::vector<int> getNeighs(const atlas::Mesh::HybridElements::Connectivity& conn, int idx) {
   std::vector<int> neighs;
