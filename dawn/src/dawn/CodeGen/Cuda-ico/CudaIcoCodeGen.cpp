@@ -505,27 +505,17 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
                                            const iir::Stencil& stencil) const {
 
   const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& fields = stencil.getOrderedFields();
+  const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
 
-  for(auto field : fields) {
-    auto fname = field.second.Name;
-    copyFun.addArg("::dawn::float_type* " + fname);
-  }
-
-  for(auto fieldID : APIFields) {
-    if(fields.count(fieldID) == 0) {
-      continue;
-    }
+  for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
     copyFun.addArg("::dawn::float_type* " + fname);
   }
   copyFun.addArg("bool do_reshape");
 
   // call initField on each field
-  for(auto fieldID : APIFields) {
-    if(fields.count(fieldID) == 0) {
-      continue;
-    }
+  for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
     auto dims = stencil.getMetadata().getFieldDimensions(fieldID);
     if(dims.isVertical()) {
@@ -555,21 +545,16 @@ void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
                                         const iir::Stencil& stencil) const {
 
   const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& fields = stencil.getOrderedFields();
+  const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
 
-  for(auto fieldID : APIFields) {
-    if(fields.count(fieldID) == 0) {
-      continue;
-    }
+  for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
     copyFun.addArg("::dawn::float_type* " + fname);
   }
 
   // copy pointer to each field storage
-  for(auto fieldID : APIFields) {
-    if(fields.count(fieldID) == 0) {
-      continue;
-    }
+  for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
     copyFun.addStatement(fname + "_ = " + fname);
   }
@@ -579,12 +564,10 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
                                          bool rawPtrs) const {
   const auto& APIFields = stencil.getMetadata().getAPIFields();
   const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
 
   // signature
-  for(auto fieldID : APIFields) {
-    if(stenFields.count(fieldID) == 0) {
-      continue;
-    }
+  for(auto fieldID : usedAPIFields) {
     auto field = stenFields.at(fieldID);
     if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
        field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
@@ -641,10 +624,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
   };
 
   // function body
-  for(auto fieldID : APIFields) {
-    if(stenFields.count(fieldID) == 0) {
-      continue;
-    }
+  for(auto fieldID : usedAPIFields) {
     auto field = stenFields.at(fieldID);
     if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
        field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
@@ -795,16 +775,14 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
 
     // generate compound strings first
     const auto& APIFields = stencil.getMetadata().getAPIFields();
-    const auto& fields = stencil.getOrderedFields();
+    const auto& stenFields = stencil.getOrderedFields();
+    auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
 
     // all fields
     std::stringstream fieldsStr;
     {
       bool first = true;
-      for(auto fieldID : APIFields) {
-        if(fields.count(fieldID) == 0) {
-          continue;
-        }
+      for(auto fieldID : usedAPIFields) {
         if(!first) {
           fieldsStr << ", ";
         }
@@ -816,11 +794,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     // all input output fields
     std::stringstream ioFieldStr;
     bool first = true;
-    for(auto fieldID : APIFields) {
-      if(fields.count(fieldID) == 0) {
-        continue;
-      }
-      auto field = fields.at(fieldID);
+    for(auto fieldID : usedAPIFields) {
+      auto field = stenFields.at(fieldID);
       if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
          field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
         if(!first) {
