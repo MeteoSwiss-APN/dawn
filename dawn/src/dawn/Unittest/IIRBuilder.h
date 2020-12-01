@@ -348,6 +348,10 @@ public:
 
   Field field(std::string const& name, ast::LocationType denseLocation, bool maskK = true);
   Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
+
+  Field tmpField(std::string const& name, ast::LocationType denseLocation, bool maskK = true);
+  Field tmpField(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
+
   Field vertical_field(std::string const& name);
 };
 

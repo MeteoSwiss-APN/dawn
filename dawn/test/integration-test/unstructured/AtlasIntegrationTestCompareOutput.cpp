@@ -29,6 +29,7 @@
 #include "atlas/output/Gmsh.h"
 #include "interface/atlas_interface.hpp"
 
+#include <array/native/NativeArrayView.h>
 #include <atlas/util/CoordinateEnums.h>
 
 #include <gtest/gtest.h>
@@ -1039,8 +1040,6 @@ TEST(AtlasIntegrationTestCompareOutput, iterationSpaceUnstructured) {
   const int nb_levels = 1;
   const int level = 0;
 
-  printf("number of cells in mesh %d\n", mesh.cells().size());
-
   auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
   auto [in1_F, in1_v] = makeAtlasField("in_1", mesh.cells().size(), nb_levels);
   auto [in2_F, in2_v] = makeAtlasField("in_2", mesh.cells().size(), nb_levels);
@@ -1095,13 +1094,67 @@ TEST(AtlasIntegrationTestCompareOutput, globalVar) {
   // Run the stencil
   auto stencil = dawn_generated::cxxnaiveico::globalVar<atlasInterface::atlasTag>(
       mesh, static_cast<int>(nb_levels), in_v, out_v);
-  stencil.set_dt(dt);  
+  stencil.set_dt(dt);
   stencil.run();
 
   // Check correctness of the output
   for(int k = 0; k < nb_levels; k++) {
     for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
       ASSERT_EQ(out_v(cell_idx, k), dt);
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_tempFieldAllocation.hpp>
+TEST(AtlasIntegrationTestCompareOutput, tempFieldAllocation) {
+  auto mesh = generateQuadMesh(10, 10);
+  size_t nb_levels = 10;
+
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::tempFieldAllocation<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v, out_v);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(out_v(cell_idx, k), 2.);
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_sparseTempFieldAllocation.hpp>
+TEST(AtlasIntegrationTestCompareOutput, sparseTempFieldAllocation) {
+  auto mesh = generateEquilatMesh(10, 10);
+  size_t nb_levels = 10;
+
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::sparseTempFieldAllocation<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v, out_v);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(out_v(cell_idx, k), 3.);
     }
   }
 }
