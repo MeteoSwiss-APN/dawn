@@ -59,6 +59,7 @@ private:
     void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
     void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
     void visit(const std::shared_ptr<iir::VarAccessExpr>& stmt) override;
+    void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
 
     void setCurDimensionFromLocType(iir::LocalVariableType&& type);
     bool isConsistent() const { return dimensionsConsistent_; }

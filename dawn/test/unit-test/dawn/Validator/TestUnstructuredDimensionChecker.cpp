@@ -558,5 +558,22 @@ TEST(UnstructuredDimensionCheckerTest, VerticalIndirection) {
                                                                            1, "kidx"})))))))),
       ".*Dimensions consistency check failed.*");
 }
+TEST(UnstructuredDimensionCheckerTest, IfStmt) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cond = b.field("cond", LocType::Cells);
+  auto body = b.field("body", LocType::Edges);
+
+  EXPECT_DEATH(
+      auto stencil = b.build(
+          "fail", b.stencil(b.multistage(
+                      LoopOrderKind::Parallel,
+                      b.stage(b.doMethod(
+                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.ifStmt(b.at(cond), b.stmt(b.assignExpr(b.at(body), b.lit(1.))))))))),
+      ".*Dimensions consistency check failed.*");
+}
 
 } // namespace

@@ -582,7 +582,6 @@ UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain 
 }
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
-  DAWN_ASSERT(isSparse());
   return neighborChain_;
 }
 

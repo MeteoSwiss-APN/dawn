@@ -220,6 +220,50 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   setCurDimensionFromLocType(varAccessInfo.getType());
 }
 
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::IfStmt>& stmt) {
+  if(!dimensionsConsistent_) {
+    return;
+  }
+
+  using checker_t = UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl;
+
+  checker_t cond(nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+  checker_t ifBranch(nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+  checker_t elseBranch(nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
+
+  stmt->getCondExpr()->accept(cond);
+  stmt->getThenStmt()->accept(ifBranch);
+  if(stmt->hasElse()) {
+    stmt->getElseStmt()->accept(elseBranch);
+  }
+
+  std::vector<checker_t> checkers{cond, ifBranch};
+  if(stmt->hasElse()) {
+    checkers.push_back(elseBranch);
+  }
+
+  dimensionsConsistent_ &= std::all_of(checkers.begin(), checkers.end(),
+                                       [](const checker_t& c) { return c.isConsistent(); });
+  if(std::all_of(checkers.begin(), checkers.end(),
+                 [](const checker_t& c) { return c.hasHorizontalDimensions(); })) {
+    dimensionsConsistent_ &=
+        std::all_of(checkers.begin(), checkers.end(), [&checkers](const checker_t& c) {
+          return getUnstructuredDim(c.getDimensions()).getNeighborChain() ==
+                 getUnstructuredDim(checkers[0].getDimensions()).getNeighborChain();
+        });
+
+    if(curDimensions_.has_value()) {
+      dimensionsConsistent_ &= checkers[0].getDimensions() == curDimensions_;
+    } else {
+      curDimensions_ = checkers[0].getDimensions();
+    }
+  }
+  dimensionsConsistent_ |= std::none_of(checkers.begin(), checkers.end(), [](const checker_t& c) {
+    return c.hasHorizontalDimensions();
+  });
+}
+
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
                               ast::NeighborChain chain) {
   if(dim.isDense()) {
