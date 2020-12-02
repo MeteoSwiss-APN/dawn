@@ -1,5 +1,6 @@
 #include "UnstructuredDimensionChecker.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
@@ -245,23 +246,30 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   dimensionsConsistent_ &= std::all_of(checkers.begin(), checkers.end(),
                                        [](const checker_t& c) { return c.isConsistent(); });
-  if(std::all_of(checkers.begin(), checkers.end(),
+
+  if(std::any_of(checkers.begin(), checkers.end(),
                  [](const checker_t& c) { return c.hasHorizontalDimensions(); })) {
+    ast::NeighborChain chain;
+    const sir::FieldDimensions* dim;
+    for(const auto& checker : checkers) {
+      if(checker.hasHorizontalDimensions()) {
+        chain = getUnstructuredDim(checker.getDimensions()).getNeighborChain();
+        dim = &checker.getDimensions();
+      }
+    }
     dimensionsConsistent_ &=
-        std::all_of(checkers.begin(), checkers.end(), [&checkers](const checker_t& c) {
-          return getUnstructuredDim(c.getDimensions()).getNeighborChain() ==
-                 getUnstructuredDim(checkers[0].getDimensions()).getNeighborChain();
+        std::all_of(checkers.begin(), checkers.end(), [&chain](const checker_t& c) {
+          return c.hasHorizontalDimensions()
+                     ? getUnstructuredDim(c.getDimensions()).getNeighborChain() == chain
+                     : true;
         });
 
     if(curDimensions_.has_value()) {
-      dimensionsConsistent_ &= checkers[0].getDimensions() == curDimensions_;
+      dimensionsConsistent_ &= *dim == curDimensions_;
     } else {
-      curDimensions_ = checkers[0].getDimensions();
+      curDimensions_ = *dim;
     }
   }
-  dimensionsConsistent_ |= std::none_of(checkers.begin(), checkers.end(), [](const checker_t& c) {
-    return c.hasHorizontalDimensions();
-  });
 }
 
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,

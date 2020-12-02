@@ -633,7 +633,8 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtNestPassVert) {
       "pass",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Edges,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                              b.ifStmt(b.at(cond), b.ifStmt(b.at(inner_cond),
                                                            b.stmt(b.assignExpr(b.at(inner_body),
                                                                                b.lit(1.))))))))));
@@ -651,37 +652,5 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtNestPassVert) {
               UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
   }
 }
-
-// TEST(UnstructuredDimensionCheckerTest, IfStmtNestPass2) {
-//   using namespace dawn::iir;
-//   using LocType = dawn::ast::LocationType;
-
-//   UnstructuredIIRBuilder b;
-//   auto cond = b.field("cond", LocType::Edges);
-//   auto inner_cond = b.field("inner_cond", LocType::Edges);
-//   auto inner_body = b.field("inner_body", LocType::Edges);
-//   auto eField = b.field("eField", LocType::Edges);
-//   auto cField = b.field("cField", LocType::Cells);
-//   auto sparse = b.field("sparse", {LocType::Edges, LocType::Cells});
-
-//   auto stencil = b.build(
-//       "pass", b.stencil(b.multistage(
-//                   LoopOrderKind::Parallel,
-//                   b.stage(b.doMethod(
-//                       dawn::sir::Interval::Start, dawn::sir::Interval::End,
-//                       b.stmt(b.assignExpr(
-//                           b.at(eField),
-//                           b.reduceOverNeighborExpr(
-//                               Op::plus, b.binaryExpr(b.at(sparse), b.at(cField), Op::multiply),
-//                               b.lit(0), {LocType::Edges, LocType::Cells}))),
-//                       b.ifStmt(b.at(cond),
-//                                b.ifStmt(b.at(inner_cond),
-//                                         b.stmt(b.assignExpr(b.at(inner_body), b.lit(1.))))))))));
-
-//   auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
-//                                                                          stencil->getMetaData());
-//   EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true,
-//   dawn::SourceLocation()));
-// }
 
 } // namespace
