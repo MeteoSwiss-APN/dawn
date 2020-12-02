@@ -576,4 +576,48 @@ TEST(UnstructuredDimensionCheckerTest, IfStmt) {
       ".*Dimensions consistency check failed.*");
 }
 
+TEST(UnstructuredDimensionCheckerTest, IfStmtNest) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cond = b.field("cond", LocType::Cells);
+  auto inner_cond = b.field("inner_cond", LocType::Edges);
+  auto inner_body = b.field("inner_body", LocType::Edges);
+
+  EXPECT_DEATH(
+      auto stencil = b.build(
+          "fail", b.stencil(b.multistage(
+                      LoopOrderKind::Parallel,
+                      b.stage(b.doMethod(
+                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.ifStmt(b.at(cond), b.ifStmt(b.at(inner_cond),
+                                                        b.stmt(b.assignExpr(b.at(inner_body),
+                                                                            b.lit(1.)))))))))),
+      ".*Dimensions consistency check failed.*");
+}
+
+TEST(UnstructuredDimensionCheckerTest, IfStmtNestPass) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cond = b.field("cond", LocType::Edges);
+  auto inner_cond = b.field("inner_cond", LocType::Edges);
+  auto inner_body = b.field("inner_body", LocType::Edges);
+
+  auto stencil = b.build(
+      "fail",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.ifStmt(b.at(cond), b.ifStmt(b.at(inner_cond),
+                                                           b.stmt(b.assignExpr(b.at(inner_body),
+                                                                               b.lit(1.))))))))));
+
+  auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
+                                                                         stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
+
 } // namespace
