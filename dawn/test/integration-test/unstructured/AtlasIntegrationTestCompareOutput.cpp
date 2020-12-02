@@ -1095,7 +1095,7 @@ TEST(AtlasIntegrationTestCompareOutput, globalVar) {
   // Run the stencil
   auto stencil = dawn_generated::cxxnaiveico::globalVar<atlasInterface::atlasTag>(
       mesh, static_cast<int>(nb_levels), in_v, out_v);
-  stencil.set_dt(dt);  
+  stencil.set_dt(dt);
   stencil.run();
 
   // Check correctness of the output
