@@ -766,12 +766,50 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
   }
 
+  const std::string wrapperName = stencilInstantiation->getName();
+  {
+    std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
+    if(stencils.empty()) {
+      std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
+      if(fromHost) {
+        apiRunFuns.push_back(
+            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_c_host",
+                                             apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
+        apiRunFuns.push_back(
+            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_fort_host",
+                                             apiRunFunStreams[1], /*indent level*/ 0, onlyDecl));
+      } else {
+        apiRunFuns.push_back(std::make_unique<MemberFunction>(
+            "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
+      }
+
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+        apiRunFun->addArg("int k_size");
+        for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
+          apiRunFun->addArg("::dawn::float_type *" +
+                            stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
+        }
+        apiRunFun->finishArgs();
+        if(!onlyDecl) {
+          apiRunFun->startBody();
+          apiRunFun->addStatement("return 0.");
+        }
+        apiRunFun->commit();
+      }
+
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str() << ";\n";
+      }
+      return;
+    }
+  }
+
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
     const auto& stencil = *stencils[stencilIdx];
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
-    const std::string wrapperName = stencilInstantiation->getName();
 
     // generate compound strings first
     const auto& APIFields = stencil.getMetadata().getAPIFields();
@@ -1138,10 +1176,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
   // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) ) however
   // the interface would not be very useful if the name is generated.
-  DAWN_ASSERT_MSG(stencils.size() == 1,
+  DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
-
-  const auto& stencil = *stencils[0];
 
   std::vector<FortranInterfaceAPI> apis = {
       FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
@@ -1151,14 +1187,15 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   for(auto&& api : apis) {
     api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
     api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
-    for(auto field : support::orderMap(stencil.getFields())) {
-      const int spatialDims = field.second.field.getFieldDimensions().numSpatialDimensions();
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
+      const int spatialDims =
+          stencilInstantiation->getMetaData().getFieldDimensions(fieldID).numSpatialDimensions();
       const int n = spatialDims > 1
                         ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
                         : spatialDims;
 
       api.addArg(
-          field.second.Name,
+          stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
           FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
                                                         time whether we have fields in SP/DP */
           ,
