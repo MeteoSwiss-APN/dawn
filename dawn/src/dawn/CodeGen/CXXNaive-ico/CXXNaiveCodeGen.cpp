@@ -177,10 +177,10 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
 
   // Generate stencil wrapper constructor
   const auto& APIFields = metadata.getAPIFields();
-  auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
+  auto stencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const ::dawn::mesh_t<LibTag> &mesh");
-  StencilWrapperConstructor.addArg("int k_size");
+  stencilWrapperConstructor.addArg("const ::dawn::mesh_t<LibTag> &mesh");
+  stencilWrapperConstructor.addArg("int k_size");
 
   auto getLocationTypeString = [](ast::LocationType type) {
     switch(type) {
@@ -197,7 +197,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   };
   for(auto APIfieldID : APIFields) {
     if(metadata.getFieldDimensions(APIfieldID).isVertical()) {
-      StencilWrapperConstructor.addArg("::dawn::vertical_field_t<LibTag, ::dawn::float_type>& " +
+      stencilWrapperConstructor.addArg("::dawn::vertical_field_t<LibTag, ::dawn::float_type>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
       continue;
     }
@@ -206,13 +206,13 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
            .isDense()) {
       std::string typeString =
           getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
-      StencilWrapperConstructor.addArg("::dawn::" + typeString +
+      stencilWrapperConstructor.addArg("::dawn::" + typeString +
                                        "field_t<LibTag, ::dawn::float_type>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
     } else {
       std::string typeString =
           getLocationTypeString(metadata.getDenseLocationTypeFromAccessID(APIfieldID));
-      StencilWrapperConstructor.addArg("::dawn::sparse_" + typeString +
+      stencilWrapperConstructor.addArg("::dawn::sparse_" + typeString +
                                        "field_t<LibTag, ::dawn::float_type>& " +
                                        metadata.getNameFromAccessID(APIfieldID));
     }
@@ -245,54 +245,47 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       initCtr += ",m_globals";
     }
     initCtr += ")";
-    StencilWrapperConstructor.addInit(initCtr);
+    stencilWrapperConstructor.addInit(initCtr);
 
     if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
                                   iir::FieldAccessType::StencilTemporary>()) {
       for(auto accessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
                                                      iir::FieldAccessType::StencilTemporary>()) {
 
-        if(metadata.isMultiVersionedField(accessID)) {
-          int originalAccessID = metadata.getOriginalVersionOfAccessID(accessID);
-          StencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) +
-                                            "(allocateFieldLike(LibTag{}, " +
-                                            metadata.getNameFromAccessID(originalAccessID) + "))");
+        auto field = stencilFields.at(accessID).field;
+        std::string allocString;
+        if(field.getFieldDimensions().isVertical()) {
+          allocString = "allocateField(LibTag{}, k_size)";
         } else {
-          auto field = stencilFields.at(accessID).field;
-          std::string allocString;
-          if(field.getFieldDimensions().isVertical()) {
-            allocString = "allocateField(LibTag{}, k_size)";
-          } else {
-            auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-                field.getFieldDimensions().getHorizontalFieldDimension());
+          auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+              field.getFieldDimensions().getHorizontalFieldDimension());
 
-            auto getNumElCall = [](const sir::UnstructuredFieldDimension& hdims) -> std::string {
-              switch(hdims.getDenseLocationType()) {
-              case ast::LocationType::Cells:
-                return "numCells(LibTag{}, mesh)";
-              case ast::LocationType::Edges:
-                return "numEdges(LibTag{}, mesh)";
-              case ast::LocationType::Vertices:
-                return "numVertices(LibTag{}, mesh)";
-              default:
-                dawn_unreachable("invalid location");
-              }
-            };
-
-            if(hdims.isDense()) {
-              allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size)";
-            } else {
-              allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size, " +
-                            std::to_string(ICOChainSize(hdims.getNeighborChain())) + ")";
+          auto getNumElCall = [](const sir::UnstructuredFieldDimension& hdims) -> std::string {
+            switch(hdims.getDenseLocationType()) {
+            case ast::LocationType::Cells:
+              return "numCells(LibTag{}, mesh)";
+            case ast::LocationType::Edges:
+              return "numEdges(LibTag{}, mesh)";
+            case ast::LocationType::Vertices:
+              return "numVertices(LibTag{}, mesh)";
+            default:
+              dawn_unreachable("invalid location");
             }
+          };
 
-            StencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) + "(" +
-                                              allocString + ")");
+          if(hdims.isDense()) {
+            allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size)";
+          } else {
+            allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size, " +
+                          std::to_string(ICOChainSize(hdims.getNeighborChain())) + ")";
           }
+
+          stencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) + "(" +
+                                            allocString + ")");
         }
       }
     }
-    StencilWrapperConstructor.commit();
+    stencilWrapperConstructor.commit();
   }
 }
 

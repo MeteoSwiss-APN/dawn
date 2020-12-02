@@ -87,13 +87,6 @@ private:
   atlas::array::ArrayView<T, 1> atlas_field_;
 };
 
-template <typename T>
-VerticalField<T> allocateFieldLike(atlasTag, const VerticalField<T>& other) {
-  // leaky!
-  auto field = new atlas::Field("copy", atlas::array::DataType::real64(), other.numElements());
-  return VerticalField<T>(atlas::array::make_view<T, 1>(*field));
-}
-
 inline VerticalField<::dawn::float_type> allocateField(atlasTag, size_t k_size) {
   // leaky!
   auto field = new atlas::Field("allocated", atlas::array::DataType::real64(),
@@ -127,15 +120,6 @@ public:
 private:
   atlas::array::ArrayView<T, 2> atlas_field_;
 };
-
-template <typename T>
-Field<T> allocateFieldLike(atlasTag, const Field<T>& other) {
-  auto shape = other.getShape();
-  // leaky!
-  auto field = new atlas::Field("copy", atlas::array::DataType::real64(),
-                                atlas::array::make_shape(std::get<0>(shape), std::get<1>(shape)));
-  return Field<T>(atlas::array::make_view<T, 2>(*field));
-}
 
 inline Field<::dawn::float_type> allocateField(atlasTag, size_t num_el, size_t k_size) {
   auto field = new atlas::Field("allocate", atlas::array::DataType::real64(),
@@ -182,15 +166,6 @@ public:
 private:
   atlas::array::ArrayView<T, 3> sparse_dimension_;
 };
-
-template <typename T>
-SparseDimension<T> allocateFieldLike(atlasTag, const SparseDimension<T>& other) {
-  auto shape = other.getShape();
-  // leaky!
-  auto field = new atlas::Field("copy", atlas::array::DataType::real64(), std::get<0>(shape),
-                                std::get<1>(shape), std::get<2>(shape));
-  return SparseDimension<T>(atlas::array::make_view<double, 3>(*field));
-}
 
 inline SparseDimension<::dawn::float_type> allocateField(atlasTag, size_t num_el, size_t k_size,
                                                          size_t sparse_size) {

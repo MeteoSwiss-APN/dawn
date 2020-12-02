@@ -29,7 +29,6 @@
 #include "atlas/output/Gmsh.h"
 #include "interface/atlas_interface.hpp"
 
-#include <array/native/NativeArrayView.h>
 #include <atlas/util/CoordinateEnums.h>
 
 #include <gtest/gtest.h>
