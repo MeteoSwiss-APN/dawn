@@ -907,6 +907,7 @@ int main() {
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
+
   {
     using namespace dawn::iir;
     using LocType = dawn::ast::LocationType;
@@ -940,6 +941,64 @@ int main() {
     passFieldVersioning.run(stencilInstantiation);
     passFixVersionedInputFields.run(stencilInstantiation);
     passSetStageLocationType.run(stencilInstantiation);
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto in_f = b.field("in_field", LocType::Cells);
+    auto tmp_f = b.tmpField("tmp_field", LocType::Cells);
+    auto out_f = b.field("out_field", LocType::Cells);
+    std::string stencilName = "tempFieldAllocation";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.stmt(b.assignExpr(b.at(tmp_f), b.lit(1.))),
+                           b.stmt(b.assignExpr(
+                               b.at(out_f), b.binaryExpr(b.at(tmp_f), b.at(in_f), Op::plus))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto in_f = b.field("in_field", LocType::Cells);
+    auto tmp_f = b.tmpField("tmp_field", {LocType::Cells, LocType::Edges});
+    auto out_f = b.field("out_field", LocType::Cells);
+    std::string stencilName = "sparseTempFieldAllocation";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(
+                LocType::Cells,
+                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                           b.loopStmtChain(b.stmt(b.assignExpr(b.at(tmp_f), b.lit(1.))),
+                                           {LocType::Cells, LocType::Edges}),
+                           b.stmt(b.assignExpr(
+                               b.at(out_f),
+                               b.reduceOverNeighborExpr(
+                                   Op::plus, b.binaryExpr(b.at(tmp_f), b.at(in_f), Op::multiply),
+                                   b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");

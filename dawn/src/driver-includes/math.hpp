@@ -102,10 +102,10 @@ GT_FUNCTION T fmod(const T x, const T y) {
  * @param x Base value
  * @param y Exponent value
  *
- * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
+ * @see https://en.cppreference.com/w/cpp/numeric/math/pow
  */
-template <typename T>
-GT_FUNCTION T pow(const T x, const T y) {
+template <typename T, typename U>
+GT_FUNCTION T pow(const T x, const U y) {
   return ::pow(x, y);
 }
 
@@ -128,7 +128,7 @@ GT_FUNCTION T sqrt(const T x) {
  * @see http://en.cppreference.com/w/cpp/algorithm/min
  */
 template <typename T, typename U>
-GT_FUNCTION auto min(const T x, const U y) -> decltype(x+y) {
+GT_FUNCTION auto min(const T x, const U y) -> decltype(x + y) {
   return x < y ? x : y;
 }
 
@@ -138,7 +138,7 @@ GT_FUNCTION auto min(const T x, const U y) -> decltype(x+y) {
  * @see http://en.cppreference.com/w/cpp/algorithm/max
  */
 template <typename T, typename U>
-GT_FUNCTION auto max(const T x, const U y) -> decltype(x+y) {
+GT_FUNCTION auto max(const T x, const U y) -> decltype(x + y) {
   return x > y ? x : y;
 }
 
@@ -160,6 +160,97 @@ GT_FUNCTION T exp(const T arg) {
 template <typename T>
 GT_FUNCTION T log(const T x) {
   return ::log(x);
+}
+
+/**
+ * @brief Computes the sine of x
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/sin
+ */
+template <typename T>
+GT_FUNCTION T sin(const T x) {
+  return ::sin(x);
+}
+
+/**
+ * @brief Computes the cosine of x
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/cos
+ */
+template <typename T>
+GT_FUNCTION T cos(const T x) {
+  return ::cos(x);
+}
+
+/**
+ * @brief Computes the tangent of x
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/tan
+ */
+template <typename T>
+GT_FUNCTION T tan(const T x) {
+  return ::tan(x);
+}
+
+/**
+ * @brief Computes the arc sine of x
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/asin
+ */
+template <typename T>
+GT_FUNCTION T asin(const T x) {
+  return ::asin(x);
+}
+
+/**
+ * @brief Computes the arc cosine of x
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/acos
+ */
+template <typename T>
+GT_FUNCTION T acos(const T x) {
+  return ::acos(x);
+}
+
+/**
+ * @brief Computes the arc tangent of x
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/atan
+ */
+template <typename T>
+GT_FUNCTION T atan(const T x) {
+  return ::atan(x);
+}
+
+/**
+ * @brief Determines if the given floating point number arg has finite value i.e. it is normal,
+ * subnormal or zero, but not infinite or NaN.
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/isfinite
+ */
+template <typename T>
+GT_FUNCTION T isfinite(const T x) {
+  return std::isfinite(x);
+}
+
+/**
+ * @brief Determines if the given floating point number arg is a positive or negative infinity.
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/isinf
+ */
+template <typename T>
+GT_FUNCTION T isinf(const T x) {
+  return std::isinf(x);
+}
+
+/**
+ * @brief Determines if the given floating point number arg is a not-a-number (NaN) value.
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/isnan
+ */
+template <typename T>
+GT_FUNCTION T isnan(const T x) {
+  return std::isnan(x);
 }
 
 /** @} */
