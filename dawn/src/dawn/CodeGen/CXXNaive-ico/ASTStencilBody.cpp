@@ -371,18 +371,17 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
 
   ss_ << ", " << nbhChainToVectorString(expr->getNbhChain());
   if(hasWeights) {
-    ss_ << ", [&](auto& lhs, auto " << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1)
-        << ", auto const& weight) {\n";
+    ss_ << ", [&, " + ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) +
+               " = int(0)](auto& "
+               "lhs, auto "
+        << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1)
+        << ", auto const& weight) mutable {\n";
     ss_ << "lhs " << expr->getOp() << "= ";
     ss_ << "weight * ";
   } else {
-    ss_ << ", [&](auto& lhs, auto red_loc" << (reductionDepth_ + 1) << ") { ";
-    // generate this next red_loc only if the rhs contains further reductions
-    FindReduceOverNeighborExpr redFinder;
-    expr->getRhs()->accept(redFinder);
-    if(redFinder.hasReduceOverNeighborExpr()) {
-      ss_ << "int " << ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ + 1) << " = 0;";
-    }
+    ss_ << ", [&, " + ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) +
+               " = int(0)](auto& lhs, auto red_loc"
+        << (reductionDepth_ + 1) << ") mutable { ";
     ss_ << "lhs " << expr->getOp() << "= ";
   }
 

@@ -599,24 +599,8 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
                       continue;
 
                     for(const auto& stmt : doMethod.getAST().getStatements()) {
-
-                      // if this statement contains a ReduceOverNeighbrExpr but isnt the
-                      // first one we need to reset the neighborhood iterator
-                      FindReduceOverNeighborExpr findReduceOverNeighborExpr;
-                      stmt->accept(findReduceOverNeighborExpr);
-                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-                        StencilRunMethod.ss() << "{\n";
-                        StencilRunMethod.ss()
-                            << "int " << ASTStencilBody::ReductionSparseIndexVarName(0)
-                            << " = 0;\n";
-                      }
-
                       stmt->accept(stencilBodyCXXVisitor);
                       StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
-
-                      if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-                        StencilRunMethod.ss() << "}\n";
-                      }
                     }
                   }
                 });
