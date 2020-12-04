@@ -758,6 +758,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties, bool fromHost, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
+  DAWN_ASSERT_MSG(stencils.size() <= 1, "code generation only for at most one stencil!\n");
 
   CollectChainStrings chainCollector;
   std::set<std::vector<ast::LocationType>> chains;
@@ -766,74 +767,81 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
   }
 
-  for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
-    const auto& stencil = *stencils[stencilIdx];
+  const std::string wrapperName = stencilInstantiation->getName();
 
-    const std::string stencilName =
-        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
-    const std::string wrapperName = stencilInstantiation->getName();
-
-    // generate compound strings first
-    const auto& APIFields = stencil.getMetadata().getAPIFields();
-    const auto& stenFields = stencil.getOrderedFields();
-    auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
-
-    // all fields
-    std::stringstream fieldsStr;
-    {
-      bool first = true;
-      for(auto fieldID : usedAPIFields) {
-        if(!first) {
-          fieldsStr << ", ";
-        }
-        fieldsStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID);
-        first = false;
-      }
+  // two functions if from host (from c / from fort), one function if simply passing the pointers
+  std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
+  { // stringstreams need to outlive the correspondind MemberFunctions
+    std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
+    if(fromHost) {
+      apiRunFuns.push_back(
+          std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_c_host",
+                                           apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
+      apiRunFuns.push_back(
+          std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_fort_host",
+                                           apiRunFunStreams[1], /*indent level*/ 0, onlyDecl));
+    } else {
+      apiRunFuns.push_back(std::make_unique<MemberFunction>(
+          "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
     }
 
-    // all input output fields
-    std::stringstream ioFieldStr;
-    bool first = true;
-    for(auto fieldID : usedAPIFields) {
-      auto field = stenFields.at(fieldID);
-      if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-         field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
-        if(!first) {
-          ioFieldStr << ", ";
-        }
-        ioFieldStr << field.Name;
-        first = false;
+    for(auto& apiRunFun : apiRunFuns) {
+      apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+      apiRunFun->addArg("int k_size");
+      for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
+        apiRunFun->addArg("::dawn::float_type *" +
+                          stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
       }
+      apiRunFun->finishArgs();
     }
 
-    // two functions if from host (from c / from fort), one function if simply passing the pointers
-    std::vector<std::stringstream> apiRunFunStreams(fromHost ? 2 : 1);
-    { // stringstreams need to outlive the correspondind MemberFunctions
-      std::vector<std::unique_ptr<MemberFunction>> apiRunFuns;
-      if(fromHost) {
-        apiRunFuns.push_back(
-            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_c_host",
-                                             apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
-        apiRunFuns.push_back(
-            std::make_unique<MemberFunction>("double", "run_" + wrapperName + "_from_fort_host",
-                                             apiRunFunStreams[1], /*indent level*/ 0, onlyDecl));
+    // Write body only when run for implementation generation
+    if(!onlyDecl) {
+      if(stencils.empty()) {
+        for(auto& apiRunFun : apiRunFuns) {
+          apiRunFun->startBody();
+          apiRunFun->addStatement("return 0.");
+          apiRunFun->commit();
+        }
       } else {
-        apiRunFuns.push_back(std::make_unique<MemberFunction>(
-            "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
-      }
+        // we now know that there is exactly one stencil
+        const auto& stencil = *stencils[0];
 
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-        apiRunFun->addArg("int k_size");
-        for(auto accessID : stencil.getMetadata().getAPIFields()) {
-          apiRunFun->addArg("::dawn::float_type *" +
-                            stencil.getMetadata().getNameFromAccessID(accessID));
+        auto stenFields = stencil.getOrderedFields();
+        const auto& APIFields = stencilInstantiation->getMetaData().getAPIFields();
+        auto usedAPIFields =
+            makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+
+        // listing all used API fields
+        std::stringstream fieldsStr;
+        {
+          bool first = true;
+          for(auto fieldID : usedAPIFields) {
+            if(!first) {
+              fieldsStr << ", ";
+            }
+            fieldsStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID);
+            first = false;
+          }
         }
-        apiRunFun->finishArgs();
-      }
 
-      // Write body only when run for implementation generation
-      if(!onlyDecl) {
+        // listing all input & output fields
+        std::stringstream ioFieldStr;
+        bool first = true;
+        for(auto fieldID : usedAPIFields) {
+          auto field = stenFields.at(fieldID);
+          if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
+             field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+            if(!first) {
+              ioFieldStr << ", ";
+            }
+            ioFieldStr << field.Name;
+            first = false;
+          }
+        }
+
+        const std::string stencilName =
+            codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName +
@@ -860,18 +868,18 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           apiRunFun->addStatement("return time");
           apiRunFun->commit();
         }
+      }
 
-        for(const auto& stream : apiRunFunStreams) {
-          ssSW << stream.str();
-        }
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str();
+      }
 
-      } else {
-        for(auto& apiRunFun : apiRunFuns) {
-          apiRunFun->commit();
-        }
-        for(const auto& stream : apiRunFunStreams) {
-          ssSW << stream.str() << ";\n";
-        }
+    } else {
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->commit();
+      }
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str() << ";\n";
       }
     }
   }
@@ -1138,10 +1146,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
   // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) ) however
   // the interface would not be very useful if the name is generated.
-  DAWN_ASSERT_MSG(stencils.size() == 1,
+  DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
-
-  const auto& stencil = *stencils[0];
 
   std::vector<FortranInterfaceAPI> apis = {
       FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
@@ -1151,14 +1157,15 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   for(auto&& api : apis) {
     api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
     api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
-    for(auto field : support::orderMap(stencil.getFields())) {
-      const int spatialDims = field.second.field.getFieldDimensions().numSpatialDimensions();
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
+      const int spatialDims =
+          stencilInstantiation->getMetaData().getFieldDimensions(fieldID).numSpatialDimensions();
       const int n = spatialDims > 1
                         ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
                         : spatialDims;
 
       api.addArg(
-          field.second.Name,
+          stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
           FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
                                                         time whether we have fields in SP/DP */
           ,
