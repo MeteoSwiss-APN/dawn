@@ -34,17 +34,11 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_nestedWithSparse.hpp
   generated_reductionInIfConditional.hpp
   generated_sparseAssignment0.hpp
-  generated_SparseAssignment0.hpp
   generated_sparseAssignment1.hpp
-  generated_SparseAssignment1.hpp
   generated_sparseAssignment2.hpp
-  generated_SparseAssignment2.hpp
   generated_sparseAssignment3.hpp
-  generated_SparseAssignment3.hpp
   generated_sparseAssignment4.hpp
-  generated_SparseAssignment4.hpp
   generated_sparseAssignment5.hpp
-  generated_SparseAssignment5.hpp
   generated_sparseDimension.hpp
   generated_sparseDimensionTwice.hpp
   generated_sparseTempFieldAllocation.hpp
