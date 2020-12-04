@@ -1,6 +1,8 @@
 #include "UnstructuredDimensionChecker.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/SIR/SIR.h"
@@ -218,6 +220,33 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   setCurDimensionFromLocType(varAccessInfo.getType());
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::IfStmt>& ifStmt) {
+  visit(std::static_pointer_cast<iir::Stmt>(ifStmt));
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::BlockStmt>& blockStmt) {
+  visit(std::static_pointer_cast<iir::Stmt>(blockStmt));
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::Stmt>& stmt) {
+  std::optional<sir::FieldDimensions> prevDims = curDimensions_;
+  for(auto& s : stmt->getChildren()) {
+    s->accept(*this);
+    if(isConsistent() && hasHorizontalDimensions()) {
+      dimensionsConsistent_ &= (prevDims && !prevDims->isVertical())
+                                   ? getUnstructuredDim(*prevDims).getDenseLocationType() ==
+                                         getUnstructuredDim(*curDimensions_).getDenseLocationType()
+                                   : true;
+      prevDims = curDimensions_;
+    }
+  }
+  if(!isConsistent())
+    return;
 }
 
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
