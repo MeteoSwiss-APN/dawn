@@ -296,6 +296,24 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
   return {id, name};
 }
 
+IIRBuilder::Field UnstructuredIIRBuilder::tmpField(std::string const& name,
+                                                   ast::LocationType location, bool maskK) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::StencilTemporary, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, maskK));
+  return {id, name};
+}
+
+IIRBuilder::Field UnstructuredIIRBuilder::tmpField(std::string const& name,
+                                                   ast::NeighborChain sparseChain, bool maskK) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(
+      iir::FieldAccessType::StencilTemporary, name,
+      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, maskK));
+  return {id, name};
+}
+
 IIRBuilder::Field UnstructuredIIRBuilder::vertical_field(std::string const& name) {
   DAWN_ASSERT(si_);
   int id =

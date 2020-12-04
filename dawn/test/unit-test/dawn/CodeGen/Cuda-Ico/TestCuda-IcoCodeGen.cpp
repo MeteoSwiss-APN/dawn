@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "UnstructuredStencils.h"
-#include "dawn/CodeGen/Cuda-ico/IcoChainSizes.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
+#include "dawn/CodeGen/IcoChainSizes.h"
 #include "dawn/CodeGen/Options.h"
 #include "dawn/Serialization/IIRSerializer.h"
 
@@ -88,9 +88,9 @@ TEST(CudaIco, ChainSizes) {
 
   for(const auto& [chain, expected] : tests) {
     const auto actual = dawn::ICOChainSize(chain);
-    EXPECT_EQ(expected, actual) << "Incorrect neighbor size: "  << actual
-      << " (expected " << expected
-      << ") for neighborchain: " << dawn::codegen::cudaico::chainToVectorString(chain);
+    EXPECT_EQ(expected, actual) << "Incorrect neighbor size: " << actual << " (expected "
+                                << expected << ") for neighborchain: "
+                                << dawn::codegen::cudaico::chainToVectorString(chain);
   }
 }
 

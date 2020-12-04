@@ -70,6 +70,10 @@ inline std::vector<const toylib::ToylibElement*> getVertices(toylibTag, toylib::
   return ret;
 }
 
+inline auto numVertices(toylibTag, toylib::Grid const& grid) { return grid.vertices().size(); }
+inline auto numCells(toylibTag, toylib::Grid const& grid) { return grid.faces().size(); }
+inline auto numEdges(toylibTag, toylib::Grid const& grid) { return grid.edges().size(); }
+
 // Specialized to deref the reference_wrapper
 inline toylib::Edge const& deref(toylibTag, std::reference_wrapper<toylib::Edge> const& e) {
   return e; // implicit conversion
