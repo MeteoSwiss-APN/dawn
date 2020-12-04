@@ -223,7 +223,17 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::IfStmt>& stmt) {
+    const std::shared_ptr<iir::IfStmt>& ifStmt) {
+  visit(std::static_pointer_cast<iir::Stmt>(ifStmt));
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::BlockStmt>& blockStmt) {
+  visit(std::static_pointer_cast<iir::Stmt>(blockStmt));
+}
+
+void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
+    const std::shared_ptr<iir::Stmt>& stmt) {
   std::optional<sir::FieldDimensions> prevDims = curDimensions_;
   for(auto& s : stmt->getChildren()) {
     s->accept(*this);
