@@ -2,6 +2,7 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/SIR/SIR.h"
@@ -223,53 +224,19 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<iir::IfStmt>& stmt) {
-  if(!dimensionsConsistent_) {
+  std::optional<sir::FieldDimensions> prevDims = curDimensions_;
+  for(auto& s : stmt->getChildren()) {
+    s->accept(*this);
+    if(isConsistent() && hasHorizontalDimensions()) {
+      dimensionsConsistent_ &= (prevDims && !prevDims->isVertical())
+                                   ? getUnstructuredDim(*prevDims).getDenseLocationType() ==
+                                         getUnstructuredDim(*curDimensions_).getDenseLocationType()
+                                   : true;
+      prevDims = curDimensions_;
+    }
+  }
+  if(!isConsistent())
     return;
-  }
-
-  using checker_t = UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl;
-
-  checker_t cond(nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
-  checker_t ifBranch(nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
-  checker_t elseBranch(nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
-
-  stmt->getCondExpr()->accept(cond);
-  stmt->getThenStmt()->accept(ifBranch);
-  if(stmt->hasElse()) {
-    stmt->getElseStmt()->accept(elseBranch);
-  }
-
-  std::vector<checker_t> checkers{cond, ifBranch};
-  if(stmt->hasElse()) {
-    checkers.push_back(elseBranch);
-  }
-
-  dimensionsConsistent_ &= std::all_of(checkers.begin(), checkers.end(),
-                                       [](const checker_t& c) { return c.isConsistent(); });
-
-  if(std::any_of(checkers.begin(), checkers.end(),
-                 [](const checker_t& c) { return c.hasHorizontalDimensions(); })) {
-    ast::NeighborChain chain;
-    const sir::FieldDimensions* dim;
-    for(const auto& checker : checkers) {
-      if(checker.hasHorizontalDimensions()) {
-        chain = getUnstructuredDim(checker.getDimensions()).getNeighborChain();
-        dim = &checker.getDimensions();
-      }
-    }
-    dimensionsConsistent_ &=
-        std::all_of(checkers.begin(), checkers.end(), [&chain](const checker_t& c) {
-          return c.hasHorizontalDimensions()
-                     ? getUnstructuredDim(c.getDimensions()).getNeighborChain() == chain
-                     : true;
-        });
-
-    if(curDimensions_.has_value()) {
-      dimensionsConsistent_ &= *dim == curDimensions_;
-    } else {
-      curDimensions_ = *dim;
-    }
-  }
 }
 
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
