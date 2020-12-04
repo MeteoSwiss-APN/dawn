@@ -14,6 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Support/Assert.h"
 #include "driver-includes/unstructured_domain.hpp"
 #include "driver-includes/unstructured_interface.hpp"
 
@@ -1154,6 +1155,63 @@ TEST(AtlasIntegrationTestCompareOutput, sparseTempFieldAllocation) {
   for(int k = 0; k < nb_levels; k++) {
     for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
       ASSERT_EQ(out_v(cell_idx, k), 3.);
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_reductionInIfConditional.hpp>
+TEST(AtlasIntegrationTestCompareOutput, reductionInConditional) {
+  auto mesh = generateEquilatMesh(10, 10);
+  size_t nb_levels = 1;
+  const int level = 0;
+  const int edgesPerCell = 3;
+
+  auto [in_F, in_v] = makeAtlasField("in", mesh.cells().size(), nb_levels);
+  auto [e_F, e_v] = makeAtlasField("e", mesh.edges().size(), nb_levels);
+  auto [sparse_F, sparse_v] =
+      makeAtlasSparseField("sparse", mesh.cells().size(), edgesPerCell, nb_levels);
+  auto [out_F, out_v] = makeAtlasField("out", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(in_v, mesh.cells().size(), nb_levels, 1.0);
+  initField(out_v, mesh.cells().size(), nb_levels, -1.0);
+  initField(e_v, mesh.edges().size(), nb_levels, -1.0);
+  initSparseField(sparse_v, mesh.cells().size(), nb_levels, edgesPerCell, 1.);
+
+  auto isBoundaryEdge = [mesh](const int edgeIdx) -> bool {
+    return mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+               mesh.edges().cell_connectivity().missing_value() ||
+           mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+               mesh.edges().cell_connectivity().missing_value();
+  };
+
+  for(int edgeIdx = 0; edgeIdx < mesh.edges().size(); edgeIdx++) {
+    e_v(edgeIdx, level) = isBoundaryEdge(edgeIdx) ? 0 : 1;
+  }
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::reductionInIfConditional<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), in_v, sparse_v, e_v, out_v);
+  stencil.run();
+
+  // Check correctness of the output
+  {
+    const auto& conn = mesh.cells().edge_connectivity();
+    for(int cellIdx = 0; cellIdx < mesh.cells().size(); cellIdx++) {
+      int numInt = 0;
+      for(int nbhIdx = 0; nbhIdx < conn.cols(cellIdx); nbhIdx++) {
+        int edgeIdx = conn(cellIdx, nbhIdx);
+        if(!isBoundaryEdge(edgeIdx)) {
+          numInt++;
+        }
+      }
+      if(numInt < 3) {
+        ASSERT_EQ(out_v(cellIdx), 6);
+      } else {
+        ASSERT_EQ(out_v(cellIdx), 12);
+      }
     }
   }
 }
