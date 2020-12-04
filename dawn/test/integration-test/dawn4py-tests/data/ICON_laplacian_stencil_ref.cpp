@@ -54,41 +54,29 @@ private:
 {
     for(int k = 0+0; k <= ( m_k_size == 0 ? 0 : (m_k_size - 1)) + 0+0; ++k) {
       for(auto const& loc : getVertices(LibTag{}, m_mesh)) {
-{
-int sparse_dimension_idx0 = 0;
-m_rot_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Vertices, ::dawn::LocationType::Edges}, [&](auto& lhs, auto red_loc1) { lhs += (m_vec(deref(LibTag{}, red_loc1), (k + 0)) * m_geofac_rot(deref(LibTag{}, loc),sparse_dimension_idx0, (k + 0)));
+m_rot_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Vertices, ::dawn::LocationType::Edges}, [&, sparse_dimension_idx0 = int(0)](auto& lhs, auto red_loc1) mutable { lhs += (m_vec(deref(LibTag{}, red_loc1), (k + 0)) * m_geofac_rot(deref(LibTag{}, loc),sparse_dimension_idx0, (k + 0)));
 sparse_dimension_idx0++;
 return lhs;
 });
-}
       }      for(auto const& loc : getCells(LibTag{}, m_mesh)) {
-{
-int sparse_dimension_idx0 = 0;
-m_div_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Cells, ::dawn::LocationType::Edges}, [&](auto& lhs, auto red_loc1) { lhs += (m_vec(deref(LibTag{}, red_loc1), (k + 0)) * m_geofac_div(deref(LibTag{}, loc),sparse_dimension_idx0, (k + 0)));
+m_div_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Cells, ::dawn::LocationType::Edges}, [&, sparse_dimension_idx0 = int(0)](auto& lhs, auto red_loc1) mutable { lhs += (m_vec(deref(LibTag{}, red_loc1), (k + 0)) * m_geofac_div(deref(LibTag{}, loc),sparse_dimension_idx0, (k + 0)));
 sparse_dimension_idx0++;
 return lhs;
 });
-}
       }      for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
-{
-int sparse_dimension_idx0 = 0;
-m_nabla2t1_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Edges, ::dawn::LocationType::Vertices}, [&](auto& lhs, auto red_loc1, auto const& weight) {
+m_nabla2t1_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Edges, ::dawn::LocationType::Vertices}, [&, sparse_dimension_idx0 = int(0)](auto& lhs, auto red_loc1, auto const& weight) mutable {
 lhs += weight * m_rot_vec(deref(LibTag{}, red_loc1), (k + 0));
 sparse_dimension_idx0++;
 return lhs;
 }, std::vector<::dawn::float_type>({(::dawn::float_type) -1.0, (::dawn::float_type) 1.0}));
-}
       }      for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
 m_nabla2t1_vec(deref(LibTag{}, loc), (k + 0)) = ((m_tangent_orientation(deref(LibTag{}, loc), (k + 0)) * m_nabla2t1_vec(deref(LibTag{}, loc), (k + 0))) / m_primal_edge_length(deref(LibTag{}, loc), (k + 0)));
       }      for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
-{
-int sparse_dimension_idx0 = 0;
-m_nabla2t2_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Edges, ::dawn::LocationType::Cells}, [&](auto& lhs, auto red_loc1, auto const& weight) {
+m_nabla2t2_vec(deref(LibTag{}, loc), (k + 0)) = reduce(LibTag{}, m_mesh,loc, (::dawn::float_type) 0.0, std::vector<::dawn::LocationType>{::dawn::LocationType::Edges, ::dawn::LocationType::Cells}, [&, sparse_dimension_idx0 = int(0)](auto& lhs, auto red_loc1, auto const& weight) mutable {
 lhs += weight * m_div_vec(deref(LibTag{}, red_loc1), (k + 0));
 sparse_dimension_idx0++;
 return lhs;
 }, std::vector<::dawn::float_type>({(::dawn::float_type) -1.0, (::dawn::float_type) 1.0}));
-}
       }      for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
 m_nabla2t2_vec(deref(LibTag{}, loc), (k + 0)) = (m_nabla2t2_vec(deref(LibTag{}, loc), (k + 0)) / m_dual_edge_length(deref(LibTag{}, loc), (k + 0)));
       }      for(auto const& loc : getEdges(LibTag{}, m_mesh)) {

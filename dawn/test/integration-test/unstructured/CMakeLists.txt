@@ -21,13 +21,18 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_copyEdge.hpp
   generated_diamond.hpp
   generated_diamondWeights.hpp
+  generated_diffusionCuda.hpp
   generated_diffusion.hpp
+  generated_globalVar.hpp
   generated_gradient.hpp
   generated_horizontalVertical.hpp
   generated_intp.hpp
+  generated_iterationSpaceUnstructured.hpp
   generated_nestedSimple.hpp
+  generated_NestedSparse.hpp
   generated_nestedWithField.hpp
   generated_nestedWithSparse.hpp
+  generated_reductionInIfConditional.hpp
   generated_sparseAssignment0.hpp
   generated_sparseAssignment1.hpp
   generated_sparseAssignment2.hpp
@@ -36,10 +41,12 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_sparseAssignment5.hpp
   generated_sparseDimension.hpp
   generated_sparseDimensionTwice.hpp
+  generated_sparseTempFieldAllocation.hpp
+  generated_tempFieldAllocation.hpp
+  generated_tempField.hpp
   generated_tridiagonalSolve.hpp
   generated_verticalIndirecion.hpp
   generated_verticalSum.hpp
-  generated_globalVar.hpp
 )
 
 set(reference_stencil_codes reference_diffusion.hpp

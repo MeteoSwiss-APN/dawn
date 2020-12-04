@@ -1006,5 +1006,45 @@ int main() {
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto c_f = b.field("c_field", LocType::Cells);
+    auto sparse_f = b.field("sparse_field", {LocType::Cells, LocType::Edges});
+    auto e_f = b.field("e_field", LocType::Edges);
+    auto out_f = b.field("out_field", LocType::Cells);
+    std::string stencilName = "reductionInIfConditional";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Cells,
+                    b.doMethod(
+                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.ifStmt(
+                            b.binaryExpr(b.reduceOverNeighborExpr(
+                                             Op::plus, b.at(e_f),
+                                             b.lit(0.), {LocType::Cells, LocType::Edges}),
+                                         b.lit(3.), Op::less),
+                            b.stmt(b.assignExpr(
+                                b.at(out_f),
+                                b.reduceOverNeighborExpr(
+                                    Op::plus, b.binaryExpr(b.at(sparse_f), b.lit(2.), Op::multiply),
+                                    b.lit(0.), {LocType::Cells, LocType::Edges}))),
+                            b.stmt(b.assignExpr(
+                                b.at(out_f),
+                                b.reduceOverNeighborExpr(
+                                    Op::plus, b.binaryExpr(b.at(sparse_f), b.lit(4.), Op::multiply),
+                                    b.lit(0.), {LocType::Cells, LocType::Edges})))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
   return 0;
 }
