@@ -154,6 +154,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperRun(
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
   RunMethod.finishArgs();
+  RunMethod.startBody();
 
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getMetaData(), codeGenProperties);
