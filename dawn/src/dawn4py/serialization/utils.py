@@ -202,7 +202,7 @@ def make_field_dimensions_cartesian(mask: List[int] = None) -> FieldDimensions:
 
 
 def make_field_dimensions_unstructured(
-    locations: List[LocationTypeValue], mask_k: int,
+    locations: List[LocationTypeValue], mask_k: int, include_center: bool = False
 ) -> FieldDimensions:
     """ Create FieldDimensions of unstructured type
 
@@ -218,6 +218,7 @@ def make_field_dimensions_unstructured(
     sparse_part = len(locations) > 1
     if sparse_part:
         horizontal_dim.sparse_part.extend(locations)
+    horizontal_dim.include_center = include_center
     dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
     dims.mask_k = mask_k
     return dims
@@ -819,6 +820,7 @@ def make_reduction_over_neighbor_expr(
     init: ExprType,
     chain: List[LocationTypeValue],
     weights: List[ExprType] = None,
+    include_center: bool = False
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
@@ -836,6 +838,7 @@ def make_reduction_over_neighbor_expr(
     expr.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend([make_expr(weight) for weight in weights])
+    expr.includeCenter = include_center
     return expr
 
 

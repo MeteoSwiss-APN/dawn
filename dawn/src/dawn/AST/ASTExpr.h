@@ -643,6 +643,7 @@ private:
   std::string op_ = "+";
   std::optional<std::vector<std::shared_ptr<Expr>>> weights_;
   std::vector<ast::LocationType> chain_;
+  bool includeCenter_ = false;
   // due to current design limitations (getChildren() returning a view into memory), the operands
   // hold a copy of the (shared pointer to) the weights
   std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
@@ -653,11 +654,11 @@ public:
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init, std::vector<ast::LocationType> chain,
-                            SourceLocation loc = SourceLocation());
+                            bool includeCenter = false, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init,
                             std::vector<std::shared_ptr<Expr>> weights,
-                            std::vector<ast::LocationType> chain,
+                            std::vector<ast::LocationType> chain, bool includeCenter = false,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -671,6 +672,7 @@ public:
   std::vector<ast::LocationType> getNbhChain() const { return chain_; };
   ast::LocationType getLhsLocation() const { return chain_.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
+  bool getIncludeCenter() const { return includeCenter_; };
 
   ExprRangeType getChildren() override;
 

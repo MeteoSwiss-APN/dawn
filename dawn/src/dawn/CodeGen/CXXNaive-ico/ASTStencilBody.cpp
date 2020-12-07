@@ -380,9 +380,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     ss_ << "weight * ";
   } else {
     ss_ << ", [&, " + ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) +
-               " = int(0)](auto& lhs, auto " 
-       << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1)
-       << ") mutable { ";
+               " = int(0)](auto& lhs, auto "
+        << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1) << ") mutable { ";
     ss_ << "lhs " << expr->getOp() << "= ";
   }
 
@@ -426,6 +425,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
 
     ss_ << "})";
+  }
+  if(expr->getIncludeCenter()) {
+    ss_ << ", /*include center*/ true";
   }
   ss_ << ")";
 }

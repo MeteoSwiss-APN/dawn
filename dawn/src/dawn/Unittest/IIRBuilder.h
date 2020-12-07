@@ -136,7 +136,8 @@ public:
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
                                                     const std::vector<ast::LocationType>& chain,
-                                                    const std::vector<TWeight>&& weights) {
+                                                    const std::vector<TWeight>&& weights,
+                                                    bool includeCenter = false) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
     std::vector<std::shared_ptr<ast::Expr>> vWeights;
@@ -153,15 +154,15 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr>
-  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                         std::shared_ptr<iir::Expr>&& init,
-                         const std::vector<ast::LocationType>& chain,
-                         const std::vector<std::shared_ptr<iir::Expr>>&& weights);
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(
+      Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+      const std::vector<ast::LocationType>& chain,
+      const std::vector<std::shared_ptr<iir::Expr>>&& weights, bool includeCenter = false);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    const std::vector<ast::LocationType>& chain);
+                                                    const std::vector<ast::LocationType>& chain,
+                                                    bool includeCenter = false);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);

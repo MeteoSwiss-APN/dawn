@@ -471,10 +471,15 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& rhs,
                                                      std::shared_ptr<Expr> const& init,
                                                      std::vector<ast::LocationType> chain,
-                                                     SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), chain_(chain), operands_{rhs, init} {
+                                                     bool includeCenter, SourceLocation loc)
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), chain_(chain),
+      includeCenter_(includeCenter), operands_{rhs, init} {
   DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
+  if(includeCenter_) {
+    DAWN_ASSERT_MSG(chain.front() == chain.back(), "including center is only allowed if the end "
+                                                   "location is the same as the starting location");
+  }
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
@@ -482,18 +487,23 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& init,
                                                      std::vector<std::shared_ptr<Expr>> weights,
                                                      std::vector<ast::LocationType> chain,
-                                                     SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
-      chain_(chain), operands_{rhs, init} {
+                                                     bool includeCenter, SourceLocation loc)
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights), chain_(chain),
+      includeCenter_(includeCenter), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
   DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
+  if(includeCenter_) {
+    DAWN_ASSERT_MSG(chain.front() == chain.back(), "including center is only allowed if the end "
+                                                   "location is the same as the starting location");
+  }
   operands_.insert(operands_.end(), weights.begin(), weights.end());
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
-      weights_(expr.getWeights()), chain_(expr.getNbhChain()), operands_(expr.operands_) {}
+      weights_(expr.getWeights()), chain_(expr.getNbhChain()),
+      includeCenter_(expr.getIncludeCenter()), operands_(expr.operands_) {}
 
 ReductionOverNeighborExpr&
 ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
@@ -501,6 +511,7 @@ ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
   op_ = expr.op_;
   operands_ = expr.operands_;
   chain_ = expr.getNbhChain();
+  includeCenter_ = expr.getIncludeCenter();
   weights_ = expr.getWeights();
   return *this;
 }

@@ -574,11 +574,17 @@ bool UnstructuredFieldDimension::chainIsValid() const {
   return true;
 }
 
-UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain)
-    : neighborChain_(neighborChain) {
+UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain,
+                                                       bool includeCenter)
+    : neighborChain_(neighborChain), includeCenter_(includeCenter) {
   DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
   DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
                                   "expaneded notation (e.g. C->C becomes C->E->C\n");
+  if(includeCenter_) {
+    DAWN_ASSERT_MSG(neighborChain.front() == neighborChain.back(),
+                    "including center is only allowed if the end "
+                    "location is the same as the starting location");
+  }
 }
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
@@ -605,7 +611,11 @@ std::string UnstructuredFieldDimension::toString() const {
 
   std::string output = "", separator = "";
   for(const auto elem : neighborChain_) {
-    output += separator + getLocationTypeString(elem);
+    if(includeCenter_ && separator == "") {
+      output += separator + "[" + getLocationTypeString(elem) + "]";
+    } else {
+      output += separator + getLocationTypeString(elem);
+    }
     separator = "->";
   }
   return output;

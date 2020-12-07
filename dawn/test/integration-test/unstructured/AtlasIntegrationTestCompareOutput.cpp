@@ -1217,4 +1217,51 @@ TEST(AtlasIntegrationTestCompareOutput, reductionInConditional) {
 }
 } // namespace
 
+namespace {
+#include <generated_reductionWithCenter.hpp>
+TEST(AtlasIntegrationTestCompareOutput, reductionWithCenter) {
+  auto mesh = generateEquilatMesh(10, 10);
+  size_t nb_levels = 1;
+
+  auto [cout_F, cout_v] = makeAtlasField("cout", mesh.cells().size(), nb_levels);
+  auto [cin_F, cin_v] = makeAtlasField("cin", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(cout_v, mesh.cells().size(), nb_levels, .0);
+  initField(cin_v, mesh.cells().size(), nb_levels, 1.0);
+
+  auto isBoundaryEdge = [mesh](const int edgeIdx) -> bool {
+    return mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+               mesh.edges().cell_connectivity().missing_value() ||
+           mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+               mesh.edges().cell_connectivity().missing_value();
+  };
+
+  std::vector<size_t> nnbh_c2c(mesh.cells().size());
+  const auto& conn = mesh.cells().edge_connectivity();
+  for(int cIdx = 0; cIdx < mesh.cells().size(); cIdx++) {
+    int nnbh = 0;
+    for(int nbhIdx = 0; nbhIdx < conn.cols(cIdx); nbhIdx++) {
+      int eIdx = conn(cIdx, nbhIdx);
+      if(eIdx != conn.missing_value()) {
+        nnbh += !isBoundaryEdge(eIdx) ? 1 : 0;
+      }
+    }
+    nnbh_c2c[cIdx] = nnbh;
+  }
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::reductionWithCenter<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), cin_v, cout_v);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(cout_v(cell_idx, k), nnbh_c2c[cell_idx] + 1);
+    }
+  }
+}
+} // namespace
+
 } // namespace

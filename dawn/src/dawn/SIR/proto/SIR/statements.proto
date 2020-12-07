@@ -52,6 +52,8 @@ message UnstructuredDimension {
   dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
   // neighbor chain encoding sparse part when the field has a sparse dimension
   repeated dawn.proto.enums.LocationType sparse_part = 2;
+  // is the first element in the chain part of the sparse dimension?
+  bool include_center = 3;
 }
 
 // @brief Dimensions spanned by a field
@@ -715,6 +717,7 @@ message ReductionOverNeighborExpr {
       5; // Neighbor chain definining the neighbors to reduce from and the
          // location type to reduce to (first element)
   SourceLocation loc = 6;
+  bool includeCenter = 7;
 }
 
 // @brief Abstract syntax tree of the SIR

@@ -307,6 +307,7 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
       }
       protoUnstructuredDimension->set_dense_location_type(
           getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
+      protoUnstructuredDimension->set_include_center(unstructuredDimension.getIncludeCenter());
     }
   }
 }
@@ -740,6 +741,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
       currentExprProto_.pop();
     }
   }
+
+  protoExpr->set_includecenter(expr->getIncludeCenter());
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -784,7 +787,8 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
       }
 
       return sir::FieldDimensions(
-          sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain),
+          sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain,
+                                        protoUnstructuredDimension.include_center()),
           protoFieldDimensions.mask_k());
 
     } else { // dense
@@ -792,7 +796,8 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
       return sir::FieldDimensions(
           sir::HorizontalFieldDimension(dawn::ast::unstructured,
                                         getLocationTypeFromProtoLocationType(
-                                            protoUnstructuredDimension.dense_location_type())),
+                                            protoUnstructuredDimension.dense_location_type()),
+                                        protoUnstructuredDimension.include_center()),
           protoFieldDimensions.mask_k());
     }
   } else {
@@ -1051,7 +1056,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), chain, makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), chain, exprProto.includecenter(),
+          makeLocation(exprProto));
       return expr;
     } else {
       std::vector<std::shared_ptr<ast::Expr>> deserializedWeights;
@@ -1061,7 +1067,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
           makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
-          makeLocation(exprProto));
+          exprProto.includecenter(), makeLocation(exprProto));
       return expr;
     }
   }

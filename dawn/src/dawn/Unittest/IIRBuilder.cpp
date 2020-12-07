@@ -110,25 +110,23 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return si_;
 }
 
-std::shared_ptr<iir::Expr>
-IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                   std::shared_ptr<iir::Expr>&& init,
-                                   const std::vector<ast::LocationType>& chain) {
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+    const std::vector<ast::LocationType>& chain, bool includeCenter) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), chain);
+      std::move(init), chain, includeCenter);
   expr->setID(si_->nextUID());
   return expr;
 }
 
-std::shared_ptr<iir::Expr>
-IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                   std::shared_ptr<iir::Expr>&& init,
-                                   const std::vector<ast::LocationType>& chain,
-                                   const std::vector<std::shared_ptr<iir::Expr>>&& weights) {
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+    const std::vector<ast::LocationType>& chain,
+    const std::vector<std::shared_ptr<iir::Expr>>&& weights, bool includeCenter) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), move(weights), chain);
+      std::move(init), move(weights), chain, includeCenter);
   expr->setID(si_->nextUID());
   return expr;
 }
