@@ -1062,10 +1062,41 @@ int main() {
             b.stage(
                 LocType::Cells,
                 b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                           b.stmt(b.assignExpr(b.at(cout_f), b.reduceOverNeighborExpr(
-                                                                 Op::plus, b.at(cin_f), b.lit(0.),
-                                                                 {LocType::Cells, LocType::Edges,
-                                                                  LocType::Cells}, true))))))));
+                           b.stmt(b.assignExpr(
+                               b.at(cout_f),
+                               b.reduceOverNeighborExpr(
+                                   Op::plus, b.at(cin_f), b.lit(0.),
+                                   {LocType::Cells, LocType::Edges, LocType::Cells}, true))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto cin_f = b.field("cin_field", LocType::Cells);
+    auto cout_f = b.field("cout_field", LocType::Cells);
+    auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges, LocType::Cells});
+    std::string stencilName = "reductionWithCenterSparse";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Cells,
+                    b.doMethod(
+                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stmt(b.assignExpr(
+                            b.at(cout_f),
+                            b.reduceOverNeighborExpr(
+                                Op::plus, b.binaryExpr(b.at(cin_f), b.at(sparse_f), Op::multiply),
+                                b.lit(0.), {LocType::Cells, LocType::Edges, LocType::Cells},
+                                true))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");

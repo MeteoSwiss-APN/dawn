@@ -61,6 +61,8 @@ protected:
   std::string sparseArgName_ = "loc";
 
   bool parentIsReduction_ = false;
+  bool parentReductionIncludesCenterPrep_ = false;
+  bool parentReductionIncludesCenterIter_ = false;
   bool parentIsForLoop_ = false;
 
   bool firstPass_ = true;
