@@ -45,7 +45,10 @@ def main(args: argparse.Namespace):
                 sir_utils.make_field_access_expr("p_grad"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
-                    sir_utils.make_binary_operator( sir_utils.make_field_access_expr("geofac_grg"), "*", sir_utils.make_field_access_expr("p_ccpr") ),
+                    sir_utils.make_binary_operator( 
+                        sir_utils.make_unstructured_field_access_expr("geofac_grg"), 
+                        "*", 
+                        sir_utils.make_unstructured_field_access_expr("p_ccpr", horizontal_offset=sir_utils.make_unstructured_offset(True))),
                     init=sir_utils.make_literal_access_expr(
                         "0.0", SIR.BuiltinType.Double),
                     chain=[SIR.LocationType.Value(
@@ -100,7 +103,7 @@ def main(args: argparse.Namespace):
     f.close()
 
     # compile
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

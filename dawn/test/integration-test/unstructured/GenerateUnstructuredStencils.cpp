@@ -1065,7 +1065,7 @@ int main() {
                            b.stmt(b.assignExpr(
                                b.at(cout_f),
                                b.reduceOverNeighborExpr(
-                                   Op::plus, b.at(cin_f), b.lit(0.),
+                                   Op::plus, b.at(cin_f, HOffsetType::withOffset, 0), b.lit(0.),
                                    {LocType::Cells, LocType::Edges, LocType::Cells}, true))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
@@ -1089,14 +1089,15 @@ int main() {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                        b.stmt(b.assignExpr(
-                            b.at(cout_f),
-                            b.reduceOverNeighborExpr(
-                                Op::plus, b.binaryExpr(b.at(cin_f), b.at(sparse_f), Op::multiply),
-                                b.lit(0.), {LocType::Cells, LocType::Edges, LocType::Cells},
-                                true))))))));
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(
+                                   b.at(cout_f),
+                                   b.reduceOverNeighborExpr(
+                                       Op::plus,
+                                       b.binaryExpr(b.at(cin_f, HOffsetType::withOffset, 0),
+                                                    b.at(sparse_f), Op::multiply),
+                                       b.lit(0.), {LocType::Cells, LocType::Edges, LocType::Cells},
+                                       true))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");

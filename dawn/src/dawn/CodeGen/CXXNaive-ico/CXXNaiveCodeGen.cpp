@@ -278,7 +278,8 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
             allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size)";
           } else {
             allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size, " +
-                          std::to_string(ICOChainSize(hdims.getNeighborChain())) + ")";
+                          std::to_string(ICOChainSize(hdims.getNeighborChain())) +
+                          (hdims.getIncludeCenter() ? "+1" : "") + ")";
           }
 
           stencilWrapperConstructor.addInit("m_" + metadata.getNameFromAccessID(accessID) + "(" +

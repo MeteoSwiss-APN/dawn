@@ -18,6 +18,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Type.h"
+#include "driver-includes/unstructured_interface.hpp"
 #include <gtest/gtest.h>
 #include <memory>
 #include <vector>
@@ -74,6 +75,29 @@ TEST_P(StencilTest, Fields) {
       std::make_shared<sir::Field>("bar", makeFieldDimensions()));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
+TEST_P(StencilTest, UnstructuredFields) {
+  auto makeFieldDimensionsDense = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::unstructured,
+                                                              dawn::ast::LocationType::Cells,
+                                                              /*includeCenter*/ true),
+                                true);
+  };
+
+  auto makeFieldDimensionsSparse = []() -> sir::FieldDimensions {
+    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::unstructured,
+                                                              {dawn::ast::LocationType::Cells,
+                                                               dawn::ast::LocationType::Edges,
+                                                               dawn::ast::LocationType::Cells},
+                                                              /*includeCenter*/ true),
+                                true);
+  };
+
+  sirRef->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("fooUnstr", makeFieldDimensionsDense()));
+  sirRef->Stencils[0]->Fields.emplace_back(
+      std::make_shared<sir::Field>("barUnstr", makeFieldDimensionsSparse()));
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
 
 TEST_P(StencilTest, FieldsWithAttributes) {
   sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>(
@@ -98,6 +122,19 @@ TEST_P(StencilTest, AST_Reduction) {
       std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
       std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
                                      ast::LocationType::Cells});
+
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
+      std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
+
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
+TEST_P(StencilTest, AST_ReductionIncludeCenter) {
+  const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
+      "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
+      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
+      std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
+                                     ast::LocationType::Cells},
+      /*includeCenter*/ true);
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
       std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));

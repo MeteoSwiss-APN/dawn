@@ -742,7 +742,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
     }
   }
 
-  protoExpr->set_includecenter(expr->getIncludeCenter());
+  protoExpr->set_include_center(expr->getIncludeCenter());
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -1056,7 +1056,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), chain, exprProto.includecenter(),
+          makeExpr(exprProto.init(), dataType, maxID), chain, exprProto.include_center(),
           makeLocation(exprProto));
       return expr;
     } else {
@@ -1067,7 +1067,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
           makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
-          exprProto.includecenter(), makeLocation(exprProto));
+          exprProto.include_center(), makeLocation(exprProto));
       return expr;
     }
   }
