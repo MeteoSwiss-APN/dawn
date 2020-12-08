@@ -165,12 +165,17 @@ TEST_P(StencilTest, AST_ForLoopChain) {
       std::make_shared<sir::FieldAccessExpr>("lhs"), std::make_shared<sir::FieldAccessExpr>("rhs"));
   std::shared_ptr<sir::BlockStmt> bodyBlock =
       sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(body)});
-  std::vector<ast::LocationType> chain{ast::LocationType::Cells, ast::LocationType::Edges,
-                                       ast::LocationType::Vertices};
-  std::shared_ptr<sir::LoopStmt> loopStmt = sir::makeLoopStmt(std::move(chain), bodyBlock);
+  std::vector<ast::LocationType> chain1{ast::LocationType::Cells, ast::LocationType::Edges,
+                                        ast::LocationType::Vertices};
+  std::shared_ptr<sir::LoopStmt> loopStmt1 = sir::makeLoopStmt(std::move(chain1), bodyBlock);
+
+  std::vector<ast::LocationType> chain2{ast::LocationType::Cells, ast::LocationType::Edges,
+                                        ast::LocationType::Cells};
+  std::shared_ptr<sir::LoopStmt> loopStmt2 =
+      sir::makeLoopStmt(std::move(chain2), /*include center*/ true, bodyBlock);
 
   sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
-      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{loopStmt}));
+      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{loopStmt1, loopStmt2}));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }

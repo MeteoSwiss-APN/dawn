@@ -576,9 +576,9 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
         chain.push_back(getLocationTypeFromProtoLocationType(
             stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
       }
-      auto stmt =
-          sir::makeLoopStmt(std::move(chain), std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt),
-                            makeLocation(stmtProto));
+      auto stmt = sir::makeLoopStmt(
+          std::move(chain), stmtProto.loop_descriptor().loop_descriptor_chain().include_center(),
+          std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt), makeLocation(stmtProto));
       return stmt;
     }
     case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {

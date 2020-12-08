@@ -105,9 +105,9 @@ void ASTConverter::visit(const std::shared_ptr<sir::LoopStmt>& stmt) {
   stmt->getBlockStmt()->accept(*this);
   if(auto* chainDesc =
          dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr())) {
-    stmtMap_.emplace(
-        stmt, iir::makeLoopStmt(chainDesc->getChain(), std::dynamic_pointer_cast<iir::BlockStmt>(
-                                                           stmtMap_.at(stmt->getBlockStmt()))));
+    stmtMap_.emplace(stmt, iir::makeLoopStmt(chainDesc->getChain(), chainDesc->getIncludeCenter(),
+                                             std::dynamic_pointer_cast<iir::BlockStmt>(
+                                                 stmtMap_.at(stmt->getBlockStmt()))));
   } else {
     dawn_unreachable("unsupported loop descriptor!\n");
   }

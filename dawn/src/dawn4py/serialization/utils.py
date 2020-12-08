@@ -406,7 +406,7 @@ def make_block_stmt(statements: List[StmtType]) -> BlockStmt:
     return stmt
 
 
-def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue]) -> LoopStmt:
+def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue], include_center: bool = False) -> LoopStmt:
     """ Create an For Loop
 
     :param block: List of statements that compose the body of the loop
@@ -415,6 +415,7 @@ def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue]) -> Lo
     stmt.statements.CopyFrom(make_stmt(make_block_stmt(block)))
     loop_descriptor_chain = LoopDescriptorChain()
     loop_descriptor_chain.chain.extend(chain)
+    loop_descriptor_chain.include_center = include_center
     stmt.loop_descriptor.loop_descriptor_chain.CopyFrom(loop_descriptor_chain)
 
     return stmt

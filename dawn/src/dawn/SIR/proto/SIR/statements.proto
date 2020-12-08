@@ -324,6 +324,7 @@ message LoopDescriptorGeneral {
 
 message LoopDescriptorChain {
   repeated dawn.proto.enums.LocationType chain = 1;
+  bool include_center = 2;
 }
 
 message LoopDescriptor {

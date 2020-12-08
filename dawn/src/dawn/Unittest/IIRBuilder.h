@@ -210,10 +210,12 @@ public:
                                     std::shared_ptr<iir::Stmt>&& caseElse = {nullptr});
 
   std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
-                                           std::vector<ast::LocationType>&& chain);
+                                           std::vector<ast::LocationType>&& chain,
+                                           bool includeCenter = false);
 
   std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
-                                           std::vector<ast::LocationType>&& chain);
+                                           std::vector<ast::LocationType>&& chain,
+                                           bool includeCenter = false);
 
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
@@ -347,11 +349,15 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, HOffsetType hOffset, int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
-  Field field(std::string const& name, ast::LocationType denseLocation, bool maskK = true);
-  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
+  Field field(std::string const& name, ast::LocationType denseLocation, bool maskK = true,
+              bool includeCenter = false);
+  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true,
+              bool includeCenter = false);
 
-  Field tmpField(std::string const& name, ast::LocationType denseLocation, bool maskK = true);
-  Field tmpField(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
+  Field tmpField(std::string const& name, ast::LocationType denseLocation, bool maskK = true,
+                 bool includeCenter = false);
+  Field tmpField(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true,
+                 bool includeCenter = false);
 
   Field vertical_field(std::string const& name);
 };

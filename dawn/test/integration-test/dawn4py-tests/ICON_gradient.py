@@ -41,6 +41,12 @@ def main(args: argparse.Namespace):
     
     body_ast = sir_utils.make_ast(
         [
+            sir_utils.make_loop_stmt(
+                sir_utils.make_assignment_stmt(
+                    sir_utils.make_field_access_expr("geofac_grg"), 
+                    sir_utils.make_literal_access_expr("2.", SIR.BuiltinType.Double)), 
+                    [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
+                    include_center = True),
             sir_utils.make_assignment_stmt(
                 sir_utils.make_field_access_expr("p_grad"),
                 sir_utils.make_reduction_over_neighbor_expr(
@@ -53,8 +59,8 @@ def main(args: argparse.Namespace):
                         "0.0", SIR.BuiltinType.Double),
                     chain=[SIR.LocationType.Value(
                         "Cell"), SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"),],
-                    include_center = True
+                        "Cell")],
+                    include_center = True,
                 ),
                 "=",
             )
@@ -89,7 +95,7 @@ def main(args: argparse.Namespace):
                         "geofac_grg",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")], 1, include_center = True
-                        ),
+                        ),                       
                     ),
                 ],
             ),

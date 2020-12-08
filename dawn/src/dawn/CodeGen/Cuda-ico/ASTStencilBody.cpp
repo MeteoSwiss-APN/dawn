@@ -40,9 +40,15 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
 
+  parentIsForLoop_ = true;
+  if(maybeChainPtr->getIncludeCenter()) {
+    parentIterationIncludesCenterPrep_ = true;
+    stmt->getBlockStmt()->accept(*this);
+    parentIterationIncludesCenterPrep_ = false;
+  }
+
   ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(maybeChainPtr->getChain())
       << "; nbhIter++)";
-  parentIsForLoop_ = true;
 
   ss_ << "{\n";
   ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getChain()) << "["
@@ -50,7 +56,11 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
+  if(maybeChainPtr->getIncludeCenter()) {
+    parentIterationIncludesCenterIter_ = true;
+  }
   stmt->getBlockStmt()->accept(*this);
+  parentIterationIncludesCenterIter_ = false;
 
   ss_ << "}\n";
   parentIsForLoop_ = false;
@@ -119,7 +129,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
       return kiterStr + "*" + denseSize +
-             (parentReductionIncludesCenterPrep_ ? "+ pidx" : "+ nbhIdx");
+             (parentIterationIncludesCenterPrep_ ? "+ pidx" : "+ nbhIdx");
     } else {
       return kiterStr + "*" + denseSize + "+ pidx";
     }
@@ -131,8 +141,8 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
     return kiterStr + "*" + denseSize + " * " + sparseSize + " + " +
-           (parentReductionIncludesCenterPrep_ ? "0 * " : "nbhIter * ") + denseSize + " + pidx" +
-           (parentReductionIncludesCenterIter_ ? " + 1" : "");
+           (parentIterationIncludesCenterPrep_ ? "0 * " : "nbhIter * ") + denseSize + " + pidx" +
+           (parentIterationIncludesCenterIter_ ? " + 1" : "");
   }
 
   if(isHorizontal && isDense) {
@@ -140,7 +150,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return parentReductionIncludesCenterPrep_ ? "pidx" : "nbhIdx";
+      return parentIterationIncludesCenterPrep_ ? "pidx" : "nbhIdx";
     } else {
       return "pidx";
     }
@@ -151,8 +161,8 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
                     "Sparse Field Access not allowed in this context");
     std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
-    return (parentReductionIncludesCenterPrep_ ? "nbhIter * " : "0 * ") + denseSize + " + pidx" +
-           (parentReductionIncludesCenterIter_ ? " + 1" : "");
+    return (parentIterationIncludesCenterPrep_ ? "nbhIter * " : "0 * ") + denseSize + " + pidx" +
+           (parentIterationIncludesCenterIter_ ? " + 1" : "");
   }
 
   DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
@@ -238,11 +248,11 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     ss_ << "};\n";
   }
   if(expr->getIncludeCenter()) {
-    parentReductionIncludesCenterPrep_ = true;
+    parentIterationIncludesCenterPrep_ = true;
     ss_ << lhs_name << expr->getOp() + "= ";
     expr->getRhs()->accept(*this);
     ss_ << ";\n";
-    parentReductionIncludesCenterPrep_ = false;
+    parentIterationIncludesCenterPrep_ = false;
   }
   ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
       << "; nbhIter++)";
@@ -257,10 +267,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     ss_ << " " << weights_name << "[nbhIter] * ";
   }
   if(expr->getIncludeCenter()) {
-    parentReductionIncludesCenterIter_ = true;
+    parentIterationIncludesCenterIter_ = true;
   }
   expr->getRhs()->accept(*this);
-  parentReductionIncludesCenterIter_ = false;
+  parentIterationIncludesCenterIter_ = false;
   ss_ << ";}\n";
   parentIsReduction_ = false;
 }

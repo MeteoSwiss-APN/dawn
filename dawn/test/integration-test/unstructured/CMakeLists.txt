@@ -21,7 +21,6 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_copyEdge.hpp
   generated_diamond.hpp
   generated_diamondWeights.hpp
-  generated_diffusionCuda.hpp
   generated_diffusion.hpp
   generated_globalVar.hpp
   generated_gradient.hpp
@@ -29,15 +28,17 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_intp.hpp
   generated_iterationSpaceUnstructured.hpp
   generated_nestedSimple.hpp
-  generated_NestedSparse.hpp
   generated_nestedWithField.hpp
   generated_nestedWithSparse.hpp
+  generated_reductionAndFillWithCenterSparse.hpp
   generated_reductionInIfConditional.hpp
-  generated_sparseAssignment0.hpp
-  generated_sparseAssignment1.hpp
-  generated_sparseAssignment2.hpp
-  generated_sparseAssignment3.hpp
-  generated_sparseAssignment4.hpp
+  generated_reductionWithCenter.hpp
+  generated_reductionWithCenterSparse.hpp
+  generated_sparseAssignment0.hpp  
+  generated_sparseAssignment1.hpp 
+  generated_sparseAssignment2.hpp  
+  generated_sparseAssignment3.hpp 
+  generated_sparseAssignment4.hpp 
   generated_sparseAssignment5.hpp
   generated_sparseDimension.hpp
   generated_sparseDimensionTwice.hpp

@@ -371,6 +371,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<LoopStmt>& stmt) {
     for(auto loc : maybeChainPtr->getChain()) {
       protoChainDescr->add_chain(getProtoLocationTypeFromLocationType(loc));
     }
+    protoChainDescr->set_include_center(maybeChainPtr->getIncludeCenter());
   } else {
     dawn_unreachable("Loop descriptor not implemented.");
   }
@@ -1105,9 +1106,10 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
         chain.push_back(getLocationTypeFromProtoLocationType(
             stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
       }
-      auto stmt = std::make_shared<LoopStmt>(makeData(dataType, stmtProto.data()), std::move(chain),
-                                             std::dynamic_pointer_cast<BlockStmt>(blockStmt),
-                                             makeLocation(stmtProto));
+      auto stmt = std::make_shared<LoopStmt>(
+          makeData(dataType, stmtProto.data()), std::move(chain),
+          stmtProto.loop_descriptor().loop_descriptor_chain().include_center(),
+          std::dynamic_pointer_cast<BlockStmt>(blockStmt), makeLocation(stmtProto));
       stmt->setID(stmtProto.id());
       maxID = std::max(std::abs(stmtProto.id()), maxID);
       return stmt;

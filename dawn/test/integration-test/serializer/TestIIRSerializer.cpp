@@ -322,6 +322,41 @@ TEST_F(IIRSerializerTest, IIRTestsReductionWithCenterSparse) {
   IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
 }
 
+TEST_F(IIRSerializerTest, IIRTestsFillAndReductionWithCenterSparse) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cin_f = b.field("cin_field", LocType::Cells);
+  auto cout_f = b.field("cout_field", LocType::Cells);
+  auto sparse_f = b.tmpField("sparse", {LocType::Cells, LocType::Edges, LocType::Cells},
+                             /*maskK*/ true, /*include_center*/ true);
+  std::string stencilName = "reductionAndFillWithCenterSparse";
+
+  auto stencil_instantiation = b.build(
+      stencilName,
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
+                                             {LocType::Cells, LocType::Edges, LocType::Cells},
+                                             /*include center*/ true),
+                             b.stmt(b.assignExpr(
+                                 b.at(cout_f),
+                                 b.reduceOverNeighborExpr(
+                                     Op::plus,
+                                     b.binaryExpr(b.at(cin_f, HOffsetType::withOffset, 0),
+                                                  b.at(sparse_f), Op::multiply),
+                                     b.lit(0.), {LocType::Cells, LocType::Edges, LocType::Cells},
+                                     /*include center*/ true))))))));
+
+  auto deserializedAndSerialized =
+      IIRSerializer::deserializeFromString(IIRSerializer::serializeToString(stencil_instantiation));
+
+  IIR_EXPECT_EQ(stencil_instantiation, deserializedAndSerialized);
+}
+
 TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
